@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { SwipeableScreen } from '@/components/SwipeableScreen';
 import { Colors } from '@/constants/colors';
 import {
   mockPatient,
@@ -41,7 +40,6 @@ const formatDate = (dateString: string) => {
 
 export const TodayScreen = () => {
   return (
-    <SwipeableScreen current="today">
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Today" />
@@ -93,7 +91,6 @@ export const TodayScreen = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
-    </SwipeableScreen>
   );
 };
 

@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Sparkline } from '@/components/Sparkline';
-import { SwipeableScreen } from '@/components/SwipeableScreen';
 import { Colors } from '@/constants/colors';
 import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 
@@ -21,7 +20,6 @@ const diagnosticIcon = (status: DiagnosticTest['status']) => {
 
 export const MyDataScreen = () => {
   return (
-    <SwipeableScreen current="my-data">
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="My Data" />
@@ -71,7 +69,6 @@ export const MyDataScreen = () => {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
-    </SwipeableScreen>
   );
 };
 

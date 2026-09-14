@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
-import { SwipeableScreen } from '@/components/SwipeableScreen';
 import { Colors } from '@/constants/colors';
 import { mockPatient, mockDoctor } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
@@ -63,7 +62,6 @@ export const MoreScreen = () => {
   const { logout } = useAuth();
 
   return (
-    <SwipeableScreen current="more">
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="More" />
@@ -96,7 +94,6 @@ export const MoreScreen = () => {
         </View>
       </ScrollView>
     </SafeAreaView>
-    </SwipeableScreen>
   );
 };
 

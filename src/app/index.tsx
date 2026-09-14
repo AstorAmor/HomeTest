@@ -9,5 +9,5 @@ export default function RootIndex() {
     return <LoginScreen />;
   }
 
-  return <Redirect href="/(tabs)/today" />;
+  return <Redirect href="/(tabs)" />;
 }

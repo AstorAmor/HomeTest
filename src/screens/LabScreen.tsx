@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { RangeBar } from '@/components/RangeBar';
-import { SwipeableScreen } from '@/components/SwipeableScreen';
 import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses, mockLabResultPanels } from '@/data/mockData';
 
@@ -20,7 +19,6 @@ const formatFullDate = (dateString: string) => {
 
 export const LabScreen = () => {
   return (
-    <SwipeableScreen current="lab">
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Lab" />
@@ -80,7 +78,6 @@ export const LabScreen = () => {
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
-    </SwipeableScreen>
   );
 };
 
