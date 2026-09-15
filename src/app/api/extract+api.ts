@@ -41,6 +41,64 @@ interface FilePayload {
   mimeType: string;
 }
 
+const MAX_RETRIES = 3;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Llama a Gemini con reintentos y espera creciente si la API devuelve
+// 429 (límite de peticiones por minuto superado) o 503 (sobrecarga temporal).
+async function callGeminiWithRetry(
+  apiKey: string,
+  fileParts: { inline_data: { mime_type: string; data: string } }[]
+): Promise<{ response: Response } | { error: string; status: number }> {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 170000);
+
+    let response: Response;
+    try {
+      response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: EXTRACTION_PROMPT }, ...fileParts] }],
+            generationConfig: { responseMimeType: 'application/json' },
+          }),
+          signal: controller.signal,
+        }
+      );
+    } catch (fetchErr) {
+      const isAbort = fetchErr instanceof Error && fetchErr.name === 'AbortError';
+      return {
+        error: isAbort
+          ? 'Gemini tardó demasiado en responder (>170s). Prueba con menos páginas o imágenes más pequeñas.'
+          : `Error al llamar a Gemini: ${fetchErr instanceof Error ? fetchErr.message : 'desconocido'}`,
+        status: 504,
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    const isRateLimited = response.status === 429 || response.status === 503;
+    if (isRateLimited && attempt < MAX_RETRIES) {
+      const retryAfterHeader = response.headers.get('retry-after');
+      const waitMs = retryAfterHeader
+        ? Number(retryAfterHeader) * 1000
+        : 4000 * Math.pow(2, attempt); // 4s, 8s, 16s
+      await sleep(waitMs);
+      continue;
+    }
+
+    return { response };
+  }
+
+  return { error: 'No se pudo completar la petición tras varios reintentos', status: 429 };
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -62,47 +120,23 @@ export async function POST(request: Request) {
       inline_data: { mime_type: f.mimeType, data: f.base64 },
     }));
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 170000);
+    const result = await callGeminiWithRetry(apiKey, fileParts);
 
-    let geminiResponse: Response;
-    try {
-      geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: EXTRACTION_PROMPT }, ...fileParts],
-              },
-            ],
-            generationConfig: {
-              responseMimeType: 'application/json',
-            },
-          }),
-          signal: controller.signal,
-        }
-      );
-    } catch (fetchErr) {
-      const isAbort = fetchErr instanceof Error && fetchErr.name === 'AbortError';
-      return Response.json(
-        {
-          error: isAbort
-            ? 'Gemini tardó demasiado en responder (>170s). Prueba con menos páginas o imágenes más pequeñas.'
-            : `Error al llamar a Gemini: ${fetchErr instanceof Error ? fetchErr.message : 'desconocido'}`,
-        },
-        { status: 504 }
-      );
-    } finally {
-      clearTimeout(timeoutId);
+    if ('error' in result) {
+      return Response.json({ error: result.error }, { status: result.status });
     }
+
+    const geminiResponse = result.response;
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
+      const isRateLimited = geminiResponse.status === 429;
       return Response.json(
-        { error: `Error de Gemini (${geminiResponse.status}): ${errorText}` },
+        {
+          error: isRateLimited
+            ? 'Gemini sigue con el límite de peticiones superado tras varios reintentos. Espera un minuto y prueba con menos páginas a la vez.'
+            : `Error de Gemini (${geminiResponse.status}): ${errorText}`,
+        },
         { status: 502 }
       );
     }

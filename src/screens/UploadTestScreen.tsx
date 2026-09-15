@@ -18,7 +18,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { LabReportTable } from '@/components/LabReportTable';
 import { Colors } from '@/constants/colors';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
-import { ExtractedLabReport } from '@/types/labReport';
+import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
@@ -97,7 +97,13 @@ export const UploadTestScreen = () => {
     try {
       const partialReports: ExtractedLabReport[] = [];
 
-      for (const batch of batches) {
+      for (let i = 0; i < batches.length; i++) {
+        if (i > 0) {
+          // pequeña pausa entre lotes para no ráfagas de peticiones a Gemini
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
+
+        const batch = batches[i];
         const payloadFiles = batch.map((f) => ({ base64: f.base64, mimeType: f.mimeType }));
 
         const response = await fetchWithTimeout(
@@ -219,6 +225,22 @@ export const UploadTestScreen = () => {
     processFiles(pages);
   };
 
+  const updateParametro = (
+    seccionIndex: number,
+    parametroIndex: number,
+    updated: ExtractedParametro
+  ) => {
+    setReport((prev) => {
+      if (!prev) return prev;
+      const secciones = prev.secciones.map((s, si) => {
+        if (si !== seccionIndex) return s;
+        const parametros = s.parametros.map((p, pi) => (pi === parametroIndex ? updated : p));
+        return { ...s, parametros };
+      });
+      return { ...prev, secciones };
+    });
+  };
+
   const isBusy = status === 'reading' || status === 'uploading';
 
   return (
@@ -228,13 +250,16 @@ export const UploadTestScreen = () => {
 
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={pickDocument} disabled={isBusy}>
-            <Text style={styles.buttonText}>📄 Elegir PDF</Text>
+            <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
+            <Text style={styles.buttonText}>Elegir PDF</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={addPhoto} disabled={isBusy}>
-            <Text style={styles.buttonText}>📷 Añadir foto</Text>
+            <Ionicons name="camera-outline" size={20} color={Colors.accent} />
+            <Text style={styles.buttonText}>Añadir foto</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={pickFromGallery} disabled={isBusy}>
-            <Text style={styles.buttonText}>🖼️ Añadir desde galería</Text>
+            <Ionicons name="images-outline" size={20} color={Colors.accent} />
+            <Text style={styles.buttonText}>Añadir desde galería</Text>
           </TouchableOpacity>
         </View>
 
@@ -295,7 +320,7 @@ export const UploadTestScreen = () => {
 
         {report ? (
           <View style={styles.tableWrap}>
-            <LabReportTable report={report} />
+            <LabReportTable report={report} onUpdateParametro={updateParametro} />
 
             <TouchableOpacity style={styles.rawToggle} onPress={() => setShowRaw((v) => !v)}>
               <Text style={styles.rawToggleText}>
@@ -329,12 +354,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     backgroundColor: Colors.card,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
+    gap: 10,
   },
   buttonDisabled: {
     opacity: 0.5,

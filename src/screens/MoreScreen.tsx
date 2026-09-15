@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
 import { Colors } from '@/constants/colors';
@@ -57,22 +56,13 @@ const menuItems: MenuItem[] = [
     iconFamily: 'ionicons',
     icon: 'settings-outline',
   },
-  {
-    id: 'upload-test',
-    title: 'Upload lab report (test)',
-    subtitle: 'Debug: extraer datos de un PDF/imagen con IA',
-    iconFamily: 'ionicons',
-    icon: 'cloud-upload-outline',
-  },
 ];
 
 export const MoreScreen = () => {
   const { logout } = useAuth();
-  const router = useRouter();
 
   const handlePress = (id: string) => {
     if (id === 'settings') return logout();
-    if (id === 'upload-test') return router.push('/upload-test');
   };
 
   return (

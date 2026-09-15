@@ -1,11 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { ExtractedLabReport } from '@/types/labReport';
+import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { Colors } from '@/constants/colors';
 import { LabReportRow } from './LabReportRow';
 
 interface LabReportTableProps {
   report: ExtractedLabReport;
+  onUpdateParametro?: (
+    seccionIndex: number,
+    parametroIndex: number,
+    updated: ExtractedParametro
+  ) => void;
 }
 
 const PATIENT_FIELDS: { key: keyof ExtractedLabReport['paciente']; label: string }[] = [
@@ -16,7 +21,7 @@ const PATIENT_FIELDS: { key: keyof ExtractedLabReport['paciente']; label: string
   { key: 'laboratorio', label: 'Laboratorio' },
 ];
 
-export const LabReportTable = ({ report }: LabReportTableProps) => {
+export const LabReportTable = ({ report, onUpdateParametro }: LabReportTableProps) => {
   const hasPatientInfo = PATIENT_FIELDS.some((f) => report.paciente?.[f.key]);
 
   return (
@@ -35,11 +40,19 @@ export const LabReportTable = ({ report }: LabReportTableProps) => {
         </View>
       )}
 
-      {report.secciones.map((seccion) => (
+      {report.secciones.map((seccion, seccionIndex) => (
         <View key={seccion.titulo} style={styles.section}>
           <Text style={styles.sectionTitle}>{seccion.titulo}</Text>
-          {seccion.parametros.map((param) => (
-            <LabReportRow key={param.nombre} parametro={param} />
+          {seccion.parametros.map((param, parametroIndex) => (
+            <LabReportRow
+              key={`${param.nombre}-${parametroIndex}`}
+              parametro={param}
+              onUpdate={
+                onUpdateParametro
+                  ? (updated) => onUpdateParametro(seccionIndex, parametroIndex, updated)
+                  : undefined
+              }
+            />
           ))}
         </View>
       ))}

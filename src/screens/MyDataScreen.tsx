@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Sparkline } from '@/components/Sparkline';
 import { Colors } from '@/constants/colors';
@@ -19,6 +20,8 @@ const diagnosticIcon = (status: DiagnosticTest['status']) => {
 };
 
 export const MyDataScreen = () => {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -62,6 +65,14 @@ export const MyDataScreen = () => {
             );
           })}
         </View>
+
+        <TouchableOpacity
+          style={styles.logGlucoseButton}
+          onPress={() => router.push('/log-glucose')}
+        >
+          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
+          <Text style={styles.logGlucoseText}>Log Glucose</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.filesCard}>
           <Ionicons name="folder-outline" size={22} color={Colors.textPrimary} />
@@ -149,6 +160,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: 'center',
     width: 60,
+  },
+  logGlucoseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    paddingVertical: 16,
+  },
+  logGlucoseText: {
+    color: Colors.accent,
+    fontSize: 15,
+    fontWeight: '700',
   },
   filesCard: {
     flexDirection: 'row',

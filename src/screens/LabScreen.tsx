@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { RangeBar } from '@/components/RangeBar';
 import { Colors } from '@/constants/colors';
@@ -18,6 +19,8 @@ const formatFullDate = (dateString: string) => {
 };
 
 export const LabScreen = () => {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -75,6 +78,14 @@ export const LabScreen = () => {
         <TouchableOpacity style={styles.requestButton}>
           <Ionicons name="flask-outline" size={20} color={Colors.background} />
           <Text style={styles.requestButtonText}>Request a new test</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => router.push('/upload-test')}
+        >
+          <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
+          <Text style={styles.uploadButtonText}>Upload lab report (test)</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -195,6 +206,24 @@ const styles = StyleSheet.create({
   requestButtonText: {
     color: Colors.background,
     fontSize: 16,
+    fontWeight: '700',
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 30,
+    paddingVertical: 16,
+    marginHorizontal: 20,
+    marginTop: 12,
+  },
+  uploadButtonText: {
+    color: Colors.accent,
+    fontSize: 15,
     fontWeight: '700',
   },
 });

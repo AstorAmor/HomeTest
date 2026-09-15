@@ -23,6 +23,7 @@ export default function Layout() {
             <Stack.Screen name="login" options={{ animationEnabled: false }} />
             <Stack.Screen name="(tabs)" options={{ animationEnabled: false }} />
             <Stack.Screen name="upload-test" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="log-glucose" options={{ presentation: 'modal' }} />
           </Stack>
         </AuthProvider>
       </ThemeProvider>
