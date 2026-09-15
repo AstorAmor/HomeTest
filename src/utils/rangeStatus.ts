@@ -12,8 +12,8 @@ export function getRangeStatus(
 }
 
 export const RANGE_STATUS_LABEL: Record<RangeStatus, string> = {
-  en_rango: 'En rango',
-  por_debajo: 'Por debajo',
-  por_encima: 'Por encima',
-  sin_rango: 'Sin referencia',
+  en_rango: 'In range',
+  por_debajo: 'Below range',
+  por_encima: 'Above range',
+  sin_rango: 'No reference',
 };

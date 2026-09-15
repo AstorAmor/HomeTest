@@ -31,7 +31,7 @@ export const LoginScreen = () => {
     try {
       if (isSignUp) {
         if (!nombre.trim()) {
-          setError('Por favor ingresa tu nombre');
+          setError('Please enter your name');
           setLoading(false);
           return;
         }
@@ -40,7 +40,7 @@ export const LoginScreen = () => {
         await login(email, password);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al autenticar');
+      setError(err instanceof Error ? err.message : 'Authentication error');
     } finally {
       setLoading(false);
     }
@@ -57,16 +57,16 @@ export const LoginScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Text style={styles.title}>HomeTest</Text>
-            <Text style={styles.subtitle}>Tests médicos a domicilio</Text>
+            <Text style={styles.subtitle}>At-home medical tests</Text>
           </View>
 
           <View style={styles.form}>
             {isSignUp && (
               <>
-                <Text style={styles.label}>Nombre completo</Text>
+                <Text style={styles.label}>Full name</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Juan García López"
+                  placeholder="John Smith"
                   placeholderTextColor={Colors.textMuted}
                   value={nombre}
                   onChangeText={setNombre}
@@ -78,7 +78,7 @@ export const LoginScreen = () => {
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
-              placeholder="tu@email.com"
+              placeholder="you@email.com"
               placeholderTextColor={Colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -87,7 +87,7 @@ export const LoginScreen = () => {
               editable={!loading}
             />
 
-            <Text style={styles.label}>Contraseña</Text>
+            <Text style={styles.label}>Password</Text>
             <TextInput
               style={styles.input}
               placeholder="••••••••"
@@ -109,7 +109,7 @@ export const LoginScreen = () => {
                 <ActivityIndicator color={Colors.background} />
               ) : (
                 <Text style={styles.buttonText}>
-                  {isSignUp ? 'Crear cuenta' : 'Entrar'}
+                  {isSignUp ? 'Create account' : 'Sign in'}
                 </Text>
               )}
             </TouchableOpacity>
@@ -123,15 +123,15 @@ export const LoginScreen = () => {
             >
               <Text style={styles.toggleText}>
                 {isSignUp
-                  ? '¿Ya tienes cuenta? Inicia sesión'
-                  : '¿No tienes cuenta? Crea una'}
+                  ? 'Already have an account? Sign in'
+                  : "Don't have an account? Create one"}
               </Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.demoHint}>
             <Text style={styles.demoText}>
-              💡 Usa cualquier email/contraseña para el demo
+              💡 Use any email/password for the demo
             </Text>
           </View>
         </ScrollView>

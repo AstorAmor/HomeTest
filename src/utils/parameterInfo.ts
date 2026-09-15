@@ -7,14 +7,14 @@ function normalizeName(name: string): string {
     .replace(/^_|_$/g, '');
 }
 
-// Explicaciones breves por parámetro. Ampliar según se necesite.
+// Short descriptions per parameter. Expand as needed.
 const PARAMETER_INFO: Record<string, string> = {
   hematies:
-    'Mide la cantidad de glóbulos rojos en la sangre, encargados de transportar oxígeno por el organismo. Su valor puede variar según la edad, el sexo y otros factores.',
+    'Measures the number of red blood cells in your blood, responsible for carrying oxygen throughout the body. Values can vary by age, sex, and other factors.',
 };
 
 const DEFAULT_INFO = (nombre: string) =>
-  `${nombre} es uno de los parámetros medidos en tu analítica. Los valores fuera del rango de referencia no implican necesariamente un problema de salud, pero conviene comentarlos con tu médico. (Contenido de ejemplo — próximamente información médica verificada por parámetro).`;
+  `${nombre} is one of the parameters measured in your lab report. Values outside the reference range don't necessarily mean a health issue, but it's worth discussing with your doctor. (Sample content — verified medical information per parameter coming soon).`;
 
 export function getParameterInfo(nombre: string): string {
   return PARAMETER_INFO[normalizeName(nombre)] ?? DEFAULT_INFO(nombre);

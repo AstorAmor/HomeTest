@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Sparkline } from '@/components/Sparkline';
 import { Colors } from '@/constants/colors';
-import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
+import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest, Biomarker } from '@/data/mockData';
+import { loadSeedData } from '@/data/seedData';
+import { getLiveBiomarkers } from '@/utils/liveBiomarkers';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -19,8 +21,35 @@ const diagnosticIcon = (status: DiagnosticTest['status']) => {
   }
 };
 
+const DETAIL_ROUTES: Record<string, string> = {
+  sugar: '/glucose-detail',
+  blood_pressure: '/blood-pressure-detail',
+  cholesterol: '/cholesterol-detail',
+  cortisol: '/cortisol-detail',
+};
+
 export const MyDataScreen = () => {
   const router = useRouter();
+  const navigation = useNavigation();
+  const [seedStatus, setSeedStatus] = useState('');
+  const [biomarkers, setBiomarkers] = useState<Biomarker[]>(mockBiomarkers);
+
+  useEffect(() => {
+    getLiveBiomarkers().then(setBiomarkers);
+    const unsubscribe = navigation.addListener('focus', () => {
+      getLiveBiomarkers().then(setBiomarkers);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const handleLoadSeed = async () => {
+    setSeedStatus('Loading…');
+    const result = await loadSeedData();
+    setSeedStatus(
+      `Loaded: ${result.bloodPressure} blood pressure, ${result.glucose} glucose, ${result.cholesterol} cholesterol, ${result.cortisol} cortisol`
+    );
+    getLiveBiomarkers().then(setBiomarkers);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -29,20 +58,24 @@ export const MyDataScreen = () => {
 
         <Text style={styles.sectionTitle}>Blood tests</Text>
         <View style={styles.bloodTestsCard}>
-          {mockBiomarkers.map((b, index) => (
-            <View
+          {biomarkers.map((b, index) => (
+            <TouchableOpacity
               key={b.id}
               style={[
                 styles.bloodTestRow,
-                index < mockBiomarkers.length - 1 && styles.bloodTestDivider,
+                index < biomarkers.length - 1 && styles.bloodTestDivider,
               ]}
+              onPress={() => {
+                const route = DETAIL_ROUTES[b.id];
+                if (route) router.push(route as any);
+              }}
             >
               <View>
                 <Text style={styles.bloodTestName}>{b.nombre}</Text>
                 <Text style={styles.bloodTestUnit}>{b.unidad.split(' ')[0]}</Text>
               </View>
               <Sparkline data={b.history} />
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -74,10 +107,40 @@ export const MyDataScreen = () => {
           <Text style={styles.logGlucoseText}>Log Glucose</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.logGlucoseButton}
+          onPress={() => router.push('/log-blood-pressure')}
+        >
+          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
+          <Text style={styles.logGlucoseText}>Log Blood Pressure</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.logGlucoseButton}
+          onPress={() => router.push('/log-cholesterol')}
+        >
+          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
+          <Text style={styles.logGlucoseText}>Log Cholesterol</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.logGlucoseButton}
+          onPress={() => router.push('/log-cortisol')}
+        >
+          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
+          <Text style={styles.logGlucoseText}>Log Cortisol</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.filesCard}>
           <Ionicons name="folder-outline" size={22} color={Colors.textPrimary} />
           <Text style={styles.filesText}>Access to your files</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.seedButton} onPress={handleLoadSeed}>
+          <Ionicons name="flask-outline" size={18} color={Colors.textMuted} />
+          <Text style={styles.seedButtonText}>Load dummy data (dev)</Text>
+        </TouchableOpacity>
+        {seedStatus ? <Text style={styles.seedStatus}>{seedStatus}</Text> : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -195,5 +258,24 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  seedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 20,
+    paddingVertical: 10,
+  },
+  seedButtonText: {
+    color: Colors.textMuted,
+    fontSize: 13,
+  },
+  seedStatus: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });

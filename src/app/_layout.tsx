@@ -24,6 +24,13 @@ export default function Layout() {
             <Stack.Screen name="(tabs)" options={{ animationEnabled: false }} />
             <Stack.Screen name="upload-test" options={{ presentation: 'modal' }} />
             <Stack.Screen name="log-glucose" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="log-blood-pressure" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="log-cholesterol" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="log-cortisol" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="blood-pressure-detail" />
+            <Stack.Screen name="glucose-detail" />
+            <Stack.Screen name="cholesterol-detail" />
+            <Stack.Screen name="cortisol-detail" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

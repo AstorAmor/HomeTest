@@ -22,4 +22,6 @@ export const Colors = {
   tabBarInactive: '#6B7185',
 
   divider: '#262A3A',
+
+  pulseAccent: '#E06B9E',
 };

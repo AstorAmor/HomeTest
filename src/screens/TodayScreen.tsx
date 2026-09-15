@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import {
@@ -11,6 +12,7 @@ import {
   mockRecommendations,
   Biomarker,
 } from '@/data/mockData';
+import { getLiveBiomarkers } from '@/utils/liveBiomarkers';
 
 const firstName = mockPatient.nombre.split(' ')[0];
 
@@ -39,6 +41,17 @@ const formatDate = (dateString: string) => {
 };
 
 export const TodayScreen = () => {
+  const navigation = useNavigation();
+  const [biomarkers, setBiomarkers] = useState<Biomarker[]>(mockBiomarkers);
+
+  useEffect(() => {
+    getLiveBiomarkers().then(setBiomarkers);
+    const unsubscribe = navigation.addListener('focus', () => {
+      getLiveBiomarkers().then(setBiomarkers);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -63,7 +76,7 @@ export const TodayScreen = () => {
 
         <Text style={styles.sectionTitle}>Biomarkers</Text>
         <View style={styles.grid}>
-          {mockBiomarkers.map((b) => (
+          {biomarkers.map((b) => (
             <View key={b.id} style={styles.biomarkerCard}>
               <Text style={styles.biomarkerName}>{b.nombre}</Text>
               <View style={styles.biomarkerValueRow}>

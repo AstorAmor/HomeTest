@@ -10,8 +10,8 @@ export interface GlucoseEntry {
 }
 
 export const MEAL_TYPE_LABEL: Record<MealType, string> = {
-  desayuno: 'Desayuno',
-  comida: 'Comida',
-  cena: 'Cena',
+  desayuno: 'Breakfast',
+  comida: 'Lunch',
+  cena: 'Dinner',
   unspecified: 'Unspecified',
 };

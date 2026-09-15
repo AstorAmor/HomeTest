@@ -13,13 +13,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { LabReportTable } from '@/components/LabReportTable';
 import { Colors } from '@/constants/colors';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
+import { prepareImage, fetchWithTimeout, chunk } from '@/utils/imageUpload';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
 
@@ -32,35 +32,6 @@ interface CapturedPage {
 
 const REQUEST_TIMEOUT_MS = 60000;
 const BATCH_SIZE = 2;
-
-function chunk<T>(items: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
-  }
-  return chunks;
-}
-
-// Redimensiona y comprime una foto para que el payload sea manejable (varias
-// páginas en una sola llamada pueden pesar mucho si no se comprimen antes)
-async function prepareImage(uri: string): Promise<{ uri: string; base64: string }> {
-  const result = await manipulateAsync(uri, [{ resize: { width: 1600 } }], {
-    compress: 0.6,
-    format: SaveFormat.JPEG,
-    base64: true,
-  });
-  return { uri: result.uri, base64: result.base64 ?? '' };
-}
-
-async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
 
 export const UploadTestScreen = () => {
   const [pages, setPages] = useState<CapturedPage[]>([]);
@@ -138,10 +109,10 @@ export const UploadTestScreen = () => {
       const isAbort = err instanceof Error && err.name === 'AbortError';
       setErrorText(
         isAbort
-          ? `Un lote tardó más de ${REQUEST_TIMEOUT_MS / 1000}s y se canceló. Prueba con menos páginas por lote o fotos más ligeras.`
+          ? `A batch took longer than ${REQUEST_TIMEOUT_MS / 1000}s and was canceled. Try fewer pages per batch or lighter photos.`
           : err instanceof Error
             ? err.message
-            : 'Error desconocido'
+            : 'Unknown error'
       );
     } finally {
       setProgress(null);
@@ -179,7 +150,7 @@ export const UploadTestScreen = () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
-      setErrorText('Permiso de galería denegado');
+      setErrorText('Gallery permission denied');
       return;
     }
 
@@ -206,7 +177,7 @@ export const UploadTestScreen = () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
-      setErrorText('Permiso de cámara denegado');
+      setErrorText('Camera permission denied');
       return;
     }
 
@@ -246,28 +217,27 @@ export const UploadTestScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title="Subir análisis (test)" showBack />
+        <ScreenHeader title="Upload lab report" showBack />
 
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={pickDocument} disabled={isBusy}>
             <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
-            <Text style={styles.buttonText}>Elegir PDF</Text>
+            <Text style={styles.buttonText}>Choose PDF</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={addPhoto} disabled={isBusy}>
             <Ionicons name="camera-outline" size={20} color={Colors.accent} />
-            <Text style={styles.buttonText}>Añadir foto</Text>
+            <Text style={styles.buttonText}>Add photo</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={pickFromGallery} disabled={isBusy}>
             <Ionicons name="images-outline" size={20} color={Colors.accent} />
-            <Text style={styles.buttonText}>Añadir desde galería</Text>
+            <Text style={styles.buttonText}>Add from gallery</Text>
           </TouchableOpacity>
         </View>
 
         {pages.length > 0 && (
           <View style={styles.pagesSection}>
             <Text style={styles.pagesTitle}>
-              {pages.length} página{pages.length > 1 ? 's' : ''} añadida
-              {pages.length > 1 ? 's' : ''}
+              {pages.length} page{pages.length > 1 ? 's' : ''} added
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pagesRow}>
               {pages.map((page, index) => (
@@ -292,7 +262,7 @@ export const UploadTestScreen = () => {
             >
               <Ionicons name="checkmark-circle" size={18} color={Colors.background} />
               <Text style={styles.analyzeButtonText}>
-                Analizar {pages.length} página{pages.length > 1 ? 's' : ''}
+                Analyze {pages.length} page{pages.length > 1 ? 's' : ''}
               </Text>
             </TouchableOpacity>
           </View>
@@ -303,10 +273,10 @@ export const UploadTestScreen = () => {
             <ActivityIndicator color={Colors.accent} />
             <Text style={styles.statusText}>
               {status === 'reading'
-                ? 'Leyendo archivos…'
+                ? 'Reading files…'
                 : progress
-                  ? `Extrayendo lote ${progress.done + 1} de ${progress.total}…`
-                  : 'Extrayendo datos con IA…'}
+                  ? `Extracting batch ${progress.done + 1} of ${progress.total}…`
+                  : 'Extracting data with AI…'}
             </Text>
           </View>
         )}
@@ -324,7 +294,7 @@ export const UploadTestScreen = () => {
 
             <TouchableOpacity style={styles.rawToggle} onPress={() => setShowRaw((v) => !v)}>
               <Text style={styles.rawToggleText}>
-                {showRaw ? 'Ocultar JSON crudo' : 'Ver JSON crudo'}
+                {showRaw ? 'Hide raw JSON' : 'View raw JSON'}
               </Text>
             </TouchableOpacity>
 

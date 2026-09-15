@@ -14,11 +14,11 @@ interface LabReportTableProps {
 }
 
 const PATIENT_FIELDS: { key: keyof ExtractedLabReport['paciente']; label: string }[] = [
-  { key: 'nombre', label: 'Paciente' },
-  { key: 'fecha_recepcion', label: 'Recepción' },
-  { key: 'fecha_validacion', label: 'Validación' },
-  { key: 'numero_informe', label: 'Nº informe' },
-  { key: 'laboratorio', label: 'Laboratorio' },
+  { key: 'nombre', label: 'Patient' },
+  { key: 'fecha_recepcion', label: 'Received' },
+  { key: 'fecha_validacion', label: 'Validated' },
+  { key: 'numero_informe', label: 'Report No.' },
+  { key: 'laboratorio', label: 'Laboratory' },
 ];
 
 export const LabReportTable = ({ report, onUpdateParametro }: LabReportTableProps) => {
