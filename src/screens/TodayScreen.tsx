@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -9,7 +9,6 @@ import {
   mockBiomarkers,
   mockNextTestDate,
   mockResultsEtaDays,
-  mockRecommendations,
   Biomarker,
 } from '@/data/mockData';
 import { getLiveBiomarkers } from '@/utils/liveBiomarkers';
@@ -28,11 +27,6 @@ const statusColor = (status: Biomarker['status']) => {
     default:
       return Colors.textSecondary;
   }
-};
-
-const recommendationImages: Record<string, any> = {
-  daily_walk: require('../../assets/images/daily-walk.jpg'),
-  sleep_well: require('../../assets/images/sleep-well.jpg'),
 };
 
 const formatDate = (dateString: string) => {
@@ -87,19 +81,6 @@ export const TodayScreen = () => {
                 {b.statusLabel}
               </Text>
             </View>
-          ))}
-        </View>
-
-        <Text style={styles.sectionTitle}>Health Recommendations</Text>
-        <View style={styles.recommendations}>
-          {mockRecommendations.map((rec) => (
-            <Image
-              key={rec.id}
-              source={recommendationImages[rec.imageKey]}
-              style={styles.recCard}
-              resizeMode="cover"
-              accessibilityLabel={rec.title}
-            />
           ))}
         </View>
       </ScrollView>
@@ -189,16 +170,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'right',
-  },
-  recommendations: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  recCard: {
-    width: '100%',
-    height: 150,
-    borderRadius: 16,
-    marginBottom: 12,
-    backgroundColor: Colors.card,
   },
 });

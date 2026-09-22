@@ -46,7 +46,7 @@ export const MyDataScreen = () => {
     setSeedStatus('Loading…');
     const result = await loadSeedData();
     setSeedStatus(
-      `Loaded: ${result.bloodPressure} blood pressure, ${result.glucose} glucose, ${result.cholesterol} cholesterol, ${result.cortisol} cortisol`
+      `Loaded: ${result.bloodPressure} blood pressure, ${result.glucose} glucose, ${result.cholesterol} cholesterol, ${result.cortisol} cortisol, ${result.cycle} cycle`
     );
     getLiveBiomarkers().then(setBiomarkers);
   };
@@ -129,6 +129,16 @@ export const MyDataScreen = () => {
         >
           <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
           <Text style={styles.logGlucoseText}>Log Cortisol</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.logGlucoseButton}
+          onPress={() => router.push('/cycle-detail')}
+        >
+          <Ionicons name="water-outline" size={22} color={Colors.pulseAccent} />
+          <Text style={[styles.logGlucoseText, { color: Colors.pulseAccent }]}>
+            Menstrual Cycle
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.filesCard}>

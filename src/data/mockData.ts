@@ -63,17 +63,6 @@ export const mockBiomarkers: Biomarker[] = [
 export const mockNextTestDate = '2026-10-10';
 export const mockResultsEtaDays = 3;
 
-export interface Recommendation {
-  id: string;
-  title: string;
-  imageKey: 'daily_walk' | 'sleep_well';
-}
-
-export const mockRecommendations: Recommendation[] = [
-  { id: 'rec-1', title: 'Daily walk', imageKey: 'daily_walk' },
-  { id: 'rec-2', title: 'Sleep well', imageKey: 'sleep_well' },
-];
-
 export type DiagnosticStatus = 'ok' | 'waiting' | 'attention';
 
 export interface DiagnosticTest {

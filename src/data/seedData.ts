@@ -2,11 +2,13 @@ import { saveBloodPressureEntry } from './bloodPressureRepository';
 import { saveGlucoseEntry } from './glucoseRepository';
 import { cholesterolRepository } from './cholesterolRepository';
 import { cortisolRepository } from './cortisolRepository';
+import { cycleRepository } from './cycleRepository';
 import { MealType } from '@/types/glucose';
 import bloodPressureSeed from './seed/bloodPressureSeed.json';
 import glucoseSeed from './seed/glucoseSeed.json';
 import cholesterolSeed from './seed/cholesterolSeed.json';
 import cortisolSeed from './seed/cortisolSeed.json';
+import cycleSeed from './seed/cycleSeed.json';
 
 // Convierte "2026-06-01 08:30" (fácil de editar a mano) a ISO estricto
 function toIso(fecha: string): string {
@@ -18,6 +20,7 @@ export async function loadSeedData(): Promise<{
   glucose: number;
   cholesterol: number;
   cortisol: number;
+  cycle: number;
 }> {
   for (const item of bloodPressureSeed as {
     systolic: number;
@@ -72,10 +75,19 @@ export async function loadSeedData(): Promise<{
     });
   }
 
+  for (const item of cycleSeed as { fecha: string }[]) {
+    await cycleRepository.save({
+      id: `seed-cycle-${item.fecha}`,
+      fecha: toIso(`${item.fecha} 00:00`),
+      createdAt: new Date().toISOString(),
+    });
+  }
+
   return {
     bloodPressure: bloodPressureSeed.length,
     glucose: glucoseSeed.length,
     cholesterol: cholesterolSeed.length,
     cortisol: cortisolSeed.length,
+    cycle: cycleSeed.length,
   };
 }
