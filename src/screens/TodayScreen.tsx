@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { AiLogModule } from '@/components/AiLogModule';
 import { Colors } from '@/constants/colors';
 import {
   mockPatient,
@@ -67,6 +68,9 @@ export const TodayScreen = () => {
             </Text>
           </View>
         </View>
+
+        <Text style={styles.sectionTitle}>AI Diary log</Text>
+        <AiLogModule />
 
         <Text style={styles.sectionTitle}>Biomarkers</Text>
         <View style={styles.grid}>
