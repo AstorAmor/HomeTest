@@ -1,0 +1,170 @@
+{
+  "categoria": "tiroides",
+  "biomarcadores": [
+    {
+      "canonical_id": "TSH",
+      "canonical_name": "Hormona estimulante del tiroides (TSH)",
+      "aliases": ["TSH", "Thyroid-Stimulating Hormone"],
+      "category": "tiroides",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Thyroid-Stimulating Hormone (TSH)",
+          "external_category": "Thyroid",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["T4_FREE", "T3_FREE"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "T4_FREE",
+      "canonical_name": "Tiroxina libre (T4 libre)",
+      "aliases": ["T4 Free", "Thyroxine (T4) Free", "T4 Libre"],
+      "category": "tiroides",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Thyroxine (T4) Free",
+          "external_category": "Thyroid",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TSH", "T3_FREE"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "T3_FREE",
+      "canonical_name": "Triyodotironina libre (T3 libre)",
+      "aliases": ["T3 Free", "Triiodothyronine (T3) Free", "T3 Libre"],
+      "category": "tiroides",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Triiodothyronine (T3) Free",
+          "external_category": "Thyroid",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TSH", "T4_FREE"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "TPO_AB",
+      "canonical_name": "Anticuerpos antiperoxidasa tiroidea (TPO)",
+      "aliases": ["TPO", "Thyroid Peroxidase Antibodies", "Anticuerpos TPO"],
+      "category": "tiroides",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Thyroid Peroxidase Antibodies (TPO)",
+          "external_category": "Thyroid",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TG_AB"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "TG_AB",
+      "canonical_name": "Anticuerpos antitiroglobulina (TgAb)",
+      "aliases": ["TgAb", "Thyroglobulin Antibodies", "Anticuerpos Antitiroglobulina"],
+      "category": "tiroides",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Thyroglobulin Antibodies (TgAb)",
+          "external_category": "Thyroid",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TPO_AB"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

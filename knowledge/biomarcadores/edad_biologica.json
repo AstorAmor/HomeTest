@@ -1,0 +1,39 @@
+{
+  "_comment": "Edad Biologica es un SCORE derivado, no un biomarcador medido. Esta entrada es solo un placeholder de catalogo (existe en Function Health) -- NO implementa ningun modelo ni formula. Segun la Fase 3 del roadmap, cuando se construya un modelo real (BiologicalAgeModelV1) necesitara su propia entidad con formula/inputs/model/version, no solo este esquema de Biomarker. No calcular esto con un LLM.",
+  "categoria": "edad_biologica",
+  "biomarcadores": [
+    {
+      "canonical_id": "BIOLOGICAL_AGE",
+      "canonical_name": "Edad biológica",
+      "aliases": ["Biological Age", "Edad Biologica"],
+      "category": "edad_biologica",
+      "measurement_type": "SCORE",
+      "sample_type": "N/A (calculado)",
+      "common_units": ["años"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Biological Age",
+          "external_category": "Biological Age",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": "SCORE sin modelo propio implementado todavia. Function no publica su formula/algoritmo exacto. No usar un LLM para inventar un calculo de edad biologica -- pendiente de disenar como entidad propia (formula, inputs, modelo, version, fuente de referencia) en Fase 3.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "REVIEW_REQUIRED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

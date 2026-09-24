@@ -1,21 +1,13 @@
-function normalizeName(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_|_$/g, '');
-}
-
-// Short descriptions per parameter. Expand as needed.
-const PARAMETER_INFO: Record<string, string> = {
-  hematies:
-    'Measures the number of red blood cells in your blood, responsible for carrying oxygen throughout the body. Values can vary by age, sex, and other factors.',
-};
+import { getCanonicalBiomarkerForExtractedName } from '@/knowledge/canonicalBiomarkers';
 
 const DEFAULT_INFO = (nombre: string) =>
   `${nombre} is one of the parameters measured in your lab report. Values outside the reference range don't necessarily mean a health issue, but it's worth discussing with your doctor. (Sample content — verified medical information per parameter coming soon).`;
 
+// Busca el parametro extraido en la base de conocimiento canonica
+// (knowledge/biomarcadores/*.json via knowledge/mapping/extracted-name-aliases.json).
+// Si no hay biomarcador canonico asociado, o su knowledge_card todavia no
+// tiene biological_role redactado, cae al texto generico de siempre.
 export function getParameterInfo(nombre: string): string {
-  return PARAMETER_INFO[normalizeName(nombre)] ?? DEFAULT_INFO(nombre);
+  const biomarker = getCanonicalBiomarkerForExtractedName(nombre);
+  return biomarker?.knowledge_card.biological_role ?? DEFAULT_INFO(nombre);
 }

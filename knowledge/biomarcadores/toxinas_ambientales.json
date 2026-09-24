@@ -1,0 +1,71 @@
+{
+  "categoria": "toxinas_ambientales",
+  "biomarcadores": [
+    {
+      "canonical_id": "LEAD",
+      "canonical_name": "Plomo",
+      "aliases": ["Lead", "Plomo"],
+      "category": "toxinas_ambientales",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Lead",
+          "external_category": "Environmental Toxins",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "A toxic metal that can impact the brain, kidneys, and heart.",
+        "clinical_relevance": null,
+        "related_biomarkers": ["MERCURY"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "MERCURY",
+      "canonical_name": "Mercurio",
+      "aliases": ["Mercury", "Mercurio"],
+      "category": "toxinas_ambientales",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Mercury",
+          "external_category": "Environmental Toxins",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["LEAD"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

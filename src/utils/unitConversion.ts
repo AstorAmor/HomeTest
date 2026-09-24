@@ -1,3 +1,5 @@
+import { normalizeName } from './normalizeName';
+
 interface ConversionEntry {
   unitA: string;
   unitB: string;
@@ -29,15 +31,6 @@ const CONVERSIONS: Record<string, ConversionEntry> = {
   potasio: { unitA: 'mEq/L', unitB: 'mmol/L', factorAtoB: 1 },
   cloro: { unitA: 'mEq/L', unitB: 'mmol/L', factorAtoB: 1 },
 };
-
-function normalizeName(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_|_$/g, '');
-}
 
 function normalizeUnit(unit: string): string {
   return unit.toLowerCase().replace(/\s+/g, '');

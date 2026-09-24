@@ -1,0 +1,300 @@
+{
+  "_comment": "Hormonas que Function Health lista tanto en 'Female Health' como en 'Male Health' -- se guardan una vez, con ambos external_sources.",
+  "categoria": "hormonas",
+  "biomarcadores": [
+    {
+      "canonical_id": "ESTRADIOL",
+      "canonical_name": "Estradiol",
+      "aliases": ["Estradiol"],
+      "category": "hormonas",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Estradiol",
+          "external_category": "Female Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        },
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Estradiol",
+          "external_category": "Male Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["FSH", "LH", "TESTOSTERONE_TOTAL"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "FSH",
+      "canonical_name": "Hormona folículoestimulante (FSH)",
+      "aliases": ["FSH", "Follicle Stimulating Hormone"],
+      "category": "hormonas",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Follicle Stimulating Hormone",
+          "external_category": "Female Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        },
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Follicle Stimulating Hormone",
+          "external_category": "Male Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["LH", "ESTRADIOL"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "LH",
+      "canonical_name": "Hormona luteinizante (LH)",
+      "aliases": ["LH", "Luteinizing Hormone"],
+      "category": "hormonas",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Luteinizing Hormone",
+          "external_category": "Female Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        },
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Luteinizing Hormone",
+          "external_category": "Male Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["FSH", "TESTOSTERONE_TOTAL"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "PROLACTIN",
+      "canonical_name": "Prolactina",
+      "aliases": ["Prolactin", "Prolactina"],
+      "category": "hormonas",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Prolactin",
+          "external_category": "Female Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        },
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Prolactin",
+          "external_category": "Male Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "SHBG",
+      "canonical_name": "Globulina transportadora de hormonas sexuales (SHBG)",
+      "aliases": ["SHBG", "Sex Hormone Binding Globulin"],
+      "category": "hormonas",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Sex Hormone Binding Globulin (SHBG)",
+          "external_category": "Female Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        },
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Sex Hormone Binding Globulin (SHBG)",
+          "external_category": "Male Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TESTOSTERONE_TOTAL", "TESTOSTERONE_FREE"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "TESTOSTERONE_TOTAL",
+      "canonical_name": "Testosterona total",
+      "aliases": ["Testosterone, Total", "Testosterona Total"],
+      "category": "hormonas",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Testosterone, Total",
+          "external_category": "Female Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        },
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Testosterone, Total",
+          "external_category": "Male Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TESTOSTERONE_FREE", "SHBG"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "TESTOSTERONE_FREE",
+      "canonical_name": "Testosterona libre",
+      "aliases": ["Testosterone, Free", "Testosterona Libre"],
+      "category": "hormonas",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Testosterone, Free",
+          "external_category": "Female Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        },
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Testosterone, Free",
+          "external_category": "Male Health",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TESTOSTERONE_TOTAL", "SHBG"],
+        "preanalytical_factors": null,
+        "limitations": "Function Health lo marca [CALCULATION DERIVED FROM LAB TESTS], probablemente a partir de Testosterone Total + SHBG (formula tipo Vermeulen) -- confirmar formula exacta antes de reimplementar.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

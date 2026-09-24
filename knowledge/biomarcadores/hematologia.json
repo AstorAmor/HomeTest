@@ -1,0 +1,335 @@
+{
+  "categoria": "hematologia",
+  "biomarcadores": [
+    {
+      "canonical_id": "HEMOGLOBIN",
+      "canonical_name": "Hemoglobina",
+      "aliases": ["Hemoglobina", "Hemoglobin", "Hb"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["g/dL", "g/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Hemoglobin",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["RBC", "HEMATOCRIT"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "RBC",
+      "canonical_name": "Hematíes (glóbulos rojos)",
+      "aliases": ["Hematies", "Hematíes", "Red Blood Cells", "RBC", "Red Blood Cell Count"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["x10^6/µL"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Red Blood Cell Count",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Measures the number of red blood cells in your blood, responsible for carrying oxygen throughout the body. Values can vary by age, sex, and other factors.",
+        "clinical_relevance": null,
+        "related_biomarkers": ["HEMOGLOBIN", "HEMATOCRIT"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "HEMATOCRIT",
+      "canonical_name": "Hematocrito",
+      "aliases": ["Hematocrito", "Hematocrit", "HCT"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Hematocrit",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["RBC", "HEMOGLOBIN"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "MCH",
+      "canonical_name": "Hemoglobina corpuscular media (MCH)",
+      "aliases": ["MCH", "Mean Corpuscular Hemoglobin"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Mean Corpuscular Hemoglobin (MCH)",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["MCV", "MCHC"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "MCHC",
+      "canonical_name": "Concentración de hemoglobina corpuscular media (MCHC)",
+      "aliases": ["MCHC", "Mean Corpuscular Hemoglobin Concentration"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Mean Corpuscular Hemoglobin Concentration (MCHC)",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["MCV", "MCH"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "MCV",
+      "canonical_name": "Volumen corpuscular medio (MCV)",
+      "aliases": ["MCV", "Mean Corpuscular Volume"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Mean Corpuscular Volume (MCV)",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["MCH", "MCHC"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "RDW",
+      "canonical_name": "Amplitud de distribución eritrocitaria (RDW)",
+      "aliases": ["RDW", "Red Cell Distribution Width"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Red Cell Distribution Width (RDW)",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["RBC"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "PLATELET_COUNT",
+      "canonical_name": "Recuento de plaquetas",
+      "aliases": ["Platelet Count", "Plaquetas"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Platelet Count",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["MPV"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "MPV",
+      "canonical_name": "Volumen plaquetario medio (MPV)",
+      "aliases": ["MPV", "Mean Platelet Volume"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Mean Platelet Volume (MPV)",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["PLATELET_COUNT"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "ABO_RH",
+      "canonical_name": "Grupo sanguíneo ABO y factor Rh",
+      "aliases": ["ABO Group and Rhesus (Rh) Factor", "Grupo Sanguineo"],
+      "category": "hematologia",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "ABO Group and Rhesus (Rh) Factor",
+          "external_category": "Blood",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

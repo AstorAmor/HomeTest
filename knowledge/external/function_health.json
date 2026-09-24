@@ -1,0 +1,296 @@
+{
+  "_comment": "Transcripcion fiel del catalogo publico de Function Health (https://www.functionhealth.com/what-we-test), pegado por el usuario el 2026-09-23. Fuente comercial (source_type = COMMERCIAL_REFERENCE), no autoridad clinica -- ver knowledge/README.md. Sirve como seed dataset para descubrir biomarcadores, no se asume que 'Function lo mide' implique que nosotros debamos medirlo.",
+  "source": "FUNCTION_HEALTH",
+  "source_type": "COMMERCIAL_REFERENCE",
+  "source_reference": "https://www.functionhealth.com/what-we-test",
+  "retrieved_at": "2026-09-23",
+  "retrieved_via": "Pegado por el usuario en conversacion, no scraping automatizado",
+  "categories": [
+    {
+      "external_category": "Heart",
+      "included": [
+        { "external_name": "Apolipoprotein B (ApoB)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "HDL Cholesterol", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "HDL Large", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "High-Sensitivity C-Reactive Protein (hs-CRP)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "LDL Cholesterol", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" },
+        { "external_name": "LDL Medium", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "LDL Particle Number", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "LDL Pattern", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "LDL Peak Size", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "LDL Small", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Lipoprotein (a)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Non-HDL Cholesterol", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" },
+        { "external_name": "Total Cholesterol", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Total Cholesterol / HDL Ratio", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" },
+        { "external_name": "Triglycerides", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Extended Heart & Metabolic", "Genetic Heart Risks"]
+    },
+    {
+      "external_category": "Thyroid",
+      "included": [
+        { "external_name": "Thyroglobulin Antibodies (TgAb)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Thyroid Peroxidase Antibodies (TPO)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Thyroid-Stimulating Hormone (TSH)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Thyroxine (T4) Free", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Triiodothyronine (T3) Free", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Extended Thyroid Health"]
+    },
+    {
+      "external_category": "Cancer Detection",
+      "included": [],
+      "addons": ["GRAIL Cancer Test"],
+      "note": "GRAIL es un producto de deteccion multi-cancer, no un analito individual -- no se canonicaliza como biomarcador en esta fase."
+    },
+    {
+      "external_category": "Autoimmunity",
+      "included": [
+        { "external_name": "Antinuclear Antibodies (ANA) Pattern", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Antinuclear Antibodies (ANA) Screen", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Antinuclear Antibodies Titer", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Rheumatoid Factor (RF)", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Celiac (Gluten Intolerance)", "Extended Autoimmunity"]
+    },
+    {
+      "external_category": "Immune Regulation",
+      "included": [
+        { "external_name": "Basophils", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Eosinophils", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "High-Sensitivity C-Reactive Protein (hs-CRP)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Lymphocytes", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Monocytes", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Neutrophils", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "White Blood Cell Count", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Extended Immune Regulation", "Mold & Environmental Toxin Response"]
+    },
+    {
+      "external_category": "Female Health",
+      "included": [
+        { "external_name": "Anti-Mullerian Hormone", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "DHEA-Sulfate", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Estradiol", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Follicle Stimulating Hormone", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Luteinizing Hormone", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Prolactin", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Sex Hormone Binding Globulin (SHBG)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Testosterone, Free", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Testosterone, Total", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Extended Hormone Health", "Pregnancy HcG", "Progesterone"]
+    },
+    {
+      "external_category": "Male Health",
+      "included": [
+        { "external_name": "DHEA-Sulfate", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Estradiol", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Follicle Stimulating Hormone", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Luteinizing Hormone", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Prolactin", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Prostate Specific Antigen (PSA) %, Free", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Prostate Specific Antigen (PSA), Free", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Prostate Specific Antigen (PSA), Total", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Sex Hormone Binding Globulin (SHBG)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Testosterone, Free", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Testosterone, Total", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Extended Hormone Health", "Progesterone"]
+    },
+    {
+      "external_category": "Metabolic",
+      "included": [
+        { "external_name": "Glucose", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Hemoglobin A1c (HbA1c)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Insulin", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Leptin", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Uric Acid", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Extended Heart & Metabolic"]
+    },
+    {
+      "external_category": "Environmental Toxins",
+      "included": [
+        { "external_name": "Lead", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Mercury", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Bisphenol A (BPA) Exposure", "Extended Heavy Metals", "Forever Chemicals (PFAS) Exposure"]
+    },
+    {
+      "external_category": "Biological Age",
+      "included": [
+        { "external_name": "Biological Age", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Nutrients",
+      "included": [
+        { "external_name": "Arachidonic Acid/EPA Ratio", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Calcium", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Ferritin", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Homocysteine", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Iron", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Iron % Saturation", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Iron Binding Capacity", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Magnesium", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Methylmalonic Acid (MMA) (B12 Proxy)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Omega-3 Total", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Omega-3: DHA", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Omega-3: DPA", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Omega-3: EPA", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Omega-6 / Omega-3 Ratio", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Omega-6 Total", "testing_frequency": null, "derived_or_measured": "DERIVED" },
+        { "external_name": "Omega-6: Arachidonic Acid", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Omega-6: Linoleic Acid", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Vitamin D", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Zinc", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": ["Extended Vitamins, Minerals, Nutrients", "MTHFR Gene"]
+    },
+    {
+      "external_category": "Stress & Aging",
+      "included": [
+        { "external_name": "Cortisol", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "DHEA-Sulfate", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Liver",
+      "included": [
+        { "external_name": "Alanine Transaminase (ALT)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Albumin", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Albumin / Globulin Ratio", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" },
+        { "external_name": "Alkaline Phosphatase (ALP)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Aspartate Aminotransferase (AST)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Gamma-glutamyl Transferase (GGT)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Globulin", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" },
+        { "external_name": "Total Bilirubin", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Total Protein", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Blood",
+      "included": [
+        { "external_name": "ABO Group and Rhesus (Rh) Factor", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Hematocrit", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Hemoglobin", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Mean Corpuscular Hemoglobin (MCH)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Mean Corpuscular Hemoglobin Concentration (MCHC)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Mean Corpuscular Volume (MCV)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Mean Platelet Volume (MPV)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Platelet Count", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Red Blood Cell Count", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Red Cell Distribution Width (RDW)", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Kidneys",
+      "included": [
+        { "external_name": "Albumin (Microalbumin - Urine)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Blood Urea Nitrogen", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "BUN / Creatinine Ratio", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" },
+        { "external_name": "Calcium", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Chloride", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Creatinine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Creatinine-based Estimated Glomerular Filtration Rate (eGFR)", "testing_frequency": "2x/year", "derived_or_measured": "DERIVED" },
+        { "external_name": "Potassium", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Sodium", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Pancreas",
+      "included": [
+        { "external_name": "Amylase", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Lipase", "testing_frequency": null, "derived_or_measured": "MEASURED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Brain Health",
+      "included": [],
+      "addons": ["Alzheimer's Detection", "Alzheimer's Risk (ApoE)", "Brain Injury & Degeneration Screening"]
+    },
+    {
+      "external_category": "Electrolytes",
+      "included": [
+        { "external_name": "Calcium", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Carbon Dioxide", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Chloride", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Magnesium", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Potassium", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Sodium", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Allergies & Sensitivities",
+      "included": [],
+      "addons": ["Food Allergies", "Food Sensitivities (IgG)", "Indoor & Outdoor Allergies: Molds, Pets, Grasses, Dust, Trees, Pollen"]
+    },
+    {
+      "external_category": "Urine",
+      "included": [
+        { "external_name": "Albumin (Microalbumin - Urine)", "testing_frequency": null, "derived_or_measured": "MEASURED" },
+        { "external_name": "Amorphous Sediment, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Appearance, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Bacteria, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Bilirubin, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Calcium Oxalate Crystals, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Color, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Glucose, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Hyaline Casts, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Ketones, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Leukocyte Esterase, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Nitrite, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Occult Blood, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "pH, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Protein, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Red Blood Cell, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Specific Gravity, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Squamous Epithelial Cells", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "White Blood Cell, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" },
+        { "external_name": "Yeast, Urine", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED" }
+      ],
+      "addons": []
+    },
+    {
+      "external_category": "Bone Health",
+      "included": [],
+      "addons": ["Osteoporosis, Hyperparathyroidism, and Myeloma"]
+    },
+    {
+      "external_category": "Infections",
+      "included": [],
+      "addons": ["Lyme & Tick-Borne", "Viral Antibodies"]
+    },
+    {
+      "external_category": "Gut",
+      "included": [],
+      "addons": [],
+      "note": "Pagina indica 'Gut health test coming soon' -- Function todavia no ofrece nada real en esta categoria."
+    },
+    {
+      "external_category": "Sexual Health",
+      "included": [],
+      "addons": ["Pregnancy HcG", "Sexual Health Panel"]
+    },
+    {
+      "external_category": "MRI & CT Scans",
+      "included": [],
+      "addons": ["Heart CT Scan", "Lungs CT Scan", "MRI Scan", "MRI Scan with Skeletal & Neurological Assessment", "MRI Scan with Spine"],
+      "note": "Imaging, no son biomarcadores -- fuera del modelo Biomarker/Claim/Evidence de esta fase."
+    }
+  ],
+  "membership_pricing_context": {
+    "price_first_year_usd": 365,
+    "tests_per_year_claimed": "160+",
+    "note": "Contexto comercial de Function, no forma parte del modelo clinico. Guardado solo por trazabilidad de la fuente."
+  }
+}

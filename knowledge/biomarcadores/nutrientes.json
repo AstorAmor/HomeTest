@@ -1,0 +1,533 @@
+{
+  "categoria": "nutrientes",
+  "biomarcadores": [
+    {
+      "canonical_id": "FERRITIN",
+      "canonical_name": "Ferritina",
+      "aliases": ["Ferritin", "Ferritina"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Ferritin",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["IRON", "IRON_SATURATION", "IRON_BINDING_CAPACITY"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "IRON_BINDING_CAPACITY",
+      "canonical_name": "Capacidad de fijación del hierro (TIBC)",
+      "aliases": ["Iron Binding Capacity", "TIBC"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Iron Binding Capacity",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["IRON", "FERRITIN", "IRON_SATURATION"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "IRON_SATURATION",
+      "canonical_name": "Porcentaje de saturación de hierro",
+      "aliases": ["Iron % Saturation", "Saturacion de Hierro"],
+      "category": "nutrientes",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Iron % Saturation",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["IRON", "IRON_BINDING_CAPACITY"],
+        "preanalytical_factors": null,
+        "limitations": "DERIVED = Iron / TIBC * 100. Confirmar formula antes de implementar en rule engine.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "HOMOCYSTEINE",
+      "canonical_name": "Homocisteína",
+      "aliases": ["Homocysteine", "Homocisteina"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Homocysteine",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["MMA_B12"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "MMA_B12",
+      "canonical_name": "Ácido metilmalónico (MMA, proxy de B12)",
+      "aliases": ["MMA", "Methylmalonic Acid", "Acido Metilmalonico"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Methylmalonic Acid (MMA) (B12 Proxy)",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["HOMOCYSTEINE"],
+        "preanalytical_factors": null,
+        "limitations": "Function lo usa como proxy indirecto de Vitamina B12, no mide B12 directamente en el panel incluido.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "VITAMIN_D",
+      "canonical_name": "Vitamina D",
+      "aliases": ["Vitamin D", "Vitamina D", "25-OH Vitamin D"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Vitamin D",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "ZINC",
+      "canonical_name": "Zinc",
+      "aliases": ["Zinc"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Zinc",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA3_TOTAL",
+      "canonical_name": "Omega-3 total",
+      "aliases": ["Omega-3 Total"],
+      "category": "nutrientes",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-3 Total",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA3_DHA", "OMEGA3_DPA", "OMEGA3_EPA"],
+        "preanalytical_factors": null,
+        "limitations": "DERIVED = suma de DHA + DPA + EPA (y posiblemente otros omega-3). Confirmar formula exacta antes de implementar.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA3_DHA",
+      "canonical_name": "Omega-3: DHA",
+      "aliases": ["Omega-3: DHA", "DHA"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-3: DHA",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA3_TOTAL"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA3_DPA",
+      "canonical_name": "Omega-3: DPA",
+      "aliases": ["Omega-3: DPA", "DPA"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-3: DPA",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA3_TOTAL"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA3_EPA",
+      "canonical_name": "Omega-3: EPA",
+      "aliases": ["Omega-3: EPA", "EPA"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-3: EPA",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA3_TOTAL", "ARACHIDONIC_EPA_RATIO"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA6_TOTAL",
+      "canonical_name": "Omega-6 total",
+      "aliases": ["Omega-6 Total"],
+      "category": "nutrientes",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-6 Total",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA6_ARACHIDONIC", "OMEGA6_LINOLEIC"],
+        "preanalytical_factors": null,
+        "limitations": "DERIVED, probablemente suma de Arachidonic Acid + Linoleic Acid (y otros omega-6). Confirmar formula.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA6_ARACHIDONIC",
+      "canonical_name": "Omega-6: ácido araquidónico",
+      "aliases": ["Omega-6: Arachidonic Acid", "Acido Araquidonico"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-6: Arachidonic Acid",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA6_TOTAL", "ARACHIDONIC_EPA_RATIO"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA6_LINOLEIC",
+      "canonical_name": "Omega-6: ácido linoleico",
+      "aliases": ["Omega-6: Linoleic Acid", "Acido Linoleico"],
+      "category": "nutrientes",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-6: Linoleic Acid",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA6_TOTAL"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "OMEGA6_OMEGA3_RATIO",
+      "canonical_name": "Ratio Omega-6 / Omega-3",
+      "aliases": ["Omega-6 / Omega-3 Ratio", "Ratio Omega-6/Omega-3"],
+      "category": "nutrientes",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Omega-6 / Omega-3 Ratio",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA6_TOTAL", "OMEGA3_TOTAL"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "ARACHIDONIC_EPA_RATIO",
+      "canonical_name": "Ratio ácido araquidónico / EPA",
+      "aliases": ["Arachidonic Acid/EPA Ratio", "Ratio AA/EPA"],
+      "category": "nutrientes",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Arachidonic Acid/EPA Ratio",
+          "external_category": "Nutrients",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["OMEGA6_ARACHIDONIC", "OMEGA3_EPA"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

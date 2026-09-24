@@ -1,0 +1,51 @@
+{
+  "categoria": "vitales",
+  "biomarcadores": [
+    {
+      "canonical_id": "BP_SYSTOLIC",
+      "canonical_name": "Presión arterial sistólica",
+      "aliases": ["Systolic", "Sistólica", "Sistolica"],
+      "category": "vitales",
+      "measurement_type": "MEASURED",
+      "sample_type": "Tensiómetro",
+      "common_units": ["mmHg"],
+      "external_sources": [],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["BP_DIASTOLIC"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "BP_DIASTOLIC",
+      "canonical_name": "Presión arterial diastólica",
+      "aliases": ["Diastolic", "Diastólica", "Diastolica"],
+      "category": "vitales",
+      "measurement_type": "MEASURED",
+      "sample_type": "Tensiómetro",
+      "common_units": ["mmHg"],
+      "external_sources": [],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["BP_SYSTOLIC"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

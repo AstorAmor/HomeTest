@@ -1,0 +1,325 @@
+{
+  "categoria": "hepatico",
+  "biomarcadores": [
+    {
+      "canonical_id": "TOTAL_BILIRUBIN",
+      "canonical_name": "Bilirrubina total",
+      "aliases": ["Bilirrubina Total", "Total Bilirubin"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "µmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Total Bilirubin",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["DIRECT_BILIRUBIN"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "DIRECT_BILIRUBIN",
+      "canonical_name": "Bilirrubina directa",
+      "aliases": ["Bilirrubina Directa", "Direct Bilirubin"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "µmol/L"],
+      "external_sources": [],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TOTAL_BILIRUBIN"],
+        "preanalytical_factors": null,
+        "limitations": "Function Health no reporta bilirrubina directa por separado, solo Total Bilirubin -- sin external_source.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "ALBUMIN",
+      "canonical_name": "Albúmina",
+      "aliases": ["Albumina", "Albúmina", "Albumin"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["g/dL", "g/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Albumin",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TOTAL_PROTEIN", "GLOBULIN", "ALBUMIN_GLOBULIN_RATIO"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "TOTAL_PROTEIN",
+      "canonical_name": "Proteínas totales",
+      "aliases": ["Proteinas Totales", "Proteínas Totales", "Total Protein"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["g/dL", "g/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Total Protein",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["ALBUMIN", "GLOBULIN"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "ALT",
+      "canonical_name": "Alanina aminotransferasa (ALT/GPT)",
+      "aliases": ["ALT", "GPT", "Alanine Transaminase"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Alanine Transaminase (ALT)",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["AST"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "AST",
+      "canonical_name": "Aspartato aminotransferasa (AST/GOT)",
+      "aliases": ["AST", "GOT", "Aspartate Aminotransferase"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Aspartate Aminotransferase (AST)",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["ALT"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "ALP",
+      "canonical_name": "Fosfatasa alcalina (ALP)",
+      "aliases": ["ALP", "Alkaline Phosphatase", "Fosfatasa Alcalina"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Alkaline Phosphatase (ALP)",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "GGT",
+      "canonical_name": "Gamma-glutamil transferasa (GGT)",
+      "aliases": ["GGT", "Gamma-glutamyl Transferase"],
+      "category": "hepatico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Gamma-glutamyl Transferase (GGT)",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "GLOBULIN",
+      "canonical_name": "Globulina",
+      "aliases": ["Globulin", "Globulina"],
+      "category": "hepatico",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Globulin",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["ALBUMIN", "TOTAL_PROTEIN", "ALBUMIN_GLOBULIN_RATIO"],
+        "preanalytical_factors": null,
+        "limitations": "DERIVED, probablemente Total Protein - Albumin. Confirmar formula antes de implementar.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "ALBUMIN_GLOBULIN_RATIO",
+      "canonical_name": "Ratio Albúmina / Globulina",
+      "aliases": ["Albumin / Globulin Ratio", "Ratio A/G"],
+      "category": "hepatico",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Albumin / Globulin Ratio",
+          "external_category": "Liver",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["ALBUMIN", "GLOBULIN"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

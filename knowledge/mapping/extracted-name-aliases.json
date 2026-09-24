@@ -1,0 +1,27 @@
+{
+  "_comment": "OVERRIDE opcional sobre el mapeo automatico. El mapeo principal nombre-extraido -> canonical_id se genera solo, en src/knowledge/canonicalBiomarkers.ts, a partir de canonical_name + aliases de cada biomarcador en knowledge/biomarcadores/*.json. Este archivo solo hace falta para variantes de extraccion que no quieras anadir a la lista 'oficial' de aliases de un biomarcador; si hay conflicto, esta entrada gana. Las claves de abajo vinieron originalmente de src/utils/unitConversion.ts / parameterInfo.ts, pero ya estan cubiertas por los aliases de cada biomarcador -- se dejan como ejemplo/documentacion, no hacen falta para que funcionen.",
+  "aliases": {
+    "glucosa": "GLUCOSE",
+    "colesterol_total": "TOTAL_CHOLESTEROL",
+    "colesterol_hdl": "HDL_C",
+    "colesterol_ldl": "LDL_C",
+    "trigliceridos": "TRIGLYCERIDES",
+    "creatinina": "CREATININE",
+    "urea": "UREA",
+    "bun": "BUN",
+    "bilirrubina_total": "TOTAL_BILIRUBIN",
+    "bilirrubina_directa": "DIRECT_BILIRUBIN",
+    "calcio": "CALCIUM",
+    "acido_urico": "URIC_ACID",
+    "hierro": "IRON",
+    "hemoglobina": "HEMOGLOBIN",
+    "albumina": "ALBUMIN",
+    "proteinas_totales": "TOTAL_PROTEIN",
+    "magnesio": "MAGNESIUM",
+    "fosforo": "PHOSPHORUS",
+    "sodio": "SODIUM",
+    "potasio": "POTASSIUM",
+    "cloro": "CHLORIDE",
+    "hematies": "RBC"
+  }
+}

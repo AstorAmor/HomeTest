@@ -1,0 +1,302 @@
+{
+  "categoria": "lipidico",
+  "biomarcadores": [
+    {
+      "canonical_id": "TOTAL_CHOLESTEROL",
+      "canonical_name": "Colesterol total",
+      "aliases": ["Colesterol Total", "Colesterol", "Total Cholesterol"],
+      "category": "lipidico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "mmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Total Cholesterol",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["HDL_C", "LDL_C", "TRIGLYCERIDES"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "HDL_C",
+      "canonical_name": "Colesterol HDL",
+      "aliases": ["Colesterol HDL", "HDL", "HDL Cholesterol"],
+      "category": "lipidico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "mmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "HDL Cholesterol",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TOTAL_CHOLESTEROL", "LDL_C", "TRIGLYCERIDES"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "LDL_C",
+      "canonical_name": "Colesterol LDL",
+      "aliases": ["Colesterol LDL", "LDL", "LDL Cholesterol"],
+      "category": "lipidico",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "mmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "LDL Cholesterol",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C", "TRIGLYCERIDES", "APOB"],
+        "preanalytical_factors": null,
+        "limitations": "Function Health lo marca explicitamente como [CALCULATION DERIVED FROM LAB TESTS] (measurement_type actualizado a DERIVED en base a esto). Probablemente formula de Friedewald a partir de Total Cholesterol/HDL/Triglycerides -- pendiente confirmar formula exacta antes de reimplementarla en nuestro rule engine.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 2
+    },
+    {
+      "canonical_id": "TRIGLYCERIDES",
+      "canonical_name": "Triglicéridos",
+      "aliases": ["Trigliceridos", "Triglicéridos", "Triglycerides"],
+      "category": "lipidico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "mmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Triglycerides",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C", "LDL_C"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "APOB",
+      "canonical_name": "Apolipoproteína B (ApoB)",
+      "aliases": ["ApoB", "Apolipoprotein B", "Apolipoproteina B"],
+      "category": "lipidico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Apolipoprotein B (ApoB)",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["LDL_C", "LIPOPROTEIN_A"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "HS_CRP",
+      "canonical_name": "Proteína C reactiva de alta sensibilidad (hs-CRP)",
+      "aliases": ["hs-CRP", "High-Sensitivity C-Reactive Protein", "PCR ultrasensible"],
+      "category": "lipidico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "High-Sensitivity C-Reactive Protein (hs-CRP)",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "LIPOPROTEIN_A",
+      "canonical_name": "Lipoproteína (a)",
+      "aliases": ["Lp(a)", "Lipoprotein (a)", "Lipoproteina a"],
+      "category": "lipidico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Lipoprotein (a)",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["APOB", "LDL_C"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "NON_HDL_CHOLESTEROL",
+      "canonical_name": "Colesterol no-HDL",
+      "aliases": ["Non-HDL Cholesterol", "Colesterol No-HDL"],
+      "category": "lipidico",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Non-HDL Cholesterol",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "TC_HDL_RATIO",
+      "canonical_name": "Ratio Colesterol Total / HDL",
+      "aliases": ["Total Cholesterol / HDL Ratio", "Ratio CT/HDL"],
+      "category": "lipidico",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Total Cholesterol / HDL Ratio",
+          "external_category": "Heart",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

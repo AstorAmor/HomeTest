@@ -1,0 +1,137 @@
+{
+  "categoria": "metabolico",
+  "biomarcadores": [
+    {
+      "canonical_id": "GLUCOSE",
+      "canonical_name": "Glucosa",
+      "aliases": ["Glucosa", "Glucose", "Glucemia", "Blood Sugar"],
+      "category": "metabolico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "mmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Glucose",
+          "external_category": "Metabolic",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "HBA1C",
+      "canonical_name": "Hemoglobina glicosilada (HbA1c)",
+      "aliases": ["HbA1c", "Hemoglobin A1c", "Hemoglobina Glicosilada"],
+      "category": "metabolico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Hemoglobin A1c (HbA1c)",
+          "external_category": "Metabolic",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["GLUCOSE"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "INSULIN",
+      "canonical_name": "Insulina",
+      "aliases": ["Insulin", "Insulina"],
+      "category": "metabolico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Insulin",
+          "external_category": "Metabolic",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["GLUCOSE"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "LEPTIN",
+      "canonical_name": "Leptina",
+      "aliases": ["Leptin", "Leptina"],
+      "category": "metabolico",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Leptin",
+          "external_category": "Metabolic",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

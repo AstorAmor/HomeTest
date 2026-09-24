@@ -33,6 +33,7 @@ export default function Layout() {
             <Stack.Screen name="cholesterol-detail" />
             <Stack.Screen name="cortisol-detail" />
             <Stack.Screen name="cycle-detail" />
+            <Stack.Screen name="catalogo" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

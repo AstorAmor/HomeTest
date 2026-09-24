@@ -1,0 +1,226 @@
+{
+  "categoria": "renal",
+  "biomarcadores": [
+    {
+      "canonical_id": "CREATININE",
+      "canonical_name": "Creatinina",
+      "aliases": ["Creatinina", "Creatinine"],
+      "category": "renal",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "µmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Creatinine",
+          "external_category": "Kidneys",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["UREA", "BUN", "EGFR"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "UREA",
+      "canonical_name": "Urea",
+      "aliases": ["Urea"],
+      "category": "renal",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "mmol/L"],
+      "external_sources": [],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["CREATININE", "BUN"],
+        "preanalytical_factors": null,
+        "limitations": "Function Health no reporta 'Urea' como tal, solo 'Blood Urea Nitrogen' (ver BUN) -- sin external_source propio.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "BUN",
+      "canonical_name": "Nitrógeno ureico en sangre (BUN)",
+      "aliases": ["BUN", "Nitrogeno Ureico", "Blood Urea Nitrogen"],
+      "category": "renal",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "mmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Blood Urea Nitrogen",
+          "external_category": "Kidneys",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["UREA", "CREATININE", "BUN_CREATININE_RATIO"],
+        "preanalytical_factors": null,
+        "limitations": "PENDIENTE: BUN y Urea están relacionados matemáticamente (BUN ≈ Urea / 2.14); confirmar si algún laboratorio reporta uno como derivado del otro antes de tratarlos como independientes.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "URIC_ACID",
+      "canonical_name": "Ácido úrico",
+      "aliases": ["Acido Urico", "Ácido Úrico", "Uric Acid"],
+      "category": "renal",
+      "measurement_type": "MEASURED",
+      "sample_type": "Sangre",
+      "common_units": ["mg/dL", "µmol/L"],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Uric Acid",
+          "external_category": "Metabolic",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": [],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "EGFR",
+      "canonical_name": "Tasa de filtración glomerular estimada (eGFR)",
+      "aliases": ["eGFR", "Estimated Glomerular Filtration Rate", "Creatinine-based eGFR"],
+      "category": "renal",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Creatinine-based Estimated Glomerular Filtration Rate (eGFR)",
+          "external_category": "Kidneys",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["CREATININE"],
+        "preanalytical_factors": null,
+        "limitations": "DERIVED a partir de creatinina + edad + sexo (formula estandar tipo CKD-EPI/MDRD) -- confirmar version exacta de formula antes de implementar en rule engine, no asumir.",
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "BUN_CREATININE_RATIO",
+      "canonical_name": "Ratio BUN / Creatinina",
+      "aliases": ["BUN / Creatinine Ratio", "Ratio BUN/Creatinina"],
+      "category": "renal",
+      "measurement_type": "DERIVED",
+      "sample_type": "Sangre",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "BUN / Creatinine Ratio",
+          "external_category": "Kidneys",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "DERIVED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["BUN", "CREATININE"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    },
+    {
+      "canonical_id": "URINE_MICROALBUMIN",
+      "canonical_name": "Microalbúmina en orina",
+      "aliases": ["Albumin (Microalbumin - Urine)", "Microalbumina"],
+      "category": "renal",
+      "measurement_type": "MEASURED",
+      "sample_type": "Orina",
+      "common_units": [],
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Albumin (Microalbumin - Urine)",
+          "external_category": "Kidneys",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": null,
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": null,
+        "clinical_relevance": null,
+        "related_biomarkers": ["ALBUMIN"],
+        "preanalytical_factors": null,
+        "limitations": null,
+        "clinical_contexts": null
+      },
+      "claims": [],
+      "evidence_status": "NOT_REVIEWED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1
+    }
+  ]
+}

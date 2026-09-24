@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
 import { Colors } from '@/constants/colors';
@@ -50,6 +51,13 @@ const menuItems: MenuItem[] = [
     icon: 'van-utility',
   },
   {
+    id: 'catalog',
+    title: 'Biomarker Catalog',
+    subtitle: '118 biomarkers, canonical knowledge base (dev)',
+    iconFamily: 'ionicons',
+    icon: 'library-outline',
+  },
+  {
     id: 'settings',
     title: 'Settings',
     subtitle: 'Manage your preferences',
@@ -60,9 +68,11 @@ const menuItems: MenuItem[] = [
 
 export const MoreScreen = () => {
   const { logout } = useAuth();
+  const router = useRouter();
 
   const handlePress = (id: string) => {
     if (id === 'settings') return logout();
+    if (id === 'catalog') return router.push('/catalogo');
   };
 
   return (
