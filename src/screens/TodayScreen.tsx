@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { AiLogModule } from '@/components/AiLogModule';
 import { Colors } from '@/constants/colors';
@@ -37,6 +38,7 @@ const formatDate = (dateString: string) => {
 
 export const TodayScreen = () => {
   const navigation = useNavigation();
+  const router = useRouter();
   const [biomarkers, setBiomarkers] = useState<Biomarker[]>(mockBiomarkers);
 
   useEffect(() => {
@@ -51,6 +53,21 @@ export const TodayScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Today" />
+
+        <TouchableOpacity
+          style={styles.reportBanner}
+          onPress={() => router.push('/report-intro')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.reportBannerIcon}>
+            <Ionicons name="sparkles" size={22} color={Colors.accent} />
+          </View>
+          <View style={styles.reportBannerText}>
+            <Text style={styles.reportBannerTitle}>Your report is here!</Text>
+            <Text style={styles.reportBannerSubtitle}>Tap to see your results and plan</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
 
         <View style={styles.greeting}>
           <Text style={styles.greetingTitle}>Hi {firstName}!</Text>
@@ -99,6 +116,39 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: 32,
+  },
+  reportBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 24,
+  },
+  reportBannerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.accentSoft,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reportBannerText: {
+    flex: 1,
+  },
+  reportBannerTitle: {
+    color: Colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  reportBannerSubtitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
   },
   greeting: {
     paddingHorizontal: 20,

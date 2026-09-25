@@ -1,0 +1,2901 @@
+{
+  "report_id": "rpt_followup_2026_09_25",
+  "version": 1,
+  "status": "liberado",
+  "test_date": "2026-09-25",
+  "escalation": {
+    "tier": "verde",
+    "escalated_markers": [],
+    "physician_note": null,
+    "reviewed_at": null
+  },
+  "summary": {
+    "headline": "Tu informe está aquí — y se nota la mejora",
+    "paragraphs": [
+      "En los últimos 6 meses, tu colesterol, tu glucosa y tus marcadores de inflamación han mejorado de forma clara. Este cambio coincide con tus mejores hábitos de sueño y con haber vuelto a moverte más.",
+      "Aún hay un par de marcadores que merecen atención (vitamina D y ferritina), pero vas en la dirección correcta."
+    ],
+    "counts": {
+      "en_rango": 107,
+      "a_vigilar": 3,
+      "fuera_de_rango": 0,
+      "total": 110
+    },
+    "phenoage": {
+      "available": true,
+      "low": 29.1,
+      "high": 33.2,
+      "chronological_age": 32,
+      "drivers": [
+        {
+          "marker_id": "hdl",
+          "direction": "resta"
+        },
+        {
+          "marker_id": "hs_crp",
+          "direction": "resta"
+        },
+        {
+          "marker_id": "homa_ir",
+          "direction": "resta"
+        }
+      ],
+      "explanation": "Tu edad fenotípica estimada ha bajado respecto al informe anterior, en línea con la mejora en inflamación, sensibilidad a la insulina y perfil lipídico."
+    }
+  },
+  "sections": [
+    {
+      "category_id": "cbc",
+      "title": "Hemograma",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "hemoglobin",
+          "display_name": "Hemoglobina",
+          "value": 15.1,
+          "value_text": "15.1 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 13.0,
+            "high": 17.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 14.8,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 2.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "hematocrit",
+          "display_name": "Hematocrito",
+          "value": 45.2,
+          "value_text": "45.2 %",
+          "unit": "%",
+          "range": {
+            "low": 40.0,
+            "high": 52.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 44.5,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 1.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "rbc",
+          "display_name": "Eritrocitos",
+          "value": 5.2,
+          "value_text": "5.2 x10^6/uL",
+          "unit": "x10^6/uL",
+          "range": {
+            "low": 4.5,
+            "high": 5.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 5.1,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 2.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mcv",
+          "display_name": "VCM (volumen corpuscular medio)",
+          "value": 88.0,
+          "value_text": "88.0 fL",
+          "unit": "fL",
+          "range": {
+            "low": 80.0,
+            "high": 100.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 87.0,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 1.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mch",
+          "display_name": "HCM",
+          "value": 29.8,
+          "value_text": "29.8 pg",
+          "unit": "pg",
+          "range": {
+            "low": 27.0,
+            "high": 33.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 29.5,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 1.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mchc",
+          "display_name": "CHCM",
+          "value": 34.0,
+          "value_text": "34.0 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 32.0,
+            "high": 36.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 33.8,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 0.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "rdw",
+          "display_name": "ADE (RDW-CV)",
+          "value": 12.8,
+          "value_text": "12.8 %",
+          "unit": "%",
+          "range": {
+            "low": 11.5,
+            "high": 14.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 13.2,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 3.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "wbc",
+          "display_name": "Leucocitos",
+          "value": 6.4,
+          "value_text": "6.4 x10^9/L",
+          "unit": "x10^9/L",
+          "range": {
+            "low": 4.0,
+            "high": 11.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 7.2,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 11.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "neutrophils_pct",
+          "display_name": "Neutrófilos",
+          "value": 55.0,
+          "value_text": "55.0 %",
+          "unit": "%",
+          "range": {
+            "low": 40.0,
+            "high": 70.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 58.0,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 5.2
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lymphocytes_pct",
+          "display_name": "Linfocitos",
+          "value": 33.0,
+          "value_text": "33.0 %",
+          "unit": "%",
+          "range": {
+            "low": 20.0,
+            "high": 45.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 30.0,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 10.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "monocytes_pct",
+          "display_name": "Monocitos",
+          "value": 6.5,
+          "value_text": "6.5 %",
+          "unit": "%",
+          "range": {
+            "low": 2.0,
+            "high": 10.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 7.0,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 7.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "eosinophils_pct",
+          "display_name": "Eosinófilos",
+          "value": 2.2,
+          "value_text": "2.2 %",
+          "unit": "%",
+          "range": {
+            "low": 0.0,
+            "high": 6.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 2.5,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 12.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "basophils_pct",
+          "display_name": "Basófilos",
+          "value": 0.5,
+          "value_text": "0.5 %",
+          "unit": "%",
+          "range": {
+            "low": 0.0,
+            "high": 2.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 0.6,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 16.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "platelets",
+          "display_name": "Plaquetas",
+          "value": 260,
+          "value_text": "260 x10^9/L",
+          "unit": "x10^9/L",
+          "range": {
+            "low": 150,
+            "high": 450,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 245,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 6.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mpv",
+          "display_name": "VPM (volumen plaquetario medio)",
+          "value": 9.6,
+          "value_text": "9.6 fL",
+          "unit": "fL",
+          "range": {
+            "low": 7.5,
+            "high": 11.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 9.8,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 2.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "reticulocytes_pct",
+          "display_name": "Reticulocitos",
+          "value": 1.2,
+          "value_text": "1.2 %",
+          "unit": "%",
+          "range": {
+            "low": 0.5,
+            "high": 2.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.1,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 9.1
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "iron",
+      "title": "Hierro y anemia",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "ferritin",
+          "display_name": "Ferritina",
+          "value": 34,
+          "value_text": "34 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 30,
+            "high": 400,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_bajo",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 24,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 41.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "iron",
+          "display_name": "Hierro sérico",
+          "value": 88,
+          "value_text": "88 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 65,
+            "high": 175,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 70,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 25.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "tibc",
+          "display_name": "Capacidad total de fijación del hierro (TIBC)",
+          "value": 350,
+          "value_text": "350 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 250,
+            "high": 450,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 380,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 7.9
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "transferrin",
+          "display_name": "Transferrina",
+          "value": 275,
+          "value_text": "275 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 200,
+            "high": 360,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 290,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 5.2
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "transferrin_saturation",
+          "display_name": "Saturación de transferrina",
+          "value": 25.0,
+          "value_text": "25.0 %",
+          "unit": "%",
+          "range": {
+            "low": 20.0,
+            "high": 50.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 18.0,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 38.9
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "metabolic",
+      "title": "Metabolismo y glucosa",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "homa_ir",
+          "display_name": "HOMA-IR (resistencia a la insulina)",
+          "value": 2.23,
+          "value_text": "2.23 índice",
+          "unit": "índice",
+          "range": {
+            "low": 0.5,
+            "high": 2.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "trend": {
+            "previous_value": 4.24,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 47.4
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "glucose",
+          "display_name": "Glucosa en ayunas",
+          "value": 92,
+          "value_text": "92 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 70,
+            "high": 99,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 104,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 11.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "hba1c",
+          "display_name": "Hemoglobina glicosilada (HbA1c)",
+          "value": 5.4,
+          "value_text": "5.4 %",
+          "unit": "%",
+          "range": {
+            "low": 4.0,
+            "high": 5.6,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 5.9,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 8.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "insulin",
+          "display_name": "Insulina basal",
+          "value": 9.8,
+          "value_text": "9.8 uIU/mL",
+          "unit": "uIU/mL",
+          "range": {
+            "low": 2.6,
+            "high": 15.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 16.5,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 40.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "c_peptide",
+          "display_name": "Péptido C",
+          "value": 2.6,
+          "value_text": "2.6 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 0.8,
+            "high": 3.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 3.4,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 23.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fructosamine",
+          "display_name": "Fructosamina",
+          "value": 240,
+          "value_text": "240 umol/L",
+          "unit": "umol/L",
+          "range": {
+            "low": 200,
+            "high": 285,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 268,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 10.4
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "lipids",
+      "title": "Perfil lipídico",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "ldl",
+          "display_name": "LDL (colesterol \"malo\")",
+          "value": 132,
+          "value_text": "132 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 130,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "trend": {
+            "previous_value": 165,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 20.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_cholesterol",
+          "display_name": "Colesterol total",
+          "value": 196,
+          "value_text": "196 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 200,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_alto",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 228,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 14.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "non_hdl_cholesterol",
+          "display_name": "Colesterol no-HDL",
+          "value": 148,
+          "value_text": "148 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 160,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_alto",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 189,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 21.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "apob",
+          "display_name": "Apolipoproteína B",
+          "value": 96,
+          "value_text": "96 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_alto",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 118,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 18.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "hdl",
+          "display_name": "HDL (colesterol \"bueno\")",
+          "value": 48,
+          "value_text": "48 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 40,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 39,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 23.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "triglycerides",
+          "display_name": "Triglicéridos",
+          "value": 108,
+          "value_text": "108 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 150,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 180,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 40.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "tg_hdl_ratio",
+          "display_name": "Ratio Triglicéridos/HDL",
+          "value": 2.25,
+          "value_text": "2.25 índice",
+          "unit": "índice",
+          "range": {
+            "low": 0.0,
+            "high": 3.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 4.62,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 51.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "apoa1",
+          "display_name": "Apolipoproteína A1",
+          "value": 142,
+          "value_text": "142 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 110,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 128,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 10.9
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lpa",
+          "display_name": "Lipoproteína (a)",
+          "value": 14,
+          "value_text": "14 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 30,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 14,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "liver",
+      "title": "Función hepática",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "alt",
+          "display_name": "ALT (GPT)",
+          "value": 34,
+          "value_text": "34 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 7,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 52,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 34.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ast",
+          "display_name": "AST (GOT)",
+          "value": 29,
+          "value_text": "29 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 8,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 41,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 29.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ggt",
+          "display_name": "GGT",
+          "value": 38,
+          "value_text": "38 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 8,
+            "high": 61,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 58,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 34.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "alp",
+          "display_name": "Fosfatasa alcalina",
+          "value": 74,
+          "value_text": "74 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 40,
+            "high": 129,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 78,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 5.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_bilirubin",
+          "display_name": "Bilirrubina total",
+          "value": 0.6,
+          "value_text": "0.6 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0.1,
+            "high": 1.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 0.7,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 14.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "direct_bilirubin",
+          "display_name": "Bilirrubina directa",
+          "value": 0.15,
+          "value_text": "0.15 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0.0,
+            "high": 0.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 0.2,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 25.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "albumin",
+          "display_name": "Albúmina",
+          "value": 4.5,
+          "value_text": "4.5 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 3.5,
+            "high": 5.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 4.4,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 2.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_protein",
+          "display_name": "Proteínas totales",
+          "value": 7.2,
+          "value_text": "7.2 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 6.0,
+            "high": 8.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 7.1,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 1.4
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fib4",
+          "display_name": "FIB-4 (fibrosis hepática)",
+          "value": 0.78,
+          "value_text": "0.78 índice",
+          "unit": "índice",
+          "range": {
+            "low": 0.0,
+            "high": 1.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.05,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 25.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ck",
+          "display_name": "CK (creatina quinasa)",
+          "value": 140,
+          "value_text": "140 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 30,
+            "high": 200,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 165,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 15.2
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ldh",
+          "display_name": "LDH",
+          "value": 160,
+          "value_text": "160 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 100,
+            "high": 190,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 175,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 8.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "amylase",
+          "display_name": "Amilasa",
+          "value": 58,
+          "value_text": "58 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 28,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 62,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 6.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lipase",
+          "display_name": "Lipasa",
+          "value": 32,
+          "value_text": "32 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 13,
+            "high": 60,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 35,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 8.6
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "kidney",
+      "title": "Función renal",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "creatinine",
+          "display_name": "Creatinina",
+          "value": 0.95,
+          "value_text": "0.95 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0.7,
+            "high": 1.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.02,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 6.9
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "egfr",
+          "display_name": "eGFR (filtrado glomerular estimado)",
+          "value": 98,
+          "value_text": "98 mL/min/1.73m²",
+          "unit": "mL/min/1.73m²",
+          "range": {
+            "low": 90,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 88,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 11.4
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "bun",
+          "display_name": "Urea (BUN)",
+          "value": 15,
+          "value_text": "15 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 7,
+            "high": 20,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 17,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 11.8
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "uric_acid",
+          "display_name": "Ácido úrico",
+          "value": 6.1,
+          "value_text": "6.1 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 3.5,
+            "high": 7.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 7.0,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 12.9
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "cystatin_c",
+          "display_name": "Cistatina C",
+          "value": 0.82,
+          "value_text": "0.82 mg/L",
+          "unit": "mg/L",
+          "range": {
+            "low": 0.6,
+            "high": 1.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 0.88,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 6.8
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "thyroid",
+      "title": "Tiroides",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "tsh",
+          "display_name": "TSH",
+          "value": 2.1,
+          "value_text": "2.1 uIU/mL",
+          "unit": "uIU/mL",
+          "range": {
+            "low": 0.4,
+            "high": 4.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 2.6,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 19.2
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "free_t4",
+          "display_name": "T4 libre",
+          "value": 1.3,
+          "value_text": "1.3 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 0.8,
+            "high": 1.8,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.2,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 8.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_t3",
+          "display_name": "T3 total",
+          "value": 140,
+          "value_text": "140 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 80,
+            "high": 200,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 135,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 3.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_t4",
+          "display_name": "T4 total",
+          "value": 8.0,
+          "value_text": "8.0 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 5.0,
+            "high": 12.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 7.8,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 2.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "anti_tpo",
+          "display_name": "Anticuerpos anti-TPO",
+          "value": 11,
+          "value_text": "11 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 34,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 12,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 8.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "anti_tg",
+          "display_name": "Anticuerpos anti-tiroglobulina",
+          "value": 8,
+          "value_text": "8 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 9,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 11.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "thyroglobulin",
+          "display_name": "Tiroglobulina",
+          "value": 13,
+          "value_text": "13 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 1,
+            "high": 78,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 14,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 7.1
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "inflammation",
+      "title": "Inflamación",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "hs_crp",
+          "display_name": "PCR ultrasensible",
+          "value": 1.6,
+          "value_text": "1.6 mg/L",
+          "unit": "mg/L",
+          "range": {
+            "low": 0.0,
+            "high": 3.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 4.8,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 66.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "esr",
+          "display_name": "VSG (velocidad de sedimentación)",
+          "value": 7,
+          "value_text": "7 mm/h",
+          "unit": "mm/h",
+          "range": {
+            "low": 0,
+            "high": 15,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 14,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 50.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fibrinogen",
+          "display_name": "Fibrinógeno",
+          "value": 300,
+          "value_text": "300 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 200,
+            "high": 400,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 340,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 11.8
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "homocysteine",
+          "display_name": "Homocisteína",
+          "value": 9.8,
+          "value_text": "9.8 umol/L",
+          "unit": "umol/L",
+          "range": {
+            "low": 5.0,
+            "high": 15.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 12.5,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 21.6
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "hormones",
+      "title": "Hormonas sexuales",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "total_testosterone",
+          "display_name": "Testosterona total",
+          "value": 480,
+          "value_text": "480 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 264,
+            "high": 916,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 410,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 17.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "free_testosterone",
+          "display_name": "Testosterona libre (calculada)",
+          "value": 104,
+          "value_text": "104 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 46,
+            "high": 224,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 88,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 18.2
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "shbg",
+          "display_name": "SHBG (globulina transportadora de hormonas sexuales)",
+          "value": 30,
+          "value_text": "30 nmol/L",
+          "unit": "nmol/L",
+          "range": {
+            "low": 10,
+            "high": 57,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 28,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 7.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "estradiol",
+          "display_name": "Estradiol",
+          "value": 22,
+          "value_text": "22 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 10,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 24,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 8.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lh",
+          "display_name": "LH (hormona luteinizante)",
+          "value": 4.5,
+          "value_text": "4.5 mUI/mL",
+          "unit": "mUI/mL",
+          "range": {
+            "low": 1.7,
+            "high": 8.6,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 4.2,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 7.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fsh",
+          "display_name": "FSH (hormona folículoestimulante)",
+          "value": 4.0,
+          "value_text": "4.0 mUI/mL",
+          "unit": "mUI/mL",
+          "range": {
+            "low": 1.5,
+            "high": 12.4,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 3.8,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 5.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "dhea_s",
+          "display_name": "DHEA-S",
+          "value": 290,
+          "value_text": "290 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 100,
+            "high": 500,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 260,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 11.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "prolactin",
+          "display_name": "Prolactina",
+          "value": 8.0,
+          "value_text": "8.0 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 4.0,
+            "high": 15.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 8.5,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 5.9
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "androstenedione",
+          "display_name": "Androstenediona",
+          "value": 1.5,
+          "value_text": "1.5 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 0.3,
+            "high": 3.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.4,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 7.1
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "adrenal",
+      "title": "Función suprarrenal",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "cortisol_am",
+          "display_name": "Cortisol (matutino, 8h)",
+          "value": 13.8,
+          "value_text": "13.8 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 6.2,
+            "high": 19.4,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 15.5,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 11.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "cortisol_pm",
+          "display_name": "Cortisol (tarde, 16h)",
+          "value": 7.2,
+          "value_text": "7.2 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 2.3,
+            "high": 11.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 9.8,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 26.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "aldosterone",
+          "display_name": "Aldosterona",
+          "value": 11.0,
+          "value_text": "11.0 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 3.0,
+            "high": 35.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 12.0,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 8.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "renin",
+          "display_name": "Renina",
+          "value": 1.6,
+          "value_text": "1.6 ng/mL/h",
+          "unit": "ng/mL/h",
+          "range": {
+            "low": 0.6,
+            "high": 4.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.8,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 11.1
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "vitamins",
+      "title": "Vitaminas",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "vitamin_d",
+          "display_name": "Vitamina D (25-OH)",
+          "value": 26,
+          "value_text": "26 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 30,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "bajo",
+          "tier": "ambar",
+          "trend": {
+            "previous_value": 18,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 44.4
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_b12",
+          "display_name": "Vitamina B12",
+          "value": 420,
+          "value_text": "420 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 232,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 310,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 35.5
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "folate",
+          "display_name": "Ácido fólico (folato)",
+          "value": 9.2,
+          "value_text": "9.2 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 3.1,
+            "high": 20.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 6.8,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 35.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_b6",
+          "display_name": "Vitamina B6",
+          "value": 18,
+          "value_text": "18 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 5,
+            "high": 50,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 14,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 28.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_a",
+          "display_name": "Vitamina A",
+          "value": 45,
+          "value_text": "45 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 20,
+            "high": 80,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 42,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 7.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_e",
+          "display_name": "Vitamina E",
+          "value": 10.2,
+          "value_text": "10.2 mg/L",
+          "unit": "mg/L",
+          "range": {
+            "low": 5.5,
+            "high": 17.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 9.0,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 13.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "coq10",
+          "display_name": "Coenzima Q10",
+          "value": 0.9,
+          "value_text": "0.9 ug/mL",
+          "unit": "ug/mL",
+          "range": {
+            "low": 0.4,
+            "high": 1.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 0.7,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 28.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "omega3_index",
+          "display_name": "Índice de Omega-3",
+          "value": 6.8,
+          "value_text": "6.8 %",
+          "unit": "%",
+          "range": {
+            "low": 4.0,
+            "high": 20.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 4.2,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 61.9
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "minerals",
+      "title": "Minerales",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "sodium",
+          "display_name": "Sodio",
+          "value": 140,
+          "value_text": "140 mmol/L",
+          "unit": "mmol/L",
+          "range": {
+            "low": 136,
+            "high": 145,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 140,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "potassium",
+          "display_name": "Potasio",
+          "value": 4.2,
+          "value_text": "4.2 mmol/L",
+          "unit": "mmol/L",
+          "range": {
+            "low": 3.5,
+            "high": 5.1,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 4.3,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 2.3
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "calcium_corrected",
+          "display_name": "Calcio corregido",
+          "value": 9.5,
+          "value_text": "9.5 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 8.6,
+            "high": 10.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 9.4,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 1.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "magnesium",
+          "display_name": "Magnesio",
+          "value": 2.0,
+          "value_text": "2.0 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 1.7,
+            "high": 2.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.8,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 11.1
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "phosphorus",
+          "display_name": "Fósforo",
+          "value": 3.5,
+          "value_text": "3.5 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 2.5,
+            "high": 4.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 3.4,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 2.9
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "zinc",
+          "display_name": "Zinc",
+          "value": 82,
+          "value_text": "82 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 60,
+            "high": 120,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 68,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 20.6
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "copper",
+          "display_name": "Cobre",
+          "value": 98,
+          "value_text": "98 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 70,
+            "high": 140,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 95,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 3.2
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "selenium",
+          "display_name": "Selenio",
+          "value": 95,
+          "value_text": "95 ug/L",
+          "unit": "ug/L",
+          "range": {
+            "low": 70,
+            "high": 150,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 88,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "sube",
+            "delta_pct": 8.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "chloride",
+          "display_name": "Cloro",
+          "value": 102,
+          "value_text": "102 mmol/L",
+          "unit": "mmol/L",
+          "range": {
+            "low": 98,
+            "high": 107,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 102,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "cardio",
+      "title": "Salud cardiovascular",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "nt_probnp",
+          "display_name": "NT-proBNP",
+          "value": 30,
+          "value_text": "30 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 0,
+            "high": 125,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 42,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 28.6
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "immune",
+      "title": "Autoinmunidad",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "ana",
+          "display_name": "Anticuerpos antinucleares (ANA)",
+          "value": 0,
+          "value_text": "0 título",
+          "unit": "título",
+          "range": {
+            "low": 0,
+            "high": 1,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_bajo",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 0,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "rheumatoid_factor",
+          "display_name": "Factor reumatoide",
+          "value": 5,
+          "value_text": "5 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 14,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 6,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 16.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_ige",
+          "display_name": "IgE total",
+          "value": 38,
+          "value_text": "38 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 45,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 15.6
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "hormones_growth",
+      "title": "Hormona de crecimiento",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "igf1",
+          "display_name": "IGF-1 (somatomedina C)",
+          "value": 170,
+          "value_text": "170 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 90,
+            "high": 360,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 150,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "sube",
+            "delta_pct": 13.3
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "other",
+      "title": "Otros",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "ammonia",
+          "display_name": "Amoniaco",
+          "value": 28,
+          "value_text": "28 umol/L",
+          "unit": "umol/L",
+          "range": {
+            "low": 15,
+            "high": 45,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 32,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 12.5
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "tumor",
+      "title": "Marcadores tumorales",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "psa",
+          "display_name": "PSA (antígeno prostático específico)",
+          "value": 0.8,
+          "value_text": "0.8 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 0.0,
+            "high": 4.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 0.9,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "baja",
+            "delta_pct": 11.1
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "coagulation",
+      "title": "Coagulación",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "pt_inr",
+          "display_name": "Tiempo de protrombina (INR)",
+          "value": 1.0,
+          "value_text": "1.0 ratio",
+          "unit": "ratio",
+          "range": {
+            "low": 0.8,
+            "high": 1.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.0,
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "toxicology",
+      "title": "Metales pesados",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "lead",
+          "display_name": "Plomo (sangre)",
+          "value": 1.5,
+          "value_text": "1.5 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 0.0,
+            "high": 5.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 1.8,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 16.7
+          },
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mercury",
+          "display_name": "Mercurio (sangre)",
+          "value": 2.8,
+          "value_text": "2.8 ug/L",
+          "unit": "ug/L",
+          "range": {
+            "low": 0.0,
+            "high": 10.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "trend": {
+            "previous_value": 3.2,
+            "previous_date": "2026-03-27",
+            "significant": true,
+            "direction": "baja",
+            "delta_pct": 12.5
+          },
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "sti",
+      "title": "Cribado de infecciones de transmisión sexual",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "hiv_ab",
+          "display_name": "VIH (Ac/Ag combo)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": [],
+          "trend": {
+            "previous_value": "Negativo",
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          }
+        },
+        {
+          "marker_id": "syphilis",
+          "display_name": "Sífilis (RPR/TPHA)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": [],
+          "trend": {
+            "previous_value": "Negativo",
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          }
+        },
+        {
+          "marker_id": "hbsag",
+          "display_name": "Hepatitis B (HBsAg)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": [],
+          "trend": {
+            "previous_value": "Negativo",
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          }
+        },
+        {
+          "marker_id": "anti_hcv",
+          "display_name": "Hepatitis C (Anti-VHC)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": [],
+          "trend": {
+            "previous_value": "Negativo",
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          }
+        },
+        {
+          "marker_id": "gc_ct_pcr",
+          "display_name": "Gonococo / Clamidia (PCR)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": [],
+          "trend": {
+            "previous_value": "Negativo",
+            "previous_date": "2026-03-27",
+            "significant": false,
+            "direction": "estable",
+            "delta_pct": 0.0
+          }
+        }
+      ]
+    }
+  ],
+  "retest": [
+    {
+      "marker_id": "ldl",
+      "months": 6,
+      "reason": "seguimiento de riesgo cardiovascular"
+    },
+    {
+      "marker_id": "vitamin_d",
+      "months": 3,
+      "reason": "confirmar respuesta a suplementación"
+    }
+  ],
+  "glossary": [
+    {
+      "term": "HbA1c",
+      "definition": "Refleja tu nivel medio de glucosa en sangre durante los últimos 2-3 meses."
+    },
+    {
+      "term": "HOMA-IR",
+      "definition": "Estima cómo de bien responde tu cuerpo a la insulina."
+    },
+    {
+      "term": "PhenoAge",
+      "definition": "Una estimación de tu edad biológica a partir de biomarcadores, con un margen de incertidumbre."
+    }
+  ],
+  "provenance": {
+    "ruleset_hash": "mock-ruleset-v0",
+    "kb_snapshot": "mock-kb-2026-09",
+    "prompt_version": "mock-v1",
+    "model": "dummy-data-generator",
+    "ai_generated_text": false,
+    "note": "DATOS DUMMY para prototipo — no son datos clínicos reales."
+  },
+  "action_plan": [
+    {
+      "action_id": "act.sueno.mantener_horario",
+      "pinned": true,
+      "title": "Mantén tu horario de sueño regular",
+      "why": [
+        "Tu regularidad de sueño ha mejorado un 35% en 6 meses y coincide con la bajada de tu HbA1c y tu PCR."
+      ],
+      "how": [
+        "Acuéstate y levántate a la misma hora (±30 min), incluso los fines de semana."
+      ],
+      "caveats": [],
+      "provenance": "sangre_y_wearable",
+      "confidence": "alta",
+      "linked_markers": [
+        "hba1c",
+        "hs_crp",
+        "homa_ir"
+      ],
+      "estimated_next_test": {
+        "marker_id": "hba1c",
+        "current_value": 5.4,
+        "expected_value_in_6_months": 5.2,
+        "expected_range_low": 5.0,
+        "expected_range_high": 5.35,
+        "uncertainty_note": "El margen se amplía con el tiempo: es una estimación, no una promesa."
+      }
+    },
+    {
+      "action_id": "act.actividad.fuerza_2x_semana",
+      "pinned": false,
+      "title": "Añade 2 sesiones de fuerza por semana",
+      "why": [
+        "Tus pasos diarios subieron de ~5.100 a ~8.600, pero aún no entrenas fuerza — clave para tu sensibilidad a la insulina y tu composición corporal."
+      ],
+      "how": [
+        "2 sesiones de 30-40 min/semana, full body, con progresión de carga."
+      ],
+      "caveats": [
+        "Si tienes molestias articulares, empieza con peso corporal antes de añadir carga externa."
+      ],
+      "provenance": "wearable",
+      "confidence": "media",
+      "linked_markers": [
+        "homa_ir",
+        "glucose"
+      ],
+      "estimated_next_test": {
+        "marker_id": "homa_ir",
+        "current_value": 2.23,
+        "expected_value_in_6_months": 1.7,
+        "expected_range_low": 1.4,
+        "expected_range_high": 2.0,
+        "uncertainty_note": "El margen se amplía con el tiempo: es una estimación, no una promesa."
+      }
+    },
+    {
+      "action_id": "act.dieta.mas_omega3_pescado_azul",
+      "pinned": false,
+      "title": "Sube tu ingesta de omega-3 (pescado azul 2-3x/semana)",
+      "why": [
+        "Tu índice de omega-3 sigue bajo (6,8%, objetivo >8%) y tus triglicéridos, aunque mejor, aún pueden bajar más."
+      ],
+      "how": [
+        "2-3 raciones/semana de pescado azul (salmón, sardina, caballa) o un suplemento de EPA/DHA si no llegas."
+      ],
+      "caveats": [],
+      "provenance": "sangre",
+      "confidence": "alta",
+      "linked_markers": [
+        "omega3_index",
+        "triglycerides"
+      ],
+      "estimated_next_test": {
+        "marker_id": "triglycerides",
+        "current_value": 108,
+        "expected_value_in_6_months": 90,
+        "expected_range_low": 78,
+        "expected_range_high": 105,
+        "uncertainty_note": "El margen se amplía con el tiempo: es una estimación, no una promesa."
+      }
+    },
+    {
+      "action_id": "act.suplemento.vitamina_d",
+      "pinned": false,
+      "title": "Suplementa vitamina D y toma sol con regularidad",
+      "why": [
+        "Tu vitamina D sigue insuficiente (26 ng/mL) aunque ha mejorado desde el primer test (18 ng/mL)."
+      ],
+      "how": [
+        "2.000 UI/día de vitamina D3 y 15-20 min de sol en brazos/piernas, 3-4 veces/semana."
+      ],
+      "caveats": [
+        "Revisa con tu médico si tomas anticoagulantes o tienes hipercalcemia."
+      ],
+      "provenance": "sangre",
+      "confidence": "alta",
+      "linked_markers": [
+        "vitamin_d"
+      ],
+      "estimated_next_test": {
+        "marker_id": "vitamin_d",
+        "current_value": 26,
+        "expected_value_in_6_months": 38,
+        "expected_range_low": 32,
+        "expected_range_high": 44,
+        "uncertainty_note": "El margen se amplía con el tiempo: es una estimación, no una promesa."
+      }
+    },
+    {
+      "action_id": "act.dieta.hierro_hemo",
+      "pinned": false,
+      "title": "Incluye más hierro de fácil absorción",
+      "why": [
+        "Tu ferritina sigue en el límite bajo (34 ng/mL); mejorar tu reserva de hierro ayuda a tu energía y rendimiento."
+      ],
+      "how": [
+        "2-3 raciones/semana de carne roja magra, legumbres + vitamina C en la misma comida."
+      ],
+      "caveats": [],
+      "provenance": "sangre",
+      "confidence": "media",
+      "linked_markers": [
+        "ferritin",
+        "transferrin_saturation"
+      ],
+      "estimated_next_test": {
+        "marker_id": "ferritin",
+        "current_value": 34,
+        "expected_value_in_6_months": 55,
+        "expected_range_low": 42,
+        "expected_range_high": 70,
+        "uncertainty_note": "El margen se amplía con el tiempo: es una estimación, no una promesa."
+      }
+    }
+  ],
+  "wearable_context": {
+    "window": "last_28_days",
+    "coverage_pct": 92,
+    "sleep_avg_hours": 7.2,
+    "sleep_regularity_score_pct": 84,
+    "resting_heart_rate_bpm": 59,
+    "hrv_rmssd_ms": 47,
+    "steps_avg_daily": 8600,
+    "activity_vs_baseline_pct": 68,
+    "notes": [
+      "Cobertura de datos suficiente para alimentar el plan (>70% de noches)."
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "user_id": "demo_user_32m",
+  "display_name": "Usuario demo",
+  "date_of_birth": "1994-04-12",
+  "biological_sex": "male",
+  "height_cm": 178,
+  "primary_goal": "general_health_improvement",
+  "goal_declared_at": "2026-03-27",
+  "conditions_declared": [],
+  "medications": [],
+  "supplements_baseline": [],
+  "supplements_current": [
+    "vitamin_d3_2000ui",
+    "omega3_epa_dha"
+  ],
+  "smoking": "never",
+  "alcohol": "occasional",
+  "weight_kg": {
+    "baseline": 86.5,
+    "current": 80.8
+  },
+  "waist_cm": {
+    "baseline": 96,
+    "current": 89
+  },
+  "resting_heart_rate_bpm": {
+    "baseline": 68,
+    "current": 59
+  },
+  "hrv_rmssd_ms": {
+    "baseline": 32,
+    "current": 47
+  },
+  "sleep_avg_hours": {
+    "baseline": 5.6,
+    "current": 7.2
+  },
+  "sleep_regularity_score_pct": {
+    "baseline": 48,
+    "current": 84
+  },
+  "typical_bedtime": {
+    "baseline": "01:10",
+    "current": "23:15"
+  },
+  "typical_waketime": {
+    "baseline": "07:40",
+    "current": "07:05"
+  },
+  "steps_avg_daily": {
+    "baseline": 5100,
+    "current": 8600
+  },
+  "exercise_days_per_week": {
+    "baseline": 1,
+    "current": 4
+  },
+  "vo2max_estimate": {
+    "baseline": 34,
+    "current": 41
+  }
+}

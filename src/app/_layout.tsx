@@ -34,6 +34,11 @@ export default function Layout() {
             <Stack.Screen name="cortisol-detail" />
             <Stack.Screen name="cycle-detail" />
             <Stack.Screen name="catalogo" />
+            <Stack.Screen name="report-intro" />
+            <Stack.Screen name="report-summary" />
+            <Stack.Screen name="report-marker-detail" />
+            <Stack.Screen name="report-plan" />
+            <Stack.Screen name="talk-to-specialist" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

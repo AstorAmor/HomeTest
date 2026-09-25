@@ -1,0 +1,1999 @@
+{
+  "report_id": "rpt_baseline_2026_03_27",
+  "version": 1,
+  "status": "liberado",
+  "test_date": "2026-03-27",
+  "escalation": {
+    "tier": "ambar",
+    "escalated_markers": [
+      "hba1c",
+      "hs_crp"
+    ],
+    "physician_note": null,
+    "reviewed_at": null
+  },
+  "summary": {
+    "headline": "Tu primer informe HomeTest",
+    "paragraphs": [
+      "Este es tu primer análisis. La mayoría de tus marcadores están en rango, pero el perfil lipídico, la glucosa y algunos marcadores de inflamación sugieren que tus hábitos de sueño, actividad y alimentación tienen margen de mejora.",
+      "Hemos preparado un plan de acción para los próximos 6 meses. Repite el test para ver tu evolución real."
+    ],
+    "counts": {
+      "en_rango": 92,
+      "a_vigilar": 18,
+      "fuera_de_rango": 0,
+      "total": 110
+    },
+    "phenoage": {
+      "available": true,
+      "low": 33.4,
+      "high": 37.8,
+      "chronological_age": 32,
+      "drivers": [
+        {
+          "marker_id": "hs_crp",
+          "direction": "suma"
+        },
+        {
+          "marker_id": "homa_ir",
+          "direction": "suma"
+        },
+        {
+          "marker_id": "hdl",
+          "direction": "suma"
+        }
+      ],
+      "explanation": "Tu edad fenotípica estimada es algo superior a tu edad cronológica, principalmente por la inflamación de bajo grado y la resistencia a la insulina."
+    }
+  },
+  "sections": [
+    {
+      "category_id": "cbc",
+      "title": "Hemograma",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "hemoglobin",
+          "display_name": "Hemoglobina",
+          "value": 14.8,
+          "value_text": "14.8 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 13.0,
+            "high": 17.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "hematocrit",
+          "display_name": "Hematocrito",
+          "value": 44.5,
+          "value_text": "44.5 %",
+          "unit": "%",
+          "range": {
+            "low": 40.0,
+            "high": 52.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "rbc",
+          "display_name": "Eritrocitos",
+          "value": 5.1,
+          "value_text": "5.1 x10^6/uL",
+          "unit": "x10^6/uL",
+          "range": {
+            "low": 4.5,
+            "high": 5.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mcv",
+          "display_name": "VCM (volumen corpuscular medio)",
+          "value": 87.0,
+          "value_text": "87.0 fL",
+          "unit": "fL",
+          "range": {
+            "low": 80.0,
+            "high": 100.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mch",
+          "display_name": "HCM",
+          "value": 29.5,
+          "value_text": "29.5 pg",
+          "unit": "pg",
+          "range": {
+            "low": 27.0,
+            "high": 33.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mchc",
+          "display_name": "CHCM",
+          "value": 33.8,
+          "value_text": "33.8 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 32.0,
+            "high": 36.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "rdw",
+          "display_name": "ADE (RDW-CV)",
+          "value": 13.2,
+          "value_text": "13.2 %",
+          "unit": "%",
+          "range": {
+            "low": 11.5,
+            "high": 14.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "wbc",
+          "display_name": "Leucocitos",
+          "value": 7.2,
+          "value_text": "7.2 x10^9/L",
+          "unit": "x10^9/L",
+          "range": {
+            "low": 4.0,
+            "high": 11.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "neutrophils_pct",
+          "display_name": "Neutrófilos",
+          "value": 58.0,
+          "value_text": "58.0 %",
+          "unit": "%",
+          "range": {
+            "low": 40.0,
+            "high": 70.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lymphocytes_pct",
+          "display_name": "Linfocitos",
+          "value": 30.0,
+          "value_text": "30.0 %",
+          "unit": "%",
+          "range": {
+            "low": 20.0,
+            "high": 45.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "monocytes_pct",
+          "display_name": "Monocitos",
+          "value": 7.0,
+          "value_text": "7.0 %",
+          "unit": "%",
+          "range": {
+            "low": 2.0,
+            "high": 10.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "eosinophils_pct",
+          "display_name": "Eosinófilos",
+          "value": 2.5,
+          "value_text": "2.5 %",
+          "unit": "%",
+          "range": {
+            "low": 0.0,
+            "high": 6.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "basophils_pct",
+          "display_name": "Basófilos",
+          "value": 0.6,
+          "value_text": "0.6 %",
+          "unit": "%",
+          "range": {
+            "low": 0.0,
+            "high": 2.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "platelets",
+          "display_name": "Plaquetas",
+          "value": 245,
+          "value_text": "245 x10^9/L",
+          "unit": "x10^9/L",
+          "range": {
+            "low": 150,
+            "high": 450,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mpv",
+          "display_name": "VPM (volumen plaquetario medio)",
+          "value": 9.8,
+          "value_text": "9.8 fL",
+          "unit": "fL",
+          "range": {
+            "low": 7.5,
+            "high": 11.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "reticulocytes_pct",
+          "display_name": "Reticulocitos",
+          "value": 1.1,
+          "value_text": "1.1 %",
+          "unit": "%",
+          "range": {
+            "low": 0.5,
+            "high": 2.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "iron",
+      "title": "Hierro y anemia",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "ferritin",
+          "display_name": "Ferritina",
+          "value": 24,
+          "value_text": "24 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 30,
+            "high": 400,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "bajo",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "transferrin_saturation",
+          "display_name": "Saturación de transferrina",
+          "value": 18.0,
+          "value_text": "18.0 %",
+          "unit": "%",
+          "range": {
+            "low": 20.0,
+            "high": 50.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "bajo",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "iron",
+          "display_name": "Hierro sérico",
+          "value": 70,
+          "value_text": "70 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 65,
+            "high": 175,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_bajo",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "tibc",
+          "display_name": "Capacidad total de fijación del hierro (TIBC)",
+          "value": 380,
+          "value_text": "380 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 250,
+            "high": 450,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "transferrin",
+          "display_name": "Transferrina",
+          "value": 290,
+          "value_text": "290 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 200,
+            "high": 360,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "metabolic",
+      "title": "Metabolismo y glucosa",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "glucose",
+          "display_name": "Glucosa en ayunas",
+          "value": 104,
+          "value_text": "104 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 70,
+            "high": 99,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "hba1c",
+          "display_name": "Hemoglobina glicosilada (HbA1c)",
+          "value": 5.9,
+          "value_text": "5.9 %",
+          "unit": "%",
+          "range": {
+            "low": 4.0,
+            "high": 5.6,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "insulin",
+          "display_name": "Insulina basal",
+          "value": 16.5,
+          "value_text": "16.5 uIU/mL",
+          "unit": "uIU/mL",
+          "range": {
+            "low": 2.6,
+            "high": 15.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "homa_ir",
+          "display_name": "HOMA-IR (resistencia a la insulina)",
+          "value": 4.24,
+          "value_text": "4.24 índice",
+          "unit": "índice",
+          "range": {
+            "low": 0.5,
+            "high": 2.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "rojo",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "c_peptide",
+          "display_name": "Péptido C",
+          "value": 3.4,
+          "value_text": "3.4 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 0.8,
+            "high": 3.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fructosamine",
+          "display_name": "Fructosamina",
+          "value": 268,
+          "value_text": "268 umol/L",
+          "unit": "umol/L",
+          "range": {
+            "low": 200,
+            "high": 285,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "lipids",
+      "title": "Perfil lipídico",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "total_cholesterol",
+          "display_name": "Colesterol total",
+          "value": 228,
+          "value_text": "228 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 200,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ldl",
+          "display_name": "LDL (colesterol \"malo\")",
+          "value": 165,
+          "value_text": "165 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 130,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "hdl",
+          "display_name": "HDL (colesterol \"bueno\")",
+          "value": 39,
+          "value_text": "39 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 40,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "bajo",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "non_hdl_cholesterol",
+          "display_name": "Colesterol no-HDL",
+          "value": 189,
+          "value_text": "189 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 160,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "triglycerides",
+          "display_name": "Triglicéridos",
+          "value": 180,
+          "value_text": "180 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 150,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "tg_hdl_ratio",
+          "display_name": "Ratio Triglicéridos/HDL",
+          "value": 4.62,
+          "value_text": "4.62 índice",
+          "unit": "índice",
+          "range": {
+            "low": 0.0,
+            "high": 3.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "apob",
+          "display_name": "Apolipoproteína B",
+          "value": 118,
+          "value_text": "118 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "apoa1",
+          "display_name": "Apolipoproteína A1",
+          "value": 128,
+          "value_text": "128 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 110,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lpa",
+          "display_name": "Lipoproteína (a)",
+          "value": 14,
+          "value_text": "14 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0,
+            "high": 30,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "liver",
+      "title": "Función hepática",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "alt",
+          "display_name": "ALT (GPT)",
+          "value": 52,
+          "value_text": "52 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 7,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ast",
+          "display_name": "AST (GOT)",
+          "value": 41,
+          "value_text": "41 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 8,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ggt",
+          "display_name": "GGT",
+          "value": 58,
+          "value_text": "58 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 8,
+            "high": 61,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_alto",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "alp",
+          "display_name": "Fosfatasa alcalina",
+          "value": 78,
+          "value_text": "78 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 40,
+            "high": 129,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_bilirubin",
+          "display_name": "Bilirrubina total",
+          "value": 0.7,
+          "value_text": "0.7 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0.1,
+            "high": 1.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "direct_bilirubin",
+          "display_name": "Bilirrubina directa",
+          "value": 0.2,
+          "value_text": "0.2 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0.0,
+            "high": 0.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "albumin",
+          "display_name": "Albúmina",
+          "value": 4.4,
+          "value_text": "4.4 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 3.5,
+            "high": 5.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_protein",
+          "display_name": "Proteínas totales",
+          "value": 7.1,
+          "value_text": "7.1 g/dL",
+          "unit": "g/dL",
+          "range": {
+            "low": 6.0,
+            "high": 8.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fib4",
+          "display_name": "FIB-4 (fibrosis hepática)",
+          "value": 1.05,
+          "value_text": "1.05 índice",
+          "unit": "índice",
+          "range": {
+            "low": 0.0,
+            "high": 1.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ck",
+          "display_name": "CK (creatina quinasa)",
+          "value": 165,
+          "value_text": "165 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 30,
+            "high": 200,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "ldh",
+          "display_name": "LDH",
+          "value": 175,
+          "value_text": "175 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 100,
+            "high": 190,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "amylase",
+          "display_name": "Amilasa",
+          "value": 62,
+          "value_text": "62 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 28,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lipase",
+          "display_name": "Lipasa",
+          "value": 35,
+          "value_text": "35 U/L",
+          "unit": "U/L",
+          "range": {
+            "low": 13,
+            "high": 60,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "kidney",
+      "title": "Función renal",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "egfr",
+          "display_name": "eGFR (filtrado glomerular estimado)",
+          "value": 88,
+          "value_text": "88 mL/min/1.73m²",
+          "unit": "mL/min/1.73m²",
+          "range": {
+            "low": 90,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "bajo",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "uric_acid",
+          "display_name": "Ácido úrico",
+          "value": 7.0,
+          "value_text": "7.0 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 3.5,
+            "high": 7.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_alto",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "creatinine",
+          "display_name": "Creatinina",
+          "value": 1.02,
+          "value_text": "1.02 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 0.7,
+            "high": 1.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "bun",
+          "display_name": "Urea (BUN)",
+          "value": 17,
+          "value_text": "17 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 7,
+            "high": 20,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "cystatin_c",
+          "display_name": "Cistatina C",
+          "value": 0.88,
+          "value_text": "0.88 mg/L",
+          "unit": "mg/L",
+          "range": {
+            "low": 0.6,
+            "high": 1.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "thyroid",
+      "title": "Tiroides",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "tsh",
+          "display_name": "TSH",
+          "value": 2.6,
+          "value_text": "2.6 uIU/mL",
+          "unit": "uIU/mL",
+          "range": {
+            "low": 0.4,
+            "high": 4.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "free_t4",
+          "display_name": "T4 libre",
+          "value": 1.2,
+          "value_text": "1.2 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 0.8,
+            "high": 1.8,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_t3",
+          "display_name": "T3 total",
+          "value": 135,
+          "value_text": "135 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 80,
+            "high": 200,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_t4",
+          "display_name": "T4 total",
+          "value": 7.8,
+          "value_text": "7.8 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 5.0,
+            "high": 12.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "anti_tpo",
+          "display_name": "Anticuerpos anti-TPO",
+          "value": 12,
+          "value_text": "12 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 34,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "anti_tg",
+          "display_name": "Anticuerpos anti-tiroglobulina",
+          "value": 9,
+          "value_text": "9 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "thyroglobulin",
+          "display_name": "Tiroglobulina",
+          "value": 14,
+          "value_text": "14 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 1,
+            "high": 78,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "inflammation",
+      "title": "Inflamación",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "hs_crp",
+          "display_name": "PCR ultrasensible",
+          "value": 4.8,
+          "value_text": "4.8 mg/L",
+          "unit": "mg/L",
+          "range": {
+            "low": 0.0,
+            "high": 3.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "alto",
+          "tier": "rojo",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "esr",
+          "display_name": "VSG (velocidad de sedimentación)",
+          "value": 14,
+          "value_text": "14 mm/h",
+          "unit": "mm/h",
+          "range": {
+            "low": 0,
+            "high": 15,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_alto",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fibrinogen",
+          "display_name": "Fibrinógeno",
+          "value": 340,
+          "value_text": "340 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 200,
+            "high": 400,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "homocysteine",
+          "display_name": "Homocisteína",
+          "value": 12.5,
+          "value_text": "12.5 umol/L",
+          "unit": "umol/L",
+          "range": {
+            "low": 5.0,
+            "high": 15.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "hormones",
+      "title": "Hormonas sexuales",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "total_testosterone",
+          "display_name": "Testosterona total",
+          "value": 410,
+          "value_text": "410 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 264,
+            "high": 916,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "free_testosterone",
+          "display_name": "Testosterona libre (calculada)",
+          "value": 88,
+          "value_text": "88 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 46,
+            "high": 224,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "shbg",
+          "display_name": "SHBG (globulina transportadora de hormonas sexuales)",
+          "value": 28,
+          "value_text": "28 nmol/L",
+          "unit": "nmol/L",
+          "range": {
+            "low": 10,
+            "high": 57,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "estradiol",
+          "display_name": "Estradiol",
+          "value": 24,
+          "value_text": "24 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 10,
+            "high": 40,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "lh",
+          "display_name": "LH (hormona luteinizante)",
+          "value": 4.2,
+          "value_text": "4.2 mUI/mL",
+          "unit": "mUI/mL",
+          "range": {
+            "low": 1.7,
+            "high": 8.6,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "fsh",
+          "display_name": "FSH (hormona folículoestimulante)",
+          "value": 3.8,
+          "value_text": "3.8 mUI/mL",
+          "unit": "mUI/mL",
+          "range": {
+            "low": 1.5,
+            "high": 12.4,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "dhea_s",
+          "display_name": "DHEA-S",
+          "value": 260,
+          "value_text": "260 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 100,
+            "high": 500,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "prolactin",
+          "display_name": "Prolactina",
+          "value": 8.5,
+          "value_text": "8.5 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 4.0,
+            "high": 15.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "androstenedione",
+          "display_name": "Androstenediona",
+          "value": 1.4,
+          "value_text": "1.4 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 0.3,
+            "high": 3.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "adrenal",
+      "title": "Función suprarrenal",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "cortisol_am",
+          "display_name": "Cortisol (matutino, 8h)",
+          "value": 15.5,
+          "value_text": "15.5 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 6.2,
+            "high": 19.4,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "cortisol_pm",
+          "display_name": "Cortisol (tarde, 16h)",
+          "value": 9.8,
+          "value_text": "9.8 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 2.3,
+            "high": 11.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "aldosterone",
+          "display_name": "Aldosterona",
+          "value": 12.0,
+          "value_text": "12.0 ng/dL",
+          "unit": "ng/dL",
+          "range": {
+            "low": 3.0,
+            "high": 35.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "renin",
+          "display_name": "Renina",
+          "value": 1.8,
+          "value_text": "1.8 ng/mL/h",
+          "unit": "ng/mL/h",
+          "range": {
+            "low": 0.6,
+            "high": 4.3,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "vitamins",
+      "title": "Vitaminas",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "vitamin_d",
+          "display_name": "Vitamina D (25-OH)",
+          "value": 18,
+          "value_text": "18 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 30,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "bajo",
+          "tier": "ambar",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "omega3_index",
+          "display_name": "Índice de Omega-3",
+          "value": 4.2,
+          "value_text": "4.2 %",
+          "unit": "%",
+          "range": {
+            "low": 4.0,
+            "high": 20.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_bajo",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_b12",
+          "display_name": "Vitamina B12",
+          "value": 310,
+          "value_text": "310 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 232,
+            "high": null,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "folate",
+          "display_name": "Ácido fólico (folato)",
+          "value": 6.8,
+          "value_text": "6.8 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 3.1,
+            "high": 20.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_b6",
+          "display_name": "Vitamina B6",
+          "value": 14,
+          "value_text": "14 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 5,
+            "high": 50,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_a",
+          "display_name": "Vitamina A",
+          "value": 42,
+          "value_text": "42 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 20,
+            "high": 80,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "vitamin_e",
+          "display_name": "Vitamina E",
+          "value": 9.0,
+          "value_text": "9.0 mg/L",
+          "unit": "mg/L",
+          "range": {
+            "low": 5.5,
+            "high": 17.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "coq10",
+          "display_name": "Coenzima Q10",
+          "value": 0.7,
+          "value_text": "0.7 ug/mL",
+          "unit": "ug/mL",
+          "range": {
+            "low": 0.4,
+            "high": 1.9,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "minerals",
+      "title": "Minerales",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "sodium",
+          "display_name": "Sodio",
+          "value": 140,
+          "value_text": "140 mmol/L",
+          "unit": "mmol/L",
+          "range": {
+            "low": 136,
+            "high": 145,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "potassium",
+          "display_name": "Potasio",
+          "value": 4.3,
+          "value_text": "4.3 mmol/L",
+          "unit": "mmol/L",
+          "range": {
+            "low": 3.5,
+            "high": 5.1,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "calcium_corrected",
+          "display_name": "Calcio corregido",
+          "value": 9.4,
+          "value_text": "9.4 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 8.6,
+            "high": 10.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "magnesium",
+          "display_name": "Magnesio",
+          "value": 1.8,
+          "value_text": "1.8 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 1.7,
+            "high": 2.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "phosphorus",
+          "display_name": "Fósforo",
+          "value": 3.4,
+          "value_text": "3.4 mg/dL",
+          "unit": "mg/dL",
+          "range": {
+            "low": 2.5,
+            "high": 4.5,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "zinc",
+          "display_name": "Zinc",
+          "value": 68,
+          "value_text": "68 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 60,
+            "high": 120,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "copper",
+          "display_name": "Cobre",
+          "value": 95,
+          "value_text": "95 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 70,
+            "high": 140,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "selenium",
+          "display_name": "Selenio",
+          "value": 88,
+          "value_text": "88 ug/L",
+          "unit": "ug/L",
+          "range": {
+            "low": 70,
+            "high": 150,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "chloride",
+          "display_name": "Cloro",
+          "value": 102,
+          "value_text": "102 mmol/L",
+          "unit": "mmol/L",
+          "range": {
+            "low": 98,
+            "high": 107,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "cardio",
+      "title": "Salud cardiovascular",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "nt_probnp",
+          "display_name": "NT-proBNP",
+          "value": 42,
+          "value_text": "42 pg/mL",
+          "unit": "pg/mL",
+          "range": {
+            "low": 0,
+            "high": 125,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "immune",
+      "title": "Autoinmunidad",
+      "expanded_by_default": true,
+      "markers": [
+        {
+          "marker_id": "ana",
+          "display_name": "Anticuerpos antinucleares (ANA)",
+          "value": 0,
+          "value_text": "0 título",
+          "unit": "título",
+          "range": {
+            "low": 0,
+            "high": 1,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "limite_bajo",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "rheumatoid_factor",
+          "display_name": "Factor reumatoide",
+          "value": 6,
+          "value_text": "6 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 14,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "total_ige",
+          "display_name": "IgE total",
+          "value": 45,
+          "value_text": "45 UI/mL",
+          "unit": "UI/mL",
+          "range": {
+            "low": 0,
+            "high": 100,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "hormones_growth",
+      "title": "Hormona de crecimiento",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "igf1",
+          "display_name": "IGF-1 (somatomedina C)",
+          "value": 150,
+          "value_text": "150 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 90,
+            "high": 360,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "other",
+      "title": "Otros",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "ammonia",
+          "display_name": "Amoniaco",
+          "value": 32,
+          "value_text": "32 umol/L",
+          "unit": "umol/L",
+          "range": {
+            "low": 15,
+            "high": 45,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "tumor",
+      "title": "Marcadores tumorales",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "psa",
+          "display_name": "PSA (antígeno prostático específico)",
+          "value": 0.9,
+          "value_text": "0.9 ng/mL",
+          "unit": "ng/mL",
+          "range": {
+            "low": 0.0,
+            "high": 4.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "coagulation",
+      "title": "Coagulación",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "pt_inr",
+          "display_name": "Tiempo de protrombina (INR)",
+          "value": 1.0,
+          "value_text": "1.0 ratio",
+          "unit": "ratio",
+          "range": {
+            "low": 0.8,
+            "high": 1.2,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "toxicology",
+      "title": "Metales pesados",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "lead",
+          "display_name": "Plomo (sangre)",
+          "value": 1.8,
+          "value_text": "1.8 ug/dL",
+          "unit": "ug/dL",
+          "range": {
+            "low": 0.0,
+            "high": 5.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "mercury",
+          "display_name": "Mercurio (sangre)",
+          "value": 3.2,
+          "value_text": "3.2 ug/L",
+          "unit": "ug/L",
+          "range": {
+            "low": 0.0,
+            "high": 10.0,
+            "source": "laboratorio",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    },
+    {
+      "category_id": "sti",
+      "title": "Cribado de infecciones de transmisión sexual",
+      "expanded_by_default": false,
+      "markers": [
+        {
+          "marker_id": "hiv_ab",
+          "display_name": "VIH (Ac/Ag combo)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "syphilis",
+          "display_name": "Sífilis (RPR/TPHA)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "hbsag",
+          "display_name": "Hepatitis B (HBsAg)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "anti_hcv",
+          "display_name": "Hepatitis C (Anti-VHC)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        },
+        {
+          "marker_id": "gc_ct_pcr",
+          "display_name": "Gonococo / Clamidia (PCR)",
+          "value": "Negativo",
+          "value_text": "Negativo",
+          "unit": null,
+          "range": {
+            "low": null,
+            "high": null,
+            "source": "guia",
+            "adjustment": "ninguno"
+          },
+          "flag": "en_rango",
+          "tier": "verde",
+          "preanalytic_flags": []
+        }
+      ]
+    }
+  ],
+  "retest": [
+    {
+      "marker_id": "ldl",
+      "months": 6,
+      "reason": "seguimiento de riesgo cardiovascular"
+    },
+    {
+      "marker_id": "vitamin_d",
+      "months": 3,
+      "reason": "confirmar respuesta a suplementación"
+    }
+  ],
+  "glossary": [
+    {
+      "term": "HbA1c",
+      "definition": "Refleja tu nivel medio de glucosa en sangre durante los últimos 2-3 meses."
+    },
+    {
+      "term": "HOMA-IR",
+      "definition": "Estima cómo de bien responde tu cuerpo a la insulina."
+    },
+    {
+      "term": "PhenoAge",
+      "definition": "Una estimación de tu edad biológica a partir de biomarcadores, con un margen de incertidumbre."
+    }
+  ],
+  "provenance": {
+    "ruleset_hash": "mock-ruleset-v0",
+    "kb_snapshot": "mock-kb-2026-09",
+    "prompt_version": "mock-v1",
+    "model": "dummy-data-generator",
+    "ai_generated_text": false,
+    "note": "DATOS DUMMY para prototipo — no son datos clínicos reales."
+  },
+  "action_plan": [],
+  "wearable_context": {
+    "window": "last_28_days",
+    "coverage_pct": 61,
+    "sleep_avg_hours": 5.6,
+    "sleep_regularity_score_pct": 48,
+    "resting_heart_rate_bpm": 68,
+    "hrv_rmssd_ms": 32,
+    "steps_avg_daily": 5100,
+    "activity_vs_baseline_pct": 0,
+    "notes": [
+      "Cobertura de datos límite (61%): línea base aún en construcción."
+    ]
+  }
+}
