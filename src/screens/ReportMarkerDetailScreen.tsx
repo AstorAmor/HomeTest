@@ -7,14 +7,13 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { currentReport, findMarkerInCurrentReport } from '@/data/reportRepository';
 import { getMarkerExplanation } from '@/data/markerExplanations';
-import { EscalationTier } from '@/types/report';
-
-const TIER_COLOR: Record<EscalationTier, string> = {
-  verde: Colors.accent,
-  ambar: Colors.warning,
-  rojo: Colors.danger,
-  critico: Colors.danger,
-};
+import {
+  getMarkerDisplayNameEn,
+  getMarkerValueTextEn,
+  getUnitLabelEn,
+  RETEST_REASON_EN,
+} from '@/data/reportContentEn';
+import { TIER_COLOR, FLAG_LABEL } from '@/utils/reportDisplay';
 
 export const ReportMarkerDetailScreen = () => {
   const { markerId } = useLocalSearchParams<{ markerId: string }>();
@@ -31,24 +30,23 @@ export const ReportMarkerDetailScreen = () => {
   }
 
   const color = TIER_COLOR[marker.tier];
+  const displayName = getMarkerDisplayNameEn(marker.marker_id, marker.display_name);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={marker.display_name} showBack />
+        <ScreenHeader title={displayName} showBack />
 
         <View style={styles.valueCard}>
-          <Text style={styles.value}>{marker.value_text}</Text>
+          <Text style={styles.value}>{getMarkerValueTextEn(marker.value, marker.unit)}</Text>
           {marker.range.low !== null && marker.range.high !== null && (
             <Text style={styles.range}>
-              Reference range: {marker.range.low}–{marker.range.high} {marker.unit ?? ''}
+              Reference range: {marker.range.low}–{marker.range.high} {getUnitLabelEn(marker.unit)}
             </Text>
           )}
           <View style={[styles.badge, { backgroundColor: `${color}22` }]}>
             <Ionicons name="information-circle-outline" size={14} color={color} />
-            <Text style={[styles.badgeText, { color }]}>
-              {marker.flag.replace(/_/g, ' ')}
-            </Text>
+            <Text style={[styles.badgeText, { color }]}>{FLAG_LABEL[marker.flag]}</Text>
           </View>
         </View>
 
@@ -72,7 +70,8 @@ export const ReportMarkerDetailScreen = () => {
           <View style={styles.retestChip}>
             <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
             <Text style={styles.retestText}>
-              Suggested retest in {retest.months} months — {retest.reason}
+              Suggested retest in {retest.months} months —{' '}
+              {RETEST_REASON_EN[retest.marker_id] ?? retest.reason}
             </Text>
           </View>
         )}

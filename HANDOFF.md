@@ -149,6 +149,59 @@ de analíticas) se deja en el idioma del documento original a propósito
 - Layout final calibrado a mano por el usuario: rueda 212px, barra desplazada (-33, 5); fila inferior con Log a la izquierda y lápiz+micro a la derecha. Todo el texto en inglés.
 - Pendiente: la sección "Daily readiness" (sueño/calorías/pasos con anillos, estilo Google) del mockup NO está hecha; iría con Health Connect (requiere dev client, se decidió posponerlo y usar datos dummy primero).
 
+### Lab Report Wow Prototype — añadido 2026-09-26 (rama `feature/lab-report-wow-prototype`)
+
+Prototipo visual de la pantalla de informe de laboratorio + plan personalizado,
+construido siguiendo `PROMPT_CLAUDE_CODE_lab_report_wow.md` (research prompt
+previo, esquema `HomeTestReport` ya decidido). Sobre datos dummy fijos, sin
+backend ni lógica real de negocio — es UI de alto impacto visual, no el motor
+de reglas real (eso vive aparte, en la rama `feature/recommendation-engine-skeleton`,
+todavía no mezclada con esta).
+
+- **Datos**: los 4 JSON dummy en `src/data/seed/hometest/` (informe baseline,
+  informe actual, perfil de usuario, serie temporal de wearable), cargados
+  como imports estáticos en `src/data/reportRepository.ts` — sin AsyncStorage,
+  es solo para este prototipo.
+- **Flujo de pantallas**: `/report-intro` (landing "Your report is here!") →
+  `/report-summary` (donuts de resumen + PhenoAge + lista de marcadores a
+  revisar) → `/report-marker-detail?markerId=...` (detalle tappable) →
+  `/report-plan` (hábitos antes/después + tendencia 6 meses + action plan con
+  proyección) → `/talk-to-specialist` (UI sin backend). Entrada desde Today
+  vía una tarjeta nueva ("Your report is here!").
+- **Componentes nuevos**: `DonutChart.tsx` y `ProjectionChart.tsx` (SVG puro,
+  sin librería de gráficos nueva, mismo patrón que `SimpleMetricChart.tsx`/
+  `Sparkline.tsx` ya existentes).
+- **Importante — capa de traducción**: los JSON dummy tienen el contenido de
+  texto (títulos, why/how del plan, explicación de PhenoAge, nombres de
+  marcador) en español a propósito, como placeholders. Todo lo que ve el
+  usuario debe estar en inglés, así que **no se renderizan esos campos
+  directamente** — hay una capa de traducción manual en
+  `src/data/reportContentEn.ts` (y `src/data/markerExplanations.ts` para las
+  explicaciones de marcador) que Claude Code generó como copy final. Si se
+  reemplazan los JSON dummy por datos reales/generados por LLM, revisar si
+  esa capa de traducción sigue haciendo falta o si el contenido ya viene en
+  inglés.
+- **Bug real encontrado y arreglado**: con `app.json` → `web.output: "server"`,
+  `Dimensions.get('window').width` evaluado a nivel de módulo (patrón que ya
+  tenía `SimpleMetricChart.tsx`) devuelve `0` durante el render en servidor,
+  lo que producía un ancho de SVG negativo y rompía el gráfico (y el scroll
+  de la pantalla) en la primera carga. Arreglado en `SimpleMetricChart.tsx` y
+  en el nuevo `ProjectionChart.tsx` usando `useWindowDimensions()` (reactivo)
+  en vez del `Dimensions.get()` estático. Si aparecen más gráficos SVG en el
+  futuro, usar `useWindowDimensions()` desde el principio.
+- **Decisiones de implementación tomadas sin preguntar** (per instrucciones
+  del prompt): no existía la sección "More → Goals" que el prompt daba por
+  hecha — se lee `primary_goal` directamente del fixture de perfil en vez de
+  rehacer onboarding. El donut por categoría solo se muestra para las
+  categorías con algún marcador fuera de "en_rango" (5 de 19), no las 19.
+  El indicador "N marcadores mejoraron" cuenta `trend.significant && flag
+  === 'en_rango'` como proxy de mejora — no hay (todavía) una tabla de qué
+  dirección es clínicamente buena por marcador para algo más preciso.
+- **Pendiente / no implementado a propósito**: sin tests (el prompt pedía UI,
+  no lógica); `.expo/types/router.d.ts` se regenera solo al arrancar
+  `npx expo start` (está en `.gitignore`, no hace falta tocarlo a mano salvo
+  para verificar tipos sin arrancar el server).
+
 ## Decisión pendiente y con implicaciones de arquitectura: "aprendizaje" tipo Flo
 
 El usuario preguntó si se puede montar la plataforma para que aprenda

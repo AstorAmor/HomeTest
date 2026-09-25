@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import Svg, { Polyline, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 
@@ -13,11 +13,9 @@ interface SimpleMetricChartProps {
   color: string;
 }
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_MARGIN = 40;
 const CARD_PADDING = 32;
 const Y_AXIS_WIDTH = 36;
-const CHART_WIDTH = SCREEN_WIDTH - CARD_MARGIN - CARD_PADDING - Y_AXIS_WIDTH - 10;
 const CHART_HEIGHT = 140;
 const PADDING_Y = 10;
 
@@ -32,6 +30,9 @@ function scaleY(value: number, min: number, max: number, height: number) {
 }
 
 export const SimpleMetricChart = ({ entries, color }: SimpleMetricChartProps) => {
+  const { width: screenWidth } = useWindowDimensions();
+  const chartWidth = Math.max(screenWidth - CARD_MARGIN - CARD_PADDING - Y_AXIS_WIDTH - 10, 120);
+
   if (entries.length < 2) {
     return (
       <View style={styles.emptyWrap}>
@@ -46,7 +47,7 @@ export const SimpleMetricChart = ({ entries, color }: SimpleMetricChartProps) =>
   const min = Math.min(...values) - Math.max(2, Math.round(Math.min(...values) * 0.05));
   const max = Math.max(...values) + Math.max(2, Math.round(Math.max(...values) * 0.05));
 
-  const xStep = entries.length > 1 ? CHART_WIDTH / (entries.length - 1) : 0;
+  const xStep = entries.length > 1 ? chartWidth / (entries.length - 1) : 0;
   const points = entries.map((e, i) => ({
     x: i * xStep,
     y: scaleY(e.valor, min, max, CHART_HEIGHT),
@@ -60,7 +61,7 @@ export const SimpleMetricChart = ({ entries, color }: SimpleMetricChartProps) =>
           <Text style={styles.axisLabel}>{Math.round(max)}</Text>
           <Text style={styles.axisLabel}>{Math.round(min)}</Text>
         </View>
-        <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
+        <Svg width={chartWidth} height={CHART_HEIGHT}>
           <Polyline points={line} fill="none" stroke={color} strokeWidth={2} />
           {points.map((p, i) => (
             <Circle key={i} cx={p.x} cy={p.y} r={3} fill={color} />

@@ -7,44 +7,12 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { DonutChart } from '@/components/DonutChart';
 import { Colors } from '@/constants/colors';
 import { currentReport, getMarkersNeedingReview } from '@/data/reportRepository';
-import { MarkerFlag, EscalationTier } from '@/types/report';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  lipids: 'Lipids',
-  metabolic: 'Metabolic',
-  iron: 'Iron',
-  vitamins: 'Vitamins',
-  immune: 'Immune',
-};
-
-const categoryLabel = (categoryId: string) =>
-  CATEGORY_LABELS[categoryId] ??
-  categoryId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-
-const TIER_COLOR: Record<EscalationTier, string> = {
-  verde: Colors.accent,
-  ambar: Colors.warning,
-  rojo: Colors.danger,
-  critico: Colors.danger,
-};
-
-const FLAG_ICON: Record<MarkerFlag, keyof typeof Ionicons.glyphMap> = {
-  alto: 'arrow-up-circle',
-  limite_alto: 'arrow-up-circle-outline',
-  bajo: 'arrow-down-circle',
-  limite_bajo: 'arrow-down-circle-outline',
-  critico: 'alert-circle',
-  en_rango: 'checkmark-circle-outline',
-};
-
-const FLAG_LABEL: Record<MarkerFlag, string> = {
-  alto: 'High',
-  limite_alto: 'Borderline high',
-  bajo: 'Low',
-  limite_bajo: 'Borderline low',
-  critico: 'Critical',
-  en_rango: 'In range',
-};
+import {
+  getMarkerDisplayNameEn,
+  getMarkerValueTextEn,
+  PHENOAGE_EXPLANATION_EN,
+} from '@/data/reportContentEn';
+import { TIER_COLOR, FLAG_LABEL, FLAG_ICON, categoryLabel } from '@/utils/reportDisplay';
 
 // Proxy simplificado: "mejora" = cambio significativo que además ya aterrizó en rango.
 // No tenemos (todavía) una tabla de qué dirección es clínicamente buena por marcador,
@@ -144,7 +112,7 @@ export const ReportSummaryScreen = () => {
             <Text style={styles.phenoChrono}>
               vs. {summary.phenoage.chronological_age} chronological
             </Text>
-            <Text style={styles.phenoExplanation}>{summary.phenoage.explanation}</Text>
+            <Text style={styles.phenoExplanation}>{PHENOAGE_EXPLANATION_EN}</Text>
           </View>
         )}
 
@@ -166,8 +134,12 @@ export const ReportSummaryScreen = () => {
               >
                 <Ionicons name={FLAG_ICON[marker.flag]} size={22} color={color} />
                 <View style={styles.markerTextWrap}>
-                  <Text style={styles.markerName}>{marker.display_name}</Text>
-                  <Text style={styles.markerValue}>{marker.value_text}</Text>
+                  <Text style={styles.markerName}>
+                    {getMarkerDisplayNameEn(marker.marker_id, marker.display_name)}
+                  </Text>
+                  <Text style={styles.markerValue}>
+                    {getMarkerValueTextEn(marker.value, marker.unit)}
+                  </Text>
                 </View>
                 <View style={[styles.markerBadge, { backgroundColor: `${color}22` }]}>
                   <Text style={[styles.markerBadgeText, { color }]}>
