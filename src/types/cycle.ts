@@ -1,3 +1,11 @@
+// Fase de ciclo relevante para ajustar rangos de referencia hormonales (ver
+// src/logic/rulesEngine/cycleAdjustment.ts). 'none' cubre explícitamente a
+// usuarios sin ciclo con relevancia clínica para el ajuste: hombres,
+// menopausia confirmada, o anticoncepción hormonal (que aplana el ciclo
+// natural) -- no es lo mismo que "sin dato", que se representa como `null`
+// en el resto del motor.
+export type CyclePhase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal' | 'none';
+
 export interface CycleEntry {
   id: string;
   fecha: string; // ISO date del primer día de sangrado (inicio de ciclo)

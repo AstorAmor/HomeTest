@@ -149,6 +149,64 @@ de analíticas) se deja en el idioma del documento original a propósito
 - Layout final calibrado a mano por el usuario: rueda 212px, barra desplazada (-33, 5); fila inferior con Log a la izquierda y lápiz+micro a la derecha. Todo el texto en inglés.
 - Pendiente: la sección "Daily readiness" (sueño/calorías/pasos con anillos, estilo Google) del mockup NO está hecha; iría con Health Connect (requiere dev client, se decidió posponerlo y usar datos dummy primero).
 
+## Motor de recomendaciones (esqueleto) — añadido 2026-09-25
+
+Primer paso del diseño del "cerebro" de la app: qué le dice a la usuaria
+sobre sus resultados y qué le recomienda. Construido siguiendo un prompt de
+investigación lanzado en paralelo a Claude/ChatGPT/Gemini (research sobre
+arquitectura, fórmula de edad biológica, lógica de recomendaciones, ajuste
+por ciclo e integración de wearables — comparando cómo lo hacen Function
+Health, Lucis, Axon Longevity y Holo.hq). Esta sesión construyó solo lo que
+NO depende de esa investigación:
+
+- `src/types/recommendation.ts` — tipos del motor completo (BiomarkerResult,
+  RecommendationInput/Output, evidencia trazable por afirmación).
+- `src/types/wearable.ts` — interfaz `WearableDataProvider`, sin ninguna
+  integración real (Terra API vs HealthKit nativo vs Health Connect: por
+  decidir).
+- `src/types/cycle.ts` — se le añadió `CyclePhase` ('menstrual' |
+  'follicular' | 'ovulation' | 'luteal' | 'none').
+- `src/logic/rulesEngine/` — motor determinista, **testeado con Vitest**
+  (`npm test`, 25 tests, añadido este mismo día — el repo no tenía ningún
+  test runner hasta ahora):
+  - `flags.ts` — flag de cada resultado, reutiliza `rangeStatus.ts`.
+  - `ratios.ts` — 8 ratios calculados (LDL Friedewald, no-HDL, TC/HDL,
+    BUN/Creatinina, Globulina, A/G, % saturación de hierro, HOMA-IR) con
+    conversión de unidades propia. **HOMA-IR no tiene canonical_id en el
+    catálogo todavía** — hay que añadirlo a `metabolico.json` antes de
+    usarlo en producción (ver `TODO_ADD_TO_CATALOG` en el archivo). eGFR,
+    testosterona libre, % PSA libre y los ratios de Omega quedan sin
+    implementar (fórmulas más complejas, con más riesgo de error).
+  - `biologicalAge.ts` — **stub que lanza error a propósito**
+    (`BiologicalAgeNotImplementedError`). Candidata más probable: PhenoAge
+    (sus 9 inputs ya existen en el catálogo), pendiente de fórmula exacta.
+  - `cycleAdjustment.ts` — identifica biomarcadores cycle-sensitive (FSH,
+    LH, Estradiol, Prolactina) pero **no ajusta números todavía** — falta
+    literatura con cutoffs por fase, y además HomeTest no tiene rangos de
+    referencia propios (los rangos hoy vienen del PDF del laboratorio, no
+    de `knowledge/`) — ver limitación explicada en el README del módulo.
+  - `README.md` — explica todo lo de arriba con más detalle.
+- `prompts/` (nueva carpeta en la raíz del repo, no dentro de `src/`) —
+  4 plantillas de prompt versionadas en markdown (system prompt, síntesis
+  por biomarcador, plan de acción multi-marcador, guardarraíles de
+  seguridad), todas con secciones "QUÉ FALTA" explícitas señalando qué
+  depende de la investigación externa. Ver `prompts/README.md`.
+
+**Decisión importante de validación médica** (contexto para quien retome
+esto): el médico colegiado que se va a contratar validará por
+responsabilidad legal y casos de riesgo, **no** hace revisión sistemática
+de evidencia científica marcador a marcador — eso lo hace el fundador
+directamente (formación en bioingeniería). El diseño de todo esto tiene que
+tenerlo en cuenta, no asumir un equipo médico grande revisando cada
+`knowledge_card`.
+
+**Próximo paso**: cuando vuelvan las respuestas de la investigación externa,
+traerlas a una sesión de Claude Code para (1) decidir y programar la
+fórmula de `biologicalAge.ts`, (2) rellenar los 4 prompts de `prompts/` con
+contenido real, (3) diseñar el árbol de decisión de
+`multi-marker-plan.md` como código (probablemente otro módulo determinista
+en `src/logic/rulesEngine/`, no solo texto en el prompt).
+
 ## Decisión pendiente y con implicaciones de arquitectura: "aprendizaje" tipo Flo
 
 El usuario preguntó si se puede montar la plataforma para que aprenda
