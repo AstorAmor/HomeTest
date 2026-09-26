@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -19,6 +19,7 @@ export const ReportMarkerDetailScreen = () => {
   const { markerId } = useLocalSearchParams<{ markerId: string }>();
   const marker = markerId ? findMarkerInCurrentReport(markerId) : undefined;
   const retest = currentReport.retest.find((r) => r.marker_id === markerId);
+  const [testBooked, setTestBooked] = useState(false);
 
   if (!marker) {
     return (
@@ -75,6 +76,25 @@ export const ReportMarkerDetailScreen = () => {
             </Text>
           </View>
         )}
+
+        {retest &&
+          (testBooked ? (
+            <View style={styles.bookedConfirmation}>
+              <Ionicons name="checkmark-circle" size={18} color={Colors.accent} />
+              <Text style={styles.bookedConfirmationText}>
+                Noted — a real booking flow isn't wired up in this prototype yet.
+              </Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.bookTestButton}
+              onPress={() => setTestBooked(true)}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="flask-outline" size={18} color={Colors.background} />
+              <Text style={styles.bookTestButtonText}>Book a new test</Text>
+            </TouchableOpacity>
+          ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -163,5 +183,35 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 12,
     flex: 1,
+  },
+  bookTestButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.accent,
+    borderRadius: 30,
+    paddingVertical: 14,
+    marginTop: 12,
+  },
+  bookTestButtonText: {
+    color: Colors.background,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  bookedConfirmation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.accentSoft,
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+  },
+  bookedConfirmationText: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: 12,
+    lineHeight: 17,
   },
 });

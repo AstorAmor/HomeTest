@@ -24,7 +24,12 @@ export function findMarkerInCurrentReport(markerId: string): ReportMarker | unde
   return undefined;
 }
 
-export function getMarkersNeedingReview(): ReportMarker[] {
+export interface MarkerWithCategory extends ReportMarker {
+  categoryId: string;
+  categoryTitle: string;
+}
+
+export function getMarkersNeedingReview(): MarkerWithCategory[] {
   const severityWeight: Record<string, number> = {
     critico: 0,
     alto: 1,
@@ -33,7 +38,23 @@ export function getMarkersNeedingReview(): ReportMarker[] {
     limite_bajo: 2,
   };
   return currentReport.sections
-    .flatMap((s) => s.markers)
+    .flatMap((s) =>
+      s.markers.map((m) => ({ ...m, categoryId: s.category_id, categoryTitle: s.title }))
+    )
     .filter((m) => m.flag !== 'en_rango')
     .sort((a, b) => (severityWeight[a.flag] ?? 9) - (severityWeight[b.flag] ?? 9));
+}
+
+// El campo summary.counts del JSON dummy no está sincronizado con los flags reales
+// por marcador (es un dato de ejemplo escrito a mano aparte) — para que el donut de
+// cabecera y el desglose por categoría sumen lo mismo, se calcula aquí a partir de
+// los marcadores reales en vez de leer summary.counts directamente.
+export function getComputedSummaryCounts(): {
+  enRango: number;
+  needsReview: number;
+  total: number;
+} {
+  const allMarkers = currentReport.sections.flatMap((s) => s.markers);
+  const enRango = allMarkers.filter((m) => m.flag === 'en_rango').length;
+  return { enRango, needsReview: allMarkers.length - enRango, total: allMarkers.length };
 }

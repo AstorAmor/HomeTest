@@ -6,7 +6,11 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { DonutChart } from '@/components/DonutChart';
 import { Colors } from '@/constants/colors';
-import { currentReport, getMarkersNeedingReview } from '@/data/reportRepository';
+import {
+  currentReport,
+  getComputedSummaryCounts,
+  getMarkersNeedingReview,
+} from '@/data/reportRepository';
 import {
   getMarkerDisplayNameEn,
   getMarkerValueTextEn,
@@ -37,6 +41,7 @@ const getCategoryBreakdown = () =>
 export const ReportSummaryScreen = () => {
   const router = useRouter();
   const { summary } = currentReport;
+  const counts = getComputedSummaryCounts();
   const markersNeedingReview = getMarkersNeedingReview();
   const improvedCount = countImprovedMarkers();
   const categoryBreakdown = getCategoryBreakdown();
@@ -59,20 +64,20 @@ export const ReportSummaryScreen = () => {
         <View style={styles.donutRow}>
           <DonutChart
             segments={[
-              { value: summary.counts.en_rango, color: Colors.accent },
-              { value: summary.counts.a_vigilar, color: Colors.warning },
+              { value: counts.enRango, color: Colors.accent },
+              { value: counts.needsReview, color: Colors.warning },
             ]}
-            centerLabel={`${summary.counts.en_rango}`}
-            centerSubLabel={`of ${summary.counts.total} in range`}
+            centerLabel={`${counts.enRango}`}
+            centerSubLabel={`of ${counts.total} in range`}
           />
           <View style={styles.legend}>
             <View style={styles.legendRow}>
               <View style={[styles.legendDot, { backgroundColor: Colors.accent }]} />
-              <Text style={styles.legendText}>{summary.counts.en_rango} in range</Text>
+              <Text style={styles.legendText}>{counts.enRango} in range</Text>
             </View>
             <View style={styles.legendRow}>
               <View style={[styles.legendDot, { backgroundColor: Colors.warning }]} />
-              <Text style={styles.legendText}>{summary.counts.a_vigilar} need a look</Text>
+              <Text style={styles.legendText}>{counts.needsReview} need a look</Text>
             </View>
           </View>
         </View>
@@ -134,9 +139,16 @@ export const ReportSummaryScreen = () => {
               >
                 <Ionicons name={FLAG_ICON[marker.flag]} size={22} color={color} />
                 <View style={styles.markerTextWrap}>
-                  <Text style={styles.markerName}>
-                    {getMarkerDisplayNameEn(marker.marker_id, marker.display_name)}
-                  </Text>
+                  <View style={styles.markerNameRow}>
+                    <Text style={styles.markerName}>
+                      {getMarkerDisplayNameEn(marker.marker_id, marker.display_name)}
+                    </Text>
+                    <View style={styles.categoryPill}>
+                      <Text style={styles.categoryPillText}>
+                        {categoryLabel(marker.categoryId)}
+                      </Text>
+                    </View>
+                  </View>
                   <Text style={styles.markerValue}>
                     {getMarkerValueTextEn(marker.value, marker.unit)}
                   </Text>
@@ -297,11 +309,27 @@ const styles = StyleSheet.create({
   markerTextWrap: {
     flex: 1,
   },
+  markerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
   markerName: {
     color: Colors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 2,
+  },
+  categoryPill: {
+    backgroundColor: Colors.divider,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  categoryPillText: {
+    color: Colors.textMuted,
+    fontSize: 10,
+    fontWeight: '600',
   },
   markerValue: {
     color: Colors.textSecondary,
