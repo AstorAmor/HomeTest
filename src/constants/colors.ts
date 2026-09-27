@@ -24,4 +24,13 @@ export const Colors = {
   divider: '#262A3A',
 
   pulseAccent: '#E06B9E',
+  pinkSoft: '#F7B6D2',
+  pinkSoftBg: 'rgba(247, 182, 210, 0.16)',
+
+  // Series de gráficas y anillos (Today / My Data)
+  violet: '#9B8CFF',
+  violetSoft: 'rgba(155, 140, 255, 0.15)',
+  sky: '#5AB8F0',
+  amber: '#F0B84D',
+  coral: '#FF8A65',
 };

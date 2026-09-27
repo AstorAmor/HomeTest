@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/colors';
+import { CosmicBackground } from '@/components/CosmicBackground';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -50,6 +51,7 @@ export const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <CosmicBackground />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
@@ -98,7 +100,7 @@ export const LoginScreen = () => {
               editable={!loading}
             />
 
-            {error && <Text style={styles.error}>{error}</Text>}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <TouchableOpacity
               style={[styles.button, !isFormValid && styles.buttonDisabled]}
@@ -143,7 +145,7 @@ export const LoginScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0D0F1A',
   },
   container: {
     flex: 1,
@@ -186,7 +188,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: Colors.textPrimary,
-    backgroundColor: Colors.card,
+    backgroundColor: 'rgba(30, 34, 48, 0.72)',
   },
   button: {
     backgroundColor: Colors.accent,
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   demoHint: {
-    backgroundColor: Colors.card,
+    backgroundColor: 'rgba(30, 34, 48, 0.72)',
     borderLeftWidth: 4,
     borderLeftColor: Colors.warning,
     paddingVertical: 12,

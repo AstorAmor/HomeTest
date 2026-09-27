@@ -4,22 +4,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { RangeBar } from '@/components/RangeBar';
+import { DonutChart } from '@/components/DonutChart';
+import { MarkerRangeBar } from '@/components/MarkerRangeBar';
 import { Colors } from '@/constants/colors';
-import { mockUpcomingAnalyses, mockLabResultPanels } from '@/data/mockData';
+import { mockUpcomingAnalyses } from '@/data/mockData';
+import { getMarkerValueTextEn } from '@/data/reportContentEn';
+import {
+  LAB_REPORTS,
+  flagColor,
+  flaggedMarkers,
+  formatReportDate,
+  markerNameEn,
+  rangePosition,
+  reportCounts,
+} from '@/utils/labReportView';
 
 const formatShortDate = (dateString: string) => {
   const date = new Date(dateString);
   return `${date.getDate()}/${date.getMonth() + 1}`;
 };
 
-const formatFullDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-};
-
 export const LabScreen = () => {
   const router = useRouter();
+
+  const openReport = (id: 'current' | 'baseline') => {
+    // El informe más reciente abre el recorrido completo (resumen + plan);
+    // los anteriores, la vista de resultados por secciones.
+    if (id === 'current') router.push('/report-summary');
+    else router.push({ pathname: '/lab-report', params: { id } });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -29,7 +42,12 @@ export const LabScreen = () => {
         <Text style={styles.sectionTitle}>Upcoming Analysis</Text>
         <View style={styles.sectionBlock}>
           {mockUpcomingAnalyses.map((item) => (
-            <View key={item.id} style={styles.upcomingCard}>
+            <TouchableOpacity
+              key={item.id}
+              style={styles.upcomingCard}
+              onPress={() => router.push({ pathname: '/upcoming-analysis', params: { id: item.id } })}
+              activeOpacity={0.85}
+            >
               <View style={styles.upcomingLeft}>
                 <Text style={styles.upcomingName}>{item.nombre}</Text>
                 <Text style={styles.upcomingDesc}>{item.descripcion}</Text>
@@ -38,41 +56,63 @@ export const LabScreen = () => {
                 <View style={styles.dateBadge}>
                   <Text style={styles.dateBadgeText}>{formatShortDate(item.fecha)}</Text>
                 </View>
-                <Ionicons name="calendar-outline" size={22} color={Colors.textSecondary} />
+                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
         <Text style={styles.sectionTitle}>Lab Results</Text>
         <View style={styles.sectionBlock}>
-          {mockLabResultPanels.map((panel) => (
-            <View key={panel.id} style={styles.resultCard}>
-              <View style={styles.resultHeader}>
-                <Text style={styles.resultName}>{panel.nombre}</Text>
-                <Text style={styles.resultDate}>{formatFullDate(panel.fecha)}</Text>
-              </View>
-              <Text
-                style={[
-                  styles.resultStatus,
-                  { color: panel.status === 'good' ? Colors.accent : Colors.danger },
-                ]}
-              >
-                {panel.statusLabel}
-              </Text>
-
-              <View style={styles.paramsList}>
-                {panel.parametros.map((param) => (
-                  <View key={param.nombre} style={styles.paramRow}>
-                    <Text style={styles.paramText}>
-                      {param.nombre}: {param.valor}
+          {LAB_REPORTS.map(({ id, title, report }) => {
+            const counts = reportCounts(report);
+            const flagged = flaggedMarkers(report);
+            return (
+              <TouchableOpacity key={id} style={styles.resultCard} onPress={() => openReport(id)} activeOpacity={0.85}>
+                <View style={styles.resultTop}>
+                  <DonutChart
+                    size={58}
+                    strokeWidth={7}
+                    segments={[
+                      { value: counts.inRange, color: Colors.accent },
+                      { value: counts.needsReview, color: Colors.warning },
+                    ]}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.resultName}>{title}</Text>
+                    <Text style={styles.resultDate}>{formatReportDate(report.test_date)}</Text>
+                    <Text style={styles.resultCounts}>
+                      <Text style={{ color: Colors.accent }}>{counts.inRange} in range</Text>
+                      {'  ·  '}
+                      <Text style={{ color: Colors.warning }}>{counts.needsReview} need a look</Text>
                     </Text>
-                    <RangeBar posicion={param.posicion} estado={param.estado} />
                   </View>
-                ))}
-              </View>
-            </View>
-          ))}
+                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                </View>
+
+                {flagged.length > 0 && (
+                  <View style={styles.paramsList}>
+                    {flagged.map((m) => {
+                      const pos = rangePosition(m);
+                      return (
+                        <View key={m.marker_id} style={styles.paramRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.paramText} numberOfLines={1}>
+                              {markerNameEn(m)}
+                            </Text>
+                            <Text style={[styles.paramValue, { color: flagColor(m) }]}>
+                              {getMarkerValueTextEn(m.value, m.unit)}
+                            </Text>
+                          </View>
+                          {pos !== null && <MarkerRangeBar position={pos} color={flagColor(m)} />}
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <TouchableOpacity style={styles.requestButton}>
@@ -80,10 +120,7 @@ export const LabScreen = () => {
           <Text style={styles.requestButtonText}>Request a new test</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => router.push('/upload-test')}
-        >
+        <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
           <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
           <Text style={styles.uploadButtonText}>Upload lab report (test)</Text>
         </TouchableOpacity>
@@ -160,27 +197,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
   },
-  resultHeader: {
+  resultTop: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+    alignItems: 'center',
+    gap: 14,
   },
   resultName: {
     color: Colors.textPrimary,
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
   },
   resultDate: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontSize: 12,
+    marginTop: 2,
   },
-  resultStatus: {
-    fontSize: 14,
+  resultCounts: {
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 14,
+    marginTop: 4,
+    color: Colors.textMuted,
   },
   paramsList: {
     gap: 10,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
   },
   paramRow: {
     flexDirection: 'row',
@@ -190,8 +233,12 @@ const styles = StyleSheet.create({
   },
   paramText: {
     color: Colors.textPrimary,
-    fontSize: 14,
-    flex: 1,
+    fontSize: 13,
+  },
+  paramValue: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 1,
   },
   requestButton: {
     flexDirection: 'row',

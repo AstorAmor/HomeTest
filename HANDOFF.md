@@ -253,3 +253,62 @@ predicciones de ciclo. Conclusiones ya habladas, no implementadas:
    la funcionalidad de ciclo menstrual funciona
 5. Primera decisión pendiente del usuario: dónde vive la sección de
    ciclo menstrual si no es en "My Data"
+
+## Wearables — añadido 2026-09-26 (rama `feature/wearables`, sin commit)
+
+Decisión: sin agregador de pago. Huawei por conexión directa (cuenta de desarrollador
+individual solicitada; pulso y sueño están reservados a empresas, se pedirán cuando exista
+la SL) y Health Connect para Xiaomi, Garmin, Oura, Samsung y Google. Apple HealthKit, más adelante.
+Contexto completo: documento de diseño, sección 5, en el proyecto de Claude (`Diseno_inteligencia_informe.md`).
+
+- **Capa anti-dependencia de proveedor**: `src/wearables/types.ts` (formato propio,
+  `DailyWearableRecord`) y `src/wearables/wearableRepository.ts` (AsyncStorage). Ninguna
+  pantalla lee formatos de proveedor; cada proveedor es un adaptador en `src/wearables/providers/`.
+- `providers/huaweiDummy.ts`: 14 días deterministas de pasos, pulso en reposo, VFC y sueño;
+  los 3 últimos días simulan una mala racha para probar las reglas sangre × wearable.
+- `providers/healthConnect.ts`: lee Steps, RestingHeartRate, HeartRateVariabilityRmssd y
+  SleepSession, resume por día y marca de origen (dataOrigin → nombre).
+- Pantalla `/wearables` (More → Wearables).
+- `app.json`: plugins `react-native-health-connect` y `expo-build-properties` (SDK 36, min 26)
+  y permisos `android.permission.health.READ_*`. `package.json`: añadidos
+  `react-native-health-connect`, `expo-dev-client`, `expo-build-properties`.
+- **Pendiente**: `npm install` en Windows; Health Connect NO funciona en Expo Go, requiere
+  `eas build --profile development --platform android` e instalar ese APK. El adaptador real de
+  Huawei Health Kit (OAuth en la nube) cuando la cuenta de desarrollador esté aprobada.
+
+## Prototipo v2 (notas del 26/09) — añadido 2026-09-27 (misma rama `feature/wearables`, sin commit)
+
+Implementa las notas manuscritas del 26/09 (`Fase0/20260927_transcripcion_prototipo.docx`). Todo el
+texto de UI en inglés; datos de ejemplo marcados como "sample" cuando no hay datos reales.
+
+- **Selector "developer" tras el login** (`DevModeSelectScreen`, `demoMode` en `AuthContext`):
+  nuevo usuario → `/onboarding`; usuario con resultados → `/results-ready` (rayo + GREAT JOB!! + confeti
+  → informe); habitual → Today. Settings (logout) vuelve al selector.
+- **Onboarding** (`OnboardingScreen`): fecha de nacimiento, altura y peso con rueda tipo candado
+  (`components/WheelPicker.tsx`), sexo, hábitos y objetivos; "Skip" en cualquier momento. Al terminar,
+  insignia "Plan builder" + confeti. Se guarda en `data/profileRepository.ts` (AsyncStorage).
+- **Login**: fondo de nubes cósmicas discreto (`components/CosmicBackground.tsx`).
+- **Today**: check-in (`/check-in`: primero el momento del día, luego preguntas adaptadas, nota
+  opcional y sugerencias SIEMPRE opcionales; `data/checkInRepository.ts`); gráfico diario de energía y
+  ánimo; barra de fase del ciclo solo si el perfil es mujer (`utils/cyclePhase.ts`); daily readiness
+  (anillo grande + pasos/calorías/sueño, `wearables/dailySeries.ts`, fórmula simple pendiente de validar
+  con el médico); biomarcadores Sugar, BP, Resting HR, HRV, Temperature; "Your plan" dummy editable en
+  `data/planRepository.ts` (`CURRENT_PLAN`) con registro de entreno (`/log-workout`) y foto de comida
+  gamificada (`/log-meal`, puntos + racha; las fotos quedan guardadas para un futuro dataset).
+  `AiLogModule` ya no se usa en Today (se conserva el fichero).
+- **My Data**: gráficas nuevas (`components/TrendChart.tsx`) para wearables (HR, HRV, sueño, pasos,
+  calorías), tensión con 2 líneas, temperatura y análisis; "Your tests"; sin botones "Log…" (se registra
+  entrando en cada indicador; BP detail tiene ahora su botón); botón de ciclo en rosa claro.
+- **Lab**: "Upcoming analysis" abre detalle con marcadores, preparación y "Reschedule or cancel";
+  "Lab results" abre el informe (el actual → report-summary; el anterior → `/lab-report`).
+- **More**: My Profile (`/profile`), Professionals con catálogo y reserva dummy (`/professionals`,
+  `data/servicesMock.ts`), Track your tests con transportista y línea de tiempo (`/track-tests`).
+- **Wearables**: añadidas métricas `body_temperature` y calorías activas al dummy de Huawei.
+- **Transiciones**: `_layout.tsx` usa `ios_from_right` para todas las pantallas (atrás = espejo de
+  adelante) y `slide_from_bottom` para los modales; `contentStyle` oscuro evita destellos. Esto también
+  elimina los 3 errores de tsc por `animationEnabled`.
+- **Pendiente (decisión del usuario)**: que la app funcione sin el ordenador encendido. Propuesta:
+  APK `eas build --profile preview` + rutas API en EAS Hosting (`eas deploy`) con la clave de Gemini
+  como variable de entorno; Windmill seguiría siendo local.
+- Nota: con `expo-dev-client` instalado, `npx expo start` abre por defecto el development build; para
+  Expo Go usar `npx expo start --go` (o pulsar `s` en la terminal de Expo).

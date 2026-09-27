@@ -74,16 +74,25 @@ export interface DiagnosticTest {
 
 export const mockDiagnosticTests: DiagnosticTest[] = [
   { id: 'fobt', nombre: 'FOBT', status: 'ok' },
-  { id: 'vih', nombre: 'VIH', status: 'waiting', statusLabel: 'Waiting for results' },
+  { id: 'vih', nombre: 'HIV', status: 'waiting', statusLabel: 'Waiting for results' },
   { id: 'hepa', nombre: 'Hep A', status: 'ok' },
   { id: 'apob', nombre: 'ApoB', status: 'ok' },
 ];
+
+export interface UpcomingMarkerGroup {
+  category: string;
+  markers: string[];
+}
 
 export interface UpcomingAnalysis {
   id: string;
   nombre: string;
   descripcion: string;
   fecha: string;
+  timeSlot: string;
+  sampleType: string;
+  preparation: string[];
+  markerGroups: UpcomingMarkerGroup[];
 }
 
 export const mockUpcomingAnalyses: UpcomingAnalysis[] = [
@@ -91,13 +100,33 @@ export const mockUpcomingAnalyses: UpcomingAnalysis[] = [
     id: 'up-1',
     nombre: 'Blood Analysis',
     descripcion: 'Glucose, Insulin, Lipid Profile...',
-    fecha: '2026-09-23',
+    fecha: '2026-10-10',
+    timeSlot: '08:00 – 10:00',
+    sampleType: 'At-home blood collection kit',
+    preparation: [
+      'Fast for 8 hours (water is fine)',
+      'Avoid intense exercise the day before',
+      'Take the sample before 10:00',
+    ],
+    markerGroups: [
+      { category: 'Metabolic', markers: ['Glucose', 'HbA1c', 'Insulin', 'HOMA-IR'] },
+      { category: 'Lipids', markers: ['Total cholesterol', 'LDL', 'HDL', 'Triglycerides', 'ApoB'] },
+      { category: 'Liver', markers: ['ALT', 'AST', 'GGT'] },
+      { category: 'Kidney', markers: ['Creatinine', 'eGFR'] },
+      { category: 'Thyroid', markers: ['TSH', 'Free T4'] },
+      { category: 'Inflammation', markers: ['hs-CRP'] },
+      { category: 'Vitamins & iron', markers: ['Vitamin D', 'Vitamin B12', 'Ferritin'] },
+    ],
   },
   {
     id: 'up-2',
     nombre: 'Diagnostic Test',
     descripcion: 'FOBT...',
-    fecha: '2026-10-03',
+    fecha: '2026-10-17',
+    timeSlot: 'Any time',
+    sampleType: 'Stool sample kit',
+    preparation: ['Follow the kit instructions', 'Send it back within 24 hours'],
+    markerGroups: [{ category: 'Colorectal screening', markers: ['Faecal occult blood (FOBT)'] }],
   },
 ];
 

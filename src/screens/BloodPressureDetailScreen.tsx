@@ -71,10 +71,15 @@ export const BloodPressureDetailScreen = () => {
           <BloodPressureChart entries={filtered} />
         </View>
 
+        <TouchableOpacity style={styles.addButton} onPress={() => router.push('/log-blood-pressure')}>
+          <Ionicons name="add-circle-outline" size={20} color={Colors.accent} />
+          <Text style={styles.addButtonText}>Log blood pressure</Text>
+        </TouchableOpacity>
+
         <Text style={styles.sectionTitle}>History</Text>
         {historyDesc.length === 0 ? (
           <Text style={styles.emptyText}>
-            No entries yet. Add one from "Log Blood Pressure" in My Data.
+            No entries yet. Add one with "Log blood pressure" above.
           </Text>
         ) : (
           <View style={styles.historyList}>
@@ -141,7 +146,25 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: 20,
     padding: 16,
+    marginBottom: 12,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    marginHorizontal: 20,
     marginBottom: 28,
+    paddingVertical: 16,
+  },
+  addButtonText: {
+    color: Colors.accent,
+    fontSize: 15,
+    fontWeight: '700',
   },
   sectionTitle: {
     fontSize: 18,

@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
 import { Colors } from '@/constants/colors';
-import { mockPatient, mockDoctor } from '@/data/mockData';
+import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 
 const avatarSource = require('../../assets/images/avatar.jpg');
@@ -37,18 +37,25 @@ const menuItems: MenuItem[] = [
     icon: 'calendar-outline',
   },
   {
-    id: 'doctor',
-    title: 'My Doctor',
-    subtitle: `${mockDoctor.nombre}, ${mockDoctor.especialidad}`,
+    id: 'professionals',
+    title: 'Professionals',
+    subtitle: 'Doctors, dietitians, trainers, physios and more',
     iconFamily: 'ionicons',
     icon: 'medkit-outline',
   },
   {
     id: 'track',
     title: 'Track your tests',
-    subtitle: 'Follow status, delivery, and result history',
+    subtitle: 'Shipping, logistics partner and result history',
     iconFamily: 'material',
     icon: 'van-utility',
+  },
+  {
+    id: 'wearables',
+    title: 'Wearables',
+    subtitle: 'Connect Huawei, Xiaomi, Garmin, Oura and more',
+    iconFamily: 'ionicons',
+    icon: 'watch-outline',
   },
   {
     id: 'catalog',
@@ -72,7 +79,11 @@ export const MoreScreen = () => {
 
   const handlePress = (id: string) => {
     if (id === 'settings') return logout();
+    if (id === 'profile') return router.push('/profile');
+    if (id === 'professionals') return router.push('/professionals');
+    if (id === 'track') return router.push('/track-tests');
     if (id === 'catalog') return router.push('/catalogo');
+    if (id === 'wearables') return router.push('/wearables');
   };
 
   return (

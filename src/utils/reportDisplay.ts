@@ -33,6 +33,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   iron: 'Iron',
   vitamins: 'Vitamins',
   immune: 'Immune',
+  cbc: 'Blood count',
+  hormones: 'Sex hormones',
+  hormones_growth: 'Growth hormone',
+  cardio: 'Cardiovascular',
+  tumor: 'Tumour markers',
+  toxicology: 'Heavy metals',
+  sti: 'STI screening',
 };
 
 export const categoryLabel = (categoryId: string) =>

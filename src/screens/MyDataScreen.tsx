@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useNavigation } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Sparkline } from '@/components/Sparkline';
+import { TrendChart, TrendSeries } from '@/components/TrendChart';
 import { Colors } from '@/constants/colors';
-import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest, Biomarker } from '@/data/mockData';
+import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 import { loadSeedData } from '@/data/seedData';
-import { getLiveBiomarkers } from '@/utils/liveBiomarkers';
+import { getGlucoseEntries } from '@/data/glucoseRepository';
+import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
+import { cholesterolRepository } from '@/data/cholesterolRepository';
+import { cortisolRepository } from '@/data/cortisolRepository';
+import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -21,26 +25,103 @@ const diagnosticIcon = (status: DiagnosticTest['status']) => {
   }
 };
 
-const DETAIL_ROUTES: Record<string, string> = {
-  sugar: '/glucose-detail',
-  blood_pressure: '/blood-pressure-detail',
-  cholesterol: '/cholesterol-detail',
-  cortisol: '/cortisol-detail',
+interface DatedValue {
+  fecha: string;
+  valor: number;
+}
+
+interface ChartData {
+  labels: string[];
+  series: TrendSeries[];
+  latest: string;
+  isSample: boolean;
+}
+
+const RECENT = 10; // puntos que se muestran en las gráficas de análisis
+
+// Últimas mediciones guardadas; si no hay, el histórico mock (con fechas mensuales
+// inventadas) para que la pantalla no salga vacía en la demo.
+function simpleChart(entries: DatedValue[], mockId: string, color: string): ChartData {
+  const asc = [...entries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+  if (asc.length >= 2) {
+    return {
+      labels: asc.map((e) => shortDate(e.fecha)),
+      series: [{ color, values: asc.map((e) => e.valor) }],
+      latest: String(asc[asc.length - 1].valor),
+      isSample: false,
+    };
+  }
+  const mock = mockBiomarkers.find((b) => b.id === mockId)!;
+  const now = new Date();
+  const labels = mock.history.map((_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (mock.history.length - 1 - i), 1);
+    return d.toLocaleDateString('en-GB', { month: 'short' });
+  });
+  return { labels, series: [{ color, values: mock.history }], latest: mock.valor, isSample: true };
+}
+
+const wearableChart = (points: DailyPoint[] | undefined, color: string, format: (v: number) => string) => {
+  const pts = points ?? [];
+  return {
+    labels: pts.map((p) => shortDate(p.date)),
+    series: [{ color, values: pts.map((p) => p.value) }],
+    latest: pts.length ? format(pts[pts.length - 1].value) : '—',
+    avg: pts.length ? format(pts.reduce((a, p) => a + p.value, 0) / pts.length) : '—',
+  };
 };
 
 export const MyDataScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
+  const { series, isSample } = useDailyWearables();
   const [seedStatus, setSeedStatus] = useState('');
-  const [biomarkers, setBiomarkers] = useState<Biomarker[]>(mockBiomarkers);
+  const [glucose, setGlucose] = useState<ChartData | null>(null);
+  const [cholesterol, setCholesterol] = useState<ChartData | null>(null);
+  const [cortisol, setCortisol] = useState<ChartData | null>(null);
+  const [bp, setBp] = useState<ChartData | null>(null);
+
+  const load = useCallback(async () => {
+    const [g, bpEntries, chol, cort] = await Promise.all([
+      getGlucoseEntries(),
+      getBloodPressureEntries(),
+      cholesterolRepository.getAll(),
+      cortisolRepository.getAll(),
+    ]);
+    setGlucose(simpleChart(g, 'sugar', Colors.accent));
+    setCholesterol(simpleChart(chol, 'cholesterol', Colors.amber));
+    setCortisol(simpleChart(cort, 'cortisol', Colors.violet));
+
+    const bpAsc = [...bpEntries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+    if (bpAsc.length >= 2) {
+      setBp({
+        labels: bpAsc.map((e) => shortDate(e.fecha)),
+        series: [
+          { label: 'Systolic (high)', color: Colors.coral, values: bpAsc.map((e) => e.systolic) },
+          { label: 'Diastolic (low)', color: Colors.sky, values: bpAsc.map((e) => e.diastolic) },
+        ],
+        latest: `${bpAsc[bpAsc.length - 1].systolic}/${bpAsc[bpAsc.length - 1].diastolic}`,
+        isSample: false,
+      });
+    } else {
+      const sys = [118, 122, 119, 125, 121, 120];
+      const dia = [78, 81, 77, 83, 80, 80];
+      setBp({
+        labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+        series: [
+          { label: 'Systolic (high)', color: Colors.coral, values: sys },
+          { label: 'Diastolic (low)', color: Colors.sky, values: dia },
+        ],
+        latest: '120/80',
+        isSample: true,
+      });
+    }
+  }, []);
 
   useEffect(() => {
-    getLiveBiomarkers().then(setBiomarkers);
-    const unsubscribe = navigation.addListener('focus', () => {
-      getLiveBiomarkers().then(setBiomarkers);
-    });
+    load();
+    const unsubscribe = navigation.addListener('focus', load);
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, load]);
 
   const handleLoadSeed = async () => {
     setSeedStatus('Loading…');
@@ -48,38 +129,86 @@ export const MyDataScreen = () => {
     setSeedStatus(
       `Loaded: ${result.bloodPressure} blood pressure, ${result.glucose} glucose, ${result.cholesterol} cholesterol, ${result.cortisol} cortisol, ${result.cycle} cycle`
     );
-    getLiveBiomarkers().then(setBiomarkers);
+    load();
   };
+
+  const hr = wearableChart(series.resting_heart_rate, Colors.coral, (v) => `${Math.round(v)}`);
+  const hrv = wearableChart(series.hrv, Colors.accent, (v) => `${Math.round(v)}`);
+  const sleep = wearableChart(series.sleep_duration, Colors.violet, formatSleep);
+  const steps = wearableChart(series.steps, Colors.sky, (v) => Math.round(v).toLocaleString('en-GB'));
+  const kcal = wearableChart(series.active_energy, Colors.amber, (v) => `${Math.round(v)}`);
+  const temp = wearableChart(series.body_temperature, Colors.pinkSoft, (v) => v.toFixed(1));
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="My Data" />
 
-        <Text style={styles.sectionTitle}>Blood tests</Text>
-        <View style={styles.bloodTestsCard}>
-          {biomarkers.map((b, index) => (
-            <TouchableOpacity
-              key={b.id}
-              style={[
-                styles.bloodTestRow,
-                index < biomarkers.length - 1 && styles.bloodTestDivider,
-              ]}
-              onPress={() => {
-                const route = DETAIL_ROUTES[b.id];
-                if (route) router.push(route as any);
-              }}
-            >
-              <View>
-                <Text style={styles.bloodTestName}>{b.nombre}</Text>
-                <Text style={styles.bloodTestUnit}>{b.unidad.split(' ')[0]}</Text>
-              </View>
-              <Sparkline data={b.history} />
-            </TouchableOpacity>
-          ))}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Wearable measurements</Text>
+          <Text style={styles.sectionMeta}>Last 14 days{isSample ? ' · sample' : ''}</Text>
         </View>
+        <MetricCard title="Resting heart rate" icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={`avg ${hr.avg}`} onPress={() => router.push('/wearables')}>
+          <TrendChart labels={hr.labels} series={hr.series} height={90} />
+        </MetricCard>
+        <MetricCard title="Heart rate variability" icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={`avg ${hrv.avg}`} onPress={() => router.push('/wearables')}>
+          <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
+        </MetricCard>
+        <MetricCard title="Sleep" icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={`avg ${sleep.avg}`} onPress={() => router.push('/wearables')}>
+          <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
+        </MetricCard>
+        <MetricCard title="Steps" icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={`avg ${steps.avg}`} onPress={() => router.push('/wearables')}>
+          <TrendChart labels={steps.labels} series={steps.series} height={90} formatY={(v) => `${(v / 1000).toFixed(1)}k`} />
+        </MetricCard>
+        <MetricCard title="Active calories" icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={`avg ${kcal.avg}`} onPress={() => router.push('/wearables')}>
+          <TrendChart labels={kcal.labels} series={kcal.series} height={90} />
+        </MetricCard>
 
-        <Text style={styles.sectionTitle}>Diagnostic tests</Text>
+        {bp && (
+          <MetricCard
+            title="Blood pressure"
+            icon="speedometer"
+            iconColor={Colors.coral}
+            value={bp.latest}
+            unit="mmHg"
+            avg={bp.isSample ? 'sample' : 'tap to log'}
+            onPress={() => router.push('/blood-pressure-detail')}
+          >
+            <TrendChart labels={bp.labels} series={bp.series} height={110} />
+          </MetricCard>
+        )}
+
+        <MetricCard title="Temperature" icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={`avg ${temp.avg}`} onPress={() => router.push('/wearables')}>
+          <TrendChart
+            labels={temp.labels}
+            series={temp.series}
+            height={90}
+            band={{ low: 36.1, high: 37.2 }}
+            formatY={(v) => v.toFixed(1)}
+          />
+        </MetricCard>
+
+        <View style={[styles.sectionHeader, { marginTop: 16 }]}>
+          <Text style={styles.sectionTitle}>Blood tests</Text>
+          <Text style={styles.sectionMeta}>Tap to see history and log</Text>
+        </View>
+        {glucose && (
+          <MetricCard title="Sugar" icon="water" iconColor={Colors.accent} value={glucose.latest} unit="mg/dL" avg={glucose.isSample ? 'sample' : ''} onPress={() => router.push('/glucose-detail')}>
+            <TrendChart labels={glucose.labels} series={glucose.series} height={90} band={{ low: 70, high: 99 }} />
+          </MetricCard>
+        )}
+        {cholesterol && (
+          <MetricCard title="Total cholesterol" icon="analytics" iconColor={Colors.amber} value={cholesterol.latest} unit="mg/dL" avg={cholesterol.isSample ? 'sample' : ''} onPress={() => router.push('/cholesterol-detail')}>
+            <TrendChart labels={cholesterol.labels} series={cholesterol.series} height={90} band={{ low: 125, high: 200 }} />
+          </MetricCard>
+        )}
+        {cortisol && (
+          <MetricCard title="Cortisol" icon="sunny" iconColor={Colors.violet} value={cortisol.latest} unit="µg/dL" avg={cortisol.isSample ? 'sample' : ''} onPress={() => router.push('/cortisol-detail')}>
+            <TrendChart labels={cortisol.labels} series={cortisol.series} height={90} formatY={(v) => v.toFixed(0)} />
+          </MetricCard>
+        )}
+
+        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Your tests</Text>
         <View style={styles.diagnosticGrid}>
           {mockDiagnosticTests.map((test) => {
             const icon = diagnosticIcon(test.status);
@@ -99,46 +228,9 @@ export const MyDataScreen = () => {
           })}
         </View>
 
-        <TouchableOpacity
-          style={styles.logGlucoseButton}
-          onPress={() => router.push('/log-glucose')}
-        >
-          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
-          <Text style={styles.logGlucoseText}>Log Glucose</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.logGlucoseButton}
-          onPress={() => router.push('/log-blood-pressure')}
-        >
-          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
-          <Text style={styles.logGlucoseText}>Log Blood Pressure</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.logGlucoseButton}
-          onPress={() => router.push('/log-cholesterol')}
-        >
-          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
-          <Text style={styles.logGlucoseText}>Log Cholesterol</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.logGlucoseButton}
-          onPress={() => router.push('/log-cortisol')}
-        >
-          <Ionicons name="add-circle-outline" size={22} color={Colors.accent} />
-          <Text style={styles.logGlucoseText}>Log Cortisol</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.logGlucoseButton}
-          onPress={() => router.push('/cycle-detail')}
-        >
-          <Ionicons name="water-outline" size={22} color={Colors.pulseAccent} />
-          <Text style={[styles.logGlucoseText, { color: Colors.pulseAccent }]}>
-            Menstrual Cycle
-          </Text>
+        <TouchableOpacity style={styles.cycleButton} onPress={() => router.push('/cycle-detail')} activeOpacity={0.85}>
+          <Ionicons name="water" size={20} color="#5A2340" />
+          <Text style={styles.cycleButtonText}>Menstrual Cycle</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.filesCard}>
@@ -156,6 +248,42 @@ export const MyDataScreen = () => {
   );
 };
 
+const MetricCard = ({
+  title,
+  icon,
+  iconColor,
+  value,
+  unit,
+  avg,
+  onPress,
+  children,
+}: {
+  title: string;
+  icon: string;
+  iconColor: string;
+  value: string;
+  unit?: string;
+  avg?: string;
+  onPress: () => void;
+  children: React.ReactNode;
+}) => (
+  <TouchableOpacity style={styles.metricCard} onPress={onPress} activeOpacity={0.85}>
+    <View style={styles.metricHeader}>
+      <View style={[styles.metricIcon, { backgroundColor: `${iconColor}22` }]}>
+        <Ionicons name={icon as any} size={16} color={iconColor} />
+      </View>
+      <Text style={styles.metricTitle}>{title}</Text>
+      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+    </View>
+    <View style={styles.metricValueRow}>
+      <Text style={styles.metricValue}>{value}</Text>
+      {unit ? <Text style={styles.metricUnit}> {unit}</Text> : null}
+      {avg ? <Text style={styles.metricAvg}>{avg}</Text> : null}
+    </View>
+    {children}
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -164,41 +292,71 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
+  sectionHeader: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    gap: 2,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 14,
   },
-  bloodTestsCard: {
+  sectionTitleSpaced: {
+    paddingHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  sectionMeta: {
+    color: Colors.textMuted,
+    fontSize: 12,
+  },
+  metricCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 16,
+    padding: 16,
     marginHorizontal: 20,
-    marginBottom: 28,
-    paddingHorizontal: 16,
+    marginBottom: 12,
   },
-  bloodTestRow: {
+  metricHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    gap: 10,
+    marginBottom: 8,
   },
-  bloodTestDivider: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+  metricIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  bloodTestName: {
-    color: Colors.textPrimary,
-    fontSize: 16,
+  metricTitle: {
+    flex: 1,
+    color: Colors.textSecondary,
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
   },
-  bloodTestUnit: {
+  metricValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 10,
+  },
+  metricValue: {
+    color: Colors.textPrimary,
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  metricUnit: {
     color: Colors.textSecondary,
     fontSize: 13,
+  },
+  metricAvg: {
+    marginLeft: 'auto',
+    color: Colors.textMuted,
+    fontSize: 12,
   },
   diagnosticGrid: {
     flexDirection: 'row',
@@ -234,23 +392,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 60,
   },
-  logGlucoseButton: {
+  cycleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    backgroundColor: Colors.pinkSoft,
     borderRadius: 16,
     marginHorizontal: 20,
     marginBottom: 12,
     paddingVertical: 16,
   },
-  logGlucoseText: {
-    color: Colors.accent,
+  cycleButtonText: {
+    color: '#5A2340',
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   filesCard: {
     flexDirection: 'row',
