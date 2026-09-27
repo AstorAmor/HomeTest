@@ -1,13 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
 import { Colors } from '@/constants/colors';
 import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { ageFromDob, BADGES, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 
 const avatarSource = require('../../assets/images/avatar.jpg');
@@ -35,19 +36,14 @@ const LABELS: Record<string, string> = {
 
 export const ProfileScreen = () => {
   const router = useRouter();
-  const navigation = useNavigation();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useDeepState<UserProfile | null>(null);
 
   const load = useCallback(() => {
     profileRepository.get().then(setProfile);
-  }, []);
+  }, [setProfile]);
 
-  useEffect(() => {
-    load();
-    const unsubscribe = navigation.addListener('focus', load);
-    return unsubscribe;
-  }, [navigation, load]);
+  useReloadOnFocus(load);
 
   const age = ageFromDob(profile?.dateOfBirth);
   const rows: { label: string; value?: string }[] = [

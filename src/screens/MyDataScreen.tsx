@@ -1,11 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart, TrendSeries } from '@/components/TrendChart';
 import { Colors } from '@/constants/colors';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 import { loadSeedData } from '@/data/seedData';
 import { getGlucoseEntries } from '@/data/glucoseRepository';
@@ -72,13 +73,12 @@ const wearableChart = (points: DailyPoint[] | undefined, color: string, format: 
 
 export const MyDataScreen = () => {
   const router = useRouter();
-  const navigation = useNavigation();
   const { series, isSample } = useDailyWearables();
   const [seedStatus, setSeedStatus] = useState('');
-  const [glucose, setGlucose] = useState<ChartData | null>(null);
-  const [cholesterol, setCholesterol] = useState<ChartData | null>(null);
-  const [cortisol, setCortisol] = useState<ChartData | null>(null);
-  const [bp, setBp] = useState<ChartData | null>(null);
+  const [glucose, setGlucose] = useDeepState<ChartData | null>(null);
+  const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(null);
+  const [cortisol, setCortisol] = useDeepState<ChartData | null>(null);
+  const [bp, setBp] = useDeepState<ChartData | null>(null);
 
   const load = useCallback(async () => {
     const [g, bpEntries, chol, cort] = await Promise.all([
@@ -115,13 +115,9 @@ export const MyDataScreen = () => {
         isSample: true,
       });
     }
-  }, []);
+  }, [setGlucose, setCholesterol, setCortisol, setBp]);
 
-  useEffect(() => {
-    load();
-    const unsubscribe = navigation.addListener('focus', load);
-    return unsubscribe;
-  }, [navigation, load]);
+  useReloadOnFocus(load);
 
   const handleLoadSeed = async () => {
     setSeedStatus('Loading…');

@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { BloodPressureChart } from '@/components/BloodPressureChart';
 import { Colors } from '@/constants/colors';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { BloodPressureEntry } from '@/types/bloodPressure';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 
@@ -26,18 +27,12 @@ const formatListDate = (iso: string) => {
 };
 
 export const BloodPressureDetailScreen = () => {
-  const navigation = useNavigation();
   const router = useRouter();
-  const [entries, setEntries] = useState<BloodPressureEntry[]>([]);
+  const [entries, setEntries] = useDeepState<BloodPressureEntry[]>([]);
   const [range, setRange] = useState<Range>('M');
 
-  useEffect(() => {
-    getBloodPressureEntries().then(setEntries);
-    const unsubscribe = navigation.addListener('focus', () => {
-      getBloodPressureEntries().then(setEntries);
-    });
-    return unsubscribe;
-  }, [navigation]);
+  const load = useCallback(() => getBloodPressureEntries().then(setEntries), [setEntries]);
+  useReloadOnFocus(load);
 
   const cutoff = Date.now() - RANGE_DAYS[range] * 24 * 60 * 60 * 1000;
   const filtered = entries

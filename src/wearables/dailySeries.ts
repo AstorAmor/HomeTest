@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigation } from 'expo-router';
+import { useCallback } from 'react';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { DailyWearableRecord, WearableMetric } from './types';
 import { wearableRepository } from './wearableRepository';
 import { generateHuaweiDummy } from './providers/huaweiDummy';
@@ -31,9 +31,8 @@ export function toDailySeries(records: DailyWearableRecord[]): DailySeries {
 // Hook para Today y My Data: lee lo sincronizado y, si todavía no hay nada,
 // usa el dummy de Huawei EN MEMORIA (sin guardarlo) para que la demo no salga vacía.
 export function useDailyWearables() {
-  const navigation = useNavigation();
-  const [series, setSeries] = useState<DailySeries>({});
-  const [isSample, setIsSample] = useState(false);
+  const [series, setSeries] = useDeepState<DailySeries>({});
+  const [isSample, setIsSample] = useDeepState(false);
 
   const load = useCallback(async () => {
     const stored = await wearableRepository.getRecords();
@@ -44,13 +43,9 @@ export function useDailyWearables() {
       setSeries(toDailySeries(generateHuaweiDummy(14)));
       setIsSample(true);
     }
-  }, []);
+  }, [setSeries, setIsSample]);
 
-  useEffect(() => {
-    load();
-    const unsubscribe = navigation.addListener('focus', load);
-    return unsubscribe;
-  }, [navigation, load]);
+  useReloadOnFocus(load);
 
   return { series, isSample };
 }

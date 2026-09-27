@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { CycleEntry, CyclePrediction } from '@/types/cycle';
 import { cycleRepository } from '@/data/cycleRepository';
 import { getApiBaseUrl } from '@/utils/apiBaseUrl';
@@ -27,7 +28,6 @@ const CONFIDENCE_LABEL: Record<string, string> = {
 
 export const CycleDetailScreen = () => {
   const router = useRouter();
-  const navigation = useNavigation();
   const [entries, setEntries] = useState<CycleEntry[]>([]);
   const [prediction, setPrediction] = useState<CyclePrediction | null>(null);
   const [loadingPrediction, setLoadingPrediction] = useState(false);
@@ -69,11 +69,12 @@ export const CycleDetailScreen = () => {
     });
   };
 
+  const refreshRef = useRef(refresh);
   useEffect(() => {
-    refresh();
-    const unsubscribe = navigation.addListener('focus', refresh);
-    return unsubscribe;
-  }, [navigation]);
+    refreshRef.current = refresh;
+  });
+  const load = useCallback(() => refreshRef.current(), []);
+  useReloadOnFocus(load);
 
   const historyDesc = [...entries].sort(
     (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()

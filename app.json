@@ -71,7 +71,7 @@
     },
     "owner": "astoramor",
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "sdkVersion"
     },
     "updates": {
       "url": "https://u.expo.dev/e88f66c2-4fae-44aa-a3b6-1812c06dcd15"

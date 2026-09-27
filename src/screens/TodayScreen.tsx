@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -10,6 +10,7 @@ import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import {
   mockPatient,
   mockBiomarkers,
@@ -95,18 +96,17 @@ const PLAN_ICON: Record<PlanItemKind, { family: 'mci' | 'ion'; name: string; col
 };
 
 export const TodayScreen = () => {
-  const navigation = useNavigation();
   const router = useRouter();
   const { demoMode } = useAuth();
   const { series, isSample } = useDailyWearables();
-  const [biomarkers, setBiomarkers] = useState<Biomarker[]>(mockBiomarkers);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [lastCheckIn, setLastCheckIn] = useState<CheckInEntry | null>(null);
-  const [checkInSeries, setCheckInSeries] = useState<{ points: DailyCheckInPoint[]; sample: boolean }>({
+  const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(mockBiomarkers);
+  const [, setProfile] = useDeepState<UserProfile | null>(null);
+  const [lastCheckIn, setLastCheckIn] = useDeepState<CheckInEntry | null>(null);
+  const [checkInSeries, setCheckInSeries] = useDeepState<{ points: DailyCheckInPoint[]; sample: boolean }>({
     points: [],
     sample: true,
   });
-  const [cycle, setCycle] = useState<CyclePhaseInfo | null>(null);
+  const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
   const [strengthDone, setStrengthDone] = useState(0);
   const [mealsToday, setMealsToday] = useState(0);
 
@@ -126,13 +126,9 @@ export const TodayScreen = () => {
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
-  }, []);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle]);
 
-  useEffect(() => {
-    load();
-    const unsubscribe = navigation.addListener('focus', load);
-    return unsubscribe;
-  }, [navigation, load]);
+  useReloadOnFocus(load);
 
   const readiness = computeReadiness(series);
   const steps = latest(series.steps) ?? 0;

@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SimpleMetricChart } from '@/components/SimpleMetricChart';
 import { Colors } from '@/constants/colors';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 export interface GenericMetricEntry {
   id: string;
@@ -40,17 +40,15 @@ export const SimpleMetricDetailScreen = ({
   onAddPress,
   onEditPress,
 }: SimpleMetricDetailScreenProps) => {
-  const navigation = useNavigation();
-  const [entries, setEntries] = useState<GenericMetricEntry[]>([]);
+  const [entries, setEntries] = useDeepState<GenericMetricEntry[]>([]);
+  const loadEntriesRef = useRef(loadEntries);
   const [range, setRange] = useState<Range>('M');
 
   useEffect(() => {
-    loadEntries().then(setEntries);
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadEntries().then(setEntries);
-    });
-    return unsubscribe;
-  }, [navigation]);
+    loadEntriesRef.current = loadEntries;
+  });
+  const load = useCallback(() => loadEntriesRef.current().then(setEntries), [setEntries]);
+  useReloadOnFocus(load);
 
   const cutoff = Date.now() - RANGE_DAYS[range] * 24 * 60 * 60 * 1000;
   const filtered = entries
