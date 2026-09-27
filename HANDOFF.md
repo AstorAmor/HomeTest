@@ -312,3 +312,16 @@ texto de UI en inglés; datos de ejemplo marcados como "sample" cuando no hay da
   como variable de entorno; Windmill seguiría siendo local.
 - Nota: con `expo-dev-client` instalado, `npx expo start` abre por defecto el development build; para
   Expo Go usar `npx expo start --go` (o pulsar `s` en la terminal de Expo).
+
+## Probar en el móvil sin el ordenador (EAS Update + Expo Go) — 2026-09-27
+
+- `runtimeVersion` usa la política `sdkVersion` (`exposdk:57.0.0`) para que Expo Go acepte las
+  actualizaciones. Publicar tras cada cambio:
+  `npx eas-cli update --channel preview --environment preview --message "..." --non-interactive`
+- Abrir en Expo Go (QR): https://qr.expo.dev/eas-update?projectId=e88f66c2-4fae-44aa-a3b6-1812c06dcd15&runtimeVersion=exposdk:57.0.0&channel=preview
+  (enlace directo: `exp://u.expo.dev/e88f66c2-4fae-44aa-a3b6-1812c06dcd15?runtime-version=exposdk%3A57.0.0&channel-name=preview`).
+- Limitación: las rutas API (Gemini: leer analíticas y tensiómetro; Windmill: predicción del ciclo)
+  NO funcionan así, porque no hay servidor. Para eso hace falta desplegarlas (EAS Hosting) y apuntar
+  `getApiBaseUrl()` a esa URL. Pendiente de decisión del usuario.
+- Transiciones "atrás": las pantallas recargan datos al recuperar el foco solo cuando termina la
+  animación (`hooks/useReloadOnFocus.ts`) y no re-renderizan si los datos no cambian.
