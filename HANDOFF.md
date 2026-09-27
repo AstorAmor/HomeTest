@@ -325,3 +325,6 @@ texto de UI en inglés; datos de ejemplo marcados como "sample" cuando no hay da
   `getApiBaseUrl()` a esa URL. Pendiente de decisión del usuario.
 - Transiciones "atrás": las pantallas recargan datos al recuperar el foco solo cuando termina la
   animación (`hooks/useReloadOnFocus.ts`) y no re-renderizan si los datos no cambian.
+- **APK (2026-09-27)**: `npx eas-cli build --platform android --profile preview` → build
+  c2ac2e70 (canal `preview`, nombre visible "HomeTest"). La APK recibe las `eas update --channel preview`
+  sin reinstalar. Health Connect funciona en la APK (no en Expo Go). Las rutas API siguen sin servidor.
