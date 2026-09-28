@@ -72,6 +72,11 @@ export default function Layout() {
             <Stack.Screen name="pro" options={{ animation: 'fade' }} />
             <Stack.Screen name="pro-patient" />
             <Stack.Screen name="pro-profile" />
+            <Stack.Screen name="plan-intro" options={{ animation: 'fade' }} />
+            <Stack.Screen name="exercise" options={{ presentation: 'modal', animation: 'fade' }} />
+            <Stack.Screen name="metric" />
+            <Stack.Screen name="store" />
+            <Stack.Screen name="schedule" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

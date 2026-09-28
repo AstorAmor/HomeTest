@@ -4,14 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Avatar } from '@/components/Avatar';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Colors } from '@/constants/colors';
 import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { ageFromDob, BADGES, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
+import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 
-const avatarSource = require('../../assets/images/avatar.jpg');
 
 const LABELS: Record<string, string> = {
   female: 'Female',
@@ -55,6 +54,23 @@ export const ProfileScreen = () => {
     { label: 'Sleep', value: profile?.sleep && LABELS[profile.sleep] },
     { label: 'Smoking', value: profile?.smoking && LABELS[profile.smoking] },
     { label: 'Alcohol', value: profile?.alcohol && LABELS[profile.alcohol] },
+    {
+      label: 'Medication',
+      value:
+        profile?.takesMedication === undefined
+          ? undefined
+          : profile.takesMedication
+            ? profile.medications || 'Yes'
+            : 'None',
+    },
+    {
+      label: 'Conditions',
+      value: profile?.conditions?.length
+        ? profile.conditions
+            .map((c) => (c === 'other' ? profile.conditionsOther || 'Other' : CONDITION_OPTIONS.find((o) => o.id === c)?.label ?? c))
+            .join(', ')
+        : undefined,
+    },
   ];
   const goals = GOAL_OPTIONS.filter((g) => profile?.goals.includes(g.id));
 
@@ -64,7 +80,7 @@ export const ProfileScreen = () => {
         <ScreenHeader title="My Profile" showBack />
 
         <View style={styles.hero}>
-          <Avatar nombre={mockPatient.nombre} source={avatarSource} size={84} />
+          <UserAvatar size={84} />
           <Text style={styles.name}>{user?.nombre ?? mockPatient.nombre}</Text>
           <Text style={styles.email}>{user?.email ?? mockPatient.email}</Text>
           <View style={styles.memberPill}>
@@ -83,7 +99,7 @@ export const ProfileScreen = () => {
           {rows.map((r, i) => (
             <View key={r.label} style={[styles.row, i > 0 && styles.rowDivider]}>
               <Text style={styles.rowLabel}>{r.label}</Text>
-              <Text style={[styles.rowValue, !r.value && styles.rowEmpty]}>{r.value ?? 'Not answered'}</Text>
+              <Text style={[styles.rowValue, styles.rowValueWrap, !r.value && styles.rowEmpty]}>{r.value ?? 'Not answered'}</Text>
             </View>
           ))}
         </View>
@@ -102,19 +118,6 @@ export const ProfileScreen = () => {
           )}
         </View>
 
-        <Text style={[styles.sectionTitle, styles.spaced]}>Badges</Text>
-        <View style={styles.goals}>
-          {profile?.badges.length ? (
-            profile.badges.map((b) => (
-              <View key={b} style={styles.badge}>
-                <Ionicons name={(BADGES[b]?.icon ?? 'ribbon') as any} size={22} color={Colors.amber} />
-                <Text style={styles.badgeText}>{BADGES[b]?.title ?? b}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.rowEmpty}>Complete your profile to earn your first badge.</Text>
-          )}
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -159,6 +162,7 @@ const styles = StyleSheet.create({
   rowDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   rowLabel: { color: Colors.textSecondary, fontSize: 14 },
   rowValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  rowValueWrap: { flexShrink: 1, textAlign: 'right', marginLeft: 16 },
   rowEmpty: { color: Colors.textMuted, fontSize: 13, fontWeight: '400' },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   goalChip: {

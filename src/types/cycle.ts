@@ -1,6 +1,7 @@
 export interface CycleEntry {
   id: string;
   fecha: string; // ISO date del primer día de sangrado (inicio de ciclo)
+  endFecha?: string | null; // ISO date del último día de sangrado (duración del periodo)
   createdAt: string;
 }
 

@@ -10,9 +10,14 @@ import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { useFirstName } from '@/components/UserAvatar';
+import { BadgesSection } from '@/components/BadgesSection';
+import { SpecialistCarousel } from '@/components/SpecialistCarousel';
+import { computeAchievements } from '@/data/achievements';
+import { planImage } from '@/data/planImages';
+import { Image } from 'expo-image';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import {
-  mockPatient,
   mockBiomarkers,
   mockNextTestDate,
   mockResultsEtaDays,
@@ -25,14 +30,17 @@ import { CheckInEntry, MOOD_OPTIONS, MOMENT_OPTIONS } from '@/types/checkIn';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import {
-  CURRENT_PLAN,
+  buildPlan,
+  mealRepository,
+  mindfulRepository,
+  mindfulSessionsThisWeek,
   PlanItemKind,
+  workoutRepository,
   mealsLoggedToday,
   strengthSessionsThisWeek,
 } from '@/data/planRepository';
 import { computeReadiness, formatSleep, latest, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 
-const firstName = mockPatient.nombre.split(' ')[0];
 
 const statusColor = (status: Biomarker['status']) => {
   switch (status) {
@@ -93,14 +101,24 @@ const PLAN_ICON: Record<PlanItemKind, { family: 'mci' | 'ion'; name: string; col
   strength: { family: 'mci', name: 'dumbbell', color: Colors.coral },
   steps: { family: 'ion', name: 'footsteps', color: Colors.sky },
   nutrition: { family: 'mci', name: 'rice', color: Colors.amber },
+  sleep: { family: 'ion', name: 'moon', color: Colors.violet },
+  mindfulness: { family: 'ion', name: 'leaf', color: Colors.accent },
 };
 
 export const TodayScreen = () => {
   const router = useRouter();
   const { demoMode } = useAuth();
+  const firstName = useFirstName();
   const { series, isSample } = useDailyWearables();
   const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(mockBiomarkers);
-  const [, setProfile] = useDeepState<UserProfile | null>(null);
+  const [profile, setProfile] = useDeepState<UserProfile | null>(null);
+  const [achievementData, setAchievementData] = useDeepState<{
+    workouts: { fecha: string; type: string }[];
+    meals: { fecha: string }[];
+    checkIns: { fecha: string }[];
+    mindful: { fecha: string }[];
+  }>({ workouts: [], meals: [], checkIns: [], mindful: [] });
+  const [mindfulWeek, setMindfulWeek] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useDeepState<CheckInEntry | null>(null);
   const [checkInSeries, setCheckInSeries] = useDeepState<{ points: DailyCheckInPoint[]; sample: boolean }>({
     points: [],
@@ -112,13 +130,25 @@ export const TodayScreen = () => {
 
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
-    const [p, checkIns, cycleEntries, strength, meals] = await Promise.all([
-      profileRepository.get(),
-      checkInRepository.getAll(),
-      cycleRepository.getAll(),
-      strengthSessionsThisWeek(),
-      mealsLoggedToday(),
-    ]);
+    const [p, checkIns, cycleEntries, strength, meals, workoutList, mealList, mindfulList, mindfulThisWeek] =
+      await Promise.all([
+        profileRepository.get(),
+        checkInRepository.getAll(),
+        cycleRepository.getAll(),
+        strengthSessionsThisWeek(),
+        mealsLoggedToday(),
+        workoutRepository.getAll(),
+        mealRepository.getAll(),
+        mindfulRepository.getAll(),
+        mindfulSessionsThisWeek(),
+      ]);
+    setAchievementData({
+      workouts: workoutList.map((w) => ({ fecha: w.fecha, type: w.type })),
+      meals: mealList.map((m) => ({ fecha: m.fecha })),
+      checkIns: checkIns.map((c) => ({ fecha: c.fecha })),
+      mindful: mindfulList.map((m) => ({ fecha: m.fecha })),
+    });
+    setMindfulWeek(mindfulThisWeek);
     setProfile(p);
     setLastCheckIn(checkIns.length ? checkIns[0] : null);
     const real = dailyCheckInSeries(checkIns);
@@ -126,7 +156,7 @@ export const TodayScreen = () => {
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
-  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle]);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData]);
 
   useReloadOnFocus(load);
 
@@ -144,15 +174,26 @@ export const TodayScreen = () => {
   const lastMood = lastCheckIn?.mood ? MOOD_OPTIONS.find((m) => m.id === lastCheckIn.mood) : null;
   const lastMoment = lastCheckIn ? MOMENT_OPTIONS.find((m) => m.id === lastCheckIn.moment) : null;
 
+  const plan = buildPlan(profile);
+  const achievements = computeAchievements({
+    dailySteps: series.steps ?? [],
+    ...achievementData,
+    badges: profile?.badges ?? [],
+  });
+
   const planProgress = (kind: PlanItemKind, target: number) => {
     if (kind === 'strength') return { value: strengthDone / target, text: `${strengthDone}/${target} this week` };
     if (kind === 'steps') return { value: steps / target, text: `${steps.toLocaleString('en-GB')} today` };
+    if (kind === 'sleep') return { value: sleep / 60 / target, text: `${formatSleep(sleep)} last night` };
+    if (kind === 'mindfulness') return { value: mindfulWeek / target, text: `${mindfulWeek}/${target} this week` };
     return { value: mealsToday / target, text: `${mealsToday}/${target} meals logged today` };
   };
 
   const onPlanPress = (kind: PlanItemKind) => {
     if (kind === 'strength') router.push('/log-workout');
-    else if (kind === 'steps') router.push('/wearables');
+    else if (kind === 'steps') router.push({ pathname: '/metric', params: { kind: 'steps' } });
+    else if (kind === 'sleep') router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } });
+    else if (kind === 'mindfulness') router.push({ pathname: '/exercise', params: { id: 'box_breathing' } });
     else router.push('/log-meal');
   };
 
@@ -316,7 +357,7 @@ export const TodayScreen = () => {
             unit="bpm"
             status={vsUsual(series.resting_heart_rate, false).label}
             color={vsUsual(series.resting_heart_rate, false).color}
-            onPress={() => router.push('/wearables')}
+            onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}
           />
           <BiomarkerCard
             name="HRV"
@@ -324,7 +365,7 @@ export const TodayScreen = () => {
             unit="ms"
             status={vsUsual(series.hrv, true).label}
             color={vsUsual(series.hrv, true).color}
-            onPress={() => router.push('/wearables')}
+            onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}
           />
           <BiomarkerCard
             name="Temperature"
@@ -332,15 +373,20 @@ export const TodayScreen = () => {
             unit="°C"
             status={temp != null && temp >= 36.1 && temp <= 37.2 ? 'Normal' : 'Check'}
             color={temp != null && temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
-            onPress={() => router.push('/wearables')}
+            onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}
             wide
           />
         </View>
 
         {/* Your plan */}
-        <Text style={styles.sectionTitle}>Your plan</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>Your plan</Text>
+          <TouchableOpacity onPress={() => router.push('/plan-intro')} hitSlop={8}>
+            <Text style={styles.link}>See why</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.planList}>
-          {CURRENT_PLAN.map((item) => {
+          {plan.map((item) => {
             const icon = PLAN_ICON[item.kind];
             const progress = planProgress(item.kind, item.target);
             return (
@@ -350,11 +396,13 @@ export const TodayScreen = () => {
                 onPress={() => onPlanPress(item.kind)}
                 activeOpacity={0.85}
               >
-                <View style={[styles.planIcon, { backgroundColor: `${icon.color}22` }]}>
+                <View style={styles.planThumb}>
+                  <Image source={planImage(item.kind, profile?.sex)} style={StyleSheet.absoluteFill} contentFit="cover" />
+                  <View style={[StyleSheet.absoluteFill, styles.planThumbShade]} />
                   {icon.family === 'mci' ? (
-                    <MaterialCommunityIcons name={icon.name as any} size={24} color={icon.color} />
+                    <MaterialCommunityIcons name={icon.name as any} size={22} color="#FFFFFF" />
                   ) : (
-                    <Ionicons name={icon.name as any} size={22} color={icon.color} />
+                    <Ionicons name={icon.name as any} size={20} color="#FFFFFF" />
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
@@ -370,15 +418,29 @@ export const TodayScreen = () => {
                   <Text style={styles.planProgress}>{progress.text}</Text>
                 </View>
                 <Ionicons
-                  name={item.kind === 'steps' ? 'chevron-forward' : 'add-circle'}
-                  size={item.kind === 'steps' ? 18 : 26}
-                  color={item.kind === 'steps' ? Colors.textMuted : icon.color}
+                  name={
+                    item.kind === 'steps' || item.kind === 'sleep'
+                      ? 'chevron-forward'
+                      : item.kind === 'mindfulness'
+                        ? 'play-circle'
+                        : 'add-circle'
+                  }
+                  size={item.kind === 'steps' || item.kind === 'sleep' ? 18 : 26}
+                  color={item.kind === 'steps' || item.kind === 'sleep' ? Colors.textMuted : icon.color}
                 />
               </TouchableOpacity>
             );
           })}
         </View>
         <Text style={styles.planNote}>Sample plan. It will come from your personalised recommendations.</Text>
+
+        {/* Your badges */}
+        <Text style={styles.sectionTitle}>Your badges</Text>
+        <BadgesSection achievements={achievements} />
+
+        {/* Talk to a specialist */}
+        <Text style={styles.sectionTitle}>Talk to a specialist</Text>
+        <SpecialistCarousel onSelect={() => router.push('/professionals')} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -681,6 +743,29 @@ const styles = StyleSheet.create({
     borderColor: Colors.cardBorder,
     borderRadius: 16,
     padding: 14,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    paddingRight: 20,
+    marginTop: 16,
+    marginBottom: 14,
+  },
+  sectionTitleInline: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  planThumb: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  planThumbShade: {
+    backgroundColor: 'rgba(13, 15, 26, 0.45)',
   },
   planIcon: {
     width: 46,

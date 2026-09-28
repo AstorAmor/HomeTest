@@ -213,10 +213,13 @@ export const CheckInScreen = () => {
                     </View>
                     <TouchableOpacity
                       style={[styles.startButton, isAccepted && styles.startButtonDone]}
-                      onPress={() => setAccepted((prev) => new Set(prev).add(s.id))}
+                      onPress={() => {
+                        setAccepted((prev) => new Set(prev).add(s.id));
+                        router.push({ pathname: '/exercise', params: { id: s.id } });
+                      }}
                     >
                       <Text style={[styles.startText, isAccepted && { color: Colors.accent }]}>
-                        {isAccepted ? 'Added' : 'Start'}
+                        {isAccepted ? 'Again' : 'Start'}
                       </Text>
                     </TouchableOpacity>
                   </View>

@@ -4,12 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Avatar } from '@/components/Avatar';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Colors } from '@/constants/colors';
-import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 
-const avatarSource = require('../../assets/images/avatar.jpg');
 
 interface MenuItem {
   id: string;
@@ -98,6 +96,7 @@ export const MoreScreen = () => {
     if (id === 'settings') return logout();
     if (id === 'profile') return router.push('/profile');
     if (id === 'sharing') return router.push('/sharing');
+    if (id === 'schedule') return router.push('/schedule');
     if (id === 'admin') return router.push('/admin');
     if (id === 'professionals') return router.push('/professionals');
     if (id === 'track') return router.push('/track-tests');
@@ -118,7 +117,7 @@ export const MoreScreen = () => {
               onPress={() => handlePress(item.id)}
             >
               {item.isProfile ? (
-                <Avatar nombre={mockPatient.nombre} source={avatarSource} size={52} />
+                <UserAvatar size={52} />
               ) : (
                 <View style={styles.iconWrap}>
                   {item.iconFamily === 'material' ? (

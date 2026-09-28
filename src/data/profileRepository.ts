@@ -27,6 +27,11 @@ export interface UserProfile {
   sleep?: SleepHabit;
   smoking?: Smoking;
   alcohol?: Alcohol;
+  // Antecedentes de salud
+  takesMedication?: boolean;
+  medications?: string;
+  conditions: ConditionId[];
+  conditionsOther?: string;
   goals: GoalId[];
   completedAt?: string;
   badges: string[];
@@ -43,6 +48,35 @@ export const GOAL_OPTIONS: { id: GoalId; label: string; icon: string }[] = [
   { id: 'longevity', label: 'Longevity', icon: 'hourglass-outline' },
 ];
 
+export type ConditionId =
+  | 'diabetes'
+  | 'prediabetes'
+  | 'hypertension'
+  | 'high_cholesterol'
+  | 'thyroid'
+  | 'heart_disease'
+  | 'asthma_copd'
+  | 'anaemia'
+  | 'autoimmune'
+  | 'pcos'
+  | 'none'
+  | 'other';
+
+export const CONDITION_OPTIONS: { id: ConditionId; label: string; femaleOnly?: boolean }[] = [
+  { id: 'diabetes', label: 'Diabetes' },
+  { id: 'prediabetes', label: 'Prediabetes' },
+  { id: 'hypertension', label: 'High blood pressure' },
+  { id: 'high_cholesterol', label: 'High cholesterol' },
+  { id: 'thyroid', label: 'Thyroid disorder' },
+  { id: 'heart_disease', label: 'Heart disease' },
+  { id: 'asthma_copd', label: 'Asthma / COPD' },
+  { id: 'anaemia', label: 'Anaemia' },
+  { id: 'autoimmune', label: 'Autoimmune disease' },
+  { id: 'pcos', label: 'PCOS', femaleOnly: true },
+  { id: 'other', label: 'Other' },
+  { id: 'none', label: 'None' },
+];
+
 export const BADGES: Record<string, { title: string; description: string; icon: string }> = {
   plan_builder: {
     title: 'Plan builder',
@@ -52,7 +86,7 @@ export const BADGES: Record<string, { title: string; description: string; icon: 
 };
 
 const STORAGE_KEY = 'hometest:user_profile';
-const EMPTY: UserProfile = { goals: [], badges: [] };
+const EMPTY: UserProfile = { goals: [], badges: [], conditions: [] };
 
 // Con sesión de Supabase: tabla profiles (la fila la crea un trigger al registrarse).
 // Sin sesión (modo demo): AsyncStorage.
@@ -65,6 +99,10 @@ const fromRow = (r: any): UserProfile => ({
   sleep: r.sleep_habit ?? undefined,
   smoking: r.smoking ?? undefined,
   alcohol: r.alcohol ?? undefined,
+  takesMedication: r.takes_medication ?? undefined,
+  medications: r.medications ?? undefined,
+  conditions: r.conditions ?? [],
+  conditionsOther: r.conditions_other ?? undefined,
   goals: r.goals ?? [],
   badges: r.badges ?? [],
   completedAt: r.onboarding_completed_at ?? undefined,
@@ -79,6 +117,10 @@ const toRow = (p: UserProfile) => ({
   sleep_habit: p.sleep ?? null,
   smoking: p.smoking ?? null,
   alcohol: p.alcohol ?? null,
+  takes_medication: p.takesMedication ?? null,
+  medications: p.medications ?? null,
+  conditions: p.conditions ?? [],
+  conditions_other: p.conditionsOther ?? null,
   goals: p.goals,
   badges: p.badges,
   onboarding_completed_at: p.completedAt ?? null,

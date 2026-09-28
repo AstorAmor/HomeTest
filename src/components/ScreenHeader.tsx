@@ -2,11 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Avatar } from './Avatar';
 import { Colors } from '@/constants/colors';
-import { mockPatient } from '@/data/mockData';
+import { UserAvatar } from './UserAvatar';
 
-const avatarSource = require('../../assets/images/avatar.jpg');
 
 interface ScreenHeaderProps {
   title: string;
@@ -29,7 +27,7 @@ export const ScreenHeader = ({ title, showBack = false }: ScreenHeaderProps) => 
       <Text style={styles.title}>{title}</Text>
 
       <View style={[styles.side, styles.sideRight]}>
-        <Avatar nombre={mockPatient.nombre} source={avatarSource} size={38} />
+        <UserAvatar size={38} />
       </View>
     </View>
   );

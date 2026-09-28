@@ -10,6 +10,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 import { loadSeedData } from '@/data/seedData';
 import { importLocalDataToAccount } from '@/data/importLocalData';
+import { profileRepository, Sex } from '@/data/profileRepository';
 import { useAuth } from '@/context/AuthContext';
 import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
@@ -82,8 +83,11 @@ export const MyDataScreen = () => {
   const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(null);
   const [cortisol, setCortisol] = useDeepState<ChartData | null>(null);
   const [bp, setBp] = useDeepState<ChartData | null>(null);
+  // El ciclo menstrual solo se muestra a perfiles de mujer
+  const [sex, setSex] = useState<Sex | undefined>(undefined);
 
   const load = useCallback(async () => {
+    profileRepository.get().then((p) => setSex(p.sex)).catch(() => undefined);
     const [g, bpEntries, chol, cort] = await Promise.all([
       getGlucoseEntries(),
       getBloodPressureEntries(),
@@ -157,19 +161,19 @@ export const MyDataScreen = () => {
           <Text style={styles.sectionTitle}>Wearable measurements</Text>
           <Text style={styles.sectionMeta}>Last 14 days{isSample ? ' · sample' : ''}</Text>
         </View>
-        <MetricCard title="Resting heart rate" icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={`avg ${hr.avg}`} onPress={() => router.push('/wearables')}>
+        <MetricCard title="Resting heart rate" icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={`avg ${hr.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
           <TrendChart labels={hr.labels} series={hr.series} height={90} />
         </MetricCard>
-        <MetricCard title="Heart rate variability" icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={`avg ${hrv.avg}`} onPress={() => router.push('/wearables')}>
+        <MetricCard title="Heart rate variability" icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={`avg ${hrv.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
           <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
         </MetricCard>
-        <MetricCard title="Sleep" icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={`avg ${sleep.avg}`} onPress={() => router.push('/wearables')}>
+        <MetricCard title="Sleep" icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={`avg ${sleep.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
           <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
         </MetricCard>
-        <MetricCard title="Steps" icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={`avg ${steps.avg}`} onPress={() => router.push('/wearables')}>
+        <MetricCard title="Steps" icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={`avg ${steps.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
           <TrendChart labels={steps.labels} series={steps.series} height={90} formatY={(v) => `${(v / 1000).toFixed(1)}k`} />
         </MetricCard>
-        <MetricCard title="Active calories" icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={`avg ${kcal.avg}`} onPress={() => router.push('/wearables')}>
+        <MetricCard title="Active calories" icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={`avg ${kcal.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
           <TrendChart labels={kcal.labels} series={kcal.series} height={90} />
         </MetricCard>
 
@@ -187,7 +191,7 @@ export const MyDataScreen = () => {
           </MetricCard>
         )}
 
-        <MetricCard title="Temperature" icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={`avg ${temp.avg}`} onPress={() => router.push('/wearables')}>
+        <MetricCard title="Temperature" icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={`avg ${temp.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
           <TrendChart
             labels={temp.labels}
             series={temp.series}
@@ -237,10 +241,12 @@ export const MyDataScreen = () => {
           })}
         </View>
 
-        <TouchableOpacity style={styles.cycleButton} onPress={() => router.push('/cycle-detail')} activeOpacity={0.85}>
-          <Ionicons name="water" size={20} color="#5A2340" />
-          <Text style={styles.cycleButtonText}>Menstrual Cycle</Text>
-        </TouchableOpacity>
+        {sex === 'female' && (
+          <TouchableOpacity style={styles.cycleButton} onPress={() => router.push('/cycle-detail')} activeOpacity={0.85}>
+            <Ionicons name="water" size={20} color="#5A2340" />
+            <Text style={styles.cycleButtonText}>Menstrual Cycle</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.filesCard}>
           <Ionicons name="folder-outline" size={22} color={Colors.textPrimary} />

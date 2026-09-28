@@ -15,6 +15,8 @@ interface TrendChartProps {
   height?: number;
   band?: { low: number; high: number }; // rango de referencia sombreado
   formatY?: (v: number) => string;
+  formatValue?: (v: number) => string; // valor en el globo al tocar un punto
+  interactive?: boolean; // tocar la gráfica muestra fecha y valor del punto más cercano
 }
 
 const PAD_TOP = 12;
@@ -46,8 +48,11 @@ export const TrendChart = ({
   height = 120,
   band,
   formatY = (v) => String(Math.round(v)),
+  formatValue,
+  interactive = true,
 }: TrendChartProps) => {
   const [width, setWidth] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
   const gradientId = `trend${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
@@ -76,6 +81,14 @@ export const TrendChart = ({
   const y = (v: number) => PAD_TOP + plotHeight - ((v - min) / (max - min)) * plotHeight;
 
   const gridValues = [max - pad, (min + max) / 2, min + pad];
+  const fmtValue = formatValue ?? ((v: number) => (Math.abs(v) < 10 ? v.toFixed(1) : String(Math.round(v))));
+
+  // Punto más cercano a la posición tocada
+  const pick = (locationX: number) => {
+    if (plotWidth <= 0) return;
+    const i = Math.round(((locationX - 4) / (plotWidth - 8)) * (pointCount - 1));
+    setSelected(Math.max(0, Math.min(pointCount - 1, i)));
+  };
   const midIndex = Math.floor((labels.length - 1) / 2);
 
   return (
@@ -114,6 +127,18 @@ export const TrendChart = ({
             />
           ))}
 
+          {selected !== null && (
+            <Line
+              x1={x(selected)}
+              x2={x(selected)}
+              y1={PAD_TOP - 6}
+              y2={PAD_TOP + plotHeight}
+              stroke={Colors.textSecondary}
+              strokeWidth={1}
+              strokeDasharray="2 3"
+            />
+          )}
+
           {series.map((s, si) => {
             const pts = s.values.map((v, i) => ({ x: x(i), y: y(v) }));
             const line = smoothPath(pts);
@@ -129,10 +154,43 @@ export const TrendChart = ({
                 <Path d={line} stroke={s.color} strokeWidth={2.5} fill="none" strokeLinecap="round" />
                 <Circle cx={last.x} cy={last.y} r={7} fill={s.color} opacity={0.2} />
                 <Circle cx={last.x} cy={last.y} r={3.8} fill={s.color} />
+                {selected !== null && s.values[selected] !== undefined && (
+                  <Circle cx={pts[selected].x} cy={pts[selected].y} r={5} fill={Colors.background} stroke={s.color} strokeWidth={2.5} />
+                )}
               </React.Fragment>
             );
           })}
         </Svg>
+      )}
+
+      {width > 0 && interactive && (
+        <View
+          style={[styles.touchLayer, { width: plotWidth, height }]}
+          onStartShouldSetResponder={() => true}
+          onResponderTerminationRequest={() => true}
+          onResponderGrant={(e) => pick(e.nativeEvent.locationX)}
+          onResponderMove={(e) => pick(e.nativeEvent.locationX)}
+        />
+      )}
+
+      {selected !== null && width > 0 && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.tooltip,
+            { left: Math.max(0, Math.min(plotWidth - 130, x(selected) - 65)) },
+          ]}
+        >
+          <Text style={styles.tooltipDate}>{labels[selected]}</Text>
+          {series.map((s) =>
+            s.values[selected] !== undefined ? (
+              <Text key={s.label ?? s.color} style={[styles.tooltipValue, { color: s.color }]}>
+                {s.label ? `${s.label}: ` : ''}
+                {fmtValue(s.values[selected])}
+              </Text>
+            ) : null
+          )}
+        </View>
       )}
 
       {width > 0 &&
@@ -175,6 +233,31 @@ const styles = StyleSheet.create({
     position: 'absolute',
     color: Colors.textMuted,
     fontSize: 10,
+  },
+  touchLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  tooltip: {
+    position: 'absolute',
+    top: -6,
+    width: 130,
+    backgroundColor: 'rgba(11, 13, 22, 0.92)',
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+  },
+  tooltipDate: {
+    color: Colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  tooltipValue: {
+    fontSize: 12,
+    fontWeight: '800',
   },
   xLabels: {
     flexDirection: 'row',

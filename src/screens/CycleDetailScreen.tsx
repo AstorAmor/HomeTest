@@ -78,6 +78,14 @@ export const CycleDetailScreen = () => {
     (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
   );
 
+  // Duración del periodo (días de regla, inicio y fin incluidos)
+  const periodDays = (e: CycleEntry) =>
+    e.endFecha
+      ? Math.round((new Date(e.endFecha).getTime() - new Date(e.fecha).getTime()) / (24 * 3600 * 1000)) + 1
+      : null;
+  const durations = entries.map(periodDays).filter((d): d is number => d != null);
+  const avgPeriod = durations.length ? Math.round((durations.reduce((a, b) => a + b, 0) / durations.length) * 10) / 10 : null;
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -118,8 +126,8 @@ export const CycleDetailScreen = () => {
                 <Text style={styles.statLabel}>Average length</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statValue}>{prediction.cycles_logged}</Text>
-                <Text style={styles.statLabel}>Cycles logged</Text>
+                <Text style={styles.statValue}>{avgPeriod ?? '—'}</Text>
+                <Text style={styles.statLabel}>Period days</Text>
               </View>
             </View>
 
@@ -132,14 +140,14 @@ export const CycleDetailScreen = () => {
         {entries.length < 2 && !loadingPrediction && (
           <View style={styles.emptyPredictionCard}>
             <Text style={styles.emptyText}>
-              Log at least 2 period start dates to get a prediction.
+              Log at least 2 periods to get a prediction.
             </Text>
           </View>
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={() => router.push('/log-cycle')}>
           <Ionicons name="add-circle-outline" size={20} color={Colors.pulseAccent} />
-          <Text style={styles.addButtonText}>Log period start</Text>
+          <Text style={styles.addButtonText}>Log period</Text>
         </TouchableOpacity>
 
         <Text style={styles.sectionTitle}>History</Text>
@@ -154,7 +162,11 @@ export const CycleDetailScreen = () => {
                 onPress={() => router.push({ pathname: '/log-cycle', params: { id: entry.id } })}
               >
                 <Text style={styles.historyDate}>{formatListDate(entry.fecha)}</Text>
-                <Text style={styles.historyValue}>Period start</Text>
+                <Text style={styles.historyValue}>
+                  {entry.endFecha
+                    ? `until ${formatListDate(entry.endFecha)} · ${periodDays(entry)} days`
+                    : 'Ongoing / end not logged'}
+                </Text>
                 <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />
               </TouchableOpacity>
             ))}

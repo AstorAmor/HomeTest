@@ -115,7 +115,7 @@ export const LabScreen = () => {
           })}
         </View>
 
-        <TouchableOpacity style={styles.requestButton}>
+        <TouchableOpacity style={styles.requestButton} onPress={() => router.push('/store')}>
           <Ionicons name="flask-outline" size={20} color={Colors.background} />
           <Text style={styles.requestButtonText}>Request a new test</Text>
         </TouchableOpacity>

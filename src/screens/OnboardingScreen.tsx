@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Animated, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -10,6 +10,8 @@ import {
   ActivityLevel,
   Alcohol,
   BADGES,
+  CONDITION_OPTIONS,
+  ConditionId,
   GOAL_OPTIONS,
   GoalId,
   Sex,
@@ -25,8 +27,8 @@ const YEARS = Array.from({ length: 81 }, (_, i) => String(1930 + i));
 const HEIGHTS = Array.from({ length: 71 }, (_, i) => String(140 + i));
 const WEIGHTS = Array.from({ length: 111 }, (_, i) => String(40 + i));
 
-type Step = 'dob' | 'sex' | 'body' | 'habits' | 'goals';
-const STEPS: Step[] = ['dob', 'sex', 'body', 'habits', 'goals'];
+type Step = 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals';
+const STEPS: Step[] = ['dob', 'sex', 'body', 'habits', 'health', 'goals'];
 
 interface ChipOption<T extends string> {
   id: T;
@@ -76,6 +78,37 @@ export const OnboardingScreen = () => {
   const [smoking, setSmoking] = useState<Smoking>();
   const [alcohol, setAlcohol] = useState<Alcohol>();
   const [goals, setGoals] = useState<GoalId[]>([]);
+  const [takesMedication, setTakesMedication] = useState<boolean>();
+  const [medications, setMedications] = useState('');
+  const [conditions, setConditions] = useState<ConditionId[]>([]);
+  const [conditionsOther, setConditionsOther] = useState('');
+
+  // Al editar el perfil, el cuestionario parte de las respuestas ya guardadas
+  useEffect(() => {
+    profileRepository
+      .get()
+      .then((p) => {
+        if (p.dateOfBirth) {
+          const [y, m, d] = p.dateOfBirth.split('-').map(Number);
+          if (YEARS.includes(String(y))) setYear(YEARS.indexOf(String(y)));
+          setMonth(m - 1);
+          setDay(d - 1);
+        }
+        if (p.sex) setSex(p.sex);
+        if (p.heightCm && HEIGHTS.includes(String(p.heightCm))) setHeight(HEIGHTS.indexOf(String(p.heightCm)));
+        if (p.weightKg && WEIGHTS.includes(String(Math.round(p.weightKg)))) setWeight(WEIGHTS.indexOf(String(Math.round(p.weightKg))));
+        setActivity(p.activity);
+        setSleep(p.sleep);
+        setSmoking(p.smoking);
+        setAlcohol(p.alcohol);
+        setGoals(p.goals);
+        setTakesMedication(p.takesMedication);
+        setMedications(p.medications ?? '');
+        setConditions(p.conditions ?? []);
+        setConditionsOther(p.conditionsOther ?? '');
+      })
+      .catch(() => undefined);
+  }, []);
   // Qué pasos ha respondido de verdad (si se salta, no se guarda el valor por defecto)
   const [answered, setAnswered] = useState<Set<Step>>(new Set());
 
@@ -93,6 +126,12 @@ export const OnboardingScreen = () => {
       profile.weightKg = Number(WEIGHTS[weight]);
     }
     Object.assign(profile, { activity, sleep, smoking, alcohol });
+    if (answered.has('health') || takesMedication !== undefined || conditions.length) {
+      profile.takesMedication = takesMedication;
+      profile.medications = takesMedication ? medications.trim() : undefined;
+      profile.conditions = conditions;
+      profile.conditionsOther = conditions.includes('other') ? conditionsOther.trim() : undefined;
+    }
     return profile;
   };
 
@@ -116,8 +155,12 @@ export const OnboardingScreen = () => {
   useEffect(() => {
     if (phase !== 'building') return;
     const t = setTimeout(async () => {
+      // La insignia solo se celebra la primera vez (no al volver a editar el perfil)
+      const before = await profileRepository.get();
+      const firstTime = !before.badges.includes('plan_builder');
       await profileRepository.awardBadge('plan_builder');
-      setPhase('badge');
+      if (firstTime) setPhase('badge');
+      else router.replace('/plan-intro');
     }, 1600);
     return () => clearTimeout(t);
   }, [phase]);
@@ -132,8 +175,15 @@ export const OnboardingScreen = () => {
   }
 
   if (phase === 'badge') {
-    return <BadgeUnlocked onContinue={() => router.replace('/(tabs)')} />;
+    return <BadgeUnlocked onContinue={() => router.replace('/plan-intro')} />;
   }
+
+  const toggleCondition = (id: ConditionId) =>
+    setConditions((prev) => {
+      if (id === 'none') return prev.includes('none') ? [] : ['none'];
+      const without = prev.filter((c) => c !== 'none');
+      return without.includes(id) ? without.filter((c) => c !== id) : [...without, id];
+    });
 
   const toggleGoal = (id: GoalId) =>
     setGoals((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
@@ -262,6 +312,59 @@ export const OnboardingScreen = () => {
                 { id: 'daily', label: 'Daily' },
               ]}
             />
+          </>
+        )}
+
+        {step === 'health' && (
+          <>
+            <Text style={styles.title}>Your health background</Text>
+            <Text style={styles.subtitle}>
+              Some medicines and conditions change how results should be read. Only you and the professionals you
+              choose can see this.
+            </Text>
+            <Text style={styles.question}>Do you take any regular medication?</Text>
+            <ChipGroup
+              value={takesMedication === undefined ? undefined : takesMedication ? 'yes' : 'no'}
+              onChange={(v) => setTakesMedication(v === 'yes')}
+              options={[
+                { id: 'no', label: 'No' },
+                { id: 'yes', label: 'Yes' },
+              ]}
+            />
+            {takesMedication && (
+              <TextInput
+                style={styles.textInput}
+                value={medications}
+                onChangeText={setMedications}
+                placeholder="Which ones? e.g. levothyroxine 50 µg, contraceptive pill"
+                placeholderTextColor={Colors.textMuted}
+                multiline
+              />
+            )}
+            <Text style={styles.question}>Have you been diagnosed with any condition?</Text>
+            <View style={styles.chips}>
+              {CONDITION_OPTIONS.filter((c) => !c.femaleOnly || sex === 'female').map((c) => {
+                const selected = conditions.includes(c.id);
+                return (
+                  <TouchableOpacity
+                    key={c.id}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    onPress={() => toggleCondition(c.id)}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{c.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {conditions.includes('other') && (
+              <TextInput
+                style={styles.textInput}
+                value={conditionsOther}
+                onChangeText={setConditionsOther}
+                placeholder="Tell us which"
+                placeholderTextColor={Colors.textMuted}
+              />
+            )}
           </>
         )}
 
@@ -446,6 +549,17 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: Colors.textPrimary,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    color: Colors.textPrimary,
+    fontSize: 15,
+    marginBottom: 18,
   },
   goalList: {
     gap: 10,

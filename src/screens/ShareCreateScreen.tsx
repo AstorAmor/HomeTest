@@ -13,6 +13,7 @@ import {
   SHARE_SCOPES,
   ShareScope,
 } from '@/data/sharing';
+import { profileRepository } from '@/data/profileRepository';
 
 const EXPIRY_OPTIONS: { id: string; label: string; days: number | null }[] = [
   { id: '30', label: '30 days', days: 30 },
@@ -31,6 +32,13 @@ export const ShareCreateScreen = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // La categoría del ciclo menstrual solo se ofrece a perfiles de mujer
+  const [isFemale, setIsFemale] = useState(false);
+  useEffect(() => {
+    profileRepository.get().then((p) => setIsFemale(p.sex === 'female')).catch(() => undefined);
+  }, []);
+  const scopeOptions = SHARE_SCOPES.filter((s) => s.id !== 'cycle' || isFemale);
+
   useEffect(() => {
     listVerifiedProfessionals()
       .then(setProfessionals)
@@ -45,7 +53,7 @@ export const ShareCreateScreen = () => {
       return next;
     });
 
-  const allSelected = scopes.size === SHARE_SCOPES.length;
+  const allSelected = scopes.size === scopeOptions.length;
   const pro = professionals?.find((p) => p.id === selectedPro);
 
   const submit = async () => {
@@ -105,12 +113,12 @@ export const ShareCreateScreen = () => {
         <View style={styles.stepRow}>
           <Text style={styles.step}>2 · What</Text>
           <TouchableOpacity
-            onPress={() => setScopes(allSelected ? new Set() : new Set(SHARE_SCOPES.map((s) => s.id)))}
+            onPress={() => setScopes(allSelected ? new Set() : new Set(scopeOptions.map((s) => s.id)))}
           >
             <Text style={styles.link}>{allSelected ? 'Clear all' : 'Select all'}</Text>
           </TouchableOpacity>
         </View>
-        {SHARE_SCOPES.map((s) => {
+        {scopeOptions.map((s) => {
           const selected = scopes.has(s.id);
           return (
             <TouchableOpacity
