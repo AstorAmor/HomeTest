@@ -4,7 +4,12 @@
     {
       "canonical_id": "AMH",
       "canonical_name": "Hormona antimülleriana (AMH)",
-      "aliases": ["AMH", "Anti-Mullerian Hormone", "Hormona Antimulleriana"],
+      "aliases": [
+        "AMH",
+        "Anti-Mullerian Hormone",
+        "Hormona Antimulleriana",
+        "AMH (anti-Müllerian hormone)"
+      ],
       "category": "salud_femenina",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,18 +26,32 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["FSH", "ESTRADIOL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A hormone made by developing egg follicles in the ovaries.",
+        "clinical_relevance": "An estimate of ovarian reserve (how many eggs remain).",
+        "related_biomarkers": [
+          "FSH",
+          "ESTRADIOL"
+        ],
+        "preanalytical_factors": "Age, PCOS (higher), some contraceptives (slightly lower).",
+        "limitations": "Does not predict natural fertility or egg quality.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/anti-mullerian-hormone-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "AMH (anti-Müllerian hormone)"
     }
-  ]
+  ],
+  "categoria_en": "Women's health"
 }

@@ -4,7 +4,10 @@
     {
       "canonical_id": "FERRITIN",
       "canonical_name": "Ferritina",
-      "aliases": ["Ferritin", "Ferritina"],
+      "aliases": [
+        "Ferritin",
+        "Ferritina"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,23 +24,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["IRON", "IRON_SATURATION", "IRON_BINDING_CAPACITY"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The protein that stores iron; its blood level reflects your iron stores.",
+        "clinical_relevance": "The best single test for iron deficiency, a common cause of fatigue.",
+        "related_biomarkers": [
+          "IRON",
+          "IRON_SATURATION",
+          "IRON_BINDING_CAPACITY"
+        ],
+        "preanalytical_factors": "Inflammation, infection and liver disease raise it regardless of iron stores.",
+        "limitations": "A normal ferritin can hide deficiency during inflammation.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/ferritin-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Ferritin"
     },
     {
       "canonical_id": "IRON_BINDING_CAPACITY",
       "canonical_name": "Capacidad de fijación del hierro (TIBC)",
-      "aliases": ["Iron Binding Capacity", "TIBC"],
+      "aliases": [
+        "Iron Binding Capacity",
+        "TIBC",
+        "Total iron-binding capacity (TIBC)"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,23 +75,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["IRON", "FERRITIN", "IRON_SATURATION"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "How much iron your blood proteins (transferrin) could carry.",
+        "clinical_relevance": "High TIBC suggests iron deficiency; low TIBC suggests inflammation or overload.",
+        "related_biomarkers": [
+          "IRON",
+          "FERRITIN",
+          "IRON_SATURATION"
+        ],
+        "preanalytical_factors": "Iron status, pregnancy, oral contraceptives, inflammation.",
+        "limitations": "Read with ferritin and serum iron.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/iron-tests/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Total iron-binding capacity (TIBC)"
     },
     {
       "canonical_id": "IRON_SATURATION",
       "canonical_name": "Porcentaje de saturación de hierro",
-      "aliases": ["Iron % Saturation", "Saturacion de Hierro"],
+      "aliases": [
+        "Iron % Saturation",
+        "Saturacion de Hierro",
+        "Transferrin saturation"
+      ],
       "category": "nutrientes",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -87,23 +126,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["IRON", "IRON_BINDING_CAPACITY"],
-        "preanalytical_factors": null,
-        "limitations": "DERIVED = Iron / TIBC * 100. Confirmar formula antes de implementar en rule engine.",
-        "clinical_contexts": null
+        "biological_role": "The percentage of transferrin carrying iron.",
+        "clinical_relevance": "Low values suggest iron deficiency; high values can suggest iron overload.",
+        "related_biomarkers": [
+          "IRON",
+          "IRON_BINDING_CAPACITY"
+        ],
+        "preanalytical_factors": "Time of day, recent meals and supplements.",
+        "limitations": "Calculated from serum iron and TIBC.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/iron-tests/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Transferrin saturation"
     },
     {
       "canonical_id": "HOMOCYSTEINE",
       "canonical_name": "Homocisteína",
-      "aliases": ["Homocysteine", "Homocisteina"],
+      "aliases": [
+        "Homocysteine",
+        "Homocisteina"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -120,23 +175,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["MMA_B12"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "An amino acid that depends on vitamins B12, B6 and folate to be cleared.",
+        "clinical_relevance": "High levels can reflect B vitamin deficiency and are linked to cardiovascular risk.",
+        "related_biomarkers": [
+          "MMA_B12"
+        ],
+        "preanalytical_factors": "B12, folate and B6 status, kidney function, genetics (MTHFR), smoking.",
+        "limitations": "Lowering it with vitamins has not clearly reduced heart events.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/homocysteine-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Homocysteine"
     },
     {
       "canonical_id": "MMA_B12",
       "canonical_name": "Ácido metilmalónico (MMA, proxy de B12)",
-      "aliases": ["MMA", "Methylmalonic Acid", "Acido Metilmalonico"],
+      "aliases": [
+        "MMA",
+        "Methylmalonic Acid",
+        "Acido Metilmalonico",
+        "Methylmalonic acid (MMA)"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -153,23 +225,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["HOMOCYSTEINE"],
-        "preanalytical_factors": null,
-        "limitations": "Function lo usa como proxy indirecto de Vitamina B12, no mide B12 directamente en el panel incluido.",
-        "clinical_contexts": null
+        "biological_role": "A compound that builds up when vitamin B12 is lacking.",
+        "clinical_relevance": "A sensitive marker of true B12 deficiency at the tissue level.",
+        "related_biomarkers": [
+          "HOMOCYSTEINE"
+        ],
+        "preanalytical_factors": "Kidney function raises it.",
+        "limitations": "Interpret with B12 levels.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/methylmalonic-acid-mma-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Methylmalonic acid (MMA)"
     },
     {
       "canonical_id": "VITAMIN_D",
       "canonical_name": "Vitamina D",
-      "aliases": ["Vitamin D", "Vitamina D", "25-OH Vitamin D"],
+      "aliases": [
+        "Vitamin D",
+        "Vitamina D",
+        "25-OH Vitamin D",
+        "Vitamin D (25-OH)"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -186,23 +275,35 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "The storage form of vitamin D, made in the skin with sunlight and taken from food and supplements.",
+        "clinical_relevance": "Important for bones, muscles and immunity; deficiency is common in winter.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Sun exposure, season, skin tone, weight and supplements.",
+        "limitations": "Optimal levels are debated; very high levels can be harmful.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/vitamin-d-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Vitamin D (25-OH)"
     },
     {
       "canonical_id": "ZINC",
       "canonical_name": "Zinc",
-      "aliases": ["Zinc"],
+      "aliases": [
+        "Zinc"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -219,23 +320,36 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A trace mineral needed for immunity, wound healing, taste and hormones.",
+        "clinical_relevance": "Low zinc can impair immunity and skin health.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Diet, inflammation, time of day, gut absorption.",
+        "limitations": "Blood zinc falls during inflammation and does not always reflect body stores.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "NIH Office of Dietary Supplements – Zinc fact sheet",
+            "url": "https://ods.od.nih.gov/factsheets/Zinc-HealthProfessional/",
+            "checked_at": "2026-09-28",
+            "link_verified": false
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Zinc"
     },
     {
       "canonical_id": "OMEGA3_TOTAL",
       "canonical_name": "Omega-3 total",
-      "aliases": ["Omega-3 Total"],
+      "aliases": [
+        "Omega-3 Total",
+        "Omega-3 index"
+      ],
       "category": "nutrientes",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -252,23 +366,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA3_DHA", "OMEGA3_DPA", "OMEGA3_EPA"],
-        "preanalytical_factors": null,
-        "limitations": "DERIVED = suma de DHA + DPA + EPA (y posiblemente otros omega-3). Confirmar formula exacta antes de implementar.",
-        "clinical_contexts": null
+        "biological_role": "The percentage of EPA and DHA in red blood cell membranes.",
+        "clinical_relevance": "Reflects long-term omega-3 intake; lower values are associated with higher cardiovascular risk.",
+        "related_biomarkers": [
+          "OMEGA3_DHA",
+          "OMEGA3_DPA",
+          "OMEGA3_EPA"
+        ],
+        "preanalytical_factors": "Oily fish and supplement intake over the last 2-3 months.",
+        "limitations": "Not yet a routine clinical test; method-dependent.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-3 index"
     },
     {
       "canonical_id": "OMEGA3_DHA",
       "canonical_name": "Omega-3: DHA",
-      "aliases": ["Omega-3: DHA", "DHA"],
+      "aliases": [
+        "Omega-3: DHA",
+        "DHA"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -285,23 +416,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA3_TOTAL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Docosahexaenoic acid, a long-chain omega-3 fat important for brain and eyes.",
+        "clinical_relevance": "Part of the omega-3 index.",
+        "related_biomarkers": [
+          "OMEGA3_TOTAL"
+        ],
+        "preanalytical_factors": "Oily fish and supplements.",
+        "limitations": "Method-dependent; not routine.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-3: DHA"
     },
     {
       "canonical_id": "OMEGA3_DPA",
       "canonical_name": "Omega-3: DPA",
-      "aliases": ["Omega-3: DPA", "DPA"],
+      "aliases": [
+        "Omega-3: DPA",
+        "DPA"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -318,23 +464,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA3_TOTAL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Docosapentaenoic acid, an intermediate long-chain omega-3.",
+        "clinical_relevance": "Contributes to overall omega-3 status.",
+        "related_biomarkers": [
+          "OMEGA3_TOTAL"
+        ],
+        "preanalytical_factors": "Oily fish, supplements.",
+        "limitations": "Research-level marker.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-3: DPA"
     },
     {
       "canonical_id": "OMEGA3_EPA",
       "canonical_name": "Omega-3: EPA",
-      "aliases": ["Omega-3: EPA", "EPA"],
+      "aliases": [
+        "Omega-3: EPA",
+        "EPA"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -351,23 +512,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA3_TOTAL", "ARACHIDONIC_EPA_RATIO"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Eicosapentaenoic acid, an anti-inflammatory long-chain omega-3.",
+        "clinical_relevance": "Part of the omega-3 index.",
+        "related_biomarkers": [
+          "OMEGA3_TOTAL",
+          "ARACHIDONIC_EPA_RATIO"
+        ],
+        "preanalytical_factors": "Oily fish and supplements.",
+        "limitations": "Method-dependent; not routine.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-3: EPA"
     },
     {
       "canonical_id": "OMEGA6_TOTAL",
       "canonical_name": "Omega-6 total",
-      "aliases": ["Omega-6 Total"],
+      "aliases": [
+        "Omega-6 Total",
+        "Omega-6 total"
+      ],
       "category": "nutrientes",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -384,23 +561,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA6_ARACHIDONIC", "OMEGA6_LINOLEIC"],
-        "preanalytical_factors": null,
-        "limitations": "DERIVED, probablemente suma de Arachidonic Acid + Linoleic Acid (y otros omega-6). Confirmar formula.",
-        "clinical_contexts": null
+        "biological_role": "The share of omega-6 fatty acids in blood fats.",
+        "clinical_relevance": "Helps interpret the balance between omega-6 and omega-3.",
+        "related_biomarkers": [
+          "OMEGA6_ARACHIDONIC",
+          "OMEGA6_LINOLEIC"
+        ],
+        "preanalytical_factors": "Vegetable oils, processed foods.",
+        "limitations": "Research-level marker.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-6 total"
     },
     {
       "canonical_id": "OMEGA6_ARACHIDONIC",
       "canonical_name": "Omega-6: ácido araquidónico",
-      "aliases": ["Omega-6: Arachidonic Acid", "Acido Araquidonico"],
+      "aliases": [
+        "Omega-6: Arachidonic Acid",
+        "Acido Araquidonico",
+        "Omega-6: arachidonic acid"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -417,23 +611,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA6_TOTAL", "ARACHIDONIC_EPA_RATIO"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "An omega-6 fat that is a precursor of inflammatory signals.",
+        "clinical_relevance": "Used in the arachidonic acid/EPA ratio.",
+        "related_biomarkers": [
+          "OMEGA6_TOTAL",
+          "ARACHIDONIC_EPA_RATIO"
+        ],
+        "preanalytical_factors": "Meat, eggs, diet.",
+        "limitations": "Research-level marker.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-6: arachidonic acid"
     },
     {
       "canonical_id": "OMEGA6_LINOLEIC",
       "canonical_name": "Omega-6: ácido linoleico",
-      "aliases": ["Omega-6: Linoleic Acid", "Acido Linoleico"],
+      "aliases": [
+        "Omega-6: Linoleic Acid",
+        "Acido Linoleico",
+        "Omega-6: linoleic acid"
+      ],
       "category": "nutrientes",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -450,23 +661,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA6_TOTAL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The main dietary omega-6 fat.",
+        "clinical_relevance": "Reflects intake of seed oils; generally not harmful at usual intakes.",
+        "related_biomarkers": [
+          "OMEGA6_TOTAL"
+        ],
+        "preanalytical_factors": "Vegetable oils, nuts.",
+        "limitations": "Research-level marker.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-6: linoleic acid"
     },
     {
       "canonical_id": "OMEGA6_OMEGA3_RATIO",
       "canonical_name": "Ratio Omega-6 / Omega-3",
-      "aliases": ["Omega-6 / Omega-3 Ratio", "Ratio Omega-6/Omega-3"],
+      "aliases": [
+        "Omega-6 / Omega-3 Ratio",
+        "Ratio Omega-6/Omega-3",
+        "Omega-6 / omega-3 ratio"
+      ],
       "category": "nutrientes",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -483,23 +710,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA6_TOTAL", "OMEGA3_TOTAL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The balance between omega-6 and omega-3 fats.",
+        "clinical_relevance": "A high ratio suggests low omega-3 intake.",
+        "related_biomarkers": [
+          "OMEGA6_TOTAL",
+          "OMEGA3_TOTAL"
+        ],
+        "preanalytical_factors": "Diet.",
+        "limitations": "The ideal ratio is debated.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Omega-6 / omega-3 ratio"
     },
     {
       "canonical_id": "ARACHIDONIC_EPA_RATIO",
       "canonical_name": "Ratio ácido araquidónico / EPA",
-      "aliases": ["Arachidonic Acid/EPA Ratio", "Ratio AA/EPA"],
+      "aliases": [
+        "Arachidonic Acid/EPA Ratio",
+        "Ratio AA/EPA",
+        "Arachidonic acid / EPA ratio"
+      ],
       "category": "nutrientes",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -516,18 +760,32 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["OMEGA6_ARACHIDONIC", "OMEGA3_EPA"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The balance between a pro-inflammatory omega-6 and an anti-inflammatory omega-3.",
+        "clinical_relevance": "A high ratio can suggest low omega-3 intake.",
+        "related_biomarkers": [
+          "OMEGA6_ARACHIDONIC",
+          "OMEGA3_EPA"
+        ],
+        "preanalytical_factors": "Diet, supplements.",
+        "limitations": "Research-level marker.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Harris WS, von Schacky C. The Omega-3 Index. Prev Med 2004",
+            "url": "https://doi.org/10.1016/j.ypmed.2004.02.030",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Arachidonic acid / EPA ratio"
     }
-  ]
+  ],
+  "categoria_en": "Nutrients"
 }

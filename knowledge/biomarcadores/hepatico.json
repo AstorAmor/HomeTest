@@ -4,11 +4,18 @@
     {
       "canonical_id": "TOTAL_BILIRUBIN",
       "canonical_name": "Bilirrubina total",
-      "aliases": ["Bilirrubina Total", "Total Bilirubin"],
+      "aliases": [
+        "Bilirrubina Total",
+        "Total Bilirubin",
+        "Total bilirubin"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "µmol/L"],
+      "common_units": [
+        "mg/dL",
+        "µmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -21,50 +28,88 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["DIRECT_BILIRUBIN"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A yellow pigment made when red blood cells break down, processed by the liver.",
+        "clinical_relevance": "High levels can indicate liver problems, bile duct blockage or increased red cell breakdown.",
+        "related_biomarkers": [
+          "DIRECT_BILIRUBIN"
+        ],
+        "preanalytical_factors": "Fasting and Gilbert's syndrome (a harmless inherited condition) raise it.",
+        "limitations": "Mild isolated rises are often due to Gilbert's syndrome.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/bilirubin-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Total bilirubin"
     },
     {
       "canonical_id": "DIRECT_BILIRUBIN",
       "canonical_name": "Bilirrubina directa",
-      "aliases": ["Bilirrubina Directa", "Direct Bilirubin"],
+      "aliases": [
+        "Bilirrubina Directa",
+        "Direct Bilirubin",
+        "Direct bilirubin"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "µmol/L"],
+      "common_units": [
+        "mg/dL",
+        "µmol/L"
+      ],
       "external_sources": [],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TOTAL_BILIRUBIN"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health no reporta bilirrubina directa por separado, solo Total Bilirubin -- sin external_source.",
-        "clinical_contexts": null
+        "biological_role": "The fraction of bilirubin already processed by the liver.",
+        "clinical_relevance": "Helps tell liver or bile duct problems from red cell breakdown.",
+        "related_biomarkers": [
+          "TOTAL_BILIRUBIN"
+        ],
+        "preanalytical_factors": "Liver and bile duct disease.",
+        "limitations": "Interpret together with total bilirubin.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/bilirubin-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Direct bilirubin"
     },
     {
       "canonical_id": "ALBUMIN",
       "canonical_name": "Albúmina",
-      "aliases": ["Albumina", "Albúmina", "Albumin"],
+      "aliases": [
+        "Albumina",
+        "Albúmina",
+        "Albumin"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["g/dL", "g/L"],
+      "common_units": [
+        "g/dL",
+        "g/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -77,27 +122,49 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TOTAL_PROTEIN", "GLOBULIN", "ALBUMIN_GLOBULIN_RATIO"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The main protein in blood, made by the liver.",
+        "clinical_relevance": "Reflects liver function, nutrition and fluid balance.",
+        "related_biomarkers": [
+          "TOTAL_PROTEIN",
+          "GLOBULIN",
+          "ALBUMIN_GLOBULIN_RATIO"
+        ],
+        "preanalytical_factors": "Hydration, inflammation, liver and kidney disease, protein intake.",
+        "limitations": "Changes slowly; not an early marker of malnutrition.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/albumin-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Albumin"
     },
     {
       "canonical_id": "TOTAL_PROTEIN",
       "canonical_name": "Proteínas totales",
-      "aliases": ["Proteinas Totales", "Proteínas Totales", "Total Protein"],
+      "aliases": [
+        "Proteinas Totales",
+        "Proteínas Totales",
+        "Total Protein",
+        "Total protein"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["g/dL", "g/L"],
+      "common_units": [
+        "g/dL",
+        "g/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -110,23 +177,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ALBUMIN", "GLOBULIN"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "All proteins in the blood, mainly albumin and globulins.",
+        "clinical_relevance": "A general marker of nutrition, liver and kidney function and immune activity.",
+        "related_biomarkers": [
+          "ALBUMIN",
+          "GLOBULIN"
+        ],
+        "preanalytical_factors": "Hydration, inflammation, liver and kidney disease.",
+        "limitations": "Non-specific; read with albumin and globulin.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/total-protein-and-albumin-globulin-a-g-ratio/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Total protein"
     },
     {
       "canonical_id": "ALT",
       "canonical_name": "Alanina aminotransferasa (ALT/GPT)",
-      "aliases": ["ALT", "GPT", "Alanine Transaminase"],
+      "aliases": [
+        "ALT",
+        "GPT",
+        "Alanine Transaminase",
+        "ALT (alanine aminotransferase)"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -143,23 +228,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["AST"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "An enzyme found mainly in the liver.",
+        "clinical_relevance": "Raised ALT is one of the most specific signs of liver cell injury, e.g. fatty liver.",
+        "related_biomarkers": [
+          "AST"
+        ],
+        "preanalytical_factors": "Alcohol, excess weight, fatty liver, some medicines and supplements, intense exercise.",
+        "limitations": "Normal ALT does not rule out liver disease.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/alt-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "ALT (alanine aminotransferase)"
     },
     {
       "canonical_id": "AST",
       "canonical_name": "Aspartato aminotransferasa (AST/GOT)",
-      "aliases": ["AST", "GOT", "Aspartate Aminotransferase"],
+      "aliases": [
+        "AST",
+        "GOT",
+        "Aspartate Aminotransferase",
+        "AST (aspartate aminotransferase)"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -176,23 +278,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ALT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "An enzyme found in the liver, heart and muscles.",
+        "clinical_relevance": "Helps assess liver injury, usually alongside ALT.",
+        "related_biomarkers": [
+          "ALT"
+        ],
+        "preanalytical_factors": "Alcohol, liver disease, muscle injury and intense exercise.",
+        "limitations": "Less liver-specific than ALT.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/ast-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "AST (aspartate aminotransferase)"
     },
     {
       "canonical_id": "ALP",
       "canonical_name": "Fosfatasa alcalina (ALP)",
-      "aliases": ["ALP", "Alkaline Phosphatase", "Fosfatasa Alcalina"],
+      "aliases": [
+        "ALP",
+        "Alkaline Phosphatase",
+        "Fosfatasa Alcalina",
+        "Alkaline phosphatase (ALP)"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -209,23 +328,37 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "An enzyme from the liver, bile ducts and bones.",
+        "clinical_relevance": "High levels can point to bile duct problems or increased bone turnover.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Growth in adolescents, pregnancy, bone healing and some medicines.",
+        "limitations": "Needs context (GGT, bone markers) to tell liver from bone.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/alkaline-phosphatase/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Alkaline phosphatase (ALP)"
     },
     {
       "canonical_id": "GGT",
       "canonical_name": "Gamma-glutamil transferasa (GGT)",
-      "aliases": ["GGT", "Gamma-glutamyl Transferase"],
+      "aliases": [
+        "GGT",
+        "Gamma-glutamyl Transferase",
+        "GGT (gamma-glutamyl transferase)"
+      ],
       "category": "hepatico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -242,23 +375,36 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A liver enzyme sensitive to alcohol and bile flow.",
+        "clinical_relevance": "Helps confirm a liver origin of high ALP and reflects alcohol intake and fatty liver.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Alcohol, some medicines, fatty liver and excess weight.",
+        "limitations": "Sensitive but not specific.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/gamma-glutamyl-transferase-ggt-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "GGT (gamma-glutamyl transferase)"
     },
     {
       "canonical_id": "GLOBULIN",
       "canonical_name": "Globulina",
-      "aliases": ["Globulin", "Globulina"],
+      "aliases": [
+        "Globulin",
+        "Globulina"
+      ],
       "category": "hepatico",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -275,23 +421,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ALBUMIN", "TOTAL_PROTEIN", "ALBUMIN_GLOBULIN_RATIO"],
-        "preanalytical_factors": null,
-        "limitations": "DERIVED, probablemente Total Protein - Albumin. Confirmar formula antes de implementar.",
-        "clinical_contexts": null
+        "biological_role": "The protein in blood that is not albumin, including antibodies.",
+        "clinical_relevance": "Raised levels can reflect chronic inflammation or infection.",
+        "related_biomarkers": [
+          "ALBUMIN",
+          "TOTAL_PROTEIN",
+          "ALBUMIN_GLOBULIN_RATIO"
+        ],
+        "preanalytical_factors": "Inflammation, infection, liver disease.",
+        "limitations": "Calculated (total protein minus albumin).",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/total-protein-and-albumin-globulin-a-g-ratio/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Globulin"
     },
     {
       "canonical_id": "ALBUMIN_GLOBULIN_RATIO",
       "canonical_name": "Ratio Albúmina / Globulina",
-      "aliases": ["Albumin / Globulin Ratio", "Ratio A/G"],
+      "aliases": [
+        "Albumin / Globulin Ratio",
+        "Ratio A/G",
+        "Albumin / globulin ratio"
+      ],
       "category": "hepatico",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -308,18 +472,32 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ALBUMIN", "GLOBULIN"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Albumin divided by globulin.",
+        "clinical_relevance": "An unusual ratio can hint at liver disease, inflammation or immune conditions.",
+        "related_biomarkers": [
+          "ALBUMIN",
+          "GLOBULIN"
+        ],
+        "preanalytical_factors": "Same factors as albumin and globulin.",
+        "limitations": "A screening index; needs follow-up if abnormal.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/total-protein-and-albumin-globulin-a-g-ratio/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Albumin / globulin ratio"
     }
-  ]
+  ],
+  "categoria_en": "Liver"
 }

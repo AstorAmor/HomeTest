@@ -4,7 +4,10 @@
     {
       "canonical_id": "AMYLASE",
       "canonical_name": "Amilasa",
-      "aliases": ["Amylase", "Amilasa"],
+      "aliases": [
+        "Amylase",
+        "Amilasa"
+      ],
       "category": "pancreas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,23 +24,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["LIPASE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "An enzyme that digests starch, made by the pancreas and salivary glands.",
+        "clinical_relevance": "Very high levels suggest pancreatitis.",
+        "related_biomarkers": [
+          "LIPASE"
+        ],
+        "preanalytical_factors": "Salivary gland problems, kidney function.",
+        "limitations": "Less specific than lipase.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/amylase-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Amylase"
     },
     {
       "canonical_id": "LIPASE",
       "canonical_name": "Lipasa",
-      "aliases": ["Lipase", "Lipasa"],
+      "aliases": [
+        "Lipase",
+        "Lipasa"
+      ],
       "category": "pancreas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,18 +72,31 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": "An enzyme that helps detect inflammation in the pancreas.",
-        "clinical_relevance": null,
-        "related_biomarkers": ["AMYLASE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "An enzyme made by the pancreas to digest fat.",
+        "clinical_relevance": "The main blood test for pancreatitis.",
+        "related_biomarkers": [
+          "AMYLASE"
+        ],
+        "preanalytical_factors": "Kidney function, some medicines.",
+        "limitations": "Mild rises can have non-pancreatic causes.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/lipase-tests/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Lipase"
     }
-  ]
+  ],
+  "categoria_en": "Pancreas"
 }

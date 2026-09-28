@@ -4,48 +4,87 @@
     {
       "canonical_id": "BP_SYSTOLIC",
       "canonical_name": "Presión arterial sistólica",
-      "aliases": ["Systolic", "Sistólica", "Sistolica"],
+      "aliases": [
+        "Systolic",
+        "Sistólica",
+        "Sistolica",
+        "Systolic blood pressure"
+      ],
       "category": "vitales",
       "measurement_type": "MEASURED",
       "sample_type": "Tensiómetro",
-      "common_units": ["mmHg"],
+      "common_units": [
+        "mmHg"
+      ],
       "external_sources": [],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["BP_DIASTOLIC"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The pressure in your arteries when the heart beats (the top number).",
+        "clinical_relevance": "High blood pressure is a major, silent risk factor for heart attack, stroke and kidney disease.",
+        "related_biomarkers": [
+          "BP_DIASTOLIC"
+        ],
+        "preanalytical_factors": "Stress, caffeine, salt, exercise just before, cuff size and posture.",
+        "limitations": "Needs repeated readings; home readings are often more reliable.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/measuring-blood-pressure/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Systolic blood pressure"
     },
     {
       "canonical_id": "BP_DIASTOLIC",
       "canonical_name": "Presión arterial diastólica",
-      "aliases": ["Diastolic", "Diastólica", "Diastolica"],
+      "aliases": [
+        "Diastolic",
+        "Diastólica",
+        "Diastolica",
+        "Diastolic blood pressure"
+      ],
       "category": "vitales",
       "measurement_type": "MEASURED",
       "sample_type": "Tensiómetro",
-      "common_units": ["mmHg"],
+      "common_units": [
+        "mmHg"
+      ],
       "external_sources": [],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["BP_SYSTOLIC"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The pressure in your arteries between heartbeats (the bottom number).",
+        "clinical_relevance": "Part of the diagnosis of high blood pressure.",
+        "related_biomarkers": [
+          "BP_SYSTOLIC"
+        ],
+        "preanalytical_factors": "Same as systolic.",
+        "limitations": "Needs repeated readings.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/measuring-blood-pressure/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Diastolic blood pressure"
     }
-  ]
+  ],
+  "categoria_en": "Vital signs"
 }

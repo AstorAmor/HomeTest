@@ -4,7 +4,12 @@
     {
       "canonical_id": "PSA_TOTAL",
       "canonical_name": "Antígeno prostático específico total (PSA total)",
-      "aliases": ["PSA", "Prostate Specific Antigen (PSA), Total", "PSA Total"],
+      "aliases": [
+        "PSA",
+        "Prostate Specific Antigen (PSA), Total",
+        "PSA Total",
+        "PSA (prostate-specific antigen)"
+      ],
       "category": "salud_masculina",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,23 +26,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["PSA_FREE", "PSA_FREE_PERCENT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A protein made by the prostate.",
+        "clinical_relevance": "Used, after discussing pros and cons, to screen for prostate cancer.",
+        "related_biomarkers": [
+          "PSA_FREE",
+          "PSA_FREE_PERCENT"
+        ],
+        "preanalytical_factors": "Age, prostate enlargement, infection, recent ejaculation or cycling.",
+        "limitations": "Not specific for cancer; decisions need a doctor.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/prostate-specific-antigen-psa-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "PSA (prostate-specific antigen)"
     },
     {
       "canonical_id": "PSA_FREE",
       "canonical_name": "Antígeno prostático específico libre (PSA libre)",
-      "aliases": ["PSA Free", "Prostate Specific Antigen (PSA), Free"],
+      "aliases": [
+        "PSA Free",
+        "Prostate Specific Antigen (PSA), Free",
+        "Free PSA"
+      ],
       "category": "salud_masculina",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,23 +76,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["PSA_TOTAL", "PSA_FREE_PERCENT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "PSA circulating unbound in the blood.",
+        "clinical_relevance": "Helps interpret a borderline total PSA.",
+        "related_biomarkers": [
+          "PSA_TOTAL",
+          "PSA_FREE_PERCENT"
+        ],
+        "preanalytical_factors": "Same as total PSA.",
+        "limitations": "Only useful alongside total PSA.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/prostate-specific-antigen-psa-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Free PSA"
     },
     {
       "canonical_id": "PSA_FREE_PERCENT",
       "canonical_name": "Porcentaje de PSA libre",
-      "aliases": ["PSA Percent Free", "Prostate Specific Antigen PSA Percent Free"],
+      "aliases": [
+        "PSA Percent Free",
+        "Prostate Specific Antigen PSA Percent Free",
+        "Free PSA percentage"
+      ],
       "category": "salud_masculina",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -87,18 +126,32 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["PSA_TOTAL", "PSA_FREE"],
-        "preanalytical_factors": null,
-        "limitations": "DERIVED = PSA_FREE / PSA_TOTAL * 100. Confirmar antes de implementar en rule engine.",
-        "clinical_contexts": null
+        "biological_role": "Free PSA as a percentage of total PSA.",
+        "clinical_relevance": "A lower percentage is associated with a higher chance of prostate cancer.",
+        "related_biomarkers": [
+          "PSA_TOTAL",
+          "PSA_FREE"
+        ],
+        "preanalytical_factors": "Same as total PSA.",
+        "limitations": "Mainly used when total PSA is borderline.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/prostate-specific-antigen-psa-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Free PSA percentage"
     }
-  ]
+  ],
+  "categoria_en": "Men's health"
 }

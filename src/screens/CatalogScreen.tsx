@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, SectionList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, SectionList, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -31,6 +31,15 @@ const CATEGORY_LABELS: Record<string, string> = {
   edad_biologica: 'Biological Age',
 };
 
+const SAMPLE_EN: Record<string, string> = {
+  Sangre: 'Blood',
+  Orina: 'Urine',
+  'Tensiómetro': 'Blood pressure monitor',
+  'N/A (calculado)': 'Calculated',
+};
+
+const displayName = (b: CanonicalBiomarker) => b.canonical_name_en ?? b.canonical_name;
+
 const MEASUREMENT_COLOR: Record<MeasurementType, string> = {
   MEASURED: Colors.accent,
   DERIVED: Colors.warning,
@@ -45,7 +54,7 @@ interface Section {
 
 function matchesQuery(biomarker: CanonicalBiomarker, query: string): boolean {
   if (!query) return true;
-  const haystack = [biomarker.canonical_name, biomarker.canonical_id, ...biomarker.aliases]
+  const haystack = [displayName(biomarker), biomarker.canonical_name, biomarker.canonical_id, ...biomarker.aliases]
     .join(' ')
     .toLowerCase();
   return haystack.includes(query);
@@ -70,7 +79,7 @@ export const CatalogScreen = () => {
       .sort((a, b) => (CATEGORY_LABELS[a[0]] ?? a[0]).localeCompare(CATEGORY_LABELS[b[0]] ?? b[0]))
       .map(([category, data]) => ({
         title: CATEGORY_LABELS[category] ?? category,
-        data: [...data].sort((a, b) => a.canonical_name.localeCompare(b.canonical_name)),
+        data: [...data].sort((a, b) => displayName(a).localeCompare(displayName(b))),
       }));
 
     return { sections: built, total: filtered.length };
@@ -132,7 +141,7 @@ const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
     <TouchableOpacity style={styles.card} onPress={onToggle} activeOpacity={0.8}>
       <View style={styles.topRow}>
         <Text style={styles.name} numberOfLines={expanded ? undefined : 1}>
-          {biomarker.canonical_name}
+          {displayName(biomarker)}
         </Text>
         <Ionicons
           name={expanded ? 'chevron-up' : 'chevron-down'}
@@ -163,7 +172,7 @@ const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
           {biomarker.aliases.length > 0 && (
             <DetailRow label="Aliases" value={biomarker.aliases.join(', ')} />
           )}
-          <DetailRow label="Sample" value={biomarker.sample_type} />
+          <DetailRow label="Sample" value={SAMPLE_EN[biomarker.sample_type] ?? biomarker.sample_type} />
           {biomarker.common_units.length > 0 && (
             <DetailRow label="Units" value={biomarker.common_units.join(', ')} />
           )}
@@ -178,13 +187,33 @@ const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
             <DetailRow label="UCUM" value={getBiomarkerCodes(biomarker.canonical_id)!.ucum!} />
           ) : null}
 
-          <Text style={styles.knowledgeText}>
-            {biomarker.knowledge_card.biological_role ??
-              'Not reviewed yet — no verified medical content for this biomarker.'}
-          </Text>
+          {biomarker.knowledge_card.biological_role ? (
+            <>
+              <Text style={styles.kTitle}>What it is</Text>
+              <Text style={styles.knowledgeText}>{biomarker.knowledge_card.biological_role}</Text>
+              <Text style={styles.kTitle}>Why it matters</Text>
+              <Text style={styles.knowledgeText}>{biomarker.knowledge_card.clinical_relevance}</Text>
+              <Text style={styles.kTitle}>What can change it</Text>
+              <Text style={styles.knowledgeText}>{biomarker.knowledge_card.preanalytical_factors}</Text>
+            </>
+          ) : (
+            <Text style={styles.knowledgeText}>Not reviewed yet — no verified medical content for this biomarker.</Text>
+          )}
 
           {biomarker.knowledge_card.limitations && (
             <Text style={styles.limitationsText}>⚠ {biomarker.knowledge_card.limitations}</Text>
+          )}
+
+          {(biomarker.knowledge_card.references ?? []).map((r) => (
+            <TouchableOpacity key={r.url} onPress={() => Linking.openURL(r.url)}>
+              <Text style={styles.refText}>
+                📖 {r.title}
+                {r.link_verified ? '' : ' (link not auto-verified)'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          {biomarker.evidence_status === 'CLINICAL_REVIEW_REQUIRED' && (
+            <Text style={styles.reviewText}>Draft content, pending review by a HomeTest doctor.</Text>
           )}
 
           {biomarker.external_sources.map((source, i) => (
@@ -316,6 +345,23 @@ const styles = StyleSheet.create({
   detailLabel: {
     color: Colors.textMuted,
     fontWeight: '700',
+  },
+  kTitle: {
+    color: Colors.textPrimary,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  refText: {
+    color: Colors.accent,
+    fontSize: 12,
+    marginTop: 8,
+    textDecorationLine: 'underline',
+  },
+  reviewText: {
+    color: Colors.warning,
+    fontSize: 11,
+    marginTop: 6,
   },
   knowledgeText: {
     color: Colors.textSecondary,

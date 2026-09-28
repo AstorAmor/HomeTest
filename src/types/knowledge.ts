@@ -27,7 +27,16 @@ export interface ExternalSource {
   source_reference: string | null;
 }
 
+export interface KnowledgeReference {
+  title: string;
+  url: string;
+  checked_at: string;
+  link_verified: boolean;
+}
+
 export interface KnowledgeCard {
+  language?: 'en' | 'es';
+  references?: KnowledgeReference[];
   biological_role: string | null;
   clinical_relevance: string | null;
   related_biomarkers: string[];
@@ -39,6 +48,7 @@ export interface KnowledgeCard {
 export interface CanonicalBiomarker {
   canonical_id: string;
   canonical_name: string;
+  canonical_name_en?: string;
   aliases: string[];
   category: string;
   measurement_type: MeasurementType;
@@ -55,5 +65,6 @@ export interface CanonicalBiomarker {
 
 export interface BiomarcadoresFile {
   categoria: string;
+  categoria_en?: string;
   biomarcadores: CanonicalBiomarker[];
 }

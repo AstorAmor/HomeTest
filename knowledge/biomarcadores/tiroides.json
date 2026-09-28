@@ -4,7 +4,11 @@
     {
       "canonical_id": "TSH",
       "canonical_name": "Hormona estimulante del tiroides (TSH)",
-      "aliases": ["TSH", "Thyroid-Stimulating Hormone"],
+      "aliases": [
+        "TSH",
+        "Thyroid-Stimulating Hormone",
+        "TSH (thyroid-stimulating hormone)"
+      ],
       "category": "tiroides",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,23 +25,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["T4_FREE", "T3_FREE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A pituitary hormone that tells the thyroid how much hormone to make.",
+        "clinical_relevance": "The best first test for an under- or overactive thyroid.",
+        "related_biomarkers": [
+          "T4_FREE",
+          "T3_FREE"
+        ],
+        "preanalytical_factors": "Illness, some medicines, biotin supplements, pregnancy.",
+        "limitations": "Needs free T4 to confirm most abnormalities.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/tsh-thyroid-stimulating-hormone-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "TSH (thyroid-stimulating hormone)"
     },
     {
       "canonical_id": "T4_FREE",
       "canonical_name": "Tiroxina libre (T4 libre)",
-      "aliases": ["T4 Free", "Thyroxine (T4) Free", "T4 Libre"],
+      "aliases": [
+        "T4 Free",
+        "Thyroxine (T4) Free",
+        "T4 Libre",
+        "Free T4 (thyroxine)"
+      ],
       "category": "tiroides",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,23 +76,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TSH", "T3_FREE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The main hormone released by the thyroid, in its active unbound form.",
+        "clinical_relevance": "Confirms and grades thyroid problems suggested by TSH.",
+        "related_biomarkers": [
+          "TSH",
+          "T3_FREE"
+        ],
+        "preanalytical_factors": "Illness, pregnancy, some medicines, biotin.",
+        "limitations": "Read with TSH.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/thyroxine-t4-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Free T4 (thyroxine)"
     },
     {
       "canonical_id": "T3_FREE",
       "canonical_name": "Triyodotironina libre (T3 libre)",
-      "aliases": ["T3 Free", "Triiodothyronine (T3) Free", "T3 Libre"],
+      "aliases": [
+        "T3 Free",
+        "Triiodothyronine (T3) Free",
+        "T3 Libre",
+        "Free T3 (triiodothyronine)"
+      ],
       "category": "tiroides",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -87,23 +127,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TSH", "T4_FREE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The most active thyroid hormone.",
+        "clinical_relevance": "Helps assess an overactive thyroid.",
+        "related_biomarkers": [
+          "TSH",
+          "T4_FREE"
+        ],
+        "preanalytical_factors": "Illness and low calorie intake lower it.",
+        "limitations": "Less useful for an underactive thyroid.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/triiodothyronine-t3-tests/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Free T3 (triiodothyronine)"
     },
     {
       "canonical_id": "TPO_AB",
       "canonical_name": "Anticuerpos antiperoxidasa tiroidea (TPO)",
-      "aliases": ["TPO", "Thyroid Peroxidase Antibodies", "Anticuerpos TPO"],
+      "aliases": [
+        "TPO",
+        "Thyroid Peroxidase Antibodies",
+        "Anticuerpos TPO",
+        "Thyroid peroxidase antibodies (anti-TPO)"
+      ],
       "category": "tiroides",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -120,23 +178,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TG_AB"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Antibodies against an enzyme of the thyroid gland.",
+        "clinical_relevance": "Point to autoimmune thyroid disease (Hashimoto's, Graves').",
+        "related_biomarkers": [
+          "TG_AB"
+        ],
+        "preanalytical_factors": "Autoimmunity; more common in women.",
+        "limitations": "Positive antibodies do not always mean thyroid disease.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/thyroid-antibodies/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Thyroid peroxidase antibodies (anti-TPO)"
     },
     {
       "canonical_id": "TG_AB",
       "canonical_name": "Anticuerpos antitiroglobulina (TgAb)",
-      "aliases": ["TgAb", "Thyroglobulin Antibodies", "Anticuerpos Antitiroglobulina"],
+      "aliases": [
+        "TgAb",
+        "Thyroglobulin Antibodies",
+        "Anticuerpos Antitiroglobulina",
+        "Thyroglobulin antibodies"
+      ],
       "category": "tiroides",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -153,18 +228,31 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TPO_AB"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Antibodies against thyroglobulin, a thyroid protein.",
+        "clinical_relevance": "Support a diagnosis of autoimmune thyroid disease.",
+        "related_biomarkers": [
+          "TPO_AB"
+        ],
+        "preanalytical_factors": "Autoimmunity.",
+        "limitations": "Less specific than anti-TPO.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/thyroid-antibodies/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Thyroglobulin antibodies"
     }
-  ]
+  ],
+  "categoria_en": "Thyroid"
 }

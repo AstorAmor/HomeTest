@@ -5,7 +5,10 @@
     {
       "canonical_id": "ESTRADIOL",
       "canonical_name": "Estradiol",
-      "aliases": ["Estradiol"],
+      "aliases": [
+        "Estradiol",
+        "Oestradiol"
+      ],
       "category": "hormonas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -31,23 +34,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["FSH", "LH", "TESTOSTERONE_TOTAL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The main form of oestrogen.",
+        "clinical_relevance": "Helps assess menstrual cycle, fertility, menopause and some hormonal conditions.",
+        "related_biomarkers": [
+          "FSH",
+          "LH",
+          "TESTOSTERONE_TOTAL"
+        ],
+        "preanalytical_factors": "Varies hugely across the menstrual cycle; contraceptives and HRT.",
+        "limitations": "Needs the cycle day to be interpreted.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/estrogen-levels-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Oestradiol"
     },
     {
       "canonical_id": "FSH",
       "canonical_name": "Hormona folículoestimulante (FSH)",
-      "aliases": ["FSH", "Follicle Stimulating Hormone"],
+      "aliases": [
+        "FSH",
+        "Follicle Stimulating Hormone",
+        "FSH (follicle-stimulating hormone)"
+      ],
       "category": "hormonas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -73,23 +94,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["LH", "ESTRADIOL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A pituitary hormone that drives egg and sperm production.",
+        "clinical_relevance": "Helps assess fertility and menopause.",
+        "related_biomarkers": [
+          "LH",
+          "ESTRADIOL"
+        ],
+        "preanalytical_factors": "Cycle day, age, contraceptives.",
+        "limitations": "In women, usually measured on days 2-5 of the cycle.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/follicle-stimulating-hormone-fsh-levels-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "FSH (follicle-stimulating hormone)"
     },
     {
       "canonical_id": "LH",
       "canonical_name": "Hormona luteinizante (LH)",
-      "aliases": ["LH", "Luteinizing Hormone"],
+      "aliases": [
+        "LH",
+        "Luteinizing Hormone",
+        "LH (luteinising hormone)"
+      ],
       "category": "hormonas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -115,23 +153,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["FSH", "TESTOSTERONE_TOTAL"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A pituitary hormone that triggers ovulation and testosterone production.",
+        "clinical_relevance": "Helps assess fertility, PCOS and pituitary function.",
+        "related_biomarkers": [
+          "FSH",
+          "TESTOSTERONE_TOTAL"
+        ],
+        "preanalytical_factors": "Cycle phase (peaks at ovulation), age.",
+        "limitations": "Needs cycle context.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/luteinizing-hormone-lh-levels-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "LH (luteinising hormone)"
     },
     {
       "canonical_id": "PROLACTIN",
       "canonical_name": "Prolactina",
-      "aliases": ["Prolactin", "Prolactina"],
+      "aliases": [
+        "Prolactin",
+        "Prolactina"
+      ],
       "category": "hormonas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -157,23 +211,37 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A pituitary hormone mainly involved in breast milk production.",
+        "clinical_relevance": "High prolactin can cause irregular periods, infertility or low libido.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Stress, sleep, exercise, nipple stimulation and some medicines.",
+        "limitations": "Mild rises are often due to stress during sampling.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/prolactin-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Prolactin"
     },
     {
       "canonical_id": "SHBG",
       "canonical_name": "Globulina transportadora de hormonas sexuales (SHBG)",
-      "aliases": ["SHBG", "Sex Hormone Binding Globulin"],
+      "aliases": [
+        "SHBG",
+        "Sex Hormone Binding Globulin",
+        "SHBG (sex hormone-binding globulin)"
+      ],
       "category": "hormonas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -199,23 +267,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TESTOSTERONE_TOTAL", "TESTOSTERONE_FREE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A protein that carries testosterone and oestradiol in the blood.",
+        "clinical_relevance": "Needed to estimate free (active) testosterone.",
+        "related_biomarkers": [
+          "TESTOSTERONE_TOTAL",
+          "TESTOSTERONE_FREE"
+        ],
+        "preanalytical_factors": "Age, weight, insulin resistance, thyroid, oral contraceptives.",
+        "limitations": "Interpret with total testosterone.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/shbg-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "SHBG (sex hormone-binding globulin)"
     },
     {
       "canonical_id": "TESTOSTERONE_TOTAL",
       "canonical_name": "Testosterona total",
-      "aliases": ["Testosterone, Total", "Testosterona Total"],
+      "aliases": [
+        "Testosterone, Total",
+        "Testosterona Total",
+        "Total testosterone"
+      ],
       "category": "hormonas",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -241,23 +326,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TESTOSTERONE_FREE", "SHBG"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The main male sex hormone, also important in women.",
+        "clinical_relevance": "Low levels can cause fatigue, low libido and loss of muscle; high levels in women can suggest PCOS.",
+        "related_biomarkers": [
+          "TESTOSTERONE_FREE",
+          "SHBG"
+        ],
+        "preanalytical_factors": "Time of day (highest in the morning), sleep, weight, illness, age.",
+        "limitations": "Measure in the morning; confirm low values on a repeat test.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/testosterone-levels-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Total testosterone"
     },
     {
       "canonical_id": "TESTOSTERONE_FREE",
       "canonical_name": "Testosterona libre",
-      "aliases": ["Testosterone, Free", "Testosterona Libre"],
+      "aliases": [
+        "Testosterone, Free",
+        "Testosterona Libre",
+        "Free testosterone"
+      ],
       "category": "hormonas",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -283,18 +385,32 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TESTOSTERONE_TOTAL", "SHBG"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health lo marca [CALCULATION DERIVED FROM LAB TESTS], probablemente a partir de Testosterone Total + SHBG (formula tipo Vermeulen) -- confirmar formula exacta antes de reimplementar.",
-        "clinical_contexts": null
+        "biological_role": "The fraction of testosterone not bound to proteins and available to tissues.",
+        "clinical_relevance": "More informative than total testosterone when SHBG is abnormal.",
+        "related_biomarkers": [
+          "TESTOSTERONE_TOTAL",
+          "SHBG"
+        ],
+        "preanalytical_factors": "Same as total testosterone and SHBG.",
+        "limitations": "Usually calculated from total testosterone, SHBG and albumin.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/testosterone-levels-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Free testosterone"
     }
-  ]
+  ],
+  "categoria_en": "Hormones"
 }

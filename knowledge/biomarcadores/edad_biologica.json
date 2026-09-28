@@ -5,11 +5,17 @@
     {
       "canonical_id": "BIOLOGICAL_AGE",
       "canonical_name": "Edad biológica",
-      "aliases": ["Biological Age", "Edad Biologica"],
+      "aliases": [
+        "Biological Age",
+        "Edad Biologica",
+        "Biological age (PhenoAge)"
+      ],
       "category": "edad_biologica",
       "measurement_type": "SCORE",
       "sample_type": "N/A (calculado)",
-      "common_units": ["años"],
+      "common_units": [
+        "años"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -22,18 +28,29 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "An estimate of how old your body behaves, calculated from 9 routine blood markers and your age.",
+        "clinical_relevance": "Tracks whether lifestyle changes move your overall health profile in the right direction.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": "SCORE sin modelo propio implementado todavia. Function no publica su formula/algoritmo exacto. No usar un LLM para inventar un calculo de edad biologica -- pendiente de disenar como entidad propia (formula, inputs, modelo, version, fuente de referencia) en Fase 3.",
-        "clinical_contexts": null
+        "preanalytical_factors": "All the markers it uses: glucose, CRP, albumin, creatinine, blood count and others.",
+        "limitations": "A population-level estimate, not a diagnosis; small changes are within error.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "Levine ME et al. An epigenetic biomarker of aging for lifespan and healthspan. Aging (Albany NY) 2018",
+            "url": "https://doi.org/10.18632/aging.101414",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "REVIEW_REQUIRED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Biological age (PhenoAge)"
     }
-  ]
+  ],
+  "categoria_en": "Biological age"
 }

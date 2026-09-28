@@ -4,11 +4,19 @@
     {
       "canonical_id": "HEMOGLOBIN",
       "canonical_name": "Hemoglobina",
-      "aliases": ["Hemoglobina", "Hemoglobin", "Hb"],
+      "aliases": [
+        "Hemoglobina",
+        "Hemoglobin",
+        "Hb",
+        "Haemoglobin"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["g/dL", "g/L"],
+      "common_units": [
+        "g/dL",
+        "g/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -21,27 +29,49 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["RBC", "HEMATOCRIT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The protein in red blood cells that carries oxygen.",
+        "clinical_relevance": "Low haemoglobin defines anaemia; high values can reflect dehydration or other conditions.",
+        "related_biomarkers": [
+          "RBC",
+          "HEMATOCRIT"
+        ],
+        "preanalytical_factors": "Iron, B12 and folate status, blood loss, altitude, smoking, hydration.",
+        "limitations": "Does not explain the cause of anaemia by itself.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/hemoglobin-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Haemoglobin"
     },
     {
       "canonical_id": "RBC",
       "canonical_name": "Hematíes (glóbulos rojos)",
-      "aliases": ["Hematies", "Hematíes", "Red Blood Cells", "RBC", "Red Blood Cell Count"],
+      "aliases": [
+        "Hematies",
+        "Hematíes",
+        "Red Blood Cells",
+        "RBC",
+        "Red Blood Cell Count",
+        "Red blood cell count"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["x10^6/µL"],
+      "common_units": [
+        "x10^6/µL"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -54,23 +84,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": "Measures the number of red blood cells in your blood, responsible for carrying oxygen throughout the body. Values can vary by age, sex, and other factors.",
-        "clinical_relevance": null,
-        "related_biomarkers": ["HEMOGLOBIN", "HEMATOCRIT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The number of red blood cells in a volume of blood.",
+        "clinical_relevance": "Helps classify anaemia and other blood conditions.",
+        "related_biomarkers": [
+          "HEMOGLOBIN",
+          "HEMATOCRIT"
+        ],
+        "preanalytical_factors": "Iron, B12, folate, hydration, altitude.",
+        "limitations": "Interpret with haemoglobin and red cell indices.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/red-blood-cell-rbc-count/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Red blood cell count"
     },
     {
       "canonical_id": "HEMATOCRIT",
       "canonical_name": "Hematocrito",
-      "aliases": ["Hematocrito", "Hematocrit", "HCT"],
+      "aliases": [
+        "Hematocrito",
+        "Hematocrit",
+        "HCT",
+        "Haematocrit"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -87,23 +135,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["RBC", "HEMOGLOBIN"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The percentage of your blood volume made up of red blood cells.",
+        "clinical_relevance": "Moves with haemoglobin; used to detect anaemia or excess red cells.",
+        "related_biomarkers": [
+          "RBC",
+          "HEMOGLOBIN"
+        ],
+        "preanalytical_factors": "Hydration, altitude, blood loss.",
+        "limitations": "Affected by hydration.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/hematocrit-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Haematocrit"
     },
     {
       "canonical_id": "MCH",
       "canonical_name": "Hemoglobina corpuscular media (MCH)",
-      "aliases": ["MCH", "Mean Corpuscular Hemoglobin"],
+      "aliases": [
+        "MCH",
+        "Mean Corpuscular Hemoglobin",
+        "MCH (mean corpuscular haemoglobin)"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -120,23 +185,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["MCV", "MCHC"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The average amount of haemoglobin in each red blood cell.",
+        "clinical_relevance": "Helps classify anaemia together with MCV.",
+        "related_biomarkers": [
+          "MCV",
+          "MCHC"
+        ],
+        "preanalytical_factors": "Iron, B12 and folate status.",
+        "limitations": "Read together with MCV.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/red-blood-cell-rbc-indices/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "MCH (mean corpuscular haemoglobin)"
     },
     {
       "canonical_id": "MCHC",
       "canonical_name": "Concentración de hemoglobina corpuscular media (MCHC)",
-      "aliases": ["MCHC", "Mean Corpuscular Hemoglobin Concentration"],
+      "aliases": [
+        "MCHC",
+        "Mean Corpuscular Hemoglobin Concentration"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -153,23 +234,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["MCV", "MCH"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The average concentration of haemoglobin inside red blood cells.",
+        "clinical_relevance": "Helps classify anaemia.",
+        "related_biomarkers": [
+          "MCV",
+          "MCH"
+        ],
+        "preanalytical_factors": "Iron deficiency lowers it.",
+        "limitations": "Changes late compared with MCV.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/red-blood-cell-rbc-indices/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "MCHC"
     },
     {
       "canonical_id": "MCV",
       "canonical_name": "Volumen corpuscular medio (MCV)",
-      "aliases": ["MCV", "Mean Corpuscular Volume"],
+      "aliases": [
+        "MCV",
+        "Mean Corpuscular Volume",
+        "MCV (mean corpuscular volume)"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -186,23 +284,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["MCH", "MCHC"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The average size of your red blood cells.",
+        "clinical_relevance": "Small cells suggest iron deficiency; large cells can suggest low B12 or folate, or alcohol.",
+        "related_biomarkers": [
+          "MCH",
+          "MCHC"
+        ],
+        "preanalytical_factors": "Iron, B12, folate, alcohol, liver and thyroid disease.",
+        "limitations": "Mixed deficiencies can give a normal MCV.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/mcv-mean-corpuscular-volume/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "MCV (mean corpuscular volume)"
     },
     {
       "canonical_id": "RDW",
       "canonical_name": "Amplitud de distribución eritrocitaria (RDW)",
-      "aliases": ["RDW", "Red Cell Distribution Width"],
+      "aliases": [
+        "RDW",
+        "Red Cell Distribution Width",
+        "RDW (red cell distribution width)"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -219,23 +334,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["RBC"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "How much red blood cells vary in size.",
+        "clinical_relevance": "A high RDW can be an early sign of iron, B12 or folate deficiency.",
+        "related_biomarkers": [
+          "RBC"
+        ],
+        "preanalytical_factors": "Nutritional deficiencies, recent blood loss or transfusion.",
+        "limitations": "Non-specific.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/rdw-red-cell-distribution-width/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "RDW (red cell distribution width)"
     },
     {
       "canonical_id": "PLATELET_COUNT",
       "canonical_name": "Recuento de plaquetas",
-      "aliases": ["Platelet Count", "Plaquetas"],
+      "aliases": [
+        "Platelet Count",
+        "Plaquetas",
+        "Platelet count"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -252,23 +383,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["MPV"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The number of platelets, the cells that help blood clot.",
+        "clinical_relevance": "Low or high counts can point to bleeding or clotting risk and other conditions.",
+        "related_biomarkers": [
+          "MPV"
+        ],
+        "preanalytical_factors": "Infections, inflammation, iron deficiency, medicines, alcohol.",
+        "limitations": "Clumping in the tube can give a falsely low count.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/platelet-tests/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Platelet count"
     },
     {
       "canonical_id": "MPV",
       "canonical_name": "Volumen plaquetario medio (MPV)",
-      "aliases": ["MPV", "Mean Platelet Volume"],
+      "aliases": [
+        "MPV",
+        "Mean Platelet Volume",
+        "MPV (mean platelet volume)"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -285,23 +432,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["PLATELET_COUNT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The average size of your platelets.",
+        "clinical_relevance": "Helps interpret abnormal platelet counts.",
+        "related_biomarkers": [
+          "PLATELET_COUNT"
+        ],
+        "preanalytical_factors": "Platelet production and turnover.",
+        "limitations": "Limited value on its own.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/platelet-tests/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "MPV (mean platelet volume)"
     },
     {
       "canonical_id": "ABO_RH",
       "canonical_name": "Grupo sanguíneo ABO y factor Rh",
-      "aliases": ["ABO Group and Rhesus (Rh) Factor", "Grupo Sanguineo"],
+      "aliases": [
+        "ABO Group and Rhesus (Rh) Factor",
+        "Grupo Sanguineo",
+        "Blood group (ABO and Rh)"
+      ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -318,18 +481,29 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "Your blood type based on markers on red blood cells.",
+        "clinical_relevance": "Needed for transfusions and important in pregnancy (Rh).",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Inherited; does not change.",
+        "limitations": "Only needs testing once.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/ency/article/003345.htm",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Blood group (ABO and Rh)"
     }
-  ]
+  ],
+  "categoria_en": "Blood count"
 }

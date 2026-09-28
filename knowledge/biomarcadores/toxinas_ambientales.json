@@ -4,7 +4,10 @@
     {
       "canonical_id": "LEAD",
       "canonical_name": "Plomo",
-      "aliases": ["Lead", "Plomo"],
+      "aliases": [
+        "Lead",
+        "Plomo"
+      ],
       "category": "toxinas_ambientales",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,23 +24,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": "A toxic metal that can impact the brain, kidneys, and heart.",
-        "clinical_relevance": null,
-        "related_biomarkers": ["MERCURY"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A toxic heavy metal measured in whole blood.",
+        "clinical_relevance": "Detects recent or ongoing exposure (old paint, pipes, some hobbies and jobs).",
+        "related_biomarkers": [
+          "MERCURY"
+        ],
+        "preanalytical_factors": "Occupation, old housing, some traditional remedies.",
+        "limitations": "Blood lead reflects recent exposure more than stored lead in bones.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/ency/article/003360.htm",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Lead"
     },
     {
       "canonical_id": "MERCURY",
       "canonical_name": "Mercurio",
-      "aliases": ["Mercury", "Mercurio"],
+      "aliases": [
+        "Mercury",
+        "Mercurio"
+      ],
       "category": "toxinas_ambientales",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,18 +72,31 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["LEAD"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A toxic heavy metal measured in blood.",
+        "clinical_relevance": "Reflects exposure, mainly from large predatory fish.",
+        "related_biomarkers": [
+          "LEAD"
+        ],
+        "preanalytical_factors": "Fish intake (tuna, swordfish), dental work, occupation.",
+        "limitations": "Blood levels reflect recent exposure.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/heavy-metal-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Mercury"
     }
-  ]
+  ],
+  "categoria_en": "Environmental toxins"
 }

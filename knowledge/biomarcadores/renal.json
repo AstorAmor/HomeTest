@@ -4,11 +4,17 @@
     {
       "canonical_id": "CREATININE",
       "canonical_name": "Creatinina",
-      "aliases": ["Creatinina", "Creatinine"],
+      "aliases": [
+        "Creatinina",
+        "Creatinine"
+      ],
       "category": "renal",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "µmol/L"],
+      "common_units": [
+        "mg/dL",
+        "µmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -21,50 +27,90 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["UREA", "BUN", "EGFR"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A waste product of muscle metabolism filtered by the kidneys.",
+        "clinical_relevance": "Used to estimate kidney function (eGFR).",
+        "related_biomarkers": [
+          "UREA",
+          "BUN",
+          "EGFR"
+        ],
+        "preanalytical_factors": "Muscle mass, intense exercise, high meat or creatine intake and dehydration.",
+        "limitations": "Can stay normal until a large part of kidney function is lost.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/creatinine-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Creatinine"
     },
     {
       "canonical_id": "UREA",
       "canonical_name": "Urea",
-      "aliases": ["Urea"],
+      "aliases": [
+        "Urea"
+      ],
       "category": "renal",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["CREATININE", "BUN"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health no reporta 'Urea' como tal, solo 'Blood Urea Nitrogen' (ver BUN) -- sin external_source propio.",
-        "clinical_contexts": null
+        "biological_role": "A waste product from protein breakdown, removed by the kidneys.",
+        "clinical_relevance": "Helps assess kidney function and hydration.",
+        "related_biomarkers": [
+          "CREATININE",
+          "BUN"
+        ],
+        "preanalytical_factors": "Protein intake, dehydration, bleeding in the gut and some medicines.",
+        "limitations": "Less specific for kidney function than creatinine.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/bun-blood-urea-nitrogen/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Urea"
     },
     {
       "canonical_id": "BUN",
       "canonical_name": "Nitrógeno ureico en sangre (BUN)",
-      "aliases": ["BUN", "Nitrogeno Ureico", "Blood Urea Nitrogen"],
+      "aliases": [
+        "BUN",
+        "Nitrogeno Ureico",
+        "Blood Urea Nitrogen",
+        "Blood urea nitrogen (BUN)"
+      ],
       "category": "renal",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -77,27 +123,49 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["UREA", "CREATININE", "BUN_CREATININE_RATIO"],
-        "preanalytical_factors": null,
-        "limitations": "PENDIENTE: BUN y Urea están relacionados matemáticamente (BUN ≈ Urea / 2.14); confirmar si algún laboratorio reporta uno como derivado del otro antes de tratarlos como independientes.",
-        "clinical_contexts": null
+        "biological_role": "The nitrogen part of urea in the blood.",
+        "clinical_relevance": "Together with creatinine, it helps assess kidney function and hydration.",
+        "related_biomarkers": [
+          "UREA",
+          "CREATININE",
+          "BUN_CREATININE_RATIO"
+        ],
+        "preanalytical_factors": "Protein intake, dehydration, gut bleeding and steroids.",
+        "limitations": "Not specific on its own; read with creatinine.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/bun-blood-urea-nitrogen/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Blood urea nitrogen (BUN)"
     },
     {
       "canonical_id": "URIC_ACID",
       "canonical_name": "Ácido úrico",
-      "aliases": ["Acido Urico", "Ácido Úrico", "Uric Acid"],
+      "aliases": [
+        "Acido Urico",
+        "Ácido Úrico",
+        "Uric Acid",
+        "Uric acid"
+      ],
       "category": "renal",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "µmol/L"],
+      "common_units": [
+        "mg/dL",
+        "µmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -110,23 +178,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A waste product from the breakdown of purines (found in cells and some foods).",
+        "clinical_relevance": "High levels can cause gout and kidney stones and are linked to metabolic syndrome.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Diet (red meat, seafood, alcohol, sugary drinks), dehydration, kidney function and diuretics.",
+        "limitations": "High uric acid without symptoms does not always need treatment.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/uric-acid-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Uric acid"
     },
     {
       "canonical_id": "EGFR",
       "canonical_name": "Tasa de filtración glomerular estimada (eGFR)",
-      "aliases": ["eGFR", "Estimated Glomerular Filtration Rate", "Creatinine-based eGFR"],
+      "aliases": [
+        "eGFR",
+        "Estimated Glomerular Filtration Rate",
+        "Creatinine-based eGFR",
+        "eGFR (estimated glomerular filtration rate)"
+      ],
       "category": "renal",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -143,23 +226,39 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["CREATININE"],
-        "preanalytical_factors": null,
-        "limitations": "DERIVED a partir de creatinina + edad + sexo (formula estandar tipo CKD-EPI/MDRD) -- confirmar version exacta de formula antes de implementar en rule engine, no asumir.",
-        "clinical_contexts": null
+        "biological_role": "An estimate of how much blood your kidneys filter per minute, calculated from creatinine, age and sex.",
+        "clinical_relevance": "The main measure of kidney function and used to stage chronic kidney disease.",
+        "related_biomarkers": [
+          "CREATININE"
+        ],
+        "preanalytical_factors": "Anything that changes creatinine (muscle mass, hydration, diet).",
+        "limitations": "Less accurate at extremes of body size and muscle mass; cystatin C can help.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/creatinine-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "eGFR (estimated glomerular filtration rate)"
     },
     {
       "canonical_id": "BUN_CREATININE_RATIO",
       "canonical_name": "Ratio BUN / Creatinina",
-      "aliases": ["BUN / Creatinine Ratio", "Ratio BUN/Creatinina"],
+      "aliases": [
+        "BUN / Creatinine Ratio",
+        "Ratio BUN/Creatinina",
+        "BUN / creatinine ratio"
+      ],
       "category": "renal",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -176,23 +275,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["BUN", "CREATININE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Urea nitrogen divided by creatinine.",
+        "clinical_relevance": "Can suggest dehydration or reduced blood flow to the kidneys when high.",
+        "related_biomarkers": [
+          "BUN",
+          "CREATININE"
+        ],
+        "preanalytical_factors": "Same factors as BUN and creatinine.",
+        "limitations": "A supporting index, not a diagnosis.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/bun-blood-urea-nitrogen/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "BUN / creatinine ratio"
     },
     {
       "canonical_id": "URINE_MICROALBUMIN",
       "canonical_name": "Microalbúmina en orina",
-      "aliases": ["Albumin (Microalbumin - Urine)", "Microalbumina"],
+      "aliases": [
+        "Albumin (Microalbumin - Urine)",
+        "Microalbumina",
+        "Urine microalbumin"
+      ],
       "category": "renal",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
@@ -209,18 +325,31 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ALBUMIN"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Small amounts of albumin (a protein) leaking into the urine.",
+        "clinical_relevance": "An early sign of kidney damage, especially in diabetes and high blood pressure.",
+        "related_biomarkers": [
+          "ALBUMIN"
+        ],
+        "preanalytical_factors": "Intense exercise, fever, infection and high blood pressure can raise it temporarily.",
+        "limitations": "Should be confirmed on repeat samples; best expressed as albumin/creatinine ratio.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/microalbumin-creatinine-ratio/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Urine microalbumin"
     }
-  ]
+  ],
+  "categoria_en": "Kidney"
 }

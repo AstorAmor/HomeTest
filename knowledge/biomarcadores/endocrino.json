@@ -4,11 +4,16 @@
     {
       "canonical_id": "CORTISOL",
       "canonical_name": "Cortisol",
-      "aliases": ["Cortisol"],
+      "aliases": [
+        "Cortisol"
+      ],
       "category": "endocrino",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["µg/dL", "nmol/L"],
+      "common_units": [
+        "µg/dL",
+        "nmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -21,23 +26,37 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "The main stress hormone, made by the adrenal glands; it follows a daily rhythm, highest in the morning.",
+        "clinical_relevance": "Very high or low levels point to adrenal or pituitary problems.",
         "related_biomarkers": [],
-        "preanalytical_factors": "PENDIENTE: el cortisol tiene un ritmo circadiano marcado (más alto por la mañana); la hora de la extracción es relevante y hoy no se registra.",
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Time of day, stress, poor sleep, illness, oral contraceptives and steroid medicines.",
+        "limitations": "A single morning blood value says little about everyday stress.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cortisol-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Cortisol"
     },
     {
       "canonical_id": "DHEA_S",
       "canonical_name": "Sulfato de dehidroepiandrosterona (DHEA-S)",
-      "aliases": ["DHEA-S", "DHEA-Sulfate", "Dehidroepiandrosterona Sulfato"],
+      "aliases": [
+        "DHEA-S",
+        "DHEA-Sulfate",
+        "Dehidroepiandrosterona Sulfato"
+      ],
       "category": "endocrino",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,18 +73,31 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["CORTISOL"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health tambien lista DHEA-Sulfate en Female Health y Male Health -- mismo analito, cross-listado en 3 categorias comerciales.",
-        "clinical_contexts": null
+        "biological_role": "An adrenal hormone that is a building block for sex hormones.",
+        "clinical_relevance": "Helps assess adrenal function and some causes of excess hair or acne in women.",
+        "related_biomarkers": [
+          "CORTISOL"
+        ],
+        "preanalytical_factors": "Declines naturally with age; stress and supplements.",
+        "limitations": "Wide normal range by age and sex.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/dhea-sulfate-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "DHEA-S"
     }
-  ]
+  ],
+  "categoria_en": "Endocrine"
 }

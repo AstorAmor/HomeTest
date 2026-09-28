@@ -4,7 +4,11 @@
     {
       "canonical_id": "ANA_SCREEN",
       "canonical_name": "Anticuerpos antinucleares (ANA), cribado",
-      "aliases": ["ANA Screen", "Antinuclear Antibodies (ANA) Screen"],
+      "aliases": [
+        "ANA Screen",
+        "Antinuclear Antibodies (ANA) Screen",
+        "Antinuclear antibodies (ANA) screen"
+      ],
       "category": "autoinmunidad",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,23 +25,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ANA_PATTERN", "ANA_TITER"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Antibodies that target the nucleus of your own cells.",
+        "clinical_relevance": "A screening test for autoimmune diseases such as lupus.",
+        "related_biomarkers": [
+          "ANA_PATTERN",
+          "ANA_TITER"
+        ],
+        "preanalytical_factors": "Age, infections, some medicines; common in healthy people at low titres.",
+        "limitations": "A positive result alone does not mean disease.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/ana-antinuclear-antibody-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Antinuclear antibodies (ANA) screen"
     },
     {
       "canonical_id": "ANA_PATTERN",
       "canonical_name": "Anticuerpos antinucleares (ANA), patrón",
-      "aliases": ["ANA Pattern", "Antinuclear Antibodies (ANA) Pattern"],
+      "aliases": [
+        "ANA Pattern",
+        "Antinuclear Antibodies (ANA) Pattern",
+        "ANA pattern"
+      ],
       "category": "autoinmunidad",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,23 +75,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ANA_SCREEN", "ANA_TITER"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The staining pattern of antinuclear antibodies under the microscope.",
+        "clinical_relevance": "Helps narrow down which autoimmune condition may be involved.",
+        "related_biomarkers": [
+          "ANA_SCREEN",
+          "ANA_TITER"
+        ],
+        "preanalytical_factors": "Depends on which autoantibodies are present.",
+        "limitations": "Only interpreted when ANA is positive.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/ana-antinuclear-antibody-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "ANA pattern"
     },
     {
       "canonical_id": "ANA_TITER",
       "canonical_name": "Anticuerpos antinucleares (ANA), título",
-      "aliases": ["ANA Titer", "Antinuclear Antibodies Titer"],
+      "aliases": [
+        "ANA Titer",
+        "Antinuclear Antibodies Titer",
+        "ANA titre"
+      ],
       "category": "autoinmunidad",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -87,23 +125,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["ANA_SCREEN", "ANA_PATTERN"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "How diluted the sample can be while antinuclear antibodies are still detected.",
+        "clinical_relevance": "Higher titres are more likely to be clinically relevant.",
+        "related_biomarkers": [
+          "ANA_SCREEN",
+          "ANA_PATTERN"
+        ],
+        "preanalytical_factors": "Age, infections, medicines.",
+        "limitations": "Low titres are common in healthy people.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/ana-antinuclear-antibody-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "ANA titre"
     },
     {
       "canonical_id": "RF",
       "canonical_name": "Factor reumatoide (RF)",
-      "aliases": ["RF", "Rheumatoid Factor", "Factor Reumatoide"],
+      "aliases": [
+        "RF",
+        "Rheumatoid Factor",
+        "Factor Reumatoide",
+        "Rheumatoid factor (RF)"
+      ],
       "category": "autoinmunidad",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -120,18 +176,29 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "An antibody often found in rheumatoid arthritis.",
+        "clinical_relevance": "Supports the diagnosis of rheumatoid arthritis and other conditions.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Age, infections, other autoimmune diseases.",
+        "limitations": "Can be positive in healthy people and negative in early arthritis.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/rheumatoid-factor-rf-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Rheumatoid factor (RF)"
     }
-  ]
+  ],
+  "categoria_en": "Autoimmunity"
 }

@@ -4,11 +4,17 @@
     {
       "canonical_id": "CALCIUM",
       "canonical_name": "Calcio",
-      "aliases": ["Calcio", "Calcium"],
+      "aliases": [
+        "Calcio",
+        "Calcium"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -21,27 +27,44 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A mineral essential for bones, muscles, nerves and heart.",
+        "clinical_relevance": "Helps detect problems with the parathyroid glands, bones, kidneys and vitamin D.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": "Function Health tambien lista Calcium en Nutrients y en Kidneys -- mismo analito, cross-listado en 3 de sus categorias comerciales; aqui solo se guarda un external_source (Electrolytes).",
-        "clinical_contexts": null
+        "preanalytical_factors": "Albumin levels, vitamin D, parathyroid hormone, some medicines.",
+        "limitations": "Should be corrected for albumin or measured as ionised calcium.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/calcium-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Calcium"
     },
     {
       "canonical_id": "IRON",
       "canonical_name": "Hierro",
-      "aliases": ["Hierro", "Iron"],
+      "aliases": [
+        "Hierro",
+        "Iron",
+        "Serum iron"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["µg/dL", "µmol/L"],
+      "common_units": [
+        "µg/dL",
+        "µmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -54,27 +77,47 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["FERRITIN", "IRON_SATURATION", "IRON_BINDING_CAPACITY"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The amount of iron circulating in your blood.",
+        "clinical_relevance": "Part of the assessment of iron deficiency or overload.",
+        "related_biomarkers": [
+          "FERRITIN",
+          "IRON_SATURATION",
+          "IRON_BINDING_CAPACITY"
+        ],
+        "preanalytical_factors": "Varies a lot through the day and with recent meals or supplements.",
+        "limitations": "Unreliable on its own: ferritin and transferrin saturation are more informative.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/iron-tests/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Serum iron"
     },
     {
       "canonical_id": "MAGNESIUM",
       "canonical_name": "Magnesio",
-      "aliases": ["Magnesio", "Magnesium"],
+      "aliases": [
+        "Magnesio",
+        "Magnesium"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -87,50 +130,84 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A mineral involved in hundreds of enzymes, muscles and nerves.",
+        "clinical_relevance": "Low magnesium can cause cramps, fatigue and heart rhythm problems.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": "Function Health tambien lista Magnesium en Electrolytes (sin frecuencia 2x especificada ahi) -- mismo analito, cross-listado.",
-        "clinical_contexts": null
+        "preanalytical_factors": "Diet, alcohol, diuretics, proton pump inhibitors, gut losses.",
+        "limitations": "Blood levels can be normal even when body stores are low.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/magnesium-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Magnesium"
     },
     {
       "canonical_id": "PHOSPHORUS",
       "canonical_name": "Fósforo",
-      "aliases": ["Fosforo", "Fósforo", "Phosphorus"],
+      "aliases": [
+        "Fosforo",
+        "Fósforo",
+        "Phosphorus",
+        "Phosphorus (phosphate)"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A mineral that works with calcium in bones and energy metabolism.",
+        "clinical_relevance": "Helps assess kidney, bone and parathyroid disorders.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": "Function Health no incluye Fosforo en su catalogo publico -- sin external_source.",
-        "clinical_contexts": null
+        "preanalytical_factors": "Kidney function, diet, vitamin D.",
+        "limitations": "Varies with meals and time of day.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/phosphate-in-blood/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Phosphorus (phosphate)"
     },
     {
       "canonical_id": "SODIUM",
       "canonical_name": "Sodio",
-      "aliases": ["Sodio", "Sodium"],
+      "aliases": [
+        "Sodio",
+        "Sodium"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mEq/L", "mmol/L"],
+      "common_units": [
+        "mEq/L",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -143,27 +220,46 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["POTASSIUM", "CHLORIDE"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health tambien lista Sodium en Kidneys -- mismo analito, cross-listado.",
-        "clinical_contexts": null
+        "biological_role": "The main electrolyte in the fluid outside your cells.",
+        "clinical_relevance": "Essential for fluid balance, nerves and muscles.",
+        "related_biomarkers": [
+          "POTASSIUM",
+          "CHLORIDE"
+        ],
+        "preanalytical_factors": "Hydration, heavy sweating, diuretics and some hormones.",
+        "limitations": "Reflects water balance more than salt intake.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/sodium-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Sodium"
     },
     {
       "canonical_id": "POTASSIUM",
       "canonical_name": "Potasio",
-      "aliases": ["Potasio", "Potassium"],
+      "aliases": [
+        "Potasio",
+        "Potassium"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mEq/L", "mmol/L"],
+      "common_units": [
+        "mEq/L",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -176,27 +272,46 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["SODIUM", "CHLORIDE"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health tambien lista Potassium en Kidneys -- mismo analito, cross-listado.",
-        "clinical_contexts": null
+        "biological_role": "An electrolyte found mainly inside cells.",
+        "clinical_relevance": "Crucial for heart rhythm and muscle function.",
+        "related_biomarkers": [
+          "SODIUM",
+          "CHLORIDE"
+        ],
+        "preanalytical_factors": "Kidney function, diuretics and blood pressure medicines; a haemolysed sample falsely raises it.",
+        "limitations": "A high result is often repeated to rule out a sampling artefact.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/potassium-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Potassium"
     },
     {
       "canonical_id": "CHLORIDE",
       "canonical_name": "Cloro",
-      "aliases": ["Cloro", "Chloride"],
+      "aliases": [
+        "Cloro",
+        "Chloride"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mEq/L", "mmol/L"],
+      "common_units": [
+        "mEq/L",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -209,23 +324,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["SODIUM", "POTASSIUM"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health tambien lista Chloride en Kidneys -- mismo analito, cross-listado.",
-        "clinical_contexts": null
+        "biological_role": "An electrolyte that works with sodium to keep fluid and acid-base balance.",
+        "clinical_relevance": "Part of the standard electrolyte panel.",
+        "related_biomarkers": [
+          "SODIUM",
+          "POTASSIUM"
+        ],
+        "preanalytical_factors": "Hydration, vomiting, diuretics.",
+        "limitations": "Rarely meaningful on its own.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/chloride-blood-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Chloride"
     },
     {
       "canonical_id": "CARBON_DIOXIDE",
       "canonical_name": "Dióxido de carbono (CO2 / bicarbonato)",
-      "aliases": ["CO2", "Carbon Dioxide", "Bicarbonato"],
+      "aliases": [
+        "CO2",
+        "Carbon Dioxide",
+        "Bicarbonato",
+        "Carbon dioxide (bicarbonate)"
+      ],
       "category": "electrolitos",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -242,18 +375,33 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["SODIUM", "POTASSIUM", "CHLORIDE"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The amount of bicarbonate in the blood.",
+        "clinical_relevance": "Reflects the body's acid-base balance.",
+        "related_biomarkers": [
+          "SODIUM",
+          "POTASSIUM",
+          "CHLORIDE"
+        ],
+        "preanalytical_factors": "Breathing, kidney function, vomiting and diarrhoea.",
+        "limitations": "Needs clinical context to interpret.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/carbon-dioxide-co2-in-blood/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Carbon dioxide (bicarbonate)"
     }
-  ]
+  ],
+  "categoria_en": "Electrolytes & minerals"
 }

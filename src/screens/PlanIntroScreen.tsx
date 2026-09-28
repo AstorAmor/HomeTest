@@ -44,8 +44,13 @@ export const PlanIntroScreen = () => {
     setIndex(i);
   };
 
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) =>
-    setIndex(Math.round(e.nativeEvent.contentOffset.x / width));
+  // Solo se actualiza la página al quedar alineada: durante el scroll animado de
+  // "Next" los offsets intermedios devolverían el índice anterior y cortarían la animación.
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const x = e.nativeEvent.contentOffset.x;
+    const page = Math.round(x / width);
+    if (Math.abs(x - page * width) < 2 && page !== index) setIndex(page);
+  };
 
   const finish = () => router.replace('/(tabs)');
   const last = index >= plan.length - 1;

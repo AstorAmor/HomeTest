@@ -4,7 +4,12 @@
     {
       "canonical_id": "WBC_COUNT",
       "canonical_name": "Recuento de glóbulos blancos (leucocitos)",
-      "aliases": ["White Blood Cell Count", "Leucocitos", "WBC"],
+      "aliases": [
+        "White Blood Cell Count",
+        "Leucocitos",
+        "WBC",
+        "White blood cell count"
+      ],
       "category": "regulacion_inmune",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -21,23 +26,42 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["NEUTROPHILS", "LYMPHOCYTES", "MONOCYTES", "EOSINOPHILS", "BASOPHILS"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The number of white blood cells, the cells of the immune system.",
+        "clinical_relevance": "Helps detect infection, inflammation and blood disorders.",
+        "related_biomarkers": [
+          "NEUTROPHILS",
+          "LYMPHOCYTES",
+          "MONOCYTES",
+          "EOSINOPHILS",
+          "BASOPHILS"
+        ],
+        "preanalytical_factors": "Infections, stress, intense exercise, smoking, steroids.",
+        "limitations": "Mild variations are common and often temporary.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/white-blood-count-wbc/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "White blood cell count"
     },
     {
       "canonical_id": "NEUTROPHILS",
       "canonical_name": "Neutrófilos",
-      "aliases": ["Neutrophils", "Neutrofilos"],
+      "aliases": [
+        "Neutrophils",
+        "Neutrofilos"
+      ],
       "category": "regulacion_inmune",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -54,23 +78,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["WBC_COUNT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The most common white blood cells, first responders to bacterial infection.",
+        "clinical_relevance": "High in bacterial infection or stress; low levels increase infection risk.",
+        "related_biomarkers": [
+          "WBC_COUNT"
+        ],
+        "preanalytical_factors": "Infection, stress, steroids, some medicines; some people of African descent have lower normal levels.",
+        "limitations": "Interpret as absolute count, not only percentage.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/blood-differential/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Neutrophils"
     },
     {
       "canonical_id": "LYMPHOCYTES",
       "canonical_name": "Linfocitos",
-      "aliases": ["Lymphocytes", "Linfocitos"],
+      "aliases": [
+        "Lymphocytes",
+        "Linfocitos"
+      ],
       "category": "regulacion_inmune",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -87,23 +126,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["WBC_COUNT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "White blood cells that fight viruses and make antibodies.",
+        "clinical_relevance": "Changes can reflect viral infections or immune conditions.",
+        "related_biomarkers": [
+          "WBC_COUNT"
+        ],
+        "preanalytical_factors": "Viral infections, stress, steroids.",
+        "limitations": "Interpret as absolute count.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/blood-differential/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Lymphocytes"
     },
     {
       "canonical_id": "MONOCYTES",
       "canonical_name": "Monocitos",
-      "aliases": ["Monocytes", "Monocitos"],
+      "aliases": [
+        "Monocytes",
+        "Monocitos"
+      ],
       "category": "regulacion_inmune",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -120,23 +174,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["WBC_COUNT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "White blood cells that clear debris and fight chronic infections.",
+        "clinical_relevance": "Raised in chronic infection or inflammation.",
+        "related_biomarkers": [
+          "WBC_COUNT"
+        ],
+        "preanalytical_factors": "Recovery from infection, inflammation.",
+        "limitations": "Mild rises are usually not significant.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/blood-differential/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Monocytes"
     },
     {
       "canonical_id": "EOSINOPHILS",
       "canonical_name": "Eosinófilos",
-      "aliases": ["Eosinophils", "Eosinofilos"],
+      "aliases": [
+        "Eosinophils",
+        "Eosinofilos"
+      ],
       "category": "regulacion_inmune",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -153,23 +222,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["WBC_COUNT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "White blood cells involved in allergy and parasite defence.",
+        "clinical_relevance": "Raised in allergies, asthma and parasitic infections.",
+        "related_biomarkers": [
+          "WBC_COUNT"
+        ],
+        "preanalytical_factors": "Allergy season, medicines.",
+        "limitations": "Mild rises are common in allergic people.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/blood-differential/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Eosinophils"
     },
     {
       "canonical_id": "BASOPHILS",
       "canonical_name": "Basófilos",
-      "aliases": ["Basophils", "Basofilos"],
+      "aliases": [
+        "Basophils",
+        "Basofilos"
+      ],
       "category": "regulacion_inmune",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -186,18 +270,31 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["WBC_COUNT"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The least common white blood cells, involved in allergic reactions.",
+        "clinical_relevance": "Rarely abnormal; very high values need follow-up.",
+        "related_biomarkers": [
+          "WBC_COUNT"
+        ],
+        "preanalytical_factors": "Allergy, inflammation.",
+        "limitations": "Low values have little meaning.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/blood-differential/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Basophils"
     }
-  ]
+  ],
+  "categoria_en": "Immune regulation"
 }

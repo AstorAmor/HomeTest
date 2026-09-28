@@ -4,11 +4,19 @@
     {
       "canonical_id": "TOTAL_CHOLESTEROL",
       "canonical_name": "Colesterol total",
-      "aliases": ["Colesterol Total", "Colesterol", "Total Cholesterol"],
+      "aliases": [
+        "Colesterol Total",
+        "Colesterol",
+        "Total Cholesterol",
+        "Total cholesterol"
+      ],
       "category": "lipidico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -21,27 +29,49 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["HDL_C", "LDL_C", "TRIGLYCERIDES"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "All the cholesterol carried in your blood (LDL, HDL and other particles).",
+        "clinical_relevance": "Part of the standard assessment of cardiovascular risk.",
+        "related_biomarkers": [
+          "HDL_C",
+          "LDL_C",
+          "TRIGLYCERIDES"
+        ],
+        "preanalytical_factors": "Diet, genetics, weight, thyroid function, and some medicines.",
+        "limitations": "Says little on its own: LDL, HDL, non-HDL and ApoB are more informative.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Total cholesterol"
     },
     {
       "canonical_id": "HDL_C",
       "canonical_name": "Colesterol HDL",
-      "aliases": ["Colesterol HDL", "HDL", "HDL Cholesterol"],
+      "aliases": [
+        "Colesterol HDL",
+        "HDL",
+        "HDL Cholesterol",
+        "HDL cholesterol"
+      ],
       "category": "lipidico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -54,27 +84,49 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TOTAL_CHOLESTEROL", "LDL_C", "TRIGLYCERIDES"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Cholesterol carried by high-density lipoproteins, which take cholesterol back to the liver.",
+        "clinical_relevance": "Low HDL is associated with higher cardiovascular risk.",
+        "related_biomarkers": [
+          "TOTAL_CHOLESTEROL",
+          "LDL_C",
+          "TRIGLYCERIDES"
+        ],
+        "preanalytical_factors": "Exercise raises it; smoking, excess weight and high triglycerides lower it.",
+        "limitations": "Very high HDL is not necessarily protective; raising HDL with drugs has not reduced events.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "HDL cholesterol"
     },
     {
       "canonical_id": "LDL_C",
       "canonical_name": "Colesterol LDL",
-      "aliases": ["Colesterol LDL", "LDL", "LDL Cholesterol"],
+      "aliases": [
+        "Colesterol LDL",
+        "LDL",
+        "LDL Cholesterol",
+        "LDL cholesterol"
+      ],
       "category": "lipidico",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -87,27 +139,49 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C", "TRIGLYCERIDES", "APOB"],
-        "preanalytical_factors": null,
-        "limitations": "Function Health lo marca explicitamente como [CALCULATION DERIVED FROM LAB TESTS] (measurement_type actualizado a DERIVED en base a esto). Probablemente formula de Friedewald a partir de Total Cholesterol/HDL/Triglycerides -- pendiente confirmar formula exacta antes de reimplementarla en nuestro rule engine.",
-        "clinical_contexts": null
+        "biological_role": "Cholesterol carried by low-density lipoproteins, the main particles that build up in artery walls.",
+        "clinical_relevance": "The main target for reducing cardiovascular risk.",
+        "related_biomarkers": [
+          "TOTAL_CHOLESTEROL",
+          "HDL_C",
+          "TRIGLYCERIDES",
+          "APOB"
+        ],
+        "preanalytical_factors": "Diet (saturated fat), genetics, weight, thyroid function and lipid-lowering medicines.",
+        "limitations": "Usually calculated; less accurate with very high triglycerides or very low LDL.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 2
+      "version": 2,
+      "canonical_name_en": "LDL cholesterol"
     },
     {
       "canonical_id": "TRIGLYCERIDES",
       "canonical_name": "Triglicéridos",
-      "aliases": ["Trigliceridos", "Triglicéridos", "Triglycerides"],
+      "aliases": [
+        "Trigliceridos",
+        "Triglicéridos",
+        "Triglycerides"
+      ],
       "category": "lipidico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
-      "common_units": ["mg/dL", "mmol/L"],
+      "common_units": [
+        "mg/dL",
+        "mmol/L"
+      ],
       "external_sources": [
         {
           "source": "FUNCTION_HEALTH",
@@ -120,23 +194,42 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C", "LDL_C"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The main type of fat in your blood, used for energy.",
+        "clinical_relevance": "High triglycerides are linked to cardiovascular risk, insulin resistance and, when very high, pancreatitis.",
+        "related_biomarkers": [
+          "TOTAL_CHOLESTEROL",
+          "HDL_C",
+          "LDL_C"
+        ],
+        "preanalytical_factors": "Very sensitive to recent meals and alcohol; also sugar intake, weight and diabetes.",
+        "limitations": "Should ideally be measured fasting for a stable value.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/triglycerides-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Triglycerides"
     },
     {
       "canonical_id": "APOB",
       "canonical_name": "Apolipoproteína B (ApoB)",
-      "aliases": ["ApoB", "Apolipoprotein B", "Apolipoproteina B"],
+      "aliases": [
+        "ApoB",
+        "Apolipoprotein B",
+        "Apolipoproteina B",
+        "Apolipoprotein B (ApoB)"
+      ],
       "category": "lipidico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -153,23 +246,41 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["LDL_C", "LIPOPROTEIN_A"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "The protein on every atherogenic particle (LDL, VLDL, Lp(a)), so it counts the particles that can clog arteries.",
+        "clinical_relevance": "Often a better predictor of cardiovascular risk than LDL cholesterol, especially with high triglycerides.",
+        "related_biomarkers": [
+          "LDL_C",
+          "LIPOPROTEIN_A"
+        ],
+        "preanalytical_factors": "Genetics, diet, weight, insulin resistance and lipid-lowering treatment.",
+        "limitations": "Not yet part of every standard lipid panel.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Apolipoprotein B (ApoB)"
     },
     {
       "canonical_id": "HS_CRP",
       "canonical_name": "Proteína C reactiva de alta sensibilidad (hs-CRP)",
-      "aliases": ["hs-CRP", "High-Sensitivity C-Reactive Protein", "PCR ultrasensible"],
+      "aliases": [
+        "hs-CRP",
+        "High-Sensitivity C-Reactive Protein",
+        "PCR ultrasensible",
+        "High-sensitivity CRP (hs-CRP)"
+      ],
       "category": "lipidico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -186,23 +297,38 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
+        "biological_role": "A sensitive measure of C-reactive protein, a marker of low-grade inflammation.",
+        "clinical_relevance": "Persistently raised hs-CRP adds information on cardiovascular risk and chronic inflammation.",
         "related_biomarkers": [],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "preanalytical_factors": "Any recent infection, injury or intense exercise raises it sharply; excess weight and smoking too.",
+        "limitations": "Not specific: repeat if above 10 mg/L, which usually reflects an acute process.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/c-reactive-protein-crp-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "High-sensitivity CRP (hs-CRP)"
     },
     {
       "canonical_id": "LIPOPROTEIN_A",
       "canonical_name": "Lipoproteína (a)",
-      "aliases": ["Lp(a)", "Lipoprotein (a)", "Lipoproteina a"],
+      "aliases": [
+        "Lp(a)",
+        "Lipoprotein (a)",
+        "Lipoproteina a",
+        "Lipoprotein(a)"
+      ],
       "category": "lipidico",
       "measurement_type": "MEASURED",
       "sample_type": "Sangre",
@@ -219,23 +345,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["APOB", "LDL_C"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "A genetically determined lipoprotein that promotes atherosclerosis and clotting.",
+        "clinical_relevance": "High Lp(a) is an independent, inherited cardiovascular risk factor.",
+        "related_biomarkers": [
+          "APOB",
+          "LDL_C"
+        ],
+        "preanalytical_factors": "Mostly genetic; lifestyle changes it very little.",
+        "limitations": "Usually only needs measuring once in a lifetime.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Lipoprotein(a)"
     },
     {
       "canonical_id": "NON_HDL_CHOLESTEROL",
       "canonical_name": "Colesterol no-HDL",
-      "aliases": ["Non-HDL Cholesterol", "Colesterol No-HDL"],
+      "aliases": [
+        "Non-HDL Cholesterol",
+        "Colesterol No-HDL",
+        "Non-HDL cholesterol"
+      ],
       "category": "lipidico",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -252,23 +395,40 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Total cholesterol minus HDL: the cholesterol in all potentially harmful particles.",
+        "clinical_relevance": "A good summary of atherogenic cholesterol that does not require fasting.",
+        "related_biomarkers": [
+          "TOTAL_CHOLESTEROL",
+          "HDL_C"
+        ],
+        "preanalytical_factors": "Same factors as LDL and triglycerides.",
+        "limitations": "Calculated value; depends on the accuracy of total and HDL cholesterol.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Non-HDL cholesterol"
     },
     {
       "canonical_id": "TC_HDL_RATIO",
       "canonical_name": "Ratio Colesterol Total / HDL",
-      "aliases": ["Total Cholesterol / HDL Ratio", "Ratio CT/HDL"],
+      "aliases": [
+        "Total Cholesterol / HDL Ratio",
+        "Ratio CT/HDL",
+        "Total / HDL cholesterol ratio"
+      ],
       "category": "lipidico",
       "measurement_type": "DERIVED",
       "sample_type": "Sangre",
@@ -285,18 +445,32 @@
         }
       ],
       "knowledge_card": {
-        "biological_role": null,
-        "clinical_relevance": null,
-        "related_biomarkers": ["TOTAL_CHOLESTEROL", "HDL_C"],
-        "preanalytical_factors": null,
-        "limitations": null,
-        "clinical_contexts": null
+        "biological_role": "Total cholesterol divided by HDL cholesterol.",
+        "clinical_relevance": "A simple index of cardiovascular risk: lower is better.",
+        "related_biomarkers": [
+          "TOTAL_CHOLESTEROL",
+          "HDL_C"
+        ],
+        "preanalytical_factors": "Everything that changes total or HDL cholesterol.",
+        "limitations": "A ratio can look fine even when absolute LDL or ApoB are high.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/cholesterol-levels/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
       },
       "claims": [],
-      "evidence_status": "NOT_REVIEWED",
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
       "data_quality": "VERIFIED",
       "last_reviewed": null,
-      "version": 1
+      "version": 1,
+      "canonical_name_en": "Total / HDL cholesterol ratio"
     }
-  ]
+  ],
+  "categoria_en": "Lipids & heart"
 }

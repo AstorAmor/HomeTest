@@ -5,230 +5,916 @@
     {
       "canonical_id": "URINE_COLOR",
       "canonical_name": "Color de la orina",
-      "aliases": ["Color, Urine", "Color de Orina"],
+      "aliases": [
+        "Color, Urine",
+        "Color de Orina",
+        "Urine colour"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Color, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Color, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "The colour of the urine sample.",
+        "clinical_relevance": "Can reflect hydration, blood, bilirubin or foods and medicines.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Hydration, beetroot, vitamins, medicines.",
+        "limitations": "Non-specific.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Urine colour"
     },
     {
       "canonical_id": "URINE_APPEARANCE",
       "canonical_name": "Aspecto de la orina",
-      "aliases": ["Appearance, Urine", "Aspecto de Orina"],
+      "aliases": [
+        "Appearance, Urine",
+        "Aspecto de Orina",
+        "Urine appearance"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Appearance, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Appearance, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Whether urine is clear or cloudy.",
+        "clinical_relevance": "Cloudiness can suggest infection, crystals or mucus.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Diet, temperature of the sample.",
+        "limitations": "Non-specific.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Urine appearance"
     },
     {
       "canonical_id": "URINE_PH",
       "canonical_name": "pH de la orina",
-      "aliases": ["pH, Urine", "pH Urinario"],
+      "aliases": [
+        "pH, Urine",
+        "pH Urinario",
+        "Urine pH"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "pH, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "pH, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "How acidic or alkaline the urine is.",
+        "clinical_relevance": "Helps assess kidney stone risk and some metabolic problems.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Diet, medicines, infection.",
+        "limitations": "Varies through the day.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Urine pH"
     },
     {
       "canonical_id": "URINE_SPECIFIC_GRAVITY",
       "canonical_name": "Densidad específica de la orina",
-      "aliases": ["Specific Gravity, Urine", "Densidad Urinaria"],
+      "aliases": [
+        "Specific Gravity, Urine",
+        "Densidad Urinaria",
+        "Urine specific gravity"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Specific Gravity, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Specific Gravity, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "How concentrated the urine is.",
+        "clinical_relevance": "Reflects hydration and the kidneys' ability to concentrate urine.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Fluid intake, sweating.",
+        "limitations": "Varies with hydration.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Urine specific gravity"
     },
     {
       "canonical_id": "URINE_PROTEIN",
       "canonical_name": "Proteína en orina",
-      "aliases": ["Protein, Urine", "Proteina en Orina"],
+      "aliases": [
+        "Protein, Urine",
+        "Proteina en Orina",
+        "Protein in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Protein, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["URINE_MICROALBUMIN"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Protein, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Protein detected in urine by dipstick.",
+        "clinical_relevance": "Persistent protein can be a sign of kidney disease.",
+        "related_biomarkers": [
+          "URINE_MICROALBUMIN"
+        ],
+        "preanalytical_factors": "Exercise, fever, dehydration can cause temporary protein.",
+        "limitations": "Needs confirmation with a quantitative test.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/protein-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Protein in urine"
     },
     {
       "canonical_id": "URINE_GLUCOSE",
       "canonical_name": "Glucosa en orina",
-      "aliases": ["Glucose, Urine", "Glucosa en Orina"],
+      "aliases": [
+        "Glucose, Urine",
+        "Glucosa en Orina",
+        "Glucose in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Glucose, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["GLUCOSE"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Glucose, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Sugar spilling into the urine.",
+        "clinical_relevance": "Usually appears when blood glucose is high, e.g. in diabetes.",
+        "related_biomarkers": [
+          "GLUCOSE"
+        ],
+        "preanalytical_factors": "High blood sugar, some diabetes medicines (SGLT2 inhibitors), pregnancy.",
+        "limitations": "Not a substitute for blood glucose.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/glucose-in-urine-test/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Glucose in urine"
     },
     {
       "canonical_id": "URINE_KETONES",
       "canonical_name": "Cetonas en orina",
-      "aliases": ["Ketones, Urine", "Cetonas en Orina"],
+      "aliases": [
+        "Ketones, Urine",
+        "Cetonas en Orina",
+        "Ketones in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Ketones, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Ketones, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "By-products of fat burning.",
+        "clinical_relevance": "Appear with fasting, very low-carb diets or uncontrolled diabetes.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Fasting, keto diets, intense exercise, vomiting.",
+        "limitations": "Common and harmless with fasting; worrying with high glucose.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/ketones-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Ketones in urine"
     },
     {
       "canonical_id": "URINE_BILIRUBIN",
       "canonical_name": "Bilirrubina en orina",
-      "aliases": ["Bilirubin, Urine", "Bilirrubina en Orina"],
+      "aliases": [
+        "Bilirubin, Urine",
+        "Bilirrubina en Orina",
+        "Bilirubin in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Bilirubin, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["TOTAL_BILIRUBIN"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Bilirubin, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Bilirubin detected in urine.",
+        "clinical_relevance": "Can suggest liver or bile duct problems.",
+        "related_biomarkers": [
+          "TOTAL_BILIRUBIN"
+        ],
+        "preanalytical_factors": "Liver disease, some medicines.",
+        "limitations": "Needs blood tests to confirm.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/bilirubin-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Bilirubin in urine"
     },
     {
       "canonical_id": "URINE_OCCULT_BLOOD",
       "canonical_name": "Sangre oculta en orina",
-      "aliases": ["Occult Blood, Urine", "Sangre Oculta en Orina"],
+      "aliases": [
+        "Occult Blood, Urine",
+        "Sangre Oculta en Orina",
+        "Blood in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Occult Blood, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["URINE_RBC"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Occult Blood, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Haemoglobin detected in urine by dipstick.",
+        "clinical_relevance": "Can reflect infection, stones, menstruation or kidney or bladder problems.",
+        "related_biomarkers": [
+          "URINE_RBC"
+        ],
+        "preanalytical_factors": "Menstruation, intense exercise, infection.",
+        "limitations": "Needs microscopy and follow-up to find the cause.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/blood-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Blood in urine"
     },
     {
       "canonical_id": "URINE_NITRITE",
       "canonical_name": "Nitritos en orina",
-      "aliases": ["Nitrite, Urine", "Nitritos en Orina"],
+      "aliases": [
+        "Nitrite, Urine",
+        "Nitritos en Orina",
+        "Nitrites in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Nitrite, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["URINE_BACTERIA", "URINE_LEUKOCYTE_ESTERASE"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Nitrite, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Substances produced by some bacteria in urine.",
+        "clinical_relevance": "A positive result suggests a urinary tract infection.",
+        "related_biomarkers": [
+          "URINE_BACTERIA",
+          "URINE_LEUKOCYTE_ESTERASE"
+        ],
+        "preanalytical_factors": "Bacterial infection.",
+        "limitations": "A negative result does not rule out infection.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/nitrites-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Nitrites in urine"
     },
     {
       "canonical_id": "URINE_LEUKOCYTE_ESTERASE",
       "canonical_name": "Esterasa leucocitaria en orina",
-      "aliases": ["Leukocyte Esterase, Urine", "Esterasa Leucocitaria"],
+      "aliases": [
+        "Leukocyte Esterase, Urine",
+        "Esterasa Leucocitaria",
+        "Leukocyte esterase"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Leukocyte Esterase, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["URINE_WBC", "URINE_NITRITE"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Leukocyte Esterase, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "An enzyme from white blood cells in urine.",
+        "clinical_relevance": "Suggests inflammation or infection of the urinary tract.",
+        "related_biomarkers": [
+          "URINE_WBC",
+          "URINE_NITRITE"
+        ],
+        "preanalytical_factors": "Infection, contamination of the sample.",
+        "limitations": "Can be positive from contamination.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Leukocyte esterase"
     },
     {
       "canonical_id": "URINE_BACTERIA",
       "canonical_name": "Bacterias en orina",
-      "aliases": ["Bacteria, Urine", "Bacterias en Orina"],
+      "aliases": [
+        "Bacteria, Urine",
+        "Bacterias en Orina",
+        "Bacteria in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Bacteria, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["URINE_NITRITE"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Bacteria, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Bacteria seen on microscopy.",
+        "clinical_relevance": "Can suggest infection when combined with symptoms and white cells.",
+        "related_biomarkers": [
+          "URINE_NITRITE"
+        ],
+        "preanalytical_factors": "Infection, contamination.",
+        "limitations": "Often due to sample contamination.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Bacteria in urine"
     },
     {
       "canonical_id": "URINE_RBC",
       "canonical_name": "Glóbulos rojos en orina",
-      "aliases": ["Red Blood Cell, Urine", "Hematies en Orina"],
+      "aliases": [
+        "Red Blood Cell, Urine",
+        "Hematies en Orina",
+        "Red blood cells in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Red Blood Cell, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["URINE_OCCULT_BLOOD"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Red Blood Cell, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Red cells counted under the microscope.",
+        "clinical_relevance": "Can point to infection, stones or kidney or bladder problems.",
+        "related_biomarkers": [
+          "URINE_OCCULT_BLOOD"
+        ],
+        "preanalytical_factors": "Menstruation, exercise, infection.",
+        "limitations": "Persistent findings need follow-up.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/blood-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Red blood cells in urine"
     },
     {
       "canonical_id": "URINE_WBC",
       "canonical_name": "Glóbulos blancos en orina",
-      "aliases": ["White Blood Cell, Urine", "Leucocitos en Orina"],
+      "aliases": [
+        "White Blood Cell, Urine",
+        "Leucocitos en Orina",
+        "White blood cells in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "White Blood Cell, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": ["URINE_LEUKOCYTE_ESTERASE"], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "White Blood Cell, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "White cells counted under the microscope.",
+        "clinical_relevance": "Suggest infection or inflammation of the urinary tract.",
+        "related_biomarkers": [
+          "URINE_LEUKOCYTE_ESTERASE"
+        ],
+        "preanalytical_factors": "Infection, contamination.",
+        "limitations": "Interpret with symptoms and culture.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "White blood cells in urine"
     },
     {
       "canonical_id": "URINE_HYALINE_CASTS",
       "canonical_name": "Cilindros hialinos en orina",
-      "aliases": ["Hyaline Casts, Urine", "Cilindros Hialinos"],
+      "aliases": [
+        "Hyaline Casts, Urine",
+        "Cilindros Hialinos",
+        "Hyaline casts"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Hyaline Casts, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Hyaline Casts, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Cylinder-shaped protein deposits from the kidney tubules.",
+        "clinical_relevance": "A few are normal; many can reflect dehydration or kidney issues.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Exercise, dehydration.",
+        "limitations": "Usually not significant in small numbers.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Hyaline casts"
     },
     {
       "canonical_id": "URINE_CALCIUM_OXALATE_CRYSTALS",
       "canonical_name": "Cristales de oxalato cálcico en orina",
-      "aliases": ["Calcium Oxalate Crystals, Urine", "Cristales de Oxalato Calcico"],
+      "aliases": [
+        "Calcium Oxalate Crystals, Urine",
+        "Cristales de Oxalato Calcico",
+        "Calcium oxalate crystals"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Calcium Oxalate Crystals, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Calcium Oxalate Crystals, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Crystals seen under the microscope.",
+        "clinical_relevance": "Common and often harmless; many can relate to kidney stone risk.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Diet rich in oxalate, low fluid intake.",
+        "limitations": "Crystals often form after the sample cools.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/crystals-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Calcium oxalate crystals"
     },
     {
       "canonical_id": "URINE_AMORPHOUS_SEDIMENT",
       "canonical_name": "Sedimento amorfo en orina",
-      "aliases": ["Amorphous Sediment, Urine", "Sedimento Amorfo"],
+      "aliases": [
+        "Amorphous Sediment, Urine",
+        "Sedimento Amorfo",
+        "Amorphous sediment"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Amorphous Sediment, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Amorphous Sediment, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Non-crystalline deposits of salts in urine.",
+        "clinical_relevance": "Usually harmless.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Sample temperature, pH.",
+        "limitations": "Rarely clinically relevant.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Amorphous sediment"
     },
     {
       "canonical_id": "URINE_SQUAMOUS_EPITHELIAL_CELLS",
       "canonical_name": "Células epiteliales escamosas en orina",
-      "aliases": ["Squamous Epithelial Cells", "Celulas Epiteliales Escamosas"],
+      "aliases": [
+        "Squamous Epithelial Cells",
+        "Celulas Epiteliales Escamosas",
+        "Squamous epithelial cells"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Squamous Epithelial Cells", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Squamous Epithelial Cells",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Skin-type cells from the urethra or genital area.",
+        "clinical_relevance": "Mainly indicate how clean the sample collection was.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Collection technique.",
+        "limitations": "Many cells suggest a contaminated sample.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/lab-tests/epithelial-cells-in-urine/",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Squamous epithelial cells"
     },
     {
       "canonical_id": "URINE_YEAST",
       "canonical_name": "Levaduras en orina",
-      "aliases": ["Yeast, Urine", "Levaduras en Orina"],
+      "aliases": [
+        "Yeast, Urine",
+        "Levaduras en Orina",
+        "Yeast in urine"
+      ],
       "category": "orina",
       "measurement_type": "MEASURED",
       "sample_type": "Orina",
       "common_units": [],
-      "external_sources": [{ "source": "FUNCTION_HEALTH", "external_name": "Yeast, Urine", "external_category": "Urine", "included_or_addon": "INCLUDED", "testing_frequency": "2x/year", "derived_or_measured": "MEASURED", "source_reference": "https://www.functionhealth.com/what-we-test" }],
-      "knowledge_card": { "biological_role": null, "clinical_relevance": null, "related_biomarkers": [], "preanalytical_factors": null, "limitations": null, "clinical_contexts": null },
-      "claims": [], "evidence_status": "NOT_REVIEWED", "data_quality": "VERIFIED", "last_reviewed": null, "version": 1
+      "external_sources": [
+        {
+          "source": "FUNCTION_HEALTH",
+          "external_name": "Yeast, Urine",
+          "external_category": "Urine",
+          "included_or_addon": "INCLUDED",
+          "testing_frequency": "2x/year",
+          "derived_or_measured": "MEASURED",
+          "source_reference": "https://www.functionhealth.com/what-we-test"
+        }
+      ],
+      "knowledge_card": {
+        "biological_role": "Yeast cells seen under the microscope.",
+        "clinical_relevance": "Can reflect a yeast infection or contamination.",
+        "related_biomarkers": [],
+        "preanalytical_factors": "Diabetes, antibiotics, contamination.",
+        "limitations": "Interpret with symptoms.",
+        "clinical_contexts": null,
+        "language": "en",
+        "references": [
+          {
+            "title": "MedlinePlus (U.S. National Library of Medicine)",
+            "url": "https://medlineplus.gov/urinalysis.html",
+            "checked_at": "2026-09-28",
+            "link_verified": true
+          }
+        ]
+      },
+      "claims": [],
+      "evidence_status": "CLINICAL_REVIEW_REQUIRED",
+      "data_quality": "VERIFIED",
+      "last_reviewed": null,
+      "version": 1,
+      "canonical_name_en": "Yeast in urine"
     }
-  ]
+  ],
+  "categoria_en": "Urine"
 }
