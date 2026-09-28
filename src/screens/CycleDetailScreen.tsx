@@ -8,7 +8,7 @@ import { Colors } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { CycleEntry, CyclePrediction } from '@/types/cycle';
 import { cycleRepository } from '@/data/cycleRepository';
-import { getApiBaseUrl } from '@/utils/apiBaseUrl';
+import { postAi } from '@/utils/apiBaseUrl';
 
 const formatListDate = (iso: string) => {
   const d = new Date(iso);
@@ -41,13 +41,11 @@ export const CycleDetailScreen = () => {
     setLoadingPrediction(true);
     setPredictionError('');
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/predict-cycle`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cycle_starts: cycleEntries.map((e) => e.fecha.slice(0, 10)),
-        }),
-      });
+      const response = await postAi(
+        'predict-cycle',
+        { cycle_starts: cycleEntries.map((e) => e.fecha.slice(0, 10)) },
+        30000
+      );
       const data = await response.json();
       if (!response.ok || data.error) {
         setPredictionError(data.error ?? 'Could not compute prediction');

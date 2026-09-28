@@ -16,6 +16,16 @@ export async function prepareImage(
   return { uri: result.uri, base64: result.base64 ?? '' };
 }
 
+// Foto para guardar (comidas): 1080 px de ancho y JPEG al 55 % ≈ 100-200 KB,
+// frente a los 3-5 MB de una foto de móvil. Con 1 GB gratis caben miles.
+export async function compressPhoto(uri: string, maxWidth: number = 1080): Promise<string> {
+  const result = await manipulateAsync(uri, [{ resize: { width: maxWidth } }], {
+    compress: 0.55,
+    format: SaveFormat.JPEG,
+  });
+  return result.uri;
+}
+
 export async function fetchWithTimeout(
   url: string,
   options: RequestInit,

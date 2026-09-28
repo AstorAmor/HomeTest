@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 
 export type Sex = 'female' | 'male' | 'other' | 'undisclosed';
 export type ActivityLevel = 'sedentary' | 'light' | 'active' | 'very_active';
@@ -53,8 +54,47 @@ export const BADGES: Record<string, { title: string; description: string; icon: 
 const STORAGE_KEY = 'hometest:user_profile';
 const EMPTY: UserProfile = { goals: [], badges: [] };
 
+// Con sesión de Supabase: tabla profiles (la fila la crea un trigger al registrarse).
+// Sin sesión (modo demo): AsyncStorage.
+const fromRow = (r: any): UserProfile => ({
+  dateOfBirth: r.date_of_birth ?? undefined,
+  sex: r.sex ?? undefined,
+  heightCm: r.height_cm != null ? Number(r.height_cm) : undefined,
+  weightKg: r.weight_kg != null ? Number(r.weight_kg) : undefined,
+  activity: r.activity ?? undefined,
+  sleep: r.sleep_habit ?? undefined,
+  smoking: r.smoking ?? undefined,
+  alcohol: r.alcohol ?? undefined,
+  goals: r.goals ?? [],
+  badges: r.badges ?? [],
+  completedAt: r.onboarding_completed_at ?? undefined,
+});
+
+const toRow = (p: UserProfile) => ({
+  date_of_birth: p.dateOfBirth ?? null,
+  sex: p.sex ?? null,
+  height_cm: p.heightCm ?? null,
+  weight_kg: p.weightKg ?? null,
+  activity: p.activity ?? null,
+  sleep_habit: p.sleep ?? null,
+  smoking: p.smoking ?? null,
+  alcohol: p.alcohol ?? null,
+  goals: p.goals,
+  badges: p.badges,
+  onboarding_completed_at: p.completedAt ?? null,
+});
+
 export const profileRepository = {
   async get(): Promise<UserProfile> {
+    if (isRemoteActive()) {
+      const { data, error } = await supabase!
+        .from('profiles')
+        .select('*')
+        .eq('id', getCurrentUserId()!)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data ? fromRow(data) : { ...EMPTY };
+    }
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...EMPTY };
     try {
@@ -64,7 +104,22 @@ export const profileRepository = {
     }
   },
   async save(profile: UserProfile): Promise<void> {
+    if (isRemoteActive()) {
+      const { error } = await supabase!.from('profiles').update(toRow(profile)).eq('id', getCurrentUserId()!);
+      if (error) throw new Error(error.message);
+      return;
+    }
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  },
+  // Sube el perfil guardado en el móvil a la cuenta (solo si en la cuenta está vacío).
+  async importLocalToRemote(): Promise<boolean> {
+    if (!isRemoteActive()) return false;
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const remote = await this.get();
+    if (remote.completedAt || remote.goals.length) return false;
+    await this.save({ ...EMPTY, ...(JSON.parse(raw) as UserProfile) });
+    return true;
   },
   async awardBadge(badgeId: string): Promise<UserProfile> {
     const profile = await this.get();

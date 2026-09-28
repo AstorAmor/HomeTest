@@ -9,6 +9,8 @@ import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 import { loadSeedData } from '@/data/seedData';
+import { importLocalDataToAccount } from '@/data/importLocalData';
+import { useAuth } from '@/context/AuthContext';
 import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
@@ -74,6 +76,7 @@ const wearableChart = (points: DailyPoint[] | undefined, color: string, format: 
 export const MyDataScreen = () => {
   const router = useRouter();
   const { series, isSample } = useDailyWearables();
+  const { authMode } = useAuth();
   const [seedStatus, setSeedStatus] = useState('');
   const [glucose, setGlucose] = useDeepState<ChartData | null>(null);
   const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(null);
@@ -126,6 +129,16 @@ export const MyDataScreen = () => {
       `Loaded: ${result.bloodPressure} blood pressure, ${result.glucose} glucose, ${result.cholesterol} cholesterol, ${result.cortisol} cortisol, ${result.cycle} cycle`
     );
     load();
+  };
+
+  const handleImportLocal = async () => {
+    setSeedStatus('Uploading…');
+    try {
+      setSeedStatus(await importLocalDataToAccount());
+      load();
+    } catch (err) {
+      setSeedStatus(err instanceof Error ? err.message : 'Upload failed');
+    }
   };
 
   const hr = wearableChart(series.resting_heart_rate, Colors.coral, (v) => `${Math.round(v)}`);
@@ -238,6 +251,12 @@ export const MyDataScreen = () => {
           <Ionicons name="flask-outline" size={18} color={Colors.textMuted} />
           <Text style={styles.seedButtonText}>Load dummy data (dev)</Text>
         </TouchableOpacity>
+        {authMode === 'supabase' && (
+          <TouchableOpacity style={styles.seedButton} onPress={handleImportLocal}>
+            <Ionicons name="cloud-upload-outline" size={18} color={Colors.textMuted} />
+            <Text style={styles.seedButtonText}>Upload this phone's data to my account (dev)</Text>
+          </TouchableOpacity>
+        )}
         {seedStatus ? <Text style={styles.seedStatus}>{seedStatus}</Text> : null}
       </ScrollView>
     </SafeAreaView>

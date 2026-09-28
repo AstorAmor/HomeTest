@@ -1,7 +1,35 @@
-import { createMetricRepository } from './metricRepository';
+import { createMetricRepository, definedOnly } from './metricRepository';
 import { CheckInEntry, DayMoment, Mood } from '@/types/checkIn';
 
-export const checkInRepository = createMetricRepository<CheckInEntry>('hometest:check_ins');
+export const checkInRepository = createMetricRepository<CheckInEntry>('hometest:check_ins', {
+  table: 'check_ins',
+  dateColumn: 'checked_in_at',
+  toRow: (e) =>
+    definedOnly({
+      id: e.id,
+      moment: e.moment,
+      sleep: e.sleep,
+      energy: e.energy,
+      stress: e.stress,
+      day_rating: e.dayRating,
+      mood: e.mood,
+      note: e.note,
+      checked_in_at: e.fecha,
+      created_at: e.createdAt,
+    }),
+  fromRow: (r) => ({
+    id: r.id,
+    moment: r.moment,
+    sleep: r.sleep ?? undefined,
+    energy: r.energy ?? undefined,
+    stress: r.stress ?? undefined,
+    dayRating: r.day_rating ?? undefined,
+    mood: r.mood ?? undefined,
+    note: r.note ?? undefined,
+    fecha: r.checked_in_at,
+    createdAt: r.created_at,
+  }),
+});
 
 // Puntuación de ánimo 1..5 a partir del estado elegido, para poder dibujarlo.
 const MOOD_SCORE: Record<Mood, number> = {

@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
-import { MealEntry, mealRepository, mealStreakDays } from '@/data/planRepository';
+import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 
 const MEAL_TYPES: { id: MealEntry['mealType']; label: string }[] = [
   { id: 'breakfast', label: 'Breakfast' },
@@ -62,7 +62,7 @@ export const LogMealScreen = () => {
 
   const save = async () => {
     const now = new Date().toISOString();
-    await mealRepository.save({
+    await saveMeal({
       id: `meal-${Date.now()}`,
       fecha: now,
       createdAt: now,

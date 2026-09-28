@@ -19,8 +19,7 @@ import {
   setAudioModeAsync,
 } from 'expo-audio';
 import { Colors } from '@/constants/colors';
-import { getApiBaseUrl } from '@/utils/apiBaseUrl';
-import { fetchWithTimeout } from '@/utils/imageUpload';
+import { postAi } from '@/utils/apiBaseUrl';
 import { saveAiLogEntry } from '@/data/aiLogRepository';
 import { MoodQuadrant, MOOD_QUADRANTS, MOOD_QUADRANT_INFO, AiLogExtraction } from '@/types/aiLog';
 
@@ -99,18 +98,9 @@ export const AiLogModule = () => {
 
       const trimmedNote = note.trim();
 
-      const response = await fetchWithTimeout(
-        `${getApiBaseUrl()}/api/extract-ai-log`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            quadrant,
-            intensity,
-            text: trimmedNote || undefined,
-            audio: audioPayload,
-          }),
-        },
+      const response = await postAi(
+        'extract-ai-log',
+        { quadrant, intensity, text: trimmedNote || undefined, audio: audioPayload },
         REQUEST_TIMEOUT_MS
       );
 

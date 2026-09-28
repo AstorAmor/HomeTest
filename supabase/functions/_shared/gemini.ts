@@ -1,26 +1,30 @@
+// Cliente mínimo de Gemini (JSON), sin dependencias de plataforma: lo usan tanto
+// las Edge Functions de Supabase (Deno) como las rutas API locales de Expo (Node).
+
 export interface GeminiFilePart {
   base64: string;
   mimeType: string;
 }
 
+export type GeminiResult<T> = { data: T } | { error: string; status: number };
+
+const MODEL = 'gemini-3.6-flash';
 const MAX_RETRIES = 3;
-const TIMEOUT_MS = 170000;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-type GeminiResult<T> = { data: T } | { error: string; status: number };
-
-// Llama a Gemini pidiendo una respuesta JSON, con reintentos y espera
-// creciente si la API devuelve 429 (límite de peticiones) o 503 (sobrecarga).
+// Pide a Gemini una respuesta JSON, con reintentos y espera creciente si la
+// API devuelve 429 (límite de peticiones) o 503 (sobrecarga).
 export async function callGeminiJson<T>(
+  apiKey: string | undefined,
   prompt: string,
-  files: GeminiFilePart[]
+  files: GeminiFilePart[],
+  timeoutMs = 140000
 ): Promise<GeminiResult<T>> {
-  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return { error: 'GEMINI_API_KEY not configured on the server (.env.local)', status: 500 };
+    return { error: 'GEMINI_API_KEY is not configured on the server', status: 500 };
   }
 
   const fileParts = files.map((f) => ({
@@ -29,15 +33,15 @@ export async function callGeminiJson<T>(
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     let response: Response;
     try {
       response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }, ...fileParts] }],
             generationConfig: { responseMimeType: 'application/json' },
@@ -49,7 +53,7 @@ export async function callGeminiJson<T>(
       const isAbort = fetchErr instanceof Error && fetchErr.name === 'AbortError';
       return {
         error: isAbort
-          ? `Gemini took too long to respond (>${TIMEOUT_MS / 1000}s).`
+          ? `Gemini took too long to respond (>${timeoutMs / 1000}s).`
           : `Error calling Gemini: ${fetchErr instanceof Error ? fetchErr.message : 'unknown'}`,
         status: 504,
       };

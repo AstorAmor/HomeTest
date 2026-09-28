@@ -1,9 +1,39 @@
-import { createMetricRepository } from './metricRepository';
+import { createMetricRepository, definedOnly } from './metricRepository';
 import { AiLogEntry } from '@/types/aiLog';
 
 const STORAGE_KEY = 'hometest:ai_log_entries';
 
-const repo = createMetricRepository<AiLogEntry>(STORAGE_KEY);
+export const aiLogRepository = createMetricRepository<AiLogEntry>(STORAGE_KEY, {
+  table: 'ai_logs',
+  dateColumn: 'logged_at',
+  toRow: (e) =>
+    definedOnly({
+      id: e.id,
+      quadrant: e.quadrant,
+      intensity: e.intensity,
+      note: e.note,
+      has_audio: e.hasAudio,
+      transcript: e.transcript,
+      summary: e.summary,
+      tags: e.tags,
+      logged_at: e.fecha,
+      created_at: e.createdAt,
+    }),
+  fromRow: (r) => ({
+    id: r.id,
+    quadrant: r.quadrant,
+    intensity: r.intensity,
+    note: r.note,
+    hasAudio: r.has_audio,
+    transcript: r.transcript,
+    summary: r.summary,
+    tags: r.tags ?? [],
+    fecha: r.logged_at,
+    createdAt: r.created_at,
+  }),
+});
+
+const repo = aiLogRepository;
 
 export async function saveAiLogEntry(entry: AiLogEntry): Promise<void> {
   return repo.save(entry);

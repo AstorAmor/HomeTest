@@ -1,9 +1,31 @@
-import { createMetricRepository } from './metricRepository';
+import { createMetricRepository, definedOnly } from './metricRepository';
 import { GlucoseEntry } from '@/types/glucose';
 
 const STORAGE_KEY = 'hometest:glucose_entries';
 
-const repo = createMetricRepository<GlucoseEntry>(STORAGE_KEY);
+export const glucoseRepository = createMetricRepository<GlucoseEntry>(STORAGE_KEY, {
+  table: 'glucose_readings',
+  dateColumn: 'measured_at',
+  toRow: (e) =>
+    definedOnly({
+      id: e.id,
+      value: e.valor,
+      unit: e.unidad,
+      meal_type: e.mealType,
+      measured_at: e.fecha,
+      created_at: e.createdAt,
+    }),
+  fromRow: (r) => ({
+    id: r.id,
+    valor: Number(r.value),
+    unidad: r.unit,
+    mealType: r.meal_type,
+    fecha: r.measured_at,
+    createdAt: r.created_at,
+  }),
+});
+
+const repo = glucoseRepository;
 
 export async function saveGlucoseEntry(entry: GlucoseEntry): Promise<void> {
   return repo.save(entry);

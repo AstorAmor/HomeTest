@@ -23,7 +23,7 @@ export const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { login, signup } = useAuth();
+  const { login, signup, authMode } = useAuth();
 
   const handleSubmit = async () => {
     setError('');
@@ -133,7 +133,9 @@ export const LoginScreen = () => {
 
           <View style={styles.demoHint}>
             <Text style={styles.demoText}>
-              💡 Use any email/password for the demo
+              {authMode === 'demo'
+                ? '💡 Demo mode: use any email/password'
+                : '🔒 Your data is private to your account'}
             </Text>
           </View>
         </ScrollView>

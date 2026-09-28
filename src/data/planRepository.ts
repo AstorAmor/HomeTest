@@ -1,4 +1,6 @@
-import { createMetricRepository } from './metricRepository';
+import { createMetricRepository, definedOnly } from './metricRepository';
+import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
+import { compressPhoto } from '@/utils/imageUpload';
 
 // "Your plan" en Today: versión simplificada de las recomendaciones personalizadas.
 // DUMMY por ahora. Cuando exista el motor de recomendaciones, solo hay que
@@ -48,14 +50,76 @@ export interface MealEntry {
   id: string;
   fecha: string;
   createdAt: string;
-  photoUri?: string; // foto local; en el futuro, dataset para entrenar un modelo propio
+  photoUri?: string; // foto local (modo demo o antes de subirla)
+  photoPath?: string; // ruta en el bucket privado meal-photos (<user_id>/<id>.jpg); futuro dataset propio
   description: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   addedSugar: boolean | null;
 }
 
-export const workoutRepository = createMetricRepository<WorkoutEntry>('hometest:workouts');
-export const mealRepository = createMetricRepository<MealEntry>('hometest:meals');
+export const workoutRepository = createMetricRepository<WorkoutEntry>('hometest:workouts', {
+  table: 'workouts',
+  dateColumn: 'performed_at',
+  toRow: (e) =>
+    definedOnly({
+      id: e.id,
+      type: e.type,
+      minutes: e.minutes,
+      intensity: e.intensity,
+      performed_at: e.fecha,
+      created_at: e.createdAt,
+    }),
+  fromRow: (r) => ({
+    id: r.id,
+    type: r.type,
+    minutes: r.minutes,
+    intensity: r.intensity,
+    fecha: r.performed_at,
+    createdAt: r.created_at,
+  }),
+});
+
+export const mealRepository = createMetricRepository<MealEntry>('hometest:meals', {
+  table: 'meals',
+  dateColumn: 'eaten_at',
+  toRow: (e) =>
+    definedOnly({
+      id: e.id,
+      photo_path: e.photoPath,
+      description: e.description,
+      meal_type: e.mealType,
+      added_sugar: e.addedSugar,
+      eaten_at: e.fecha,
+      created_at: e.createdAt,
+    }),
+  fromRow: (r) => ({
+    id: r.id,
+    photoPath: r.photo_path ?? undefined,
+    description: r.description,
+    mealType: r.meal_type,
+    addedSugar: r.added_sugar,
+    fecha: r.eaten_at,
+    createdAt: r.created_at,
+  }),
+});
+
+// Guarda una comida. La foto se comprime siempre antes de guardarla; con sesión
+// de Supabase se sube al bucket privado meal-photos.
+export async function saveMeal(entry: MealEntry): Promise<void> {
+  const photoUri = entry.photoUri ? await compressPhoto(entry.photoUri) : undefined;
+  const userId = getCurrentUserId();
+  if (photoUri && isRemoteActive() && supabase && userId) {
+    const path = `${userId}/${entry.id}.jpg`;
+    const bytes = await (await fetch(photoUri)).arrayBuffer();
+    const { error } = await supabase.storage
+      .from('meal-photos')
+      .upload(path, bytes, { contentType: 'image/jpeg', upsert: true });
+    if (error) throw new Error(error.message);
+    await mealRepository.save({ ...entry, photoUri: undefined, photoPath: path });
+    return;
+  }
+  await mealRepository.save({ ...entry, photoUri });
+}
 
 const startOfWeek = (d = new Date()) => {
   const date = new Date(d);

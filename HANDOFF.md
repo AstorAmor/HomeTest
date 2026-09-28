@@ -328,3 +328,35 @@ texto de UI en inglés; datos de ejemplo marcados como "sample" cuando no hay da
 - **APK (2026-09-27)**: `npx eas-cli build --platform android --profile preview` → build
   c2ac2e70 (canal `preview`, nombre visible "HomeTest"). La APK recibe las `eas update --channel preview`
   sin reinstalar. Health Connect funciona en la APK (no en Expo Go). Las rutas API siguen sin servidor.
+
+## Supabase (backend real) — 2026-09-28, rama `feature/supabase`
+
+Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito). CLI vinculada
+(`npx supabase link`). Sin Docker: las migraciones y funciones se aplican directamente al remoto.
+
+- **Esquema** (`supabase/migrations/`): tablas por dominio (profiles, glucose_readings,
+  blood_pressure_readings, metric_readings, cycle_starts, check_ins, ai_logs, workouts, meals,
+  wearable_daily, lab_reports) con RLS "cada usuario solo lo suyo". `profiles.consent_aggregate_use`
+  (opt-in uso agregado) existe desde el día 1. Buckets privados `meal-photos` (≤1 MB, jpeg) y
+  `lab-files` (≤10 MB), carpeta por usuario.
+- **Compartir con profesionales** (requisito crítico del usuario): `professionals` (verificados solo
+  por HomeTest; `verified_at` no escribible desde la app) y `data_shares` (paciente → profesional,
+  `scopes` por categoría, caducidad, revocable, nunca se borra = registro de consentimiento). RLS de
+  solo lectura para el profesional vía `has_share()`. `my_shared_patients()` da al profesional su lista.
+  Pendiente: pantallas en la app para gestionar permisos y vista del profesional.
+- **Tests de seguridad**: `supabase/tests/database/rls_sharing.test.sql` (20 comprobaciones, todas OK
+  el 2026-09-28). Sin Docker se ejecutan con `db query --linked` envolviendo el resultado en un
+  error final (rollback garantizado); con Docker: `npx supabase test db --linked`.
+- **Edge Functions** (`supabase/functions/`): extract, extract-bp, extract-ai-log, predict-cycle.
+  Exigen sesión (401 sin ella). Prompts, cliente Gemini y predicción del ciclo en `_shared/`, usados
+  también por las rutas API locales (modo demo). Windmill ya no hace falta.
+  Desplegar: `npx supabase functions deploy --use-api`. Secreto necesario: `GEMINI_API_KEY`
+  (`npx supabase secrets set GEMINI_API_KEY=...`, lo pone el usuario).
+- **App**: `src/lib/supabase.ts`. Con `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+  (en `.env.local` y como variables de EAS en development/preview/production) usa login real y guarda
+  en la nube; sin ellas, modo demo (login simulado + AsyncStorage). Los repositorios deciden solos
+  (`createMetricRepository(storageKey, remoteTable)`) y filtran siempre por el propio `user_id`.
+  IA vía `postAi()` en `utils/apiBaseUrl.ts`. Botón dev en My Data para subir datos locales a la cuenta.
+- Fotos de comida comprimidas a 1080 px / JPEG 55 % (`compressPhoto`) antes de guardarlas.
+- Límites del plan gratuito: 500 MB BD, 1 GB storage, pausa tras 7 días sin uso, sin backups. Antes
+  de datos reales de pacientes: plan de pago + contrato de encargado de tratamiento (RGPD).

@@ -16,10 +16,10 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { LabReportTable } from '@/components/LabReportTable';
 import { Colors } from '@/constants/colors';
-import { getApiBaseUrl } from '@/utils/apiBaseUrl';
+import { postAi } from '@/utils/apiBaseUrl';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
-import { prepareImage, fetchWithTimeout, chunk } from '@/utils/imageUpload';
+import { prepareImage, chunk } from '@/utils/imageUpload';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
 
@@ -77,15 +77,7 @@ export const UploadTestScreen = () => {
         const batch = batches[i];
         const payloadFiles = batch.map((f) => ({ base64: f.base64, mimeType: f.mimeType }));
 
-        const response = await fetchWithTimeout(
-          `${getApiBaseUrl()}/api/extract`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ files: payloadFiles }),
-          },
-          REQUEST_TIMEOUT_MS
-        );
+        const response = await postAi('extract', { files: payloadFiles }, REQUEST_TIMEOUT_MS);
 
         const data = await response.json();
 

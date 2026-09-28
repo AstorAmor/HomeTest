@@ -1,9 +1,33 @@
-import { createMetricRepository } from './metricRepository';
+import { createMetricRepository, definedOnly } from './metricRepository';
 import { BloodPressureEntry } from '@/types/bloodPressure';
 
 const STORAGE_KEY = 'hometest:blood_pressure_entries';
 
-const repo = createMetricRepository<BloodPressureEntry>(STORAGE_KEY);
+export const bloodPressureRepository = createMetricRepository<BloodPressureEntry>(STORAGE_KEY, {
+  table: 'blood_pressure_readings',
+  dateColumn: 'measured_at',
+  toRow: (e) =>
+    definedOnly({
+      id: e.id,
+      systolic: e.systolic,
+      diastolic: e.diastolic,
+      pulse: e.pulse,
+      source: e.source,
+      measured_at: e.fecha,
+      created_at: e.createdAt,
+    }),
+  fromRow: (r) => ({
+    id: r.id,
+    systolic: r.systolic,
+    diastolic: r.diastolic,
+    pulse: r.pulse,
+    source: r.source,
+    fecha: r.measured_at,
+    createdAt: r.created_at,
+  }),
+});
+
+const repo = bloodPressureRepository;
 
 export async function saveBloodPressureEntry(entry: BloodPressureEntry): Promise<void> {
   return repo.save(entry);

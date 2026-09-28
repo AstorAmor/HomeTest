@@ -18,8 +18,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Colors } from '@/constants/colors';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { getApiBaseUrl } from '@/utils/apiBaseUrl';
-import { prepareImage, fetchWithTimeout } from '@/utils/imageUpload';
+import { postAi } from '@/utils/apiBaseUrl';
+import { prepareImage } from '@/utils/imageUpload';
 import { ExtractedBloodPressure } from '@/types/bloodPressure';
 import {
   saveBloodPressureEntry,
@@ -83,15 +83,7 @@ export const LogBloodPressureScreen = () => {
         base64 = prepared.base64;
       }
 
-      const response = await fetchWithTimeout(
-        `${getApiBaseUrl()}/api/extract-bp`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ files: [{ base64, mimeType }] }),
-        },
-        REQUEST_TIMEOUT_MS
-      );
+      const response = await postAi('extract-bp', { files: [{ base64, mimeType }] }, REQUEST_TIMEOUT_MS);
 
       const data = await response.json();
 
