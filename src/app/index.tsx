@@ -6,7 +6,7 @@ import { Redirect } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
 export default function RootIndex() {
-  const { isLoggedIn, demoMode, initializing } = useAuth();
+  const { isLoggedIn, demoMode, initializing, professional } = useAuth();
 
   // Mientras se recupera la sesión guardada, pantalla vacía (evita un parpadeo del login)
   if (initializing) {
@@ -15,6 +15,11 @@ export default function RootIndex() {
 
   if (!isLoggedIn) {
     return <LoginScreen />;
+  }
+
+  // Los profesionales tienen su propia interfaz (pacientes que les comparten datos)
+  if (professional) {
+    return <Redirect href="/pro" />;
   }
 
   // Selector "developer" tras el login: nuevo usuario / resultados / habitual

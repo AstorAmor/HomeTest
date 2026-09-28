@@ -4,7 +4,7 @@
 --   npx supabase test db --linked
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(28);
 
 -- Usuarios simulados: A y B pacientes, P profesional verificado, Q sin verificar
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -16,6 +16,9 @@ insert into auth.users (id, email, raw_user_meta_data) values
 insert into public.professionals (id, display_name, role, verified_at) values
   ('00000000-0000-0000-0000-0000000000c1', 'Dra. P', 'doctor', now()),
   ('00000000-0000-0000-0000-0000000000d1', 'Dr. Q', 'dietitian', null);
+
+-- A es además administradora de HomeTest
+insert into public.admins (user_id) values ('00000000-0000-0000-0000-0000000000a1');
 
 select is(
   (select count(*) from public.profiles where id in (
@@ -86,6 +89,37 @@ select is((select count(*) from public.my_shared_patients()), 1::bigint,
 set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
 select is((select count(*) from public.glucose_readings), 0::bigint,
   'un profesional sin verificar no ve nada aunque tenga permiso');
+
+-- ---------------------------------------------------------------- Ficha y tarifa del profesional
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+update public.professionals
+  set hourly_rate_requested_eur = 90, city = 'Madrid', languages = array['Spanish', 'English']
+  where id = '00000000-0000-0000-0000-0000000000c1';
+select is((select rate_status from public.my_professional_profile()), 'pending',
+  'al proponer una tarifa, queda pendiente de revisión');
+select throws_ok(
+  $$ update public.professionals set hourly_rate_eur = 500 where id = '00000000-0000-0000-0000-0000000000c1' $$,
+  '42501', null, 'el profesional no puede aprobarse su propia tarifa');
+select throws_ok(
+  $$ select public.admin_review_professional('00000000-0000-0000-0000-0000000000c1', null, 'approve', null) $$,
+  '42501', null, 'un profesional no puede usar el panel de admin');
+
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}';
+select throws_ok(
+  $$ select hourly_rate_requested_eur from public.professionals $$,
+  '42501', null, 'un paciente no ve la tarifa propuesta (solo la aprobada)');
+select is((select count(*) from public.professionals), 1::bigint,
+  'el directorio solo muestra profesionales verificados');
+
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+select is((select count(*) from public.admin_list_professionals()), 2::bigint,
+  'la admin ve a todos los profesionales, verificados o no');
+select public.admin_review_professional('00000000-0000-0000-0000-0000000000c1', null, 'approve', 'OK');
+
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}';
+select is((select hourly_rate_eur from public.professionals where id = '00000000-0000-0000-0000-0000000000c1'),
+  90::numeric, 'tras la aprobación, los pacientes ven la tarifa aprobada');
+select is((select public.is_admin()), false, 'un paciente normal no es admin');
 
 -- ---------------------------------------------------------------- A gestiona sus permisos
 set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';

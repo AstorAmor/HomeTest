@@ -66,6 +66,12 @@ export default function Layout() {
             <Stack.Screen name="professional-detail" />
             <Stack.Screen name="track-tests" />
             <Stack.Screen name="profile" />
+            <Stack.Screen name="sharing" />
+            <Stack.Screen name="share-new" />
+            <Stack.Screen name="admin" />
+            <Stack.Screen name="pro" options={{ animation: 'fade' }} />
+            <Stack.Screen name="pro-patient" />
+            <Stack.Screen name="pro-profile" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { getAllCanonicalBiomarkers } from '@/knowledge/canonicalBiomarkers';
+import { getBiomarkerCodes } from '@/knowledge/standardCodes';
 import { CanonicalBiomarker, MeasurementType } from '@/types/knowledge';
 
 // Etiquetas legibles para las categorias provisionales de knowledge/biomarcadores/*.json.
@@ -166,6 +167,16 @@ const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
           {biomarker.common_units.length > 0 && (
             <DetailRow label="Units" value={biomarker.common_units.join(', ')} />
           )}
+          <DetailRow
+            label="LOINC"
+            value={(() => {
+              const codes = getBiomarkerCodes(biomarker.canonical_id);
+              return codes?.loinc ? `${codes.loinc} · ${codes.loinc_display}` : 'Pending';
+            })()}
+          />
+          {getBiomarkerCodes(biomarker.canonical_id)?.ucum ? (
+            <DetailRow label="UCUM" value={getBiomarkerCodes(biomarker.canonical_id)!.ucum!} />
+          ) : null}
 
           <Text style={styles.knowledgeText}>
             {biomarker.knowledge_card.biological_role ??

@@ -360,3 +360,22 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 - Fotos de comida comprimidas a 1080 px / JPEG 55 % (`compressPhoto`) antes de guardarlas.
 - Límites del plan gratuito: 500 MB BD, 1 GB storage, pausa tras 7 días sin uso, sin backups. Antes
   de datos reales de pacientes: plan de pago + contrato de encargado de tratamiento (RGPD).
+
+### Profesionales, admin e interoperabilidad — 2026-09-28 (tarde)
+
+- **LOINC/UCUM**: `knowledge/mapping/standard-codes.json` (107 de 118 biomarcadores + métricas de la app,
+  cada código validado contra tx.fhir.org con su nombre oficial; 11 pendientes documentados con el motivo,
+  p. ej. omega-3 depende del método del laboratorio). Acceso: `src/knowledge/standardCodes.ts`. Se ven en
+  More → Biomarker Catalog. Siguiente: exportación HL7 FHIR (Patient/Observation/DiagnosticReport).
+- **Cuentas de profesional**: registro con "I'm a healthcare professional"; ficha en `/pro-profile` (foto
+  comprimida a 512 px en bucket público `professional-photos`, nº colegiado, colegio, ciudad, idiomas,
+  modalidades, años, bio, tarifa PROPUESTA). Migración `..._professional_profiles_admin.sql`: privilegios
+  por columna (pacientes no ven tarifa propuesta ni notas), trigger que devuelve la tarifa a revisión.
+- **Admin**: tabla `admins` (sin acceso desde la app; alta por SQL), RPCs `is_admin`,
+  `admin_list_professionals`, `admin_review_professional`. Pantalla `/admin` (More → Professionals review,
+  solo visible para admins): verificar profesionales y aprobar/rechazar tarifas.
+- **Compartir**: `/sharing` (More → Sharing & privacy) y `/share-new`; el profesional entra en `/pro`
+  (lista de pacientes) y `/pro-patient` (datos compartidos, solo lectura). Interfaz de profesional completa
+  (calendario sincronizable Outlook/Google/Yahoo) = siguiente fase.
+- Tests RLS: 28/28 OK. El catálogo mock `/professionals` (servicesMock) convive con el directorio real:
+  unificar cuando haya profesionales reales.

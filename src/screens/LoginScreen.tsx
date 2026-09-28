@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
+import { Ionicons } from '@expo/vector-icons';
+import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -22,6 +24,11 @@ export const LoginScreen = () => {
   const [nombre, setNombre] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Alta como profesional sanitario (solo con Supabase: necesita cuenta real)
+  const [isProfessional, setIsProfessional] = useState(false);
+  const [proRole, setProRole] = useState<ProfessionalRole>('doctor');
+  const [specialty, setSpecialty] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
 
   const { login, signup, authMode } = useAuth();
 
@@ -36,7 +43,14 @@ export const LoginScreen = () => {
           setLoading(false);
           return;
         }
-        await signup(email, password, nombre);
+        await signup(
+          email,
+          password,
+          nombre,
+          isProfessional
+            ? { role: proRole, specialty: specialty.trim(), licenseNumber: licenseNumber.trim() }
+            : undefined
+        );
       } else {
         await login(email, password);
       }
@@ -74,6 +88,61 @@ export const LoginScreen = () => {
                   onChangeText={setNombre}
                   editable={!loading}
                 />
+
+                {authMode === 'supabase' && (
+                  <TouchableOpacity
+                    style={styles.proToggle}
+                    onPress={() => setIsProfessional(!isProfessional)}
+                    disabled={loading}
+                  >
+                    <Ionicons
+                      name={isProfessional ? 'checkbox' : 'square-outline'}
+                      size={22}
+                      color={isProfessional ? Colors.accent : Colors.textSecondary}
+                    />
+                    <Text style={styles.proToggleText}>I'm a healthcare professional</Text>
+                  </TouchableOpacity>
+                )}
+
+                {isProfessional && (
+                  <View style={styles.proBox}>
+                    <Text style={[styles.label, { marginTop: 0 }]}>Profession</Text>
+                    <View style={styles.roleChips}>
+                      {PROFESSIONAL_ROLES.map((r) => (
+                        <TouchableOpacity
+                          key={r.id}
+                          style={[styles.roleChip, proRole === r.id && styles.roleChipSelected]}
+                          onPress={() => setProRole(r.id)}
+                        >
+                          <Text style={[styles.roleChipText, proRole === r.id && styles.roleChipTextSelected]}>
+                            {r.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <Text style={styles.label}>Specialty (optional)</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. Internal medicine"
+                      placeholderTextColor={Colors.textMuted}
+                      value={specialty}
+                      onChangeText={setSpecialty}
+                      editable={!loading}
+                    />
+                    <Text style={styles.label}>License / registration number</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Nº de colegiado"
+                      placeholderTextColor={Colors.textMuted}
+                      value={licenseNumber}
+                      onChangeText={setLicenseNumber}
+                      editable={!loading}
+                    />
+                    <Text style={styles.proNote}>
+                      HomeTest verifies every professional before patients can share data with them.
+                    </Text>
+                  </View>
+                )}
               </>
             )}
 
@@ -219,6 +288,55 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 12,
     paddingHorizontal: 8,
+  },
+  proToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 16,
+  },
+  proToggleText: {
+    color: Colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  proBox: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(62, 205, 184, 0.35)',
+    backgroundColor: 'rgba(30, 34, 48, 0.72)',
+  },
+  roleChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  roleChip: {
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  roleChipSelected: {
+    borderColor: Colors.accent,
+    backgroundColor: Colors.accentSoft,
+  },
+  roleChipText: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  roleChipTextSelected: {
+    color: Colors.textPrimary,
+  },
+  proNote: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 10,
   },
   demoHint: {
     backgroundColor: 'rgba(30, 34, 48, 0.72)',

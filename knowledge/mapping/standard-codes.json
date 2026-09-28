@@ -1,0 +1,694 @@
+{
+  "_comment": "Códigos estándar para interoperabilidad (HL7 FHIR). LOINC identifica cada prueba; UCUM, la unidad. Cada código LOINC se validó contra el servidor terminológico de HL7 (tx.fhir.org, $lookup) y loinc_display es el nombre oficial devuelto. Biomarcadores sin entrada: pendientes de asignar (no adivinar).",
+  "validated_against": "https://tx.fhir.org/r4 CodeSystem/$lookup (system http://loinc.org)",
+  "validated_at": "2026-09-28",
+  "biomarkers": {
+    "ABO_RH": {
+      "loinc": "882-1",
+      "loinc_display": "ABO and Rh group [Type] in Blood",
+      "ucum": null
+    },
+    "ALBUMIN": {
+      "loinc": "1751-7",
+      "loinc_display": "Albumin [Mass/volume] in Serum or Plasma",
+      "ucum": "g/dL"
+    },
+    "ALBUMIN_GLOBULIN_RATIO": {
+      "loinc": "1759-0",
+      "loinc_display": "Albumin/Globulin [Mass Ratio] in Serum or Plasma",
+      "ucum": "{ratio}"
+    },
+    "ALP": {
+      "loinc": "6768-6",
+      "loinc_display": "Alkaline phosphatase [Enzymatic activity/volume] in Serum or Plasma",
+      "ucum": "U/L"
+    },
+    "ALT": {
+      "loinc": "1742-6",
+      "loinc_display": "Alanine aminotransferase [Enzymatic activity/volume] in Serum or Plasma",
+      "ucum": "U/L"
+    },
+    "AMH": {
+      "loinc": "38476-8",
+      "loinc_display": "Mullerian inhibiting substance [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/mL"
+    },
+    "AMYLASE": {
+      "loinc": "1798-8",
+      "loinc_display": "Amylase [Enzymatic activity/volume] in Serum or Plasma",
+      "ucum": "U/L"
+    },
+    "ANA_SCREEN": {
+      "loinc": "8061-4",
+      "loinc_display": "Nuclear Ab [Presence] in Serum",
+      "ucum": "{presence}"
+    },
+    "ANA_TITER": {
+      "loinc": "5048-4",
+      "loinc_display": "Nuclear Ab [Titer] in Serum by Immunofluorescence",
+      "ucum": "{titer}"
+    },
+    "APOB": {
+      "loinc": "1884-6",
+      "loinc_display": "Apolipoprotein B [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "ARACHIDONIC_EPA_RATIO": {
+      "loinc": "90909-3",
+      "loinc_display": "Arachidonate (C20:4w6)/Eicosapentaenoate (C20:5w3) [Mass Ratio] in Blood",
+      "ucum": "{ratio}"
+    },
+    "AST": {
+      "loinc": "1920-8",
+      "loinc_display": "Aspartate aminotransferase [Enzymatic activity/volume] in Serum or Plasma",
+      "ucum": "U/L"
+    },
+    "BASOPHILS": {
+      "loinc": "704-7",
+      "loinc_display": "Basophils [#/volume] in Blood by Automated count",
+      "ucum": "10*3/uL"
+    },
+    "BP_DIASTOLIC": {
+      "loinc": "8462-4",
+      "loinc_display": "Diastolic blood pressure",
+      "ucum": "mm[Hg]"
+    },
+    "BP_SYSTOLIC": {
+      "loinc": "8480-6",
+      "loinc_display": "Systolic blood pressure",
+      "ucum": "mm[Hg]"
+    },
+    "BUN": {
+      "loinc": "3094-0",
+      "loinc_display": "Urea nitrogen [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "BUN_CREATININE_RATIO": {
+      "loinc": "3097-3",
+      "loinc_display": "Urea nitrogen/Creatinine [Mass Ratio] in Serum or Plasma",
+      "ucum": "{ratio}"
+    },
+    "CALCIUM": {
+      "loinc": "17861-6",
+      "loinc_display": "Calcium [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "CARBON_DIOXIDE": {
+      "loinc": "2028-9",
+      "loinc_display": "Carbon dioxide, total [Moles/volume] in Serum or Plasma",
+      "ucum": "mmol/L"
+    },
+    "CHLORIDE": {
+      "loinc": "2075-0",
+      "loinc_display": "Chloride [Moles/volume] in Serum or Plasma",
+      "ucum": "mmol/L"
+    },
+    "CORTISOL": {
+      "loinc": "2143-6",
+      "loinc_display": "Cortisol [Mass/volume] in Serum or Plasma",
+      "ucum": "ug/dL"
+    },
+    "CREATININE": {
+      "loinc": "2160-0",
+      "loinc_display": "Creatinine [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "DHEA_S": {
+      "loinc": "2191-5",
+      "loinc_display": "Dehydroepiandrosterone sulfate (DHEA-S) [Mass/volume] in Serum or Plasma",
+      "ucum": "ug/dL"
+    },
+    "DIRECT_BILIRUBIN": {
+      "loinc": "1968-7",
+      "loinc_display": "Bilirubin.direct [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "EGFR": {
+      "loinc": "98979-8",
+      "loinc_display": "Glomerular filtration rate [Volume Rate/Area] in Serum, Plasma or Blood by Creatinine-based formula (CKD-EPI 2021)/1.73 sq M",
+      "ucum": "mL/min/{1.73_m2}"
+    },
+    "EOSINOPHILS": {
+      "loinc": "711-2",
+      "loinc_display": "Eosinophils [#/volume] in Blood by Automated count",
+      "ucum": "10*3/uL"
+    },
+    "ESTRADIOL": {
+      "loinc": "2243-4",
+      "loinc_display": "Estradiol (E2) [Mass/volume] in Serum or Plasma",
+      "ucum": "pg/mL"
+    },
+    "FERRITIN": {
+      "loinc": "2276-4",
+      "loinc_display": "Ferritin [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/mL"
+    },
+    "FSH": {
+      "loinc": "15067-2",
+      "loinc_display": "Follitropin [Units/volume] in Serum or Plasma",
+      "ucum": "m[IU]/mL"
+    },
+    "GGT": {
+      "loinc": "2324-2",
+      "loinc_display": "Gamma glutamyl transferase [Enzymatic activity/volume] in Serum or Plasma",
+      "ucum": "U/L"
+    },
+    "GLOBULIN": {
+      "loinc": "10834-0",
+      "loinc_display": "Globulin [Mass/volume] in Serum by calculation",
+      "ucum": "g/dL"
+    },
+    "GLUCOSE": {
+      "loinc": "2345-7",
+      "loinc_display": "Glucose [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "HBA1C": {
+      "loinc": "4548-4",
+      "loinc_display": "Hemoglobin A1c/Hemoglobin.total in Blood",
+      "ucum": "%"
+    },
+    "HDL_C": {
+      "loinc": "2085-9",
+      "loinc_display": "Cholesterol in HDL [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "HEMATOCRIT": {
+      "loinc": "4544-3",
+      "loinc_display": "Hematocrit [Volume Fraction] of Blood by Automated count",
+      "ucum": "%"
+    },
+    "HEMOGLOBIN": {
+      "loinc": "718-7",
+      "loinc_display": "Hemoglobin [Mass/volume] in Blood",
+      "ucum": "g/dL"
+    },
+    "HOMOCYSTEINE": {
+      "loinc": "13965-9",
+      "loinc_display": "Homocysteine [Moles/volume] in Serum or Plasma",
+      "ucum": "umol/L"
+    },
+    "HS_CRP": {
+      "loinc": "30522-7",
+      "loinc_display": "C reactive protein [Mass/volume] in Serum or Plasma by High sensitivity method",
+      "ucum": "mg/L"
+    },
+    "INSULIN": {
+      "loinc": "20448-7",
+      "loinc_display": "Insulin [Units/volume] in Serum or Plasma",
+      "ucum": "u[IU]/mL"
+    },
+    "IRON": {
+      "loinc": "2498-4",
+      "loinc_display": "Iron [Mass/volume] in Serum or Plasma",
+      "ucum": "ug/dL"
+    },
+    "IRON_BINDING_CAPACITY": {
+      "loinc": "2500-7",
+      "loinc_display": "Iron binding capacity [Mass/volume] in Serum or Plasma",
+      "ucum": "ug/dL"
+    },
+    "IRON_SATURATION": {
+      "loinc": "2502-3",
+      "loinc_display": "Iron saturation [Mass Fraction] in Serum or Plasma",
+      "ucum": "%"
+    },
+    "LDL_C": {
+      "loinc": "13457-7",
+      "loinc_display": "Cholesterol in LDL [Mass/volume] in Serum or Plasma by calculation",
+      "ucum": "mg/dL"
+    },
+    "LEAD": {
+      "loinc": "5671-3",
+      "loinc_display": "Lead [Mass/volume] in Blood",
+      "ucum": "ug/dL"
+    },
+    "LEPTIN": {
+      "loinc": "21365-2",
+      "loinc_display": "Leptin [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/mL"
+    },
+    "LH": {
+      "loinc": "10501-5",
+      "loinc_display": "Lutropin [Units/volume] in Serum or Plasma",
+      "ucum": "m[IU]/mL"
+    },
+    "LIPASE": {
+      "loinc": "3040-3",
+      "loinc_display": "Lipase [Enzymatic activity/volume] in Serum or Plasma",
+      "ucum": "U/L"
+    },
+    "LIPOPROTEIN_A": {
+      "loinc": "10835-7",
+      "loinc_display": "Lipoprotein a [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "LYMPHOCYTES": {
+      "loinc": "731-0",
+      "loinc_display": "Lymphocytes [#/volume] in Blood by Automated count",
+      "ucum": "10*3/uL"
+    },
+    "MAGNESIUM": {
+      "loinc": "19123-9",
+      "loinc_display": "Magnesium [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "MCH": {
+      "loinc": "785-6",
+      "loinc_display": "MCH [Entitic mass] by Automated count",
+      "ucum": "pg"
+    },
+    "MCHC": {
+      "loinc": "786-4",
+      "loinc_display": "MCHC [Entitic Mass/volume] in Red Blood Cells by Automated count",
+      "ucum": "g/dL"
+    },
+    "MCV": {
+      "loinc": "787-2",
+      "loinc_display": "MCV [Entitic mean volume] in Red Blood Cells by Automated count",
+      "ucum": "fL"
+    },
+    "MERCURY": {
+      "loinc": "5685-3",
+      "loinc_display": "Mercury [Mass/volume] in Blood",
+      "ucum": "ug/L"
+    },
+    "MMA_B12": {
+      "loinc": "13964-2",
+      "loinc_display": "Methylmalonate [Moles/volume] in Serum or Plasma",
+      "ucum": "nmol/L"
+    },
+    "MONOCYTES": {
+      "loinc": "742-7",
+      "loinc_display": "Monocytes [#/volume] in Blood by Automated count",
+      "ucum": "10*3/uL"
+    },
+    "MPV": {
+      "loinc": "32623-1",
+      "loinc_display": "Platelet [Entitic mean volume] in Blood by Automated count",
+      "ucum": "fL"
+    },
+    "NEUTROPHILS": {
+      "loinc": "751-8",
+      "loinc_display": "Neutrophils [#/volume] in Blood by Automated count",
+      "ucum": "10*3/uL"
+    },
+    "NON_HDL_CHOLESTEROL": {
+      "loinc": "43396-1",
+      "loinc_display": "Cholesterol non HDL [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "PHOSPHORUS": {
+      "loinc": "2777-1",
+      "loinc_display": "Phosphate [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "PLATELET_COUNT": {
+      "loinc": "777-3",
+      "loinc_display": "Platelets [#/volume] in Blood by Automated count",
+      "ucum": "10*3/uL"
+    },
+    "POTASSIUM": {
+      "loinc": "2823-3",
+      "loinc_display": "Potassium [Moles/volume] in Serum or Plasma",
+      "ucum": "mmol/L"
+    },
+    "PROLACTIN": {
+      "loinc": "2842-3",
+      "loinc_display": "Prolactin [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/mL"
+    },
+    "PSA_FREE": {
+      "loinc": "10886-0",
+      "loinc_display": "Prostate Specific Ag Free [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/mL"
+    },
+    "PSA_FREE_PERCENT": {
+      "loinc": "12841-3",
+      "loinc_display": "Prostate Specific Ag Free/Prostate specific Ag.total in Serum or Plasma",
+      "ucum": "%"
+    },
+    "PSA_TOTAL": {
+      "loinc": "2857-1",
+      "loinc_display": "Prostate specific Ag [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/mL"
+    },
+    "RBC": {
+      "loinc": "789-8",
+      "loinc_display": "Erythrocytes [#/volume] in Blood by Automated count",
+      "ucum": "10*6/uL"
+    },
+    "RDW": {
+      "loinc": "788-0",
+      "loinc_display": "Erythrocyte [DistWidth] in Blood by Automated count",
+      "ucum": "%"
+    },
+    "RF": {
+      "loinc": "11572-5",
+      "loinc_display": "Rheumatoid factor [Units/volume] in Serum or Plasma",
+      "ucum": "[IU]/mL"
+    },
+    "SHBG": {
+      "loinc": "13967-5",
+      "loinc_display": "Sex hormone binding globulin [Moles/volume] in Serum or Plasma",
+      "ucum": "nmol/L"
+    },
+    "SODIUM": {
+      "loinc": "2951-2",
+      "loinc_display": "Sodium [Moles/volume] in Serum or Plasma",
+      "ucum": "mmol/L"
+    },
+    "T3_FREE": {
+      "loinc": "3051-0",
+      "loinc_display": "Triiodothyronine (T3) Free [Mass/volume] in Serum or Plasma",
+      "ucum": "pg/mL"
+    },
+    "T4_FREE": {
+      "loinc": "3024-7",
+      "loinc_display": "Thyroxine (T4) free [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/dL"
+    },
+    "TC_HDL_RATIO": {
+      "loinc": "9830-1",
+      "loinc_display": "Cholesterol.total/Cholesterol in HDL [Mass Ratio] in Serum or Plasma",
+      "ucum": "{ratio}"
+    },
+    "TESTOSTERONE_FREE": {
+      "loinc": "2991-8",
+      "loinc_display": "Testosterone Free [Mass/volume] in Serum or Plasma",
+      "ucum": "pg/mL"
+    },
+    "TESTOSTERONE_TOTAL": {
+      "loinc": "2986-8",
+      "loinc_display": "Testosterone [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/dL"
+    },
+    "TG_AB": {
+      "loinc": "8098-6",
+      "loinc_display": "Thyroglobulin Ab [Units/volume] in Serum or Plasma",
+      "ucum": "[IU]/mL"
+    },
+    "TOTAL_BILIRUBIN": {
+      "loinc": "1975-2",
+      "loinc_display": "Bilirubin.total [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "TOTAL_CHOLESTEROL": {
+      "loinc": "2093-3",
+      "loinc_display": "Cholesterol [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "TOTAL_PROTEIN": {
+      "loinc": "2885-2",
+      "loinc_display": "Protein [Mass/volume] in Serum or Plasma",
+      "ucum": "g/dL"
+    },
+    "TPO_AB": {
+      "loinc": "8099-4",
+      "loinc_display": "Thyroperoxidase Ab [Units/volume] in Serum or Plasma",
+      "ucum": "[IU]/mL"
+    },
+    "TRIGLYCERIDES": {
+      "loinc": "2571-8",
+      "loinc_display": "Triglyceride [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "TSH": {
+      "loinc": "3016-3",
+      "loinc_display": "Thyrotropin [Units/volume] in Serum or Plasma",
+      "ucum": "m[IU]/L"
+    },
+    "UREA": {
+      "loinc": "3091-6",
+      "loinc_display": "Urea [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "URIC_ACID": {
+      "loinc": "3084-1",
+      "loinc_display": "Urate [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "URINE_AMORPHOUS_SEDIMENT": {
+      "loinc": "8246-1",
+      "loinc_display": "Amorphous sediment [Presence] in Urine sediment by Light microscopy",
+      "ucum": null
+    },
+    "URINE_APPEARANCE": {
+      "loinc": "5767-9",
+      "loinc_display": "Appearance of Urine",
+      "ucum": null
+    },
+    "URINE_BACTERIA": {
+      "loinc": "25145-4",
+      "loinc_display": "Bacteria [Presence] in Urine sediment by Light microscopy",
+      "ucum": null
+    },
+    "URINE_BILIRUBIN": {
+      "loinc": "5770-3",
+      "loinc_display": "Bilirubin.total [Presence] in Urine by Test strip",
+      "ucum": null
+    },
+    "URINE_CALCIUM_OXALATE_CRYSTALS": {
+      "loinc": "25148-8",
+      "loinc_display": "Calcium oxalate crystals [#/area] in Urine sediment by Microscopy high power field",
+      "ucum": "/[HPF]"
+    },
+    "URINE_COLOR": {
+      "loinc": "5778-6",
+      "loinc_display": "Color of Urine",
+      "ucum": null
+    },
+    "URINE_GLUCOSE": {
+      "loinc": "5792-7",
+      "loinc_display": "Glucose [Mass/volume] in Urine by Test strip",
+      "ucum": "mg/dL"
+    },
+    "URINE_HYALINE_CASTS": {
+      "loinc": "5796-8",
+      "loinc_display": "Hyaline casts [#/area] in Urine sediment by Microscopy low power field",
+      "ucum": "/[LPF]"
+    },
+    "URINE_KETONES": {
+      "loinc": "5797-6",
+      "loinc_display": "Ketones [Mass/volume] in Urine by Test strip",
+      "ucum": "mg/dL"
+    },
+    "URINE_LEUKOCYTE_ESTERASE": {
+      "loinc": "5799-2",
+      "loinc_display": "Leukocyte esterase [Presence] in Urine by Test strip",
+      "ucum": null
+    },
+    "URINE_MICROALBUMIN": {
+      "loinc": "14957-5",
+      "loinc_display": "Microalbumin [Mass/volume] in Urine",
+      "ucum": "mg/L"
+    },
+    "URINE_NITRITE": {
+      "loinc": "5802-4",
+      "loinc_display": "Nitrite [Presence] in Urine by Test strip",
+      "ucum": null
+    },
+    "URINE_OCCULT_BLOOD": {
+      "loinc": "5794-3",
+      "loinc_display": "Hemoglobin [Presence] in Urine by Test strip",
+      "ucum": null
+    },
+    "URINE_PH": {
+      "loinc": "5803-2",
+      "loinc_display": "pH of Urine by Test strip",
+      "ucum": "[pH]"
+    },
+    "URINE_PROTEIN": {
+      "loinc": "5804-0",
+      "loinc_display": "Protein [Mass/volume] in Urine by Test strip",
+      "ucum": "mg/dL"
+    },
+    "URINE_RBC": {
+      "loinc": "13945-1",
+      "loinc_display": "Erythrocytes [#/area] in Urine sediment by Microscopy high power field",
+      "ucum": "/[HPF]"
+    },
+    "URINE_SPECIFIC_GRAVITY": {
+      "loinc": "5811-5",
+      "loinc_display": "Specific gravity of Urine by Test strip",
+      "ucum": "{ratio}"
+    },
+    "URINE_SQUAMOUS_EPITHELIAL_CELLS": {
+      "loinc": "11277-1",
+      "loinc_display": "Epithelial cells.squamous [#/area] in Urine sediment by Microscopy high power field",
+      "ucum": "/[HPF]"
+    },
+    "URINE_WBC": {
+      "loinc": "5821-4",
+      "loinc_display": "Leukocytes [#/area] in Urine sediment by Microscopy high power field",
+      "ucum": "/[HPF]"
+    },
+    "VITAMIN_D": {
+      "loinc": "62292-8",
+      "loinc_display": "25-Hydroxyvitamin D3+25-Hydroxyvitamin D2 [Mass/volume] in Serum or Plasma",
+      "ucum": "ng/mL"
+    },
+    "WBC_COUNT": {
+      "loinc": "6690-2",
+      "loinc_display": "Leukocytes [#/volume] in Blood by Automated count",
+      "ucum": "10*3/uL"
+    },
+    "ZINC": {
+      "loinc": "5763-8",
+      "loinc_display": "Zinc [Mass/volume] in Serum or Plasma",
+      "ucum": "ug/dL"
+    }
+  },
+  "app_metrics": {
+    "glucose_reading": {
+      "loinc": "41653-7",
+      "loinc_display": "Glucose [Mass/volume] in Capillary blood by Glucometer",
+      "ucum": "mg/dL"
+    },
+    "cholesterol_total": {
+      "loinc": "2093-3",
+      "loinc_display": "Cholesterol [Mass/volume] in Serum or Plasma",
+      "ucum": "mg/dL"
+    },
+    "cortisol": {
+      "loinc": "2143-6",
+      "loinc_display": "Cortisol [Mass/volume] in Serum or Plasma",
+      "ucum": "ug/dL"
+    },
+    "bp_systolic": {
+      "loinc": "8480-6",
+      "loinc_display": "Systolic blood pressure",
+      "ucum": "mm[Hg]"
+    },
+    "bp_diastolic": {
+      "loinc": "8462-4",
+      "loinc_display": "Diastolic blood pressure",
+      "ucum": "mm[Hg]"
+    },
+    "pulse": {
+      "loinc": "8867-4",
+      "loinc_display": "Heart rate",
+      "ucum": "/min"
+    },
+    "resting_heart_rate": {
+      "loinc": "40443-4",
+      "loinc_display": "Heart rate --resting",
+      "ucum": "/min"
+    },
+    "hrv": {
+      "loinc": null,
+      "loinc_display": null,
+      "ucum": "ms",
+      "note": "Wearables report RMSSD; LOINC 80404-7 is SDNN (R-R interval standard deviation). Do not export with that code."
+    },
+    "body_temperature": {
+      "loinc": "8310-5",
+      "loinc_display": "Body temperature",
+      "ucum": "Cel"
+    },
+    "steps": {
+      "loinc": "41950-7",
+      "loinc_display": "Number of steps in 24 hour Measured",
+      "ucum": "{steps}"
+    },
+    "sleep_duration": {
+      "loinc": "93832-4",
+      "loinc_display": "Sleep duration",
+      "ucum": "min"
+    },
+    "active_energy": {
+      "loinc": "41981-2",
+      "loinc_display": "Calories burned",
+      "ucum": "kcal"
+    },
+    "body_weight": {
+      "loinc": "29463-7",
+      "loinc_display": "Body weight",
+      "ucum": "kg"
+    },
+    "body_height": {
+      "loinc": "8302-2",
+      "loinc_display": "Body height",
+      "ucum": "cm"
+    }
+  },
+  "units_to_ucum": {
+    "mg/dL": "mg/dL",
+    "mg/dl": "mg/dL",
+    "g/dL": "g/dL",
+    "g/dl": "g/dL",
+    "g/L": "g/L",
+    "mg/L": "mg/L",
+    "µg/dL": "ug/dL",
+    "ug/dL": "ug/dL",
+    "µg/L": "ug/L",
+    "ug/L": "ug/L",
+    "ng/mL": "ng/mL",
+    "ng/ml": "ng/mL",
+    "ng/dL": "ng/dL",
+    "pg/mL": "pg/mL",
+    "pg/ml": "pg/mL",
+    "mmol/L": "mmol/L",
+    "mmol/l": "mmol/L",
+    "µmol/L": "umol/L",
+    "umol/L": "umol/L",
+    "nmol/L": "nmol/L",
+    "pmol/L": "pmol/L",
+    "mEq/L": "meq/L",
+    "mEq/l": "meq/L",
+    "U/L": "U/L",
+    "UI/L": "U/L",
+    "IU/L": "[IU]/L",
+    "UI/mL": "[IU]/mL",
+    "IU/mL": "[IU]/mL",
+    "mUI/mL": "m[IU]/mL",
+    "mIU/mL": "m[IU]/mL",
+    "mUI/L": "m[IU]/L",
+    "mIU/L": "m[IU]/L",
+    "µUI/mL": "u[IU]/mL",
+    "uIU/mL": "u[IU]/mL",
+    "µIU/mL": "u[IU]/mL",
+    "%": "%",
+    "fL": "fL",
+    "fl": "fL",
+    "pg": "pg",
+    "x10^3/µL": "10*3/uL",
+    "x10^3/uL": "10*3/uL",
+    "x10^6/µL": "10*6/uL",
+    "x10^6/uL": "10*6/uL",
+    "x10^9/L": "10*9/L",
+    "x10^12/L": "10*12/L",
+    "mL/min/1.73m²": "mL/min/{1.73_m2}",
+    "mL/min/1.73m2": "mL/min/{1.73_m2}",
+    "ml/min/1.73m2": "mL/min/{1.73_m2}",
+    "mm/h": "mm/h",
+    "mmHg": "mm[Hg]",
+    "bpm": "/min",
+    "lpm": "/min",
+    "°C": "Cel",
+    "ºC": "Cel",
+    "ms": "ms",
+    "kg": "kg",
+    "cm": "cm",
+    "kcal": "kcal",
+    "min": "min",
+    "índice": "{index}",
+    "index": "{index}",
+    "título": "{titer}",
+    "titer": "{titer}",
+    "ratio": "{ratio}"
+  },
+  "pending": {
+    "OMEGA3_TOTAL": "Depende del método del laboratorio (suero vs. membrana eritrocitaria, absoluto vs. % de ácidos grasos). Asignar cuando se cierre el laboratorio.",
+    "OMEGA3_DHA": "Idem (candidatos: 35174-2 suero mol/vol; 75095-0 eritrocito).",
+    "OMEGA3_DPA": "Idem (candidato suero: 48371-9).",
+    "OMEGA3_EPA": "Idem (candidatos: 35173-4 suero; 75097-6 eritrocito).",
+    "OMEGA6_TOTAL": "Idem.",
+    "OMEGA6_ARACHIDONIC": "Idem (candidato eritrocito: 75110-7).",
+    "OMEGA6_LINOLEIC": "Idem.",
+    "OMEGA6_OMEGA3_RATIO": "Idem.",
+    "ANA_PATTERN": "LOINC tiene un código por patrón (moteado, homogéneo, centromérico...): se codifica el patrón concreto que informe el laboratorio.",
+    "URINE_YEAST": "Sin coincidencia clara en la búsqueda; revisar con el laboratorio.",
+    "BIOLOGICAL_AGE": "Cálculo propio de HomeTest (PhenoAge): no tiene código LOINC."
+  }
+}

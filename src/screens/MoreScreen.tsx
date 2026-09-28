@@ -44,6 +44,13 @@ const menuItems: MenuItem[] = [
     icon: 'medkit-outline',
   },
   {
+    id: 'sharing',
+    title: 'Sharing & privacy',
+    subtitle: 'Choose what each professional can see, and revoke it anytime',
+    iconFamily: 'ionicons',
+    icon: 'shield-checkmark-outline',
+  },
+  {
     id: 'track',
     title: 'Track your tests',
     subtitle: 'Shipping, logistics partner and result history',
@@ -73,13 +80,25 @@ const menuItems: MenuItem[] = [
   },
 ];
 
+// Solo para administradores de HomeTest
+const ADMIN_ITEM: MenuItem = {
+  id: 'admin',
+  title: 'Professionals review',
+  subtitle: 'Verify professionals and approve their rates (admin)',
+  iconFamily: 'ionicons',
+  icon: 'ribbon-outline',
+};
+
 export const MoreScreen = () => {
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const router = useRouter();
+  const items = isAdmin ? [...menuItems.slice(0, -1), ADMIN_ITEM, menuItems[menuItems.length - 1]] : menuItems;
 
   const handlePress = (id: string) => {
     if (id === 'settings') return logout();
     if (id === 'profile') return router.push('/profile');
+    if (id === 'sharing') return router.push('/sharing');
+    if (id === 'admin') return router.push('/admin');
     if (id === 'professionals') return router.push('/professionals');
     if (id === 'track') return router.push('/track-tests');
     if (id === 'catalog') return router.push('/catalogo');
@@ -92,7 +111,7 @@ export const MoreScreen = () => {
         <ScreenHeader title="More" />
 
         <View style={styles.list}>
-          {menuItems.map((item) => (
+          {items.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.card}
