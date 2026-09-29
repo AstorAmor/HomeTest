@@ -82,13 +82,13 @@ export const PlanIntroScreen = () => {
 
             <SafeAreaView style={styles.page} edges={['top', 'bottom']}>
               <View style={styles.top}>
-                <Text style={styles.eyebrow}>Here is your plan</Text>
                 <Text style={styles.counter}>
                   {i + 1} of {plan.length}
                 </Text>
               </View>
 
-              <View style={styles.bottom}>
+              <View style={{ flex: 1 }} />
+              <View>
                 <Text style={styles.number}>{i + 1}</Text>
                 <Text style={styles.title}>{item.title}</Text>
                 <Text style={styles.label}>Why</Text>
@@ -101,6 +101,8 @@ export const PlanIntroScreen = () => {
                   </View>
                 ))}
               </View>
+              {/* Más espacio arriba que abajo: el texto queda algo por debajo del centro. */}
+              <View style={{ flex: 0.6 }} />
             </SafeAreaView>
           </View>
         ))}
@@ -128,11 +130,9 @@ export const PlanIntroScreen = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0D0F1A' },
-  page: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 24, paddingBottom: 150 },
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16 },
-  eyebrow: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', letterSpacing: 0.5 },
+  page: { flex: 1, paddingHorizontal: 24, paddingBottom: 150 },
+  top: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingTop: 16 },
   counter: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  bottom: {},
   number: { color: Colors.accent, fontSize: 56, fontWeight: '900', lineHeight: 60 },
   title: { color: Colors.textPrimary, fontSize: 28, fontWeight: '800', marginBottom: 14 },
   label: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginTop: 8, marginBottom: 6 },

@@ -4,7 +4,7 @@ import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 export type Sex = 'female' | 'male' | 'other' | 'undisclosed';
 export type ActivityLevel = 'sedentary' | 'light' | 'active' | 'very_active';
 export type SleepHabit = 'lt6' | '6to7' | '7to8' | 'gt8';
-export type Smoking = 'never' | 'former' | 'current';
+export type Smoking = 'never' | 'former' | 'occasional' | 'current';
 export type Alcohol = 'never' | 'occasional' | 'weekly' | 'daily';
 export type GoalId =
   | 'general_health'

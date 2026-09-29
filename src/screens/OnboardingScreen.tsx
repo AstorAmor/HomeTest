@@ -298,6 +298,7 @@ export const OnboardingScreen = () => {
               options={[
                 { id: 'never', label: 'Never' },
                 { id: 'former', label: 'I used to' },
+                { id: 'occasional', label: 'Occasionally' },
                 { id: 'current', label: 'Yes' },
               ]}
             />

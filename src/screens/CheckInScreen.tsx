@@ -8,6 +8,7 @@ import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_OPTIONS, Mood } from '@/t
 import { checkInRepository, checkInSuggestions, suggestMoment, Suggestion } from '@/data/checkInRepository';
 
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
+type ScaleId = Exclude<QuestionId, 'mood'>;
 
 // Qué se pregunta según el momento del día (primera respuesta del check-in).
 const QUESTIONS: Record<DayMoment, QuestionId[]> = {
@@ -16,7 +17,7 @@ const QUESTIONS: Record<DayMoment, QuestionId[]> = {
   winding_down: ['dayRating', 'energy', 'mood'],
 };
 
-const QUESTION_TEXT: Record<Exclude<QuestionId, 'mood'>, { title: string; labels: string[] }> = {
+const QUESTION_TEXT: Record<ScaleId, { title: string; labels: string[] }> = {
   sleep: { title: 'How did you sleep?', labels: ['Terrible', 'Poor', 'OK', 'Good', 'Great'] },
   energy: { title: "How's your energy level?", labels: ['Drained', 'Low', 'OK', 'Good', 'Full'] },
   stress: { title: 'How stressed do you feel?', labels: ['Not at all', 'A little', 'Some', 'Quite', 'Very'] },
@@ -47,148 +48,125 @@ const LevelScale = ({ value, onChange, labels }: { value?: number; onChange: (v:
   </View>
 );
 
+// Todo el check-in en una sola pantalla: momento del día (preseleccionado el
+// sugerido), las preguntas de ese momento, el ánimo y una nota opcional.
 export const CheckInScreen = () => {
   const router = useRouter();
   const suggested = useMemo(() => suggestMoment(), []);
-  const [moment, setMoment] = useState<DayMoment | null>(null);
+  const [moment, setMoment] = useState<DayMoment>(suggested);
   const [answers, setAnswers] = useState<Partial<Record<QuestionId, number>>>({});
   const [mood, setMood] = useState<Mood>();
   const [note, setNote] = useState('');
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [stage, setStage] = useState<'moment' | 'questions' | 'note' | 'done'>('moment');
+  const [done, setDone] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [accepted, setAccepted] = useState<Set<string>>(new Set());
 
-  const questions = moment ? QUESTIONS[moment] : [];
-  const currentQuestion = questions[questionIndex];
-  // Momento + 3 preguntas + nota (todas las variantes tienen 3 preguntas)
-  const totalSteps = 1 + (questions.length || 3) + 1;
-  const stepNumber =
-    stage === 'moment' ? 1 : stage === 'questions' ? 2 + questionIndex : stage === 'note' ? totalSteps : totalSteps;
-
-  const chooseMoment = (m: DayMoment) => {
-    setMoment(m);
-    setQuestionIndex(0);
-    setStage('questions');
-  };
-
-  const goNext = () => {
-    if (questionIndex < questions.length - 1) setQuestionIndex(questionIndex + 1);
-    else setStage('note');
-  };
-
-  const goBack = () => {
-    if (stage === 'questions' && questionIndex > 0) setQuestionIndex(questionIndex - 1);
-    else if (stage === 'questions') setStage('moment');
-    else if (stage === 'note') setStage('questions');
-    else router.back();
-  };
+  const scales = QUESTIONS[moment].filter((q): q is ScaleId => q !== 'mood');
+  const complete = !!mood && scales.every((q) => answers[q] !== undefined);
 
   const save = async () => {
-    if (!moment) return;
+    if (!complete) return;
     const now = new Date().toISOString();
+    // Solo se guardan las respuestas de las preguntas del momento elegido.
+    const pick = (q: ScaleId) => (scales.includes(q) ? answers[q] : undefined);
     const entry: Omit<CheckInEntry, 'id' | 'createdAt'> = {
       fecha: now,
       moment,
-      sleep: answers.sleep,
-      energy: answers.energy,
-      stress: answers.stress,
-      dayRating: answers.dayRating,
+      sleep: pick('sleep'),
+      energy: pick('energy'),
+      stress: pick('stress'),
+      dayRating: pick('dayRating'),
       mood,
       note: note.trim() || undefined,
     };
     await checkInRepository.save({ ...entry, id: `checkin-${Date.now()}`, createdAt: now });
     setSuggestions(checkInSuggestions(entry));
-    setStage('done');
+    setDone(true);
   };
-
-  const answered =
-    currentQuestion === 'mood' ? !!mood : currentQuestion ? answers[currentQuestion] !== undefined : false;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        {stage !== 'done' ? (
-          <TouchableOpacity onPress={goBack} hitSlop={12}>
-            <Ionicons name={stage === 'moment' ? 'close' : 'chevron-back'} size={24} color={Colors.textPrimary} />
+        {!done ? (
+          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+            <Ionicons name="close" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 24 }} />
         )}
         <Text style={styles.topTitle}>Check in</Text>
-        <Text style={styles.stepCount}>{stage !== 'done' ? `${stepNumber}/${totalSteps}` : ''}</Text>
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        {stage === 'moment' && (
+        {!done && (
           <>
-            <Text style={styles.title}>What does your day look like?</Text>
-            <Text style={styles.subtitle}>We'll adapt the questions to the moment.</Text>
-            <View style={styles.optionList}>
-              {MOMENT_OPTIONS.map((o) => (
-                <TouchableOpacity key={o.id} style={styles.option} onPress={() => chooseMoment(o.id)} activeOpacity={0.85}>
-                  <View style={styles.optionIcon}>
-                    <Ionicons name={o.icon as any} size={22} color={Colors.accent} />
-                  </View>
-                  <Text style={styles.optionText}>{o.label}</Text>
-                  {o.id === suggested && <Text style={styles.suggestedTag}>Suggested</Text>}
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.hint}>
-              Suggested from the time of day. With a connected wearable we'll also use your wake-up time.
-            </Text>
-          </>
-        )}
-
-        {stage === 'questions' && currentQuestion && currentQuestion !== 'mood' && (
-          <>
-            <Text style={styles.title}>{QUESTION_TEXT[currentQuestion].title}</Text>
-            <LevelScale
-              value={answers[currentQuestion]}
-              labels={QUESTION_TEXT[currentQuestion].labels}
-              onChange={(v) => setAnswers((prev) => ({ ...prev, [currentQuestion]: v }))}
-            />
-          </>
-        )}
-
-        {stage === 'questions' && currentQuestion === 'mood' && (
-          <>
-            <Text style={styles.title}>How are you feeling?</Text>
-            <View style={styles.moodGrid}>
-              {MOOD_OPTIONS.map((m) => {
-                const selected = mood === m.id;
+            <Text style={styles.question}>What does your day look like?</Text>
+            <View style={styles.momentRow}>
+              {MOMENT_OPTIONS.map((o) => {
+                const selected = moment === o.id;
                 return (
                   <TouchableOpacity
-                    key={m.id}
-                    style={[styles.moodItem, selected && styles.moodItemSelected]}
-                    onPress={() => setMood(m.id)}
+                    key={o.id}
+                    style={[styles.momentChip, selected && styles.momentChipSelected]}
+                    onPress={() => setMoment(o.id)}
+                    activeOpacity={0.85}
                   >
-                    <Text style={styles.moodEmoji}>{m.emoji}</Text>
-                    <Text style={[styles.moodLabel, selected && { color: Colors.textPrimary }]}>{m.label}</Text>
+                    <Ionicons name={o.icon as any} size={18} color={selected ? Colors.accent : Colors.textSecondary} />
+                    <Text style={[styles.momentText, selected && { color: Colors.textPrimary }]} numberOfLines={2}>
+                      {o.label}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
+            {moment === suggested && <Text style={styles.hint}>Suggested from the time of day.</Text>}
+
+            {scales.map((q) => (
+              <View key={q} style={styles.block}>
+                <Text style={styles.question}>{QUESTION_TEXT[q].title}</Text>
+                <LevelScale
+                  value={answers[q]}
+                  labels={QUESTION_TEXT[q].labels}
+                  onChange={(v) => setAnswers((prev) => ({ ...prev, [q]: v }))}
+                />
+              </View>
+            ))}
+
+            <View style={styles.block}>
+              <Text style={styles.question}>How are you feeling?</Text>
+              <View style={styles.moodGrid}>
+                {MOOD_OPTIONS.map((m) => {
+                  const selected = mood === m.id;
+                  return (
+                    <TouchableOpacity
+                      key={m.id}
+                      style={[styles.moodItem, selected && styles.moodItemSelected]}
+                      onPress={() => setMood(m.id)}
+                    >
+                      <Text style={styles.moodEmoji}>{m.emoji}</Text>
+                      <Text style={[styles.moodLabel, selected && { color: Colors.textPrimary }]}>{m.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.block}>
+              <Text style={styles.question}>Anything else? (optional)</Text>
+              <TextInput
+                style={styles.noteInput}
+                placeholder="e.g. Big presentation today, slept badly…"
+                placeholderTextColor={Colors.textMuted}
+                value={note}
+                onChangeText={setNote}
+                multiline
+              />
+            </View>
           </>
         )}
 
-        {stage === 'note' && (
-          <>
-            <Text style={styles.title}>Anything else?</Text>
-            <Text style={styles.subtitle}>Optional. A few words about how you feel or what's going on.</Text>
-            <TextInput
-              style={styles.noteInput}
-              placeholder="e.g. Big presentation today, slept badly…"
-              placeholderTextColor={Colors.textMuted}
-              value={note}
-              onChangeText={setNote}
-              multiline
-            />
-          </>
-        )}
-
-        {stage === 'done' && (
+        {done && (
           <>
             <View style={styles.doneIcon}>
               <Ionicons name="checkmark" size={34} color={Colors.background} />
@@ -230,17 +208,11 @@ export const CheckInScreen = () => {
         )}
       </ScrollView>
 
-      {stage === 'questions' && (
-        <TouchableOpacity style={[styles.cta, !answered && styles.ctaDisabled]} onPress={goNext} disabled={!answered}>
-          <Text style={styles.ctaText}>Continue</Text>
+      {!done ? (
+        <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>
+          <Text style={styles.ctaText}>Save check-in</Text>
         </TouchableOpacity>
-      )}
-      {stage === 'note' && (
-        <TouchableOpacity style={styles.cta} onPress={save}>
-          <Text style={styles.ctaText}>{note.trim() ? 'Save check-in' : 'Skip and save'}</Text>
-        </TouchableOpacity>
-      )}
-      {stage === 'done' && (
+      ) : (
         <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
           <Text style={styles.ctaText}>Done</Text>
         </TouchableOpacity>
@@ -267,16 +239,44 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
   },
-  stepCount: {
-    color: Colors.textMuted,
-    fontSize: 13,
-    width: 24,
-    textAlign: 'right',
-  },
   body: {
     paddingHorizontal: 20,
-    paddingTop: 28,
+    paddingTop: 16,
     paddingBottom: 24,
+  },
+  block: {
+    marginTop: 28,
+  },
+  question: {
+    color: Colors.textPrimary,
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 12,
+  },
+  momentRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  momentChip: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+  },
+  momentChipSelected: {
+    borderColor: Colors.accent,
+    backgroundColor: 'rgba(62, 205, 184, 0.08)',
+  },
+  momentText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   title: {
     color: Colors.textPrimary,
@@ -294,20 +294,10 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 12,
     lineHeight: 17,
-    marginTop: 16,
+    marginTop: 8,
   },
   optionList: {
     gap: 12,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
   },
   optionIcon: {
     width: 42,
@@ -317,26 +307,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  optionText: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  suggestedTag: {
-    color: Colors.accent,
-    fontSize: 11,
-    fontWeight: '700',
-    borderWidth: 1,
-    borderColor: 'rgba(62, 205, 184, 0.4)',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
   levelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 36,
+    marginTop: 4,
   },
   levelItem: {
     alignItems: 'center',
@@ -367,7 +341,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginTop: 20,
   },
   moodItem: {
     width: '30.5%',
@@ -392,7 +365,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   noteInput: {
-    minHeight: 120,
+    minHeight: 90,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     backgroundColor: Colors.card,
