@@ -392,8 +392,8 @@ export const TodayScreen = () => {
         {/* Your plan */}
         <View style={styles.sectionHeaderRow}>
           <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>Your plan</Text>
-          <TouchableOpacity onPress={() => router.push('/plan-intro')} hitSlop={8}>
-            <Text style={styles.link}>See why</Text>
+          <TouchableOpacity onPress={() => router.push('/action-plan')} hitSlop={8}>
+            <Text style={styles.link}>Full view</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.planList}>

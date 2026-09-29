@@ -466,3 +466,5 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 - **"See full plan"** en Today → `/plans`: plan actual (abre `/report-plan`) y planes anteriores con la evolución
   de sus marcadores (el de marzo es dummy: `src/data/planHistory.ts`).
 - `ScreenHeader`: "atrás" sin historial vuelve al inicio (antes daba GO_BACK sin manejar).
+- **Full view** (Today → Your plan) abre `/action-plan`: el "Your action plan" del último informe (componente
+  `ActionPlanList`, compartido con `/report-plan`), con porqué, cómo, avisos y proyección de cada marcador.
