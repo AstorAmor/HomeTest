@@ -1,34 +1,35 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
-import { CATALOG, CATEGORY_LABEL, CatalogTest, formatPrice, MEMBERSHIP, TestCategory } from '@/data/testCatalog';
-
-const CATEGORY_ICON: Record<TestCategory, string> = {
-  membership: 'star',
-  blood: 'water',
-  hormonal: 'female',
-  preventive: 'shield-checkmark',
-  digestive: 'nutrition',
-  sexual: 'lock-closed',
-  consultation: 'videocam',
-};
+import { CATALOG, CATEGORY_LABEL, CatalogTest, formatPrice, PLANS, TestCategory, testIcon } from '@/data/testCatalog';
+import { listMyPaidProducts } from '@/data/orders';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const FILTERS: (TestCategory | 'all')[] = ['all', 'blood', 'hormonal', 'preventive', 'digestive', 'sexual', 'consultation'];
 
-// Tienda de tests. PROTOTIPO: no hay pagos; "Order" solo confirma la selección.
+// Tienda de tests. "Order"/"Join" lleva a /checkout (Stripe cuando esté configurado;
+// si no, pago simulado). Lo pagado se lee de la tabla orders (la escribe el webhook).
 export const StoreScreen = () => {
+  const router = useRouter();
   const [filter, setFilter] = useState<TestCategory | 'all'>('all');
   const [openId, setOpenId] = useState<string | null>(null);
-  const [ordered, setOrdered] = useState<Set<string>>(new Set());
+  const [paid, setPaid] = useState<Set<string>>(new Set());
+
+  useReloadOnFocus(
+    useCallback(async () => {
+      setPaid(new Set(await listMyPaidProducts()));
+    }, []),
+  );
 
   const list = filter === 'all' ? CATALOG : CATALOG.filter((t) => t.category === filter);
 
   const Card = ({ t, featured }: { t: CatalogTest; featured?: boolean }) => {
     const open = openId === t.id || featured;
-    const isOrdered = ordered.has(t.id);
+    const isPaid = paid.has(t.id);
     return (
       <TouchableOpacity
         style={[styles.card, featured && styles.featured]}
@@ -37,7 +38,7 @@ export const StoreScreen = () => {
       >
         <View style={styles.cardHeader}>
           <View style={[styles.catIcon, featured && { backgroundColor: 'rgba(240, 184, 77, 0.18)' }]}>
-            <Ionicons name={CATEGORY_ICON[t.category] as any} size={18} color={featured ? Colors.amber : Colors.accent} />
+            <MaterialCommunityIcons name={testIcon(t) as any} size={18} color={featured ? Colors.amber : Colors.accent} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{t.name}</Text>
@@ -47,7 +48,7 @@ export const StoreScreen = () => {
           </View>
           <View style={styles.priceBox}>
             <Text style={styles.price}>{formatPrice(t.price)}</Text>
-            {featured && <Text style={styles.priceUnit}>/year</Text>}
+            {t.perYear && <Text style={styles.priceUnit}>/year</Text>}
           </View>
         </View>
 
@@ -75,11 +76,14 @@ export const StoreScreen = () => {
               </View>
             )}
             <TouchableOpacity
-              style={[styles.order, isOrdered && styles.orderDone]}
-              onPress={() => setOrdered((prev) => new Set(prev).add(t.id))}
+              style={[styles.order, isPaid && styles.orderDone]}
+              disabled={isPaid && t.perYear}
+              onPress={() => router.push({ pathname: '/checkout', params: { id: t.id } })}
             >
-              <Text style={[styles.orderText, isOrdered && { color: Colors.accent }]}>
-                {isOrdered ? 'Requested · prototype, no payment taken' : `${featured ? 'Join' : 'Order'} · ${formatPrice(t.price)}`}
+              <Text style={[styles.orderText, isPaid && { color: Colors.accent }]}>
+                {isPaid && t.perYear
+                  ? 'Active · thanks for being a member'
+                  : `${t.perYear ? 'Join' : isPaid ? 'Order again' : 'Order'} · ${formatPrice(t.price)}`}
               </Text>
             </TouchableOpacity>
           </View>
@@ -93,7 +97,9 @@ export const StoreScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Tests & panels" showBack />
 
-        <Card t={MEMBERSHIP} featured />
+        {PLANS.map((p) => (
+          <Card key={p.id} t={p} featured />
+        ))}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
           {FILTERS.map((f) => (
@@ -110,7 +116,7 @@ export const StoreScreen = () => {
         ))}
 
         <Text style={styles.footnote}>
-          Prices include medical review of your results. Prototype: orders are not processed and no payment is taken.
+          Prices include medical review of your results. Card payments are processed by Stripe; until payments are switched on, checkout is simulated and nothing is charged.
         </Text>
       </ScrollView>
     </SafeAreaView>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
 import { Colors } from '@/constants/colors';
@@ -12,7 +12,9 @@ const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
 
 export const ProfessionalsScreen = () => {
   const router = useRouter();
-  const [role, setRole] = useState<ProfessionalRole | 'all'>('all');
+  const params = useLocalSearchParams<{ role?: string }>();
+  const initialRole = ROLES.includes(params.role as ProfessionalRole) ? (params.role as ProfessionalRole) : 'all';
+  const [role, setRole] = useState<ProfessionalRole | 'all'>(initialRole);
   const list = role === 'all' ? mockProfessionals : mockProfessionals.filter((p) => p.role === role);
 
   return (

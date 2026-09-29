@@ -2,7 +2,7 @@
 // prototipo. Nombres ficticios; tarifas alineadas con el business case v2
 // (médico ~€100, dietista ~€70, entrenador ~€60).
 
-export type ProfessionalRole = 'doctor' | 'dietitian' | 'trainer' | 'physio' | 'geneticist';
+export type ProfessionalRole = 'doctor' | 'midwife' | 'dietitian' | 'trainer' | 'physio' | 'geneticist';
 
 export interface Professional {
   id: string;
@@ -21,6 +21,7 @@ export interface Professional {
 
 export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string }> = {
   doctor: { label: 'Doctors', icon: 'medkit-outline' },
+  midwife: { label: 'Midwives', icon: 'flower-outline' },
   dietitian: { label: 'Dietitians', icon: 'nutrition-outline' },
   trainer: { label: 'Personal trainers', icon: 'barbell-outline' },
   physio: { label: 'Physiotherapists', icon: 'body-outline' },
@@ -111,6 +112,20 @@ export const mockProfessionals: Professional[] = [
     languages: ['Spanish', 'English'],
     nextAvailable: 'Thu 3 Oct, 12:00',
     online: false,
+  },
+  {
+    id: 'pro-8',
+    name: 'Marta Echeverría',
+    role: 'midwife',
+    specialty: 'Midwife · Cycle and fertility',
+    bio: 'Helps you read your cycle, hormones and fertility markers, and plan a pregnancy with confidence.',
+    pricePerSession: 60,
+    sessionMinutes: 30,
+    rating: 4.9,
+    reviews: 41,
+    languages: ['Spanish', 'English'],
+    nextAvailable: 'Fri 4 Oct, 17:00',
+    online: true,
   },
   {
     id: 'pro-7',

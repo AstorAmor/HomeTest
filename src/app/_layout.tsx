@@ -77,6 +77,7 @@ export default function Layout() {
             <Stack.Screen name="metric" />
             <Stack.Screen name="store" />
             <Stack.Screen name="schedule" />
+            <Stack.Screen name="checkout" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

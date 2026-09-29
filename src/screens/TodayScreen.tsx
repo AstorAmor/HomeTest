@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -97,12 +97,12 @@ const CheckInOrb = () => (
   </Svg>
 );
 
-const PLAN_ICON: Record<PlanItemKind, { family: 'mci' | 'ion'; name: string; color: string }> = {
-  strength: { family: 'mci', name: 'dumbbell', color: Colors.coral },
-  steps: { family: 'ion', name: 'footsteps', color: Colors.sky },
-  nutrition: { family: 'mci', name: 'rice', color: Colors.amber },
-  sleep: { family: 'ion', name: 'moon', color: Colors.violet },
-  mindfulness: { family: 'ion', name: 'leaf', color: Colors.accent },
+const PLAN_COLOR: Record<PlanItemKind, string> = {
+  strength: Colors.coral,
+  steps: Colors.sky,
+  nutrition: Colors.amber,
+  sleep: Colors.violet,
+  mindfulness: Colors.accent,
 };
 
 export const TodayScreen = () => {
@@ -387,7 +387,7 @@ export const TodayScreen = () => {
         </View>
         <View style={styles.planList}>
           {plan.map((item) => {
-            const icon = PLAN_ICON[item.kind];
+            const color = PLAN_COLOR[item.kind];
             const progress = planProgress(item.kind, item.target);
             return (
               <TouchableOpacity
@@ -398,12 +398,6 @@ export const TodayScreen = () => {
               >
                 <View style={styles.planThumb}>
                   <Image source={planImage(item.kind, profile?.sex)} style={StyleSheet.absoluteFill} contentFit="cover" />
-                  <View style={[StyleSheet.absoluteFill, styles.planThumbShade]} />
-                  {icon.family === 'mci' ? (
-                    <MaterialCommunityIcons name={icon.name as any} size={22} color="#FFFFFF" />
-                  ) : (
-                    <Ionicons name={icon.name as any} size={20} color="#FFFFFF" />
-                  )}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.planTitle}>{item.title}</Text>
@@ -411,7 +405,7 @@ export const TodayScreen = () => {
                     <View
                       style={[
                         styles.planBarFill,
-                        { width: `${Math.min(1, progress.value) * 100}%`, backgroundColor: icon.color },
+                        { width: `${Math.min(1, progress.value) * 100}%`, backgroundColor: color },
                       ]}
                     />
                   </View>
@@ -426,7 +420,7 @@ export const TodayScreen = () => {
                         : 'add-circle'
                   }
                   size={item.kind === 'steps' || item.kind === 'sleep' ? 18 : 26}
-                  color={item.kind === 'steps' || item.kind === 'sleep' ? Colors.textMuted : icon.color}
+                  color={item.kind === 'steps' || item.kind === 'sleep' ? Colors.textMuted : color}
                 />
               </TouchableOpacity>
             );
@@ -440,7 +434,7 @@ export const TodayScreen = () => {
 
         {/* Talk to a specialist */}
         <Text style={styles.sectionTitle}>Talk to a specialist</Text>
-        <SpecialistCarousel onSelect={() => router.push('/professionals')} />
+        <SpecialistCarousel onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -763,9 +757,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  planThumbShade: {
-    backgroundColor: 'rgba(13, 15, 26, 0.45)',
   },
   planIcon: {
     width: 46,

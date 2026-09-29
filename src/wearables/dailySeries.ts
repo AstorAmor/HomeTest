@@ -28,22 +28,33 @@ export function toDailySeries(records: DailyWearableRecord[]): DailySeries {
   return out;
 }
 
-// Hook para Today y My Data: lee lo sincronizado y, si todavía no hay nada,
-// usa el dummy de Huawei EN MEMORIA (sin guardarlo) para que la demo no salga vacía.
-export function useDailyWearables() {
+// Deja solo los últimos `days` días de cada métrica.
+const lastDays = (series: DailySeries, days: number): DailySeries => {
+  const out: DailySeries = {};
+  for (const metric of Object.keys(series) as WearableMetric[]) out[metric] = series[metric]!.slice(-days);
+  return out;
+};
+
+// Días de ejemplo generados cuando aún no hay datos: 6 meses, para las vistas 1M/6M.
+const SAMPLE_DAYS = 183;
+
+// Hook para Today, My Data y el detalle de métrica: lee lo sincronizado y, si todavía
+// no hay nada, usa el dummy de Huawei EN MEMORIA (sin guardarlo) para que la demo no
+// salga vacía. `days` recorta al periodo que enseña cada pantalla.
+export function useDailyWearables(days = 14) {
   const [series, setSeries] = useDeepState<DailySeries>({});
   const [isSample, setIsSample] = useDeepState(false);
 
   const load = useCallback(async () => {
     const stored = await wearableRepository.getRecords();
     if (stored.length > 0) {
-      setSeries(toDailySeries(stored));
+      setSeries(lastDays(toDailySeries(stored), days));
       setIsSample(false);
     } else {
-      setSeries(toDailySeries(generateHuaweiDummy(14)));
+      setSeries(lastDays(toDailySeries(generateHuaweiDummy(SAMPLE_DAYS)), days));
       setIsSample(true);
     }
-  }, [setSeries, setIsSample]);
+  }, [setSeries, setIsSample, days]);
 
   useReloadOnFocus(load);
 

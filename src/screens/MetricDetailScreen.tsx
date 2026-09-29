@@ -6,7 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
 import { Colors } from '@/constants/colors';
-import { formatSleep, shortDate, useDailyWearables } from '@/wearables/dailySeries';
+import { DailyPoint, formatSleep, shortDate, useDailyWearables } from '@/wearables/dailySeries';
 import { WearableMetric } from '@/wearables/types';
 
 // Información orientativa por métrica (texto de bienestar, no diagnóstico).
@@ -97,17 +97,36 @@ const INFO: Partial<Record<WearableMetric, MetricInfo>> = {
   },
 };
 
-const RANGES = [7, 14] as const;
+const RANGES = [
+  { id: '7D', days: 7 },
+  { id: '14D', days: 14 },
+  { id: '1M', days: 30 },
+  { id: '6M', days: 182 },
+] as const;
+
+// En 6M se agrupa por semanas (media de 7 días, contando desde el último día):
+// 180 puntos diarios no se leen en una gráfica de móvil.
+const weekly = (pts: DailyPoint[]): DailyPoint[] => {
+  const out: DailyPoint[] = [];
+  for (let end = pts.length; end > 0; end -= 7) {
+    const chunk = pts.slice(Math.max(0, end - 7), end);
+    out.unshift({ date: chunk[0].date, value: chunk.reduce((a, p) => a + p.value, 0) / chunk.length });
+  }
+  return out;
+};
 
 export const MetricDetailScreen = () => {
   const router = useRouter();
   const { kind } = useLocalSearchParams<{ kind: WearableMetric }>();
   const info = INFO[kind as WearableMetric] ?? INFO.steps!;
-  const { series, isSample } = useDailyWearables();
-  const [range, setRange] = useState<number>(14);
+  const { series, isSample } = useDailyWearables(182);
+  const [range, setRange] = useState<(typeof RANGES)[number]['id']>('14D');
+  const days = RANGES.find((r) => r.id === range)!.days;
+  const byWeek = days > 31;
 
   const all = series[kind as WearableMetric] ?? [];
-  const points = all.slice(-range);
+  const daily = all.slice(-days);
+  const points = byWeek ? weekly(daily) : daily;
   const values = points.map((p) => p.value);
   const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
   const latestValue = values[values.length - 1];
@@ -134,8 +153,8 @@ export const MetricDetailScreen = () => {
 
         <View style={styles.tabs}>
           {RANGES.map((r) => (
-            <TouchableOpacity key={r} style={[styles.tab, range === r && styles.tabOn]} onPress={() => setRange(r)}>
-              <Text style={[styles.tabText, range === r && styles.tabTextOn]}>{r} days</Text>
+            <TouchableOpacity key={r.id} style={[styles.tab, range === r.id && styles.tabOn]} onPress={() => setRange(r.id)}>
+              <Text style={[styles.tabText, range === r.id && styles.tabTextOn]}>{r.id}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -149,7 +168,9 @@ export const MetricDetailScreen = () => {
             formatY={chartScale}
             formatValue={info.format}
           />
-          <Text style={styles.tapHint}>Tap the chart to see each day</Text>
+          <Text style={styles.tapHint}>
+            {byWeek ? 'Weekly averages · tap the chart to see each week' : 'Tap the chart to see each day'}
+          </Text>
         </View>
 
         <View style={styles.stats}>
@@ -188,12 +209,16 @@ export const MetricDetailScreen = () => {
           <Text style={styles.disclaimer}>General information, not a diagnosis.</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Daily values</Text>
+        <Text style={styles.sectionTitle}>{byWeek ? 'Weekly averages' : 'Daily values'}</Text>
         <View style={styles.list}>
           {[...points].reverse().map((p, i) => (
             <View key={p.date} style={[styles.listRow, i > 0 && styles.listDivider]}>
               <Text style={styles.listDate}>
-                {new Date(`${p.date}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                {byWeek ? 'Week of ' : ''}
+                {new Date(`${p.date}T12:00:00`).toLocaleDateString(
+                  'en-GB',
+                  byWeek ? { day: 'numeric', month: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' },
+                )}
               </Text>
               <Text style={styles.listValue}>{info.format(p.value)}</Text>
             </View>

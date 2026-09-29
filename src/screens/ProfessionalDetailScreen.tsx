@@ -21,7 +21,7 @@ export const ProfessionalDetailScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={ROLE_INFO[pro.role].label.replace(/s$/, '')} showBack />
+        <ScreenHeader title={ROLE_INFO[pro.role].label.replace(/ves$/, 'fe').replace(/s$/, '')} showBack />
 
         <View style={styles.hero}>
           <Avatar nombre={pro.name.replace('Dr. ', '')} size={84} />

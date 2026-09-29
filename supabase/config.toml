@@ -427,3 +427,14 @@ verify_jwt = false
 
 [functions.predict-cycle]
 verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
+
+# Stripe y el navegador llaman a estas dos sin sesión de Supabase:
+# checkout-return solo redirige a la app; stripe-webhook verifica la firma de Stripe.
+[functions.checkout-return]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false

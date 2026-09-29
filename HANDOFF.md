@@ -405,3 +405,27 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
   referencia comprobada (MedlinePlus/NIH/DOI). Marcadas `CLINICAL_REVIEW_REQUIRED`: **un médico debe revisarlas**.
 - Médico de prueba: cuenta AstorMedico (astor.redes@gmail.com) verificada; el paciente comparte en More → Sharing & privacy.
 - Probar sin tocar cuentas reales: servidor `expo-web-demo` (puerto 8082, Supabase vacío → modo demo).
+
+## Pagos (Stripe) y ajustes de tienda — 2026-09-29
+
+- **Tienda**: plan Premium Health (700 €/año: todo lo de la membresía + analítica cada 3 meses + 5 videoconsultas).
+  Iconos por test (MaterialCommunityIcons): hormonas hexágono, ♀ solo tests exclusivamente femeninos, corazón en
+  cardiovascular/Lp(a), manzana en digestivo y celiaquía.
+- **Pago** `/checkout?id=`: la app solo envía el id; el importe lo pone el servidor
+  (`supabase/functions/_shared/products.ts`). `npm run check:prices` compara con `src/data/testCatalog.ts`:
+  **si cambias un precio, cámbialo en los dos sitios**.
+  - Edge Functions: `create-checkout` (crea sesión de Stripe Checkout + pedido `pending`), `checkout-return`
+    (redirige a la app; solo esquemas de la app/localhost) y `stripe-webhook` (verifica firma; único que marca `paid`,
+    comprueba importe; renovaciones anuales con `invoice.paid`, bajas con `customer.subscription.deleted`).
+  - Tabla `orders` (RLS: el usuario solo lee lo suyo; nadie escribe desde la app).
+  - **Sin `STRIPE_SECRET_KEY` la app muestra un pago SIMULADO** (no cobra ni crea pedido). Para activarlo:
+    1. Cuenta Stripe (modo test primero). 2. `npx supabase secrets set STRIPE_SECRET_KEY=sk_test_...`
+    3. En Stripe → Developers → Webhooks: endpoint
+       `https://jpqtposdxexdvdfeorzh.supabase.co/functions/v1/stripe-webhook`, eventos `checkout.session.completed`,
+       `checkout.session.async_payment_succeeded`, `checkout.session.expired`, `invoice.paid`,
+       `customer.subscription.deleted`. 4. `npx supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...`
+  - Pendiente antes de cobrar de verdad: sociedad constituida (Stripe va a nombre de la empresa), IVA/facturas
+    (servicios sanitarios pueden estar exentos: revisar con la gestoría), condiciones de venta y desistimiento.
+- **Especialistas**: el carrusel abre `/professionals?role=` con el filtro; nuevo rol `midwife` (también en BD).
+- **Métricas**: 7D / 14D / 1M / 6M (6M en medias semanales). Datos de ejemplo: 6 meses.
+- Check-in en una sola pantalla; "Occasionally" en tabaco; fotos del plan sin icono encima.
