@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +6,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
 import { Colors } from '@/constants/colors';
 import { buildSchedule, calendarLinks, SCHEDULE_COLORS, ScheduleEvent, ScheduleType } from '@/data/schedule';
+import { labAppointmentEvents } from '@/data/labAppointments';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const TYPE_LABEL: Record<ScheduleType, string> = {
   delivery: 'Kit delivery',
@@ -13,6 +15,7 @@ const TYPE_LABEL: Record<ScheduleType, string> = {
   pickup: 'Sample pickup',
   results: 'Results',
   membership: 'Membership',
+  lab: 'Lab appointment',
 };
 
 const formatDay = (key: string) =>
@@ -21,10 +24,24 @@ const formatDay = (key: string) =>
 // "Manage your schedule": vista mensual de pruebas, envíos y resultados, y botones
 // para añadir cada evento a Google Calendar, Outlook o Yahoo.
 export const ScheduleScreen = () => {
-  const events = useMemo(buildSchedule, []);
+  const base = useMemo(buildSchedule, []);
+  const [labEvents, setLabEvents] = useDeepState<ScheduleEvent[]>([]);
+  useReloadOnFocus(useCallback(async () => setLabEvents(await labAppointmentEvents()), [setLabEvents]));
+  const events = useMemo(
+    () => [...base, ...labEvents].sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? ''))),
+    [base, labEvents],
+  );
   const firstUpcoming = events.find((e) => e.date >= toDayKey(new Date()))?.date ?? toDayKey(new Date());
   const [month, setMonth] = useState(new Date(`${firstUpcoming}T12:00:00`));
   const [selected, setSelected] = useState<string | null>(firstUpcoming);
+  // Las citas de laboratorio llegan después (async): mientras el usuario no haya tocado
+  // el calendario, se salta al primer evento pendiente.
+  const touched = useRef(false);
+  useEffect(() => {
+    if (touched.current) return;
+    setMonth(new Date(`${firstUpcoming}T12:00:00`));
+    setSelected(firstUpcoming);
+  }, [firstUpcoming]);
 
   const marks = useMemo(() => {
     const out: Record<string, { color: string }[]> = {};
@@ -44,12 +61,16 @@ export const ScheduleScreen = () => {
           <MonthCalendar
             month={month}
             onMonthChange={(m) => {
+              touched.current = true;
               setMonth(m);
               setSelected(null);
             }}
             marks={marks}
             selectedDay={selected}
-            onDayPress={(d) => setSelected(selected === d ? null : d)}
+            onDayPress={(d) => {
+              touched.current = true;
+              setSelected(selected === d ? null : d);
+            }}
           />
           <View style={styles.legend}>
             {(Object.keys(TYPE_LABEL) as ScheduleType[])

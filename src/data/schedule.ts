@@ -4,7 +4,7 @@ import { currentReport } from './reportRepository';
 // Agenda del paciente: se deriva de los análisis programados (DUMMY hasta que haya
 // pedidos reales) + la próxima analítica de la membresía (6 meses tras la última).
 
-export type ScheduleType = 'delivery' | 'sample' | 'pickup' | 'results' | 'membership';
+export type ScheduleType = 'delivery' | 'sample' | 'pickup' | 'results' | 'membership' | 'lab';
 
 export const SCHEDULE_COLORS: Record<ScheduleType, string> = {
   delivery: '#5AB8F0',
@@ -12,6 +12,7 @@ export const SCHEDULE_COLORS: Record<ScheduleType, string> = {
   pickup: '#9B8CFF',
   results: '#F0B84D',
   membership: '#F7B6D2',
+  lab: '#FF8A65',
 };
 
 export interface ScheduleEvent {

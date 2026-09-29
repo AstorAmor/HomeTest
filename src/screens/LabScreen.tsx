@@ -120,6 +120,11 @@ export const LabScreen = () => {
           <Text style={styles.requestButtonText}>Request a new test</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/book-lab')}>
+          <Ionicons name="calendar-outline" size={20} color={Colors.accent} />
+          <Text style={styles.uploadButtonText}>Book an appointment</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
           <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
           <Text style={styles.uploadButtonText}>Upload lab report (test)</Text>
