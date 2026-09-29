@@ -64,19 +64,19 @@ export const ReportSummaryScreen = () => {
         <View style={styles.donutRow}>
           <DonutChart
             segments={[
-              { value: counts.enRango, color: Colors.accent },
-              { value: counts.needsReview, color: Colors.warning },
+              { value: counts.enRango, color: Colors.ok },
+              { value: counts.needsReview, color: Colors.attention },
             ]}
             centerLabel={`${counts.enRango}`}
             centerSubLabel={`of ${counts.total} in range`}
           />
           <View style={styles.legend}>
             <View style={styles.legendRow}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.accent }]} />
+              <View style={[styles.legendDot, { backgroundColor: Colors.ok }]} />
               <Text style={styles.legendText}>{counts.enRango} in range</Text>
             </View>
             <View style={styles.legendRow}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.warning }]} />
+              <View style={[styles.legendDot, { backgroundColor: Colors.attention }]} />
               <Text style={styles.legendText}>{counts.needsReview} need a look</Text>
             </View>
           </View>
@@ -94,8 +94,8 @@ export const ReportSummaryScreen = () => {
                   size={64}
                   strokeWidth={7}
                   segments={[
-                    { value: c.inRange, color: Colors.accent },
-                    { value: c.total - c.inRange, color: Colors.warning },
+                    { value: c.inRange, color: Colors.ok },
+                    { value: c.total - c.inRange, color: Colors.attention },
                   ]}
                   centerLabel={`${c.inRange}/${c.total}`}
                 />

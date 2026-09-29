@@ -453,3 +453,16 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 - Colores fijos: usar siempre `Colors.x` o `withAlpha(Colors.x, a)`; nunca hex/rgba sueltos.
   Pantallas inmersivas sobre foto/fondo oscuro (plan-intro, exercise) usan `OnDark` en ambos temas.
 - El mapa usa las teselas grises claras u oscuras de Esri según el tema.
+
+## Ajustes 2026-09-29 (tarde)
+
+- **My subscription** (`SubscriptionCard.tsx`) en el perfil y en Lab: plan activo (de `orders` pagados; en demo,
+  membresía de ejemplo), renovación, próxima analítica, "Upgrade to Premium" y "Compare plans".
+- **Tema**: selector Auto/Light/Dark también en More (arriba). Al cambiar se recarga la app **sin cerrar sesión**:
+  el modo demo elegido y el usuario demo se guardan en AsyncStorage (`AuthContext`), y tras recargar se vuelve a
+  la misma pantalla (`appearance.returnTo`, `?tab=` en las pestañas).
+- **Colores de marcadores**: tokens `Colors.ok` (en rango) y `Colors.attention` (a revisar). En claro: verde oliva y
+  naranja, para no confundirse con el terracota del acento.
+- **"See full plan"** en Today → `/plans`: plan actual (abre `/report-plan`) y planes anteriores con la evolución
+  de sus marcadores (el de marzo es dummy: `src/data/planHistory.ts`).
+- `ScreenHeader`: "atrás" sin historial vuelve al inicio (antes daba GO_BACK sin manejar).

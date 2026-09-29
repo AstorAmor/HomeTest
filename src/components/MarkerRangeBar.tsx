@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: 6,
     borderRadius: 3,
-    backgroundColor: withAlpha(Colors.accent, 0.3),
+    backgroundColor: withAlpha(Colors.ok, 0.3),
   },
   dot: {
     position: 'absolute',

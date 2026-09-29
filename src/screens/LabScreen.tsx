@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { DonutChart } from '@/components/DonutChart';
 import { MarkerRangeBar } from '@/components/MarkerRangeBar';
@@ -74,17 +75,17 @@ export const LabScreen = () => {
                     size={58}
                     strokeWidth={7}
                     segments={[
-                      { value: counts.inRange, color: Colors.accent },
-                      { value: counts.needsReview, color: Colors.warning },
+                      { value: counts.inRange, color: Colors.ok },
+                      { value: counts.needsReview, color: Colors.attention },
                     ]}
                   />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.resultName}>{title}</Text>
                     <Text style={styles.resultDate}>{formatReportDate(report.test_date)}</Text>
                     <Text style={styles.resultCounts}>
-                      <Text style={{ color: Colors.accent }}>{counts.inRange} in range</Text>
+                      <Text style={{ color: Colors.ok }}>{counts.inRange} in range</Text>
                       {'  ·  '}
-                      <Text style={{ color: Colors.warning }}>{counts.needsReview} need a look</Text>
+                      <Text style={{ color: Colors.attention }}>{counts.needsReview} need a look</Text>
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
@@ -113,6 +114,11 @@ export const LabScreen = () => {
               </TouchableOpacity>
             );
           })}
+        </View>
+
+        <Text style={styles.sectionTitle}>My subscription</Text>
+        <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
+          <SubscriptionCard />
         </View>
 
         <TouchableOpacity style={styles.requestButton} onPress={() => router.push('/store')}>

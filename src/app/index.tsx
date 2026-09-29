@@ -1,15 +1,23 @@
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { takeAppearanceReturnTo } from '@/theme/appearance';
 import { useAuth } from '@/context/AuthContext';
 import { LoginScreen } from '@/screens/LoginScreen';
 import { DevModeSelectScreen } from '@/screens/DevModeSelectScreen';
-import { Redirect } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/colors';
 
 export default function RootIndex() {
   const { isLoggedIn, demoMode, initializing, professional } = useAuth();
+  const params = useLocalSearchParams<{ tab?: string }>();
+  // Tras cambiar el tema la app se recarga: volver a donde estabas (undefined = leyendo)
+  const [returnTo, setReturnTo] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    takeAppearanceReturnTo().then(setReturnTo);
+  }, []);
 
   // Mientras se recupera la sesión guardada, pantalla vacía (evita un parpadeo del login)
-  if (initializing) {
+  if (initializing || returnTo === undefined) {
     return <View style={{ flex: 1, backgroundColor: Colors.background }} />;
   }
 
@@ -27,5 +35,9 @@ export default function RootIndex() {
     return <DevModeSelectScreen />;
   }
 
-  return <Redirect href="/(tabs)" />;
+  // Volver a una pestaña concreta ("/(tabs)?tab=3") o a otra pantalla guardada
+  const tabFromReturn = returnTo?.startsWith('/(tabs)') ? (returnTo.match(/[?&]tab=(\d)/)?.[1] ?? null) : null;
+  if (returnTo && !returnTo.startsWith('/(tabs)')) return <Redirect href={returnTo as any} />;
+  const tab = tabFromReturn ?? params.tab;
+  return <Redirect href={tab ? { pathname: '/(tabs)', params: { tab } } : '/(tabs)'} />;
 }

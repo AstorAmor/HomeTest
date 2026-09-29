@@ -40,8 +40,8 @@ export const LabReportScreen = () => {
             size={96}
             strokeWidth={11}
             segments={[
-              { value: counts.inRange, color: Colors.accent },
-              { value: counts.needsReview, color: Colors.warning },
+              { value: counts.inRange, color: Colors.ok },
+              { value: counts.needsReview, color: Colors.attention },
             ]}
             centerLabel={`${counts.inRange}`}
             centerSubLabel={`of ${counts.total}`}
@@ -50,9 +50,9 @@ export const LabReportScreen = () => {
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.date}>{formatReportDate(report.test_date)}</Text>
             <Text style={styles.counts}>
-              <Text style={{ color: Colors.accent }}>{counts.inRange} in range</Text>
+              <Text style={{ color: Colors.ok }}>{counts.inRange} in range</Text>
               {'  ·  '}
-              <Text style={{ color: Colors.warning }}>{counts.needsReview} need a look</Text>
+              <Text style={{ color: Colors.attention }}>{counts.needsReview} need a look</Text>
             </Text>
           </View>
         </View>
@@ -64,7 +64,7 @@ export const LabReportScreen = () => {
             <View key={section.category_id} style={styles.section}>
               <TouchableOpacity style={styles.sectionHeader} onPress={() => toggle(section.category_id)}>
                 <Text style={styles.sectionTitle}>{categoryLabel(section.category_id)}</Text>
-                <Text style={[styles.sectionCount, flagged > 0 && { color: Colors.warning }]}>
+                <Text style={[styles.sectionCount, flagged > 0 && { color: Colors.attention }]}>
                   {flagged > 0 ? `${flagged} to review` : `${section.markers.length} in range`}
                 </Text>
                 <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />

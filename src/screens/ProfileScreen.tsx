@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,15 +9,10 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { AppearancePref, getAppearancePref, setAppearancePref } from '@/theme/appearance';
+import { AppearanceSwitch } from '@/components/AppearanceSwitch';
+import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 
-
-const APPEARANCE_OPTIONS: { id: AppearancePref; label: string; icon: string }[] = [
-  { id: 'system', label: 'Automatic', icon: 'phone-portrait-outline' },
-  { id: 'light', label: 'Light', icon: 'sunny-outline' },
-  { id: 'dark', label: 'Dark', icon: 'moon-outline' },
-];
 
 const LABELS: Record<string, string> = {
   female: 'Female',
@@ -44,10 +39,6 @@ export const ProfileScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
-  const [appearance, setAppearance] = useState<AppearancePref>('system');
-  useEffect(() => {
-    getAppearancePref().then(setAppearance);
-  }, []);
 
   const load = useCallback(() => {
     profileRepository.get().then(setProfile);
@@ -94,10 +85,11 @@ export const ProfileScreen = () => {
           <UserAvatar size={84} />
           <Text style={styles.name}>{user?.nombre ?? mockPatient.nombre}</Text>
           <Text style={styles.email}>{user?.email ?? mockPatient.email}</Text>
-          <View style={styles.memberPill}>
-            <Ionicons name="shield-checkmark" size={14} color={Colors.accent} />
-            <Text style={styles.memberText}>Annual membership · 2 tests / year</Text>
-          </View>
+        </View>
+
+        <Text style={[styles.sectionTitle, styles.spacedTop]}>My subscription</Text>
+        <View style={{ marginHorizontal: 20, marginBottom: 22 }}>
+          <SubscriptionCard />
         </View>
 
         <View style={styles.sectionHeader}>
@@ -130,23 +122,10 @@ export const ProfileScreen = () => {
         </View>
 
         <Text style={[styles.sectionTitle, styles.spaced]}>Appearance</Text>
-        <View style={styles.segment}>
-          {APPEARANCE_OPTIONS.map((o) => (
-            <TouchableOpacity
-              key={o.id}
-              style={[styles.segmentItem, appearance === o.id && styles.segmentOn]}
-              onPress={() => {
-                if (o.id === appearance) return;
-                setAppearance(o.id);
-                setAppearancePref(o.id);
-              }}
-            >
-              <Ionicons name={o.icon as any} size={16} color={appearance === o.id ? Colors.background : Colors.textSecondary} />
-              <Text style={[styles.segmentText, appearance === o.id && { color: Colors.background }]}>{o.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={{ marginHorizontal: 20 }}>
+          <AppearanceSwitch returnTo="/profile" />
         </View>
-        <Text style={styles.segmentHint}>The app restarts to apply the change.</Text>
+        <Text style={styles.segmentHint}>The app reloads to apply it. You stay signed in.</Text>
 
       </ScrollView>
     </SafeAreaView>
@@ -159,17 +138,6 @@ const styles = StyleSheet.create({
   hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 24 },
   name: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginTop: 12 },
   email: { color: Colors.textSecondary, fontSize: 14, marginTop: 2 },
-  memberPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.accentSoft,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginTop: 12,
-  },
-  memberText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -179,6 +147,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },
   spaced: { paddingHorizontal: 20, marginTop: 22, marginBottom: 10 },
+  spacedTop: { paddingHorizontal: 20, marginBottom: 10 },
   edit: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   card: {
     backgroundColor: Colors.card,
@@ -195,18 +164,6 @@ const styles = StyleSheet.create({
   rowValueWrap: { flexShrink: 1, textAlign: 'right', marginLeft: 16 },
   rowEmpty: { color: Colors.textMuted, fontSize: 13, fontWeight: '400' },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
-  segment: {
-    flexDirection: 'row',
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 4,
-    marginHorizontal: 20,
-  },
-  segmentItem: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 10 },
-  segmentOn: { backgroundColor: Colors.accent },
-  segmentText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
   segmentHint: { color: Colors.textMuted, fontSize: 12, marginHorizontal: 20, marginTop: 8 },
   goalChip: {
     flexDirection: 'row',

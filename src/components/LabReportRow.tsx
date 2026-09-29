@@ -11,7 +11,7 @@ import { UnitLabel } from './UnitLabel';
 const statusColor = (status: ReturnType<typeof getRangeStatus>) => {
   switch (status) {
     case 'en_rango':
-      return Colors.accent;
+      return Colors.ok;
     case 'sin_rango':
       return Colors.textSecondary;
     default:

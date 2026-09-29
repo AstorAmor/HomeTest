@@ -3,8 +3,8 @@ import { Colors } from '@/constants/colors';
 import { EscalationTier, MarkerFlag } from '@/types/report';
 
 export const TIER_COLOR: Record<EscalationTier, string> = {
-  verde: Colors.accent,
-  ambar: Colors.warning,
+  verde: Colors.ok,
+  ambar: Colors.attention,
   rojo: Colors.danger,
   critico: Colors.danger,
 };

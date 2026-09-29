@@ -5,6 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { UserAvatar } from '@/components/UserAvatar';
+import { AppearanceSwitch } from '@/components/AppearanceSwitch';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 
@@ -109,6 +110,11 @@ export const MoreScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="More" />
 
+        <View style={styles.appearance}>
+          <Text style={styles.appearanceLabel}>Appearance</Text>
+          <AppearanceSwitch returnTo="/(tabs)?tab=3" />
+        </View>
+
         <View style={styles.list}>
           {items.map((item) => (
             <TouchableOpacity
@@ -148,6 +154,8 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
+  appearance: { paddingHorizontal: 20, marginBottom: 16, gap: 8 },
+  appearanceLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
   list: {
     paddingHorizontal: 20,
     gap: 12,

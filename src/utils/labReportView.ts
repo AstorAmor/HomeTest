@@ -33,7 +33,7 @@ export function rangePosition(m: ReportMarker): number | null {
 }
 
 export const flagColor = (m: ReportMarker) =>
-  m.flag === 'en_rango' ? Colors.accent : m.flag.startsWith('limite') ? Colors.warning : Colors.danger;
+  m.flag === 'en_rango' ? Colors.ok : m.flag.startsWith('limite') ? Colors.attention : Colors.danger;
 
 export const formatReportDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });

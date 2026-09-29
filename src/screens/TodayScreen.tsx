@@ -241,6 +241,17 @@ export const TodayScreen = () => {
           </View>
         </View>
 
+        <TouchableOpacity style={styles.fullPlan} onPress={() => router.push('/plans')} activeOpacity={0.85}>
+          <View style={styles.fullPlanIcon}>
+            <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fullPlanTitle}>See full plan</Text>
+            <Text style={styles.fullPlanSub}>Your latest plan with target ranges, and earlier ones</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Check-in */}
         <TouchableOpacity style={styles.checkInCard} onPress={() => router.push('/check-in')} activeOpacity={0.85}>
           <CheckInOrb />
@@ -497,6 +508,28 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
+  fullPlan: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  fullPlanIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullPlanTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  fullPlanSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   reportBanner: {
     flexDirection: 'row',
     alignItems: 'center',

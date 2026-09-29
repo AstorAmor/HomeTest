@@ -79,6 +79,7 @@ export default function Layout() {
             <Stack.Screen name="schedule" />
             <Stack.Screen name="checkout" />
             <Stack.Screen name="book-lab" />
+            <Stack.Screen name="plans" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

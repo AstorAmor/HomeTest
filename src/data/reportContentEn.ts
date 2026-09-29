@@ -5,6 +5,12 @@
 
 export const MARKER_DISPLAY_NAMES_EN: Record<string, string> = {
   ferritin: 'Ferritin',
+  hs_crp: 'hs-CRP (inflammation)',
+  uric_acid: 'Uric acid',
+  ast: 'AST (liver enzyme)',
+  alt: 'ALT (liver enzyme)',
+  hdl: 'HDL ("good" cholesterol)',
+  glucose: 'Fasting glucose',
   homa_ir: 'HOMA-IR (insulin resistance)',
   ldl: 'LDL ("bad" cholesterol)',
   total_cholesterol: 'Total Cholesterol',

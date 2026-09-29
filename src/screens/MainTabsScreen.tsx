@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TodayScreen } from './TodayScreen';
@@ -10,7 +11,9 @@ import { Colors } from '@/constants/colors';
 
 export const MainTabsScreen = () => {
   const pagerRef = useRef<PagerView>(null);
-  const [currentPage, setCurrentPage] = useState(0);
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const initialTab = Math.min(3, Math.max(0, Number(tab) || 0));
+  const [currentPage, setCurrentPage] = useState(initialTab);
 
   const handleTabPress = (index: number) => {
     pagerRef.current?.setPage(index);
@@ -21,7 +24,7 @@ export const MainTabsScreen = () => {
       <PagerView
         ref={pagerRef}
         style={styles.pager}
-        initialPage={0}
+        initialPage={initialTab}
         onPageSelected={(event) => setCurrentPage(event.nativeEvent.position)}
       >
         <View key="today" style={styles.page}>

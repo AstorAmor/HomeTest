@@ -23,6 +23,10 @@ const DARK = {
 
   warning: '#F0B84D',
 
+  // Estado de marcadores: en rango / a revisar (no reutilizar el acento de marca)
+  ok: '#3ECDB8',
+  attention: '#F0B84D',
+
   tabBarBackground: '#1A1D2A',
   tabBarBorder: '#262A3A',
   tabBarActive: '#3ECDB8',
@@ -65,6 +69,11 @@ const LIGHT: typeof DARK = {
   dangerSoft: 'rgba(192, 57, 43, 0.12)',
 
   warning: '#B7791F',
+
+  // En el tema claro el acento es terracota: "en rango" en verde y "a revisar" en
+  // ámbar anaranjado para que no se confundan con él.
+  ok: '#4F7A34',
+  attention: '#D97706',
 
   tabBarBackground: '#FFFFFF',
   tabBarBorder: '#EADBC8',

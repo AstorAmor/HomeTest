@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useRef, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Session } from '@supabase/supabase-js';
 import { AuthUser } from '@/types';
 import { mockPatient } from '@/data/mockData';
@@ -54,10 +55,37 @@ const userFromSession = (session: Session | null): AuthUser | null => {
   };
 };
 
+const DEMO_MODE_KEY = 'auth.demoMode.v1';
+const DEMO_USER_KEY = 'auth.demoUser.v1';
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [demoMode, setDemoMode] = useState<DemoMode | null>(null);
-  const [initializing, setInitializing] = useState(isSupabaseConfigured);
+  const [demoMode, setDemoModeState] = useState<DemoMode | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(isSupabaseConfigured);
+  // El modo elegido en el selector "developer" (y, sin Supabase, el usuario demo) se
+  // guardan en el móvil: recargar la app (p. ej. al cambiar el tema) no te saca.
+  const [restoring, setRestoring] = useState(true);
+  const initializing = sessionLoading || restoring;
+
+  const setDemoMode = (mode: DemoMode | null) => {
+    setDemoModeState(mode);
+    (mode ? AsyncStorage.setItem(DEMO_MODE_KEY, mode) : AsyncStorage.removeItem(DEMO_MODE_KEY)).catch(() => undefined);
+  };
+
+  useEffect(() => {
+    Promise.all([AsyncStorage.getItem(DEMO_MODE_KEY), AsyncStorage.getItem(DEMO_USER_KEY)])
+      .then(([mode, demoUser]) => {
+        if (mode) setDemoModeState(mode as DemoMode);
+        if (!supabase && demoUser) setUser(JSON.parse(demoUser) as AuthUser);
+      })
+      .catch(() => undefined)
+      .finally(() => setRestoring(false));
+  }, []);
+
+  const setDemoUser = (u: AuthUser | null) => {
+    setUser(u);
+    (u ? AsyncStorage.setItem(DEMO_USER_KEY, JSON.stringify(u)) : AsyncStorage.removeItem(DEMO_USER_KEY)).catch(() => undefined);
+  };
   const [professional, setProfessional] = useState<ProfessionalAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   // Durante el alta de un profesional, la ficha aún no existe: no consultarla en paralelo
@@ -87,7 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     supabase.auth.getSession().then(async ({ data }) => {
       await apply(data.session);
-      setInitializing(false);
+      setSessionLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       // Fuera del callback: supabase-js no admite otras llamadas suyas dentro de él
@@ -103,7 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     // Modo demo: aceptar cualquier email/password
-    setUser({ id: mockPatient.id, email, nombre: mockPatient.nombre });
+    setDemoUser({ id: mockPatient.id, email, nombre: mockPatient.nombre });
   };
 
   const signup = async (
@@ -134,7 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return;
     }
-    setUser({ id: mockPatient.id, email, nombre });
+    setDemoUser({ id: mockPatient.id, email, nombre });
   };
 
   const logout = () => {
@@ -143,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       supabase.auth.signOut();
       return;
     }
-    setUser(null);
+    setDemoUser(null);
   };
 
   return (

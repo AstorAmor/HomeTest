@@ -7,6 +7,7 @@ import { applyTheme, ThemeName } from '@/constants/colors';
 export type AppearancePref = 'system' | 'light' | 'dark';
 
 const KEY = 'appearance.v1';
+const RETURN_KEY = 'appearance.returnTo.v1';
 
 export const resolveTheme = (pref: AppearancePref): ThemeName =>
   pref === 'system' ? (Appearance.getColorScheme() === 'light' ? 'light' : 'dark') : pref;
@@ -28,13 +29,27 @@ export async function loadAppearance(): Promise<ThemeName> {
 }
 
 // Guarda la preferencia y recarga la app para que todas las pantallas la usen.
-export async function setAppearancePref(pref: AppearancePref) {
+// `returnTo` es la ruta a la que volver tras recargar (sin perder la sesión).
+export async function setAppearancePref(pref: AppearancePref, returnTo?: string) {
   await AsyncStorage.setItem(KEY, pref);
+  // En web la recarga ya mantiene la URL; en el móvil se vuelve a la ruta guardada.
+  if (returnTo && Platform.OS !== 'web') await AsyncStorage.setItem(RETURN_KEY, returnTo);
   if (Platform.OS === 'web') {
     window.location.reload();
   } else if (__DEV__) {
     DevSettings.reload();
   } else {
     await Updates.reloadAsync();
+  }
+}
+
+// Ruta pendiente tras un cambio de tema (se consume una sola vez).
+export async function takeAppearanceReturnTo(): Promise<string | null> {
+  try {
+    const v = await AsyncStorage.getItem(RETURN_KEY);
+    if (v) await AsyncStorage.removeItem(RETURN_KEY);
+    return v;
+  } catch {
+    return null;
   }
 }
