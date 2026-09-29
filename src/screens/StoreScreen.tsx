@@ -11,7 +11,7 @@ import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const FILTERS: (TestCategory | 'all')[] = ['all', 'blood', 'hormonal', 'preventive', 'digestive', 'sexual', 'consultation'];
 
-// Tienda de tests. "Order"/"Join" lleva a /checkout (Stripe cuando esté configurado;
+// Tienda de tests. "Order"/"Join" lleva a /checkout (Revolut cuando esté configurado;
 // si no, pago simulado). Lo pagado se lee de la tabla orders (la escribe el webhook).
 export const StoreScreen = () => {
   const router = useRouter();
@@ -116,7 +116,7 @@ export const StoreScreen = () => {
         ))}
 
         <Text style={styles.footnote}>
-          Prices include medical review of your results. Card payments are processed by Stripe; until payments are switched on, checkout is simulated and nothing is charged.
+          Prices include medical review of your results. Payments are processed by Revolut; until they are switched on, checkout is simulated and nothing is charged.
         </Text>
       </ScrollView>
     </SafeAreaView>

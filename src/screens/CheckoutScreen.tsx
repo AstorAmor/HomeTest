@@ -14,28 +14,28 @@ type Stage = 'review' | 'starting' | 'simulated' | 'confirming' | 'paid' | 'pend
 
 const findProduct = (id?: string): CatalogTest | undefined => [...PLANS, ...CATALOG].find((t) => t.id === id);
 
-// Pago de un test o plan. Con Stripe configurado abre su página de pago segura (la app
-// nunca ve la tarjeta) y espera a que el webhook confirme el cobro. Sin Stripe (o en
+// Pago de un test o plan. Con Revolut configurado abre su página de pago segura (la app
+// nunca ve la tarjeta) y espera a que el webhook confirme el cobro. Sin Revolut (o en
 // modo demo) muestra un pago SIMULADO que no cobra nada.
 export const CheckoutScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string; status?: string; session_id?: string }>();
+  const params = useLocalSearchParams<{ id?: string; status?: string; order_id?: string }>();
   const product = findProduct(params.id);
   const [stage, setStage] = useState<Stage>('review');
   const [message, setMessage] = useState('');
   const [simulated, setSimulated] = useState(false);
 
-  // Vuelta desde Stripe abriendo la app por enlace (si el navegador no la capturó).
+  // Vuelta desde Revolut abriendo la app por enlace (si el navegador no la capturó).
   useEffect(() => {
     if (params.status === 'cancelled') setStage('cancelled');
-    else if (params.status === 'success' && params.session_id) confirm(params.session_id);
+    else if (params.status === 'success' && params.order_id) confirm(params.order_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.status, params.session_id]);
+  }, [params.status, params.order_id]);
 
-  const confirm = async (sessionId: string) => {
+  const confirm = async (orderId: string) => {
     setStage('confirming');
     for (let i = 0; i < 8; i++) {
-      if ((await getOrderStatus(sessionId)) === 'paid') return setStage('paid');
+      if ((await getOrderStatus(orderId)) === 'paid') return setStage('paid');
       await new Promise((r) => setTimeout(r, 1500));
     }
     setStage('pending');
@@ -53,8 +53,8 @@ export const CheckoutScreen = () => {
       const result = await WebBrowser.openAuthSessionAsync(start.url, start.returnUrl);
       if (result.type !== 'success') return setStage('review');
       const { queryParams } = Linking.parse(result.url);
-      if (queryParams?.status === 'success' && typeof queryParams.session_id === 'string') {
-        await confirm(queryParams.session_id);
+      if (queryParams?.status === 'success' && typeof queryParams.order_id === 'string') {
+        await confirm(queryParams.order_id);
       } else setStage('cancelled');
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Something went wrong');
@@ -110,7 +110,7 @@ export const CheckoutScreen = () => {
           <View style={styles.secure}>
             <Ionicons name="lock-closed" size={14} color={Colors.textSecondary} />
             <Text style={styles.small}>
-              You'll pay on Stripe's secure page. HomeTest never sees or stores your card details.
+              You'll pay on Revolut's secure page (card, Apple Pay, Google Pay or Revolut Pay). HomeTest never sees or stores your card details.
             </Text>
           </View>
         ) : null}
@@ -119,7 +119,7 @@ export const CheckoutScreen = () => {
           <View style={[styles.card, styles.simCard]}>
             <Text style={styles.simTitle}>Payment simulation</Text>
             <Text style={styles.body}>
-              Payments aren't switched on yet, so this is where Stripe's secure payment page will open. Nothing will be
+              Payments aren't switched on yet, so this is where Revolut's secure payment page will open. Nothing will be
               charged.
             </Text>
             <TouchableOpacity style={styles.cta} onPress={() => setStage('paid')}>

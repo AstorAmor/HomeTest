@@ -1,4 +1,4 @@
-// Página de vuelta de Stripe Checkout: redirige a la app (Stripe exige una URL web).
+// Página de vuelta del pago (Revolut): redirige a la app (el proveedor exige una URL web).
 // No registra nada: el pago solo cuenta cuando llega el webhook firmado.
 import { isAppReturnUrl } from '../_shared/payments.ts';
 
@@ -10,8 +10,8 @@ Deno.serve((req) => {
   const status = url.searchParams.get('status') === 'success' ? 'success' : 'cancelled';
   const target = new URL(to);
   target.searchParams.set('status', status);
-  const sessionId = url.searchParams.get('session_id');
-  if (sessionId) target.searchParams.set('session_id', sessionId);
+  const orderId = url.searchParams.get('order_id');
+  if (orderId && /^[0-9a-f-]{36}$/i.test(orderId)) target.searchParams.set('order_id', orderId);
 
   return new Response(null, { status: 302, headers: { Location: target.toString() } });
 });

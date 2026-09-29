@@ -1,12 +1,12 @@
-// Crea una sesión de Stripe Checkout para un producto del catálogo y deja el pedido
-// en 'pending'. El importe sale de _shared/products.ts, nunca de la app.
-// Sin STRIPE_SECRET_KEY devuelve { configured: false } y la app simula el pago.
+// Crea un pedido en Revolut (página de pago alojada) para un producto del catálogo y
+// lo deja en 'pending' en orders. El importe sale de _shared/products.ts, nunca de la app.
+// Sin REVOLUT_SECRET_KEY devuelve { configured: false } y la app simula el pago.
 import { json, serve } from '../_shared/http.ts';
 import { PRODUCTS } from '../_shared/products.ts';
-import { adminClient, isAppReturnUrl, stripe, stripeConfigured } from '../_shared/payments.ts';
+import { adminClient, createRevolutOrder, isAppReturnUrl, revolutConfigured } from '../_shared/payments.ts';
 
 serve(async (body, userId) => {
-  if (!stripeConfigured()) return json({ configured: false });
+  if (!revolutConfigured()) return json({ configured: false });
 
   const productId = String(body?.productId ?? '');
   const product = PRODUCTS[productId];
@@ -15,39 +15,32 @@ serve(async (body, userId) => {
   const returnUrl = String(body?.returnUrl ?? '');
   if (!isAppReturnUrl(returnUrl)) return json({ error: 'Invalid return URL' }, 400);
 
-  const back = `${Deno.env.get('SUPABASE_URL')}/functions/v1/checkout-return?to=${encodeURIComponent(returnUrl)}`;
+  const db = adminClient();
   const recurring = !!product.interval;
-  const metadata = { user_id: userId, product_id: productId };
+  const { data: order, error } = await db
+    .from('orders')
+    .insert({ user_id: userId, product_id: productId, amount_cents: product.amountCents, recurring, provider: 'revolut' })
+    .select('id')
+    .single();
+  if (error || !order) return json({ error: error?.message ?? 'Could not create order' }, 500);
 
-  const session = await stripe().checkout.sessions.create({
-    mode: recurring ? 'subscription' : 'payment',
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: 'eur',
-          unit_amount: product.amountCents,
-          product_data: { name: product.name },
-          ...(recurring ? { recurring: { interval: product.interval! } } : {}),
-        },
-      },
-    ],
-    client_reference_id: userId,
-    metadata,
-    ...(recurring ? { subscription_data: { metadata } } : {}),
-    // {CHECKOUT_SESSION_ID} lo sustituye Stripe: no debe ir codificado.
-    success_url: `${back}&status=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${back}&status=cancelled`,
-  });
-
-  const { error } = await adminClient().from('orders').insert({
-    user_id: userId,
-    product_id: productId,
-    amount_cents: product.amountCents,
-    recurring,
-    stripe_session_id: session.id,
-  });
-  if (error) return json({ error: error.message }, 500);
-
-  return json({ configured: true, url: session.url, sessionId: session.id });
+  // Planes anuales: de momento pago único por año (el webhook fija current_period_end a +1 año).
+  // Cuando haga falta renovación automática, pasar a la Subscriptions API de Revolut.
+  const back = `${Deno.env.get('SUPABASE_URL')}/functions/v1/checkout-return?to=${encodeURIComponent(returnUrl)}`;
+  try {
+    const rev = await createRevolutOrder({
+      amount: product.amountCents,
+      currency: 'EUR',
+      description: recurring ? `${product.name} (1 year)` : product.name,
+      redirect_url: `${back}&status=success&order_id=${order.id}`,
+      merchant_order_data: { reference: order.id },
+      metadata: { user_id: userId, product_id: productId },
+      expire_pending_after: 'PT1H',
+    });
+    await db.from('orders').update({ provider_order_id: rev.id }).eq('id', order.id);
+    return json({ configured: true, url: rev.checkout_url, orderId: order.id });
+  } catch (e) {
+    await db.from('orders').update({ status: 'cancelled' }).eq('id', order.id);
+    return json({ error: e instanceof Error ? e.message : 'Payment provider error' }, 502);
+  }
 });

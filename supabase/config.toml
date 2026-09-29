@@ -431,10 +431,10 @@ verify_jwt = false
 [functions.create-checkout]
 verify_jwt = false
 
-# Stripe y el navegador llaman a estas dos sin sesión de Supabase:
-# checkout-return solo redirige a la app; stripe-webhook verifica la firma de Stripe.
+# Revolut y el navegador llaman a estas dos sin sesión de Supabase:
+# checkout-return solo redirige a la app; revolut-webhook verifica la firma de Revolut.
 [functions.checkout-return]
 verify_jwt = false
 
-[functions.stripe-webhook]
+[functions.revolut-webhook]
 verify_jwt = false

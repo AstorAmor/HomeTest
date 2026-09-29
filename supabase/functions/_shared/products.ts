@@ -1,4 +1,4 @@
-// Catálogo de precios que usa el SERVIDOR para cobrar (Stripe). La app envía solo
+// Catálogo de precios que usa el SERVIDOR para cobrar (Revolut). La app envía solo
 // el id del producto; el importe sale siempre de aquí.
 // Generado a partir de src/data/testCatalog.ts; si cambias un precio, cámbialo en
 // los dos sitios (npm run check:prices avisa si no coinciden).
