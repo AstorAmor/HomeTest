@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 
 interface MarkerRangeBarProps {
   position: number; // 0..1; el rango de referencia es la zona 20-80 %
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(62, 205, 184, 0.3)',
+    backgroundColor: withAlpha(Colors.accent, 0.3),
   },
   dot: {
     position: 'absolute',

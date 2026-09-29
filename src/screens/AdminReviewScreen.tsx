@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import {
   adminListProfessionals,
@@ -77,7 +77,7 @@ export const AdminReviewScreen = () => {
                     {p.city ? ` · ${p.city}` : ''}
                   </Text>
                 </View>
-                <View style={[styles.badge, { backgroundColor: p.verified ? Colors.accentSoft : 'rgba(240, 184, 77, 0.15)' }]}>
+                <View style={[styles.badge, { backgroundColor: p.verified ? Colors.accentSoft : withAlpha(Colors.amber, 0.15) }]}>
                   <Text style={[styles.badgeText, { color: p.verified ? Colors.accent : Colors.warning }]}>
                     {p.verified ? 'Verified' : 'Unverified'}
                   </Text>

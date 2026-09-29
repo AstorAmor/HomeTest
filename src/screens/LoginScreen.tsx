@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { Ionicons } from '@expo/vector-icons';
 import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
@@ -216,7 +216,7 @@ export const LoginScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0D0F1A',
+    backgroundColor: Colors.cosmicBase,
   },
   container: {
     flex: 1,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: Colors.textPrimary,
-    backgroundColor: 'rgba(30, 34, 48, 0.72)',
+    backgroundColor: withAlpha(Colors.card, 0.72),
   },
   button: {
     backgroundColor: Colors.accent,
@@ -305,8 +305,8 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(62, 205, 184, 0.35)',
-    backgroundColor: 'rgba(30, 34, 48, 0.72)',
+    borderColor: withAlpha(Colors.accent, 0.35),
+    backgroundColor: withAlpha(Colors.card, 0.72),
   },
   roleChips: {
     flexDirection: 'row',
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   demoHint: {
-    backgroundColor: 'rgba(30, 34, 48, 0.72)',
+    backgroundColor: withAlpha(Colors.card, 0.72),
     borderLeftWidth: 4,
     borderLeftColor: Colors.warning,
     paddingVertical: 12,

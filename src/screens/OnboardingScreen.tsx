@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { WheelPicker } from '@/components/WheelPicker';
 import { Confetti } from '@/components/Confetti';
 import {
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   },
   bigOptionSelected: {
     borderColor: Colors.accent,
-    backgroundColor: 'rgba(62, 205, 184, 0.08)',
+    backgroundColor: withAlpha(Colors.accent, 0.08),
   },
   bigOptionText: {
     color: Colors.textSecondary,
@@ -603,9 +603,9 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(240, 184, 77, 0.14)',
+    backgroundColor: withAlpha(Colors.amber, 0.14),
     borderWidth: 2,
-    borderColor: 'rgba(240, 184, 77, 0.5)',
+    borderColor: withAlpha(Colors.amber, 0.5),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 22,

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { CosmicBackground } from '@/components/CosmicBackground';
 
@@ -74,7 +74,7 @@ export const ResultsReadyScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0D0F1A',
+    backgroundColor: Colors.cosmicBase,
   },
   content: {
     flex: 1,
@@ -86,9 +86,9 @@ const styles = StyleSheet.create({
     width: 128,
     height: 128,
     borderRadius: 64,
-    backgroundColor: 'rgba(240, 184, 77, 0.14)',
+    backgroundColor: withAlpha(Colors.amber, 0.14),
     borderWidth: 2,
-    borderColor: 'rgba(240, 184, 77, 0.55)',
+    borderColor: withAlpha(Colors.amber, 0.55),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,

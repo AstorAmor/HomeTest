@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 
 interface WheelPickerProps {
   items: string[];
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: Colors.accentSoft,
     borderWidth: 1,
-    borderColor: 'rgba(62, 205, 184, 0.35)',
+    borderColor: withAlpha(Colors.accent, 0.35),
   },
   item: {
     justifyContent: 'center',

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_OPTIONS, Mood } from '@/types/checkIn';
 import { checkInRepository, checkInSuggestions, suggestMoment, Suggestion } from '@/data/checkInRepository';
 
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   momentChipSelected: {
     borderColor: Colors.accent,
-    backgroundColor: 'rgba(62, 205, 184, 0.08)',
+    backgroundColor: withAlpha(Colors.accent, 0.08),
   },
   momentText: {
     color: Colors.textSecondary,
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   moodItemSelected: {
     borderColor: Colors.accent,
-    backgroundColor: 'rgba(62, 205, 184, 0.08)',
+    backgroundColor: withAlpha(Colors.accent, 0.08),
   },
   moodEmoji: {
     fontSize: 28,

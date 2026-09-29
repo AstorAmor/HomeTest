@@ -1,17 +1,20 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Defs, RadialGradient, Stop, Rect, Ellipse } from 'react-native-svg';
+import { Colors } from '@/constants/colors';
 
-// Fondo "nube cósmica" discreto para el login: base casi negra y varias
-// manchas de color muy difuminadas. No es un dibujo, solo un gradiente con vida.
-const BLOBS = [
-  { id: 'b1', cx: '12%', cy: '18%', rx: '75%', ry: '42%', color: '#5B3FD1', opacity: 0.45 },
-  { id: 'b2', cx: '95%', cy: '38%', rx: '70%', ry: '38%', color: '#1C9C95', opacity: 0.35 },
-  { id: 'b3', cx: '30%', cy: '88%', rx: '80%', ry: '40%', color: '#B0437F', opacity: 0.3 },
-  { id: 'b4', cx: '85%', cy: '95%', rx: '55%', ry: '30%', color: '#2B56C9', opacity: 0.3 },
+// Fondo "nube cósmica" discreto para el login: base de la paleta (casi negra en el
+// tema oscuro, crema en el claro) y varias manchas de color muy difuminadas.
+const SHAPES = [
+  { id: 'b1', cx: '12%', cy: '18%', rx: '75%', ry: '42%', opacity: 0.45 },
+  { id: 'b2', cx: '95%', cy: '38%', rx: '70%', ry: '38%', opacity: 0.35 },
+  { id: 'b3', cx: '30%', cy: '88%', rx: '80%', ry: '40%', opacity: 0.3 },
+  { id: 'b4', cx: '85%', cy: '95%', rx: '55%', ry: '30%', opacity: 0.3 },
 ];
 
-export const CosmicBackground = () => (
+export const CosmicBackground = () => {
+  const BLOBS = SHAPES.map((s, i) => ({ ...s, color: Colors.cosmicBlobs[i] }));
+  return (
   <View pointerEvents="none" style={StyleSheet.absoluteFill}>
     <Svg width="100%" height="100%">
       <Defs>
@@ -23,10 +26,11 @@ export const CosmicBackground = () => (
           </RadialGradient>
         ))}
       </Defs>
-      <Rect x="0" y="0" width="100%" height="100%" fill="#0D0F1A" />
+      <Rect x="0" y="0" width="100%" height="100%" fill={Colors.cosmicBase} />
       {BLOBS.map((b) => (
         <Ellipse key={b.id} cx={b.cx} cy={b.cy} rx={b.rx} ry={b.ry} fill={`url(#${b.id})`} />
       ))}
     </Svg>
   </View>
-);
+  );
+};

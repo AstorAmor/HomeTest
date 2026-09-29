@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { ProgressRing } from '@/components/ProgressRing';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useFirstName } from '@/components/UserAvatar';
 import { BadgesSection } from '@/components/BadgesSection';
@@ -89,7 +89,7 @@ const CheckInOrb = () => (
       <RadialGradient id="orb" cx="35%" cy="30%" r="75%">
         <Stop offset="0" stopColor="#C9C2FF" />
         <Stop offset="0.45" stopColor={Colors.violet} />
-        <Stop offset="1" stopColor="#3ECDB8" stopOpacity="0.85" />
+        <Stop offset="1" stopColor={Colors.accent} stopOpacity="0.85" />
       </RadialGradient>
     </Defs>
     <Circle cx={26} cy={26} r={24} fill="url(#orb)" />
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     gap: 14,
     backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: 'rgba(155, 140, 255, 0.35)',
+    borderColor: withAlpha(Colors.violet, 0.35),
     borderRadius: 18,
     padding: 14,
     marginHorizontal: 20,

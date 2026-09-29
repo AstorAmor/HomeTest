@@ -6,7 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { CATALOG, CatalogTest, formatPrice, PLANS, testIcon } from '@/data/testCatalog';
 import { getOrderStatus, startCheckout } from '@/data/orders';
 
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   totalLabel: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
   total: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900' },
   secure: { flexDirection: 'row', gap: 8, marginHorizontal: 24, alignItems: 'flex-start' },
-  simCard: { borderColor: 'rgba(240, 184, 77, 0.55)', gap: 10 },
+  simCard: { borderColor: withAlpha(Colors.amber, 0.55), gap: 10 },
   simTitle: { color: Colors.amber, fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 4 },
   cta: { backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, alignItems: 'center', marginTop: 4 },

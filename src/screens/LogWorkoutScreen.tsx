@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { strengthSessionsThisWeek, workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
 
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   typeText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  selected: { borderColor: Colors.coral, backgroundColor: 'rgba(255, 138, 101, 0.1)' },
+  selected: { borderColor: Colors.coral, backgroundColor: withAlpha(Colors.coral, 0.1) },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     borderWidth: 1,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: 'rgba(255, 138, 101, 0.14)',
+    backgroundColor: withAlpha(Colors.coral, 0.14),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
-import { Colors } from '@/constants/colors';
+import { Colors, OnDark } from '@/constants/colors';
 import { EXERCISES } from '@/data/exercises';
 import { mindfulRepository } from '@/data/planRepository';
 import { Confetti } from '@/components/Confetti';
@@ -136,7 +136,7 @@ export const ExerciseScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="close" size={26} color={Colors.textPrimary} />
+          <Ionicons name="close" size={26} color={OnDark.text} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>{exercise.title}</Text>
         <Text style={styles.timer}>{started ? fmt(total - elapsed) : fmt(total)}</Text>
@@ -175,10 +175,10 @@ export const ExerciseScreen = () => {
         ) : (
           <View style={styles.controls}>
             <TouchableOpacity style={styles.control} onPress={() => setPaused(!paused)}>
-              <Ionicons name={paused ? 'play' : 'pause'} size={22} color={Colors.textPrimary} />
+              <Ionicons name={paused ? 'play' : 'pause'} size={22} color={OnDark.text} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.control} onPress={() => router.back()}>
-              <Ionicons name="stop" size={20} color={Colors.textPrimary} />
+              <Ionicons name="stop" size={20} color={OnDark.text} />
             </TouchableOpacity>
           </View>
         )}
@@ -191,16 +191,16 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#0B0D16' },
   center: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12 },
-  topTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
-  timer: { color: Colors.textSecondary, fontSize: 15, fontVariant: ['tabular-nums'], width: 44, textAlign: 'right' },
+  topTitle: { color: OnDark.text, fontSize: 17, fontWeight: '700' },
+  timer: { color: OnDark.textSecondary, fontSize: 15, fontVariant: ['tabular-nums'], width: 44, textAlign: 'right' },
   stage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   overlay: { position: 'absolute', alignItems: 'center' },
-  phaseLabel: { color: Colors.textPrimary, fontSize: 24, fontWeight: '700' },
-  phaseCount: { color: Colors.textPrimary, fontSize: 18, opacity: 0.8, marginTop: 4 },
+  phaseLabel: { color: OnDark.text, fontSize: 24, fontWeight: '700' },
+  phaseCount: { color: OnDark.text, fontSize: 18, opacity: 0.8, marginTop: 4 },
   bottom: { paddingHorizontal: 24, paddingBottom: 16, gap: 18 },
-  intro: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center' },
-  guided: { color: Colors.textPrimary, fontSize: 19, lineHeight: 27, textAlign: 'center', fontWeight: '600', minHeight: 60 },
-  hint: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center' },
+  intro: { color: OnDark.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  guided: { color: OnDark.text, fontSize: 19, lineHeight: 27, textAlign: 'center', fontWeight: '600', minHeight: 60 },
+  hint: { color: OnDark.textSecondary, fontSize: 13, textAlign: 'center' },
   progressTrack: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' },
   progressFill: { height: 4 },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 30, paddingVertical: 15, alignSelf: 'stretch' },
@@ -208,6 +208,6 @@ const styles = StyleSheet.create({
   controls: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
   control: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   doneIcon: { width: 88, height: 88, borderRadius: 44, justifyContent: 'center', alignItems: 'center', marginBottom: 18 },
-  doneTitle: { color: Colors.textPrimary, fontSize: 28, fontWeight: '800', marginBottom: 8 },
-  doneText: { color: Colors.textSecondary, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 30 },
+  doneTitle: { color: OnDark.text, fontSize: 28, fontWeight: '800', marginBottom: 8 },
+  doneText: { color: OnDark.textSecondary, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 30 },
 });

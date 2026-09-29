@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import {
   createShare,
   listVerifiedProfessionals,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 8,
   },
-  optionSelected: { borderColor: Colors.accent, backgroundColor: 'rgba(62, 205, 184, 0.08)' },
+  optionSelected: { borderColor: Colors.accent, backgroundColor: withAlpha(Colors.accent, 0.08) },
   proIcon: {
     width: 38,
     height: 38,

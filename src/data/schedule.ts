@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses } from './mockData';
 import { currentReport } from './reportRepository';
 
@@ -7,12 +8,12 @@ import { currentReport } from './reportRepository';
 export type ScheduleType = 'delivery' | 'sample' | 'pickup' | 'results' | 'membership' | 'lab';
 
 export const SCHEDULE_COLORS: Record<ScheduleType, string> = {
-  delivery: '#5AB8F0',
-  sample: '#3ECDB8',
-  pickup: '#9B8CFF',
-  results: '#F0B84D',
-  membership: '#F7B6D2',
-  lab: '#FF8A65',
+  delivery: Colors.sky,
+  sample: Colors.accent,
+  pickup: Colors.violet,
+  results: Colors.amber,
+  membership: Colors.pinkSoft,
+  lab: Colors.coral,
 };
 
 export interface ScheduleEvent {

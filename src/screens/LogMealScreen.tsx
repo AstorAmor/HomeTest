@@ -5,7 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 
@@ -196,8 +196,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: 'rgba(240, 184, 77, 0.5)',
-    backgroundColor: 'rgba(240, 184, 77, 0.06)',
+    borderColor: withAlpha(Colors.amber, 0.5),
+    backgroundColor: withAlpha(Colors.amber, 0.06),
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   sugarChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  selected: { borderColor: Colors.amber, backgroundColor: 'rgba(240, 184, 77, 0.1)' },
+  selected: { borderColor: Colors.amber, backgroundColor: withAlpha(Colors.amber, 0.1) },
   chipText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
   cta: {
     backgroundColor: Colors.accent,
@@ -253,9 +253,9 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: 'rgba(240, 184, 77, 0.14)',
+    backgroundColor: withAlpha(Colors.amber, 0.14),
     borderWidth: 2,
-    borderColor: 'rgba(240, 184, 77, 0.5)',
+    borderColor: withAlpha(Colors.amber, 0.5),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,

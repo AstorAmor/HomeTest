@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { Colors } from '@/constants/colors';
+import { Colors, OnDark } from '@/constants/colors';
 import { buildPlan, PlanItem } from '@/data/planRepository';
 import { profileRepository, Sex } from '@/data/profileRepository';
 import { planImage } from '@/data/planImages';
@@ -132,13 +132,13 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0D0F1A' },
   page: { flex: 1, paddingHorizontal: 24, paddingBottom: 150 },
   top: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingTop: 16 },
-  counter: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  counter: { color: OnDark.textSecondary, fontSize: 13, fontWeight: '600' },
   number: { color: Colors.accent, fontSize: 56, fontWeight: '900', lineHeight: 60 },
-  title: { color: Colors.textPrimary, fontSize: 28, fontWeight: '800', marginBottom: 14 },
+  title: { color: OnDark.text, fontSize: 28, fontWeight: '800', marginBottom: 14 },
   label: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginTop: 8, marginBottom: 6 },
-  why: { color: Colors.textPrimary, fontSize: 15, lineHeight: 22, opacity: 0.92 },
+  why: { color: OnDark.text, fontSize: 15, lineHeight: 22, opacity: 0.92 },
   howRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
-  howText: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20, flex: 1 },
+  howText: { color: OnDark.text, fontSize: 14, lineHeight: 20, flex: 1 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 24, paddingBottom: 12, alignItems: 'center', gap: 10 },
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.3)' },
@@ -154,5 +154,5 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  skip: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600', paddingVertical: 4 },
+  skip: { color: OnDark.textSecondary, fontSize: 14, fontWeight: '600', paddingVertical: 4 },
 });

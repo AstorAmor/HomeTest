@@ -1,7 +1,7 @@
 import React, { useId, useState } from 'react';
 import { View, Text, StyleSheet, LayoutChangeEvent } from 'react-native';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop, Line, Rect } from 'react-native-svg';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 
 export interface TrendSeries {
   values: number[];
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     width: 130,
-    backgroundColor: 'rgba(11, 13, 22, 0.92)',
+    backgroundColor: withAlpha(Colors.backgroundElevated, 0.96),
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 8,

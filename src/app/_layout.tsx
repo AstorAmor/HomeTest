@@ -1,4 +1,4 @@
-import { DarkTheme, ThemeProvider, Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/context/AuthContext';
 import { Colors } from '@/constants/colors';
 
-SplashScreen.preventAutoHideAsync();
+// La pantalla de carga se mantiene desde index.js (donde se aplica el tema).
 
 // Transiciones: todas las pantallas de detalle entran y salen con la misma
 // animación lateral (ios_from_right), así "atrás" es el reflejo exacto de "adelante"
@@ -22,9 +22,9 @@ export default function Layout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={DarkTheme}>
+      <ThemeProvider value={Colors.isLight ? DefaultTheme : DarkTheme}>
         <AuthProvider>
-          <StatusBar style="light" />
+          <StatusBar style={Colors.isLight ? 'dark' : 'light'} />
           <Stack
             screenOptions={{
               headerShown: false,

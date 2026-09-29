@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { Image } from 'expo-image';
 import { useAuth } from '@/context/AuthContext';
@@ -132,7 +132,7 @@ export const ProfessionalHomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#0D0F1A' },
+  safeArea: { flex: 1, backgroundColor: Colors.cosmicBase },
   content: { paddingBottom: 32 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 20, marginBottom: 14 },
   photo: { width: 60, height: 60, borderRadius: 30 },
@@ -141,9 +141,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(30, 34, 48, 0.85)',
+    backgroundColor: withAlpha(Colors.card, 0.85),
     borderWidth: 1,
-    borderColor: 'rgba(62, 205, 184, 0.35)',
+    borderColor: withAlpha(Colors.accent, 0.35),
     borderRadius: 14,
     padding: 13,
     marginHorizontal: 20,
@@ -157,9 +157,9 @@ const styles = StyleSheet.create({
   pending: {
     flexDirection: 'row',
     gap: 10,
-    backgroundColor: 'rgba(240, 184, 77, 0.12)',
+    backgroundColor: withAlpha(Colors.amber, 0.12),
     borderWidth: 1,
-    borderColor: 'rgba(240, 184, 77, 0.4)',
+    borderColor: withAlpha(Colors.amber, 0.4),
     borderRadius: 14,
     padding: 14,
     marginHorizontal: 20,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', gap: 10, paddingVertical: 32 },
   emptyText: { color: Colors.textMuted, fontSize: 14 },
   card: {
-    backgroundColor: 'rgba(30, 34, 48, 0.85)',
+    backgroundColor: withAlpha(Colors.card, 0.85),
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 16,

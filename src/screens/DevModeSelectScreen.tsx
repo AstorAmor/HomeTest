@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { DemoMode, useAuth } from '@/context/AuthContext';
 
@@ -81,7 +81,7 @@ export const DevModeSelectScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0D0F1A',
+    backgroundColor: Colors.cosmicBase,
   },
   content: {
     flex: 1,
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(240, 184, 77, 0.4)',
+    borderColor: withAlpha(Colors.amber, 0.4),
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    backgroundColor: 'rgba(30, 34, 48, 0.78)',
+    backgroundColor: withAlpha(Colors.card, 0.78),
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 16,

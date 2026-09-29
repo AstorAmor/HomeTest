@@ -1,16 +1,23 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { UserAvatar } from '@/components/UserAvatar';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { AppearancePref, getAppearancePref, setAppearancePref } from '@/theme/appearance';
 import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 
+
+const APPEARANCE_OPTIONS: { id: AppearancePref; label: string; icon: string }[] = [
+  { id: 'system', label: 'Automatic', icon: 'phone-portrait-outline' },
+  { id: 'light', label: 'Light', icon: 'sunny-outline' },
+  { id: 'dark', label: 'Dark', icon: 'moon-outline' },
+];
 
 const LABELS: Record<string, string> = {
   female: 'Female',
@@ -37,6 +44,10 @@ export const ProfileScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
+  const [appearance, setAppearance] = useState<AppearancePref>('system');
+  useEffect(() => {
+    getAppearancePref().then(setAppearance);
+  }, []);
 
   const load = useCallback(() => {
     profileRepository.get().then(setProfile);
@@ -118,6 +129,25 @@ export const ProfileScreen = () => {
           )}
         </View>
 
+        <Text style={[styles.sectionTitle, styles.spaced]}>Appearance</Text>
+        <View style={styles.segment}>
+          {APPEARANCE_OPTIONS.map((o) => (
+            <TouchableOpacity
+              key={o.id}
+              style={[styles.segmentItem, appearance === o.id && styles.segmentOn]}
+              onPress={() => {
+                if (o.id === appearance) return;
+                setAppearance(o.id);
+                setAppearancePref(o.id);
+              }}
+            >
+              <Ionicons name={o.icon as any} size={16} color={appearance === o.id ? Colors.background : Colors.textSecondary} />
+              <Text style={[styles.segmentText, appearance === o.id && { color: Colors.background }]}>{o.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={styles.segmentHint}>The app restarts to apply the change.</Text>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -165,12 +195,25 @@ const styles = StyleSheet.create({
   rowValueWrap: { flexShrink: 1, textAlign: 'right', marginLeft: 16 },
   rowEmpty: { color: Colors.textMuted, fontSize: 13, fontWeight: '400' },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 14,
+    padding: 4,
+    marginHorizontal: 20,
+  },
+  segmentItem: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 10 },
+  segmentOn: { backgroundColor: Colors.accent },
+  segmentText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  segmentHint: { color: Colors.textMuted, fontSize: 12, marginHorizontal: 20, marginTop: 8 },
   goalChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(62, 205, 184, 0.35)',
+    borderColor: withAlpha(Colors.accent, 0.35),
     borderRadius: 16,
     paddingHorizontal: 10,
     paddingVertical: 6,
@@ -179,9 +222,9 @@ const styles = StyleSheet.create({
   badge: {
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(240, 184, 77, 0.1)',
+    backgroundColor: withAlpha(Colors.amber, 0.1),
     borderWidth: 1,
-    borderColor: 'rgba(240, 184, 77, 0.4)',
+    borderColor: withAlpha(Colors.amber, 0.4),
     borderRadius: 14,
     paddingHorizontal: 14,
     paddingVertical: 12,

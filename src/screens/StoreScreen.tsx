@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { CATALOG, CATEGORY_LABEL, CatalogTest, formatPrice, PLANS, TestCategory, testIcon } from '@/data/testCatalog';
 import { listMyPaidProducts } from '@/data/orders';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -37,7 +37,7 @@ export const StoreScreen = () => {
         onPress={() => !featured && setOpenId(openId === t.id ? null : t.id)}
       >
         <View style={styles.cardHeader}>
-          <View style={[styles.catIcon, featured && { backgroundColor: 'rgba(240, 184, 77, 0.18)' }]}>
+          <View style={[styles.catIcon, featured && { backgroundColor: withAlpha(Colors.amber, 0.18) }]}>
             <MaterialCommunityIcons name={testIcon(t) as any} size={18} color={featured ? Colors.amber : Colors.accent} />
           </View>
           <View style={{ flex: 1 }}>
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 10,
   },
-  featured: { borderColor: 'rgba(240, 184, 77, 0.55)', marginBottom: 16 },
+  featured: { borderColor: withAlpha(Colors.amber, 0.55), marginBottom: 16 },
   cardHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   catIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
   name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },

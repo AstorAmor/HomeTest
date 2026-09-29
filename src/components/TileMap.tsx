@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, PanResponder, LayoutChangeEvent } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 
 // Mapa ligero hecho con teselas (sin módulos nativos: funciona en el APK actual,
 // Expo Go y web). Encaja todos los puntos al abrirse, se puede arrastrar y hacer zoom
 // con los botones, y cada chincheta se puede tocar.
-// Teselas: Esri "World Dark Gray" (base + capa de nombres), sin clave. Atribución
+// Teselas: Esri "World Dark/Light Gray" según el tema (base + capa de nombres), sin clave. Atribución
 // obligatoria. CARTO ya exige clave y los servidores de OpenStreetMap bloquean apps.
 // Para producción: cuenta de ArcGIS Location Platform (nivel gratuito) u otro proveedor
 // con clave (MapTiler, Stadia…), o react-native-maps en un APK nuevo.
@@ -29,7 +29,10 @@ const TILE = 256;
 const MIN_Z = 3;
 const MAX_Z = 16; // máximo del mapa base de Esri
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas';
-const LAYERS = ['World_Dark_Gray_Base', 'World_Dark_Gray_Reference'];
+const layers = () =>
+  Colors.isLight
+    ? ['World_Light_Gray_Base', 'World_Light_Gray_Reference']
+    : ['World_Dark_Gray_Base', 'World_Dark_Gray_Reference'];
 const tileUrl = (layer: string, z: number, x: number, y: number) => `${ESRI}/${layer}/MapServer/tile/${z}/${y}/${x}`;
 
 // Proyección Web Mercator: coordenadas del "mundo" en píxeles a zoom 0.
@@ -99,7 +102,7 @@ export const TileMap = ({ points, selectedId, onSelect, height = 260 }: TileMapP
       for (let ty = Math.floor(top / size); ty <= Math.floor((top + height) / size); ty++) {
         if (ty < 0 || ty >= n) continue;
         const wx = ((tx % n) + n) % n;
-        for (const layer of LAYERS) {
+        for (const layer of layers()) {
           tiles.push(
             <Image
               key={`${layer}-${tz}-${tx}-${ty}`}
@@ -131,7 +134,7 @@ export const TileMap = ({ points, selectedId, onSelect, height = 260 }: TileMapP
           hitSlop={8}
           style={{ position: 'absolute', left: x - s / 2, top: y - s + 2, zIndex: selected ? 2 : 1 }}
         >
-          <Ionicons name="location" size={s} color={selected ? Colors.accent : '#FFFFFF'} />
+          <Ionicons name="location" size={s} color={selected ? Colors.accent : Colors.isLight ? Colors.textPrimary : '#FFFFFF'} />
         </TouchableOpacity>
       );
     });
@@ -158,13 +161,13 @@ export const TileMap = ({ points, selectedId, onSelect, height = 260 }: TileMapP
 };
 
 const styles = StyleSheet.create({
-  wrap: { overflow: 'hidden', borderRadius: 16, backgroundColor: '#0E0F14', borderWidth: 1, borderColor: Colors.cardBorder },
+  wrap: { overflow: 'hidden', borderRadius: 16, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder },
   controls: { position: 'absolute', right: 10, top: 10, gap: 6 },
   ctrl: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(30, 34, 48, 0.92)',
+    backgroundColor: withAlpha(Colors.card, 0.92),
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     alignItems: 'center',
@@ -175,8 +178,8 @@ const styles = StyleSheet.create({
     right: 6,
     bottom: 4,
     fontSize: 9,
-    color: 'rgba(255,255,255,0.55)',
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    color: Colors.textSecondary,
+    backgroundColor: withAlpha(Colors.card, 0.7),
     paddingHorizontal: 4,
     borderRadius: 3,
   },
