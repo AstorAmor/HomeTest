@@ -500,3 +500,13 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 - Esquema: migración `20260930110000_specialist_portal.sql` (+ `pro_busy_slots`, `pro_opens_chat`). Citas sin
   solapes (exclusion constraint), el paciente solo puede cancelar, notas clínicas privadas del autor,
   `is_my_patient()` y `pro_patients()`. **Tests: `supabase/tests/database/specialist_portal.test.sql` (20/20 OK)**.
+
+## Web de la app en Vercel — 2026-09-30
+- **https://hometest-app.vercel.app** (misma app, cuentas reales de Supabase). El portal del especialista se ve en
+  versión escritorio con la ventana ancha. Proyecto Vercel `hometest-app` (cuenta astorgarciaamor), publicado con CLI.
+- Republicar tras cambios:
+  `WEB_OUTPUT=single npx expo export -p web` → copiar `dist/` a `deploy/hometest-app/` (con su `vercel.json` de
+  rewrites a index.html) → `cd deploy/hometest-app && npx vercel deploy --prod --yes`.
+  `app.config.js` cambia la salida web a SPA solo para esta exportación; el desarrollo local sigue en modo "server".
+- En la web no hay modo demo de IA local: la extracción usa las Edge Functions (requiere sesión).
+- Vídeo con Daily: decidido, se deja para más adelante (requiere APK nuevo).

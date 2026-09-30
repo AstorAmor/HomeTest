@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,7 +6,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
 import { Colors } from '@/constants/colors';
+import { Image } from 'expo-image';
 import { mockProfessionals, ProfessionalRole, ROLE_INFO } from '@/data/servicesMock';
+import { listVerifiedProfessionals, ProfessionalAccount } from '@/data/sharing';
+import { isRemoteActive } from '@/lib/supabase';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
 
@@ -16,6 +20,15 @@ export const ProfessionalsScreen = () => {
   const initialRole = ROLES.includes(params.role as ProfessionalRole) ? (params.role as ProfessionalRole) : 'all';
   const [role, setRole] = useState<ProfessionalRole | 'all'>(initialRole);
   const list = role === 'all' ? mockProfessionals : mockProfessionals.filter((p) => p.role === role);
+  // Especialistas reales verificados en HomeTest (con cuenta). Los de ejemplo van debajo.
+  const [real, setReal] = useDeepState<ProfessionalAccount[]>([]);
+  useReloadOnFocus(
+    useCallback(async () => {
+      if (!isRemoteActive()) return;
+      setReal(await listVerifiedProfessionals().catch(() => []));
+    }, [setReal]),
+  );
+  const realList = role === 'all' ? real : real.filter((p) => p.role === role);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -36,6 +49,38 @@ export const ProfessionalsScreen = () => {
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {realList.length > 0 && (
+          <>
+            <Text style={styles.groupTitle}>On HomeTest</Text>
+            <View style={[styles.list, { marginBottom: 20 }]}>
+              {realList.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={styles.card}
+                  onPress={() => router.push({ pathname: '/professional-detail', params: { id: p.id } })}
+                  activeOpacity={0.85}
+                >
+                  {p.photoUrl ? (
+                    <Image source={{ uri: p.photoUrl }} style={styles.photo} contentFit="cover" />
+                  ) : (
+                    <Avatar nombre={p.displayName.replace(/^Dra?\.\s*/, '')} size={52} />
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.name}>{p.displayName}</Text>
+                    <Text style={styles.specialty}>{p.specialty ?? ROLE_INFO[p.role as ProfessionalRole]?.label ?? p.role}</Text>
+                    <View style={styles.metaRow}>
+                      <Ionicons name="shield-checkmark" size={12} color={Colors.ok} />
+                      <Text style={styles.meta}>Verified{p.hourlyRateEur ? ` · €${p.hourlyRateEur} / h` : ''}</Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.groupTitle}>Examples</Text>
+          </>
+        )}
 
         <View style={styles.list}>
           {list.map((p) => (
@@ -90,6 +135,8 @@ const styles = StyleSheet.create({
   filterText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
   filterTextActive: { color: Colors.background },
   list: { paddingHorizontal: 20, gap: 12 },
+  groupTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', paddingHorizontal: 20, marginBottom: 10 },
+  photo: { width: 52, height: 52, borderRadius: 26 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

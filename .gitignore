@@ -44,3 +44,6 @@ example
 
 # large media
 Web/*.mp4
+
+# Carpeta de publicación de la web en Vercel (se regenera)
+deploy/
