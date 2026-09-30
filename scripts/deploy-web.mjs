@@ -1,5 +1,7 @@
-// Publica la versión web de la app en Vercel (https://hometest-app.vercel.app).
-//   node scripts/deploy-web.mjs
+// Publica la versión web de la app en Vercel.
+//   node scripts/deploy-web.mjs        → https://hometest-app.vercel.app (cuentas reales de Supabase)
+//   node scripts/deploy-web.mjs demo   → https://hometest-demo.vercel.app (solo paciente, datos de ejemplo,
+//                                        login simulado; para enseñar la app, p. ej. a gente con iPhone)
 // 1. Exporta la web como SPA estática (WEB_OUTPUT=single, ver app.config.js).
 // 2. Renombra assets/node_modules → assets/nm: Vercel descarta al subir cualquier carpeta
 //    llamada node_modules, y ahí Expo deja las fuentes de iconos (salían cuadrados).
@@ -8,13 +10,15 @@ import { execSync } from 'node:child_process';
 import { cpSync, existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+const DEMO = process.argv[2] === 'demo';
 const OUT = 'dist-web';
-const DEPLOY = join('deploy', 'hometest-app');
+const DEPLOY = join('deploy', DEMO ? 'hometest-demo' : 'hometest-app');
 
 const run = (cmd, env = {}, cwd) => execSync(cmd, { stdio: 'inherit', cwd, env: { ...process.env, ...env } });
 
 rmSync(OUT, { recursive: true, force: true });
-run(`npx expo export -p web --output-dir ${OUT}`, { WEB_OUTPUT: 'single' });
+// --clear: las variables EXPO_PUBLIC_* se incrustan al compilar y la caché mezclaría las dos versiones
+run(`npx expo export -p web --clear --output-dir ${OUT}`, { WEB_OUTPUT: 'single', EXPO_PUBLIC_PUBLIC_DEMO: DEMO ? '1' : '0' });
 
 // Carpeta de publicación: se vacía salvo el enlace al proyecto de Vercel (.vercel)
 if (existsSync(DEPLOY)) {

@@ -174,10 +174,6 @@ export const MyDataScreen = () => {
             </View>
             <View style={styles.periodBlock}>
               <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />
-              <TouchableOpacity style={styles.logPeriod} onPress={() => router.push('/log-cycle')} activeOpacity={0.85}>
-                <Ionicons name="water-outline" size={18} color={Colors.pulseAccent} />
-                <Text style={styles.logPeriodText}>Log period</Text>
-              </TouchableOpacity>
             </View>
           </>
         )}
@@ -433,18 +429,6 @@ const styles = StyleSheet.create({
     width: 60,
   },
   periodBlock: { paddingHorizontal: 20, marginBottom: 24, gap: 10 },
-  logPeriod: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    paddingVertical: 12,
-  },
-  logPeriodText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   filesCard: {
     flexDirection: 'row',
     alignItems: 'center',

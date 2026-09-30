@@ -542,3 +542,11 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 3. Notificaciones push (mensajes, citas confirmadas, respuesta a solicitudes).
 4. Sincronización real con Google/Outlook (registrar apps OAuth).
 5. Fotos definitivas de Keep learning.
+
+## 2026-10-01 — Web de demo para enseñar (solo paciente)
+- **https://hometest-demo.vercel.app**: vista de paciente sin portal del especialista, login simulado (cualquier
+  email/contraseña) y datos de ejemplo guardados en el navegador; no toca Supabase. Pensada para enseñar la app
+  (p. ej. a gente con iPhone: Safari → Compartir → "Añadir a pantalla de inicio"). La IA (leer analíticas) no
+  funciona aquí. Flag `EXPO_PUBLIC_PUBLIC_DEMO=1` (`isPublicDemo` en `lib/supabase.ts`). Publicar: `npm run deploy:demo`
+  (proyecto Vercel `hometest-demo`, carpeta `deploy/hometest-demo`). La web real sigue con `npm run deploy:web`.
+- My Data: quitado el botón "Log period"; se registra entrando en el ciclo (Cycle detail → Log period).

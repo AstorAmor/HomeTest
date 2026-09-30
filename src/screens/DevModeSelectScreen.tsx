@@ -8,6 +8,7 @@ import { CosmicBackground } from '@/components/CosmicBackground';
 import { DemoMode, useAuth } from '@/context/AuthContext';
 import { currentReport } from '@/data/reportRepository';
 import { reportSeenKey, userFlags } from '@/data/userFlags';
+import { isPublicDemo } from '@/lib/supabase';
 
 const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; color: string }[] = [
   {
@@ -69,7 +70,7 @@ export const DevModeSelectScreen = () => {
         <Text style={styles.subtitle}>Prototype only. Log out from More → Settings to come back here.</Text>
 
         <View style={styles.list}>
-          {OPTIONS.map((o) => (
+          {OPTIONS.filter((o) => !(isPublicDemo && o.mode === 'pro')).map((o) => (
             <TouchableOpacity
               key={o.mode}
               style={styles.card}

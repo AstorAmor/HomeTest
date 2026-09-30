@@ -58,7 +58,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "check:prices": "node scripts/check-prices.mjs",
-    "deploy:web": "node scripts/deploy-web.mjs"
+    "deploy:web": "node scripts/deploy-web.mjs",
+    "deploy:demo": "node scripts/deploy-web.mjs demo"
   },
   "private": true
 }

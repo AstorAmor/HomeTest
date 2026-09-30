@@ -8,7 +8,11 @@ import { AppState, Platform } from 'react-native';
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const publishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-export const isSupabaseConfigured = !!url && !!publishableKey;
+// Web de demostración pública (hometest-demo.vercel.app): solo la vista de paciente,
+// login simulado y datos de ejemplo en el navegador, sin tocar cuentas reales.
+export const isPublicDemo = process.env.EXPO_PUBLIC_PUBLIC_DEMO === '1';
+
+export const isSupabaseConfigured = !isPublicDemo && !!url && !!publishableKey;
 
 // En la exportación web del servidor no hay window: sin storage persistente ahí.
 const canPersist = Platform.OS !== 'web' || typeof window !== 'undefined';
