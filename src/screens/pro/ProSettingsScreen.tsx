@@ -9,6 +9,7 @@ import { isPortalDemo, portal } from '@/data/specialistPortal';
 import { updateMyProfessionalChannels } from '@/data/sharing';
 import { Availability, DEFAULT_AVAILABILITY, TimeRange, WEEKDAYS, WEEKDAY_LABEL, Weekday } from '@/data/specialistTypes';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { AppearanceSwitch } from '@/components/AppearanceSwitch';
 
 const SLOT_OPTIONS = [15, 20, 30, 45, 60];
 const BUFFER_OPTIONS = [0, 5, 10, 15];
@@ -79,6 +80,13 @@ export const ProSettingsScreen = () => {
   };
 
   const setDay = (d: Weekday, ranges: TimeRange[]) => setAv((a) => ({ ...a, weekly: { ...a.weekly, [d]: ranges } }));
+
+  const appearanceCard = (
+    <Section title="Appearance">
+      <AppearanceSwitch returnTo="/pro-settings" />
+      <Text style={styles.muted}>Light, dark or follow your device. The portal reloads and you stay signed in.</Text>
+    </Section>
+  );
 
   const profileCard = (
     <Section title="Your profile">
@@ -222,7 +230,10 @@ export const ProSettingsScreen = () => {
             {contactCard}
             {channelsCard}
           </View>
-          <View style={styles.col}>{agendaCard}</View>
+          <View style={styles.col}>
+            {appearanceCard}
+            {agendaCard}
+          </View>
         </View>
       ) : (
         <>
@@ -230,6 +241,7 @@ export const ProSettingsScreen = () => {
           {contactCard}
           {channelsCard}
           {agendaCard}
+          {appearanceCard}
         </>
       )}
       <TouchableOpacity

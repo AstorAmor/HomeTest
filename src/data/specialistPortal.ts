@@ -78,8 +78,8 @@ function demoSeed(): DemoState {
     appointments: [
       { id: 'a1', professionalId: DEMO_PRO, patientId: 'p-laura', patientName: 'Laura Martín', startsAt: soon(0.25), durationMin: 30, kind: 'results_review', modality: 'video', status: 'confirmed', reason: 'Go through my September results' },
       { id: 'a2', professionalId: DEMO_PRO, patientId: 'p-carlos', patientName: 'Carlos Ruiz', startsAt: soon(2), durationMin: 15, kind: 'follow_up', modality: 'voice', status: 'confirmed', reason: 'Blood pressure follow-up' },
-      { id: 'a3', professionalId: DEMO_PRO, patientId: 'p-elena', patientName: 'Elena Gómez', startsAt: at(1, 9, 30), durationMin: 30, kind: 'first', modality: 'video', status: 'pending', reason: 'Training and iron' },
-      { id: 'a4', professionalId: DEMO_PRO, patientId: 'p-javier', patientName: 'Javier Soto', startsAt: at(3, 17, 0), durationMin: 30, kind: 'results_review', modality: 'video', status: 'pending', reason: 'High cholesterol' },
+      { id: 'a3', professionalId: DEMO_PRO, patientId: 'p-elena', patientName: 'Elena Gómez', startsAt: at(1, 9, 30), durationMin: 30, kind: 'first', modality: 'video', status: 'pending', reason: 'Training and iron', createdAt: at(-1, 18, 12) },
+      { id: 'a4', professionalId: DEMO_PRO, patientId: 'p-javier', patientName: 'Javier Soto', startsAt: at(3, 17, 0), durationMin: 30, kind: 'results_review', modality: 'video', status: 'pending', reason: 'High cholesterol', createdAt: at(-1, 21, 3) },
       { id: 'a5', professionalId: DEMO_PRO, patientId: 'p-laura', patientName: 'Laura Martín', startsAt: at(-14, 11, 0), durationMin: 30, kind: 'first', modality: 'video', status: 'completed' },
     ],
     requests: [
@@ -176,6 +176,7 @@ const toAppointment = (r: any): Appointment => ({
   status: r.status,
   reason: r.reason,
   videoRoomUrl: r.video_room_url,
+  createdAt: r.created_at,
 });
 
 const toRequest = (r: any): ConsultRequest => ({
@@ -189,6 +190,7 @@ const toRequest = (r: any): ConsultRequest => ({
   response: r.response,
   createdAt: r.created_at,
   answeredAt: r.answered_at,
+  audioPath: r.audio_path ?? null,
 });
 
 const toNote = (r: any): ClinicalNote => ({
@@ -236,6 +238,25 @@ export const portal = {
     return (data ?? []).map(toAppointment);
   },
 
+  // Solicitudes de cita pendientes (futuras), la más antigua primero (FIFO).
+  async pendingRequests(): Promise<Appointment[]> {
+    const nowIso = new Date().toISOString();
+    if (isPortalDemo()) {
+      return (await demo()).appointments
+        .filter((a) => a.status === 'pending' && a.startsAt > nowIso)
+        .sort((a, b) => (a.createdAt ?? a.startsAt).localeCompare(b.createdAt ?? b.startsAt));
+    }
+    const { data, error } = await supabase!
+      .from('appointments')
+      .select('*')
+      .eq('professional_id', getCurrentUserId())
+      .eq('status', 'pending')
+      .gt('starts_at', nowIso)
+      .order('created_at', { ascending: true });
+    fail(error);
+    return (data ?? []).map(toAppointment);
+  },
+
   async updateAppointment(id: string, patch: Partial<Pick<Appointment, 'status' | 'videoRoomUrl'>>) {
     if (isPortalDemo()) {
       const s = await demo();
@@ -249,13 +270,15 @@ export const portal = {
     fail(error);
   },
 
-  async scheduleFollowUp(patientId: string, patientName: string, startsAt: string, kind: AppointmentKind, modality: AppointmentModality, durationMin = 30) {
+  async scheduleFollowUp(patientId: string, patientName: string, startsAt: string, kind: AppointmentKind, modality: AppointmentModality, durationMin = 30): Promise<string> {
     if (isPortalDemo()) {
       const s = await demo();
-      s.appointments.push({ id: `a-${Date.now()}`, professionalId: DEMO_PRO, patientId, patientName, startsAt, durationMin, kind, modality, status: 'confirmed' });
-      return saveDemo();
+      const id = `a-${Date.now()}`;
+      s.appointments.push({ id, professionalId: DEMO_PRO, patientId, patientName, startsAt, durationMin, kind, modality, status: 'confirmed' });
+      await saveDemo();
+      return id;
     }
-    const { error } = await supabase!.from('appointments').insert({
+    const { data, error } = await supabase!.from('appointments').insert({
       professional_id: getCurrentUserId(),
       patient_id: patientId,
       patient_name: patientName,
@@ -264,8 +287,9 @@ export const portal = {
       kind,
       modality,
       status: 'confirmed',
-    });
+    }).select('id').single();
     fail(error);
+    return data!.id as string;
   },
 
   async listPatients(): Promise<PatientSummary[]> {

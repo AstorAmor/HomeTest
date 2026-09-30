@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -22,7 +22,9 @@ export const ChatScreen = () => {
   const demo = !isRemoteConversation(conversation);
 
   const load = useCallback(async () => {
-    setMessages(await chat.listMessages(conversation));
+    const list = await chat.listMessages(conversation).catch(() => null);
+    if (!list) return;
+    setMessages((prev) => (prev.length === list.length && prev[prev.length - 1]?.id === list[list.length - 1]?.id ? prev : list));
     chat.markRead(conversation);
   }, [conversation]);
 
@@ -32,8 +34,16 @@ export const ChatScreen = () => {
       setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
       if (m.senderId !== me) chat.markRead(conversation);
     });
-    return off;
-  }, [conversation, load, me]);
+    // Respaldo si el tiempo real cae: los mensajes están siempre guardados en la base de
+    // datos, así que se vuelven a leer cada 20 s y al volver a la app.
+    const poll = demo ? null : setInterval(load, 20000);
+    const appState = AppState.addEventListener('change', (s) => s === 'active' && load());
+    return () => {
+      off();
+      if (poll) clearInterval(poll);
+      appState.remove();
+    };
+  }, [conversation, load, me, demo]);
 
   useEffect(() => {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);

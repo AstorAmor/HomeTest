@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator 
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
 import { portal } from '@/data/specialistPortal';
+import { StoredAudio } from '@/components/VoiceNote';
 import { ClinicalNote, ConsultRequest, PatientLabResult, PatientMarker, REQUEST_KIND_LABEL } from '@/data/specialistTypes';
 
 const shortDate = (iso: string | null) =>
@@ -187,7 +188,8 @@ export const RequestsPanel = ({ requests, onAnswered }: { requests: ConsultReque
               {r.status === 'open' ? 'Pending' : r.status === 'answered' ? 'Answered' : 'Closed'}
             </Text>
           </View>
-          <Text style={styles.requestMsg}>{r.message}</Text>
+          {r.message ? <Text style={styles.requestMsg}>{r.message}</Text> : null}
+          {r.audioPath ? <StoredAudio path={r.audioPath} label="Voice note from the patient" /> : null}
           <Text style={styles.muted}>{shortDate(r.createdAt)}</Text>
           {r.response ? (
             <View style={styles.response}>

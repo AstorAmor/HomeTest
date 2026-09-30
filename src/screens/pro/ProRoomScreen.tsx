@@ -7,7 +7,9 @@ import { useIsWide } from '@/components/pro/ProLayout';
 import { VideoPane } from '@/components/pro/VideoPane';
 import { NotesPanel, ResultsPanel } from '@/components/pro/PatientPanels';
 import { Colors, OnDark } from '@/constants/colors';
-import { portal } from '@/data/specialistPortal';
+import { isPortalDemo, portal } from '@/data/specialistPortal';
+import { DailyCall } from '@/components/DailyCall';
+import { getVideoJoinUrl } from '@/data/video';
 import { Appointment, PatientLabResult, PatientSummary } from '@/data/specialistTypes';
 
 type Panel = 'results' | 'notes';
@@ -22,6 +24,10 @@ export const ProRoomScreen = () => {
   const [appt, setAppt] = useState<Appointment | null>(null);
   const [patient, setPatient] = useState<PatientSummary | null>(null);
   const [lab, setLab] = useState<PatientLabResult | null>(null);
+  // Vídeo real (Daily) con cuenta de especialista; en la demo, la sala simulada.
+  const [joinUrl, setJoinUrl] = useState<string | null>(null);
+  const [videoError, setVideoError] = useState('');
+  const [realApptId, setRealApptId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const from = new Date(Date.now() - 30 * 86400000).toISOString();
@@ -35,8 +41,27 @@ export const ProRoomScreen = () => {
     setAppt(a);
     setPatient(patients.find((p) => p.id === patientId) ?? null);
     setLab(l);
-    if (a && a.status === 'pending') portal.updateAppointment(a.id, { status: 'confirmed' });
-  }, [apptId, patientId]);
+    if (a && a.status === 'pending') await portal.updateAppointment(a.id, { status: 'confirmed' });
+    if (!isPortalDemo()) {
+      try {
+        // Llamada sin cita previa (desde la ficha): se crea una cita "ahora" para la sala.
+        const id =
+          a?.id ??
+          (await portal.scheduleFollowUp(
+            patientId,
+            patients.find((p) => p.id === patientId)?.name ?? 'Patient',
+            new Date().toISOString(),
+            'follow_up',
+            modeParam === 'voice' ? 'voice' : 'video',
+            30,
+          ));
+        setRealApptId(id);
+        setJoinUrl(await getVideoJoinUrl(id));
+      } catch (e) {
+        setVideoError(e instanceof Error ? e.message : 'Could not open the video room');
+      }
+    }
+  }, [apptId, patientId, modeParam]);
 
   useEffect(() => {
     load();
@@ -46,14 +71,27 @@ export const ProRoomScreen = () => {
   const name = patient?.name ?? appt?.patientName ?? 'Patient';
 
   const end = async () => {
-    if (appt) await portal.updateAppointment(appt.id, { status: 'completed' });
+    const id = appt?.id ?? realApptId;
+    if (id) await portal.updateAppointment(id, { status: 'completed' });
     router.canGoBack() ? router.back() : router.replace('/pro');
   };
 
-  if (wide) {
-    return <SplitScreenConsultation name={name} mode={mode} patientId={patientId} apptId={appt?.id ?? null} lab={lab} onEnd={end} />;
-  }
-  return <MobileVideoConsultation name={name} mode={mode} patientId={patientId} apptId={appt?.id ?? null} lab={lab} onEnd={end} />;
+  const video = isPortalDemo() ? null : joinUrl ? (
+    <DailyCall joinUrl={joinUrl} onClose={end} patientName={name} />
+  ) : (
+    <View style={styles.videoState}>
+      <Text style={styles.videoStateText}>{videoError || 'Preparing the video room…'}</Text>
+      {videoError ? (
+        <TouchableOpacity onPress={end}>
+          <Text style={styles.videoStateLink}>Close</Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+  const props = { name, mode, patientId, apptId: appt?.id ?? realApptId, lab, onEnd: end, video };
+
+  if (wide) return <SplitScreenConsultation {...props} />;
+  return <MobileVideoConsultation {...props} />;
 };
 
 interface RoomProps {
@@ -63,6 +101,7 @@ interface RoomProps {
   apptId: string | null;
   lab: PatientLabResult | null;
   onEnd: () => void;
+  video: React.ReactNode | null; // sala real (Daily); null = sala simulada
 }
 
 const PanelTabs = ({ value, onChange }: { value: Panel; onChange: (p: Panel) => void }) => (
@@ -77,15 +116,20 @@ const PanelTabs = ({ value, onChange }: { value: Panel; onChange: (p: Panel) => 
 );
 
 // ---------------------------------------------------------------- Web de escritorio
-const SplitScreenConsultation = ({ name, mode, patientId, apptId, lab, onEnd }: RoomProps) => {
+const SplitScreenConsultation = ({ name, mode, patientId, apptId, lab, onEnd, video }: RoomProps) => {
   const [panel, setPanel] = useState<Panel>('results');
   return (
     <View style={styles.split}>
-      <View style={styles.splitVideo}>
-        <VideoPane patientName={name} mode={mode} onEnd={onEnd} />
-      </View>
+      <View style={styles.splitVideo}>{video ?? <VideoPane patientName={name} mode={mode} onEnd={onEnd} />}</View>
       <View style={styles.splitSide}>
-        <Text style={styles.sideTitle}>{name}</Text>
+        <View style={styles.sideHead}>
+          <Text style={styles.sideTitle}>{name}</Text>
+          {video ? (
+            <TouchableOpacity style={styles.endBtn} onPress={onEnd}>
+              <Text style={styles.endBtnText}>End consultation</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
         <PanelTabs value={panel} onChange={setPanel} />
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
           {panel === 'results' ? <ResultsPanel lab={lab} compact /> : <NotesPanel patientId={patientId} appointmentId={apptId} live />}
@@ -96,7 +140,7 @@ const SplitScreenConsultation = ({ name, mode, patientId, apptId, lab, onEnd }: 
 };
 
 // ---------------------------------------------------------------- Móvil
-const MobileVideoConsultation = ({ name, mode, patientId, apptId, lab, onEnd }: RoomProps) => {
+const MobileVideoConsultation = ({ name, mode, patientId, apptId, lab, onEnd, video }: RoomProps) => {
   const { height } = useWindowDimensions();
   const sheetH = Math.round(height * 0.68);
   const [panel, setPanel] = useState<Panel | null>(null);
@@ -119,7 +163,7 @@ const MobileVideoConsultation = ({ name, mode, patientId, apptId, lab, onEnd }: 
 
   return (
     <View style={styles.mobileRoot}>
-      <VideoPane patientName={name} mode={mode} onEnd={onEnd} bottomInset={70} />
+      {video ?? <VideoPane patientName={name} mode={mode} onEnd={onEnd} bottomInset={70} />}
       <SafeAreaView edges={['bottom']} style={styles.mobileBar} pointerEvents="box-none">
         <TouchableOpacity style={styles.mobileBtn} onPress={() => open('results')}>
           <Ionicons name="flask-outline" size={18} color={OnDark.text} />
@@ -149,7 +193,13 @@ const styles = StyleSheet.create({
   split: { flex: 1, flexDirection: 'row', backgroundColor: Colors.background },
   splitVideo: { flex: 1.35, padding: 12, paddingRight: 6 },
   splitSide: { flex: 1, maxWidth: 520, backgroundColor: Colors.card, borderLeftWidth: 1, borderLeftColor: Colors.cardBorder, padding: 16, gap: 12 },
-  sideTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '900' },
+  sideTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '900', flex: 1 },
+  sideHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  endBtn: { backgroundColor: '#E5484D', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
+  endBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  videoState: { flex: 1, backgroundColor: OnDark.background, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, borderRadius: 12 },
+  videoStateText: { color: OnDark.text, fontSize: 15, textAlign: 'center' },
+  videoStateLink: { color: OnDark.textSecondary, fontSize: 14, textDecorationLine: 'underline' },
   tabs: { flexDirection: 'row', gap: 8 },
   tab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, borderWidth: 1, borderColor: Colors.cardBorder },
   tabOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },

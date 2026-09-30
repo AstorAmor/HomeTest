@@ -91,6 +91,8 @@ export default function Layout() {
             <Stack.Screen name="chat" />
             <Stack.Screen name="consult-book" />
             <Stack.Screen name="consult-request" />
+            <Stack.Screen name="learn" />
+            <Stack.Screen name="video" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

@@ -45,3 +45,19 @@ mirando a cámara, sonrisa cercana, fondo sencillo y desenfocado. Que no parezca
 
 > Las imágenes generadas con IA las puedes usar en la app. Si en algún momento usas fotos de personas reales
 > (por ejemplo, de los profesionales de HomeTest), necesitarás su consentimiento por escrito.
+
+
+## Keep learning (Today) — `assets/images/learning/` · 1024×1024 JPG, cuadradas
+
+Mismo estilo que los especialistas: fotografía luminosa, natural, tonos cálidos, sin texto.
+
+| Archivo | Prompt |
+|---|---|
+| reproductive_health.jpg | Calm woman in her 30s sitting by a window with a cup of tea and a notebook, soft morning light, warm neutral tones, lifestyle health photography |
+| training.jpg | Woman and man doing strength training with dumbbells in a bright modern gym, natural light, energetic but calm |
+| meditation.jpg | Person meditating cross-legged on a mat in a bright living room with plants, eyes closed, serene |
+| yoga.jpg | Woman in a gentle yoga pose (downward dog) on a mat, sunlit studio, warm tones |
+| nutrition.jpg | Top-down healthy plate: salmon, salad, avocado, whole grains on a wooden table, natural light |
+| sleep.jpg | Cosy bedroom at dusk, neatly made bed, warm lamp light, calm atmosphere |
+| heart_health.jpg | Person checking blood pressure at home with a digital cuff at a kitchen table, bright and reassuring |
+| stress.jpg | Person walking outdoors in a green park, relaxed, deep breath, golden hour |

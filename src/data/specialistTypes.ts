@@ -18,6 +18,7 @@ export interface Appointment {
   status: AppointmentStatus;
   reason?: string | null;
   videoRoomUrl?: string | null;
+  createdAt?: string; // cuándo lo pidió el paciente (orden FIFO de las solicitudes)
 }
 
 export type RequestKind = 'question' | 'results_review' | 'video_call' | 'async_video';
@@ -34,6 +35,7 @@ export interface ConsultRequest {
   response: string | null;
   createdAt: string;
   answeredAt: string | null;
+  audioPath?: string | null; // nota de voz (ruta en Storage, o uri local en demo)
 }
 
 export interface Conversation {

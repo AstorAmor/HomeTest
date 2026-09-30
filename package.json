@@ -57,7 +57,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "check:prices": "node scripts/check-prices.mjs"
+    "check:prices": "node scripts/check-prices.mjs",
+    "deploy:web": "node scripts/deploy-web.mjs"
   },
   "private": true
 }

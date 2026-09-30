@@ -15,6 +15,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useFirstName } from '@/components/UserAvatar';
 import { BadgesSection } from '@/components/BadgesSection';
 import { SpecialistCarousel } from '@/components/SpecialistCarousel';
+import { LEARNING_TOPICS } from '@/data/learning';
+import { NextConsultationCard } from '@/components/NextConsultationCard';
 import { computeAchievements } from '@/data/achievements';
 import { planImage } from '@/data/planImages';
 import { Image } from 'expo-image';
@@ -250,6 +252,8 @@ export const TodayScreen = () => {
           </View>
         </View>
 
+        <NextConsultationCard />
+
         <TouchableOpacity style={styles.fullPlan} onPress={() => router.push('/plans')} activeOpacity={0.85}>
           <View style={styles.fullPlanIcon}>
             <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
@@ -455,6 +459,10 @@ export const TodayScreen = () => {
         {/* Talk to a specialist */}
         <Text style={styles.sectionTitle}>Talk to a specialist</Text>
         <SpecialistCarousel onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
+
+        {/* Keep learning */}
+        <Text style={styles.sectionTitle}>Keep learning</Text>
+        <SpecialistCarousel items={LEARNING_TOPICS} onSelect={(t) => router.push({ pathname: '/learn', params: { topic: t.id } })} />
       </ScrollView>
     </SafeAreaView>
   );

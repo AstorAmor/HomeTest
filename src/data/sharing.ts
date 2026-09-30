@@ -110,7 +110,7 @@ export interface ProfessionalProfileInput {
 
 // Columnas públicas del directorio (coinciden con el GRANT SELECT de la migración).
 const PUBLIC_COLUMNS =
-  'id, display_name, role, specialty, license_number, license_college, bio, city, languages, modalities, years_experience, photo_path, hourly_rate_eur, verified_at, updated_at';
+  'id, display_name, role, specialty, license_number, license_college, bio, city, languages, modalities, years_experience, photo_path, hourly_rate_eur, verified_at, updated_at, first_name, last_name, work_phone, work_email, chat_enabled, video_enabled, requests_enabled';
 
 export interface DataShare {
   id: string;

@@ -438,3 +438,6 @@ verify_jwt = false
 
 [functions.revolut-webhook]
 verify_jwt = false
+
+[functions.video-room]
+verify_jwt = false

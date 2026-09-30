@@ -510,3 +510,23 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
   `app.config.js` cambia la salida web a SPA solo para esta exportación; el desarrollo local sigue en modo "server".
 - En la web no hay modo demo de IA local: la extracción usa las Edge Functions (requiere sesión).
 - Vídeo con Daily: decidido, se deja para más adelante (requiere APK nuevo).
+
+## 2026-09-30 (tarde) — Vídeo real, búsqueda de especialistas, notas de voz, Keep learning
+- **Videoconsulta real con Daily** (dominio hometest.daily.co; secreto `DAILY_API_KEY` en Supabase). Edge Function
+  `video-room`: solo paciente o especialista de la cita; sala privada con pase personal (el médico es owner), caduca
+  2 h tras la cita, sin chat de Daily. Web: sala integrada (iframe) en la sala de consulta / pantalla `/video`.
+  Móvil: se abre en el navegador integrado seguro (Chrome Custom Tabs) — funciona con el APK actual.
+  **Siguiente**: SDK nativo `@daily-co/react-native-daily-js` (APK nuevo; su plugin de Expo pide SDK 55, probar).
+  **Antes de pacientes reales**: la cuenta Daily tiene `hipaa: false` → contratar el plan con BAA/DPA y revisar región UE.
+- Paciente: Today muestra "Your next consultation" con **Join**; el médico: Start consultation (o vídeo sin cita
+  desde la ficha: crea una cita "ahora").
+- Professionals: búsqueda + filtros (idioma, especialidad, videoconsulta) y especialistas reales ("On HomeTest").
+- Send a request: **nota de voz** (expo-audio; bucket privado `request-audio`, solo paciente y especialista
+  destinatario) y **compartir datos** con ese especialista (misma lógica que Sharing & privacy).
+- Today → **Keep learning** (8 temas, `src/data/learning.ts`, pantalla `/learn`). Fotos provisionales en
+  `assets/images/learning/` (prompts en IMAGE_PROMPTS.md).
+- Portal: selector de tema (Profile), **Requests** en la agenda (FIFO, Approve/Decline), "Add to calendar"
+  (Google/Outlook por enlace; la sincronización automática necesita registrar apps OAuth en Google y Microsoft).
+- Chat: respaldo si cae el tiempo real (relectura cada 20 s y al volver a la app).
+- Web: publicar con `npm run deploy:web` (scripts/deploy-web.mjs). Arregla los iconos: Vercel descartaba la carpeta
+  `node_modules` de assets, donde van las fuentes de iconos.

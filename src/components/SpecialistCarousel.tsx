@@ -10,7 +10,8 @@ const useNative = Platform.OS !== 'web';
 
 // Carrusel horizontal: la tarjeta centrada se ve grande y nítida; las de los lados
 // se encogen, se atenúan y se difuminan según se alejan del centro.
-export const SpecialistCarousel = ({ onSelect }: { onSelect: (s: SpecialistCard) => void }) => {
+// `items` permite reutilizarlo (p. ej. "Keep learning" en Today); por defecto, especialistas.
+export const SpecialistCarousel = <T extends SpecialistCard>({ onSelect, items }: { onSelect: (s: T) => void; items?: T[] }) => {
   const { width } = useWindowDimensions();
   const scrollX = useRef(new Animated.Value(0)).current;
   const step = CARD + GAP;
@@ -26,7 +27,7 @@ export const SpecialistCarousel = ({ onSelect }: { onSelect: (s: SpecialistCard)
       onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: useNative })}
       scrollEventThrottle={16}
     >
-      {SPECIALISTS.map((s, i) => {
+      {(items ?? (SPECIALISTS as T[])).map((s, i) => {
         const inputRange = [(i - 2) * step, (i - 1) * step, i * step, (i + 1) * step, (i + 2) * step];
         const scale = scrollX.interpolate({ inputRange, outputRange: [0.62, 0.78, 1, 0.78, 0.62], extrapolate: 'clamp' });
         const opacity = scrollX.interpolate({ inputRange, outputRange: [0.25, 0.55, 1, 0.55, 0.25], extrapolate: 'clamp' });

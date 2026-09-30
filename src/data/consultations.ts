@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { mockProfessionals } from './servicesMock';
 import {
@@ -146,7 +147,7 @@ export const consult = {
     fail(error);
   },
 
-  async sendRequest(input: { proId: string; proName: string; patientName: string; kind: RequestKind; message: string }) {
+  async sendRequest(input: { proId: string; proName: string; patientName: string; kind: RequestKind; message: string; audioUri?: string | null }) {
     if (!isRealProfessional(input.proId)) {
       const req: ConsultRequest = {
         id: `local-${Date.now()}`,
@@ -160,15 +161,27 @@ export const consult = {
         response: null,
         createdAt: new Date().toISOString(),
         answeredAt: null,
+        audioPath: input.audioUri ?? null,
       };
       await AsyncStorage.setItem(LOCAL_REQS, JSON.stringify([req, ...(await readLocal<ConsultRequest>(LOCAL_REQS))]));
       return;
+    }
+    // La nota de voz se sube primero a la carpeta privada del paciente.
+    let audioPath: string | null = null;
+    if (input.audioUri) {
+      const web = Platform.OS === 'web';
+      const contentType = web ? 'audio/webm' : 'audio/mp4';
+      audioPath = `${getCurrentUserId()}/${Date.now()}.${web ? 'webm' : 'm4a'}`;
+      const bytes = await (await fetch(input.audioUri)).arrayBuffer();
+      const { error: upErr } = await supabase!.storage.from('request-audio').upload(audioPath, bytes, { contentType });
+      fail(upErr);
     }
     const { error } = await supabase!.from('consultation_requests').insert({
       professional_id: input.proId,
       patient_name: input.patientName,
       kind: input.kind,
       message: input.message,
+      audio_path: audioPath,
     });
     fail(error);
   },
@@ -195,6 +208,7 @@ export const consult = {
         response: r.response,
         createdAt: r.created_at,
         answeredAt: r.answered_at,
+        audioPath: r.audio_path ?? null,
       })),
       ...local,
     ];
@@ -215,3 +229,10 @@ export const consult = {
     return created!.id;
   },
 };
+
+// URL reproducible de una nota de voz: firmada 1 h si está en Storage; tal cual si es local (demo).
+export async function audioUrl(path: string): Promise<string | null> {
+  if (!/^[0-9a-f-]{36}\//i.test(path) || !supabase) return path;
+  const { data } = await supabase.storage.from('request-audio').createSignedUrl(path, 3600);
+  return data?.signedUrl ?? null;
+}
