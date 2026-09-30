@@ -16,7 +16,8 @@ import { findLabReport, flagColor, formatReportDate, markerNameEn, rangePosition
 export const LabReportScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { title, report, id: reportId } = findLabReport(id);
+  const entry = findLabReport(id);
+  const { title, report, id: reportId } = entry;
   const counts = reportCounts(report);
   const [open, setOpen] = useState<Set<string>>(
     () => new Set(report.sections.filter((s) => s.markers.some((m) => m.flag !== 'en_rango')).map((s) => s.category_id))
@@ -48,7 +49,9 @@ export const LabReportScreen = () => {
           />
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>{title}</Text>
-            <Text style={styles.date}>{formatReportDate(report.test_date)}</Text>
+            <Text style={styles.date}>
+              {formatReportDate(report.test_date)} · {entry.lab}
+            </Text>
             <Text style={styles.counts}>
               <Text style={{ color: Colors.ok }}>{counts.inRange} in range</Text>
               {'  ·  '}

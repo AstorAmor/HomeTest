@@ -17,6 +17,9 @@ import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
 import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
+import { cycleRepository } from '@/data/cycleRepository';
+import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
+import { CycleStrip } from '@/components/CycleStrip';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -85,9 +88,16 @@ export const MyDataScreen = () => {
   const [bp, setBp] = useDeepState<ChartData | null>(null);
   // El ciclo menstrual solo se muestra a perfiles de mujer
   const [sex, setSex] = useState<Sex | undefined>(undefined);
+  const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
 
   const load = useCallback(async () => {
-    profileRepository.get().then((p) => setSex(p.sex)).catch(() => undefined);
+    profileRepository
+      .get()
+      .then(async (p) => {
+        setSex(p.sex);
+        setCycle(p.sex === 'female' ? currentCyclePhase(await cycleRepository.getAll()) : null);
+      })
+      .catch(() => undefined);
     const [g, bpEntries, chol, cort] = await Promise.all([
       getGlucoseEntries(),
       getBloodPressureEntries(),
@@ -156,6 +166,21 @@ export const MyDataScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="My Data" />
+
+        {sex === 'female' && cycle && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Period</Text>
+            </View>
+            <View style={styles.periodBlock}>
+              <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />
+              <TouchableOpacity style={styles.logPeriod} onPress={() => router.push('/log-cycle')} activeOpacity={0.85}>
+                <Ionicons name="water-outline" size={18} color={Colors.pulseAccent} />
+                <Text style={styles.logPeriodText}>Log period</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Wearable measurements</Text>
@@ -241,12 +266,6 @@ export const MyDataScreen = () => {
           })}
         </View>
 
-        {sex === 'female' && (
-          <TouchableOpacity style={styles.cycleButton} onPress={() => router.push('/cycle-detail')} activeOpacity={0.85}>
-            <Ionicons name="water" size={20} color="#5A2340" />
-            <Text style={styles.cycleButtonText}>Menstrual Cycle</Text>
-          </TouchableOpacity>
-        )}
 
         <TouchableOpacity style={styles.filesCard}>
           <Ionicons name="folder-outline" size={22} color={Colors.textPrimary} />
@@ -413,22 +432,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     width: 60,
   },
-  cycleButton: {
+  periodBlock: { paddingHorizontal: 20, marginBottom: 24, gap: 10 },
+  logPeriod: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    backgroundColor: Colors.pinkSoft,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    paddingVertical: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    backgroundColor: Colors.card,
+    borderRadius: 14,
+    paddingVertical: 12,
   },
-  cycleButtonText: {
-    color: '#5A2340',
-    fontSize: 15,
-    fontWeight: '800',
-  },
+  logPeriodText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   filesCard: {
     flexDirection: 'row',
     alignItems: 'center',

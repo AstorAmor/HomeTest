@@ -135,7 +135,7 @@ export const UpcomingAnalysisScreen = () => {
             <>
               <Text style={styles.sheetTitle}>Cancel this test?</Text>
               <Text style={styles.sheetText}>
-                It stays included in your membership, so you can book it again whenever you want.
+                It stays included in your subscription, so you can book it again whenever you want.
               </Text>
               <TouchableOpacity
                 style={[styles.primary, { backgroundColor: Colors.danger }]}

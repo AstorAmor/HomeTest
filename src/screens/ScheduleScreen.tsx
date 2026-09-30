@@ -14,7 +14,7 @@ const TYPE_LABEL: Record<ScheduleType, string> = {
   sample: 'Take sample',
   pickup: 'Sample pickup',
   results: 'Results',
-  membership: 'Membership',
+  membership: 'Subscription',
   lab: 'Lab appointment',
 };
 

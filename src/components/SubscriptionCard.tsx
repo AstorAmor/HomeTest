@@ -11,7 +11,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-// "My subscription": plan activo, renovación, próxima analítica y mejora a Premium.
+// "My subscription": suscripción activa, renovación, próxima analítica y mejora a Premium.
 // Se usa en el perfil y en Lab.
 export const SubscriptionCard = () => {
   const router = useRouter();
@@ -30,10 +30,10 @@ export const SubscriptionCard = () => {
   if (!sub) {
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>No active plan</Text>
+        <Text style={styles.title}>No active subscription</Text>
         <Text style={styles.text}>Join to get two full blood tests a year, a doctor's review and your personalised plan.</Text>
         <TouchableOpacity style={styles.cta} onPress={() => router.push('/store')}>
-          <Text style={styles.ctaText}>See plans</Text>
+          <Text style={styles.ctaText}>See subscriptions</Text>
         </TouchableOpacity>
       </View>
     );
@@ -73,7 +73,7 @@ export const SubscriptionCard = () => {
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.secondary} onPress={() => router.push('/store')}>
-          <Text style={styles.secondaryText}>Compare plans</Text>
+          <Text style={styles.secondaryText}>Compare subscriptions</Text>
         </TouchableOpacity>
       </View>
     </View>

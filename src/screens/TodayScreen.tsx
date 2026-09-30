@@ -8,6 +8,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { ProgressRing } from '@/components/ProgressRing';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
+import { currentReport } from '@/data/reportRepository';
+import { reportSeenKey, userFlags } from '@/data/userFlags';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useFirstName } from '@/components/UserAvatar';
@@ -127,9 +129,12 @@ export const TodayScreen = () => {
   const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
   const [strengthDone, setStrengthDone] = useState(0);
   const [mealsToday, setMealsToday] = useState(0);
+  // El aviso "Your report is here!" se enseña hasta que el usuario lo abre (user_flags).
+  const [reportSeen, setReportSeen] = useState(true);
 
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
+    userFlags.get(reportSeenKey(currentReport.report_id)).then((v) => setReportSeen(!!v));
     const [p, checkIns, cycleEntries, strength, meals, workoutList, mealList, mindfulList, mindfulThisWeek] =
       await Promise.all([
         profileRepository.get(),
@@ -202,10 +207,14 @@ export const TodayScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Today" />
 
-        {demoMode === 'results' && (
+        {demoMode === 'results' && !reportSeen && (
           <TouchableOpacity
             style={styles.reportBanner}
-            onPress={() => router.push('/report-intro')}
+            onPress={() => {
+              setReportSeen(true);
+              userFlags.set(reportSeenKey(currentReport.report_id));
+              router.push('/report-intro');
+            }}
             activeOpacity={0.85}
           >
             <View style={styles.reportBannerIcon}>

@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { DemoMode, useAuth } from '@/context/AuthContext';
+import { currentReport } from '@/data/reportRepository';
+import { reportSeenKey, userFlags } from '@/data/userFlags';
 
 const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; color: string }[] = [
   {
@@ -39,7 +41,11 @@ export const DevModeSelectScreen = () => {
   const choose = (mode: DemoMode) => {
     setDemoMode(mode);
     if (mode === 'new') router.replace('/onboarding');
-    else if (mode === 'results') router.replace('/results-ready');
+    else if (mode === 'results') {
+      // Demo: al elegir "acaba de recibir resultados" el aviso de informe vuelve a salir
+      userFlags.set(reportSeenKey(currentReport.report_id), false);
+      router.replace('/results-ready');
+    }
     else router.replace('/(tabs)');
   };
 

@@ -10,8 +10,8 @@ export interface Product {
 }
 
 export const PRODUCTS: Record<string, Product> = {
-  membership: { name: 'HomeTest annual membership', amountCents: 36500, interval: 'year' },
-  premium: { name: 'HomeTest Premium Health', amountCents: 70000, interval: 'year' },
+  membership: { name: 'HomeTest Basic subscription', amountCents: 36500, interval: 'year' },
+  premium: { name: 'HomeTest Premium subscription', amountCents: 70000, interval: 'year' },
   essential: { name: 'Essential blood test', amountCents: 12499 },
   weight: { name: 'Weight management', amountCents: 8900 },
   performance: { name: 'Sports performance', amountCents: 9999 },

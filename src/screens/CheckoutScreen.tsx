@@ -87,7 +87,7 @@ export const CheckoutScreen = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{product.name}</Text>
-                <Text style={styles.small}>{product.perYear ? 'Annual plan · renews every year' : 'One-off payment'}</Text>
+                <Text style={styles.small}>{product.perYear ? 'Annual subscription · renews every year' : 'One-off payment'}</Text>
               </View>
             </View>
             {product.includes.map((i) => (

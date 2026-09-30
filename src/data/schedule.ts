@@ -77,7 +77,7 @@ export function buildSchedule(): ScheduleEvent[] {
     type: 'membership',
     date: addDays(currentReport.test_date, 182),
     title: '6-month follow-up blood test',
-    detail: 'Included in your membership. We will send your kit a few days before.',
+    detail: 'Included in your subscription. We will send your kit a few days before.',
   });
   return events.sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? '')));
 }

@@ -82,8 +82,8 @@ export const StoreScreen = () => {
             >
               <Text style={[styles.orderText, isPaid && { color: Colors.accent }]}>
                 {isPaid && t.perYear
-                  ? 'Active · thanks for being a member'
-                  : `${t.perYear ? 'Join' : isPaid ? 'Order again' : 'Order'} · ${formatPrice(t.price)}`}
+                  ? 'Your active subscription'
+                  : `${t.perYear ? 'Subscribe' : isPaid ? 'Order again' : 'Order'} · ${formatPrice(t.price)}`}
               </Text>
             </TouchableOpacity>
           </View>

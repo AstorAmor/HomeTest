@@ -4,9 +4,10 @@ import { Colors } from '@/constants/colors';
 import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
 
 // Informes disponibles en Lab → Lab Results (dummy: los dos del prototipo).
-export const LAB_REPORTS: { id: 'current' | 'baseline'; title: string; report: HomeTestReport }[] = [
-  { id: 'current', title: 'Follow-up blood analysis', report: currentReport },
-  { id: 'baseline', title: 'Baseline blood analysis', report: baselineReport },
+// `lab` = quién hizo la analítica (laboratorio socio o "User upload" si la subió el usuario).
+export const LAB_REPORTS: { id: 'current' | 'baseline'; title: string; lab: string; report: HomeTestReport }[] = [
+  { id: 'current', title: 'Follow-up blood analysis', lab: 'Eurofins Megalab', report: currentReport },
+  { id: 'baseline', title: 'Baseline blood analysis', lab: 'Synlab', report: baselineReport },
 ];
 
 export const findLabReport = (id?: string) => LAB_REPORTS.find((r) => r.id === id) ?? LAB_REPORTS[0];

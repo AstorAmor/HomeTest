@@ -65,7 +65,7 @@ export const LabScreen = () => {
 
         <Text style={styles.sectionTitle}>Lab Results</Text>
         <View style={styles.sectionBlock}>
-          {LAB_REPORTS.map(({ id, title, report }) => {
+          {LAB_REPORTS.map(({ id, title, lab, report }) => {
             const counts = reportCounts(report);
             const flagged = flaggedMarkers(report);
             return (
@@ -81,7 +81,10 @@ export const LabScreen = () => {
                   />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.resultName}>{title}</Text>
-                    <Text style={styles.resultDate}>{formatReportDate(report.test_date)}</Text>
+                    <Text style={styles.resultDate}>
+                      {formatReportDate(report.test_date)}
+                      <Text style={styles.resultLab}> · {lab}</Text>
+                    </Text>
                     <Text style={styles.resultCounts}>
                       <Text style={{ color: Colors.ok }}>{counts.inRange} in range</Text>
                       {'  ·  '}
@@ -222,6 +225,10 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 12,
     marginTop: 2,
+  },
+  resultLab: {
+    color: Colors.textMuted,
+    fontSize: 11,
   },
   resultCounts: {
     fontSize: 12,
