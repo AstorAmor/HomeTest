@@ -530,3 +530,15 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 - Chat: respaldo si cae el tiempo real (relectura cada 20 s y al volver a la app).
 - Web: publicar con `npm run deploy:web` (scripts/deploy-web.mjs). Arregla los iconos: Vercel descartaba la carpeta
   `node_modules` de assets, donde van las fuentes de iconos.
+- Web: login y selector con ancho máximo (440/520 px); en Profile del portal el tema va al final.
+
+## Próximos pasos propuestos (a 2026-10-01)
+1. **Eventos en directo en "Keep learning"** (idea del fundador): sesiones de expertos (webinar/Q&A) con entradas.
+   Encaja con lo ya montado: tabla `events` (experto, fecha, plazas, precio), inscripción = pedido en `orders`
+   (Revolut, simulado hasta tener claves), sala en directo con Daily (modo "live streaming"/interactive para
+   muchos asistentes), recordatorio en la agenda y grabación para quien se lo pierda. Pago al experto: liquidación
+   mensual (Revolut Business payouts) con comisión de HomeTest; contrato y facturación con cada experto.
+2. Vídeo nativo dentro de la app (SDK de Daily) + APK nuevo; plan de Daily con BAA/DPA y región UE.
+3. Notificaciones push (mensajes, citas confirmadas, respuesta a solicitudes).
+4. Sincronización real con Google/Outlook (registrar apps OAuth).
+5. Fotos definitivas de Keep learning.

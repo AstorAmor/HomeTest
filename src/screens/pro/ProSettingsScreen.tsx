@@ -231,8 +231,8 @@ export const ProSettingsScreen = () => {
             {channelsCard}
           </View>
           <View style={styles.col}>
-            {appearanceCard}
             {agendaCard}
+            {appearanceCard}
           </View>
         </View>
       ) : (
