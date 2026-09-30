@@ -1,3 +1,3 @@
-import { ProfessionalPatientScreen } from '@/screens/ProfessionalPatientScreen';
+import { ProPatientDetailScreen } from '@/screens/pro/ProPatientDetailScreen';
 
-export default ProfessionalPatientScreen;
+export default ProPatientDetailScreen;

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useRef, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setPortalDemo } from '@/data/specialistPortal';
 import type { Session } from '@supabase/supabase-js';
 import { AuthUser } from '@/types';
 import { mockPatient } from '@/data/mockData';
@@ -22,7 +23,7 @@ export interface ProfessionalSignup {
 // - new: usuario nuevo -> cuestionario de onboarding
 // - results: usuario que acaba de recibir resultados -> celebración + informe
 // - returning: usuario habitual -> directo a Today
-export type DemoMode = 'new' | 'results' | 'returning';
+export type DemoMode = 'new' | 'results' | 'returning' | 'pro';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -32,7 +33,7 @@ interface AuthContextType {
   // 'supabase': cuentas reales y datos en la nube; 'demo': login simulado y datos en el móvil
   authMode: 'supabase' | 'demo';
   demoMode: DemoMode | null;
-  setDemoMode: (mode: DemoMode) => void;
+  setDemoMode: (mode: DemoMode | null) => void;
   // Ficha profesional si la cuenta es de un profesional (null = paciente)
   professional: ProfessionalAccount | null;
   refreshProfessional: () => Promise<void>;
@@ -69,13 +70,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const setDemoMode = (mode: DemoMode | null) => {
     setDemoModeState(mode);
+    setPortalDemo(mode === 'pro');
     (mode ? AsyncStorage.setItem(DEMO_MODE_KEY, mode) : AsyncStorage.removeItem(DEMO_MODE_KEY)).catch(() => undefined);
   };
 
   useEffect(() => {
     Promise.all([AsyncStorage.getItem(DEMO_MODE_KEY), AsyncStorage.getItem(DEMO_USER_KEY)])
       .then(([mode, demoUser]) => {
-        if (mode) setDemoModeState(mode as DemoMode);
+        if (mode) {
+          setDemoModeState(mode as DemoMode);
+          setPortalDemo(mode === 'pro');
+        }
         if (!supabase && demoUser) setUser(JSON.parse(demoUser) as AuthUser);
       })
       .catch(() => undefined)

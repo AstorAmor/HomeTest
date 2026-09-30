@@ -31,6 +31,13 @@ const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; 
     icon: 'home-outline',
     color: Colors.accent,
   },
+  {
+    mode: 'pro',
+    title: 'Specialist portal',
+    subtitle: 'What doctors, dietitians and trainers see (sample patients)',
+    icon: 'medkit-outline',
+    color: Colors.coral,
+  },
 ];
 
 // Pantalla solo para el prototipo: elige qué "momento" del usuario enseñar.
@@ -46,6 +53,7 @@ export const DevModeSelectScreen = () => {
       userFlags.set(reportSeenKey(currentReport.report_id), false);
       router.replace('/results-ready');
     }
+    else if (mode === 'pro') router.replace('/pro');
     else router.replace('/(tabs)');
   };
 

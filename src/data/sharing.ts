@@ -73,6 +73,24 @@ export interface ProfessionalAccount {
   rateStatus?: RateStatus;
   reviewNote?: string | null;
   verified: boolean;
+  // Datos de contacto profesional y canales que el especialista ofrece a sus pacientes
+  firstName?: string | null;
+  lastName?: string | null;
+  workPhone?: string | null;
+  workEmail?: string | null;
+  chatEnabled?: boolean;
+  videoEnabled?: boolean;
+  requestsEnabled?: boolean;
+}
+
+export interface ProfessionalChannelsInput {
+  firstName: string | null;
+  lastName: string | null;
+  workPhone: string | null;
+  workEmail: string | null;
+  chatEnabled: boolean;
+  videoEnabled: boolean;
+  requestsEnabled: boolean;
 }
 
 // Campos que el profesional puede editar (la BD rechaza el resto).
@@ -148,6 +166,13 @@ const toProfessional = (r: any): ProfessionalAccount => ({
   rateStatus: r.rate_status,
   reviewNote: r.review_note,
   verified: !!r.verified_at,
+  firstName: r.first_name ?? null,
+  lastName: r.last_name ?? null,
+  workPhone: r.work_phone ?? null,
+  workEmail: r.work_email ?? null,
+  chatEnabled: !!r.chat_enabled,
+  videoEnabled: r.video_enabled !== false,
+  requestsEnabled: r.requests_enabled !== false,
 });
 
 const toRow = (p: ProfessionalProfileInput) => ({
@@ -189,6 +214,22 @@ export async function updateMyProfessionalProfile(input: ProfessionalProfileInpu
 }
 
 // Foto de perfil: se comprime a 512 px (~30-60 KB) y se sube al bucket público.
+export async function updateMyProfessionalChannels(input: ProfessionalChannelsInput): Promise<void> {
+  const { error } = await supabase!
+    .from('professionals')
+    .update({
+      first_name: input.firstName || null,
+      last_name: input.lastName || null,
+      work_phone: input.workPhone || null,
+      work_email: input.workEmail || null,
+      chat_enabled: input.chatEnabled,
+      video_enabled: input.videoEnabled,
+      requests_enabled: input.requestsEnabled,
+    })
+    .eq('id', getCurrentUserId()!);
+  fail(error);
+}
+
 export async function uploadMyProfessionalPhoto(localUri: string): Promise<void> {
   const userId = getCurrentUserId()!;
   const compressed = await compressPhoto(localUri, 512);
@@ -307,7 +348,10 @@ export async function listSharedPatients(): Promise<SharedPatient[]> {
 
 // Tabla y columna de fecha por categoría. RLS solo devuelve filas si el permiso sigue activo.
 const SCOPE_TABLES: Partial<Record<ShareScope, { table: string; dateColumn: string }[]>> = {
-  lab_reports: [{ table: 'lab_reports', dateColumn: 'test_date' }],
+  lab_reports: [
+    { table: 'lab_reports', dateColumn: 'test_date' },
+    { table: 'lab_uploads', dateColumn: 'created_at' },
+  ],
   glucose: [{ table: 'glucose_readings', dateColumn: 'measured_at' }],
   blood_pressure: [{ table: 'blood_pressure_readings', dateColumn: 'measured_at' }],
   metrics: [{ table: 'metric_readings', dateColumn: 'measured_at' }],

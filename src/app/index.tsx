@@ -26,7 +26,7 @@ export default function RootIndex() {
   }
 
   // Los profesionales tienen su propia interfaz (pacientes que les comparten datos)
-  if (professional) {
+  if (professional || demoMode === 'pro') {
     return <Redirect href="/pro" />;
   }
 

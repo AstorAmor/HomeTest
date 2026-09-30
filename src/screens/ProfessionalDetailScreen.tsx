@@ -1,93 +1,177 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
+import { useAuth } from '@/context/AuthContext';
 import { mockProfessionals, ROLE_INFO } from '@/data/servicesMock';
+import { listVerifiedProfessionals, roleLabel } from '@/data/sharing';
+import { consult, isRealProfessional, ProCapabilities } from '@/data/consultations';
 
-// Huecos dummy para la reserva
-const SLOTS = ['Today 19:00', 'Tomorrow 08:00', 'Tomorrow 18:30', 'Wed 10:00', 'Thu 17:00', 'Fri 12:00'];
+interface ProView {
+  id: string;
+  name: string;
+  roleTitle: string;
+  specialty: string;
+  bio: string;
+  languages: string[];
+  price: number | null;
+  minutes: number;
+  rating: number | null;
+  reviews: number | null;
+  online: boolean;
+  photoUrl: string | null;
+  city: string;
+  real: boolean;
+}
 
+async function loadPro(id: string): Promise<ProView | null> {
+  if (isRealProfessional(id)) {
+    const p = (await listVerifiedProfessionals()).find((x) => x.id === id);
+    if (!p) return null;
+    return {
+      id: p.id,
+      name: p.displayName,
+      roleTitle: roleLabel(p.role),
+      specialty: p.specialty ?? roleLabel(p.role),
+      bio: p.bio ?? '',
+      languages: p.languages,
+      price: p.hourlyRateEur,
+      minutes: 30,
+      rating: null,
+      reviews: null,
+      online: p.modalities.includes('online'),
+      photoUrl: p.photoUrl,
+      city: p.city ?? '',
+      real: true,
+    };
+  }
+  const m = mockProfessionals.find((p) => p.id === id) ?? mockProfessionals[0];
+  return {
+    id: m.id,
+    name: m.name,
+    roleTitle: ROLE_INFO[m.role].label.replace(/ves$/, 'fe').replace(/s$/, ''),
+    specialty: m.specialty,
+    bio: m.bio,
+    languages: m.languages,
+    price: m.pricePerSession,
+    minutes: m.sessionMinutes,
+    rating: m.rating,
+    reviews: m.reviews,
+    online: m.online,
+    photoUrl: null,
+    city: 'Madrid',
+    real: false,
+  };
+}
+
+// Ficha de un especialista para el paciente: videoconsulta, solicitud y chat
+// (el chat solo si el especialista lo tiene habilitado).
 export const ProfessionalDetailScreen = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const pro = mockProfessionals.find((p) => p.id === id) ?? mockProfessionals[0];
-  const [slot, setSlot] = useState<string | null>(null);
-  const [shareResults, setShareResults] = useState(true);
-  const [booked, setBooked] = useState(false);
+  const [pro, setPro] = useState<ProView | null>(null);
+  const [caps, setCaps] = useState<ProCapabilities>({ video: true, requests: true, chat: false });
+
+  useEffect(() => {
+    loadPro(id).then(setPro).catch(() => setPro(null));
+    consult.capabilities(id).then(setCaps).catch(() => undefined);
+  }, [id]);
+
+  if (!pro) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScreenHeader title="Specialist" showBack />
+      </SafeAreaView>
+    );
+  }
+
+  const params = { pro: pro.id, name: pro.name };
+  const openChat = async () => {
+    const conv = await consult.conversationWith(pro.id, user?.nombre ?? 'Patient');
+    router.push({ pathname: '/chat', params: { conversation: conv, title: pro.name, side: 'patient' } });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={ROLE_INFO[pro.role].label.replace(/ves$/, 'fe').replace(/s$/, '')} showBack />
+        <ScreenHeader title={pro.roleTitle} showBack />
 
         <View style={styles.hero}>
-          <Avatar nombre={pro.name.replace('Dr. ', '')} size={84} />
+          {pro.photoUrl ? (
+            <Image source={{ uri: pro.photoUrl }} style={styles.photo} contentFit="cover" />
+          ) : (
+            <Avatar nombre={pro.name.replace(/^Dra?\.\s*/, '')} size={84} />
+          )}
           <Text style={styles.name}>{pro.name}</Text>
           <Text style={styles.specialty}>{pro.specialty}</Text>
+          {pro.real && (
+            <View style={styles.verified}>
+              <Ionicons name="shield-checkmark" size={13} color={Colors.ok} />
+              <Text style={styles.verifiedText}>Verified by HomeTest</Text>
+            </View>
+          )}
           <View style={styles.statsRow}>
-            <Stat icon="star" color={Colors.amber} value={pro.rating.toFixed(1)} label={`${pro.reviews} reviews`} />
-            <Stat icon="cash-outline" color={Colors.accent} value={`€${pro.pricePerSession}`} label={`${pro.sessionMinutes} min`} />
-            <Stat
-              icon={pro.online ? 'videocam-outline' : 'location-outline'}
-              color={Colors.violet}
-              value={pro.online ? 'Online' : 'In person'}
-              label="Madrid"
+            {pro.rating !== null && <Stat icon="star" color={Colors.amber} value={pro.rating.toFixed(1)} label={`${pro.reviews} reviews`} />}
+            <Stat icon="cash-outline" color={Colors.accent} value={pro.price ? `€${pro.price}` : '—'} label={`${pro.minutes} min`} />
+            <Stat icon={pro.online ? 'videocam-outline' : 'location-outline'} color={Colors.violet} value={pro.online ? 'Online' : 'In person'} label={pro.city || 'Spain'} />
+          </View>
+        </View>
+
+        {pro.bio ? (
+          <>
+            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.bio}>{pro.bio}</Text>
+          </>
+        ) : null}
+        {pro.languages.length > 0 && <Text style={styles.languages}>Speaks {pro.languages.join(' and ')}</Text>}
+
+        <Text style={styles.sectionTitle}>How can {pro.name.split(' ').slice(0, 2).join(' ')} help you?</Text>
+        <View style={styles.actions}>
+          {caps.video && (
+            <Action
+              icon="videocam"
+              title="Book a video consultation"
+              sub={`${pro.minutes} min · ${pro.price ? `€${pro.price}` : 'price on request'} · pick a free slot`}
+              primary
+              onPress={() => router.push({ pathname: '/consult-book', params })}
             />
-          </View>
+          )}
+          {caps.requests && (
+            <Action icon="paper-plane-outline" title="Send a request" sub="A question or a results review, answered in the app" onPress={() => router.push({ pathname: '/consult-request', params })} />
+          )}
+          {caps.chat ? (
+            <Action icon="chatbubbles-outline" title="Chat" sub="Message them directly" onPress={openChat} />
+          ) : (
+            <View style={styles.chatOff}>
+              <Ionicons name="chatbubbles-outline" size={16} color={Colors.textMuted} />
+              <Text style={styles.chatOffText}>This specialist doesn't offer chat. Use a request instead.</Text>
+            </View>
+          )}
         </View>
-
-        <Text style={styles.sectionTitle}>About</Text>
-        <Text style={styles.bio}>{pro.bio}</Text>
-        <Text style={styles.languages}>Speaks {pro.languages.join(' and ')}</Text>
-
-        <Text style={styles.sectionTitle}>Book a session</Text>
-        <View style={styles.slots}>
-          {SLOTS.map((s) => (
-            <TouchableOpacity
-              key={s}
-              style={[styles.slot, slot === s && styles.slotSelected]}
-              onPress={() => {
-                setSlot(s);
-                setBooked(false);
-              }}
-            >
-              <Text style={[styles.slotText, slot === s && { color: Colors.background }]}>{s}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.shareRow} onPress={() => setShareResults(!shareResults)}>
-          <Ionicons
-            name={shareResults ? 'checkbox' : 'square-outline'}
-            size={22}
-            color={shareResults ? Colors.accent : Colors.textMuted}
-          />
-          <Text style={styles.shareText}>Share my latest results with {pro.name.split(' ').slice(0, 2).join(' ')}</Text>
-        </TouchableOpacity>
-
-        {booked && (
-          <View style={styles.confirmation}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
-            <Text style={styles.confirmationText}>
-              Prototype: booking for {slot} noted. No real request is sent yet.
-            </Text>
-          </View>
-        )}
+        {!pro.real && <Text style={styles.proto}>Example specialist: bookings and messages stay on your phone.</Text>}
       </ScrollView>
-
-      <TouchableOpacity
-        style={[styles.cta, !slot && styles.ctaDisabled]}
-        disabled={!slot}
-        onPress={() => setBooked(true)}
-      >
-        <Text style={styles.ctaText}>{slot ? `Book ${slot} · €${pro.pricePerSession}` : 'Pick a time'}</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
+
+const Action = ({ icon, title, sub, onPress, primary }: { icon: string; title: string; sub: string; onPress: () => void; primary?: boolean }) => (
+  <TouchableOpacity style={[styles.action, primary && styles.actionPrimary]} onPress={onPress} activeOpacity={0.85}>
+    <View style={[styles.actionIcon, primary && { backgroundColor: withAlpha(Colors.background, 0.2) }]}>
+      <Ionicons name={icon as any} size={20} color={primary ? Colors.background : Colors.accent} />
+    </View>
+    <View style={{ flex: 1 }}>
+      <Text style={[styles.actionTitle, primary && { color: Colors.background }]}>{title}</Text>
+      <Text style={[styles.actionSub, primary && { color: Colors.background, opacity: 0.85 }]}>{sub}</Text>
+    </View>
+    <Ionicons name="chevron-forward" size={18} color={primary ? Colors.background : Colors.textMuted} />
+  </TouchableOpacity>
+);
 
 const Stat = ({ icon, color, value, label }: { icon: string; color: string; value: string; label: string }) => (
   <View style={styles.stat}>
@@ -99,58 +183,27 @@ const Stat = ({ icon, color, value, label }: { icon: string; color: string; valu
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
-  content: { paddingBottom: 24 },
+  content: { paddingBottom: 32 },
   hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
+  photo: { width: 84, height: 84, borderRadius: 42 },
   name: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginTop: 12 },
-  specialty: { color: Colors.textSecondary, fontSize: 14, marginTop: 4 },
-  statsRow: {
-    flexDirection: 'row',
-    alignSelf: 'stretch',
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingVertical: 14,
-    marginTop: 18,
-  },
+  specialty: { color: Colors.textSecondary, fontSize: 14, marginTop: 4, textAlign: 'center' },
+  verified: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
+  verifiedText: { color: Colors.ok, fontSize: 12, fontWeight: '700' },
+  statsRow: { flexDirection: 'row', alignSelf: 'stretch', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingVertical: 14, marginTop: 18 },
   stat: { flex: 1, alignItems: 'center', gap: 3 },
   statValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   statLabel: { color: Colors.textMuted, fontSize: 11 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginBottom: 8, marginTop: 8 },
   bio: { color: Colors.textSecondary, fontSize: 14, lineHeight: 21, paddingHorizontal: 20 },
   languages: { color: Colors.textMuted, fontSize: 12, paddingHorizontal: 20, marginTop: 6, marginBottom: 16 },
-  slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
-  slot: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  slotSelected: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  slotText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  shareRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginTop: 18 },
-  shareText: { color: Colors.textSecondary, fontSize: 14, flex: 1 },
-  confirmation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.accentSoft,
-    borderRadius: 12,
-    padding: 12,
-    marginHorizontal: 20,
-    marginTop: 16,
-  },
-  confirmationText: { color: Colors.textPrimary, fontSize: 13, flex: 1 },
-  cta: {
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  actions: { paddingHorizontal: 20, gap: 10 },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14 },
+  actionPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  actionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  actionTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  actionSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  chatOff: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 6 },
+  chatOffText: { color: Colors.textMuted, fontSize: 12, flex: 1 },
+  proto: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 16, paddingHorizontal: 30 },
 });

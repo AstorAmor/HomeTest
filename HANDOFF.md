@@ -468,3 +468,35 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 - `ScreenHeader`: "atrás" sin historial vuelve al inicio (antes daba GO_BACK sin manejar).
 - **Full view** (Today → Your plan) abre `/action-plan`: el "Your action plan" del último informe (componente
   `ActionPlanList`, compartido con `/report-plan`), con porqué, cómo, avisos y proyección de cada marcador.
+
+## 2026-09-30 — Coherencia de uso, analíticas subidas, comunicación y portal del especialista
+
+### App del paciente
+- **Lo ya visto se recuerda** (`src/data/userFlags.ts`, tabla `user_flags`): nube si hay cuenta (todos sus
+  dispositivos) + copia local (instantáneo/offline). Ej.: "Your report is here!" desaparece tras abrirlo.
+- **Subir analítica → "See my progress" / "Update plan"**: `labUploads.ts` (tabla `lab_uploads`), comparación en
+  `utils/progress.ts` (solo marcadores re-medidos, reconocidos por el catálogo canónico y con la misma unidad o
+  equivalente; cambios <5% = ruido) y propuesta de plan en `utils/planUpdate.ts` (acciones: reached / on_track /
+  needs_attention / not_retested / new). Al aplicar se guarda una versión en `action_plans` (historial en Your plans
+  y arriba en Full view). Las subidas salen en Lab con "User upload · <lab>".
+- "Subscription" para lo que se paga (Basic 365 € / Premium 700 €); "plan" = lo que hay que hacer.
+- My Data: sección **Period** (mujeres) encima de wearables; Lab: laboratorio junto a la fecha.
+- Especialista (ficha): **Book a video consultation** (huecos libres según su disponibilidad, `pro_busy_slots`),
+  **Send a request** y **Chat** (solo si el especialista lo habilita). Especialistas de ejemplo → en el móvil.
+
+### Portal del especialista (`src/screens/pro/*`, `src/components/pro/*`, datos en `specialistPortal.ts`)
+- Rutas: `/pro` Agenda (semana/mes + lista del día; Confirm / Start consultation / View history),
+  `/pro-patients` (tarjetas con ⚠ = solicitudes o valores alterados, 📞 = consulta hoy), `/pro-patient?id`
+  (acciones: llamar, vídeo, mensaje, email, vídeo explicativo, generar plan; pestañas resultados · notas SOAP ·
+  mensajes/solicitudes), `/pro-inbox`, `/pro-settings` (contacto profesional y privado, canales, agenda:
+  disponibilidad semanal, duración, margen, Google/Outlook), `/pro-plan?patient`, `/pro-room`.
+- **Web vs app**: `useIsWide()` (web ≥ 900 px) → barra lateral y SplitScreenConsultation; móvil → pestañas abajo y
+  MobileVideoConsultation (vídeo a pantalla completa + panel inferior deslizable con resultados y notas en directo).
+- **Vídeo: PROTOTIPO sin proveedor** (`VideoPane.tsx`). Integrar Daily / Whereby / LiveKit (DPA + servidores UE);
+  en el móvil requiere APK nuevo (módulo nativo).
+- **Chat**: propio sobre Supabase (tablas `conversations`/`messages` + Realtime, RLS).
+- **Demo**: selector de desarrollo → "Specialist portal" (pacientes, citas, solicitudes y notas de ejemplo, en el
+  móvil). Con una cuenta de especialista verificada, todo va contra Supabase.
+- Esquema: migración `20260930110000_specialist_portal.sql` (+ `pro_busy_slots`, `pro_opens_chat`). Citas sin
+  solapes (exclusion constraint), el paciente solo puede cancelar, notas clínicas privadas del autor,
+  `is_my_patient()` y `pro_patients()`. **Tests: `supabase/tests/database/specialist_portal.test.sql` (20/20 OK)**.

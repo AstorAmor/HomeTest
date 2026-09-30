@@ -1,3 +1,3 @@
-import { ProfessionalHomeScreen } from '@/screens/ProfessionalHomeScreen';
+import { ProAgendaScreen } from '@/screens/pro/ProAgendaScreen';
 
-export default ProfessionalHomeScreen;
+export default ProAgendaScreen;

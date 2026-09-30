@@ -83,6 +83,14 @@ export default function Layout() {
             <Stack.Screen name="action-plan" />
             <Stack.Screen name="progress" />
             <Stack.Screen name="plan-update" />
+            <Stack.Screen name="pro-patients" options={{ animation: 'fade' }} />
+            <Stack.Screen name="pro-inbox" options={{ animation: 'fade' }} />
+            <Stack.Screen name="pro-settings" options={{ animation: 'fade' }} />
+            <Stack.Screen name="pro-room" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+            <Stack.Screen name="pro-plan" />
+            <Stack.Screen name="chat" />
+            <Stack.Screen name="consult-book" />
+            <Stack.Screen name="consult-request" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

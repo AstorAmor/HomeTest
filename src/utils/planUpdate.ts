@@ -109,3 +109,28 @@ export const STATUS_LABEL: Record<PlanVersionItem['status'], string> = {
   not_retested: 'Not retested',
   new: 'New',
 };
+
+// Borrador de plan para el especialista a partir de los valores fuera de rango
+// (una acción por familia de marcadores). El especialista lo edita antes de enviarlo.
+export function draftActionsForMarkers(markers: { id: string; name: string; value: number | string; unit: string }[]): PlanVersionItem[] {
+  const out = new Map<string, PlanVersionItem>();
+  for (const m of markers) {
+    const rule = RULES.find((r) => r.markers.includes(m.id));
+    const key = rule?.title ?? `${DOCTOR_RULE.title}: ${m.name}`;
+    const line = `${m.name} ${m.value} ${m.unit}`.trim();
+    const existing = out.get(key);
+    if (existing) {
+      existing.markers.push(m.id);
+      existing.note = `${existing.note} · ${line}`;
+      continue;
+    }
+    out.set(key, {
+      title: rule?.title ?? `Follow up: ${m.name}`,
+      why: rule?.why ?? DOCTOR_RULE.why,
+      markers: [m.id],
+      status: 'new',
+      note: line,
+    });
+  }
+  return [...out.values()];
+}
