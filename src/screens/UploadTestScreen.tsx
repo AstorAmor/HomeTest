@@ -20,6 +20,8 @@ import { postAi } from '@/utils/apiBaseUrl';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
 import { prepareImage, chunk } from '@/utils/imageUpload';
+import { useRouter } from 'expo-router';
+import { labUploadRepository } from '@/data/labUploads';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
 
@@ -41,8 +43,28 @@ export const UploadTestScreen = () => {
   const [errorText, setErrorText] = useState('');
   const [showRaw, setShowRaw] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const router = useRouter();
+  // Id de la subida guardada: se guarda una sola vez al pulsar cualquiera de los dos botones.
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState('');
+
+  const saveAndGo = async (pathname: '/progress' | '/plan-update') => {
+    if (!report) return;
+    setSaveError('');
+    try {
+      let id = savedId;
+      if (!id) {
+        id = (await labUploadRepository.save(report)).id;
+        setSavedId(id);
+      }
+      router.push({ pathname, params: { upload: id } });
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Could not save your results');
+    }
+  };
 
   const resetResult = () => {
+    setSavedId(null);
     setReport(null);
     setRawJson('');
     setErrorText('');
@@ -284,6 +306,19 @@ export const UploadTestScreen = () => {
           <View style={styles.tableWrap}>
             <LabReportTable report={report} onUpdateParametro={updateParametro} />
 
+            <View style={styles.nextActions}>
+              <Text style={styles.nextTitle}>Check the values above, then:</Text>
+              <TouchableOpacity style={styles.nextPrimary} onPress={() => saveAndGo('/progress')}>
+                <Ionicons name="trending-up" size={18} color={Colors.background} />
+                <Text style={styles.nextPrimaryText}>See my progress</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/plan-update')}>
+                <Ionicons name="sparkles-outline" size={18} color={Colors.accent} />
+                <Text style={styles.nextSecondaryText}>Update plan</Text>
+              </TouchableOpacity>
+              {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
+            </View>
+
             <TouchableOpacity style={styles.rawToggle} onPress={() => setShowRaw((v) => !v)}>
               <Text style={styles.rawToggleText}>
                 {showRaw ? 'Hide raw JSON' : 'View raw JSON'}
@@ -441,4 +476,28 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     lineHeight: 18,
   },
+  nextActions: { marginTop: 16, gap: 10 },
+  nextTitle: { color: Colors.textSecondary, fontSize: 13 },
+  nextPrimary: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.accent,
+    borderRadius: 26,
+    paddingVertical: 14,
+  },
+  nextPrimaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  nextSecondary: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: 26,
+    paddingVertical: 14,
+  },
+  nextSecondaryText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
+  saveError: { color: Colors.danger, fontSize: 13 },
 });

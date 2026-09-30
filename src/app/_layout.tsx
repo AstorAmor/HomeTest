@@ -81,6 +81,8 @@ export default function Layout() {
             <Stack.Screen name="book-lab" />
             <Stack.Screen name="plans" />
             <Stack.Screen name="action-plan" />
+            <Stack.Screen name="progress" />
+            <Stack.Screen name="plan-update" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

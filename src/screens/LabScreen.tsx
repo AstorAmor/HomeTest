@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,8 @@ import { DonutChart } from '@/components/DonutChart';
 import { MarkerRangeBar } from '@/components/MarkerRangeBar';
 import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses } from '@/data/mockData';
+import { LabUpload, labUploadRepository } from '@/data/labUploads';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import {
   LAB_REPORTS,
@@ -25,8 +27,29 @@ const formatShortDate = (dateString: string) => {
   return `${date.getDate()}/${date.getMonth() + 1}`;
 };
 
+// Recuento en rango / fuera de rango de una analítica subida (con los rangos del propio laboratorio).
+const uploadCounts = (u: LabUpload) => {
+  let inRange = 0;
+  let out = 0;
+  for (const sec of u.data.secciones)
+    for (const p of sec.parametros) {
+      if (typeof p.valor !== 'number') continue;
+      const low = p.rango_min;
+      const high = p.rango_max;
+      if ((low !== null && p.valor < low) || (high !== null && p.valor > high)) out++;
+      else inRange++;
+    }
+  return { inRange, out };
+};
+
 export const LabScreen = () => {
   const router = useRouter();
+  const [uploads, setUploads] = useDeepState<LabUpload[]>([]);
+  useReloadOnFocus(
+    useCallback(async () => {
+      setUploads(await labUploadRepository.getAll().catch(() => []));
+    }, [setUploads]),
+  );
 
   const openReport = (id: 'current' | 'baseline') => {
     // El informe más reciente abre el recorrido completo (resumen + plan);
@@ -114,6 +137,41 @@ export const LabScreen = () => {
                     })}
                   </View>
                 )}
+              </TouchableOpacity>
+            );
+          })}
+          {uploads.map((u) => {
+            const c = uploadCounts(u);
+            return (
+              <TouchableOpacity
+                key={u.id}
+                style={styles.resultCard}
+                onPress={() => router.push({ pathname: '/progress', params: { upload: u.id } })}
+                activeOpacity={0.85}
+              >
+                <View style={styles.resultTop}>
+                  <DonutChart
+                    size={58}
+                    strokeWidth={7}
+                    segments={[
+                      { value: c.inRange, color: Colors.ok },
+                      { value: c.out, color: Colors.attention },
+                    ]}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.resultName}>Uploaded analysis</Text>
+                    <Text style={styles.resultDate}>
+                      {u.testDate ? formatReportDate(u.testDate) : formatReportDate(u.createdAt.slice(0, 10))}
+                      <Text style={styles.resultLab}> · User upload{u.labName ? ` · ${u.labName}` : ''}</Text>
+                    </Text>
+                    <Text style={styles.resultCounts}>
+                      <Text style={{ color: Colors.ok }}>{c.inRange} in range</Text>
+                      {'  ·  '}
+                      <Text style={{ color: Colors.attention }}>{c.out} need a look</Text>
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                </View>
               </TouchableOpacity>
             );
           })}

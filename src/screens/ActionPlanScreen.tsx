@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,10 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { ActionPlanList } from '@/components/ActionPlanList';
 import { Colors } from '@/constants/colors';
 import { currentReport } from '@/data/reportRepository';
+import { PlanVersion, planVersionRepository } from '@/data/planVersions';
+import { STATUS_LABEL } from '@/utils/planUpdate';
+import { statusColor } from '@/screens/PlanUpdateScreen';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -15,6 +19,12 @@ const longDate = (iso: string) =>
 // porqué de cada acción y la proyección de su marcador.
 export const ActionPlanScreen = () => {
   const router = useRouter();
+  const [latest, setLatest] = useDeepState<PlanVersion | null>(null);
+  useReloadOnFocus(
+    useCallback(async () => {
+      setLatest(await planVersionRepository.latest().catch(() => null));
+    }, [setLatest]),
+  );
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -24,6 +34,24 @@ export const ActionPlanScreen = () => {
           why it matters for you and where the marker could be at your next test.
         </Text>
 
+        {latest && (
+          <View style={styles.updated}>
+            <Text style={styles.updatedTitle}>Your plan today</Text>
+            <Text style={styles.updatedSub}>Updated {longDate(latest.createdAt.slice(0, 10))} with your latest results</Text>
+            {latest.items.map((it, i) => (
+              <View key={`${it.title}-${i}`} style={styles.updatedRow}>
+                <View style={[styles.dot, { backgroundColor: statusColor(it.status) }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.updatedItem}>{it.title}</Text>
+                  {it.note && <Text style={styles.updatedNote}>{it.note}</Text>}
+                </View>
+                <Text style={[styles.updatedStatus, { color: statusColor(it.status) }]}>{STATUS_LABEL[it.status]}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {latest && <Text style={styles.section}>From your {longDate(currentReport.test_date)} report</Text>}
         <ActionPlanList />
 
         <View style={styles.links}>
@@ -53,6 +81,24 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 32 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
   links: { marginHorizontal: 20, marginTop: 8, gap: 8 },
+  updated: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 18,
+    gap: 10,
+  },
+  updatedTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
+  updatedSub: { color: Colors.textSecondary, fontSize: 12, marginTop: -6 },
+  updatedRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  dot: { width: 8, height: 8, borderRadius: 4, marginTop: 6 },
+  updatedItem: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  updatedNote: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  updatedStatus: { fontSize: 11, fontWeight: '800' },
+  section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginHorizontal: 20, marginBottom: 10 },
   link: {
     flexDirection: 'row',
     alignItems: 'center',

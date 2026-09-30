@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,52 @@ import { Colors } from '@/constants/colors';
 import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
 import { markerIn, planHistory, reportsForProgress } from '@/data/planHistory';
 import { flagColor } from '@/utils/labReportView';
+import { PlanVersion, planVersionRepository } from '@/data/planVersions';
+import { STATUS_LABEL } from '@/utils/planUpdate';
+import { statusColor } from '@/screens/PlanUpdateScreen';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+
+const dayMonthYear = (iso: string) =>
+  new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const SOURCE_LABEL: Record<PlanVersion['source'], string> = {
+  upload: 'Updated from your uploaded test',
+  report: 'From your HomeTest report',
+  professional: 'Updated by your specialist',
+};
+
+// Versión del plan actualizada (subida de analítica o profesional): acciones con su estado.
+const VersionCard = ({ v, current, open, onToggle }: { v: PlanVersion; current: boolean; open: boolean; onToggle: () => void }) => (
+  <View style={[styles.card, current && styles.cardLatest]}>
+    <TouchableOpacity style={styles.head} activeOpacity={0.85} onPress={onToggle}>
+      <View style={[styles.icon, current && { backgroundColor: Colors.accent }]}>
+        <Ionicons name={current ? 'sparkles' : 'git-branch-outline'} size={20} color={current ? Colors.background : Colors.accent} />
+      </View>
+      <View style={{ flex: 1 }}>
+        {current && <Text style={styles.badge}>Current plan</Text>}
+        <Text style={styles.title}>{dayMonthYear(v.createdAt)}</Text>
+        <Text style={styles.sub}>
+          {SOURCE_LABEL[v.source]} · {v.items.length} actions
+        </Text>
+      </View>
+      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
+    </TouchableOpacity>
+    {open && (
+      <View style={styles.items}>
+        {v.items.map((it, i) => (
+          <View key={`${it.title}-${i}`} style={styles.item}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+              <Text style={[styles.itemTitle, { flex: 1 }]}>{it.title}</Text>
+              <Text style={[styles.status, { color: statusColor(it.status) }]}>{STATUS_LABEL[it.status]}</Text>
+            </View>
+            <Text style={styles.itemWhy}>{it.why}</Text>
+            {it.note && <Text style={styles.itemNote}>{it.note}</Text>}
+          </View>
+        ))}
+      </View>
+    )}
+  </View>
+);
 
 const monthYear = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
@@ -18,6 +64,15 @@ export const PlansScreen = () => {
   const router = useRouter();
   const plans = planHistory();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [versions, setVersions] = useDeepState<PlanVersion[]>([]);
+  useReloadOnFocus(
+    useCallback(async () => {
+      const v = await planVersionRepository.getAll().catch(() => []);
+      setVersions(v);
+      if (v.length) setOpenId((cur) => cur ?? v[0].id);
+    }, [setVersions]),
+  );
+  const hasVersions = versions.length > 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -25,14 +80,20 @@ export const PlansScreen = () => {
         <ScreenHeader title="Your plans" showBack />
         <Text style={styles.intro}>A new plan comes with every blood test. Earlier plans stay here so you can see how far you've come.</Text>
 
-        {plans.map((p) => {
+        {versions.map((v, i) => (
+          <VersionCard key={v.id} v={v} current={i === 0} open={openId === v.id} onToggle={() => setOpenId(openId === v.id ? null : v.id)} />
+        ))}
+
+        {plans.map((raw) => {
+          // Si hay versiones actualizadas, el plan del informe deja de ser el vigente.
+          const p = { ...raw, latest: raw.latest && !hasVersions, fromReport: raw.latest };
           const open = openId === p.id;
           return (
             <View key={p.id} style={[styles.card, p.latest && styles.cardLatest]}>
               <TouchableOpacity
                 style={styles.head}
                 activeOpacity={0.85}
-                onPress={() => (p.latest ? router.push('/report-plan') : setOpenId(open ? null : p.id))}
+                onPress={() => (p.fromReport ? router.push('/report-plan') : setOpenId(open ? null : p.id))}
               >
                 <View style={[styles.icon, p.latest && { backgroundColor: Colors.accent }]}>
                   <Ionicons name={p.latest ? 'sparkles' : 'time-outline'} size={20} color={p.latest ? Colors.background : Colors.accent} />
@@ -44,16 +105,16 @@ export const PlansScreen = () => {
                     {p.label} · {p.items.length} actions
                   </Text>
                 </View>
-                <Ionicons name={p.latest ? 'chevron-forward' : open ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
+                <Ionicons name={p.fromReport ? 'chevron-forward' : open ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
               </TouchableOpacity>
 
-              {p.latest && (
+              {p.fromReport && (
                 <TouchableOpacity style={styles.cta} onPress={() => router.push('/report-plan')}>
                   <Text style={styles.ctaText}>See full plan</Text>
                 </TouchableOpacity>
               )}
 
-              {!p.latest && open && (
+              {!p.fromReport && open && (
                 <View style={styles.items}>
                   {p.items.map((it) => (
                     <View key={it.title} style={styles.item}>
@@ -118,4 +179,6 @@ const styles = StyleSheet.create({
   markerVal: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   unit: { color: Colors.textMuted, fontSize: 11, minWidth: 44 },
   note: { color: Colors.textMuted, fontSize: 11, marginTop: 4 },
+  status: { fontSize: 11, fontWeight: '800' },
+  itemNote: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
 });
