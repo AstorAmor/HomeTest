@@ -49,15 +49,16 @@ mirando a cámara, sonrisa cercana, fondo sencillo y desenfocado. Que no parezca
 
 ## Keep learning (Today) — `assets/images/learning/` · 1024×1024 JPG, cuadradas
 
-Mismo estilo que los especialistas: fotografía luminosa, natural, tonos cálidos, sin texto.
+Estilo común (añadir al final de cada prompt): *soft editorial still life, warm natural light, muted earthy palette (terracotta, sand, sage, cream), shallow depth of field, minimal composition, generous negative space in the lower third for a caption, no text, no logos, square 1:1*.
+Más abstractas que los especialistas: objetos, texturas y formas; personas solo en reproductive_health.
 
 | Archivo | Prompt |
 |---|---|
-| reproductive_health.jpg | Calm woman in her 30s sitting by a window with a cup of tea and a notebook, soft morning light, warm neutral tones, lifestyle health photography |
-| training.jpg | Woman and man doing strength training with dumbbells in a bright modern gym, natural light, energetic but calm |
-| meditation.jpg | Person meditating cross-legged on a mat in a bright living room with plants, eyes closed, serene |
-| yoga.jpg | Woman in a gentle yoga pose (downward dog) on a mat, sunlit studio, warm tones |
-| nutrition.jpg | Top-down healthy plate: salmon, salad, avocado, whole grains on a wooden table, natural light |
-| sleep.jpg | Cosy bedroom at dusk, neatly made bed, warm lamp light, calm atmosphere |
-| heart_health.jpg | Person checking blood pressure at home with a digital cuff at a kitchen table, bright and reassuring |
-| stress.jpg | Person walking outdoors in a green park, relaxed, deep breath, golden hour |
+| reproductive_health.jpg | Side profile of a pregnant woman in a soft cream knit dress, hands resting gently on her belly, face out of frame or softly turned away, sunlit room with sheer curtains, calm and intimate |
+| training.jpg | A pair of matte terracotta kettlebells and a coiled jump rope on a light wooden floor, long morning shadows, sense of quiet strength |
+| meditation.jpg | Concentric ripples spreading across still water in a ceramic bowl, a single smooth stone beside it, soft diffused light, serene |
+| yoga.jpg | A rolled sage-green yoga mat and a cork block on pale linen, a sunbeam crossing diagonally, airy and light |
+| nutrition.jpg | Top-down arrangement of whole foods in small ceramic bowls: salmon fillet, avocado halves, lentils, berries, leafy greens, olive oil, on a sand-coloured stone surface |
+| sleep.jpg | Rumpled cream linen sheets and a pillow at dusk, a crescent moon visible through the window, warm lamp glow, deep blue and amber tones |
+| heart_health.jpg | Abstract heart shape formed by a single flowing red thread on cream paper, the thread continuing as a gentle heartbeat line, minimal |
+| stress.jpg | A dandelion clock releasing seeds into the air against a soft golden-hour meadow background, feeling of exhaling and letting go |
