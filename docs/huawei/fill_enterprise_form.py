@@ -112,3 +112,48 @@ missing = (set(T) | set(CHECK) | {"screenshot"}) - seen
 assert not missing, missing
 doc.save(OUT, garbage=3, deflate=True)
 print(OUT)
+
+# --- Versión para subir: página 4 con imagen de la empresa, formulario aplanado y comprimido ---
+# (Huawei rechazaba la subida: pide todas las secciones rellenas, incluida la imagen de la pág. 4.)
+ov = Image.new("RGB", (1400, 900), "white")
+dr = ImageDraw.Draw(ov)
+try:
+    big, mid, small = (ImageFont.truetype("arialbd.ttf", 44), ImageFont.truetype("arialbd.ttf", 28), ImageFont.truetype("arial.ttf", 22))
+except OSError:
+    big = mid = small = ImageFont.load_default()
+dr.text((60, 50), "HomeTest — preventive health, from home", fill="#B5552F", font=big)
+dr.text((60, 120), "Madrid, Spain · individual developer (company being incorporated)", fill="#444", font=small)
+boxes = [
+    ("1. At-home blood test", "Kit at home or lab\nappointment; sample\nanalysed by a partner lab."),
+    ("2. HomeTest app", "Results explained,\ntrends, wellbeing plan.\nWearables: steps,\ncalories, distance."),
+    ("3. Professionals", "Doctors, dietitians and\ntrainers the user chooses;\nsharing only with explicit,\nrevocable consent."),
+]
+for i, (title, body) in enumerate(boxes):
+    x0 = 60 + i * 450
+    dr.rounded_rectangle((x0, 220, x0 + 400, 620), radius=24, outline="#B5552F", width=4, fill="#FBF3EE")
+    dr.text((x0 + 24, 250), title, fill="#222", font=mid)
+    dr.multiline_text((x0 + 24, 320), body, fill="#333", font=small, spacing=10)
+    if i < 2:
+        dr.polygon([(x0 + 412, 405), (x0 + 440, 420), (x0 + 412, 435)], fill="#B5552F")
+dr.multiline_text((60, 680), "Data stored in the EU (Frankfurt) · never sold or used for advertising\n"
+                  "Wellbeing information only: HomeTest does not diagnose or treat", fill="#444", font=small, spacing=10)
+overview = HERE / "company_overview.png"
+ov.save(overview)
+
+up = pymupdf.open(OUT)
+for wdg in up[3].widgets():
+    if wdg.field_type == pymupdf.PDF_WIDGET_TYPE_BUTTON:
+        up[3].insert_image(wdg.rect, filename=str(overview), keep_proportion=True)
+up.bake()  # aplana los campos: el texto queda como contenido fijo de la página
+for page in up:  # reduce las imágenes pesadas de la plantilla
+    for img in page.get_images(full=True):
+        xref = img[0]
+        pix = pymupdf.Pixmap(up, xref)
+        if pix.width > 1200 or pix.height > 1200:
+            if pix.alpha or pix.n > 3:
+                pix = pymupdf.Pixmap(pymupdf.csRGB, pix)
+            pix.shrink(1 if max(pix.width, pix.height) < 2400 else 2)
+            page.replace_image(xref, pixmap=pix)
+UPLOAD = HERE / "HomeTest_HealthServiceKit_Application_Form_V3.1_upload.pdf"
+up.save(UPLOAD, garbage=4, deflate=True, deflate_images=True)
+print(UPLOAD)
