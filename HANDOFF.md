@@ -550,3 +550,11 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
   funciona aquí. Flag `EXPO_PUBLIC_PUBLIC_DEMO=1` (`isPublicDemo` en `lib/supabase.ts`). Publicar: `npm run deploy:demo`
   (proyecto Vercel `hometest-demo`, carpeta `deploy/hometest-demo`). La web real sigue con `npm run deploy:web`.
 - My Data: quitado el botón "Log period"; se registra entrando en el ciclo (Cycle detail → Log period).
+
+## Huawei Health Service Kit — 2026-10-02
+- Cuenta de desarrollador **individual verificada**; proyecto HomeTest en AppGallery Connect (App ID / OAuth client 119155453,
+  datos en Alemania, SHA-256 registrada; Callback URL de OAuth aún vacía).
+- Solicitud de Health Kit: **solo lectura de pasos, calorías y distancia + histórico de 1 mes** (pulso/sueño = empresa; pedir
+  con la SL, probablemente con una cuenta nueva de empresa porque el tipo de cuenta no se puede cambiar).
+- Material de la solicitud: `docs/huawei/build_material.py` → `HomeTest_HealthServiceKit_Application_Material.pdf`.
+  Privacidad (hometest-web) ya dice que de Huawei solo se leen esos 3 datos y 1 mes.
