@@ -10,7 +10,8 @@ Expo Router). Repo: `C:\Users\Astor\proyectos\HomeTest`, en GitHub en
 `https://github.com/AstorAmor/HomeTest` (rama `master`).
 
 Documento de spec original (visión de producto, fases, stack): busca
-`MVP_spec_claude_code.md` en el proyecto de Claude "APP e idea de negocio".
+`MVP_spec_claude_code.md` en el proyecto de Claude "APP e idea de negocio"
+(copias en OneDrive: `2. Entrepreneurship\04 App\MVP_spec_claude_code (versión Fase0|HomeTest).md`).
 Ese documento define las fases 0/1/2 y el stack decidido; este HANDOFF
 documenta el estado *real* de la implementación, que ha avanzado bastante
 más rápido que el plan de fases original.
@@ -259,7 +260,8 @@ predicciones de ciclo. Conclusiones ya habladas, no implementadas:
 Decisión: sin agregador de pago. Huawei por conexión directa (cuenta de desarrollador
 individual solicitada; pulso y sueño están reservados a empresas, se pedirán cuando exista
 la SL) y Health Connect para Xiaomi, Garmin, Oura, Samsung y Google. Apple HealthKit, más adelante.
-Contexto completo: documento de diseño, sección 5, en el proyecto de Claude (`Diseno_inteligencia_informe.md`).
+Contexto completo: documento de diseño, sección 5, en el proyecto de Claude (`Diseno_inteligencia_informe.md`;
+copia en OneDrive: `2. Entrepreneurship\04 App\Diseno_inteligencia_informe (versión HomeTest).md`).
 
 - **Capa anti-dependencia de proveedor**: `src/wearables/types.ts` (formato propio,
   `DailyWearableRecord`) y `src/wearables/wearableRepository.ts` (AsyncStorage). Ninguna
@@ -278,7 +280,7 @@ Contexto completo: documento de diseño, sección 5, en el proyecto de Claude (`
 
 ## Prototipo v2 (notas del 26/09) — añadido 2026-09-27 (misma rama `feature/wearables`, sin commit)
 
-Implementa las notas manuscritas del 26/09 (`Fase0/20260927_transcripcion_prototipo.docx`). Todo el
+Implementa las notas manuscritas del 26/09 (`OneDrive/2. Entrepreneurship/04 App/Prototipo/20260927_transcripcion_prototipo.docx`). Todo el
 texto de UI en inglés; datos de ejemplo marcados como "sample" cuando no hay datos reales.
 
 - **Selector "developer" tras el login** (`DevModeSelectScreen`, `demoMode` en `AuthContext`):
@@ -558,3 +560,10 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
   con la SL, probablemente con una cuenta nueva de empresa porque el tipo de cuenta no se puede cambiar).
 - Material de la solicitud: `docs/huawei/build_material.py` → `HomeTest_HealthServiceKit_Application_Material.pdf`.
   Privacidad (hometest-web) ya dice que de Huawei solo se leen esos 3 datos y 1 mes.
+
+## Documentos de negocio en OneDrive — reorganizados el 2026-10-05
+`OneDrive\2. Entrepreneurship` está ordenado por funciones (`00 Empresa y legal`, `01 Estrategia y finanzas`,
+`02 Mercado`, `03 Partners`, `04 App`, `05 Marca`); la tabla de rutas antigua → nueva está en
+`2. Entrepreneurship\_Reorganización 2026-10-06.md`. Ni la app, ni la web, ni Vercel/EAS ni el APK leen nada de
+OneDrive. Los scripts que generan documentos de negocio (en `01 Estrategia y finanzas\_scripts_business_case`)
+ya guardan en las carpetas nuevas.

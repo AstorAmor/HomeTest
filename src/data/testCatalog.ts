@@ -1,5 +1,5 @@
 // Tienda de tests (Lab → Request a new test). Fuente: hoja "Catalogo" de
-// OneDrive/2. Entrepreneurship/Fase0/business_case_v2.xlsx (precios de Ailin
+// OneDrive/2. Entrepreneurship/01 Estrategia y finanzas/business_case_v2.xlsx (precios de Ailin
 // replicados, decisión del fundador) + la membresía anual (S01, 365 €/año).
 // Si cambian precios o tests, actualizarlos aquí, en el business case y en
 // supabase/functions/_shared/products.ts (el servidor cobra con esa tabla, nunca
