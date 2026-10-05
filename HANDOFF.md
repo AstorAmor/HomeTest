@@ -24,9 +24,8 @@ más rápido que el plan de fases original.
   la app y la demo en Vercel. Se niega a publicar si hay cambios sin commitear, si no estás en `master` o si
   `master` no coincide con GitHub: lo publicado siempre es lo que hay en git. `--skip-app` / `--skip-web`
   para publicar solo una parte.
-- **Web pública** (`../HomeTest-web`): de momento `npx vercel deploy --prod` desde esa carpeta. Pendiente: conectar
-  GitHub en Vercel (Account Settings → Authentication) y luego `npx vercel git connect` para que se publique sola
-  con cada `git push`.
+- **Web pública** (`../HomeTest-web`): se publica sola en Vercel con cada `git push` a `master` (conectado el
+  2026-10-05; cada rama tiene además su enlace de prueba).
 
 ## Cómo arrancar para seguir trabajando
 
