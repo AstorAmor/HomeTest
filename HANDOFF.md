@@ -16,6 +16,16 @@ Ese documento define las fases 0/1/2 y el stack decidido; este HANDOFF
 documenta el estado *real* de la implementación, que ha avanzado bastante
 más rápido que el plan de fases original.
 
+## Ramas y cómo publicar (desde 2026-10-05)
+
+- **Se trabaja directamente en `master`** (las ramas `feature/*` se juntaron y se borraron). Abrir una rama
+  solo para cambios grandes o arriesgados, y juntarla al terminar.
+- **Publicar la app**: `npm run release -- "qué cambia"`. Hace EAS Update (canal preview) y publica la web de
+  la app y la demo en Vercel. Se niega a publicar si hay cambios sin commitear, si no estás en `master` o si
+  `master` no coincide con GitHub: lo publicado siempre es lo que hay en git. `--skip-app` / `--skip-web`
+  para publicar solo una parte.
+- **Web pública** (`../HomeTest-web`): se publica sola en Vercel con cada `git push` a `master`.
+
 ## Cómo arrancar para seguir trabajando
 
 **Nota para la IA que retome esto**: si el usuario pide continuar con
