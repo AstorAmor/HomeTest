@@ -48,7 +48,8 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "expo-build-properties": "~57.0.22",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.2"
   },
   "scripts": {
     "start": "expo start",
@@ -59,7 +60,8 @@
     "lint": "expo lint",
     "check:prices": "node scripts/check-prices.mjs",
     "deploy:web": "node scripts/deploy-web.mjs",
-    "deploy:demo": "node scripts/deploy-web.mjs demo"
+    "deploy:demo": "node scripts/deploy-web.mjs demo",
+    "test": "vitest run"
   },
   "private": true
 }
