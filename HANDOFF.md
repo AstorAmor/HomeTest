@@ -6,7 +6,7 @@ Documento de continuidad para retomar el trabajo en una conversación nueva.
 ## Qué es esto
 
 App móvil de tests médicos a domicilio (Expo + React Native + TypeScript,
-Expo Router). Repo: `C:\Users\Astor\proyectos\HomeTest`, en GitHub en
+Expo Router). Repo: `C:\Users\Astor\proyectos\hometest-app` (carpeta llamada `HomeTest` hasta el 2026-10-05), en GitHub en
 `https://github.com/AstorAmor/HomeTest` (rama `master`).
 
 Documento de spec original (visión de producto, fases, stack): busca
@@ -35,7 +35,7 @@ empezar, sin esperar a que te lo pida — es el primer paso obligatorio
 de cualquier sesión de trabajo aquí:
 
 ```powershell
-cd C:\Users\Astor\proyectos\HomeTest
+cd C:\Users\Astor\proyectos\hometest-app
 npx expo start
 ```
 
@@ -316,7 +316,7 @@ predicciones de ciclo. Conclusiones ya habladas, no implementadas:
 
 ## Cómo continuar en una conversación nueva
 
-1. Abrir el proyecto en `C:\Users\Astor\proyectos\HomeTest`
+1. Abrir el proyecto en `C:\Users\Astor\proyectos\hometest-app`
 2. Leer este archivo primero
 3. Comprobar `git log --oneline -10` para ver los últimos commits reales
 4. Comprobar si Docker/Windmill siguen corriendo antes de asumir que

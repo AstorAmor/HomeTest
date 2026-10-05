@@ -17,7 +17,7 @@ Las imágenes actuales de `assets/images/plan/` y `assets/images/specialists/` s
 
 ## Plan: fondos de las tarjetas ("Here is your plan")
 
-Carpeta: `HomeTest/assets/images/plan/`. Formato **vertical 1080 × 1350 px (4:5)**. La app las muestra
+Carpeta: `hometest-app/assets/images/plan/`. Formato **vertical 1080 × 1350 px (4:5)**. La app las muestra
 difuminadas y oscurecidas, con texto encima: deja **el tercio superior con poco detalle** (pared, ventana, cielo).
 
 | Archivo | Prompt |
@@ -32,7 +32,7 @@ difuminadas y oscurecidas, con texto encima: deja **el tercio superior con poco 
 
 ## "Talk to a specialist": fotos del carrusel
 
-Carpeta: `HomeTest/assets/images/specialists/`. Formato **cuadrado 1024 × 1024 px**. Retrato de medio cuerpo
+Carpeta: `hometest-app/assets/images/specialists/`. Formato **cuadrado 1024 × 1024 px**. Retrato de medio cuerpo
 mirando a cámara, sonrisa cercana, fondo sencillo y desenfocado. Que no parezcan fotos de banco de imágenes.
 
 | Archivo | Prompt |
