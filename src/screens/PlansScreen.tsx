@@ -18,7 +18,7 @@ const dayMonthYear = (iso: string) =>
 
 const SOURCE_LABEL: Record<PlanVersion['source'], string> = {
   upload: 'Updated from your uploaded test',
-  report: 'From your HomeTest report',
+  report: 'From your Kuova report',
   professional: 'Updated by your specialist',
 };
 

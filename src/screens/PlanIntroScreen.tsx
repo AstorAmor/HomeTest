@@ -72,9 +72,9 @@ export const PlanIntroScreen = () => {
             <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
               <Defs>
                 <LinearGradient id={`shade${i}`} x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#0D0F1A" stopOpacity="0.55" />
-                  <Stop offset="0.45" stopColor="#0D0F1A" stopOpacity="0.35" />
-                  <Stop offset="1" stopColor="#0D0F1A" stopOpacity="0.95" />
+                  <Stop offset="0" stopColor="#0A1D19" stopOpacity="0.55" />
+                  <Stop offset="0.45" stopColor="#0A1D19" stopOpacity="0.35" />
+                  <Stop offset="1" stopColor="#0A1D19" stopOpacity="0.95" />
                 </LinearGradient>
               </Defs>
               <Rect x="0" y="0" width="100%" height="100%" fill={`url(#shade${i})`} />
@@ -129,7 +129,7 @@ export const PlanIntroScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0F1A' },
+  root: { flex: 1, backgroundColor: '#0A1D19' },
   page: { flex: 1, paddingHorizontal: 24, paddingBottom: 150 },
   top: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingTop: 16 },
   counter: { color: OnDark.textSecondary, fontSize: 13, fontWeight: '600' },

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Colors } from '@/constants/colors';
+import { KuovaWordmark } from '@/components/KuovaLogo';
 import { useAuth } from '@/context/AuthContext';
 import { roleLabel } from '@/data/sharing';
 import { isPortalDemo } from '@/data/specialistPortal';
@@ -82,7 +83,7 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
       {!me.verified && (
         <View style={styles.demo}>
           <Ionicons name="time-outline" size={14} color={Colors.warning} />
-          <Text style={styles.demoText}>Your account is being verified by HomeTest. Patients can't find you yet.</Text>
+          <Text style={styles.demoText}>Your account is being verified by Kuova. Patients can't find you yet.</Text>
         </View>
       )}
     </>
@@ -93,7 +94,9 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
       <View style={styles.wideRoot}>
         <View style={styles.sidebar}>
           <View style={styles.brand}>
-            <Text style={styles.brandText}>HomeTest</Text>
+            <View accessible accessibilityLabel="Kuova Health" style={styles.brandLogo}>
+              <KuovaWordmark height={18} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />
+            </View>
             <Text style={styles.brandSub}>for specialists</Text>
           </View>
           {NAV.map((n) => {
@@ -171,7 +174,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   brand: { paddingHorizontal: 10, marginBottom: 18 },
-  brandText: { color: Colors.textPrimary, fontSize: 20, fontWeight: '900' },
+  brandLogo: { marginBottom: 6 },
   brandSub: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
   navItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 10 },
   navItemOn: { backgroundColor: Colors.accentSoft },

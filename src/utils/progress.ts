@@ -63,7 +63,7 @@ function knownValues(previousUploads: LabUpload[]): Record<string, Known> {
           value: m.value,
           unit: m.unit ?? '',
           date: currentReport.test_date,
-          source: 'your HomeTest report',
+          source: 'your Kuova report',
           low: m.range.low,
           high: m.range.high,
         };

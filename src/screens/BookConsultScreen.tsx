@@ -76,7 +76,7 @@ export const BookConsultScreen = () => {
           <Text style={styles.muted}>
             {proName} will confirm it shortly. You'll find it in Manage your schedule, and the video link will appear there.
           </Text>
-          {!isRealProfessional(proId) && <Text style={styles.proto}>Prototype: this specialist isn't on HomeTest yet, nothing was sent.</Text>}
+          {!isRealProfessional(proId) && <Text style={styles.proto}>Prototype: this specialist isn't on Kuova yet, nothing was sent.</Text>}
           <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
             <Text style={styles.ctaText}>Done</Text>
           </TouchableOpacity>

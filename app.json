@@ -1,19 +1,16 @@
 {
   "expo": {
-    "name": "HomeTest",
+    "name": "Kuova",
     "slug": "app-tests-medicos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "apptestsmedicos",
     "userInterfaceStyle": "automatic",
-    "ios": {
-      "icon": "./assets/expo.icon"
-    },
     "android": {
       "package": "com.astoramor.apptestsmedicos",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0E2A24",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -40,9 +37,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#0E2A24",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 88
         }
       ],
       "@react-native-community/datetimepicker",

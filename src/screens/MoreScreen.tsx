@@ -79,7 +79,7 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-// Solo para administradores de HomeTest
+// Solo para administradores de Kuova
 const ADMIN_ITEM: MenuItem = {
   id: 'admin',
   title: 'Professionals review',

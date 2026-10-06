@@ -110,7 +110,7 @@ export const CheckoutScreen = () => {
           <View style={styles.secure}>
             <Ionicons name="lock-closed" size={14} color={Colors.textSecondary} />
             <Text style={styles.small}>
-              You'll pay on Revolut's secure page (card, Apple Pay, Google Pay or Revolut Pay). HomeTest never sees or stores your card details.
+              You'll pay on Revolut's secure page (card, Apple Pay, Google Pay or Revolut Pay). Kuova never sees or stores your card details.
             </Text>
           </View>
         ) : null}
@@ -150,7 +150,7 @@ export const CheckoutScreen = () => {
             <Text style={styles.resultTitle}>
               {stage === 'paid'
                 ? product?.perYear
-                  ? 'Welcome to HomeTest!'
+                  ? 'Welcome to Kuova!'
                   : 'Order confirmed'
                 : stage === 'pending'
                   ? 'Payment received'

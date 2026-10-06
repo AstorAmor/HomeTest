@@ -30,13 +30,13 @@ import {
 
 const RATE_STATUS: Record<string, { label: string; color: string }> = {
   none: { label: 'No rate proposed yet', color: Colors.textMuted },
-  pending: { label: 'Pending HomeTest review', color: Colors.warning },
+  pending: { label: 'Pending Kuova review', color: Colors.warning },
   approved: { label: 'Approved', color: Colors.accent },
   rejected: { label: 'Not approved, please review', color: Colors.danger },
 };
 
 // Ficha del profesional: la ven los pacientes (excepto la tarifa propuesta, que
-// solo ven el propio profesional y HomeTest hasta que se aprueba).
+// solo ven el propio profesional y Kuova hasta que se aprueba).
 export const ProfessionalProfileScreen = () => {
   const router = useRouter();
   const { professional, refreshProfessional } = useAuth();
@@ -225,9 +225,9 @@ export const ProfessionalProfileScreen = () => {
             </Text>
           </View>
           <Text style={styles.hint}>
-            HomeTest reviews every rate before patients see it. Changing it sends it back to review.
+            Kuova reviews every rate before patients see it. Changing it sends it back to review.
           </Text>
-          {professional.reviewNote ? <Text style={styles.note}>Note from HomeTest: {professional.reviewNote}</Text> : null}
+          {professional.reviewNote ? <Text style={styles.note}>Note from Kuova: {professional.reviewNote}</Text> : null}
 
           {message ? <Text style={styles.error}>{message}</Text> : null}
         </ScrollView>

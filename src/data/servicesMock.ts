@@ -179,7 +179,7 @@ export const mockShipments: Shipment[] = [
     eta: 'Thu 10 Oct, 08:00 – 10:00',
     steps: [
       { label: 'Order confirmed', date: '22 Sep', status: 'done' },
-      { label: 'Kit prepared', detail: 'HomeTest warehouse, Madrid', date: '25 Sep', status: 'done' },
+      { label: 'Kit prepared', detail: 'Kuova warehouse, Madrid', date: '25 Sep', status: 'done' },
       { label: 'Handed to carrier', detail: 'SEUR Madrid hub', date: '26 Sep', status: 'done' },
       { label: 'In transit', detail: 'Scheduled for your slot', status: 'current' },
       { label: 'Delivered', detail: 'Take your sample and book the pickup', status: 'pending' },

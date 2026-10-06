@@ -124,7 +124,7 @@ export const WearablesScreen = () => {
           <Text style={styles.cardText}>Xiaomi, Garmin, Oura, Samsung, Google and others that sync to Health Connect.</Text>
           {hcAvailable === false ? (
             <Text style={styles.warning}>
-              Not available in this build. Health Connect needs the HomeTest development build (it does not work in Expo Go).
+              Not available in this build. Health Connect needs the Kuova development build (it does not work in Expo Go).
             </Text>
           ) : (
             <View style={styles.row}>

@@ -32,7 +32,7 @@ export const ProfessionalsScreen = () => {
     (langs.length === 0 || langs.every((l) => languages.includes(l))) &&
     (!videoOnly || video);
   const list = mockProfessionals.filter((p) => matches(p.name, p.specialty, p.bio, p.languages, p.online, p.role));
-  // Especialistas reales verificados en HomeTest (con cuenta). Los de ejemplo van debajo.
+  // Especialistas reales verificados en Kuova (con cuenta). Los de ejemplo van debajo.
   const [real, setReal] = useDeepState<ProfessionalAccount[]>([]);
   useReloadOnFocus(
     useCallback(async () => {
@@ -117,7 +117,7 @@ export const ProfessionalsScreen = () => {
 
         {realList.length > 0 && (
           <>
-            <Text style={styles.groupTitle}>On HomeTest</Text>
+            <Text style={styles.groupTitle}>On Kuova</Text>
             <View style={[styles.list, { marginBottom: 20 }]}>
               {realList.map((p) => (
                 <TouchableOpacity

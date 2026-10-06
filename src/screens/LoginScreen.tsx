@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { Colors, withAlpha } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
+import { KuovaWordmark } from '@/components/KuovaLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
 
@@ -72,8 +73,11 @@ export const LoginScreen = () => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.title}>HomeTest</Text>
-            <Text style={styles.subtitle}>At-home medical tests</Text>
+            <View accessible accessibilityRole="header" accessibilityLabel="Kuova Health">
+              <KuovaWordmark height={34} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />
+            </View>
+            <Text style={styles.health}>HEALTH</Text>
+            <Text style={styles.subtitle}>Know more. Live better.</Text>
           </View>
 
           <View style={styles.form}>
@@ -139,7 +143,7 @@ export const LoginScreen = () => {
                       editable={!loading}
                     />
                     <Text style={styles.proNote}>
-                      HomeTest verifies every professional before patients can share data with them.
+                      Kuova verifies every professional before patients can share data with them.
                     </Text>
                   </View>
                 )}
@@ -235,11 +239,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: Colors.textPrimary,
-    marginBottom: 8,
+  // "HEALTH" bajo el logotipo, espaciado y en Gold (como en la guía de marca)
+  health: {
+    marginTop: 10,
+    marginBottom: 18,
+    paddingLeft: 7,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 7,
+    color: '#C9A36B',
   },
   subtitle: {
     fontSize: 16,

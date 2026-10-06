@@ -213,7 +213,7 @@ const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
             </TouchableOpacity>
           ))}
           {biomarker.evidence_status === 'CLINICAL_REVIEW_REQUIRED' && (
-            <Text style={styles.reviewText}>Draft content, pending review by a HomeTest doctor.</Text>
+            <Text style={styles.reviewText}>Draft content, pending review by a Kuova doctor.</Text>
           )}
 
           {biomarker.external_sources.map((source, i) => (

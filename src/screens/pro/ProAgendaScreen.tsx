@@ -86,7 +86,7 @@ export const ProAgendaScreen = () => {
       start: hm(start),
       end: hm(end),
       title: `${KIND_LABEL[a.kind]} - ${a.patientName} (${a.modality === 'video' ? 'video' : 'call'})`,
-      detail: `HomeTest consultation${a.reason ? `: ${a.reason}` : ''}. Open the HomeTest portal to start it.`,
+      detail: `Kuova consultation${a.reason ? `: ${a.reason}` : ''}. Open the Kuova portal to start it.`,
     });
   };
 

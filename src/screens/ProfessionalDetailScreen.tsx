@@ -113,7 +113,7 @@ export const ProfessionalDetailScreen = () => {
           {pro.real && (
             <View style={styles.verified}>
               <Ionicons name="shield-checkmark" size={13} color={Colors.ok} />
-              <Text style={styles.verifiedText}>Verified by HomeTest</Text>
+              <Text style={styles.verifiedText}>Verified by Kuova</Text>
             </View>
           )}
           <View style={styles.statsRow}>

@@ -97,7 +97,7 @@ export const ProSettingsScreen = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.idName}>{me.name}</Text>
           <Text style={styles.muted}>
-            {me.role} · {me.verified ? 'Verified by HomeTest' : 'Pending verification'}
+            {me.role} · {me.verified ? 'Verified by Kuova' : 'Pending verification'}
           </Text>
         </View>
       </View>
@@ -124,7 +124,7 @@ export const ProSettingsScreen = () => {
         <Field label="Work email" value={contact.workEmail} onChange={(v) => setContact({ ...contact, workEmail: v })} keyboard="email-address" />
       </View>
       <Text style={styles.groupLabel}>
-        <Ionicons name="lock-closed-outline" size={12} /> Personal · only you and HomeTest
+        <Ionicons name="lock-closed-outline" size={12} /> Personal · only you and Kuova
       </Text>
       <View style={styles.two}>
         <Field label="Personal phone" value={priv.personalPhone} onChange={(v) => setPriv({ ...priv, personalPhone: v })} keyboard="phone-pad" />

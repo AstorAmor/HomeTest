@@ -48,7 +48,7 @@ export const ProPatientDetailScreen = () => {
     { icon: 'call-outline', label: 'Call', onPress: () => router.push({ pathname: '/pro-room', params: { patient: patient.id, mode: 'voice' } }) },
     { icon: 'videocam-outline', label: 'Video call', onPress: () => router.push({ pathname: '/pro-room', params: { patient: patient.id, mode: 'video' } }) },
     { icon: 'chatbubble-outline', label: 'Message', onPress: openChat },
-    { icon: 'mail-outline', label: 'Email', onPress: () => notify('Email', "The patient hasn't shared an email address. Use Message: it stays inside HomeTest and is encrypted in transit.") },
+    { icon: 'mail-outline', label: 'Email', onPress: () => notify('Email', "The patient hasn't shared an email address. Use Message: it stays inside Kuova and is encrypted in transit.") },
     { icon: 'film-outline', label: 'Video explanation', onPress: () => notify('Video explanation', 'Prototype: you will be able to record a short video (up to 3 min) explaining the results, and the patient will get it in their app.') },
     { icon: 'sparkles-outline', label: 'Generate action plan', onPress: () => router.push({ pathname: '/pro-plan', params: { patient: patient.id } }), primary: true },
   ];

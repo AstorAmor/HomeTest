@@ -61,7 +61,7 @@ export const SharingScreen = () => {
         </View>
 
         {authMode !== 'supabase' ? (
-          <Text style={styles.muted}>Sharing needs a HomeTest account (not available in demo mode).</Text>
+          <Text style={styles.muted}>Sharing needs a Kuova account (not available in demo mode).</Text>
         ) : shares === null && !error ? (
           <ActivityIndicator color={Colors.accent} style={{ marginTop: 24 }} />
         ) : (

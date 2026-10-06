@@ -57,7 +57,7 @@ const CONSULT_DELIVERY = 'Online video call · first slots usually within 48 h';
 export const MEMBERSHIP: CatalogTest = {
   id: 'membership',
   category: 'membership',
-  name: 'HomeTest Basic subscription',
+  name: 'Kuova Basic subscription',
   price: 365,
   description: 'Two complete blood analyses a year (full panel at the start, follow-up at 6 months), doctor review of every result and your personalised plan in the app. €1 a day.',
   includes: ['Full panel (~100 markers) + 6-month follow-up (~60 markers)', 'A doctor reviews each result (≈15 min)', 'Personalised plan, trends and reminders'],
@@ -70,7 +70,7 @@ export const MEMBERSHIP: CatalogTest = {
 export const PREMIUM: CatalogTest = {
   id: 'premium',
   category: 'membership',
-  name: 'HomeTest Premium subscription',
+  name: 'Kuova Premium subscription',
   price: 700,
   description: 'Everything in Basic, with a blood test every 3 months instead of 6 and 5 video consultations with our professionals included.',
   includes: [

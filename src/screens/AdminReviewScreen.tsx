@@ -14,7 +14,7 @@ import {
   roleLabel,
 } from '@/data/sharing';
 
-// Panel de HomeTest: verificar profesionales y aprobar/rechazar su tarifa.
+// Panel de Kuova: verificar profesionales y aprobar/rechazar su tarifa.
 // Solo funciona para admins (la base de datos lo comprueba en cada llamada).
 export const AdminReviewScreen = () => {
   const [pros, setPros] = useState<ProfessionalAccount[] | null>(null);

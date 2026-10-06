@@ -90,7 +90,7 @@ const compact = (date: string, time?: string) =>
   time ? `${date.replace(/-/g, '')}T${time.replace(':', '')}00` : date.replace(/-/g, '');
 
 export function calendarLinks(e: ScheduleEvent) {
-  const title = encodeURIComponent(`HomeTest · ${e.title}`);
+  const title = encodeURIComponent(`Kuova · ${e.title}`);
   const details = encodeURIComponent(e.detail);
   const allDay = !e.start;
   const endDate = allDay ? addDays(e.date, 1) : e.date;

@@ -123,7 +123,7 @@ export const ConsultRequestScreen = () => {
             </Text>
           </View>
         ) : localShared ? (
-          <Text style={styles.sent}>Shared ✓ (prototype: this specialist isn’t on HomeTest yet)</Text>
+          <Text style={styles.sent}>Shared ✓ (prototype: this specialist isn’t on Kuova yet)</Text>
         ) : (
           <>
             <Text style={styles.shareHint}>So they can answer with your real results. You can revoke it anytime.</Text>
@@ -151,7 +151,7 @@ export const ConsultRequestScreen = () => {
         )}
         {state === 'sent' && (
           <Text style={styles.sent}>
-            Sent ✓ {isRealProfessional(proId) ? '' : '(prototype: this specialist isn’t on HomeTest yet)'}
+            Sent ✓ {isRealProfessional(proId) ? '' : '(prototype: this specialist isn’t on Kuova yet)'}
           </Text>
         )}
         {error ? <Text style={styles.error}>{error}</Text> : null}

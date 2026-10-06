@@ -4,35 +4,39 @@
 // StyleSheet.create ya leen la paleta correcta. Cambiar de tema = guardar la
 // preferencia y recargar la app (src/theme/appearance.ts).
 
+// Identidad Kuova Health: Deep Green #0E2A24, Gold #C9A36B, Sand #EDE5D9, Cream #FAF8F3,
+// Sage y Charcoal #2A2A2A (la misma paleta que la web pública).
+
+// Oscuro "Deep Green": la versión "sobre fondo oscuro" del logo, con el oro como acento.
 const DARK = {
   isLight: false,
-  background: '#14161F',
-  backgroundElevated: '#1B1E2A',
-  card: '#1E2230',
-  cardBorder: '#2A2E40',
+  background: '#0A1D19',
+  backgroundElevated: '#0F2722',
+  card: '#12302A',
+  cardBorder: '#1E4038',
 
-  textPrimary: '#FFFFFF',
-  textSecondary: '#9198AC',
-  textMuted: '#6B7185',
+  textPrimary: '#FAF8F3',
+  textSecondary: '#A9B8B1',
+  textMuted: '#748A82',
 
-  accent: '#3ECDB8',
-  accentSoft: 'rgba(62, 205, 184, 0.15)',
+  accent: '#C9A36B',
+  accentSoft: 'rgba(201, 163, 107, 0.16)',
 
-  danger: '#E8615C',
-  dangerSoft: 'rgba(232, 97, 92, 0.15)',
+  danger: '#E8735C',
+  dangerSoft: 'rgba(232, 115, 92, 0.16)',
 
   warning: '#F0B84D',
 
   // Estado de marcadores: en rango / a revisar (no reutilizar el acento de marca)
-  ok: '#3ECDB8',
-  attention: '#F0B84D',
+  ok: '#7FC29B',
+  attention: '#E8955C',
 
-  tabBarBackground: '#1A1D2A',
-  tabBarBorder: '#262A3A',
-  tabBarActive: '#3ECDB8',
-  tabBarInactive: '#6B7185',
+  tabBarBackground: '#0D241F',
+  tabBarBorder: '#1A3A33',
+  tabBarActive: '#C9A36B',
+  tabBarInactive: '#748A82',
 
-  divider: '#262A3A',
+  divider: '#1A3A33',
 
   pulseAccent: '#E06B9E',
   pinkSoft: '#F7B6D2',
@@ -46,41 +50,41 @@ const DARK = {
   coral: '#FF8A65',
 
   // Fondo "nube" de login y pantallas de bienvenida
-  cosmicBase: '#0D0F1A',
-  cosmicBlobs: ['#5B3FD1', '#1C9C95', '#B0437F', '#2B56C9'],
+  cosmicBase: '#0A1D19',
+  cosmicBlobs: ['#1E4D41', '#8A6D3F', '#3E6B5C', '#24443B'],
 };
 
-// "Terracota": crema cálida, terracota como acento y verde oliva de apoyo.
+// Claro "Cream": crema y arena de fondo, Deep Green como acento y Gold en los detalles.
 const LIGHT: typeof DARK = {
   isLight: true,
-  background: '#FAF4EC',
+  background: '#FAF8F3',
   backgroundElevated: '#FFFFFF',
   card: '#FFFFFF',
-  cardBorder: '#EADBC8',
+  cardBorder: '#E5DDD0',
 
-  textPrimary: '#2F2420',
-  textSecondary: '#806B5E',
-  textMuted: '#A8968A',
+  textPrimary: '#2A2A2A',
+  textSecondary: '#66635D',
+  textMuted: '#9A958C',
 
-  accent: '#B5623B',
-  accentSoft: 'rgba(181, 98, 59, 0.12)',
+  accent: '#0E2A24',
+  accentSoft: 'rgba(14, 42, 36, 0.08)',
 
-  danger: '#C0392B',
-  dangerSoft: 'rgba(192, 57, 43, 0.12)',
+  danger: '#B3402F',
+  dangerSoft: 'rgba(179, 64, 47, 0.12)',
 
-  warning: '#B7791F',
+  warning: '#A8742A',
 
-  // En el tema claro el acento es terracota: "en rango" en verde y "a revisar" en
-  // ámbar anaranjado para que no se confundan con él.
-  ok: '#4F7A34',
-  attention: '#D97706',
+  // El acento es casi negro-verde: "en rango" en un verde salvia más vivo y "a revisar"
+  // en ámbar anaranjado para que no se confundan con él.
+  ok: '#3F8A5E',
+  attention: '#C9701E',
 
   tabBarBackground: '#FFFFFF',
-  tabBarBorder: '#EADBC8',
-  tabBarActive: '#B5623B',
-  tabBarInactive: '#A8968A',
+  tabBarBorder: '#E5DDD0',
+  tabBarActive: '#0E2A24',
+  tabBarInactive: '#9A958C',
 
-  divider: '#EFE3D3',
+  divider: '#EDE5D9',
 
   pulseAccent: '#C2477A',
   pinkSoft: '#D9829F',
@@ -89,11 +93,11 @@ const LIGHT: typeof DARK = {
   violet: '#7A5BB5',
   violetSoft: 'rgba(122, 91, 181, 0.12)',
   sky: '#3E7FA8',
-  amber: '#C98A1E',
+  amber: '#B8904F',
   coral: '#D9663F',
 
-  cosmicBase: '#FAF4EC',
-  cosmicBlobs: ['#E8B69A', '#6F7A4B', '#D9829F', '#C98A1E'],
+  cosmicBase: '#FAF8F3',
+  cosmicBlobs: ['#DDE6DF', '#E9D7B8', '#C7D6CC', '#EDE5D9'],
 };
 
 export type ThemeName = 'light' | 'dark';
@@ -108,7 +112,7 @@ export function applyTheme(theme: ThemeName) {
 export const OnDark = {
   text: '#FFFFFF',
   textSecondary: 'rgba(255, 255, 255, 0.72)',
-  background: '#0D0F1A',
+  background: '#0A1D19',
 };
 
 // Color con transparencia a partir de un hex (#RRGGBB) de la paleta.

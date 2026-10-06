@@ -14,7 +14,7 @@ export const DailyCall = ({ joinUrl, onClose, patientName }: { joinUrl: string; 
     setOpened(true);
     await WebBrowser.openBrowserAsync(joinUrl, {
       presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
-      toolbarColor: '#0D0F1A',
+      toolbarColor: '#0A1D19',
       controlsColor: '#FFFFFF',
       showTitle: false,
       enableBarCollapsing: true,

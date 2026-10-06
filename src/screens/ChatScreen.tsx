@@ -73,7 +73,7 @@ export const ChatScreen = () => {
         <ScreenHeader title={title ?? 'Chat'} showBack />
         <Text style={styles.notice}>
           {side === 'pro'
-            ? 'Messages are stored in HomeTest and only you and your patient can read them.'
+            ? 'Messages are stored in Kuova and only you and your patient can read them.'
             : 'For urgent symptoms call 112. Messages are private between you and your specialist.'}
         </Text>
         <FlatList
