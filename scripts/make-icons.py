@@ -28,12 +28,10 @@ def _bezier(p0, p1, p2, p3, n=24):
 
 
 K_SHAPES = [
-    # Asta con el pie en curva
-    [(0, 0), (38, 0), (38, 202)] + _bezier((38, 202), (37, 230), (20, 250), (0, 257))[1:],
-    # Brazo superior
-    [(197, 0), (260, 0), (38, 164), (38, 127)],
-    # Brazo inferior
-    [(67, 133), (98, 110), (250, 257), (194, 257)],
+    # Asta con el pie en curva + brazo superior + brazo inferior, en un solo contorno
+    # (el mismo que KuovaLogo.tsx y la web)
+    [(0, 0), (38, 0), (38, 127), (197, 0), (260, 0), (103.67, 115.49), (250, 257), (194, 257),
+     (72.58, 138.45), (38, 164), (38, 202)] + _bezier((38, 202), (37, 230), (20, 250), (0, 257))[1:],
 ]
 
 
