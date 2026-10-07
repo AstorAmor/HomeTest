@@ -17,6 +17,7 @@ import {
   PHENOAGE_EXPLANATION_EN,
 } from '@/data/reportContentEn';
 import { TIER_COLOR, FLAG_LABEL, FLAG_ICON, categoryLabel } from '@/utils/reportDisplay';
+import { useSections } from '@/data/appPrefs';
 
 // Proxy simplificado: "mejora" = cambio significativo que además ya aterrizó en rango.
 // No tenemos (todavía) una tabla de qué dirección es clínicamente buena por marcador,
@@ -39,6 +40,7 @@ const getCategoryBreakdown = () =>
     .filter((c) => c.inRange < c.total);
 
 export const ReportSummaryScreen = () => {
+  const show = useSections();
   const router = useRouter();
   const { summary } = currentReport;
   const counts = getComputedSummaryCounts();
@@ -164,14 +166,23 @@ export const ReportSummaryScreen = () => {
           })}
         </View>
 
-        <TouchableOpacity
-          style={styles.planButton}
-          onPress={() => router.push('/report-plan')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.planButtonText}>My personalized plan</Text>
-          <Ionicons name="arrow-forward" size={18} color={Colors.background} />
-        </TouchableOpacity>
+        {show('plan') && (
+          <TouchableOpacity
+            style={styles.planButton}
+            onPress={() => router.push('/report-plan')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.planButtonText}>My personalized plan</Text>
+            <Ionicons name="arrow-forward" size={18} color={Colors.background} />
+          </TouchableOpacity>
+        )}
+        {show('wearables') && (
+          <TouchableOpacity style={styles.habitsLink} onPress={() => router.push('/habits')} activeOpacity={0.85}>
+            <Ionicons name="moon-outline" size={18} color={Colors.accent} />
+            <Text style={styles.habitsLinkText}>How your habits changed: sleep, HRV, steps…</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -358,5 +369,23 @@ const styles = StyleSheet.create({
     color: Colors.background,
     fontSize: 16,
     fontWeight: '700',
+  },
+  habitsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 20,
+    marginTop: 12,
+  },
+  habitsLinkText: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

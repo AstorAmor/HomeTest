@@ -8,6 +8,7 @@ import { Colors } from '@/constants/colors';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { compareUpload, ChangeVerdict, ProgressResult, VERDICT_LABEL } from '@/utils/progress';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { useSections } from '@/data/appPrefs';
 
 const VERDICT_COLOR = (): Record<ChangeVerdict, string> => ({
   back_in_range: Colors.ok,
@@ -33,6 +34,7 @@ const shortDate = (iso: string) =>
 // "See my progress": qué ha cambiado en una analítica subida respecto al último valor
 // conocido de cada marcador. Solo los marcadores que se han vuelto a medir.
 export const ProgressScreen = () => {
+  const show = useSections();
   const router = useRouter();
   const { upload: uploadId } = useLocalSearchParams<{ upload: string }>();
   const [upload, setUpload] = useState<LabUpload | null>(null);
@@ -127,10 +129,12 @@ export const ProgressScreen = () => {
         )}
       </ScrollView>
 
-      <TouchableOpacity style={styles.cta} onPress={() => router.push({ pathname: '/plan-update', params: { upload: upload.id } })}>
-        <Ionicons name="sparkles" size={18} color={Colors.background} />
-        <Text style={styles.ctaText}>Update my plan</Text>
-      </TouchableOpacity>
+      {show('plan') && (
+        <TouchableOpacity style={styles.cta} onPress={() => router.push({ pathname: '/plan-update', params: { upload: upload.id } })}>
+          <Ionicons name="sparkles" size={18} color={Colors.background} />
+          <Text style={styles.ctaText}>Update my plan</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };

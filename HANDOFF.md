@@ -636,3 +636,29 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
 `2. Entrepreneurship\_Reorganización 2026-10-06.md`. Ni la app, ni la web, ni Vercel/EAS ni el APK leen nada de
 OneDrive. Los scripts que generan documentos de negocio (en `01 Estrategia y finanzas\_scripts_business_case`)
 ya guardan en las carpetas nuevas.
+
+## 2026-10-07 — Plan más limpio, PDF, "¿para qué quieres Kuova?" y curvas
+- **Plan personalizado** (`/report-plan`): solo acciones y qué se espera que mejore. La comparativa de hábitos
+  (sueño, HRV, pasos… + tendencia de 6 meses) se movió a **`/habits`** (`HabitsProgressScreen`), enlazada desde el
+  resumen del informe ("How your habits changed") y desde el plan completo (`/action-plan`).
+- **Compartir / imprimir el plan**: botón "Share or print" (`SharePlanButton`) en `/report-plan` y `/action-plan`.
+  Contenido en `utils/planPdf.ts` (HTML A4 con logo, acciones y curvas en SVG; también versión texto).
+  Móvil (`utils/sharePlan.ts`): PDF con `expo-print` → menú de compartir del sistema (`expo-sharing`: WhatsApp,
+  correo, el médico…) e imprimir. Web (`sharePlan.web.ts`): diálogo de impresión → "Guardar como PDF". Tercera
+  opción: dar acceso a un profesional de Kuova (`/share-new`).
+  ⚠ `expo-print`/`expo-sharing` son **módulos nativos nuevos**: la APK actual no los tiene y, con
+  `runtimeVersion: sdkVersion`, recibe igualmente las EAS Update. Se cargan bajo demanda: sin ellos, "Send as PDF"
+  comparte el plan como texto y "Print" no aparece. **Para el PDF en Android hace falta una APK nueva**
+  (`eas build --profile preview`). En Expo Go funcionan ya.
+- **Para qué quiere la app** (`data/appPrefs.ts`, guardado en `user_flags` clave `app_prefs`, sin migración):
+  primer paso del onboarding con 3 opciones — *Keep my health records* (solo historial: oculta plan, check-in,
+  readiness, wearables, insignias, especialistas y learning; se salta hábitos y objetivos y no "construye" plan),
+  *Understand and follow my health* (oculta plan e insignias; sin objetivos) e *Improve my health* (todo, como antes).
+  Sin respuesta se ve todo. Ajuste fino en **More → Customise your app** (`/app-sections`, un interruptor por
+  sección) y resumen en My Profile. Las pantallas usan `useSections()`; secciones: plan, checkin, readiness,
+  wearables, cycle, badges, specialists, learning.
+- **Proyecciones curvas** (`logic/projection.ts`, tests en `logic/__tests__/projection.test.ts`): cada marcador
+  sigue su forma de respuesta en vez de una recta — exponencial que se aplana (vitamina D y triglicéridos rápido,
+  HbA1c ~3 meses, ferritina lento) o en S (HOMA-IR: el hábito tarda unas semanas en notarse). Una línea por marcador
+  explica cuándo se espera el cambio. **Plazos orientativos, pendientes de validación clínica.**
+- Servidor de pruebas sin cuentas: `.claude/launch.json` → `expo-web-demo` (puerto 8082, `EXPO_PUBLIC_PUBLIC_DEMO=1`).

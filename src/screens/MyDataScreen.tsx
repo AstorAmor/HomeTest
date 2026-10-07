@@ -20,6 +20,7 @@ import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearabl
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import { CycleStrip } from '@/components/CycleStrip';
+import { useSections } from '@/data/appPrefs';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -79,6 +80,7 @@ const wearableChart = (points: DailyPoint[] | undefined, color: string, format: 
 
 export const MyDataScreen = () => {
   const router = useRouter();
+  const show = useSections();
   const { series, isSample } = useDailyWearables();
   const { authMode } = useAuth();
   const [seedStatus, setSeedStatus] = useState('');
@@ -167,7 +169,7 @@ export const MyDataScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="My Data" />
 
-        {sex === 'female' && cycle && (
+        {sex === 'female' && cycle && show('cycle') && (
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Period</Text>
@@ -179,24 +181,28 @@ export const MyDataScreen = () => {
         )}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Wearable measurements</Text>
-          <Text style={styles.sectionMeta}>Last 14 days{isSample ? ' · sample' : ''}</Text>
+          <Text style={styles.sectionTitle}>{show('wearables') ? 'Wearable measurements' : 'Measurements'}</Text>
+          {show('wearables') && <Text style={styles.sectionMeta}>Last 14 days{isSample ? ' · sample' : ''}</Text>}
         </View>
-        <MetricCard title="Resting heart rate" icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={`avg ${hr.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
-          <TrendChart labels={hr.labels} series={hr.series} height={90} />
-        </MetricCard>
-        <MetricCard title="Heart rate variability" icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={`avg ${hrv.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
-          <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
-        </MetricCard>
-        <MetricCard title="Sleep" icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={`avg ${sleep.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
-          <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
-        </MetricCard>
-        <MetricCard title="Steps" icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={`avg ${steps.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
-          <TrendChart labels={steps.labels} series={steps.series} height={90} formatY={(v) => `${(v / 1000).toFixed(1)}k`} />
-        </MetricCard>
-        <MetricCard title="Active calories" icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={`avg ${kcal.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
-          <TrendChart labels={kcal.labels} series={kcal.series} height={90} />
-        </MetricCard>
+        {show('wearables') && (
+          <>
+            <MetricCard title="Resting heart rate" icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={`avg ${hr.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
+              <TrendChart labels={hr.labels} series={hr.series} height={90} />
+            </MetricCard>
+            <MetricCard title="Heart rate variability" icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={`avg ${hrv.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
+              <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
+            </MetricCard>
+            <MetricCard title="Sleep" icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={`avg ${sleep.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
+              <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
+            </MetricCard>
+            <MetricCard title="Steps" icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={`avg ${steps.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
+              <TrendChart labels={steps.labels} series={steps.series} height={90} formatY={(v) => `${(v / 1000).toFixed(1)}k`} />
+            </MetricCard>
+            <MetricCard title="Active calories" icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={`avg ${kcal.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
+              <TrendChart labels={kcal.labels} series={kcal.series} height={90} />
+            </MetricCard>
+          </>
+        )}
 
         {bp && (
           <MetricCard
@@ -212,15 +218,17 @@ export const MyDataScreen = () => {
           </MetricCard>
         )}
 
-        <MetricCard title="Temperature" icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={`avg ${temp.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
-          <TrendChart
-            labels={temp.labels}
-            series={temp.series}
-            height={90}
-            band={{ low: 36.1, high: 37.2 }}
-            formatY={(v) => v.toFixed(1)}
-          />
-        </MetricCard>
+        {show('wearables') && (
+          <MetricCard title="Temperature" icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={`avg ${temp.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
+            <TrendChart
+              labels={temp.labels}
+              series={temp.series}
+              height={90}
+              band={{ low: 36.1, high: 37.2 }}
+              formatY={(v) => v.toFixed(1)}
+            />
+          </MetricCard>
+        )}
 
         <View style={[styles.sectionHeader, { marginTop: 16 }]}>
           <Text style={styles.sectionTitle}>Blood tests</Text>

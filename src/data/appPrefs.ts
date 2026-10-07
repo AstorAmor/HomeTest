@@ -1,0 +1,144 @@
+import { useEffect, useSyncExternalStore } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { getCurrentUserId } from '@/lib/supabase';
+import { userFlags } from '@/data/userFlags';
+
+// Para qué quiere el usuario la app y qué secciones ve. Hay quien solo quiere guardar
+// sus analíticas (un historial clínico, sin planes ni "gamificación"), y quien quiere
+// todo el acompañamiento. Se pregunta al principio del onboarding y se puede cambiar
+// en More → Customise your app (cada sección se puede encender o apagar).
+//
+// Se guarda en user_flags (clave "app_prefs"): con cuenta, se respeta en todos sus
+// dispositivos; sin cuenta, en el móvil. Sin respuesta, se ve todo (como antes).
+
+export type AppPurpose = 'records' | 'understand' | 'improve';
+
+export type AppSection =
+  | 'plan'
+  | 'checkin'
+  | 'readiness'
+  | 'wearables'
+  | 'cycle'
+  | 'badges'
+  | 'specialists'
+  | 'learning';
+
+export interface AppPrefs {
+  purpose?: AppPurpose;
+  hidden: AppSection[];
+}
+
+export const PURPOSE_OPTIONS: { id: AppPurpose; title: string; subtitle: string; icon: string }[] = [
+  {
+    id: 'records',
+    title: 'Keep my health records',
+    subtitle: 'My results and history in one place, ready to share with my doctors. Nothing else.',
+    icon: 'folder-open-outline',
+  },
+  {
+    id: 'understand',
+    title: 'Understand and follow my health',
+    subtitle: 'My records, plus trends, wearables and how I feel day to day.',
+    icon: 'analytics-outline',
+  },
+  {
+    id: 'improve',
+    title: 'Improve my health',
+    subtitle: 'All of it, plus a personalised plan built around my goals.',
+    icon: 'trending-up-outline',
+  },
+];
+
+export const SECTION_OPTIONS: { id: AppSection; title: string; subtitle: string; icon: string }[] = [
+  { id: 'plan', title: 'Personalised plan', subtitle: 'Actions, targets and where your markers could go', icon: 'list-outline' },
+  { id: 'checkin', title: 'Daily check-in', subtitle: 'How you feel: mood, energy and diary', icon: 'happy-outline' },
+  { id: 'readiness', title: 'Daily readiness', subtitle: 'A daily score from your sleep and activity', icon: 'speedometer-outline' },
+  { id: 'wearables', title: 'Wearable data', subtitle: 'Heart rate, HRV, sleep, steps, temperature', icon: 'watch-outline' },
+  { id: 'cycle', title: 'Cycle tracking', subtitle: 'Period dates and predictions', icon: 'rose-outline' },
+  { id: 'badges', title: 'Badges', subtitle: 'Achievements and streaks', icon: 'ribbon-outline' },
+  { id: 'specialists', title: 'Specialist suggestions', subtitle: '"Talk to a specialist" on Today', icon: 'people-outline' },
+  { id: 'learning', title: 'Learning', subtitle: 'Short reads about your health', icon: 'book-outline' },
+];
+
+// Qué se oculta de entrada según la respuesta. Luego cada sección se puede cambiar a mano.
+export const PURPOSE_HIDDEN: Record<AppPurpose, AppSection[]> = {
+  records: ['plan', 'checkin', 'readiness', 'wearables', 'badges', 'specialists', 'learning'],
+  understand: ['plan', 'badges'],
+  improve: [],
+};
+
+const FLAG_KEY = 'app_prefs';
+const EMPTY: AppPrefs = { hidden: [] };
+
+// Estado compartido por todas las pantallas: al cambiarlo en ajustes, Today, My Data…
+// se actualizan al momento sin recargar.
+let state: { prefs: AppPrefs; loadedFor: string | null } = { prefs: EMPTY, loadedFor: null };
+const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((l) => l());
+
+const sanitize = (raw: unknown): AppPrefs => {
+  if (!raw || typeof raw !== 'object') return EMPTY;
+  const r = raw as Partial<AppPrefs>;
+  const purpose = PURPOSE_OPTIONS.some((p) => p.id === r.purpose) ? r.purpose : undefined;
+  const hidden = Array.isArray(r.hidden)
+    ? r.hidden.filter((s): s is AppSection => SECTION_OPTIONS.some((o) => o.id === s))
+    : [];
+  return { purpose, hidden };
+};
+
+const currentOwner = () => getCurrentUserId() ?? 'demo';
+
+export const appPrefs = {
+  get: () => state.prefs,
+
+  async load(): Promise<AppPrefs> {
+    const owner = currentOwner();
+    const prefs = sanitize(await userFlags.get(FLAG_KEY).catch(() => undefined));
+    state = { prefs, loadedFor: owner };
+    emit();
+    return prefs;
+  },
+
+  async save(prefs: AppPrefs): Promise<void> {
+    const clean = sanitize(prefs);
+    state = { prefs: clean, loadedFor: currentOwner() };
+    emit();
+    await userFlags.set(FLAG_KEY, clean as unknown as Record<string, unknown>);
+  },
+
+  // Elegir propósito = aplicar su configuración de secciones. Si es el mismo que ya
+  // tenía, se respetan los ajustes a mano que hubiera hecho.
+  async setPurpose(purpose: AppPurpose): Promise<void> {
+    const current = state.prefs;
+    if (current.purpose === purpose) return;
+    await this.save({ purpose, hidden: [...PURPOSE_HIDDEN[purpose]] });
+  },
+
+  async setSectionVisible(section: AppSection, visible: boolean): Promise<void> {
+    const hidden = new Set(state.prefs.hidden);
+    if (visible) hidden.delete(section);
+    else hidden.add(section);
+    await this.save({ ...state.prefs, hidden: [...hidden] });
+  },
+};
+
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+
+export function useAppPrefs(): AppPrefs {
+  const { user } = useAuth();
+  const prefs = useSyncExternalStore(subscribe, () => state.prefs, () => state.prefs);
+  useEffect(() => {
+    // Primera vez, o ha entrado otra cuenta: leer las suyas
+    if (state.loadedFor !== currentOwner()) appPrefs.load();
+  }, [user?.id]);
+  return prefs;
+}
+
+// true si la sección se ve (por defecto, todas)
+export function useSections(): (section: AppSection) => boolean {
+  const { hidden } = useAppPrefs();
+  return (section) => !hidden.includes(section);
+}

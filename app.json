@@ -45,6 +45,7 @@
       "@react-native-community/datetimepicker",
       "expo-audio",
       "react-native-health-connect",
+      "expo-sharing",
       [
         "expo-build-properties",
         {

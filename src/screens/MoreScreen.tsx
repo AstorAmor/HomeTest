@@ -29,6 +29,13 @@ const menuItems: MenuItem[] = [
     isProfile: true,
   },
   {
+    id: 'customise',
+    title: 'Customise your app',
+    subtitle: 'Choose what you use Kuova for and which sections you see',
+    iconFamily: 'ionicons',
+    icon: 'options-outline',
+  },
+  {
     id: 'schedule',
     title: 'Manage your schedule',
     subtitle: 'Plan, view test dates, and see upcoming requirements',
@@ -96,6 +103,7 @@ export const MoreScreen = () => {
   const handlePress = (id: string) => {
     if (id === 'settings') return logout();
     if (id === 'profile') return router.push('/profile');
+    if (id === 'customise') return router.push('/app-sections');
     if (id === 'sharing') return router.push('/sharing');
     if (id === 'schedule') return router.push('/schedule');
     if (id === 'admin') return router.push('/admin');

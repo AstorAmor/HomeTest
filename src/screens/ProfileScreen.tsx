@@ -12,6 +12,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { AppearanceSwitch } from '@/components/AppearanceSwitch';
 import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
+import { PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 
 
 const LABELS: Record<string, string> = {
@@ -39,6 +40,8 @@ export const ProfileScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
+  const prefs = useAppPrefs();
+  const purpose = PURPOSE_OPTIONS.find((p) => p.id === prefs.purpose);
 
   const load = useCallback(() => {
     profileRepository.get().then(setProfile);
@@ -93,6 +96,24 @@ export const ProfileScreen = () => {
         </View>
 
         <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>What you use Kuova for</Text>
+          <TouchableOpacity onPress={() => router.push('/app-sections')}>
+            <Text style={styles.edit}>Change</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.card, styles.purposeCard]}>
+          <Ionicons name={(purpose?.icon ?? 'apps-outline') as any} size={20} color={Colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.purposeTitle}>{purpose?.title ?? 'Everything'}</Text>
+            <Text style={styles.purposeSubtitle}>
+              {prefs.hidden.length
+                ? `${prefs.hidden.length} section${prefs.hidden.length === 1 ? '' : 's'} hidden`
+                : 'All sections visible'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={[styles.sectionHeader, styles.afterCard]}>
           <Text style={styles.sectionTitle}>About you</Text>
           <TouchableOpacity onPress={() => router.push('/onboarding')}>
             <Text style={styles.edit}>Edit</Text>
@@ -107,19 +128,23 @@ export const ProfileScreen = () => {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, styles.spaced]}>Your goals</Text>
-        <View style={styles.goals}>
-          {goals.length ? (
-            goals.map((g) => (
-              <View key={g.id} style={styles.goalChip}>
-                <Ionicons name={g.icon as any} size={14} color={Colors.accent} />
-                <Text style={styles.goalText}>{g.label}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.rowEmpty}>No goals yet. Tap Edit to add them.</Text>
-          )}
-        </View>
+        {!prefs.hidden.includes('plan') && (
+          <>
+            <Text style={[styles.sectionTitle, styles.spaced]}>Your goals</Text>
+            <View style={styles.goals}>
+              {goals.length ? (
+                goals.map((g) => (
+                  <View key={g.id} style={styles.goalChip}>
+                    <Ionicons name={g.icon as any} size={14} color={Colors.accent} />
+                    <Text style={styles.goalText}>{g.label}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.rowEmpty}>No goals yet. Tap Edit to add them.</Text>
+              )}
+            </View>
+          </>
+        )}
 
         <Text style={[styles.sectionTitle, styles.spaced]}>Appearance</Text>
         <View style={{ marginHorizontal: 20 }}>
@@ -149,6 +174,10 @@ const styles = StyleSheet.create({
   spaced: { paddingHorizontal: 20, marginTop: 22, marginBottom: 10 },
   spacedTop: { paddingHorizontal: 20, marginBottom: 10 },
   edit: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  afterCard: { marginTop: 22 },
+  purposeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
+  purposeTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  purposeSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,

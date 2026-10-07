@@ -22,6 +22,7 @@ import { mergeLabReports } from '@/utils/mergeLabReports';
 import { prepareImage, chunk } from '@/utils/imageUpload';
 import { useRouter } from 'expo-router';
 import { labUploadRepository } from '@/data/labUploads';
+import { useSections } from '@/data/appPrefs';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
 
@@ -36,6 +37,7 @@ const REQUEST_TIMEOUT_MS = 60000;
 const BATCH_SIZE = 2;
 
 export const UploadTestScreen = () => {
+  const show = useSections();
   const [pages, setPages] = useState<CapturedPage[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [report, setReport] = useState<ExtractedLabReport | null>(null);
@@ -312,10 +314,12 @@ export const UploadTestScreen = () => {
                 <Ionicons name="trending-up" size={18} color={Colors.background} />
                 <Text style={styles.nextPrimaryText}>See my progress</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/plan-update')}>
-                <Ionicons name="sparkles-outline" size={18} color={Colors.accent} />
-                <Text style={styles.nextSecondaryText}>Update plan</Text>
-              </TouchableOpacity>
+              {show('plan') && (
+                <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/plan-update')}>
+                  <Ionicons name="sparkles-outline" size={18} color={Colors.accent} />
+                  <Text style={styles.nextSecondaryText}>Update plan</Text>
+                </TouchableOpacity>
+              )}
               {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
             </View>
 

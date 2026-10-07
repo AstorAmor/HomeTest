@@ -92,6 +92,7 @@ export const ActionPlanList = () => {
                 )}
               </Text>
               <ProjectionChart
+                markerId={item.estimated_next_test.marker_id}
                 currentValue={item.estimated_next_test.current_value}
                 expectedValueIn6Months={
                   item.estimated_next_test.expected_value_in_6_months

@@ -14,7 +14,7 @@ const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; 
   {
     mode: 'new',
     title: 'New user',
-    subtitle: 'Onboarding questionnaire: age, sex, weight, habits and goals',
+    subtitle: 'Onboarding: what Kuova is for, then age, sex, weight, health and goals',
     icon: 'person-add-outline',
     color: Colors.violet,
   },

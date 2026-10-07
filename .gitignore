@@ -48,3 +48,6 @@ Web/*.mp4
 # Carpeta de publicación de la web en Vercel (se regenera)
 deploy/
 dist-web/
+
+# Python
+__pycache__/

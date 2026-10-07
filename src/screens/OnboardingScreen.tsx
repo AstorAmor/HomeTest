@@ -20,6 +20,7 @@ import {
   UserProfile,
   profileRepository,
 } from '@/data/profileRepository';
+import { AppPurpose, appPrefs, PURPOSE_OPTIONS } from '@/data/appPrefs';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -27,8 +28,15 @@ const YEARS = Array.from({ length: 81 }, (_, i) => String(1930 + i));
 const HEIGHTS = Array.from({ length: 71 }, (_, i) => String(140 + i));
 const WEIGHTS = Array.from({ length: 111 }, (_, i) => String(40 + i));
 
-type Step = 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals';
-const STEPS: Step[] = ['dob', 'sex', 'body', 'habits', 'health', 'goals'];
+type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals';
+
+// Las preguntas dependen de para qué quiere la app: quien solo quiere guardar sus
+// analíticas no tiene por qué contestar hábitos ni objetivos.
+const stepsFor = (purpose?: AppPurpose): Step[] => {
+  if (purpose === 'records') return ['purpose', 'dob', 'sex', 'body', 'health'];
+  if (purpose === 'understand') return ['purpose', 'dob', 'sex', 'body', 'habits', 'health'];
+  return ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'goals'];
+};
 
 interface ChipOption<T extends string> {
   id: T;
@@ -82,9 +90,17 @@ export const OnboardingScreen = () => {
   const [medications, setMedications] = useState('');
   const [conditions, setConditions] = useState<ConditionId[]>([]);
   const [conditionsOther, setConditionsOther] = useState('');
+  const [purpose, setPurpose] = useState<AppPurpose>();
+  const STEPS = stepsFor(purpose);
+  // Sin plan (solo historial, o entender sin plan) no se "construye" ningún plan al final
+  const buildsPlan = purpose === undefined || purpose === 'improve';
 
   // Al editar el perfil, el cuestionario parte de las respuestas ya guardadas
   useEffect(() => {
+    appPrefs
+      .load()
+      .then((p) => setPurpose(p.purpose))
+      .catch(() => undefined);
     profileRepository
       .get()
       .then((p) => {
@@ -136,12 +152,14 @@ export const OnboardingScreen = () => {
   };
 
   const skipAll = async () => {
+    if (purpose) await appPrefs.setPurpose(purpose);
     await profileRepository.save(await buildProfile());
     router.replace('/(tabs)');
   };
 
   const next = async () => {
     setAnswered((prev) => new Set(prev).add(step));
+    if (step === 'purpose' && purpose) await appPrefs.setPurpose(purpose);
     if (stepIndex < STEPS.length - 1) {
       setStepIndex(stepIndex + 1);
       return;
@@ -149,7 +167,8 @@ export const OnboardingScreen = () => {
     const profile = await buildProfile();
     profile.completedAt = new Date().toISOString();
     await profileRepository.save(profile);
-    setPhase('building');
+    if (buildsPlan) setPhase('building');
+    else router.replace('/(tabs)');
   };
 
   useEffect(() => {
@@ -207,6 +226,38 @@ export const OnboardingScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        {step === 'purpose' && (
+          <>
+            <Text style={styles.title}>What do you want Kuova for?</Text>
+            <Text style={styles.subtitle}>
+              We'll only show what you need. You can change it anytime in More → Customise your app.
+            </Text>
+            <View style={styles.goalList}>
+              {PURPOSE_OPTIONS.map((o) => {
+                const selected = purpose === o.id;
+                return (
+                  <TouchableOpacity
+                    key={o.id}
+                    style={[styles.goalRow, styles.purposeRow, selected && styles.bigOptionSelected]}
+                    onPress={() => setPurpose(o.id)}
+                  >
+                    <Ionicons name={o.icon as any} size={24} color={selected ? Colors.accent : Colors.textSecondary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.purposeTitle, selected && { color: Colors.textPrimary }]}>{o.title}</Text>
+                      <Text style={styles.purposeSubtitle}>{o.subtitle}</Text>
+                    </View>
+                    <Ionicons
+                      name={selected ? 'radio-button-on' : 'radio-button-off'}
+                      size={22}
+                      color={selected ? Colors.accent : Colors.textMuted}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </>
+        )}
+
         {step === 'dob' && (
           <>
             <Text style={styles.title}>When were you born?</Text>
@@ -398,7 +449,9 @@ export const OnboardingScreen = () => {
       </ScrollView>
 
       <TouchableOpacity style={styles.cta} onPress={next} activeOpacity={0.85}>
-        <Text style={styles.ctaText}>{stepIndex === STEPS.length - 1 ? 'Create my plan' : 'Continue'}</Text>
+        <Text style={styles.ctaText}>
+          {stepIndex < STEPS.length - 1 ? 'Continue' : buildsPlan ? 'Create my plan' : 'Done'}
+        </Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -580,6 +633,21 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 15,
     fontWeight: '600',
+  },
+  purposeRow: {
+    alignItems: 'flex-start',
+    paddingVertical: 18,
+  },
+  purposeTitle: {
+    color: Colors.textSecondary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  purposeSubtitle: {
+    color: Colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
   },
   cta: {
     backgroundColor: Colors.accent,

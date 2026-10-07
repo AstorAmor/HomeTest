@@ -58,6 +58,8 @@ export default function Layout() {
             <Stack.Screen name="report-summary" />
             <Stack.Screen name="report-marker-detail" />
             <Stack.Screen name="report-plan" />
+            <Stack.Screen name="habits" />
+            <Stack.Screen name="app-sections" />
             <Stack.Screen name="talk-to-specialist" />
             <Stack.Screen name="wearables" />
             <Stack.Screen name="upcoming-analysis" />

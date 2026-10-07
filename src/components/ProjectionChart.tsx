@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
-import Svg, { Polyline, Polygon, Circle } from 'react-native-svg';
+import Svg, { Path, Polygon, Circle, Line } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
+import { axisLabel, axisPadding, getResponseProfile, HORIZON_MONTHS, projectionCurve } from '@/logic/projection';
 
 interface ProjectionChartProps {
+  markerId: string;
   currentValue: number;
   expectedValueIn6Months: number;
   expectedRangeLow: number;
@@ -17,11 +19,15 @@ const CARD_PADDING = 32;
 const Y_AXIS_WIDTH = 40;
 const CHART_HEIGHT = 120;
 const PADDING_Y = 10;
+const MID_LABEL_WIDTH = 40;
 
-// Banda de incertidumbre: 0 en el mes 0 (es el valor medido, conocido) y se ensancha
-// linealmente hasta [expectedRangeLow, expectedRangeHigh] en el mes 6 — no es una
-// promesa de resultado, es la nota que ya trae estimated_next_test.uncertainty_note.
+// Proyección del marcador a 6 meses. La curva no es una recta: cada marcador sigue
+// la forma con la que suele responder (src/logic/projection.ts) — rápido al principio
+// y luego estable, o en S si el hábito tarda en notarse. La banda de incertidumbre
+// sale del valor medido (conocido) y se abre hasta el rango esperado: no es una
+// promesa de resultado.
 export const ProjectionChart = ({
+  markerId,
   currentValue,
   expectedValueIn6Months,
   expectedRangeLow,
@@ -31,63 +37,77 @@ export const ProjectionChart = ({
 }: ProjectionChartProps) => {
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = Math.max(screenWidth - CARD_MARGIN - CARD_PADDING - Y_AXIS_WIDTH - 10, 120);
-  const steps = 7; // meses 0..6
-  const upper: { x: number; y: number }[] = [];
-  const lower: { x: number; y: number }[] = [];
-  const expected: { x: number; y: number }[] = [];
+
+  const curve = projectionCurve({
+    markerId,
+    currentValue,
+    expectedValue: expectedValueIn6Months,
+    rangeLow: expectedRangeLow,
+    rangeHigh: expectedRangeHigh,
+  });
+  const note = getResponseProfile(markerId).note;
 
   const allValues = [currentValue, expectedValueIn6Months, expectedRangeLow, expectedRangeHigh];
   const rawMin = Math.min(...allValues);
   const rawMax = Math.max(...allValues);
-  const pad = Math.max((rawMax - rawMin) * 0.15, rawMax * 0.02, 0.5);
+  const pad = axisPadding(rawMin, rawMax);
   const min = rawMin - pad;
   const max = rawMax + pad;
 
+  const scaleX = (month: number) => (month / HORIZON_MONTHS) * chartWidth;
   const scaleY = (value: number) => {
     const range = max - min || 1;
     return CHART_HEIGHT - PADDING_Y - ((value - min) / range) * (CHART_HEIGHT - PADDING_Y * 2);
   };
 
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1); // 0..1
-    const x = t * chartWidth;
-    const bandLow = currentValue + (expectedRangeLow - currentValue) * t;
-    const bandHigh = currentValue + (expectedRangeHigh - currentValue) * t;
-    const expectedValue = currentValue + (expectedValueIn6Months - currentValue) * t;
-    upper.push({ x, y: scaleY(bandHigh) });
-    lower.push({ x, y: scaleY(bandLow) });
-    expected.push({ x, y: scaleY(expectedValue) });
-  }
-
-  const bandPoints = [...upper, ...[...lower].reverse()].map((p) => `${p.x},${p.y}`).join(' ');
-  const expectedLine = expected.map((p) => `${p.x},${p.y}`).join(' ');
-  const lastPoint = expected[expected.length - 1];
+  const toXY = (month: number, value: number) => `${scaleX(month).toFixed(1)},${scaleY(value).toFixed(1)}`;
+  const bandPoints = [
+    ...curve.map((p) => toXY(p.month, p.high)),
+    ...[...curve].reverse().map((p) => toXY(p.month, p.low)),
+  ].join(' ');
+  const expectedPath = curve.map((p, i) => `${i === 0 ? 'M' : 'L'}${toXY(p.month, p.expected)}`).join(' ');
+  const first = curve[0];
+  const last = curve[curve.length - 1];
+  const midX = scaleX(HORIZON_MONTHS / 2);
 
   return (
     <View>
       <View style={styles.chartRow}>
         <View style={styles.yAxis}>
-          <Text style={styles.axisLabel}>{Math.round(max)}</Text>
-          <Text style={styles.axisLabel}>{Math.round(min)}</Text>
+          <Text style={styles.axisLabel}>{axisLabel(max, max - min)}</Text>
+          <Text style={styles.axisLabel}>{axisLabel(min, max - min)}</Text>
         </View>
         <Svg width={chartWidth} height={CHART_HEIGHT}>
+          <Line
+            x1={midX}
+            x2={midX}
+            y1={PADDING_Y / 2}
+            y2={CHART_HEIGHT - PADDING_Y / 2}
+            stroke={Colors.divider}
+            strokeWidth={1}
+            strokeDasharray="3,4"
+          />
           <Polygon points={bandPoints} fill={color} fillOpacity={0.15} />
-          <Polyline points={expectedLine} fill="none" stroke={color} strokeWidth={2} />
-          <Circle cx={expected[0].x} cy={expected[0].y} r={3.5} fill={Colors.textSecondary} />
-          <Circle cx={lastPoint.x} cy={lastPoint.y} r={4} fill={color} />
+          <Path d={expectedPath} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          <Circle cx={scaleX(first.month)} cy={scaleY(first.expected)} r={3.5} fill={Colors.textSecondary} />
+          <Circle cx={scaleX(last.month)} cy={scaleY(last.expected)} r={4} fill={color} />
         </Svg>
       </View>
       <View style={styles.xAxisRow}>
         <View style={styles.yAxisSpacer} />
-        <Text style={styles.axisLabel}>
-          Now · {currentValue}
-          {unit}
-        </Text>
-        <Text style={styles.axisLabel}>
-          6mo · ~{expectedValueIn6Months}
-          {unit}
-        </Text>
+        <View style={[styles.xAxisLabels, { width: chartWidth }]}>
+          <Text style={styles.axisLabel}>
+            Now · {currentValue}
+            {unit}
+          </Text>
+          <Text style={[styles.axisLabel, styles.midLabel, { left: midX - MID_LABEL_WIDTH / 2 }]}>3 mo</Text>
+          <Text style={styles.axisLabel}>
+            6 mo · ~{expectedValueIn6Months}
+            {unit}
+          </Text>
+        </View>
       </View>
+      {note && <Text style={styles.note}>{note}</Text>}
     </View>
   );
 };
@@ -112,7 +132,21 @@ const styles = StyleSheet.create({
   },
   xAxisRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginTop: 6,
+  },
+  xAxisLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  midLabel: {
+    position: 'absolute',
+    width: MID_LABEL_WIDTH,
+    textAlign: 'center',
+  },
+  note: {
+    color: Colors.textSecondary,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 8,
   },
 });

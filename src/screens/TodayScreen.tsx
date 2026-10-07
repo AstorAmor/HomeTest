@@ -21,6 +21,7 @@ import { computeAchievements } from '@/data/achievements';
 import { planImage } from '@/data/planImages';
 import { Image } from 'expo-image';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { useSections } from '@/data/appPrefs';
 import {
   mockBiomarkers,
   mockNextTestDate,
@@ -113,6 +114,7 @@ export const TodayScreen = () => {
   const router = useRouter();
   const { demoMode } = useAuth();
   const firstName = useFirstName();
+  const show = useSections();
   const { series, isSample } = useDailyWearables();
   const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(mockBiomarkers);
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
@@ -254,103 +256,113 @@ export const TodayScreen = () => {
 
         <NextConsultationCard />
 
-        <TouchableOpacity style={styles.fullPlan} onPress={() => router.push('/plans')} activeOpacity={0.85}>
-          <View style={styles.fullPlanIcon}>
-            <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.fullPlanTitle}>See full plan</Text>
-            <Text style={styles.fullPlanSub}>Your latest plan with target ranges, and earlier ones</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-        </TouchableOpacity>
+        {show('plan') && (
+          <TouchableOpacity style={styles.fullPlan} onPress={() => router.push('/plans')} activeOpacity={0.85}>
+            <View style={styles.fullPlanIcon}>
+              <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fullPlanTitle}>See full plan</Text>
+              <Text style={styles.fullPlanSub}>Your latest plan with target ranges, and earlier ones</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+          </TouchableOpacity>
+        )}
 
         {/* Check-in */}
-        <TouchableOpacity style={styles.checkInCard} onPress={() => router.push('/check-in')} activeOpacity={0.85}>
-          <CheckInOrb />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.checkInTitle}>How are you feeling?</Text>
-            <Text style={styles.checkInSubtitle}>
-              {lastCheckIn
-                ? `Last check-in ${timeAgo(lastCheckIn.fecha)}${lastMood ? ` · ${lastMood.emoji} ${lastMood.label}` : ''}`
-                : 'Sleep, energy and mood in 30 seconds'}
-            </Text>
-          </View>
-          <View style={styles.checkInButton}>
-            <Text style={styles.checkInButtonText}>Check in</Text>
-          </View>
-        </TouchableOpacity>
+        {show('checkin') && (
+          <>
+            <TouchableOpacity style={styles.checkInCard} onPress={() => router.push('/check-in')} activeOpacity={0.85}>
+              <CheckInOrb />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.checkInTitle}>How are you feeling?</Text>
+                <Text style={styles.checkInSubtitle}>
+                  {lastCheckIn
+                    ? `Last check-in ${timeAgo(lastCheckIn.fecha)}${lastMood ? ` · ${lastMood.emoji} ${lastMood.label}` : ''}`
+                    : 'Sleep, energy and mood in 30 seconds'}
+                </Text>
+              </View>
+              <View style={styles.checkInButton}>
+                <Text style={styles.checkInButtonText}>Check in</Text>
+              </View>
+            </TouchableOpacity>
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Your last 7 days</Text>
-            {checkInSeries.sample && <Text style={styles.sampleTag}>sample</Text>}
-          </View>
-          <TrendChart
-            height={96}
-            labels={checkInSeries.points.map((p) => shortDate(p.date))}
-            series={[
-              { label: 'Energy', color: Colors.accent, values: checkInSeries.points.map((p) => p.energy) },
-              { label: 'Mood', color: Colors.violet, values: checkInSeries.points.map((p) => p.mood) },
-            ]}
-            formatY={(v) => v.toFixed(0)}
-          />
-          {lastMoment && !checkInSeries.sample && (
-            <Text style={styles.cardFootnote}>Last: {lastMoment.label.toLowerCase()}</Text>
-          )}
-        </View>
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>Your last 7 days</Text>
+                {checkInSeries.sample && <Text style={styles.sampleTag}>sample</Text>}
+              </View>
+              <TrendChart
+                height={96}
+                labels={checkInSeries.points.map((p) => shortDate(p.date))}
+                series={[
+                  { label: 'Energy', color: Colors.accent, values: checkInSeries.points.map((p) => p.energy) },
+                  { label: 'Mood', color: Colors.violet, values: checkInSeries.points.map((p) => p.mood) },
+                ]}
+                formatY={(v) => v.toFixed(0)}
+              />
+              {lastMoment && !checkInSeries.sample && (
+                <Text style={styles.cardFootnote}>Last: {lastMoment.label.toLowerCase()}</Text>
+              )}
+            </View>
+          </>
+        )}
 
-        {cycle && (
+        {cycle && show('cycle') && (
           <View style={styles.block}>
             <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />
           </View>
         )}
 
         {/* Daily readiness */}
-        <Text style={styles.sectionTitle}>Daily readiness</Text>
-        <View style={[styles.card, styles.readinessCard]}>
-          {readiness ? (
-            <>
-              <ProgressRing
-                size={156}
-                strokeWidth={14}
-                progress={readiness.score / 100}
-                color={readiness.score >= 80 ? Colors.accent : readiness.score >= 60 ? Colors.amber : Colors.coral}
-              >
-                <Text style={styles.readinessScore}>{readiness.score}</Text>
-                <Text style={styles.readinessLabel}>{readiness.label}</Text>
-              </ProgressRing>
-              <View style={styles.smallRings}>
-                <SmallRing
-                  icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
-                  color={Colors.sky}
-                  progress={steps / 8000}
-                  value={steps.toLocaleString('en-GB')}
-                  label="Steps"
-                />
-                <SmallRing
-                  icon={<Ionicons name="flame" size={16} color={Colors.coral} />}
-                  color={Colors.coral}
-                  progress={calories / 500}
-                  value={`${calories}`}
-                  label="Active kcal"
-                />
-                <SmallRing
-                  icon={<Ionicons name="moon" size={15} color={Colors.violet} />}
-                  color={Colors.violet}
-                  progress={sleep / 480}
-                  value={formatSleep(sleep)}
-                  label="Sleep"
-                />
-              </View>
-              <Text style={styles.sourceText}>
-                From Huawei Health{isSample ? ' (sample data)' : ''} · <Text style={styles.link} onPress={() => router.push('/wearables')}>manage</Text>
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.cardFootnote}>Connect a wearable to see your readiness.</Text>
-          )}
-        </View>
+        {show('readiness') && (
+          <>
+            <Text style={styles.sectionTitle}>Daily readiness</Text>
+            <View style={[styles.card, styles.readinessCard]}>
+              {readiness ? (
+                <>
+                  <ProgressRing
+                    size={156}
+                    strokeWidth={14}
+                    progress={readiness.score / 100}
+                    color={readiness.score >= 80 ? Colors.accent : readiness.score >= 60 ? Colors.amber : Colors.coral}
+                  >
+                    <Text style={styles.readinessScore}>{readiness.score}</Text>
+                    <Text style={styles.readinessLabel}>{readiness.label}</Text>
+                  </ProgressRing>
+                  <View style={styles.smallRings}>
+                    <SmallRing
+                      icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
+                      color={Colors.sky}
+                      progress={steps / 8000}
+                      value={steps.toLocaleString('en-GB')}
+                      label="Steps"
+                    />
+                    <SmallRing
+                      icon={<Ionicons name="flame" size={16} color={Colors.coral} />}
+                      color={Colors.coral}
+                      progress={calories / 500}
+                      value={`${calories}`}
+                      label="Active kcal"
+                    />
+                    <SmallRing
+                      icon={<Ionicons name="moon" size={15} color={Colors.violet} />}
+                      color={Colors.violet}
+                      progress={sleep / 480}
+                      value={formatSleep(sleep)}
+                      label="Sleep"
+                    />
+                  </View>
+                  <Text style={styles.sourceText}>
+                    From Huawei Health{isSample ? ' (sample data)' : ''} · <Text style={styles.link} onPress={() => router.push('/wearables')}>manage</Text>
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.cardFootnote}>Connect a wearable to see your readiness.</Text>
+              )}
+            </View>
+          </>
+        )}
 
         {/* Biomarkers */}
         <Text style={styles.sectionTitle}>Biomarkers</Text>
@@ -375,94 +387,114 @@ export const TodayScreen = () => {
               onPress={() => router.push('/blood-pressure-detail')}
             />
           )}
-          <BiomarkerCard
-            name="Resting HR"
-            value={rhr != null ? String(rhr) : '—'}
-            unit="bpm"
-            status={vsUsual(series.resting_heart_rate, false).label}
-            color={vsUsual(series.resting_heart_rate, false).color}
-            onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}
-          />
-          <BiomarkerCard
-            name="HRV"
-            value={hrv != null ? String(hrv) : '—'}
-            unit="ms"
-            status={vsUsual(series.hrv, true).label}
-            color={vsUsual(series.hrv, true).color}
-            onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}
-          />
-          <BiomarkerCard
-            name="Temperature"
-            value={temp != null ? temp.toFixed(1) : '—'}
-            unit="°C"
-            status={temp != null && temp >= 36.1 && temp <= 37.2 ? 'Normal' : 'Check'}
-            color={temp != null && temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
-            onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}
-            wide
-          />
+          {show('wearables') && (
+            <>
+              <BiomarkerCard
+                name="Resting HR"
+                value={rhr != null ? String(rhr) : '—'}
+                unit="bpm"
+                status={vsUsual(series.resting_heart_rate, false).label}
+                color={vsUsual(series.resting_heart_rate, false).color}
+                onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}
+              />
+              <BiomarkerCard
+                name="HRV"
+                value={hrv != null ? String(hrv) : '—'}
+                unit="ms"
+                status={vsUsual(series.hrv, true).label}
+                color={vsUsual(series.hrv, true).color}
+                onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}
+              />
+              <BiomarkerCard
+                name="Temperature"
+                value={temp != null ? temp.toFixed(1) : '—'}
+                unit="°C"
+                status={temp != null && temp >= 36.1 && temp <= 37.2 ? 'Normal' : 'Check'}
+                color={temp != null && temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
+                onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}
+                wide
+              />
+            </>
+          )}
         </View>
 
         {/* Your plan */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>Your plan</Text>
-          <TouchableOpacity onPress={() => router.push('/action-plan')} hitSlop={8}>
-            <Text style={styles.link}>Full view</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.planList}>
-          {plan.map((item) => {
-            const color = PLAN_COLOR[item.kind];
-            const progress = planProgress(item.kind, item.target);
-            return (
-              <TouchableOpacity
-                key={item.kind}
-                style={styles.planRow}
-                onPress={() => onPlanPress(item.kind)}
-                activeOpacity={0.85}
-              >
-                <View style={styles.planThumb}>
-                  <Image source={planImage(item.kind, profile?.sex)} style={StyleSheet.absoluteFill} contentFit="cover" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.planTitle}>{item.title}</Text>
-                  <View style={styles.planBarTrack}>
-                    <View
-                      style={[
-                        styles.planBarFill,
-                        { width: `${Math.min(1, progress.value) * 100}%`, backgroundColor: color },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.planProgress}>{progress.text}</Text>
-                </View>
-                <Ionicons
-                  name={
-                    item.kind === 'steps' || item.kind === 'sleep'
-                      ? 'chevron-forward'
-                      : item.kind === 'mindfulness'
-                        ? 'play-circle'
-                        : 'add-circle'
-                  }
-                  size={item.kind === 'steps' || item.kind === 'sleep' ? 18 : 26}
-                  color={item.kind === 'steps' || item.kind === 'sleep' ? Colors.textMuted : color}
-                />
+        {show('plan') && (
+          <>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>Your plan</Text>
+              <TouchableOpacity onPress={() => router.push('/action-plan')} hitSlop={8}>
+                <Text style={styles.link}>Full view</Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
-        <Text style={styles.planNote}>Sample plan. It will come from your personalised recommendations.</Text>
+            </View>
+            <View style={styles.planList}>
+              {plan.map((item) => {
+                const color = PLAN_COLOR[item.kind];
+                const progress = planProgress(item.kind, item.target);
+                return (
+                  <TouchableOpacity
+                    key={item.kind}
+                    style={styles.planRow}
+                    onPress={() => onPlanPress(item.kind)}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.planThumb}>
+                      <Image source={planImage(item.kind, profile?.sex)} style={StyleSheet.absoluteFill} contentFit="cover" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.planTitle}>{item.title}</Text>
+                      <View style={styles.planBarTrack}>
+                        <View
+                          style={[
+                            styles.planBarFill,
+                            { width: `${Math.min(1, progress.value) * 100}%`, backgroundColor: color },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.planProgress}>{progress.text}</Text>
+                    </View>
+                    <Ionicons
+                      name={
+                        item.kind === 'steps' || item.kind === 'sleep'
+                          ? 'chevron-forward'
+                          : item.kind === 'mindfulness'
+                            ? 'play-circle'
+                            : 'add-circle'
+                      }
+                      size={item.kind === 'steps' || item.kind === 'sleep' ? 18 : 26}
+                      color={item.kind === 'steps' || item.kind === 'sleep' ? Colors.textMuted : color}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={styles.planNote}>Sample plan. It will come from your personalised recommendations.</Text>
+          </>
+        )}
 
         {/* Your badges */}
-        <Text style={styles.sectionTitle}>Your badges</Text>
-        <BadgesSection achievements={achievements} />
+        {show('badges') && (
+          <>
+            <Text style={styles.sectionTitle}>Your badges</Text>
+            <BadgesSection achievements={achievements} />
+          </>
+        )}
 
         {/* Talk to a specialist */}
-        <Text style={styles.sectionTitle}>Talk to a specialist</Text>
-        <SpecialistCarousel onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
+        {show('specialists') && (
+          <>
+            <Text style={styles.sectionTitle}>Talk to a specialist</Text>
+            <SpecialistCarousel onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
+          </>
+        )}
 
         {/* Keep learning */}
-        <Text style={styles.sectionTitle}>Keep learning</Text>
-        <SpecialistCarousel items={LEARNING_TOPICS} onSelect={(t) => router.push({ pathname: '/learn', params: { topic: t.id } })} />
+        {show('learning') && (
+          <>
+            <Text style={styles.sectionTitle}>Keep learning</Text>
+            <SpecialistCarousel items={LEARNING_TOPICS} onSelect={(t) => router.push({ pathname: '/learn', params: { topic: t.id } })} />
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

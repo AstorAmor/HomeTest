@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "web"],
       "port": 8081
+    },
+    {
+      "name": "expo-web-demo",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "set EXPO_PUBLIC_PUBLIC_DEMO=1&& npx expo start --web --port 8082"],
+      "port": 8082
     }
   ]
 }
