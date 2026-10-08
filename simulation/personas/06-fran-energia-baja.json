@@ -1,0 +1,71 @@
+{
+  "id": "fran-energia-baja",
+  "name": "Fran",
+  "summary": "Lleva días con energía baja (2/5) en el check-in y, tras el primer aviso, lo silencia para siempre.",
+  "tests": "X días con algo: 3 días seguidos de energía baja disparan el aviso; luego tiempo mínimo entre avisos y silencio permanente.",
+  "profile": {
+    "sex": "male",
+    "age": 47,
+    "firstName": "Fran"
+  },
+  "simulate": {
+    "fromDay": -3,
+    "toDay": 6
+  },
+  "series": [
+    {
+      "type": "check_in",
+      "fromDay": -15,
+      "toDay": -3,
+      "energy": [
+        3,
+        4
+      ],
+      "mood": [
+        "neutral",
+        "calm"
+      ]
+    },
+    {
+      "type": "check_in",
+      "fromDay": -2,
+      "toDay": 6,
+      "energy": 2,
+      "mood": [
+        "sad",
+        "stressed"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "day": 2,
+      "time": "21:00",
+      "type": "mute",
+      "nudge": "low_energy_3d",
+      "for": "forever"
+    }
+  ],
+  "expect": [
+    {
+      "day": -1,
+      "nudge": "low_energy_3d",
+      "status": "not_due"
+    },
+    {
+      "day": 0,
+      "nudge": "low_energy_3d",
+      "status": "send"
+    },
+    {
+      "day": 1,
+      "nudge": "low_energy_3d",
+      "status": "cooldown"
+    },
+    {
+      "day": 4,
+      "nudge": "low_energy_3d",
+      "status": "muted"
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 
 export type DayMoment = 'just_woke_up' | 'mid_day' | 'winding_down';
 
-export type Mood = 'happy' | 'calm' | 'neutral' | 'sad' | 'anxious' | 'stressed' | 'irritable';
+export type Mood = 'excited' | 'happy' | 'calm' | 'neutral' | 'sad' | 'anxious' | 'stressed' | 'irritable';
 
 export interface CheckInEntry {
   id: string;
@@ -25,6 +25,8 @@ export const MOMENT_OPTIONS: { id: DayMoment; label: string; icon: string }[] = 
 ];
 
 export const MOOD_OPTIONS: { id: Mood; label: string; emoji: string; positive: boolean }[] = [
+  // Con energía y ganas de hacer cosas (ambición), distinto de simplemente contento
+  { id: 'excited', label: 'Excited', emoji: '🤩', positive: true },
   { id: 'happy', label: 'Happy', emoji: '😊', positive: true },
   { id: 'calm', label: 'Calm', emoji: '😌', positive: true },
   { id: 'neutral', label: 'Neutral', emoji: '😐', positive: true },

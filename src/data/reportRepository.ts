@@ -58,3 +58,20 @@ export function getComputedSummaryCounts(): {
   const enRango = allMarkers.filter((m) => m.flag === 'en_rango').length;
   return { enRango, needsReview: allMarkers.length - enRango, total: allMarkers.length };
 }
+
+// Marcadores que estaban fuera de su rango en la analítica anterior y ahora están dentro: lo que
+// de verdad merece celebración al llegar los resultados (recibir el informe por sí solo, no).
+export function markersBackInRange(report: HomeTestReport): ReportMarker[] {
+  const out: ReportMarker[] = [];
+  for (const section of report.sections) {
+    for (const m of section.markers) {
+      const prev = m.trend?.previous_value;
+      if (typeof prev !== 'number' || typeof m.value !== 'number' || !m.range) continue;
+      const { low, high } = m.range;
+      const wasOut = (low != null && prev < low) || (high != null && prev > high);
+      const isIn = (low == null || m.value >= low) && (high == null || m.value <= high);
+      if (wasOut && isIn) out.push(m);
+    }
+  }
+  return out;
+}

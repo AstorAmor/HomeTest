@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -10,7 +10,7 @@ import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
 import { currentReport } from '@/data/reportRepository';
 import { reportSeenKey, userFlags } from '@/data/userFlags';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useFirstName } from '@/components/UserAvatar';
 import { BadgesSection } from '@/components/BadgesSection';
@@ -22,6 +22,11 @@ import { planImage } from '@/data/planImages';
 import { Image } from 'expo-image';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
+import { InboxItem, nudgeStore } from '@/data/nudgeStore';
+import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
+import { doseRepository, medicationRepository } from '@/data/medicationRepository';
+import { dosesForDay, isActiveOn } from '@/logic/medication';
+import { ScheduledDose } from '@/types/medication';
 import {
   mockBiomarkers,
   mockNextTestDate,
@@ -87,19 +92,27 @@ const vsUsual = (points: DailyPoint[] | undefined, higherIsBetter: boolean) => {
     : { label: higherIsBetter ? 'Below your usual' : 'Above your usual', color: Colors.warning };
 };
 
-// Icono abstracto del check-in: orbe con gradiente
+// Icono del check-in: la carita de "Mood & check-ins" sobre una esfera verde con brillo dorado
 const CheckInOrb = () => (
-  <Svg width={52} height={52}>
-    <Defs>
-      <RadialGradient id="orb" cx="35%" cy="30%" r="75%">
-        <Stop offset="0" stopColor="#C9C2FF" />
-        <Stop offset="0.45" stopColor={Colors.violet} />
-        <Stop offset="1" stopColor={Colors.accent} stopOpacity="0.85" />
-      </RadialGradient>
-    </Defs>
-    <Circle cx={26} cy={26} r={24} fill="url(#orb)" />
-    <Circle cx={19} cy={18} r={5} fill="#FFFFFF" opacity={0.35} />
-  </Svg>
+  <View style={{ width: 52, height: 52 }}>
+    <Svg width={52} height={52}>
+      <Defs>
+        <RadialGradient id="orb" cx="34%" cy="28%" r="78%">
+          <Stop offset="0" stopColor="#F3E2B8" />
+          <Stop offset="0.22" stopColor={Colors.gold} />
+          <Stop offset="0.55" stopColor={Colors.green} />
+          <Stop offset="1" stopColor="#0E2A24" />
+        </RadialGradient>
+      </Defs>
+      <Circle cx={26} cy={26} r={24} fill="url(#orb)" />
+      <Circle cx={18} cy={16} r={4} fill="#FFF6DD" opacity={0.55} />
+    </Svg>
+    <View style={StyleSheet.absoluteFill}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Ionicons name="happy-outline" size={26} color="#FAF8F3" />
+      </View>
+    </View>
+  </View>
 );
 
 const PLAN_COLOR: Record<PlanItemKind, string> = {
@@ -135,10 +148,21 @@ export const TodayScreen = () => {
   const [mealsToday, setMealsToday] = useState(0);
   // El aviso "Your report is here!" se enseña hasta que el usuario lo abre (user_flags).
   const [reportSeen, setReportSeen] = useState(true);
+  // Avisos sin leer (src/logic/nudges: se evalúan al abrir Today) y registro de baño de hoy
+  const [unread, setUnread] = useDeepState<InboxItem[]>([]);
+  const [bathroomToday, setBathroomToday] = useDeepState({ bowel: false, urine: false });
+  const [dosesToday, setDosesToday] = useDeepState<ScheduledDose[]>([]);
 
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
     userFlags.get(reportSeenKey(currentReport.report_id)).then((v) => setReportSeen(!!v));
+    nudgeStore.refresh().then(({ inbox }) => setUnread(inbox.filter((i) => !i.read)));
+    Promise.all([medicationRepository.getAll(), doseRepository.getAll()]).then(([m, l]) =>
+      setDosesToday(dosesForDay(m.filter((i) => isActiveOn(i, new Date())), new Date(), l))
+    );
+    Promise.all([bowelRepository.getAll(), urineRepository.getAll()]).then(([b, u]) =>
+      setBathroomToday({ bowel: !!entryForDay(b, dayKey(new Date())), urine: !!entryForDay(u, dayKey(new Date())) })
+    );
     const [p, checkIns, cycleEntries, strength, meals, workoutList, mealList, mindfulList, mindfulThisWeek] =
       await Promise.all([
         profileRepository.get(),
@@ -165,7 +189,7 @@ export const TodayScreen = () => {
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
-  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData]);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, setBathroomToday, setDosesToday]);
 
   useReloadOnFocus(load);
 
@@ -254,6 +278,21 @@ export const TodayScreen = () => {
           </View>
         </View>
 
+        {unread.length > 0 && (
+          <TouchableOpacity style={styles.inboxCard} onPress={() => router.push('/notifications')} activeOpacity={0.85}>
+            <View style={styles.inboxIcon}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.gold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fullPlanTitle}>{unread[0].title}</Text>
+              <Text style={styles.fullPlanSub} numberOfLines={2}>
+                {unread.length > 1 ? `And ${unread.length - 1} more` : unread[0].body}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+          </TouchableOpacity>
+        )}
+
         <NextConsultationCard />
 
         {show('plan') && (
@@ -296,8 +335,8 @@ export const TodayScreen = () => {
                 height={96}
                 labels={checkInSeries.points.map((p) => shortDate(p.date))}
                 series={[
-                  { label: 'Energy', color: Colors.accent, values: checkInSeries.points.map((p) => p.energy) },
-                  { label: 'Mood', color: Colors.violet, values: checkInSeries.points.map((p) => p.mood) },
+                  { label: 'Energy', color: Colors.green, values: checkInSeries.points.map((p) => p.energy) },
+                  { label: 'Mood', color: Colors.gold, values: checkInSeries.points.map((p) => p.mood) },
                 ]}
                 formatY={(v) => v.toFixed(0)}
               />
@@ -306,6 +345,59 @@ export const TodayScreen = () => {
               )}
             </View>
           </>
+        )}
+
+        {show('digestive') && (
+          <TouchableOpacity style={styles.bathroomCard} onPress={() => router.push('/digestive')} activeOpacity={0.85}>
+            <View style={styles.inboxIcon}>
+              <MaterialCommunityIcons name="stomach" size={20} color={Colors.green} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fullPlanTitle}>Gut and bladder</Text>
+              <Text style={styles.fullPlanSub}>
+                {bathroomToday.bowel && bathroomToday.urine ? 'Both logged today' : 'Two taps to log today'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.miniLog, bathroomToday.bowel && styles.miniLogDone]}
+              onPress={() => router.push('/log-bowel')}
+              hitSlop={6}
+            >
+              <Ionicons name={bathroomToday.bowel ? 'checkmark' : 'add'} size={14} color={bathroomToday.bowel ? Colors.ok : Colors.accent} />
+              <Text style={styles.miniLogText}>Gut</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.miniLog, bathroomToday.urine && styles.miniLogDone]}
+              onPress={() => router.push('/log-urine')}
+              hitSlop={6}
+            >
+              <Ionicons name={bathroomToday.urine ? 'checkmark' : 'add'} size={14} color={bathroomToday.urine ? Colors.ok : Colors.accent} />
+              <Text style={styles.miniLogText}>Urine</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+
+        {show('medication') && (
+          <TouchableOpacity style={styles.bathroomCard} onPress={() => router.push('/medications')} activeOpacity={0.85}>
+            <View style={styles.inboxIcon}>
+              <Ionicons name="medical-outline" size={20} color={Colors.gold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fullPlanTitle}>Medication</Text>
+              <Text style={styles.fullPlanSub}>
+                {dosesToday.length === 0
+                  ? 'Add what you take to keep track'
+                  : (() => {
+                      const pending = dosesToday.find((d) => !d.log);
+                      const done = dosesToday.filter((d) => d.log?.status === 'taken').length;
+                      return pending
+                        ? `Next: ${pending.name} at ${String(pending.at.getHours()).padStart(2, '0')}:${String(pending.at.getMinutes()).padStart(2, '0')} · ${done}/${dosesToday.length} taken`
+                        : `All ${dosesToday.length} doses done today`;
+                    })()}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+          </TouchableOpacity>
         )}
 
         {cycle && show('cycle') && (
@@ -325,7 +417,8 @@ export const TodayScreen = () => {
                     size={156}
                     strokeWidth={14}
                     progress={readiness.score / 100}
-                    color={readiness.score >= 80 ? Colors.accent : readiness.score >= 60 ? Colors.amber : Colors.coral}
+                    color={Colors.green}
+                    gradient={[Colors.coral, Colors.gold, Colors.green]}
                   >
                     <Text style={styles.readinessScore}>{readiness.score}</Text>
                     <Text style={styles.readinessLabel}>{readiness.label}</Text>
@@ -578,6 +671,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fullPlanTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  inboxCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  inboxIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bathroomCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  miniLog: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 14,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  miniLogDone: { borderColor: Colors.ok },
+  miniLogText: { color: Colors.textPrimary, fontSize: 12, fontWeight: '700' },
   fullPlanSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   reportBanner: {
     flexDirection: 'row',
@@ -646,7 +783,7 @@ const styles = StyleSheet.create({
     gap: 14,
     backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: withAlpha(Colors.violet, 0.35),
+    borderColor: Colors.cardBorder,
     borderRadius: 18,
     padding: 14,
     marginHorizontal: 20,
@@ -663,7 +800,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   checkInButton: {
-    backgroundColor: Colors.violet,
+    backgroundColor: Colors.accent,
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 9,

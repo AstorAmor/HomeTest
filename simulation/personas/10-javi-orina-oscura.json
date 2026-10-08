@@ -1,0 +1,107 @@
+{
+  "id": "javi-orina-oscura",
+  "name": "Javi",
+  "summary": "52 años. Registra la orina a diario; los últimos días la tiene oscura y va menos al baño. Hizo una prueba de volumen con una botella y no le pareció lo habitual.",
+  "tests": "Orina oscura 2 de los últimos 3 días: aviso de hidratación. La prueba de volumen 'no habitual' hace que la app proponga repetirla.",
+  "profile": {
+    "sex": "male",
+    "age": 52,
+    "firstName": "Javi"
+  },
+  "simulate": {
+    "fromDay": -4,
+    "toDay": 5
+  },
+  "series": [
+    {
+      "type": "urine",
+      "fromDay": -10,
+      "toDay": -3,
+      "count": [
+        5,
+        7
+      ],
+      "nightCount": [
+        0,
+        1
+      ],
+      "color": [
+        "pale",
+        "yellow"
+      ]
+    },
+    {
+      "type": "urine",
+      "fromDay": -2,
+      "toDay": 0,
+      "count": [
+        3,
+        4
+      ],
+      "nightCount": 0,
+      "color": [
+        "dark",
+        "amber"
+      ]
+    },
+    {
+      "type": "urine",
+      "fromDay": 1,
+      "toDay": 5,
+      "count": [
+        5,
+        6
+      ],
+      "color": [
+        "pale",
+        "yellow"
+      ]
+    },
+    {
+      "type": "check_in",
+      "fromDay": -10,
+      "toDay": 5,
+      "energy": [
+        3,
+        4
+      ],
+      "mood": [
+        "neutral",
+        "calm"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "day": -5,
+      "time": "18:00",
+      "type": "urine",
+      "count": 6,
+      "color": "yellow",
+      "voidVolume": "quarter",
+      "volumeUsual": "no"
+    }
+  ],
+  "expect": [
+    {
+      "day": -2,
+      "nudge": "urine_dark",
+      "status": "not_due"
+    },
+    {
+      "day": -1,
+      "nudge": "urine_dark",
+      "status": "send"
+    },
+    {
+      "day": 0,
+      "nudge": "urine_dark",
+      "status": "cooldown"
+    },
+    {
+      "day": 4,
+      "nudge": "urine_dark",
+      "status": "not_due"
+    }
+  ]
+}

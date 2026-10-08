@@ -6,10 +6,14 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { CosmicBackground } from '@/components/CosmicBackground';
+import { currentReport, markersBackInRange } from '@/data/reportRepository';
 
-// Momento "wow" al recibir resultados: rayo + GREAT JOB!! + confeti, y de ahí al informe.
+// Llegan los resultados. Solo se celebra (rayo + GREAT JOB!! + confeti) si hay logros de verdad:
+// marcadores que estaban fuera de rango y han vuelto a él. Si no, un aviso tranquilo.
 export const ResultsReadyScreen = () => {
   const router = useRouter();
+  const improved = markersBackInRange(currentReport);
+  const celebrate = improved.length > 0;
   const bolt = useRef(new Animated.Value(0)).current;
   const text = useRef(new Animated.Value(0)).current;
 
@@ -28,7 +32,7 @@ export const ResultsReadyScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <CosmicBackground />
-      <Confetti count={90} duration={3200} />
+      {celebrate && <Confetti count={90} duration={3200} />}
       <View style={styles.content}>
         <Animated.View
           style={[
@@ -42,21 +46,24 @@ export const ResultsReadyScreen = () => {
             },
           ]}
         >
-          <Ionicons name="flash" size={64} color={Colors.amber} />
+          <Ionicons name={celebrate ? 'flash' : 'document-text-outline'} size={celebrate ? 64 : 54} color={Colors.amber} />
         </Animated.View>
 
-        <Animated.Text
-          style={[
-            styles.greatJob,
-            { opacity: text, transform: [{ scale: text.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] },
-          ]}
-        >
-          GREAT JOB!!
-        </Animated.Text>
+        {celebrate && (
+          <Animated.Text
+            style={[
+              styles.greatJob,
+              { opacity: text, transform: [{ scale: text.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] },
+            ]}
+          >
+            GREAT JOB!!
+          </Animated.Text>
+        )}
         <Text style={styles.title}>Your results are in</Text>
         <Text style={styles.teaser}>
-          Your cholesterol, glucose and inflammation markers have clearly improved over the last 6 months, right in
-          step with better sleep and more movement.
+          {celebrate
+            ? `${improved.length} marker${improved.length === 1 ? ' is' : 's are'} back in range since your last test, right in step with better sleep and more movement.`
+            : 'Take a look at your report and your updated plan.'}
         </Text>
 
         <TouchableOpacity style={styles.cta} onPress={openReport} activeOpacity={0.85}>

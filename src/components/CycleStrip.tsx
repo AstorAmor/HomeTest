@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { CyclePhaseInfo, PHASE_COLORS, phaseBoundaries } from '@/utils/cyclePhase';
 
@@ -22,7 +23,10 @@ export const CycleStrip = ({ info, onPress }: CycleStripProps) => {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.header}>
-        <Text style={[styles.phase, { color: PHASE_COLORS[info.phase] }]}>{info.label}</Text>
+        <View style={styles.phaseRow}>
+          <Ionicons name="rose-outline" size={16} color={Colors.pulseAccent} />
+          <Text style={[styles.phase, { color: PHASE_COLORS[info.phase] }]}>{info.label}</Text>
+        </View>
         <Text style={styles.day}>
           Day {info.day} of {info.length}
           {info.isSample ? ' · sample' : ''}
@@ -52,6 +56,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'baseline',
     marginBottom: 10,
+  },
+  phaseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   phase: {
     fontSize: 14,

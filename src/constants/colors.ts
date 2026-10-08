@@ -42,6 +42,10 @@ const DARK = {
   pinkSoft: '#F7B6D2',
   pinkSoftBg: 'rgba(247, 182, 210, 0.16)',
 
+  // Verde y oro de marca para gráficas, la esfera del check-in y detalles (no son estados)
+  green: '#6FBF97',
+  gold: '#C9A36B',
+
   // Series de gráficas y anillos (Today / My Data)
   violet: '#9B8CFF',
   violetSoft: 'rgba(155, 140, 255, 0.15)',
@@ -89,6 +93,9 @@ const LIGHT: typeof DARK = {
   pulseAccent: '#C2477A',
   pinkSoft: '#D9829F',
   pinkSoftBg: 'rgba(217, 130, 159, 0.16)',
+
+  green: '#2E7D5B',
+  gold: '#B8904F',
 
   violet: '#7A5BB5',
   violetSoft: 'rgba(122, 91, 181, 0.12)',

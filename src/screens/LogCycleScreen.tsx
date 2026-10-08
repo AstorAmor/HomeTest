@@ -91,7 +91,7 @@ export const LogCycleScreen = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.iconBadge}>
-            <Ionicons name="water" size={26} color={Colors.pulseAccent} />
+            <Ionicons name="rose-outline" size={26} color={Colors.pulseAccent} />
           </View>
           <Text style={styles.title}>Log period</Text>
           <Text style={styles.subtitle}>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import {
@@ -23,11 +23,14 @@ const EXPIRY_OPTIONS: { id: string; label: string; days: number | null }[] = [
 ];
 
 // Paciente: elegir profesional (verificado) → qué categorías → hasta cuándo.
+// `?scope=plan` (desde "Share or print" del plan) llega con esa categoría ya marcada.
 export const ShareCreateScreen = () => {
   const router = useRouter();
+  const params = useLocalSearchParams<{ scope?: string }>();
+  const preselected = SHARE_SCOPES.find((s) => s.id === params.scope)?.id ?? 'lab_reports';
   const [professionals, setProfessionals] = useState<ProfessionalAccount[] | null>(null);
   const [selectedPro, setSelectedPro] = useState<string | null>(null);
-  const [scopes, setScopes] = useState<Set<ShareScope>>(new Set(['lab_reports']));
+  const [scopes, setScopes] = useState<Set<ShareScope>>(new Set([preselected]));
   const [expiry, setExpiry] = useState('90');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

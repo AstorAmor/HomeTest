@@ -1,0 +1,59 @@
+{
+  "id": "ana-deja-de-registrar",
+  "name": "Ana",
+  "summary": "Hace check-in cada día durante dos semanas y a partir de hoy deja de usar la app.",
+  "tests": "A los 3 días sin check-in, recordatorio suave; a los 7 días sin ningún registro, aviso de inactividad, que se repite cada 7 días.",
+  "profile": {
+    "sex": "female",
+    "age": 34,
+    "firstName": "Ana"
+  },
+  "simulate": {
+    "fromDay": -3,
+    "toDay": 21
+  },
+  "series": [
+    {
+      "type": "check_in",
+      "fromDay": -14,
+      "toDay": 0,
+      "energy": [
+        3,
+        4
+      ],
+      "mood": [
+        "happy",
+        "calm"
+      ],
+      "moment": "mid_day"
+    }
+  ],
+  "expect": [
+    {
+      "day": 3,
+      "nudge": "checkin_missed_3d",
+      "status": "send"
+    },
+    {
+      "day": 7,
+      "nudge": "inactive_7d",
+      "status": "send"
+    },
+    {
+      "day": 7,
+      "nudge": "checkin_missed_3d",
+      "status": "not_due",
+      "note": "a partir de 7 días lo cubre el aviso de inactividad"
+    },
+    {
+      "day": 10,
+      "nudge": "inactive_7d",
+      "status": "cooldown"
+    },
+    {
+      "day": 14,
+      "nudge": "inactive_7d",
+      "status": "send"
+    }
+  ]
+}

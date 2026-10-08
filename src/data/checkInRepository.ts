@@ -33,6 +33,7 @@ export const checkInRepository = createMetricRepository<CheckInEntry>('hometest:
 
 // Puntuación de ánimo 1..5 a partir del estado elegido, para poder dibujarlo.
 const MOOD_SCORE: Record<Mood, number> = {
+  excited: 5,
   happy: 5,
   calm: 4.5,
   neutral: 3,

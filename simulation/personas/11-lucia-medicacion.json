@@ -1,0 +1,23 @@
+{
+  "id": "lucia-medicacion",
+  "name": "Lucía",
+  "summary": "39 años, hipotiroidismo: toma levotiroxina cada mañana con recordatorio y la marca todos los días. Hoy se le olvida. Después le recetan ibuprofeno 3 días y silencia sus recordatorios una semana.",
+  "tests": "Aviso de toma no marcada (una vez al día como mucho) y recordatorio silenciado por medicación: el del ibuprofeno no cuenta mientras está silenciado.",
+  "profile": { "sex": "female", "age": 39, "firstName": "Lucía", "conditions": ["thyroid"] },
+  "simulate": { "fromDay": -2, "toDay": 6 },
+  "series": [
+    { "type": "dose", "fromDay": -10, "toDay": -1, "med": "levo", "at": "07:30" },
+    { "type": "dose", "fromDay": 1, "toDay": 6, "med": "levo", "at": "07:30" },
+    { "type": "check_in", "fromDay": -10, "toDay": 6, "energy": [3, 4], "mood": ["calm", "neutral"] }
+  ],
+  "events": [
+    { "day": -30, "type": "medication", "id": "levo", "name": "Levothyroxine", "dose": "50 µg", "schedule": { "type": "times", "times": ["07:30"] }, "reminders": true },
+    { "day": 2, "time": "08:00", "type": "medication", "id": "ibu", "name": "Ibuprofen", "dose": "600 mg", "schedule": { "type": "every_hours", "hours": 8, "firstTime": "07:00" }, "courseDays": 3, "reminders": true, "muteForDays": 7 }
+  ],
+  "expect": [
+    { "day": -1, "nudge": "medication_missed", "status": "not_due" },
+    { "day": 0, "nudge": "medication_missed", "status": "send", "note": "no marcó la levotiroxina de las 07:30" },
+    { "day": 1, "nudge": "medication_missed", "status": "not_due" },
+    { "day": 3, "nudge": "medication_missed", "status": "not_due", "note": "el ibuprofeno tiene los recordatorios silenciados" }
+  ]
+}

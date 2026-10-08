@@ -30,10 +30,24 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'customise',
-    title: 'Customise your app',
-    subtitle: 'Choose what you use Kuova for and which sections you see',
+    title: 'Configure my experience',
+    subtitle: 'What you use Kuova for, what you see and how each part works',
     iconFamily: 'ionicons',
     icon: 'options-outline',
+  },
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    subtitle: 'What we send you, and mute anything you do not want',
+    iconFamily: 'ionicons',
+    icon: 'notifications-outline',
+  },
+  {
+    id: 'evidence',
+    title: 'How Kuova works',
+    subtitle: 'How we calculate things, and the studies and guidelines behind them',
+    iconFamily: 'ionicons',
+    icon: 'information-circle-outline',
   },
   {
     id: 'schedule',
@@ -104,6 +118,8 @@ export const MoreScreen = () => {
     if (id === 'settings') return logout();
     if (id === 'profile') return router.push('/profile');
     if (id === 'customise') return router.push('/app-sections');
+    if (id === 'notifications') return router.push('/notifications');
+    if (id === 'evidence') return router.push('/evidence');
     if (id === 'sharing') return router.push('/sharing');
     if (id === 'schedule') return router.push('/schedule');
     if (id === 'admin') return router.push('/admin');

@@ -77,14 +77,6 @@ export const CONDITION_OPTIONS: { id: ConditionId; label: string; femaleOnly?: b
   { id: 'none', label: 'None' },
 ];
 
-export const BADGES: Record<string, { title: string; description: string; icon: string }> = {
-  plan_builder: {
-    title: 'Plan builder',
-    description: 'You shared your goals and unlocked your first personalised plan.',
-    icon: 'ribbon',
-  },
-};
-
 const STORAGE_KEY = 'hometest:user_profile';
 const EMPTY: UserProfile = { goals: [], badges: [], conditions: [] };
 

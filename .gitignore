@@ -51,3 +51,6 @@ dist-web/
 
 # Python
 __pycache__/
+
+# Informes del simulador de usuarios (npm run simulate)
+simulation/output/

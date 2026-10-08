@@ -19,6 +19,8 @@ export type AppSection =
   | 'readiness'
   | 'wearables'
   | 'cycle'
+  | 'digestive'
+  | 'medication'
   | 'badges'
   | 'specialists'
   | 'learning';
@@ -26,7 +28,15 @@ export type AppSection =
 export interface AppPrefs {
   purpose?: AppPurpose;
   hidden: AppSection[];
+  // Secciones opcionales que el usuario ha encendido (las de OPT_IN_SECTIONS salen apagadas)
+  enabled: AppSection[];
 }
+
+// Solo se ven si el usuario las enciende (en la encuesta final o en Configure my experience)
+export const OPT_IN_SECTIONS: AppSection[] = ['digestive', 'medication'];
+
+export const isSectionVisible = (prefs: AppPrefs, section: AppSection) =>
+  OPT_IN_SECTIONS.includes(section) ? prefs.enabled.includes(section) : !prefs.hidden.includes(section);
 
 export const PURPOSE_OPTIONS: { id: AppPurpose; title: string; subtitle: string; icon: string }[] = [
   {
@@ -55,6 +65,8 @@ export const SECTION_OPTIONS: { id: AppSection; title: string; subtitle: string;
   { id: 'readiness', title: 'Daily readiness', subtitle: 'A daily score from your sleep and activity', icon: 'speedometer-outline' },
   { id: 'wearables', title: 'Wearable data', subtitle: 'Heart rate, HRV, sleep, steps, temperature', icon: 'watch-outline' },
   { id: 'cycle', title: 'Cycle tracking', subtitle: 'Period dates and predictions', icon: 'rose-outline' },
+  { id: 'digestive', title: 'Gut and bladder', subtitle: 'Log your bowel movements and urine, with weekly notes', icon: 'water-outline' },
+  { id: 'medication', title: 'Medication and supplements', subtitle: 'What you take, when, and reminders if you want them', icon: 'medical-outline' },
   { id: 'badges', title: 'Badges', subtitle: 'Achievements and streaks', icon: 'ribbon-outline' },
   { id: 'specialists', title: 'Specialist suggestions', subtitle: '"Talk to a specialist" on Today', icon: 'people-outline' },
   { id: 'learning', title: 'Learning', subtitle: 'Short reads about your health', icon: 'book-outline' },
@@ -68,7 +80,7 @@ export const PURPOSE_HIDDEN: Record<AppPurpose, AppSection[]> = {
 };
 
 const FLAG_KEY = 'app_prefs';
-const EMPTY: AppPrefs = { hidden: [] };
+const EMPTY: AppPrefs = { hidden: [], enabled: [] };
 
 // Estado compartido por todas las pantallas: al cambiarlo en ajustes, Today, My Data…
 // se actualizan al momento sin recargar.
@@ -80,10 +92,9 @@ const sanitize = (raw: unknown): AppPrefs => {
   if (!raw || typeof raw !== 'object') return EMPTY;
   const r = raw as Partial<AppPrefs>;
   const purpose = PURPOSE_OPTIONS.some((p) => p.id === r.purpose) ? r.purpose : undefined;
-  const hidden = Array.isArray(r.hidden)
-    ? r.hidden.filter((s): s is AppSection => SECTION_OPTIONS.some((o) => o.id === s))
-    : [];
-  return { purpose, hidden };
+  const known = (list: unknown) =>
+    Array.isArray(list) ? list.filter((s): s is AppSection => SECTION_OPTIONS.some((o) => o.id === s)) : [];
+  return { purpose, hidden: known(r.hidden), enabled: known(r.enabled) };
 };
 
 const currentOwner = () => getCurrentUserId() ?? 'demo';
@@ -111,10 +122,17 @@ export const appPrefs = {
   async setPurpose(purpose: AppPurpose): Promise<void> {
     const current = state.prefs;
     if (current.purpose === purpose) return;
-    await this.save({ purpose, hidden: [...PURPOSE_HIDDEN[purpose]] });
+    await this.save({ purpose, hidden: [...PURPOSE_HIDDEN[purpose]], enabled: current.enabled });
   },
 
   async setSectionVisible(section: AppSection, visible: boolean): Promise<void> {
+    if (OPT_IN_SECTIONS.includes(section)) {
+      const enabled = new Set(state.prefs.enabled);
+      if (visible) enabled.add(section);
+      else enabled.delete(section);
+      await this.save({ ...state.prefs, enabled: [...enabled] });
+      return;
+    }
     const hidden = new Set(state.prefs.hidden);
     if (visible) hidden.delete(section);
     else hidden.add(section);
@@ -137,8 +155,8 @@ export function useAppPrefs(): AppPrefs {
   return prefs;
 }
 
-// true si la sección se ve (por defecto, todas)
+// true si la sección se ve (por defecto todas, menos las opcionales)
 export function useSections(): (section: AppSection) => boolean {
-  const { hidden } = useAppPrefs();
-  return (section) => !hidden.includes(section);
+  const prefs = useAppPrefs();
+  return (section) => isSectionVisible(prefs, section);
 }

@@ -1,0 +1,105 @@
+{
+  "id": "gloria-busca-embarazo",
+  "name": "Gloria",
+  "summary": "33 años, lleva más de un año intentando quedarse embarazada. Registra la temperatura basal cada mañana hasta ayer.",
+  "tests": "Recomendación de ir al médico según la guía (12 meses si tiene menos de 35 años), recordatorio de temperatura y regla retrasada con mensaje de test de embarazo.",
+  "profile": {
+    "sex": "female",
+    "age": 33,
+    "firstName": "Gloria"
+  },
+  "cycleGoal": {
+    "goal": "conceive",
+    "regularCycles": "yes",
+    "hormonalContraception": "none",
+    "tryingFor": "1_2y",
+    "frequency": "weekly",
+    "timing": "sometimes",
+    "logTemperature": true
+  },
+  "simulate": {
+    "fromDay": 0,
+    "toDay": 35
+  },
+  "series": [
+    {
+      "type": "period",
+      "fromDay": -84,
+      "toDay": 0,
+      "length": 28
+    },
+    {
+      "type": "temperature",
+      "fromDay": -27,
+      "toDay": -1,
+      "source": "manual",
+      "celsius": [
+        36.2,
+        36.45
+      ],
+      "riseFromDay": -13,
+      "rise": 0.35
+    },
+    {
+      "type": "temperature",
+      "fromDay": -27,
+      "toDay": 35,
+      "source": "wearable",
+      "celsius": [
+        35.9,
+        36.2
+      ]
+    },
+    {
+      "type": "check_in",
+      "fromDay": -30,
+      "toDay": 35,
+      "energy": [
+        3,
+        4
+      ],
+      "mood": [
+        "calm",
+        "anxious"
+      ]
+    }
+  ],
+  "expect": [
+    {
+      "day": 0,
+      "nudge": "fertility_doctor",
+      "status": "send"
+    },
+    {
+      "day": 1,
+      "nudge": "temperature_reminder",
+      "status": "send"
+    },
+    {
+      "day": 2,
+      "nudge": "temperature_reminder",
+      "status": "cooldown"
+    },
+    {
+      "day": 10,
+      "nudge": "fertility_doctor",
+      "status": "cooldown"
+    },
+    {
+      "day": 30,
+      "nudge": "fertility_doctor",
+      "status": "send"
+    },
+    {
+      "day": 33,
+      "nudge": "period_late",
+      "status": "send"
+    },
+    {
+      "day": 9,
+      "nudge": "temperature_reminder",
+      "status": "not_due",
+      "note": "tras una semana sin registrar se deja de insistir"
+    }
+  ]
+}

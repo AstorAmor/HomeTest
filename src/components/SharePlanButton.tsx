@@ -82,10 +82,10 @@ export const SharePlanButton = () => {
           <Option
             icon="medkit-outline"
             title="Share with a Kuova professional"
-            subtitle="Give them access to your results in the app"
+            subtitle="Give them access to your plan in the app"
             onPress={() => {
               setOpen(false);
-              router.push('/share-new');
+              router.push({ pathname: '/share-new', params: { scope: 'plan' } });
             }}
           />
           {error && <Text style={styles.error}>{error}</Text>}

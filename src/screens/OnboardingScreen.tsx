@@ -1,15 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Animated, TextInput } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { WheelPicker } from '@/components/WheelPicker';
-import { Confetti } from '@/components/Confetti';
 import {
   ActivityLevel,
   Alcohol,
-  BADGES,
   CONDITION_OPTIONS,
   ConditionId,
   GOAL_OPTIONS,
@@ -73,7 +71,7 @@ function ChipGroup<T extends string>({
 export const OnboardingScreen = () => {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
-  const [phase, setPhase] = useState<'questions' | 'building' | 'badge'>('questions');
+  const [phase, setPhase] = useState<'questions' | 'building'>('questions');
 
   const [day, setDay] = useState(14);
   const [month, setMonth] = useState(5);
@@ -173,14 +171,8 @@ export const OnboardingScreen = () => {
 
   useEffect(() => {
     if (phase !== 'building') return;
-    const t = setTimeout(async () => {
-      // La insignia solo se celebra la primera vez (no al volver a editar el perfil)
-      const before = await profileRepository.get();
-      const firstTime = !before.badges.includes('plan_builder');
-      await profileRepository.awardBadge('plan_builder');
-      if (firstTime) setPhase('badge');
-      else router.replace('/plan-intro');
-    }, 1600);
+    // Recibir el plan no se celebra (ni insignia ni confeti): eso queda para lo que el usuario consigue
+    const t = setTimeout(() => router.replace('/plan-intro'), 1600);
     return () => clearTimeout(t);
   }, [phase]);
 
@@ -191,10 +183,6 @@ export const OnboardingScreen = () => {
         <Text style={styles.buildingText}>Building your personalised plan…</Text>
       </SafeAreaView>
     );
-  }
-
-  if (phase === 'badge') {
-    return <BadgeUnlocked onContinue={() => router.replace('/plan-intro')} />;
   }
 
   const toggleCondition = (id: ConditionId) =>
@@ -457,30 +445,6 @@ export const OnboardingScreen = () => {
   );
 };
 
-const BadgeUnlocked = ({ onContinue }: { onContinue: () => void }) => {
-  const badge = BADGES.plan_builder;
-  const scale = useRef(new Animated.Value(0.3)).current;
-
-  useEffect(() => {
-    Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: false }).start();
-  }, [scale]);
-
-  return (
-    <SafeAreaView style={[styles.safeArea, styles.centered]}>
-      <Confetti />
-      <Animated.View style={[styles.badgeCircle, { transform: [{ scale }] }]}>
-        <Ionicons name={badge.icon as any} size={54} color={Colors.amber} />
-      </Animated.View>
-      <Text style={styles.badgeEyebrow}>Badge unlocked</Text>
-      <Text style={styles.badgeTitle}>{badge.title}</Text>
-      <Text style={styles.badgeText}>{badge.description}</Text>
-      <TouchableOpacity style={[styles.cta, styles.badgeCta]} onPress={onContinue} activeOpacity={0.85}>
-        <Text style={styles.ctaText}>See my plan</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
-};
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -666,40 +630,5 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 15,
     marginTop: 16,
-  },
-  badgeCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: withAlpha(Colors.amber, 0.14),
-    borderWidth: 2,
-    borderColor: withAlpha(Colors.amber, 0.5),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 22,
-  },
-  badgeEyebrow: {
-    color: Colors.amber,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
-  badgeTitle: {
-    color: Colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  badgeText: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  badgeCta: {
-    alignSelf: 'stretch',
   },
 });

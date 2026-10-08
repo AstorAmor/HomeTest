@@ -181,7 +181,7 @@ export const CheckInScreen = () => {
                 return (
                   <View key={s.id} style={styles.suggestion}>
                     <View style={styles.optionIcon}>
-                      <Ionicons name={s.icon as any} size={22} color={Colors.violet} />
+                      <Ionicons name={s.icon as any} size={22} color={Colors.green} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.suggestionTitle}>{s.title}</Text>
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   startButton: {
-    backgroundColor: Colors.violetSoft,
+    backgroundColor: withAlpha(Colors.green, 0.14),
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accentSoft,
   },
   startText: {
-    color: Colors.violet,
+    color: Colors.green,
     fontSize: 13,
     fontWeight: '700',
   },

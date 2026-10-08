@@ -44,7 +44,7 @@ const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; 
 // Pantalla solo para el prototipo: elige qué "momento" del usuario enseñar.
 export const DevModeSelectScreen = () => {
   const router = useRouter();
-  const { setDemoMode } = useAuth();
+  const { setDemoMode, authMode } = useAuth();
 
   const choose = (mode: DemoMode) => {
     setDemoMode(mode);
@@ -87,6 +87,19 @@ export const DevModeSelectScreen = () => {
               <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
             </TouchableOpacity>
           ))}
+          {/* Usuarios simulados (simulation/personas): solo en el modo demo, nunca en una cuenta real */}
+          {authMode === 'demo' && (
+            <TouchableOpacity style={styles.card} onPress={() => router.push('/simulation')} activeOpacity={0.85}>
+              <View style={[styles.iconWrap, { backgroundColor: `${Colors.gold}26` }]}>
+                <Ionicons name="flask-outline" size={24} color={Colors.gold} />
+              </View>
+              <View style={styles.textWrap}>
+                <Text style={styles.cardTitle}>Simulated users</Text>
+                <Text style={styles.cardSubtitle}>10 test users at different moments: see their notifications day by day</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </SafeAreaView>

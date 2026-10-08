@@ -6,6 +6,7 @@ import { compressPhoto } from '@/utils/imageUpload';
 export type ShareScope =
   | 'profile'
   | 'lab_reports'
+  | 'plan'
   | 'glucose'
   | 'blood_pressure'
   | 'metrics'
@@ -17,6 +18,7 @@ export type ShareScope =
 
 export const SHARE_SCOPES: { id: ShareScope; label: string; description: string; icon: string }[] = [
   { id: 'lab_reports', label: 'Lab results', description: 'Your blood test reports', icon: 'flask-outline' },
+  { id: 'plan', label: 'Your plan', description: 'Your personalised action plan and its updates', icon: 'document-text-outline' },
   { id: 'glucose', label: 'Glucose', description: 'Glucose readings you log', icon: 'water-outline' },
   { id: 'blood_pressure', label: 'Blood pressure', description: 'Blood pressure and pulse readings', icon: 'speedometer-outline' },
   { id: 'metrics', label: 'Other biomarkers', description: 'Cholesterol, cortisol and similar', icon: 'analytics-outline' },
@@ -347,7 +349,8 @@ export async function listSharedPatients(): Promise<SharedPatient[]> {
 }
 
 // Tabla y columna de fecha por categoría. RLS solo devuelve filas si el permiso sigue activo.
-const SCOPE_TABLES: Partial<Record<ShareScope, { table: string; dateColumn: string }[]>> = {
+const SCOPE_TABLES: Partial<Record<ShareScope, { table: string; dateColumn: string; ownerColumn?: string }[]>> = {
+  plan: [{ table: 'action_plans', dateColumn: 'created_at', ownerColumn: 'patient_id' }],
   lab_reports: [
     { table: 'lab_reports', dateColumn: 'test_date' },
     { table: 'lab_uploads', dateColumn: 'created_at' },
@@ -383,13 +386,13 @@ export async function fetchSharedPatientData(patientId: string, scopes: ShareSco
   }
 
   for (const scope of scopes) {
-    for (const { table, dateColumn } of SCOPE_TABLES[scope] ?? []) {
+    for (const { table, dateColumn, ownerColumn = 'user_id' } of SCOPE_TABLES[scope] ?? []) {
       jobs.push(
         (async () => {
           const { data, error } = await supabase!
             .from(table)
             .select('*')
-            .eq('user_id', patientId)
+            .eq(ownerColumn, patientId)
             .order(dateColumn, { ascending: false })
             .limit(60);
           fail(error);

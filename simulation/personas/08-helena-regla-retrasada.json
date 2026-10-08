@@ -1,0 +1,69 @@
+{
+  "id": "helena-regla-retrasada",
+  "name": "Helena",
+  "summary": "Ciclos de 29 días muy regulares; esta vez la regla llega 9 días tarde.",
+  "tests": "Aviso de regla retrasada a partir de 5 días de retraso; desaparece al registrar la regla.",
+  "profile": {
+    "sex": "female",
+    "age": 29,
+    "firstName": "Helena"
+  },
+  "cycleGoal": {
+    "goal": "track",
+    "regularCycles": "yes",
+    "hormonalContraception": "none"
+  },
+  "simulate": {
+    "fromDay": 0,
+    "toDay": 14
+  },
+  "series": [
+    {
+      "type": "period",
+      "fromDay": -87,
+      "toDay": -29,
+      "length": 29
+    },
+    {
+      "type": "check_in",
+      "fromDay": -30,
+      "toDay": 14,
+      "energy": [
+        3,
+        4
+      ],
+      "mood": [
+        "calm",
+        "neutral"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "day": 9,
+      "type": "period_start"
+    }
+  ],
+  "expect": [
+    {
+      "day": 4,
+      "nudge": "period_late",
+      "status": "not_due"
+    },
+    {
+      "day": 5,
+      "nudge": "period_late",
+      "status": "send"
+    },
+    {
+      "day": 8,
+      "nudge": "period_late",
+      "status": "cooldown"
+    },
+    {
+      "day": 10,
+      "nudge": "period_late",
+      "status": "not_due"
+    }
+  ]
+}

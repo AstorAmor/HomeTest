@@ -1,0 +1,101 @@
+{
+  "id": "diego-silencia-3-meses",
+  "name": "Diego",
+  "summary": "Deportista con wearable: duerme poco tres noches seguidas y después deja la app y silencia la inactividad 3 meses.",
+  "tests": "Aviso de sueño corto (3 noches de menos de 6 h) y silencio de 3 meses del aviso de inactividad.",
+  "profile": {
+    "sex": "male",
+    "age": 33,
+    "firstName": "Diego"
+  },
+  "simulate": {
+    "fromDay": -2,
+    "toDay": 100
+  },
+  "series": [
+    {
+      "type": "check_in",
+      "fromDay": -20,
+      "toDay": 0,
+      "energy": [
+        3,
+        5
+      ],
+      "mood": [
+        "happy",
+        "calm"
+      ],
+      "moment": "just_woke_up",
+      "sleep": [
+        3,
+        4
+      ]
+    },
+    {
+      "type": "workout",
+      "fromDay": -20,
+      "toDay": 0,
+      "everyDays": 2,
+      "workout": "strength",
+      "minutes": [
+        40,
+        60
+      ]
+    },
+    {
+      "type": "sleep",
+      "fromDay": -20,
+      "toDay": -3,
+      "minutes": [
+        420,
+        490
+      ]
+    },
+    {
+      "type": "sleep",
+      "fromDay": -2,
+      "toDay": 0,
+      "minutes": [
+        300,
+        345
+      ]
+    }
+  ],
+  "events": [
+    {
+      "day": 7,
+      "time": "21:00",
+      "type": "mute",
+      "nudge": "inactive_7d",
+      "for": "3m"
+    }
+  ],
+  "expect": [
+    {
+      "day": 0,
+      "nudge": "short_sleep_3n",
+      "status": "send"
+    },
+    {
+      "day": 7,
+      "nudge": "inactive_7d",
+      "status": "send"
+    },
+    {
+      "day": 14,
+      "nudge": "inactive_7d",
+      "status": "muted"
+    },
+    {
+      "day": 85,
+      "nudge": "inactive_7d",
+      "status": "muted"
+    },
+    {
+      "day": 14,
+      "nudge": "short_sleep_3n",
+      "status": "not_due",
+      "note": "el wearable dejó de mandar datos: no se avisa con noches viejas"
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "id": "ivan-digestivo-viaje",
+  "name": "Iván",
+  "summary": "Registra su digestión a diario. Tres días sin ir al baño y, ya de viaje en Bali, heces rojizas después de comer pitaya roja.",
+  "tests": "X días sin deposición: aviso. Color llamativo: pregunta de contexto (no alarma directa). Si ya está explicado, no vuelve a preguntar.",
+  "profile": {
+    "sex": "male",
+    "age": 41,
+    "firstName": "Iván"
+  },
+  "simulate": {
+    "fromDay": -5,
+    "toDay": 8
+  },
+  "series": [
+    {
+      "type": "bowel",
+      "fromDay": -13,
+      "toDay": -4,
+      "count": [
+        1,
+        2
+      ],
+      "color": [
+        "brown",
+        "light_brown"
+      ],
+      "consistency": [
+        3,
+        4
+      ]
+    },
+    {
+      "type": "bowel",
+      "fromDay": -3,
+      "toDay": -1,
+      "count": 0
+    },
+    {
+      "type": "bowel",
+      "fromDay": 1,
+      "toDay": 3,
+      "count": 1,
+      "color": "brown",
+      "consistency": [
+        4,
+        5
+      ]
+    },
+    {
+      "type": "check_in",
+      "fromDay": -13,
+      "toDay": 8,
+      "energy": [
+        3,
+        4
+      ],
+      "mood": [
+        "happy",
+        "calm"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "day": 0,
+      "type": "bowel",
+      "count": 1,
+      "color": "red",
+      "consistency": 5,
+      "note": "En Bali"
+    },
+    {
+      "day": 4,
+      "type": "bowel",
+      "count": 1,
+      "color": "red",
+      "consistency": 4,
+      "explainedBy": "Red dragon fruit"
+    }
+  ],
+  "expect": [
+    {
+      "day": -2,
+      "nudge": "bowel_none_3d",
+      "status": "not_due"
+    },
+    {
+      "day": -1,
+      "nudge": "bowel_none_3d",
+      "status": "send"
+    },
+    {
+      "day": 0,
+      "nudge": "stool_colour",
+      "status": "send"
+    },
+    {
+      "day": 4,
+      "nudge": "stool_colour",
+      "status": "not_due"
+    }
+  ]
+}

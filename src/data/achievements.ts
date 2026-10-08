@@ -33,7 +33,7 @@ export interface AchievementInput {
   meals: { fecha: string }[];
   checkIns: { fecha: string }[];
   mindful: { fecha: string }[];
-  badges: string[]; // insignias guardadas en el perfil (p. ej. plan_builder)
+  badges: string[]; // insignias guardadas en el perfil (ninguna en uso ahora mismo)
   stepGoal?: number;
 }
 
@@ -121,7 +121,6 @@ export function computeAchievements(input: AchievementInput): Achievement[] {
   const planDays = new Set([...stepDays].filter((d) => actionDays.has(d)));
 
   const list = [
-    build('plan_builder', 'Plan builder', 'You created your personalised plan', 'ribbon', input.badges.includes('plan_builder') ? 1 : 0, '', [1]),
     build('step_collector', 'Step collector', 'Total steps walked', 'footsteps', totalSteps, 'steps', [100000, 250000, 500000, 1000000]),
     build('daily_mover', 'Daily mover', `Days in a row with ${goal.toLocaleString('en-GB')}+ steps`, 'walk', dayStreak(stepDays), 'days', [3, 7, 14, 30]),
     build('plan_champion', 'Plan champion', 'Days in a row meeting your daily plan', 'trophy', dayStreak(planDays), 'days', [3, 7, 14, 30]),

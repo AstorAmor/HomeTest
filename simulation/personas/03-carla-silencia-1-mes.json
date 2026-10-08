@@ -1,0 +1,56 @@
+{
+  "id": "carla-silencia-1-mes",
+  "name": "Carla",
+  "summary": "Deja de registrar y silencia el aviso de inactividad durante 1 mes nada más recibirlo.",
+  "tests": "Silencio de 1 mes: sin avisos de inactividad hasta pasado el mes.",
+  "profile": {
+    "sex": "female",
+    "age": 45,
+    "firstName": "Carla"
+  },
+  "simulate": {
+    "fromDay": 0,
+    "toDay": 45
+  },
+  "series": [
+    {
+      "type": "check_in",
+      "fromDay": -10,
+      "toDay": 0,
+      "energy": [
+        2,
+        4
+      ],
+      "mood": [
+        "calm",
+        "stressed"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "day": 7,
+      "time": "21:00",
+      "type": "mute",
+      "nudge": "inactive_7d",
+      "for": "1m"
+    }
+  ],
+  "expect": [
+    {
+      "day": 7,
+      "nudge": "inactive_7d",
+      "status": "send"
+    },
+    {
+      "day": 14,
+      "nudge": "inactive_7d",
+      "status": "muted"
+    },
+    {
+      "day": 34,
+      "nudge": "inactive_7d",
+      "status": "muted"
+    }
+  ]
+}

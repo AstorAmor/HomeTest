@@ -1,0 +1,71 @@
+{
+  "id": "elena-constante",
+  "name": "Elena",
+  "summary": "Usuaria constante: check-in casi todos los días, entrena a menudo y su regla es regular (28 días).",
+  "tests": "Control: no debe recibir avisos de inactividad, de check-ins perdidos ni de regla retrasada.",
+  "profile": {
+    "sex": "female",
+    "age": 38,
+    "firstName": "Elena"
+  },
+  "cycleGoal": {
+    "goal": "track",
+    "regularCycles": "yes",
+    "hormonalContraception": "none"
+  },
+  "simulate": {
+    "fromDay": -7,
+    "toDay": 30
+  },
+  "series": [
+    {
+      "type": "check_in",
+      "fromDay": -40,
+      "toDay": 30,
+      "energy": [
+        3,
+        5
+      ],
+      "mood": [
+        "happy",
+        "calm",
+        "neutral"
+      ],
+      "skipChance": 0.1
+    },
+    {
+      "type": "workout",
+      "fromDay": -40,
+      "toDay": 30,
+      "everyDays": 2,
+      "workout": "cardio",
+      "minutes": [
+        30,
+        45
+      ]
+    },
+    {
+      "type": "period",
+      "fromDay": -84,
+      "toDay": 30,
+      "length": 28
+    }
+  ],
+  "expect": [
+    {
+      "day": 15,
+      "nudge": "inactive_7d",
+      "status": "not_due"
+    },
+    {
+      "day": 15,
+      "nudge": "checkin_missed_3d",
+      "status": "not_due"
+    },
+    {
+      "day": 20,
+      "nudge": "period_late",
+      "status": "not_due"
+    }
+  ]
+}

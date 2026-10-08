@@ -1,0 +1,57 @@
+{
+  "id": "bea-silencia-7-dias",
+  "name": "Bea",
+  "summary": "Deja de registrar como Ana y, cuando le llega el aviso de inactividad, lo silencia 7 días.",
+  "tests": "El aviso no vuelve mientras está silenciado y reaparece en cuanto vence el silencio.",
+  "profile": {
+    "sex": "female",
+    "age": 27,
+    "firstName": "Bea"
+  },
+  "simulate": {
+    "fromDay": 0,
+    "toDay": 24
+  },
+  "series": [
+    {
+      "type": "check_in",
+      "fromDay": -14,
+      "toDay": 0,
+      "energy": [
+        3,
+        5
+      ],
+      "mood": [
+        "happy",
+        "neutral"
+      ]
+    }
+  ],
+  "events": [
+    {
+      "day": 8,
+      "time": "09:00",
+      "type": "mute",
+      "nudge": "inactive_7d",
+      "for": "7d"
+    }
+  ],
+  "expect": [
+    {
+      "day": 7,
+      "nudge": "inactive_7d",
+      "status": "send"
+    },
+    {
+      "day": 14,
+      "nudge": "inactive_7d",
+      "status": "muted"
+    },
+    {
+      "day": 15,
+      "nudge": "inactive_7d",
+      "status": "send",
+      "note": "el silencio vence el día 15 a las 09:00"
+    }
+  ]
+}
