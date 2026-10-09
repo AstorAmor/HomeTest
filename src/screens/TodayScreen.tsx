@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { InfoButton } from '@/components/InfoButton';
 import { ProgressRing } from '@/components/ProgressRing';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
@@ -409,7 +410,10 @@ export const TodayScreen = () => {
         {/* Daily readiness */}
         {show('readiness') && (
           <>
-            <Text style={styles.sectionTitle}>Daily readiness</Text>
+            <View style={[styles.sectionHeaderRow, { alignItems: 'center' }]}>
+              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>Daily readiness</Text>
+              <InfoButton topic="readiness" />
+            </View>
             <View style={[styles.card, styles.readinessCard]}>
               {readiness ? (
                 <>

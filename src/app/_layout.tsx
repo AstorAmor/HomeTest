@@ -63,6 +63,7 @@ export default function Layout() {
             <Stack.Screen name="simulation" />
             <Stack.Screen name="medications" />
             <Stack.Screen name="evidence" />
+            <Stack.Screen name="feature-guide" />
             <Stack.Screen name="catalogo" />
             <Stack.Screen name="report-intro" />
             <Stack.Screen name="report-summary" />

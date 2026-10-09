@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { InfoButton } from '@/components/InfoButton';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
@@ -143,7 +144,10 @@ export const DigestiveScreen = () => {
           </View>
         </View>
         <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>This week</Text>
+          <View style={styles.titleWithInfo}>
+            <Text style={styles.sectionTitle}>This week</Text>
+            <InfoButton topic="digestion" />
+          </View>
           <TouchableOpacity onPress={load}>
             <Text style={styles.link}>Check now</Text>
           </TouchableOpacity>
@@ -198,7 +202,10 @@ export const DigestiveScreen = () => {
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         )}
-        <Text style={styles.sectionTitle}>This week</Text>
+        <View style={styles.titleWithInfo}>
+          <Text style={styles.sectionTitle}>This week</Text>
+          <InfoButton topic="urine" />
+        </View>
         {renderObservations(urineObservations(urine))}
 
         <Text style={styles.footer}>
@@ -234,7 +241,8 @@ const styles = StyleSheet.create({
   dayDotEmpty: { borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.cardBorder },
   dayDotZero: { backgroundColor: Colors.divider },
   dayCount: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800' },
-  sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingRight: 20 },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 20 },
+  titleWithInfo: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 16, marginBottom: 10 },
   obs: {
     backgroundColor: Colors.card,

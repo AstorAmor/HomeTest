@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { InfoButton } from '@/components/InfoButton';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { doseRepository, medicationRepository } from '@/data/medicationRepository';
@@ -146,7 +147,10 @@ export const MedicationsScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Medication" showBack />
 
-        <Text style={styles.sectionTitle}>Today</Text>
+        <View style={styles.titleRow}>
+          <Text style={[styles.sectionTitle, { paddingHorizontal: 0 }]}>Today</Text>
+          <InfoButton topic="medication" />
+        </View>
         {today.length === 0 && asNeeded.length === 0 ? (
           <Text style={styles.empty}>Nothing scheduled for today.</Text>
         ) : (
@@ -224,6 +228,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 40 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 18, marginBottom: 10 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   hint: { color: Colors.textSecondary, fontSize: 12, paddingHorizontal: 20, marginTop: -4, marginBottom: 10 },
   empty: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20, marginBottom: 6 },
   card: {

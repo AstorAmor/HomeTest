@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { CycleGoalPanel } from '@/components/CycleGoalPanel';
+import { InfoButton } from '@/components/InfoButton';
 import { Colors } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { CycleEntry, CyclePrediction } from '@/types/cycle';
@@ -112,7 +113,10 @@ export const CycleDetailScreen = () => {
                 </Text>
               </View>
             )}
-            <Text style={styles.predictionLabel}>Next period predicted</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={styles.predictionLabel}>Next period predicted</Text>
+              <InfoButton topic="cycle_prediction" size={16} />
+            </View>
             <Text style={styles.predictionDate}>
               {formatFullDate(prediction.predicted_next_start)}
             </Text>

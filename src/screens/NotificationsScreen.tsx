@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { InfoButton } from '@/components/InfoButton';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -69,6 +70,10 @@ export const NotificationsScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Notifications" showBack />
+        <View style={styles.introRow}>
+          <Text style={styles.intro}>At most two a day, and you can mute any of them.</Text>
+          <InfoButton topic="notifications" />
+        </View>
 
         {sim && (
           <TouchableOpacity style={styles.simBanner} onPress={() => router.push('/simulation')} activeOpacity={0.85}>
@@ -167,6 +172,8 @@ export const NotificationsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 40 },
+  introRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, marginBottom: 12 },
+  intro: { flex: 1, color: Colors.textSecondary, fontSize: 13 },
   empty: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginTop: 8 },
   simBanner: {
     flexDirection: 'row',

@@ -18,7 +18,8 @@ import {
   UserProfile,
   profileRepository,
 } from '@/data/profileRepository';
-import { AppPurpose, appPrefs, PURPOSE_OPTIONS } from '@/data/appPrefs';
+import { AppPurpose, AppSection, appPrefs, isSectionVisible, OPT_IN_SECTIONS, PURPOSE_OPTIONS, SECTION_OPTIONS } from '@/data/appPrefs';
+import { SectionToggles } from '@/components/SectionToggles';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -26,14 +27,15 @@ const YEARS = Array.from({ length: 81 }, (_, i) => String(1930 + i));
 const HEIGHTS = Array.from({ length: 71 }, (_, i) => String(140 + i));
 const WEIGHTS = Array.from({ length: 111 }, (_, i) => String(40 + i));
 
-type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals';
+type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals' | 'features';
 
 // Las preguntas dependen de para qué quiere la app: quien solo quiere guardar sus
-// analíticas no tiene por qué contestar hábitos ni objetivos.
+// analíticas no tiene por qué contestar hábitos ni objetivos. El último paso siempre deja claro
+// qué partes va a ver (y enciende las opcionales, como medicación, solo si las elige).
 const stepsFor = (purpose?: AppPurpose): Step[] => {
-  if (purpose === 'records') return ['purpose', 'dob', 'sex', 'body', 'health'];
-  if (purpose === 'understand') return ['purpose', 'dob', 'sex', 'body', 'habits', 'health'];
-  return ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'goals'];
+  if (purpose === 'records') return ['purpose', 'dob', 'sex', 'body', 'health', 'features'];
+  if (purpose === 'understand') return ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'features'];
+  return ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'goals', 'features'];
 };
 
 interface ChipOption<T extends string> {
@@ -89,6 +91,8 @@ export const OnboardingScreen = () => {
   const [conditions, setConditions] = useState<ConditionId[]>([]);
   const [conditionsOther, setConditionsOther] = useState('');
   const [purpose, setPurpose] = useState<AppPurpose>();
+  // Partes encendidas en el último paso (se rellena al llegar a él, según el propósito elegido)
+  const [featureOn, setFeatureOn] = useState<AppSection[] | null>(null);
   const STEPS = stepsFor(purpose);
   // Sin plan (solo historial, o entender sin plan) no se "construye" ningún plan al final
   const buildsPlan = purpose === undefined || purpose === 'improve';
@@ -128,6 +132,14 @@ export const OnboardingScreen = () => {
 
   const step = STEPS[stepIndex];
 
+  useEffect(() => {
+    if (step === 'features' && featureOn === null) {
+      const prefs = appPrefs.get();
+      setFeatureOn(SECTION_OPTIONS.filter((o) => isSectionVisible(prefs, o.id)).map((o) => o.id));
+    }
+  }, [step, featureOn]);
+  const featureSections = SECTION_OPTIONS.map((o) => o.id).filter((id) => id !== 'cycle' || sex === 'female');
+
   const buildProfile = async (): Promise<UserProfile> => {
     const current = await profileRepository.get();
     const profile: UserProfile = { ...current, goals };
@@ -158,6 +170,14 @@ export const OnboardingScreen = () => {
   const next = async () => {
     setAnswered((prev) => new Set(prev).add(step));
     if (step === 'purpose' && purpose) await appPrefs.setPurpose(purpose);
+    if (step === 'features' && featureOn) {
+      const ids = SECTION_OPTIONS.map((o) => o.id);
+      await appPrefs.save({
+        purpose: appPrefs.get().purpose,
+        hidden: ids.filter((id) => !OPT_IN_SECTIONS.includes(id) && !featureOn.includes(id)),
+        enabled: ids.filter((id) => OPT_IN_SECTIONS.includes(id) && featureOn.includes(id)),
+      });
+    }
     if (stepIndex < STEPS.length - 1) {
       setStepIndex(stepIndex + 1);
       return;
@@ -432,6 +452,20 @@ export const OnboardingScreen = () => {
                 );
               })}
             </View>
+          </>
+        )}
+        {step === 'features' && featureOn && (
+          <>
+            <Text style={styles.title}>Choose what you want to use</Text>
+            <Text style={styles.subtitle}>
+              Optional parts, like medication or gut and bladder, stay off unless you switch them on. Tap any of them to
+              see how it works. You can change all of this later in More → Configure my experience.
+            </Text>
+            <SectionToggles
+              sections={featureSections}
+              isOn={(id) => featureOn.includes(id)}
+              onToggle={(id, on) => setFeatureOn((prev) => (on ? [...(prev ?? []), id] : (prev ?? []).filter((x) => x !== id)))}
+            />
           </>
         )}
       </ScrollView>

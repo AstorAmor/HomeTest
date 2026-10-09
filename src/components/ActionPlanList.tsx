@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ProjectionChart } from "@/components/ProjectionChart";
+import { InfoButton } from "@/components/InfoButton";
 import { Colors } from "@/constants/colors";
 import { currentReport } from "@/data/reportRepository";
 import {
@@ -84,13 +85,16 @@ export const ActionPlanList = () => {
             ))}
 
             <View style={styles.projectionWrap}>
-              <Text style={styles.projectionLabel}>
-                Projected:{" "}
-                {getMarkerDisplayNameEn(
-                  item.estimated_next_test.marker_id,
-                  item.estimated_next_test.marker_id.replace(/_/g, " "),
-                )}
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <Text style={styles.projectionLabel}>
+                  Projected:{" "}
+                  {getMarkerDisplayNameEn(
+                    item.estimated_next_test.marker_id,
+                    item.estimated_next_test.marker_id.replace(/_/g, " "),
+                  )}
+                </Text>
+                <InfoButton topic="projections" size={16} />
+              </View>
               <ProjectionChart
                 markerId={item.estimated_next_test.marker_id}
                 currentValue={item.estimated_next_test.current_value}

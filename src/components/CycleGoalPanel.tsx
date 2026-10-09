@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { TrendChart } from '@/components/TrendChart';
+import { InfoButton } from '@/components/InfoButton';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { CYCLE_GOAL_PROMPTED, cycleGoalStore } from '@/data/cycleGoal';
 import { cycleRepository } from '@/data/cycleRepository';
@@ -107,7 +108,10 @@ export const CycleGoalPanel = () => {
 
       {advice && (
         <View style={[styles.card, advice.level !== 'keep_trying' && { borderColor: withAlpha(Colors.attention, 0.6) }]}>
-          <Text style={styles.cardTitle}>{advice.title}</Text>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.cardTitle, { flex: 1 }]}>{advice.title}</Text>
+            <InfoButton topic="fertility" />
+          </View>
           <Text style={styles.cardText}>{advice.body}</Text>
           {advice.level !== 'keep_trying' && (
             <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
@@ -122,6 +126,7 @@ export const CycleGoalPanel = () => {
           <View style={styles.cardHeader}>
             <Ionicons name="thermometer-outline" size={18} color={Colors.gold} />
             <Text style={[styles.cardTitle, { flex: 1 }]}>Morning temperature</Text>
+            <InfoButton topic="temperature" />
             <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-temperature')}>
               <Text style={styles.logButtonText}>Log today</Text>
             </TouchableOpacity>
