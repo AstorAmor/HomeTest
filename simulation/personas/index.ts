@@ -11,5 +11,7 @@ import p7 from './08-helena-regla-retrasada.json';
 import p8 from './09-ivan-digestivo-viaje.json';
 import p9 from './10-javi-orina-oscura.json';
 import p10 from './11-lucia-medicacion.json';
+import p11 from './12-marisa-tension-alta-8-semanas.json';
+import p12 from './13-tomas-glucosa-alta-semanal.json';
 
-export const PERSONAS = [p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10] as unknown as Persona[];
+export const PERSONAS = [p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12] as unknown as Persona[];

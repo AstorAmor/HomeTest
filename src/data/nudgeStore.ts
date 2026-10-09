@@ -7,6 +7,8 @@ import { cycleGoalStore } from './cycleGoal';
 import { basalTemperatureRepository } from './temperatureRepository';
 import { bowelRepository, urineRepository } from './bathroomRepository';
 import { doseRepository, medicationRepository } from './medicationRepository';
+import { bloodPressureRepository } from './bloodPressureRepository';
+import { glucoseRepository } from './glucoseRepository';
 import { wearableRepository } from '@/wearables/wearableRepository';
 import { evaluateNudges, muteUntil } from '@/logic/nudges';
 import { MuteOption, NudgeContext, NudgeDecision, NudgeId, NudgePrefs } from '@/logic/nudges/types';
@@ -40,7 +42,7 @@ const ageFrom = (dob?: string) => {
 };
 
 export async function buildNudgeContext(now = new Date()): Promise<NudgeContext> {
-  const [profile, checkIns, workouts, meals, cycle, goal, basal, bowel, urine, wearable, medications, doses] = await Promise.all([
+  const [profile, checkIns, workouts, meals, cycle, goal, basal, bowel, urine, wearable, medications, doses, bp, glucose] = await Promise.all([
     profileRepository.get(),
     checkInRepository.getAll(),
     workoutRepository.getAll(),
@@ -53,6 +55,8 @@ export async function buildNudgeContext(now = new Date()): Promise<NudgeContext>
     wearableRepository.getRecords(), // solo lo sincronizado de verdad, nunca los datos de ejemplo
     medicationRepository.getAll(),
     doseRepository.getAll(),
+    bloodPressureRepository.getAll(),
+    glucoseRepository.getAll(),
   ]);
   return {
     now,
@@ -73,6 +77,8 @@ export async function buildNudgeContext(now = new Date()): Promise<NudgeContext>
     sleepNights: wearable.filter((w) => w.metric === 'sleep_duration').map((w) => ({ date: w.date, minutes: w.value })),
     medications,
     doses,
+    bloodPressure: bp.map((r) => ({ fecha: r.fecha, systolic: r.systolic, diastolic: r.diastolic })),
+    glucose: glucose.map((g) => ({ fecha: g.fecha, mgdl: g.unidad === 'mmol/L' ? Math.round(g.valor * 18) : g.valor })),
   };
 }
 

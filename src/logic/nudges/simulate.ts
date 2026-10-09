@@ -29,12 +29,14 @@ export interface PersonaEvent {
     | 'unmute'
     | 'cycle_goal'
     | 'medication' // alta de una medicación o suplemento (id, name, schedule, courseDays...)
-    | 'dose'; // marca una toma (med, at "HH:MM", status)
+    | 'dose' // marca una toma (med, at "HH:MM", status)
+    | 'blood_pressure' // una lectura del tensiómetro (systolic, diastolic, pulse)
+    | 'glucose'; // una lectura del glucómetro (mgdl, mealType)
   [field: string]: unknown;
 }
 
 export interface PersonaSeries {
-  type: 'check_in' | 'workout' | 'meal' | 'sleep' | 'temperature' | 'bowel' | 'urine' | 'period' | 'dose';
+  type: 'check_in' | 'workout' | 'meal' | 'sleep' | 'temperature' | 'bowel' | 'urine' | 'period' | 'dose' | 'blood_pressure' | 'glucose';
   fromDay: number;
   toDay: number;
   everyDays?: number; // 1 = todos los días
@@ -75,6 +77,8 @@ export interface ExpandedPersona {
   sleepNights: { date: string; minutes: number }[];
   medications: MedicationItem[];
   doses: DoseLog[];
+  bloodPressure: { id: string; fecha: string; createdAt: string; systolic: number; diastolic: number; pulse: number | null }[];
+  glucose: { id: string; fecha: string; createdAt: string; mgdl: number; mealType: string }[];
   prefActions: { at: string; nudge: NudgeId; action: 'mute' | 'unmute'; option?: MuteOption }[];
   goalChanges: { at: string; answers: CycleGoalAnswers }[];
   eventsByDay: Map<number, string[]>; // resumen legible de lo registrado cada día
@@ -129,6 +133,8 @@ export function expandPersona(p: Persona, start: Date): ExpandedPersona {
     sleepNights: [],
     medications: [],
     doses: [],
+    bloodPressure: [],
+    glucose: [],
     prefActions: [],
     goalChanges: [],
     eventsByDay: new Map(),
@@ -244,6 +250,18 @@ export function expandPersona(p: Persona, start: Date): ExpandedPersona {
         out.doses.push({ id: id('dose', day), fecha: logged, createdAt: logged, medId: f.med as string, scheduledFor: scheduled.toISOString(), status: (f.status as DoseLog['status']) ?? 'taken' });
         break;
       }
+      case 'blood_pressure': {
+        const e = { ...base, systolic: num(rand, f.systolic) ?? 120, diastolic: num(rand, f.diastolic) ?? 78, pulse: num(rand, f.pulse) ?? null };
+        out.bloodPressure.push(e);
+        note(day, `BP ${e.systolic}/${e.diastolic}`);
+        break;
+      }
+      case 'glucose': {
+        const e = { ...base, mgdl: num(rand, f.mgdl) ?? 95, mealType: (pick(rand, f.mealType) as string) ?? 'unspecified' };
+        out.glucose.push(e);
+        note(day, `glucose ${e.mgdl} mg/dL`);
+        break;
+      }
       case 'cycle_goal':
         out.goalChanges.push({ at: fecha, answers: { ...(f.answers as CycleGoalAnswers), answeredAt: fecha } });
         note(day, `cycle goal: ${(f.answers as CycleGoalAnswers)?.goal}`);
@@ -266,7 +284,7 @@ export function expandPersona(p: Persona, start: Date): ExpandedPersona {
   for (const [i, e] of (p.events ?? []).entries()) add(e.type, e.day, e, seeded(`${p.id}@${i}`), e.time);
 
   const byDate = <T extends { fecha: string }>(a: T, b: T) => b.fecha.localeCompare(a.fecha);
-  for (const list of [out.checkIns, out.workouts, out.meals, out.cycleStarts, out.temperatures, out.bowel, out.urine]) {
+  for (const list of [out.checkIns, out.workouts, out.meals, out.cycleStarts, out.temperatures, out.bowel, out.urine, out.bloodPressure, out.glucose]) {
     (list as { fecha: string }[]).sort(byDate);
   }
   out.prefActions.sort((a, b) => a.at.localeCompare(b.at));
@@ -300,6 +318,8 @@ export function contextAt(x: ExpandedPersona, now: Date): { ctx: NudgeContext; p
       sleepNights: x.sleepNights.filter((s) => s.date <= dayKey(now)),
       medications: x.medications.filter((m) => new Date(m.createdAt) <= now),
       doses: upTo(x.doses, now),
+      bloodPressure: upTo(x.bloodPressure, now),
+      glucose: upTo(x.glucose, now),
     },
     prefs,
   };

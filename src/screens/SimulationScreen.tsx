@@ -4,28 +4,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
+import { useRouter } from 'expo-router';
 import { loadPersona, localMidnight, Persona, PERSONAS } from '@/data/simulation';
-import { simulatePersona, SimulationDay } from '@/logic/nudges';
-
-const STATUS_COLOR: Record<string, string> = {
-  send: Colors.ok,
-  muted: Colors.textMuted,
-  cooldown: Colors.gold,
-  daily_limit: Colors.attention,
-};
-const STATUS_LABEL: Record<string, string> = {
-  send: 'sent',
-  muted: 'muted',
-  cooldown: 'waiting',
-  daily_limit: 'daily limit',
-  not_due: 'not due',
-  missing: 'missing',
-};
+import { simulatePersona } from '@/logic/nudges';
+import { NudgeTimeline, STATUS_LABEL } from '@/components/dev/NudgeTimeline';
 
 // Developer mode → Simulated users. Los usuarios de simulation/personas: qué prueba cada uno,
 // si se cumplen sus comprobaciones y qué aviso recibe cada día (y por qué). "Open the app as…"
 // carga sus datos en el modo demo para ver la app tal como la vería.
 export const SimulationScreen = () => {
+  const router = useRouter();
   const start = useMemo(localMidnight, []);
   const [openId, setOpenId] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
@@ -47,9 +35,6 @@ export const SimulationScreen = () => {
     }
   };
 
-  const interesting = (d: SimulationDay) =>
-    d.decisions.filter((x) => x.status !== 'not_due').length > 0 || d.events.some((e) => e.startsWith('mutes') || e.startsWith('unmutes'));
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -59,6 +44,15 @@ export const SimulationScreen = () => {
           today. The same checks run with npm run simulate and npm test.
         </Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <TouchableOpacity style={[styles.card, styles.builder]} onPress={() => router.push('/case-builder')} activeOpacity={0.85}>
+          <Ionicons name="construct-outline" size={22} color={Colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name}>Build a case</Text>
+            <Text style={styles.summary}>Pick sex, age, what goes wrong and for how long: see the notifications it gets.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+        </TouchableOpacity>
 
         {results.map(({ persona, days, expectations }) => {
           const failed = expectations.filter((e) => !e.pass).length;
@@ -103,37 +97,7 @@ export const SimulationScreen = () => {
                   ))}
 
                   <Text style={styles.timelineTitle}>Timeline</Text>
-                  {days.filter(interesting).map((d) => (
-                    <View key={d.day} style={styles.dayRow}>
-                      <Text style={styles.dayLabel}>
-                        Day {d.day}
-                        {'\n'}
-                        <Text style={styles.dayDate}>{d.date.slice(5)}</Text>
-                      </Text>
-                      <View style={{ flex: 1, gap: 4 }}>
-                        {d.events
-                          .filter((e) => e.startsWith('mutes') || e.startsWith('unmutes') || e.startsWith('cycle goal'))
-                          .map((e) => (
-                            <Text key={e} style={styles.eventText}>
-                              {e}
-                            </Text>
-                          ))}
-                        {d.decisions
-                          .filter((x) => x.status !== 'not_due')
-                          .map((x) => (
-                            <View key={x.id}>
-                              <Text style={styles.nudgeText}>
-                                <Text style={{ color: STATUS_COLOR[x.status], fontWeight: '800' }}>
-                                  {STATUS_LABEL[x.status]}
-                                </Text>{' '}
-                                {x.label}
-                              </Text>
-                              <Text style={styles.reason}>{x.reason}</Text>
-                            </View>
-                          ))}
-                      </View>
-                    </View>
-                  ))}
+                  <NudgeTimeline days={days} />
 
                   <TouchableOpacity style={styles.cta} onPress={() => open(persona)} disabled={!!loading}>
                     {loading === persona.id ? (
@@ -167,6 +131,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
+  builder: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderColor: Colors.accent },
   avatar: {
     width: 40,
     height: 40,
@@ -185,12 +150,6 @@ const styles = StyleSheet.create({
   expectRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   expectText: { flex: 1, color: Colors.textSecondary, fontSize: 12 },
   timelineTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 12, marginBottom: 4 },
-  dayRow: { flexDirection: 'row', gap: 10, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  dayLabel: { width: 54, color: Colors.textPrimary, fontSize: 12, fontWeight: '700' },
-  dayDate: { color: Colors.textMuted, fontSize: 11, fontWeight: '500' },
-  eventText: { color: Colors.gold, fontSize: 12, fontWeight: '600' },
-  nudgeText: { color: Colors.textPrimary, fontSize: 12 },
-  reason: { color: Colors.textMuted, fontSize: 11, lineHeight: 15 },
   cta: {
     backgroundColor: Colors.accent,
     borderRadius: 26,

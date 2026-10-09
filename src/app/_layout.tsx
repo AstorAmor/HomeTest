@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { DevInspector } from '@/components/dev/DevInspector';
 import { Colors } from '@/constants/colors';
 
 // La pantalla de carga se mantiene desde index.js (donde se aplica el tema).
@@ -61,6 +62,7 @@ export default function Layout() {
             <Stack.Screen name="digestive" />
             <Stack.Screen name="notifications" />
             <Stack.Screen name="simulation" />
+            <Stack.Screen name="case-builder" />
             <Stack.Screen name="medications" />
             <Stack.Screen name="evidence" />
             <Stack.Screen name="feature-guide" />
@@ -107,6 +109,8 @@ export default function Layout() {
             <Stack.Screen name="learn" />
             <Stack.Screen name="video" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
           </Stack>
+          {/* Modo "Señalar" para anotar cambios de diseño (solo web, ver DevInspector.web.tsx) */}
+          <DevInspector />
         </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

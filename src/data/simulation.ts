@@ -76,6 +76,14 @@ export async function loadPersona(p: Persona): Promise<void> {
     ['hometest:medications', JSON.stringify(x.medications.filter((m) => new Date(m.createdAt) <= now))],
     ['hometest:medication_doses', JSON.stringify(past(x.doses))],
     [
+      'hometest:blood_pressure_entries',
+      JSON.stringify(past(x.bloodPressure).map((r) => ({ ...r, source: 'manual' }))),
+    ],
+    [
+      'hometest:glucose_entries',
+      JSON.stringify(past(x.glucose).map((g) => ({ id: g.id, valor: g.mgdl, unidad: 'mg/dL', fecha: g.fecha, mealType: g.mealType, createdAt: g.createdAt }))),
+    ],
+    [
       'hometest:basal_temperature',
       JSON.stringify(
         past(x.temperatures.filter((t) => t.source === 'manual')).map((t) => ({

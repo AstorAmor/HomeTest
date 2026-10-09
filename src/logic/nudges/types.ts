@@ -17,9 +17,14 @@ export type NudgeId =
   | 'stool_colour'
   | 'urine_dark'
   | 'bathroom_weekly'
-  | 'medication_missed';
+  | 'medication_missed'
+  | 'bp_very_high'
+  | 'bp_high_weeks'
+  | 'glucose_high_weeks'
+  | 'low_energy_weeks'
+  | 'short_sleep_weeks';
 
-export type NudgeCategory = 'engagement' | 'wellbeing' | 'cycle' | 'digestive' | 'urinary' | 'medication';
+export type NudgeCategory = 'engagement' | 'wellbeing' | 'cycle' | 'digestive' | 'urinary' | 'medication' | 'measurements';
 
 // Lo que sabe el motor en un momento dado (todo con fechas ISO)
 export interface NudgeContext {
@@ -36,6 +41,8 @@ export interface NudgeContext {
   sleepNights: { date: string; minutes: number }[]; // solo datos reales de wearable
   medications?: MedicationItem[]; // solo si ha activado el seguimiento de medicación
   doses?: DoseLog[];
+  bloodPressure?: { fecha: string; systolic: number; diastolic: number }[]; // tensiómetro en casa
+  glucose?: { fecha: string; mgdl: number }[]; // glucómetro en casa, siempre en mg/dL
 }
 
 export interface NudgeCheck {

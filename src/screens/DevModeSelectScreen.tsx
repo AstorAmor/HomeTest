@@ -95,7 +95,7 @@ export const DevModeSelectScreen = () => {
               </View>
               <View style={styles.textWrap}>
                 <Text style={styles.cardTitle}>Simulated users</Text>
-                <Text style={styles.cardSubtitle}>10 test users at different moments: see their notifications day by day</Text>
+                <Text style={styles.cardSubtitle}>Test users at different moments, and a case builder: see their notifications day by day</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
             </TouchableOpacity>

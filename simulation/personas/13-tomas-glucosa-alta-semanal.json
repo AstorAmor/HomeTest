@@ -1,0 +1,69 @@
+{
+  "id": "tomas-glucosa-alta",
+  "name": "Tomás",
+  "summary": "Hombre de 49 años que se mide la glucosa una vez por semana. Desde hace 6 semanas sale entre 220 y 300 mg/dL.",
+  "tests": "Registra poco: el aviso espera a tener 3 lecturas altas; con 4 semanas o más pide ir al médico y hacer una HbA1c.",
+  "profile": {
+    "sex": "male",
+    "age": 49,
+    "firstName": "Tomás"
+  },
+  "simulate": {
+    "fromDay": -48,
+    "toDay": 14
+  },
+  "series": [
+    {
+      "type": "glucose",
+      "fromDay": -97,
+      "toDay": -42,
+      "everyDays": 7,
+      "mgdl": [
+        85,
+        135
+      ],
+      "mealType": [
+        "desayuno",
+        "comida",
+        "cena"
+      ],
+      "time": "13:00"
+    },
+    {
+      "type": "glucose",
+      "fromDay": -41,
+      "toDay": 14,
+      "everyDays": 7,
+      "mgdl": [
+        220,
+        300
+      ],
+      "mealType": [
+        "desayuno",
+        "comida",
+        "cena"
+      ],
+      "time": "13:00"
+    }
+  ],
+  "events": [],
+  "expect": [
+    {
+      "day": -34,
+      "nudge": "glucose_high_weeks",
+      "status": "not_due",
+      "note": "solo 2 lecturas altas"
+    },
+    {
+      "day": -27,
+      "nudge": "glucose_high_weeks",
+      "status": "send"
+    },
+    {
+      "day": -13,
+      "nudge": "glucose_high_weeks",
+      "status": "send",
+      "note": "pide médico"
+    }
+  ]
+}

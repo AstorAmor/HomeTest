@@ -1,0 +1,73 @@
+{
+  "id": "marisa-tension-alta",
+  "name": "Marisa",
+  "summary": "Mujer de 58 años. Tras 8 semanas normales, su tensión en casa sube a 146–158 / 90–98 y sigue así 8 semanas; se la mide cada mañana.",
+  "tests": "Medidas que duran semanas: el aviso de tensión alta sale a los pocos días, se repite como mucho cada 14 días y, a partir de 4 semanas seguidas, pide ir al médico.",
+  "profile": {
+    "sex": "female",
+    "age": 58,
+    "firstName": "Marisa"
+  },
+  "simulate": {
+    "fromDay": -62,
+    "toDay": 14
+  },
+  "series": [
+    {
+      "type": "blood_pressure",
+      "fromDay": -111,
+      "toDay": -56,
+      "everyDays": 1,
+      "systolic": [
+        112,
+        128
+      ],
+      "diastolic": [
+        70,
+        82
+      ],
+      "time": "08:00"
+    },
+    {
+      "type": "blood_pressure",
+      "fromDay": -55,
+      "toDay": 14,
+      "everyDays": 1,
+      "systolic": [
+        146,
+        158
+      ],
+      "diastolic": [
+        90,
+        98
+      ],
+      "time": "08:00"
+    }
+  ],
+  "events": [],
+  "expect": [
+    {
+      "day": -52,
+      "nudge": "bp_high_weeks",
+      "status": "send",
+      "note": "a los 4 días por encima de 135/85"
+    },
+    {
+      "day": -50,
+      "nudge": "bp_high_weeks",
+      "status": "cooldown"
+    },
+    {
+      "day": -24,
+      "nudge": "bp_high_weeks",
+      "status": "send",
+      "note": "ya son 5 semanas: pide médico"
+    },
+    {
+      "day": 0,
+      "nudge": "bp_very_high",
+      "status": "not_due",
+      "note": "alta, pero ninguna lectura de 180/110"
+    }
+  ]
+}
