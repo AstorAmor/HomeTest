@@ -73,7 +73,7 @@ export const FEATURE_GUIDE: Record<AppSection, FeatureGuide> = {
     evidenceTopic: 'badges',
   },
   specialists: {
-    what: 'Suggestions to talk to a doctor, dietitian, trainer or physio when it makes sense.',
+    what: 'Suggestions to talk to a doctor, psychologist, dietitian, trainer or physio when it makes sense.',
     youDo: 'Book only if you want to.',
     youGet: 'The right professional, with your data if you choose to share it.',
     evidenceTopic: 'specialists',

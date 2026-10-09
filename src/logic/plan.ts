@@ -4,6 +4,8 @@
 // encima de donde está, y el "por qué" le dice qué de sus respuestas lo ha decidido. Cuando llegue
 // la analítica, el motor de recomendaciones añadirá lo que digan sus marcadores.
 // Reglas PENDIENTES de revisión médica. Fuentes en src/data/evidence.ts (tema "plan").
+import { dateLocale, t } from '@/i18n';
+
 export type PlanItemKind = 'strength' | 'steps' | 'nutrition' | 'sleep' | 'mindfulness';
 
 export interface PlanItem {
@@ -38,7 +40,7 @@ const ageOf = (dob?: string) => {
   if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) age--;
   return age;
 };
-const fmtSteps = (n: number) => n.toLocaleString('en-GB');
+const fmtSteps = (n: number) => n.toLocaleString(dateLocale());
 const list = (xs: string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
 
 interface Candidate {
@@ -81,7 +83,7 @@ function steps(p: PlanProfile, age: number | null, has: (g: string) => boolean, 
     score,
     item: {
       kind: 'steps',
-      title: `Walk ${fmtSteps(target)} steps a day`,
+      title: t('Walk {n} steps a day', { n: fmtSteps(target) }),
       subtitle: 'Updated from your wearable',
       target,
       why: why.join(' '),
@@ -115,7 +117,7 @@ function strength(p: PlanProfile, age: number | null, has: (g: string) => boolea
     score,
     item: {
       kind: 'strength',
-      title: `${target} strength sessions a week`,
+      title: t('{n} strength sessions a week', { n: target }),
       subtitle: beginner ? 'Start light: 20-30 minutes is enough' : 'Supports muscle, bones and blood sugar',
       target,
       why: why.join(' '),

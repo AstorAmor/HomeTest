@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { doseRepository } from '@/data/medicationRepository';
 import { MedIcon } from './MedIcon';
+import { t } from '@/i18n';
 import { DoseLog, ScheduledDose } from '@/types/medication';
 
 // Tomas de hoy con su hora y los botones Taken / Skip. Las usan Medication & supplements y la
@@ -38,15 +39,15 @@ export function DoseRows({ doses, onChange }: { doses: ScheduledDose[]; onChange
                 size={16}
                 color={d.log.status === 'taken' ? Colors.ok : Colors.textMuted}
               />
-              <Text style={styles.doneText}>{d.log.status === 'taken' ? 'Taken' : 'Skipped'}</Text>
+              <Text style={styles.doneText}>{d.log.status === 'taken' ? t('Taken') : t('Skipped')}</Text>
             </View>
           ) : (
             <>
               <TouchableOpacity style={styles.skip} onPress={() => mark(d, 'skipped')}>
-                <Text style={styles.skipText}>Skip</Text>
+                <Text style={styles.skipText}>{t('Skip')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.take} onPress={() => mark(d, 'taken')}>
-                <Text style={styles.takeText}>Taken</Text>
+                <Text style={styles.takeText}>{t('Taken')}</Text>
               </TouchableOpacity>
             </>
           )}

@@ -79,7 +79,7 @@ export function buildSummary(input: {
       icon: logistics.type === 'delivery' ? 'cube-outline' : 'bicycle-outline',
       text:
         logistics.type === 'delivery'
-          ? t('Your {name} kit arrives {day}', { name, day: dayText(logistics.date) })
+          ? t('Your {name} kit arrives {day}', { name: t(name), day: dayText(logistics.date) })
           : t('The courier picks up your sample {day}, {from}–{to}', { day: dayText(logistics.date), from: logistics.start ?? '', to: logistics.end ?? '' }),
       when: logistics.date,
       target: { pathname: '/upcoming-analysis', params: { id: logistics.id.replace(/-(delivery|pickup)$/, '') } },
@@ -104,7 +104,7 @@ export function buildSummary(input: {
         id: next.id,
         kind: 'results',
         icon: 'document-text-outline',
-        text: t('Results for your {name} expected around {day}', { name: next.title.split(':')[0], day: dayText(next.date) }),
+        text: t('Results for your {name} expected around {day}', { name: t(next.title.split(':')[0]), day: dayText(next.date) }),
         when: next.date,
         target: { pathname: '/(tabs)', params: { tab: '3' } },
       });

@@ -45,5 +45,12 @@ for (const file of walk(DEPLOY)) {
 }
 console.log(`Patched asset paths in ${patched} file(s)`);
 
+// Pinta el fondo del tema elegido antes de que cargue la app (sin destello blanco al abrirla ni al
+// cambiar de tema; la preferencia la guarda src/theme/appearance.ts). Solo en la web publicada: en
+// desarrollo Expo sirve su propia plantilla.
+const THEME_BG = `<script>try{var p=localStorage.getItem('appearance.v1');var l=p==='light'||(p!=='dark'&&window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches);var b=localStorage.getItem('appearance.fade.v1')||(l?'#FAF8F3':'#0A1D19');document.documentElement.style.background=b;document.addEventListener('DOMContentLoaded',function(){document.body.style.background=b;});}catch(e){}</script>`;
+const indexHtml = join(DEPLOY, 'index.html');
+writeFileSync(indexHtml, readFileSync(indexHtml, 'utf8').replace('</head>', `${THEME_BG}</head>`));
+
 writeFileSync(join(DEPLOY, 'vercel.json'), JSON.stringify({ rewrites: [{ source: '/(.*)', destination: '/index.html' }] }, null, 2));
 run('npx -y vercel@latest deploy --prod --yes', {}, DEPLOY);

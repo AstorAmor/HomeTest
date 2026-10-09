@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
+import { t } from '@/i18n';
 import { AppearancePref, getAppearancePref, setAppearancePref } from '@/theme/appearance';
 
 const OPTIONS: { id: AppearancePref; label: string; icon: string }[] = [
@@ -35,7 +36,7 @@ export const AppearanceSwitch = ({ returnTo }: { returnTo: string }) => {
             }}
           >
             <Ionicons name={o.icon as any} size={16} color={on ? Colors.background : Colors.textSecondary} />
-            <Text style={[styles.text, on && { color: Colors.background }]}>{o.label}</Text>
+            <Text style={[styles.text, on && { color: Colors.background }]}>{t(o.label)}</Text>
           </TouchableOpacity>
         );
       })}

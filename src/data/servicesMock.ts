@@ -2,7 +2,7 @@
 // prototipo. Nombres ficticios; tarifas alineadas con el business case v2
 // (médico ~€100, dietista ~€70, entrenador ~€60).
 
-export type ProfessionalRole = 'doctor' | 'midwife' | 'dietitian' | 'trainer' | 'physio' | 'geneticist';
+export type ProfessionalRole = 'doctor' | 'psychologist' | 'midwife' | 'dietitian' | 'trainer' | 'physio' | 'geneticist';
 
 export interface Professional {
   id: string;
@@ -21,6 +21,7 @@ export interface Professional {
 
 export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string }> = {
   doctor: { label: 'Doctors', icon: 'medkit-outline' },
+  psychologist: { label: 'Psychologists', icon: 'chatbubbles-outline' },
   midwife: { label: 'Midwives', icon: 'flower-outline' },
   dietitian: { label: 'Dietitians', icon: 'nutrition-outline' },
   trainer: { label: 'Personal trainers', icon: 'barbell-outline' },
@@ -153,6 +154,20 @@ export const mockProfessionals: Professional[] = [
     reviews: 31,
     languages: ['Spanish', 'English'],
     nextAvailable: 'Thu 10 Oct, 12:00',
+    online: true,
+  },
+  {
+    id: 'pro-9',
+    name: 'Clara Ruiz, PsyD',
+    role: 'psychologist',
+    specialty: 'General health psychologist · Stress, anxiety and sleep',
+    bio: 'Helps you understand what is behind stress, low mood or poor sleep, and gives you practical tools to handle them.',
+    pricePerSession: 60,
+    sessionMinutes: 50,
+    rating: 4.9,
+    reviews: 38,
+    languages: ['Spanish', 'English'],
+    nextAvailable: 'Tue 15 Oct, 18:00',
     online: true,
   },
 ];

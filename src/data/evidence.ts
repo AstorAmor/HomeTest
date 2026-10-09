@@ -75,7 +75,7 @@ export const EVIDENCE: EvidenceTopic[] = [
     summary: 'Only when your data or your goals point to someone who can help.',
     body: [
       'We suggest a doctor when a rule says something needs checking, for example a very high blood pressure reading or black stools without an explanation.',
-      'We suggest a dietitian, trainer or physio when it fits your goals or your plan.',
+      'We suggest a dietitian, trainer, physio or psychologist when it fits your goals or your plan.',
       'Booking is always your choice, and you decide what they can see and for how long.',
     ],
     sources: [],

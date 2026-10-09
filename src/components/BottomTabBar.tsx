@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
+import { t } from '@/i18n';
 
 interface TabConfig {
   label: string;
@@ -44,7 +45,7 @@ export const BottomTabBar = ({ currentIndex, onTabPress }: BottomTabBarProps) =>
               activeOpacity={0.7}
             >
               <Ionicons name={isActive ? tab.activeIcon : tab.icon} size={24} color={color} />
-              <Text style={[styles.label, { color }]}>{tab.label}</Text>
+              <Text style={[styles.label, { color }]}>{t(tab.label)}</Text>
             </TouchableOpacity>
           );
         })}

@@ -22,7 +22,8 @@ export async function fadeBeforeReload(color: string) {
   } catch {
     // sin almacenamiento: la recarga sigue funcionando, solo sin el velo de entrada
   }
-  await fadeTo?.(color);
+  // Tope de tiempo: si la animación no corre (pestaña en segundo plano), se recarga igual
+  await Promise.race([fadeTo?.(color), new Promise((r) => setTimeout(r, FADE_OUT_MS + 150))]);
 }
 
 // Color pendiente del cambio anterior (se consume una sola vez)
@@ -59,7 +60,12 @@ export function ThemeVeil({ initial, ready }: { initial: string | null; ready: b
     const t = setTimeout(() => {
       Animated.timing(opacity, { toValue: 0, duration: FADE_IN_MS, useNativeDriver: false }).start();
     }, 260);
-    return () => clearTimeout(t);
+    // Por si la animación no corre (pestaña en segundo plano): el velo nunca se queda puesto
+    const safety = setTimeout(() => opacity.setValue(0), 260 + FADE_IN_MS + 400);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(safety);
+    };
   }, [ready, initial, opacity]);
 
   return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: color, opacity, zIndex: 999999 }]} />;

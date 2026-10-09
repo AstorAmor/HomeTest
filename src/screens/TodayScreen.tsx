@@ -22,7 +22,7 @@ import { consult } from '@/data/consultations';
 import { KIND_LABEL } from '@/data/specialistTypes';
 import { buildSummary, SummaryLine } from '@/logic/summary';
 import { loadNutrientFocus, nutrientsDoneToday } from '@/screens/NutrientsScreen';
-import { t } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import { computeAchievements } from '@/data/achievements';
 import { planImage } from '@/data/planImages';
 import { Image } from 'expo-image';
@@ -75,10 +75,10 @@ const statusColor = (status: Biomarker['status']) => {
 
 const timeAgo = (iso: string) => {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (minutes < 60) return `${Math.max(1, minutes)} min ago`;
+  if (minutes < 60) return t('{n} min ago', { n: Math.max(1, minutes) });
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
-  return `${Math.round(hours / 24)} d ago`;
+  if (hours < 24) return t('{n} h ago', { n: hours });
+  return t('{n} d ago', { n: Math.round(hours / 24) });
 };
 
 // Estado de un valor de wearable frente a su media reciente
@@ -253,10 +253,10 @@ export const TodayScreen = () => {
   });
 
   const planProgress = (kind: PlanItemKind, target: number) => {
-    if (kind === 'strength') return { value: strengthDone / target, text: `${strengthDone}/${target} this week` };
-    if (kind === 'steps') return { value: steps / target, text: `${steps.toLocaleString('en-GB')} today` };
-    if (kind === 'sleep') return { value: sleep / 60 / target, text: `${formatSleep(sleep)} last night` };
-    if (kind === 'mindfulness') return { value: mindfulWeek / target, text: `${mindfulWeek}/${target} this week` };
+    if (kind === 'strength') return { value: strengthDone / target, text: t('{done}/{target} this week', { done: strengthDone, target }) };
+    if (kind === 'steps') return { value: steps / target, text: t('{n} today', { n: steps.toLocaleString(dateLocale()) }) };
+    if (kind === 'sleep') return { value: sleep / 60 / target, text: t('{v} last night', { v: formatSleep(sleep) }) };
+    if (kind === 'mindfulness') return { value: mindfulWeek / target, text: t('{done}/{target} this week', { done: mindfulWeek, target }) };
     return { value: nutrients.total ? nutrients.done / nutrients.total : 0, text: t('{done}/{total} done today', { done: nutrients.done, total: nutrients.total }) };
   };
 
@@ -271,7 +271,7 @@ export const TodayScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Today" showAvatar />
+        <ScreenHeader title={t('Today')} showAvatar />
 
         <View style={styles.greeting}>
           <Text style={styles.greetingTitle}>{t('Hi {name}!', { name: firstName })}</Text>
@@ -315,7 +315,7 @@ export const TodayScreen = () => {
             <View style={{ flex: 1 }}>
               <Text style={styles.fullPlanTitle}>{unread[0].title}</Text>
               <Text style={styles.fullPlanSub} numberOfLines={2}>
-                {unread.length > 1 ? `And ${unread.length - 1} more` : unread[0].body}
+                {unread.length > 1 ? t('And {n} more', { n: unread.length - 1 }) : unread[0].body}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
@@ -383,16 +383,16 @@ export const TodayScreen = () => {
               <Ionicons name="medical-outline" size={20} color={Colors.gold} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fullPlanTitle}>Medication & supplements</Text>
+              <Text style={styles.fullPlanTitle}>{t('Medication & supplements')}</Text>
               <Text style={styles.fullPlanSub}>
                 {dosesToday.length === 0
-                  ? 'Add what you take to keep track'
+                  ? t('Add what you take to keep track')
                   : (() => {
                       const pending = dosesToday.find((d) => !d.log);
                       const done = dosesToday.filter((d) => d.log?.status === 'taken').length;
                       return pending
-                        ? `Next: ${pending.name} at ${String(pending.at.getHours()).padStart(2, '0')}:${String(pending.at.getMinutes()).padStart(2, '0')} · ${done}/${dosesToday.length} taken`
-                        : `All ${dosesToday.length} doses done today`;
+                        ? t('Next: {name} at {time} · {done}/{total} taken', { name: pending.name, time: `${String(pending.at.getHours()).padStart(2, '0')}:${String(pending.at.getMinutes()).padStart(2, '0')}`, done, total: dosesToday.length })
+                        : t('All {n} doses done today', { n: dosesToday.length });
                     })()}
               </Text>
             </View>
@@ -416,7 +416,7 @@ export const TodayScreen = () => {
         {show('readiness') && (
           <>
             <View style={[styles.sectionHeaderRow, { alignItems: 'center' }]}>
-              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>Daily readiness</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>{t('Daily readiness')}</Text>
               <InfoButton topic="readiness" />
             </View>
             <View style={[styles.card, styles.readinessCard]}>
@@ -430,61 +430,61 @@ export const TodayScreen = () => {
                     gradient={[Colors.coral, Colors.gold, Colors.green]}
                   >
                     <Text style={styles.readinessScore}>{readiness.score}</Text>
-                    <Text style={styles.readinessLabel}>{readiness.label}</Text>
+                    <Text style={styles.readinessLabel}>{t(readiness.label)}</Text>
                   </ProgressRing>
                   <View style={styles.smallRings}>
                     <SmallRing
                       icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
                       color={Colors.sky}
                       progress={steps / 8000}
-                      value={steps.toLocaleString('en-GB')}
-                      label="Steps"
+                      value={steps.toLocaleString(dateLocale())}
+                      label={t('Steps')}
                     />
                     <SmallRing
                       icon={<Ionicons name="flame" size={16} color={Colors.coral} />}
                       color={Colors.coral}
                       progress={calories / 500}
                       value={`${calories}`}
-                      label="Active kcal"
+                      label={t('Active kcal')}
                     />
                     <SmallRing
                       icon={<Ionicons name="moon" size={15} color={Colors.violet} />}
                       color={Colors.violet}
                       progress={sleep / 480}
                       value={formatSleep(sleep)}
-                      label="Sleep"
+                      label={t('Sleep')}
                     />
                   </View>
                   <Text style={styles.sourceText}>
-                    From Huawei Health{isSample ? ' (sample data)' : ''} · <Text style={styles.link} onPress={() => router.push('/wearables')}>manage</Text>
+                    {t('From Huawei Health')}{isSample ? ` (${t('sample data')})` : ''} · <Text style={styles.link} onPress={() => router.push('/wearables')}>{t('manage')}</Text>
                   </Text>
                 </>
               ) : (
-                <Text style={styles.cardFootnote}>Connect a wearable to see your readiness.</Text>
+                <Text style={styles.cardFootnote}>{t('Connect a wearable to see your readiness.')}</Text>
               )}
             </View>
           </>
         )}
 
         {/* Biomarkers */}
-        <Text style={styles.sectionTitle}>Biomarkers</Text>
+        <Text style={styles.sectionTitle}>{t('Biomarkers')}</Text>
         <View style={styles.grid}>
           {sugar && (
             <BiomarkerCard
-              name="Sugar"
+              name={t('Sugar')}
               value={sugar.valor}
               unit={sugar.unidad}
-              status={sugar.statusLabel}
+              status={t(sugar.statusLabel)}
               color={statusColor(sugar.status)}
               onPress={() => router.push('/glucose-detail')}
             />
           )}
           {bp && (
             <BiomarkerCard
-              name="Blood Pressure"
+              name={t('Blood pressure')}
               value={bp.valor}
               unit={bp.unidad}
-              status={bp.statusLabel}
+              status={t(bp.statusLabel)}
               color={statusColor(bp.status)}
               onPress={() => router.push('/blood-pressure-detail')}
             />
@@ -492,26 +492,26 @@ export const TodayScreen = () => {
           {show('wearables') && (
             <>
               <BiomarkerCard
-                name="Resting HR"
+                name={t('Resting HR')}
                 value={rhr != null ? String(rhr) : '—'}
                 unit="bpm"
-                status={vsUsual(series.resting_heart_rate, false).label}
+                status={t(vsUsual(series.resting_heart_rate, false).label)}
                 color={vsUsual(series.resting_heart_rate, false).color}
                 onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}
               />
               <BiomarkerCard
-                name="HRV"
+                name={t('HRV')}
                 value={hrv != null ? String(hrv) : '—'}
                 unit="ms"
-                status={vsUsual(series.hrv, true).label}
+                status={t(vsUsual(series.hrv, true).label)}
                 color={vsUsual(series.hrv, true).color}
                 onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}
               />
               <BiomarkerCard
-                name="Temperature"
+                name={t('Temperature')}
                 value={temp != null ? temp.toFixed(1) : '—'}
                 unit="°C"
-                status={temp != null && temp >= 36.1 && temp <= 37.2 ? 'Normal' : 'Check'}
+                status={temp != null && temp >= 36.1 && temp <= 37.2 ? t('Normal') : t('Check')}
                 color={temp != null && temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
                 onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}
                 wide
@@ -522,7 +522,7 @@ export const TodayScreen = () => {
                   max={38.5}
                   value={temp ?? null}
                   range={[36.1, 37.2]}
-                  rangeLabel="Normal 36.1–37.2"
+                  rangeLabel={t('Normal 36.1–37.2')}
                   stops={[
                     { at: 35.5, color: Colors.sky },
                     { at: 36.1, color: Colors.green },
@@ -552,10 +552,10 @@ export const TodayScreen = () => {
             const tone = !b ? Colors.textMuted : status === 'Regular' ? Colors.ok : status === 'See note' ? Colors.attention : Colors.warning;
             return (
               <BiomarkerCard
-                name="Gut"
+                name={t('Gut')}
                 value={b ? String(b.count) : '—'}
-                unit={b?.count === 1 ? 'time' : 'times'}
-                status={status}
+                unit={b?.count === 1 ? t('time') : t('times')}
+                status={t(status)}
                 color={tone}
                 onPress={() => router.push({ pathname: '/digestive', params: { part: 'gut' } })}
               />
@@ -567,10 +567,10 @@ export const TodayScreen = () => {
             const tone = { good: Colors.ok, tip: Colors.warning, low: Colors.attention, check: Colors.attention, unknown: Colors.textMuted }[h.level];
             return (
               <BiomarkerCard
-                name="Bladder"
+                name={t('Bladder')}
                 value={u?.count != null ? String(u.count) : '—'}
-                unit="times"
-                status={h.label}
+                unit={t('times')}
+                status={t(h.label)}
                 color={tone}
                 onPress={() => router.push({ pathname: '/digestive', params: { part: 'bladder' } })}
               >
@@ -580,8 +580,8 @@ export const TodayScreen = () => {
                   max={HYDRATION_SCALE.length - 1}
                   value={h.position}
                   stops={HYDRATION_SCALE.map((c, i) => ({ at: i, color: URINE_COLORS.find((x) => x.id === c)!.swatch }))}
-                  leftLabel="Hydrated"
-                  rightLabel="Drink more"
+                  leftLabel={t('Hydrated')}
+                  rightLabel={t('Drink more')}
                 />
               </BiomarkerCard>
             );
@@ -592,9 +592,9 @@ export const TodayScreen = () => {
         {show('plan') && (
           <>
             <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>Your plan</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>{t('Your plan')}</Text>
               <TouchableOpacity onPress={() => router.push('/action-plan')} hitSlop={8}>
-                <Text style={styles.link}>Full view</Text>
+                <Text style={styles.link}>{t('Full view')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.planList}>
@@ -638,10 +638,10 @@ export const TodayScreen = () => {
                 );
               })}
             </View>
-            <Text style={styles.planNote}>Built from your answers. Your results will add to it when they arrive.</Text>
+            <Text style={styles.planNote}>{t('Built from your answers. Your results will add to it when they arrive.')}</Text>
             <TouchableOpacity style={styles.fullPlanLink} onPress={() => router.push('/plans')} activeOpacity={0.8}>
               <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
-              <Text style={styles.fullPlanLinkText}>See your full plan and earlier ones</Text>
+              <Text style={styles.fullPlanLinkText}>{t('See your full plan and earlier ones')}</Text>
               <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
             </TouchableOpacity>
           </>
@@ -650,7 +650,7 @@ export const TodayScreen = () => {
         {/* Your badges */}
         {show('badges') && (
           <>
-            <Text style={styles.sectionTitle}>Your badges</Text>
+            <Text style={styles.sectionTitle}>{t('Your badges')}</Text>
             <BadgesSection achievements={achievements} />
           </>
         )}
@@ -658,7 +658,7 @@ export const TodayScreen = () => {
         {/* Talk to a specialist */}
         {show('specialists') && (
           <>
-            <Text style={styles.sectionTitle}>Talk to a specialist</Text>
+            <Text style={styles.sectionTitle}>{t('Talk to a specialist')}</Text>
             <SpecialistCarousel onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
           </>
         )}
@@ -666,8 +666,12 @@ export const TodayScreen = () => {
         {/* Keep learning */}
         {show('learning') && (
           <>
-            <Text style={styles.sectionTitle}>Keep learning</Text>
-            <SpecialistCarousel items={LEARNING_TOPICS} onSelect={(t) => router.push({ pathname: '/learn', params: { topic: t.id } })} />
+            <Text style={styles.sectionTitle}>{t('Keep learning')}</Text>
+            <SpecialistCarousel
+              items={LEARNING_TOPICS.filter((x) => x.featured)}
+              onSelect={(x) => router.push({ pathname: '/learn', params: { topic: x.id } })}
+              more={{ label: t('More'), subtitle: t('All topics'), onPress: () => router.push('/learn-all') }}
+            />
           </>
         )}
       </ScrollView>

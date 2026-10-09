@@ -32,10 +32,11 @@ export const SHARE_SCOPES: { id: ShareScope; label: string; description: string;
 
 export const scopeLabel = (id: string) => SHARE_SCOPES.find((s) => s.id === id)?.label ?? id;
 
-export type ProfessionalRole = 'doctor' | 'midwife' | 'dietitian' | 'trainer' | 'physio' | 'geneticist';
+export type ProfessionalRole = 'doctor' | 'psychologist' | 'midwife' | 'dietitian' | 'trainer' | 'physio' | 'geneticist';
 
 export const PROFESSIONAL_ROLES: { id: ProfessionalRole; label: string }[] = [
   { id: 'doctor', label: 'Doctor' },
+  { id: 'psychologist', label: 'Psychologist' },
   { id: 'midwife', label: 'Midwife' },
   { id: 'dietitian', label: 'Dietitian' },
   { id: 'trainer', label: 'Personal trainer' },

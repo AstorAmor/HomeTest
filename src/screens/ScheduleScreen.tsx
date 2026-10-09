@@ -8,6 +8,7 @@ import { Colors } from '@/constants/colors';
 import { buildSchedule, calendarLinks, SCHEDULE_COLORS, ScheduleEvent, ScheduleType } from '@/data/schedule';
 import { labAppointmentEvents } from '@/data/labAppointments';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { dateLocale, t } from '@/i18n';
 
 const TYPE_LABEL: Record<ScheduleType, string> = {
   delivery: 'Kit delivery',
@@ -19,7 +20,7 @@ const TYPE_LABEL: Record<ScheduleType, string> = {
 };
 
 const formatDay = (key: string) =>
-  new Date(`${key}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(`${key}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 // "Your schedule" (pestaña de abajo y /schedule): vista mensual de pruebas, envíos y resultados, y botones
 // para añadir cada evento a Google Calendar, Outlook o Yahoo.
@@ -56,7 +57,7 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Your schedule" showBack={!embedded} />
+        <ScreenHeader title={t('Your schedule')} showBack={!embedded} />
 
         <View style={styles.card}>
           <MonthCalendar
@@ -75,11 +76,11 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
           />
           <View style={styles.legend}>
             {(Object.keys(TYPE_LABEL) as ScheduleType[])
-              .filter((t) => t !== 'sample')
-              .map((t) => (
-                <View key={t} style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: SCHEDULE_COLORS[t] }]} />
-                  <Text style={styles.legendText}>{TYPE_LABEL[t]}</Text>
+              .filter((ty) => ty !== 'sample')
+              .map((ty) => (
+                <View key={ty} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: SCHEDULE_COLORS[ty] }]} />
+                  <Text style={styles.legendText}>{t(TYPE_LABEL[ty])}</Text>
                 </View>
               ))}
           </View>
@@ -112,7 +113,7 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
   return (
     <View style={[styles.event, { borderLeftColor: color }]}>
       <View style={styles.eventHeader}>
-        <Text style={[styles.eventType, { color }]}>{TYPE_LABEL[event.type]}</Text>
+        <Text style={[styles.eventType, { color }]}>{t(TYPE_LABEL[event.type])}</Text>
         <Text style={styles.eventTime}>
           {showDate ? `${new Date(`${event.date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ` : ''}
           {event.start ? `${event.start}${event.end ? `–${event.end}` : ''}` : 'All day'}

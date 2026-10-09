@@ -6,6 +6,9 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { DonutChart } from '@/components/DonutChart';
 import { MarkerRangeBar } from '@/components/MarkerRangeBar';
+import { TileMap } from '@/components/TileMap';
+import { LAB_CENTERS } from '@/data/labCenters';
+import { t } from '@/i18n';
 import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses } from '@/data/mockData';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
@@ -60,7 +63,7 @@ export const LabScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Lab" />
+        <ScreenHeader title={t('Lab')} />
 
         <Text style={styles.sectionTitle}>Upcoming Analysis</Text>
         <View style={styles.sectionBlock}>
@@ -176,6 +179,18 @@ export const LabScreen = () => {
           })}
         </View>
 
+        {/* Laboratorios cerca: el mapa de tu zona; tocarlo abre la reserva de cita */}
+        <Text style={styles.sectionTitle}>{t('Find a lab near you')}</Text>
+        <View style={styles.mapCard}>
+          <TileMap points={LAB_CENTERS} height={200} onSelect={() => router.push('/book-lab')} />
+          <TouchableOpacity style={styles.mapFooter} onPress={() => router.push('/book-lab')} activeOpacity={0.85}>
+            <Ionicons name="location-outline" size={18} color={Colors.accent} />
+            <Text style={styles.mapFooterText}>{t('{n} labs where you can give your sample', { n: LAB_CENTERS.length })}</Text>
+            <Text style={styles.mapFooterLink}>{t('Book')}</Text>
+            <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity style={styles.requestButton} onPress={() => router.push('/store')}>
           <Ionicons name="flask-outline" size={20} color={Colors.background} />
           <Text style={styles.requestButtonText}>Request a new test</Text>
@@ -210,6 +225,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 14,
   },
+  mapCard: {
+    marginHorizontal: 20,
+    marginBottom: 28,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    backgroundColor: Colors.card,
+  },
+  mapFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 12 },
+  mapFooterText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  mapFooterLink: { color: Colors.accent, fontSize: 14, fontWeight: '800' },
   sectionBlock: {
     paddingHorizontal: 20,
     gap: 12,

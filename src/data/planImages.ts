@@ -35,11 +35,15 @@ export interface SpecialistCard {
   id: string;
   label: string;
   subtitle: string;
-  image: ImageSourcePropType;
+  image?: ImageSourcePropType;
+  // Sin foto (o si se prefiere la ilustración): icono sobre degradado con manchas (BlobArt)
+  icon?: string;
+  palette?: [string, string, string];
 }
 
 export const SPECIALISTS: SpecialistCard[] = [
   { id: 'doctor', label: 'Doctor', subtitle: 'Review your results', image: require('../../assets/images/specialists/doctor.jpg') },
+  { id: 'psychologist', label: 'Psychologist', subtitle: 'Stress, mood and sleep', icon: 'head-heart-outline', palette: ['#1E2A4A', '#4B5BA6', '#C7B6F2'] },
   { id: 'midwife', label: 'Midwife', subtitle: 'Cycle, fertility, pregnancy', image: require('../../assets/images/specialists/midwife.jpg') },
   { id: 'trainer', label: 'Personal trainer', subtitle: 'A plan for your goals', image: require('../../assets/images/specialists/personal_trainer.jpg') },
   { id: 'dietitian', label: 'Dietitian', subtitle: 'Eat for your markers', image: require('../../assets/images/specialists/dietitian.jpg') },

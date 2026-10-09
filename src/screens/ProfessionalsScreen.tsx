@@ -51,7 +51,7 @@ export const ProfessionalsScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="Professionals" showBack />
         <Text style={styles.intro}>
-          Doctors, dietitians, trainers, genetic counsellors and more, all with access to your results if you allow it.
+          Doctors, psychologists, dietitians, trainers, genetic counsellors and more, all with access to your results if you allow it.
         </Text>
 
         <View style={styles.searchRow}>
