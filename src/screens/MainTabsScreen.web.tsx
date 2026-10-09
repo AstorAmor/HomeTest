@@ -1,25 +1,48 @@
-import React, { useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { TodayScreen } from './TodayScreen';
 import { MyDataScreen } from './MyDataScreen';
+import { ScheduleScreen } from './ScheduleScreen';
 import { LabScreen } from './LabScreen';
 import { MoreScreen } from './MoreScreen';
-import { BottomTabBar } from '@/components/BottomTabBar';
+import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
+
+const LAST = TABS.length - 1;
 
 // Variante web de MainTabsScreen: react-native-pager-view no soporta web,
 // así que aquí se cambia de pestaña sin gesto de swipe (solo con la tab bar).
+// La pestaña va en la URL (?tab=N): al recargar (p. ej. al cambiar el tema) se vuelve a la misma,
+// y el modo Señalar sabe en qué pestaña estás.
 export const MainTabsScreen = () => {
+  const router = useRouter();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
-  const [currentPage, setCurrentPage] = useState(Math.min(3, Math.max(0, Number(tab) || 0)));
+  const [currentPage, setCurrentPage] = useState(Math.min(LAST, Math.max(0, Number(tab) || 0)));
 
-  const pages = [<TodayScreen key="today" />, <MyDataScreen key="my-data" />, <LabScreen key="lab" />, <MoreScreen key="more" />];
+  useEffect(() => {
+    const n = Math.min(LAST, Math.max(0, Number(tab) || 0));
+    if (tab !== undefined && n !== currentPage) setCurrentPage(n);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  const select = (i: number) => {
+    setCurrentPage(i);
+    router.setParams({ tab: String(i) });
+  };
+
+  const pages = [
+    <TodayScreen key="today" />,
+    <MyDataScreen key="my-data" />,
+    <ScheduleScreen key="schedule" embedded />,
+    <LabScreen key="lab" />,
+    <MoreScreen key="more" />,
+  ];
 
   return (
     <View style={styles.container}>
       <View style={styles.page}>{pages[currentPage]}</View>
-      <BottomTabBar currentIndex={currentPage} onTabPress={setCurrentPage} />
+      <BottomTabBar currentIndex={currentPage} onTabPress={select} />
     </View>
   );
 };

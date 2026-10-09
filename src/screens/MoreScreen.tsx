@@ -5,9 +5,9 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { UserAvatar } from '@/components/UserAvatar';
-import { AppearanceSwitch } from '@/components/AppearanceSwitch';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { t } from '@/i18n';
 
 
 interface MenuItem {
@@ -19,6 +19,8 @@ interface MenuItem {
   isProfile?: boolean;
 }
 
+// Orden pedido por el fundador: perfil y suscripción arriba; Settings (con apariencia, idioma,
+// letra, permisos, Configure my experience y Notifications) y "How KUOVA works" al final.
 const menuItems: MenuItem[] = [
   {
     id: 'profile',
@@ -29,37 +31,16 @@ const menuItems: MenuItem[] = [
     isProfile: true,
   },
   {
-    id: 'customise',
-    title: 'Configure my experience',
-    subtitle: 'What you use Kuova for, what you see and how each part works',
+    id: 'subscription',
+    title: 'My subscription',
+    subtitle: 'Your plan, renewal and next test',
     iconFamily: 'ionicons',
-    icon: 'options-outline',
-  },
-  {
-    id: 'notifications',
-    title: 'Notifications',
-    subtitle: 'What we send you, and mute anything you do not want',
-    iconFamily: 'ionicons',
-    icon: 'notifications-outline',
-  },
-  {
-    id: 'evidence',
-    title: 'How Kuova works',
-    subtitle: 'How we calculate things, and the studies and guidelines behind them',
-    iconFamily: 'ionicons',
-    icon: 'information-circle-outline',
-  },
-  {
-    id: 'schedule',
-    title: 'Manage your schedule',
-    subtitle: 'Plan, view test dates, and see upcoming requirements',
-    iconFamily: 'ionicons',
-    icon: 'calendar-outline',
+    icon: 'card-outline',
   },
   {
     id: 'professionals',
     title: 'Professionals',
-    subtitle: 'Doctors, dietitians, trainers, physios and more',
+    subtitle: 'Doctors, psychologists, dietitians, trainers and more',
     iconFamily: 'ionicons',
     icon: 'medkit-outline',
   },
@@ -94,9 +75,16 @@ const menuItems: MenuItem[] = [
   {
     id: 'settings',
     title: 'Settings',
-    subtitle: 'Manage your preferences',
+    subtitle: 'Appearance, language, text size, permissions and notifications',
     iconFamily: 'ionicons',
     icon: 'settings-outline',
+  },
+  {
+    id: 'evidence',
+    title: 'How KUOVA works',
+    subtitle: 'How we calculate things, and the studies and guidelines behind them',
+    iconFamily: 'ionicons',
+    icon: 'information-circle-outline',
   },
 ];
 
@@ -110,18 +98,18 @@ const ADMIN_ITEM: MenuItem = {
 };
 
 export const MoreScreen = () => {
-  const { logout, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const router = useRouter();
-  const items = isAdmin ? [...menuItems.slice(0, -1), ADMIN_ITEM, menuItems[menuItems.length - 1]] : menuItems;
+  // El de administración va justo antes de Settings
+  const settingsAt = menuItems.findIndex((m) => m.id === 'settings');
+  const items = isAdmin ? [...menuItems.slice(0, settingsAt), ADMIN_ITEM, ...menuItems.slice(settingsAt)] : menuItems;
 
   const handlePress = (id: string) => {
-    if (id === 'settings') return logout();
+    if (id === 'settings') return router.push('/settings');
     if (id === 'profile') return router.push('/profile');
-    if (id === 'customise') return router.push('/app-sections');
-    if (id === 'notifications') return router.push('/notifications');
+    if (id === 'subscription') return router.push('/subscription');
     if (id === 'evidence') return router.push('/evidence');
     if (id === 'sharing') return router.push('/sharing');
-    if (id === 'schedule') return router.push('/schedule');
     if (id === 'admin') return router.push('/admin');
     if (id === 'professionals') return router.push('/professionals');
     if (id === 'track') return router.push('/track-tests');
@@ -132,12 +120,7 @@ export const MoreScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="More" />
-
-        <View style={styles.appearance}>
-          <Text style={styles.appearanceLabel}>Appearance</Text>
-          <AppearanceSwitch returnTo="/(tabs)?tab=3" />
-        </View>
+        <ScreenHeader title={t('More')} />
 
         <View style={styles.list}>
           {items.map((item) => (
@@ -158,8 +141,8 @@ export const MoreScreen = () => {
                 </View>
               )}
               <View style={styles.textWrap}>
-                <Text style={styles.itemTitle}>{item.title}</Text>
-                <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
+                <Text style={styles.itemTitle}>{t(item.title)}</Text>
+                <Text style={styles.itemSubtitle}>{t(item.subtitle)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
             </TouchableOpacity>
@@ -178,8 +161,6 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 32,
   },
-  appearance: { paddingHorizontal: 20, marginBottom: 16, gap: 8 },
-  appearanceLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
   list: {
     paddingHorizontal: 20,
     gap: 12,

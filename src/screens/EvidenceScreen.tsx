@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { EVIDENCE, EvidenceTopic } from '@/data/evidence';
 
-// More → How Kuova works, o el (i) de cada sitio (?topic=…): cómo calculamos cada cosa y las
+// More → How KUOVA works, o el (i) de cada sitio (?topic=…): cómo calculamos cada cosa y las
 // fuentes. Lo que aún revisa el equipo médico lo dice claramente.
 export const EvidenceScreen = () => {
   const params = useLocalSearchParams<{ topic?: string }>();
@@ -76,7 +76,7 @@ export const EvidenceScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={first && !showAll ? 'How we calculate it' : 'How Kuova works'} showBack />
+        <ScreenHeader title={first && !showAll ? 'How we calculate it' : 'How KUOVA works'} showBack />
         {(!first || showAll) && (
           <Text style={styles.intro}>
             How we calculate what you see, and the studies and guidelines behind it. Look for the (i) next to a number

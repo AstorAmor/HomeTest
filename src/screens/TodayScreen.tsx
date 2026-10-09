@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
 import { ProgressRing } from '@/components/ProgressRing';
@@ -17,7 +16,13 @@ import { useFirstName } from '@/components/UserAvatar';
 import { BadgesSection } from '@/components/BadgesSection';
 import { SpecialistCarousel } from '@/components/SpecialistCarousel';
 import { LEARNING_TOPICS } from '@/data/learning';
-import { NextConsultationCard } from '@/components/NextConsultationCard';
+import { buildSchedule } from '@/data/schedule';
+import { labAppointmentEvents } from '@/data/labAppointments';
+import { consult } from '@/data/consultations';
+import { KIND_LABEL } from '@/data/specialistTypes';
+import { buildSummary, SummaryLine } from '@/logic/summary';
+import { loadNutrientFocus, nutrientsDoneToday } from '@/screens/NutrientsScreen';
+import { t } from '@/i18n';
 import { computeAchievements } from '@/data/achievements';
 import { planImage } from '@/data/planImages';
 import { Image } from 'expo-image';
@@ -34,12 +39,7 @@ import { dosesForDay, isActiveOn, isReminderMuted } from '@/logic/medication';
 import { DoseRows } from '@/components/DoseRows';
 import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
 import { ScheduledDose } from '@/types/medication';
-import {
-  mockBiomarkers,
-  mockNextTestDate,
-  mockResultsEtaDays,
-  Biomarker,
-} from '@/data/mockData';
+import { mockBiomarkers, Biomarker } from '@/data/mockData';
 import { getLiveBiomarkers } from '@/utils/liveBiomarkers';
 import { profileRepository, UserProfile } from '@/data/profileRepository';
 import { checkInRepository, dailyCheckInSeries, sampleCheckInSeries, DailyCheckInPoint } from '@/data/checkInRepository';
@@ -73,11 +73,6 @@ const statusColor = (status: Biomarker['status']) => {
   }
 };
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
-};
-
 const timeAgo = (iso: string) => {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (minutes < 60) return `${Math.max(1, minutes)} min ago`;
@@ -99,26 +94,10 @@ const vsUsual = (points: DailyPoint[] | undefined, higherIsBetter: boolean) => {
     : { label: higherIsBetter ? 'Below your usual' : 'Above your usual', color: Colors.warning };
 };
 
-// Icono del check-in: la carita de "Mood & check-ins" sobre una esfera verde con brillo dorado
+// Icono del check-in: la carita de "Mood & check-ins" sobre un círculo dorado liso (sin degradado)
 const CheckInOrb = () => (
-  <View style={{ width: 52, height: 52 }}>
-    <Svg width={52} height={52}>
-      <Defs>
-        <RadialGradient id="orb" cx="34%" cy="28%" r="78%">
-          <Stop offset="0" stopColor="#F3E2B8" />
-          <Stop offset="0.22" stopColor={Colors.gold} />
-          <Stop offset="0.55" stopColor={Colors.green} />
-          <Stop offset="1" stopColor="#0E2A24" />
-        </RadialGradient>
-      </Defs>
-      <Circle cx={26} cy={26} r={24} fill="url(#orb)" />
-      <Circle cx={18} cy={16} r={4} fill="#FFF6DD" opacity={0.55} />
-    </Svg>
-    <View style={StyleSheet.absoluteFill}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name="happy-outline" size={26} color="#FAF8F3" />
-      </View>
-    </View>
+  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.gold, alignItems: 'center', justifyContent: 'center' }}>
+    <Ionicons name="happy-outline" size={28} color={Colors.isLight ? '#FFFFFF' : '#0E2A24'} />
   </View>
 );
 
@@ -166,10 +145,40 @@ export const TodayScreen = () => {
   const [reminderIds, setReminderIds] = useDeepState<string[]>([]);
   // Última lectura con termómetro de las últimas 24 h (manda sobre la del wearable)
   const [thermo, setThermo] = useDeepState<number | null>(null);
+  // "Your summary": lo próximo del calendario (citas, logística, resultados)
+  const [summary, setSummary] = useDeepState<SummaryLine[]>([]);
+  // Los últimos 7 días cuelgan del check-in y se despliegan con la flecha
+  const [weekOpen, setWeekOpen] = useState(false);
+  const [nutrients, setNutrients] = useDeepState<{ done: number; total: number }>({ done: 0, total: 0 });
 
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
-    userFlags.get(reportSeenKey(currentReport.report_id)).then((v) => setReportSeen(!!v));
+    userFlags.get('today_week_open').then((v) => setWeekOpen(v === true));
+    Promise.all([loadNutrientFocus(), nutrientsDoneToday()])
+      .then(([items, done]) => setNutrients({ done: done.filter((d) => items.some((i) => i.id === d)).length, total: items.length }))
+      .catch(() => undefined);
+    Promise.all([
+      userFlags.get(reportSeenKey(currentReport.report_id)),
+      labAppointmentEvents().catch(() => []),
+      consult.myAppointments().catch(() => []),
+    ]).then(([seen, labEvents, appts]) => {
+      setReportSeen(!!seen);
+      setSummary(
+        buildSummary({
+          events: [...buildSchedule(), ...labEvents],
+          appointments: appts
+            .filter((a) => a.status === 'pending' || a.status === 'confirmed')
+            .map((a) => ({
+              id: a.id,
+              startsAt: a.startsAt,
+              label: `${t(KIND_LABEL[a.kind])}${a.professionalName ? ` ${t('with')} ${a.professionalName}` : ''}`,
+              canJoin: /^[0-9a-f-]{36}$/i.test(a.id) && a.status === 'confirmed',
+            })),
+          newResults: demoMode === 'results' && !seen,
+          now: new Date(),
+        })
+      );
+    });
     nudgeStore
       .refresh()
       .then(({ inbox }) => setUnread(inbox.filter((i) => !i.read)))
@@ -218,7 +227,7 @@ export const TodayScreen = () => {
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
-  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, setBathroomToday, setDosesToday, setReminderIds, setThermo]);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, setBathroomToday, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);
 
   useReloadOnFocus(load);
 
@@ -248,7 +257,7 @@ export const TodayScreen = () => {
     if (kind === 'steps') return { value: steps / target, text: `${steps.toLocaleString('en-GB')} today` };
     if (kind === 'sleep') return { value: sleep / 60 / target, text: `${formatSleep(sleep)} last night` };
     if (kind === 'mindfulness') return { value: mindfulWeek / target, text: `${mindfulWeek}/${target} this week` };
-    return { value: mealsToday / target, text: `${mealsToday}/${target} meals logged today` };
+    return { value: nutrients.total ? nutrients.done / nutrients.total : 0, text: t('{done}/{total} done today', { done: nutrients.done, total: nutrients.total }) };
   };
 
   const onPlanPress = (kind: PlanItemKind) => {
@@ -256,55 +265,46 @@ export const TodayScreen = () => {
     else if (kind === 'steps') router.push({ pathname: '/metric', params: { kind: 'steps' } });
     else if (kind === 'sleep') router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } });
     else if (kind === 'mindfulness') router.push({ pathname: '/exercise', params: { id: 'box_breathing' } });
-    else router.push('/log-meal');
+    else router.push('/nutrients');
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Today" />
-
-        {demoMode === 'results' && !reportSeen && (
-          <TouchableOpacity
-            style={styles.reportBanner}
-            onPress={() => {
-              setReportSeen(true);
-              userFlags.set(reportSeenKey(currentReport.report_id));
-              router.push('/report-intro');
-            }}
-            activeOpacity={0.85}
-          >
-            <View style={styles.reportBannerIcon}>
-              <Ionicons name="sparkles" size={22} color={Colors.accent} />
-            </View>
-            <View style={styles.reportBannerText}>
-              <Text style={styles.reportBannerTitle}>Your report is here!</Text>
-              <Text style={styles.reportBannerSubtitle}>Tap to see your results and plan</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-          </TouchableOpacity>
-        )}
+        <ScreenHeader title="Today" showAvatar />
 
         <View style={styles.greeting}>
-          <Text style={styles.greetingTitle}>Hi {firstName}!</Text>
-          <View style={styles.bullet}>
-            <Text style={styles.bulletDot}>–</Text>
-            <Text style={styles.bulletText}>
-              Your next blood test will be delivered {formatDate(mockNextTestDate)}.{' '}
-              <Text
-                style={styles.link}
-                onPress={() => router.push({ pathname: '/upcoming-analysis', params: { id: 'up-1' } })}
+          <Text style={styles.greetingTitle}>{t('Hi {name}!', { name: firstName })}</Text>
+        </View>
+
+        {/* Lo próximo del calendario: citas, logística y resultados (sin nombrar categorías) */}
+        <Text style={styles.sectionTitle}>{t('Your summary')}</Text>
+        <View style={styles.summaryCard}>
+          {summary.length === 0 ? (
+            <TouchableOpacity style={styles.summaryRow} onPress={() => router.push({ pathname: '/(tabs)', params: { tab: '2' } })}>
+              <Ionicons name="calendar-clear-outline" size={18} color={Colors.textMuted} />
+              <Text style={styles.summaryText}>{t('Nothing planned for the next few weeks. Your schedule is clear.')}</Text>
+            </TouchableOpacity>
+          ) : (
+            summary.map((l, i) => (
+              <TouchableOpacity
+                key={l.id}
+                style={[styles.summaryRow, i > 0 && styles.summaryDivider]}
+                onPress={() => {
+                  if (l.id === 'results-new') {
+                    setReportSeen(true);
+                    userFlags.set(reportSeenKey(currentReport.report_id));
+                  }
+                  router.push(l.target as any);
+                }}
+                activeOpacity={0.8}
               >
-                Tap to confirm or edit
-              </Text>
-            </Text>
-          </View>
-          <View style={styles.bullet}>
-            <Text style={styles.bulletDot}>–</Text>
-            <Text style={styles.bulletText}>
-              Your last results will be available in ~{mockResultsEtaDays} days
-            </Text>
-          </View>
+                <Ionicons name={l.icon as any} size={18} color={l.highlight ? Colors.gold : Colors.accent} />
+                <Text style={[styles.summaryText, l.highlight && styles.summaryHighlight]}>{l.text}</Text>
+                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         {unread.length > 0 && (
@@ -322,43 +322,54 @@ export const TodayScreen = () => {
           </TouchableOpacity>
         )}
 
-        <NextConsultationCard />
-
 
         {/* Check-in */}
         {show('checkin') && (
           <>
-            <TouchableOpacity style={styles.checkInCard} onPress={() => router.push('/check-in')} activeOpacity={0.85}>
-              <CheckInOrb />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.checkInTitle}>How are you feeling?</Text>
-                <Text style={styles.checkInSubtitle}>
-                  {lastCheckIn
-                    ? `Last check-in ${timeAgo(lastCheckIn.fecha)}${lastMood ? ` · ${lastMood.emoji} ${lastMood.label}` : ''}`
-                    : 'Sleep, energy and mood in 30 seconds'}
-                </Text>
-              </View>
-              <View style={styles.checkInButton}>
-                <Text style={styles.checkInButtonText}>Check in</Text>
-              </View>
-            </TouchableOpacity>
+            <View style={styles.checkInWrap}>
+              <TouchableOpacity style={styles.checkInRow} onPress={() => router.push('/check-in')} activeOpacity={0.85}>
+                <CheckInOrb />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.checkInTitle}>{t('How are you feeling?')}</Text>
+                  <Text style={styles.checkInSubtitle}>
+                    {lastCheckIn
+                      ? `${t('Last check-in {ago}', { ago: timeAgo(lastCheckIn.fecha) })}${lastMood ? ` · ${lastMood.emoji} ${t(lastMood.label)}` : ''}`
+                      : t('Sleep, energy and mood in 30 seconds')}
+                  </Text>
+                </View>
+                <View style={styles.checkInButton}>
+                  <Text style={styles.checkInButtonText}>{t('Check in')}</Text>
+                </View>
+              </TouchableOpacity>
 
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Your last 7 days</Text>
-                {checkInSeries.sample && <Text style={styles.sampleTag}>sample</Text>}
-              </View>
-              <TrendChart
-                height={96}
-                labels={checkInSeries.points.map((p) => shortDate(p.date))}
-                series={[
-                  { label: 'Energy', color: Colors.green, values: checkInSeries.points.map((p) => p.energy) },
-                  { label: 'Mood', color: Colors.gold, values: checkInSeries.points.map((p) => p.mood) },
-                ]}
-                formatY={(v) => v.toFixed(0)}
-              />
-              {lastMoment && !checkInSeries.sample && (
-                <Text style={styles.cardFootnote}>Last: {lastMoment.label.toLowerCase()}</Text>
+              <TouchableOpacity
+                style={styles.weekToggle}
+                onPress={() => {
+                  setWeekOpen(!weekOpen);
+                  userFlags.set('today_week_open', !weekOpen);
+                }}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: weekOpen }}
+              >
+                <Text style={styles.weekToggleText}>{t('Your last 7 days')}</Text>
+                {checkInSeries.sample && <Text style={styles.sampleTag}>{t('sample')}</Text>}
+                <Ionicons name={weekOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
+              {weekOpen && (
+                <View style={{ marginTop: 6 }}>
+                  <TrendChart
+                    height={96}
+                    labels={checkInSeries.points.map((p) => shortDate(p.date))}
+                    series={[
+                      { label: t('Energy'), color: Colors.green, values: checkInSeries.points.map((p) => p.energy) },
+                      { label: t('Mood'), color: Colors.gold, values: checkInSeries.points.map((p) => p.mood) },
+                    ]}
+                    formatY={(v) => v.toFixed(0)}
+                  />
+                  {lastMoment && !checkInSeries.sample && (
+                    <Text style={styles.cardFootnote}>{t('Last: {moment}', { moment: t(lastMoment.label).toLowerCase() })}</Text>
+                  )}
+                </View>
               )}
             </View>
           </>
@@ -601,7 +612,7 @@ export const TodayScreen = () => {
                       <Image source={planImage(item.kind, profile?.sex)} style={StyleSheet.absoluteFill} contentFit="cover" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.planTitle}>{item.title}</Text>
+                      <Text style={styles.planTitle}>{item.kind === 'nutrition' ? t('Your nutrients') : t(item.title)}</Text>
                       <View style={styles.planBarTrack}>
                         <View
                           style={[
@@ -717,6 +728,31 @@ const BiomarkerCard = ({
 );
 
 const styles = StyleSheet.create({
+  summaryCard: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
+  summaryDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
+  summaryText: { flex: 1, color: Colors.textPrimary, fontSize: 14, lineHeight: 19 },
+  summaryHighlight: { fontWeight: '800', color: Colors.gold },
+  checkInWrap: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  checkInRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  weekToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.divider },
+  weekToggleText: { flex: 1, color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,

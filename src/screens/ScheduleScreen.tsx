@@ -21,9 +21,10 @@ const TYPE_LABEL: Record<ScheduleType, string> = {
 const formatDay = (key: string) =>
   new Date(`${key}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
-// "Manage your schedule": vista mensual de pruebas, envíos y resultados, y botones
+// "Your schedule" (pestaña de abajo y /schedule): vista mensual de pruebas, envíos y resultados, y botones
 // para añadir cada evento a Google Calendar, Outlook o Yahoo.
-export const ScheduleScreen = () => {
+// `embedded`: dentro de la pestaña Schedule (sin flecha atrás)
+export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => {
   const base = useMemo(buildSchedule, []);
   const [labEvents, setLabEvents] = useDeepState<ScheduleEvent[]>([]);
   useReloadOnFocus(useCallback(async () => setLabEvents(await labAppointmentEvents()), [setLabEvents]));
@@ -55,7 +56,7 @@ export const ScheduleScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Your schedule" showBack />
+        <ScreenHeader title="Your schedule" showBack={!embedded} />
 
         <View style={styles.card}>
           <MonthCalendar

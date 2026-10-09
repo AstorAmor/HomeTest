@@ -115,6 +115,9 @@ export function applyTheme(theme: ThemeName) {
   Object.assign(Colors, theme === 'light' ? LIGHT : DARK);
 }
 
+// Fondo de cada tema (para la transición al cambiarlo, antes de recargar)
+export const themeBackground = (theme: ThemeName) => (theme === 'light' ? LIGHT : DARK).background;
+
 // Texto sobre fotos y pantallas inmersivas oscuras (igual en los dos temas).
 export const OnDark = {
   text: '#FFFFFF',

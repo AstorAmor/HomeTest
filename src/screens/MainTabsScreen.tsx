@@ -4,15 +4,16 @@ import { View, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TodayScreen } from './TodayScreen';
 import { MyDataScreen } from './MyDataScreen';
+import { ScheduleScreen } from './ScheduleScreen';
 import { LabScreen } from './LabScreen';
 import { MoreScreen } from './MoreScreen';
-import { BottomTabBar } from '@/components/BottomTabBar';
+import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
 
 export const MainTabsScreen = () => {
   const pagerRef = useRef<PagerView>(null);
   const { tab } = useLocalSearchParams<{ tab?: string }>();
-  const initialTab = Math.min(3, Math.max(0, Number(tab) || 0));
+  const initialTab = Math.min(TABS.length - 1, Math.max(0, Number(tab) || 0));
   const [currentPage, setCurrentPage] = useState(initialTab);
 
   const handleTabPress = (index: number) => {
@@ -32,6 +33,9 @@ export const MainTabsScreen = () => {
         </View>
         <View key="my-data" style={styles.page}>
           <MyDataScreen />
+        </View>
+        <View key="schedule" style={styles.page}>
+          <ScheduleScreen embedded />
         </View>
         <View key="lab" style={styles.page}>
           <LabScreen />

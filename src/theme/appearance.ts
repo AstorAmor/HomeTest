@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appearance, DevSettings, Platform } from 'react-native';
 import * as Updates from 'expo-updates';
-import { applyTheme, ThemeName } from '@/constants/colors';
+import { applyTheme, Colors, themeBackground, ThemeName } from '@/constants/colors';
+import { fadeBeforeReload } from './transition';
 
 // Preferencia de apariencia: 'system' sigue al móvil; 'light' / 'dark' la fijan.
 export type AppearancePref = 'system' | 'light' | 'dark';
@@ -28,12 +29,22 @@ export async function loadAppearance(): Promise<ThemeName> {
   return theme;
 }
 
-// Guarda la preferencia y recarga la app para que todas las pantallas la usen.
-// `returnTo` es la ruta a la que volver tras recargar (sin perder la sesión).
+// Guarda la preferencia y recarga la app para que todas las pantallas la usen, con un fundido
+// al color del tema nuevo (src/theme/transition.tsx). `returnTo` es la ruta a la que volver tras
+// recargar (sin perder la sesión). Si el tema que se ve no cambia (p. ej. de Auto a Dark con el
+// móvil en oscuro), solo se guarda.
 export async function setAppearancePref(pref: AppearancePref, returnTo?: string) {
   await AsyncStorage.setItem(KEY, pref);
+  const next = resolveTheme(pref);
+  if (next === (Colors.isLight ? 'light' : 'dark')) return;
+  await reloadKeepingPlace(themeBackground(next), returnTo);
+}
+
+// Recarga la app con el fundido y vuelve a la misma pantalla (también al cambiar de idioma)
+export async function reloadKeepingPlace(veilColor: string, returnTo?: string) {
   // En web la recarga ya mantiene la URL; en el móvil se vuelve a la ruta guardada.
   if (returnTo && Platform.OS !== 'web') await AsyncStorage.setItem(RETURN_KEY, returnTo);
+  await fadeBeforeReload(veilColor);
   if (Platform.OS === 'web') {
     window.location.reload();
   } else if (__DEV__) {

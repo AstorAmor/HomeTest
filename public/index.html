@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Kuova</title>
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+        background: #0a1d19;
+      }
+      body {
+        overflow: hidden;
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <!-- Pinta el fondo del tema elegido antes de que cargue la app: sin destello blanco al
+         abrirla ni al cambiar de tema (la preferencia la guarda src/theme/appearance.ts). -->
+    <script>
+      try {
+        var p = localStorage.getItem('appearance.v1');
+        var light = p === 'light' || (p !== 'dark' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches);
+        var bg = localStorage.getItem('appearance.fade.v1') || (light ? '#FAF8F3' : '#0A1D19');
+        document.documentElement.style.background = bg;
+        document.addEventListener('DOMContentLoaded', function () {
+          document.body.style.background = bg;
+        });
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

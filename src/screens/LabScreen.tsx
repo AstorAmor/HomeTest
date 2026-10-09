@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { DonutChart } from '@/components/DonutChart';
 import { MarkerRangeBar } from '@/components/MarkerRangeBar';
@@ -175,11 +174,6 @@ export const LabScreen = () => {
               </TouchableOpacity>
             );
           })}
-        </View>
-
-        <Text style={styles.sectionTitle}>My subscription</Text>
-        <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
-          <SubscriptionCard />
         </View>
 
         <TouchableOpacity style={styles.requestButton} onPress={() => router.push('/store')}>

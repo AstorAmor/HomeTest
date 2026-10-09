@@ -9,16 +9,20 @@ import { UserAvatar } from './UserAvatar';
 interface ScreenHeaderProps {
   title: string;
   showBack?: boolean;
+  // La foto solo sale en Today (pidió el fundador); en el resto, el hueco queda vacío
+  showAvatar?: boolean;
+  // A dónde volver si no hay pantalla anterior (p. ej. tras recargar por cambiar el tema)
+  backFallback?: string;
 }
 
-export const ScreenHeader = ({ title, showBack = false }: ScreenHeaderProps) => {
+export const ScreenHeader = ({ title, showBack = false, showAvatar = false, backFallback = '/' }: ScreenHeaderProps) => {
   const router = useRouter();
 
   return (
     <View style={styles.header}>
       <View style={styles.side}>
         {showBack && (
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} hitSlop={12}>
+          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(backFallback as any))} hitSlop={12}>
             <Ionicons name="chevron-back" size={26} color={Colors.textPrimary} />
           </TouchableOpacity>
         )}
@@ -27,7 +31,7 @@ export const ScreenHeader = ({ title, showBack = false }: ScreenHeaderProps) => 
       <Text style={styles.title}>{title}</Text>
 
       <View style={[styles.side, styles.sideRight]}>
-        <UserAvatar size={38} />
+        {showAvatar && <UserAvatar size={38} />}
       </View>
     </View>
   );

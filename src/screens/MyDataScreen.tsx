@@ -22,6 +22,7 @@ import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import { CycleStrip } from '@/components/CycleStrip';
 import { useSections } from '@/data/appPrefs';
+import { t } from '@/i18n';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -165,10 +166,17 @@ export const MyDataScreen = () => {
   const kcal = wearableChart(series.active_energy, Colors.amber, (v) => `${Math.round(v)}`);
   const temp = wearableChart(series.body_temperature, Colors.pinkSoft, (v) => v.toFixed(1));
 
+  // Biomarcadores: primero lo que la persona ha medido; lo que no, "apagado" como incentivo
+  const biomarkers = [
+    { key: 'sugar', title: 'Sugar', icon: 'water', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
+    { key: 'chol', title: 'Total cholesterol', icon: 'analytics', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
+    { key: 'cortisol', title: 'Cortisol', icon: 'sunny', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
+  ].sort((a, b) => Number(!a.data || a.data.isSample) - Number(!b.data || b.data.isSample));
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="My Data" />
+        <ScreenHeader title={t('My Data')} />
 
         {/* Edad biológica (PhenoAge) de la última analítica: lo primero que se ve */}
         {(() => {
@@ -177,47 +185,38 @@ export const MyDataScreen = () => {
           if (!now.available) return null;
           const mid = (p: typeof now) => (p.low + p.high) / 2;
           const younger = now.chronological_age - mid(now);
+          const n = Math.round(Math.abs(younger));
           return (
             <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/report-summary')} activeOpacity={0.85}>
               <View style={styles.bioAgeHeader}>
                 <Ionicons name="hourglass-outline" size={18} color={Colors.accent} />
-                <Text style={styles.bioAgeTitle}>Your biological age</Text>
-                <Text style={styles.bioAgeTag}>sample</Text>
+                <Text style={styles.bioAgeTitle}>{t('Your biological age')}</Text>
+                <Text style={styles.bioAgeTag}>{t('sample')}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </View>
-              <Text style={styles.bioAgeValue}>
-                {Math.round(now.low)}–{Math.round(now.high)}
-                <Text style={styles.bioAgeUnit}> years</Text>
-              </Text>
+              <View style={styles.bioAgeValueRow}>
+                <Text style={styles.bioAgeValue}>
+                  {Math.round(now.low)}–{Math.round(now.high)}
+                </Text>
+                <Text style={styles.bioAgeUnit}>{t('years')}</Text>
+              </View>
               <Text style={styles.bioAgeSub}>
-                {(() => {
-                  const n = Math.round(Math.abs(younger));
-                  return `About ${n} year${n === 1 ? '' : 's'} ${younger >= 0 ? 'younger' : 'older'}`;
-                })()}{' '}
-                than your age (
-                {now.chronological_age})
-                {before.available && mid(before) > mid(now) ? ` · down from ${Math.round(before.low)}–${Math.round(before.high)} at your previous test` : ''}
+                {t(younger >= 0 ? (n === 1 ? 'About {n} year younger than your age ({age})' : 'About {n} years younger than your age ({age})') : n === 1 ? 'About {n} year older than your age ({age})' : 'About {n} years older than your age ({age})', {
+                  n,
+                  age: now.chronological_age,
+                })}
+                {before.available && mid(before) > mid(now)
+                  ? t(' · down from {low}–{high} at your previous test', { low: Math.round(before.low), high: Math.round(before.high) })
+                  : ''}
               </Text>
             </TouchableOpacity>
           );
         })()}
 
-        {/* Perfil genético: antecedentes familiares ("Know your roots") y, más adelante, resultados */}
-        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
-          <View style={styles.geneticIcon}>
-            <MaterialCommunityIcons name="dna" size={20} color={Colors.gold} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.geneticTitle}>Your genetic profile</Text>
-            <Text style={styles.geneticSub}>Know your roots: what runs in your family</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
-
         {sex === 'female' && cycle && show('cycle') && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Period</Text>
+              <Text style={styles.sectionTitle}>{t('Period')}</Text>
             </View>
             <View style={styles.periodBlock}>
               <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />
@@ -226,37 +225,38 @@ export const MyDataScreen = () => {
         )}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{show('wearables') ? 'Wearable measurements' : 'Measurements'}</Text>
-          {show('wearables') && <Text style={styles.sectionMeta}>Last 14 days{isSample ? ' · sample' : ''}</Text>}
+          <Text style={styles.sectionTitle}>{show('wearables') ? t('Wearable measurements') : t('Measurements')}</Text>
+          {show('wearables') && <Text style={styles.sectionMeta}>{t('Last 14 days')}{isSample ? ` · ${t('sample')}` : ''}</Text>}
         </View>
+        {/* Orden pedido: pasos, sueño, calorías, pulso en reposo y variabilidad */}
         {show('wearables') && (
           <>
-            <MetricCard title="Resting heart rate" icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={`avg ${hr.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
-              <TrendChart labels={hr.labels} series={hr.series} height={90} />
-            </MetricCard>
-            <MetricCard title="Heart rate variability" icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={`avg ${hrv.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
-              <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
-            </MetricCard>
-            <MetricCard title="Sleep" icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={`avg ${sleep.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
-              <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
-            </MetricCard>
-            <MetricCard title="Steps" icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={`avg ${steps.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
+            <MetricCard title={t('Steps')} icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={t('avg {v}', { v: steps.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
               <TrendChart labels={steps.labels} series={steps.series} height={90} formatY={(v) => `${(v / 1000).toFixed(1)}k`} />
             </MetricCard>
-            <MetricCard title="Active calories" icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={`avg ${kcal.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
+            <MetricCard title={t('Sleep')} icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={t('avg {v}', { v: sleep.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
+              <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
+            </MetricCard>
+            <MetricCard title={t('Active calories')} icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={t('avg {v}', { v: kcal.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
               <TrendChart labels={kcal.labels} series={kcal.series} height={90} />
+            </MetricCard>
+            <MetricCard title={t('Resting heart rate')} icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={t('avg {v}', { v: hr.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
+              <TrendChart labels={hr.labels} series={hr.series} height={90} />
+            </MetricCard>
+            <MetricCard title={t('Heart rate variability')} icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={t('avg {v}', { v: hrv.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
+              <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
             </MetricCard>
           </>
         )}
 
         {bp && (
           <MetricCard
-            title="Blood pressure"
+            title={t('Blood pressure')}
             icon="speedometer"
             iconColor={Colors.coral}
             value={bp.latest}
             unit="mmHg"
-            avg={bp.isSample ? 'sample' : 'tap to log'}
+            avg={bp.isSample ? t('sample') : t('tap to log')}
             onPress={() => router.push('/blood-pressure-detail')}
           >
             <TrendChart labels={bp.labels} series={bp.series} height={110} />
@@ -264,7 +264,7 @@ export const MyDataScreen = () => {
         )}
 
         {show('wearables') && (
-          <MetricCard title="Temperature" icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={`avg ${temp.avg}`} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
+          <MetricCard title={t('Temperature')} icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={t('avg {v}', { v: temp.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
             <TrendChart
               labels={temp.labels}
               series={temp.series}
@@ -276,55 +276,71 @@ export const MyDataScreen = () => {
         )}
 
         <View style={[styles.sectionHeader, { marginTop: 16 }]}>
-          <Text style={styles.sectionTitle}>Biomarkers</Text>
-          <Text style={styles.sectionMeta}>Tap to see history and log</Text>
+          <Text style={styles.sectionTitle}>{t('Biomarkers')}</Text>
+          <Text style={styles.sectionMeta}>{t('What you have measured first. Tap any to see history or log a reading.')}</Text>
         </View>
-        {/* Sin datos todavía: la tarjeta sale igual, para registrar la primera lectura */}
-        {!glucose && <MetricCard title="Sugar" icon="water" iconColor={Colors.accent} value="—" avg="tap to log" onPress={() => router.push('/glucose-detail')} />}
-        {!cholesterol && (
-          <MetricCard title="Total cholesterol" icon="analytics" iconColor={Colors.amber} value="—" avg="tap to log" onPress={() => router.push('/cholesterol-detail')} />
-        )}
-        {!cortisol && <MetricCard title="Cortisol" icon="sunny" iconColor={Colors.violet} value="—" avg="tap to log" onPress={() => router.push('/cortisol-detail')} />}
-        {glucose && (
-          <MetricCard title="Sugar" icon="water" iconColor={Colors.accent} value={glucose.latest} unit="mg/dL" avg={glucose.isSample ? 'sample' : ''} onPress={() => router.push('/glucose-detail')}>
-            <TrendChart labels={glucose.labels} series={glucose.series} height={90} band={{ low: 70, high: 99 }} />
-          </MetricCard>
-        )}
-        {cholesterol && (
-          <MetricCard title="Total cholesterol" icon="analytics" iconColor={Colors.amber} value={cholesterol.latest} unit="mg/dL" avg={cholesterol.isSample ? 'sample' : ''} onPress={() => router.push('/cholesterol-detail')}>
-            <TrendChart labels={cholesterol.labels} series={cholesterol.series} height={90} band={{ low: 125, high: 200 }} />
-          </MetricCard>
-        )}
-        {cortisol && (
-          <MetricCard title="Cortisol" icon="sunny" iconColor={Colors.violet} value={cortisol.latest} unit="µg/dL" avg={cortisol.isSample ? 'sample' : ''} onPress={() => router.push('/cortisol-detail')}>
-            <TrendChart labels={cortisol.labels} series={cortisol.series} height={90} formatY={(v) => v.toFixed(0)} />
-          </MetricCard>
-        )}
+        {biomarkers.map((b) => {
+          const off = !b.data || b.data.isSample;
+          return (
+            <MetricCard
+              key={b.key}
+              title={t(b.title)}
+              icon={b.icon}
+              iconColor={b.color}
+              value={off ? '—' : b.data!.latest}
+              unit={off ? undefined : b.unit}
+              avg={off ? t('Not measured yet') : ''}
+              off={off}
+              onPress={() => router.push(b.to as any)}
+            >
+              {b.data ? (
+                <TrendChart labels={b.data.labels} series={off ? b.data.series.map((s) => ({ ...s, color: Colors.textMuted })) : b.data.series} height={90} band={b.band} formatY={b.key === 'cortisol' ? (v) => v.toFixed(0) : undefined} />
+              ) : null}
+              {off && <Text style={styles.offHint}>{t('Log a reading or add it to your next test to see your own line here.')}</Text>}
+            </MetricCard>
+          );
+        })}
 
-        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Tests</Text>
-        <View style={styles.diagnosticGrid}>
-          {mockDiagnosticTests.map((test) => {
+        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>{t('Tests')}</Text>
+        {/* Una debajo de otra: no sabemos cuántas pruebas habrá en camino */}
+        <View style={styles.testList}>
+          {mockDiagnosticTests.map((test, i) => {
             const icon = diagnosticIcon(test.status);
             return (
-              <View key={test.id} style={styles.diagnosticCard}>
+              <View key={test.id} style={[styles.testRow, i > 0 && styles.testDivider]}>
                 <Text style={styles.diagnosticName}>{test.nombre}</Text>
-                {test.statusLabel ? (
-                  <View style={styles.diagnosticWaiting}>
-                    <Ionicons name={icon.name} size={16} color={icon.color} />
-                    <Text style={styles.diagnosticWaitingText}>{test.statusLabel}</Text>
-                  </View>
-                ) : (
-                  <Ionicons name={icon.name} size={28} color={icon.color} />
-                )}
+                <View style={styles.testStatus}>
+                  <Ionicons name={icon.name} size={20} color={icon.color} />
+                  <Text style={[styles.testStatusText, { color: icon.color }]}>
+                    {test.statusLabel ? t(test.statusLabel) : test.status === 'ok' ? t('Normal') : t('Needs a look')}
+                  </Text>
+                </View>
               </View>
             );
           })}
         </View>
 
+        {/* Perfil genético: antecedentes familiares ("Know your roots") y, más adelante, resultados */}
+        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
+          <View style={styles.geneticIcon}>
+            <MaterialCommunityIcons name="dna" size={20} color={Colors.gold} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.geneticTitle}>{t('Your genetic profile')}</Text>
+            <Text style={styles.geneticSub}>{t('Know your roots: what runs in your family')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.filesCard}>
-          <Ionicons name="folder-outline" size={22} color={Colors.textPrimary} />
-          <Text style={styles.filesText}>Access to your files</Text>
+        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/files')} activeOpacity={0.85}>
+          <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.accent, 0.12) }]}>
+            <Ionicons name="folder-open-outline" size={20} color={Colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.geneticTitle}>{t('Your files')}</Text>
+            <Text style={styles.geneticSub}>{t('Lab reports and everything you upload')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.seedButton} onPress={handleLoadSeed}>
@@ -350,6 +366,7 @@ const MetricCard = ({
   value,
   unit,
   avg,
+  off,
   onPress,
   children,
 }: {
@@ -359,10 +376,11 @@ const MetricCard = ({
   value: string;
   unit?: string;
   avg?: string;
+  off?: boolean; // aún sin medir: se ve "apagado"
   onPress: () => void;
   children?: React.ReactNode;
 }) => (
-  <TouchableOpacity style={styles.metricCard} onPress={onPress} activeOpacity={0.85}>
+  <TouchableOpacity style={[styles.metricCard, off && styles.metricOff]} onPress={onPress} activeOpacity={0.85}>
     <View style={styles.metricHeader}>
       <View style={[styles.metricIcon, { backgroundColor: `${iconColor}22` }]}>
         <Ionicons name={icon as any} size={16} color={iconColor} />
@@ -402,6 +420,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bioAgeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bioAgeValueRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 4, marginTop: 8 },
   genetic: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -426,9 +445,10 @@ const styles = StyleSheet.create({
   geneticSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   bioAgeTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   bioAgeTag: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
-  bioAgeValue: { color: Colors.accent, fontSize: 34, fontWeight: '800', marginTop: 8 },
-  bioAgeUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '600' },
-  bioAgeSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 2 },
+  bioAgeValue: { color: Colors.accent, fontSize: 38, fontWeight: '800' },
+  // "years" pequeño y abajo, como un subíndice
+  bioAgeUnit: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 7 },
+  bioAgeSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 4, textAlign: 'center' },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -490,6 +510,21 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 12,
   },
+  testList: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+  },
+  testRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
+  testDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
+  testStatus: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  testStatusText: { fontSize: 13, fontWeight: '600' },
+  metricOff: { opacity: 0.55 },
+  offHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 6 },
   diagnosticGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

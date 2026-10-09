@@ -9,8 +9,6 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { AppearanceSwitch } from '@/components/AppearanceSwitch';
-import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 import { PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 
@@ -91,11 +89,6 @@ export const ProfileScreen = () => {
           <Text style={styles.email}>{user?.email ?? mockPatient.email}</Text>
         </View>
 
-        <Text style={[styles.sectionTitle, styles.spacedTop]}>My subscription</Text>
-        <View style={{ marginHorizontal: 20, marginBottom: 22 }}>
-          <SubscriptionCard />
-        </View>
-
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>What you use Kuova for</Text>
           <TouchableOpacity onPress={() => router.push('/app-sections')}>
@@ -147,11 +140,6 @@ export const ProfileScreen = () => {
           </>
         )}
 
-        <Text style={[styles.sectionTitle, styles.spaced]}>Appearance</Text>
-        <View style={{ marginHorizontal: 20 }}>
-          <AppearanceSwitch returnTo="/profile" />
-        </View>
-        <Text style={styles.segmentHint}>The app reloads to apply it. You stay signed in.</Text>
 
       </ScrollView>
     </SafeAreaView>
@@ -173,7 +161,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },
   spaced: { paddingHorizontal: 20, marginTop: 22, marginBottom: 10 },
-  spacedTop: { paddingHorizontal: 20, marginBottom: 10 },
   edit: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   afterCard: { marginTop: 22 },
   purposeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
@@ -194,7 +181,6 @@ const styles = StyleSheet.create({
   rowValueWrap: { flexShrink: 1, textAlign: 'right', marginLeft: 16 },
   rowEmpty: { color: Colors.textMuted, fontSize: 13, fontWeight: '400' },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
-  segmentHint: { color: Colors.textMuted, fontSize: 12, marginHorizontal: 20, marginTop: 8 },
   goalChip: {
     flexDirection: 'row',
     alignItems: 'center',

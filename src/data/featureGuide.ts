@@ -8,7 +8,7 @@ export interface FeatureGuide {
   youDo: string; // qué hace el usuario
   youGet: string; // qué recibe
   notifications?: string; // qué avisos puede mandar
-  evidenceTopic?: string; // tema de How Kuova works
+  evidenceTopic?: string; // tema de How KUOVA works
 }
 
 export const FEATURE_GUIDE: Record<AppSection, FeatureGuide> = {

@@ -1,5 +1,5 @@
-// "How Kuova works": cómo calculamos cada cosa y en qué estudios y guías nos basamos. Lo abre el
-// icono (i) junto a cada número o recomendación, y More → How Kuova works lo lista entero.
+// "How KUOVA works": cómo calculamos cada cosa y en qué estudios y guías nos basamos. Lo abre el
+// icono (i) junto a cada número o recomendación, y More → How KUOVA works lo lista entero.
 // Mantener en la misma línea que la web pública (HomeTest-web/content/answers*.json).
 
 export interface EvidenceSource {
