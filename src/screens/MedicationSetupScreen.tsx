@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { WheelPicker } from '@/components/WheelPicker';
 import { medicationRepository } from '@/data/medicationRepository';
 import { dayKey } from '@/data/bathroomRepository';
-import { defaultTimes, findKnownMed, KnownMed, parseMedicationText, scheduleText } from '@/logic/medication';
+import { defaultTimes, findKnownMed, KnownMed, medIcon, parseMedicationText, scheduleText } from '@/logic/medication';
 import { MedicationItem, MedKind, MedSchedule } from '@/types/medication';
 
 type Step = 'what' | 'dose' | 'when' | 'duration' | 'reminders' | 'summary';
@@ -17,6 +17,8 @@ type Frequency = 'once' | 'twice' | 'three' | 'every_hours' | 'weekdays' | 'as_n
 const REGULAR_SUGGESTIONS = ['Vitamin D', 'Magnesium', 'Omega-3', 'Creatine', 'Iron', 'Folic acid', 'Vitamin B12', 'Levothyroxine', 'Contraceptive pill'];
 const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
 const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+const COURSE_DAYS = [3, 5, 7, 10, 14];
+const DAY_ITEMS = Array.from({ length: 90 }, (_, i) => String(i + 1)); // "Other": de 1 a 90 días
 const SHORT_SUGGESTIONS = ['Ibuprofen', 'Paracetamol', 'Amoxicillin', 'Omeprazole'];
 const SLOTS = [
   { id: '08:00', label: 'Morning 08:00' },
@@ -69,6 +71,8 @@ export const MedicationSetupScreen = () => {
   const [total, setTotal] = useState(1);
   // "Other time": ruedas de hora y minutos
   const [otherOpen, setOtherOpen] = useState(false);
+  const [otherDaysOpen, setOtherDaysOpen] = useState(false);
+  const [otherDays, setOtherDays] = useState(5); // índice: 6 días
   const [otherHour, setOtherHour] = useState(9);
   const [otherMinute, setOtherMinute] = useState(0);
 
@@ -229,7 +233,12 @@ export const MedicationSetupScreen = () => {
               {(isShort ? SHORT_SUGGESTIONS : REGULAR_SUGGESTIONS).map((s) => {
                 const on = picked.includes(s);
                 return (
-                  <TouchableOpacity key={s} style={[styles.slot, on && styles.slotOn]} onPress={() => togglePicked(s)}>
+                  <TouchableOpacity key={s} style={[styles.slot, styles.suggestion, on && styles.slotOn]} onPress={() => togglePicked(s)}>
+                    <MaterialCommunityIcons
+                      name={medIcon(s, findKnownMed(s)?.kind ?? 'medication').name as any}
+                      size={16}
+                      color={findKnownMed(s)?.kind === 'supplement' ? Colors.green : Colors.gold}
+                    />
                     <Text style={[styles.slotText, on && { color: Colors.textPrimary }]}>
                       {on ? '✓ ' : ''}
                       {s}
@@ -380,7 +389,45 @@ export const MedicationSetupScreen = () => {
                 ? `${known.label} is often taken for ${known.shortCourseDays} days. Follow what your doctor or the leaflet says.`
                 : 'Check your prescription or the leaflet.'}
             </Text>
-            <ChoiceChips options={[3, 5, 7, 10, 14].map((d) => ({ id: d, label: `${d} days` }))} value={courseDays} onChange={setCourseDays} />
+            {/* Duraciones típicas + "Other" con rueda (como la hora), y la que ya tenga si no es típica */}
+            <ChoiceChips
+              options={[
+                ...[...COURSE_DAYS, ...(courseDays && !COURSE_DAYS.includes(courseDays) ? [courseDays] : [])]
+                  .sort((a, b) => a - b)
+                  .map((d) => ({ id: d, label: `${d} day${d === 1 ? '' : 's'}` })),
+                { id: 0, label: '+ Other' },
+              ]}
+              value={otherDaysOpen ? 0 : courseDays}
+              onChange={(d) => {
+                if (d === 0) {
+                  if (courseDays) setOtherDays(Math.min(89, courseDays - 1));
+                  setOtherDaysOpen((v) => !v);
+                  return;
+                }
+                setOtherDaysOpen(false);
+                setCourseDays(d);
+              }}
+            />
+            {otherDaysOpen && (
+              <View style={styles.otherBox}>
+                <View style={styles.wheels}>
+                  <WheelPicker items={DAY_ITEMS} selectedIndex={otherDays} onChange={setOtherDays} width={90} />
+                  <Text style={styles.wheelUnit}>days</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.addTime}
+                  onPress={() => {
+                    setCourseDays(otherDays + 1);
+                    setOtherDaysOpen(false);
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.addTimeText}>
+                    For {otherDays + 1} day{otherDays === 0 ? '' : 's'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
             {known?.tip ? <Text style={styles.tip}>{known.tip}</Text> : null}
           </>
         )}
@@ -469,6 +516,7 @@ const styles = StyleSheet.create({
   },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   colon: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginHorizontal: 4 },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700', marginLeft: 8 },
   addTime: { backgroundColor: Colors.accent, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 9, marginTop: 6, marginBottom: 6 },
   addTimeText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
   content: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 24 },
@@ -526,6 +574,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   slotOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
+  suggestion: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   slotText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
   tip: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 16, fontStyle: 'italic' },
   summaryCard: {

@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-// Modo "Señalar" (solo web): un botón flotante para tocar cualquier cosa de la app, escribir qué
-// quieres cambiar y copiar todas las notas para pegárselas a Claude. Cada nota lleva la pantalla,
+// Modo "Señalar" (solo web): una barra flotante para tocar cualquier cosa de la app, escribir qué
+// quieres cambiar y copiar todas las notas para pegárselas a Claude. Nunca bloquea la app: tras
+// elegir un elemento todo vuelve a funcionar, y las notas se guardan aunque cierres las ventanas. Cada nota lleva la pantalla,
 // el componente de React que lo pinta (p. ej. "CheckInScreen › MoodOrb"), el icono, el texto, los
 // colores y el tamaño, así se encuentra en el código sin adivinar.
 // Se ve en el servidor local (npm run web) y en cualquier web de la app abriendo una vez la
@@ -159,10 +160,18 @@ const button = (text: string, primary = false) =>
     text
   );
 
+// Flujo pensado para no bloquear nunca la app:
+// 1. "🎯 Señalar" → el siguiente toque elige un elemento (solo ese toque se lo queda el inspector).
+// 2. Sale una tarjeta para comentar junto al elemento. Mientras está abierta, la app sigue
+//    funcionando: puedes hacer scroll, pulsar, navegar…
+// 3. "Guardar" (o cerrar con texto escrito) guarda la nota; cerrar nunca pierde lo escrito.
+// 4. "💬 Notas" abre o cierra la lista cuando quieras: editar, borrar una, copiar todas.
+//    Cerrar la lista no borra nada (se guarda en este navegador).
 function mount(): () => void {
   const root = el('div', { position: 'fixed', inset: '0', pointerEvents: 'none', zIndex: '2147483646' });
   root.setAttribute('data-kuova-inspector', '');
   document.body.appendChild(root);
+  const narrow = () => window.innerWidth < 640;
 
   const box = el('div', {
     position: 'fixed',
@@ -188,39 +197,88 @@ function mount(): () => void {
   });
   root.append(box, tag);
 
-  const toggle = button('');
-  Object.assign(toggle.style, {
+  const card = (extra: Partial<CSSStyleDeclaration>) =>
+    el('div', {
+      position: 'fixed',
+      background: '#fff',
+      color: INK,
+      borderRadius: '16px',
+      boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+      padding: '14px',
+      font: '13px/1.45 system-ui, sans-serif',
+      pointerEvents: 'auto',
+      display: 'none',
+      boxSizing: 'border-box',
+      ...extra,
+    });
+
+  // Barra flotante: Señalar · Notas · minimizar (por encima de la barra de pestañas de la app)
+  const dock = el('div', {
     position: 'fixed',
     left: '12px',
-    bottom: '12px',
+    bottom: '96px',
+    display: 'flex',
+    gap: '6px',
+    alignItems: 'center',
+    pointerEvents: 'auto',
+  });
+  const pickBtn = button('');
+  const notesBtn = button('');
+  const minBtn = button('–');
+  [pickBtn, notesBtn, minBtn].forEach((b) => (b.style.boxShadow = '0 4px 16px rgba(0,0,0,0.18)'));
+  minBtn.title = 'Minimizar';
+  dock.append(pickBtn, notesBtn, minBtn);
+  const bubble = button('🎯');
+  Object.assign(bubble.style, {
+    position: 'fixed',
+    left: '12px',
+    bottom: '96px',
+    minWidth: '40px',
+    height: '40px',
+    padding: '0 10px',
+    display: 'none',
     pointerEvents: 'auto',
     boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
   });
-  root.appendChild(toggle);
-
-  const panel = el('div', {
+  bubble.title = 'Modo Señalar';
+  const toast = el('div', {
     position: 'fixed',
-    right: '12px',
-    bottom: '12px',
-    width: 'min(380px, calc(100vw - 24px))',
-    background: '#fff',
-    color: INK,
-    borderRadius: '16px',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-    padding: '14px',
-    font: '13px/1.45 system-ui, sans-serif',
-    pointerEvents: 'auto',
+    left: '12px',
+    bottom: '142px',
+    background: INK,
+    color: '#FAF7EF',
+    font: '600 12px system-ui, sans-serif',
+    padding: '8px 12px',
+    borderRadius: '10px',
+    pointerEvents: 'none',
     display: 'none',
   });
-  root.appendChild(panel);
+  root.append(dock, bubble, toast);
+
+  const composer = card({ width: 'min(360px, calc(100vw - 24px))' });
+  const drawer = card({ right: '12px', bottom: '12px', width: 'min(400px, calc(100vw - 24px))', maxHeight: '70vh', overflowY: 'auto' });
+  composer.setAttribute('data-kuova-composer', '');
+  drawer.setAttribute('data-kuova-drawer', '');
+  root.append(composer, drawer);
 
   let picking = false;
   let selected: HTMLElement | null = null;
+  let draft = '';
+  let drawerOpen = false;
+  let minimized = false;
+  let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   const inUi = (t: EventTarget | null) => t instanceof Node && root.contains(t);
 
+  const showToast = (text: string) => {
+    toast.textContent = text;
+    toast.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => (toast.style.display = 'none'), 2200);
+  };
+
   const place = (target: HTMLElement | null) => {
-    if (!target) {
+    if (!target || !target.isConnected) {
       box.style.display = tag.style.display = 'none';
       return;
     }
@@ -230,118 +288,216 @@ function mount(): () => void {
     Object.assign(tag.style, { display: 'block', left: `${Math.max(4, r.left)}px`, top: `${Math.max(4, r.top - 22)}px` });
   };
 
-  const renderToggle = () => {
-    const n = readNotes().length;
-    toggle.textContent = picking ? '✓ Señalando… (Esc para salir)' : `🎯 Señalar${n ? ` · ${n} nota${n > 1 ? 's' : ''}` : ''}`;
-    toggle.style.background = picking ? GOLD : '#fff';
+  // La tarjeta de comentar va junto al elemento (debajo o encima); en pantallas estrechas, abajo
+  const placeComposer = () => {
+    if (composer.style.display === 'none') return;
+    if (narrow() || !selected?.isConnected) {
+      Object.assign(composer.style, { left: '12px', right: 'auto', top: 'auto', bottom: '12px' });
+      return;
+    }
+    const r = selected.getBoundingClientRect();
+    const h = composer.offsetHeight || 260;
+    const w = composer.offsetWidth || 360;
+    const below = r.bottom + 10 + h < window.innerHeight;
+    const top = below ? r.bottom + 10 : Math.max(12, r.top - 10 - h);
+    const left = Math.min(Math.max(12, r.left), window.innerWidth - w - 12);
+    Object.assign(composer.style, { left: `${left}px`, top: `${top}px`, right: 'auto', bottom: 'auto' });
   };
 
-  const renderPanel = () => {
-    panel.replaceChildren();
+  const renderDock = () => {
+    const n = readNotes().length;
+    pickBtn.textContent = picking ? '✕ Cancelar (Esc)' : '🎯 Señalar';
+    pickBtn.style.background = picking ? GOLD : '#fff';
+    notesBtn.textContent = `💬 Notas${n ? ` · ${n}` : ''}`;
+    notesBtn.style.background = drawerOpen ? '#F3EBDD' : '#fff';
+    dock.style.display = minimized ? 'none' : 'flex';
+    bubble.style.display = minimized ? 'block' : 'none';
+    bubble.textContent = n ? `🎯 ${n}` : '🎯';
+  };
+
+  const saveSelected = () => {
+    if (!selected || !draft.trim()) return false;
+    writeNotes([
+      ...readNotes(),
+      {
+        route: `${location.pathname}${location.search}`,
+        chain: componentChain(selected),
+        details: describe(selected),
+        note: draft.trim(),
+        at: new Date().toISOString(),
+      },
+    ]);
+    return true;
+  };
+
+  // Cerrar la tarjeta: si había texto, se guarda como nota (nunca se pierde lo escrito)
+  const closeComposer = () => {
+    const saved = saveSelected();
+    selected = null;
+    draft = '';
+    composer.style.display = 'none';
+    place(null);
+    if (saved) showToast(`Nota guardada · ${readNotes().length} en total`);
+    renderDock();
+    if (drawerOpen) renderDrawer();
+  };
+
+  const renderComposer = () => {
+    composer.replaceChildren();
+    if (!selected) {
+      composer.style.display = 'none';
+      return;
+    }
+    const head = el('div', { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' });
+    head.append(el('strong', { fontSize: '14px' }, 'Comentar este elemento'));
+    const close = button('✕');
+    close.title = 'Cerrar (lo escrito se guarda)';
+    close.onclick = closeComposer;
+    head.appendChild(close);
+    composer.appendChild(head);
+    composer.appendChild(el('div', { marginTop: '6px', fontWeight: '600', wordBreak: 'break-word' }, componentChain(selected)));
+    composer.appendChild(el('div', { color: '#5B6662', fontSize: '12px', marginTop: '2px' }, describe(selected)));
+
+    const parent = button('↑ Coger lo que lo contiene');
+    Object.assign(parent.style, { marginTop: '8px', padding: '6px 10px', fontSize: '12px' });
+    parent.onclick = () => {
+      if (selected?.parentElement && selected.parentElement !== document.body) {
+        selected = selected.parentElement;
+        place(selected);
+        renderComposer();
+      }
+    };
+    composer.appendChild(parent);
+
+    const area = el('textarea', {
+      display: 'block',
+      width: '100%',
+      boxSizing: 'border-box',
+      minHeight: '70px',
+      marginTop: '10px',
+      padding: '8px 10px',
+      borderRadius: '10px',
+      border: '1px solid rgba(14,42,36,0.2)',
+      font: '13px/1.4 system-ui, sans-serif',
+      resize: 'vertical',
+    }) as HTMLTextAreaElement;
+    area.placeholder = '¿Qué quieres cambiar? (color, forma, tamaño, quitarlo, moverlo a…)';
+    area.value = draft;
+    area.oninput = () => (draft = area.value);
+    area.onkeydown = (e) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) closeComposer();
+    };
+    composer.appendChild(area);
+
+    const row = el('div', { display: 'flex', gap: '8px', marginTop: '8px' });
+    const save = button('Guardar nota', true);
+    save.style.flex = '1';
+    save.onclick = () => {
+      if (!draft.trim()) return area.focus();
+      closeComposer();
+    };
+    const discard = button('Descartar');
+    discard.onclick = () => {
+      draft = '';
+      closeComposer();
+    };
+    row.append(save, discard);
+    composer.appendChild(row);
+    composer.appendChild(
+      el('div', { color: '#8A938F', fontSize: '11px', marginTop: '6px' }, 'La app sigue funcionando con esto abierto. Cerrar con ✕ guarda lo escrito.')
+    );
+    composer.style.display = 'block';
+    placeComposer();
+    setTimeout(() => {
+      placeComposer();
+      area.focus();
+    }, 0);
+  };
+
+  const renderDrawer = () => {
+    drawer.replaceChildren();
+    drawer.style.display = drawerOpen ? 'block' : 'none';
+    if (!drawerOpen) return;
     const notes = readNotes();
-    if (selected) {
-      const head = el('div', { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' });
-      head.append(el('strong', { fontSize: '14px' }, 'Elemento seleccionado'));
-      const close = button('✕');
-      close.onclick = () => {
-        selected = null;
-        place(null);
-        renderPanel();
+    const head = el('div', { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '8px' });
+    head.append(el('strong', { fontSize: '14px' }, `Notas (${notes.length})`));
+    const close = button('✕');
+    close.title = 'Cerrar (las notas se quedan guardadas)';
+    close.onclick = () => {
+      drawerOpen = false;
+      renderDrawer();
+      renderDock();
+    };
+    head.appendChild(close);
+    drawer.appendChild(head);
+    if (!notes.length) {
+      drawer.appendChild(el('div', { color: '#5B6662' }, 'Aún no hay notas. Pulsa 🎯 Señalar y toca algo de la app.'));
+      return;
+    }
+    notes.forEach((n, i) => {
+      const item = el('div', { borderTop: i ? '1px solid rgba(14,42,36,0.1)' : 'none', padding: '8px 0' });
+      const top = el('div', { display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'baseline' });
+      top.append(el('span', { fontWeight: '700', fontSize: '12px', wordBreak: 'break-word' }, `${i + 1}. ${n.route} · ${n.chain.split(' › ').pop()}`));
+      const del = el('button', { border: 'none', background: 'none', color: '#B3402F', cursor: 'pointer', font: '600 12px system-ui, sans-serif' }, 'Borrar');
+      del.onclick = () => {
+        writeNotes(readNotes().filter((_, j) => j !== i));
+        renderDrawer();
+        renderDock();
       };
-      head.appendChild(close);
-      panel.appendChild(head);
-      panel.appendChild(el('div', { marginTop: '6px', fontWeight: '600', wordBreak: 'break-word' }, componentChain(selected)));
-      panel.appendChild(el('div', { color: '#5B6662', fontSize: '12px', marginTop: '2px' }, describe(selected)));
-      panel.appendChild(el('div', { color: '#5B6662', fontSize: '12px' }, `Pantalla: ${location.pathname}${location.search}`));
-
-      const parent = button('↑ Coger lo que lo contiene');
-      Object.assign(parent.style, { marginTop: '8px', padding: '6px 10px', fontSize: '12px' });
-      parent.onclick = () => {
-        if (selected?.parentElement && selected.parentElement !== document.body) {
-          selected = selected.parentElement;
-          place(selected);
-          renderPanel();
-        }
-      };
-      panel.appendChild(parent);
-
-      const area = el('textarea', {
+      top.appendChild(del);
+      item.appendChild(top);
+      const text = el('textarea', {
         display: 'block',
         width: '100%',
         boxSizing: 'border-box',
-        minHeight: '70px',
-        marginTop: '10px',
-        padding: '8px 10px',
-        borderRadius: '10px',
-        border: '1px solid rgba(14,42,36,0.2)',
+        minHeight: '44px',
+        marginTop: '4px',
+        padding: '6px 8px',
+        borderRadius: '8px',
+        border: '1px solid rgba(14,42,36,0.15)',
         font: '13px/1.4 system-ui, sans-serif',
         resize: 'vertical',
       }) as HTMLTextAreaElement;
-      area.placeholder = '¿Qué quieres cambiar? (color, forma, tamaño, quitarlo, moverlo a…)';
-      panel.appendChild(area);
-      setTimeout(() => area.focus(), 0);
-
-      const save = button('Guardar nota', true);
-      Object.assign(save.style, { marginTop: '8px', width: '100%' });
-      save.onclick = () => {
-        if (!selected || !area.value.trim()) return area.focus();
-        writeNotes([
-          ...readNotes(),
-          {
-            route: `${location.pathname}${location.search}`,
-            chain: componentChain(selected),
-            details: describe(selected),
-            note: area.value.trim(),
-            at: new Date().toISOString(),
-          },
-        ]);
-        selected = null;
-        place(null);
-        setPicking(true); // sigue señalando: lo normal es marcar varias cosas seguidas
-      };
-      panel.appendChild(save);
-    }
-
-    if (notes.length) {
-      const foot = el('div', {
-        display: 'flex',
-        gap: '8px',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        marginTop: selected ? '12px' : '0',
-        paddingTop: selected ? '10px' : '0',
-        borderTop: selected ? '1px solid rgba(14,42,36,0.1)' : 'none',
-      });
-      foot.append(el('span', { flex: '1', color: '#5B6662' }, `${notes.length} nota${notes.length > 1 ? 's' : ''} guardada${notes.length > 1 ? 's' : ''}`));
-      const copy = button('Copiar todas', true);
-      copy.onclick = async () => {
-        await navigator.clipboard.writeText(formatNotes(readNotes()));
-        copy.textContent = '¡Copiadas! Pégalas en el chat';
-        setTimeout(() => (copy.textContent = 'Copiar todas'), 2500);
-      };
-      const clear = button('Borrar');
-      clear.onclick = () => {
-        if (confirm('¿Borrar todas las notas?')) {
-          writeNotes([]);
-          renderPanel();
-          renderToggle();
+      text.value = n.note;
+      // Editar una nota se guarda al momento
+      text.oninput = () => {
+        const all = readNotes();
+        if (all[i]) {
+          all[i] = { ...all[i], note: text.value };
+          writeNotes(all);
         }
       };
-      foot.append(copy, clear);
-      panel.appendChild(foot);
-    }
-    panel.style.display = selected || (notes.length && !picking) ? 'block' : 'none';
-    renderToggle();
+      item.appendChild(text);
+      drawer.appendChild(item);
+    });
+    const foot = el('div', { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px' });
+    const copy = button('Copiar todas', true);
+    copy.onclick = async () => {
+      await navigator.clipboard.writeText(formatNotes(readNotes().filter((x) => x.note.trim())));
+      copy.textContent = '¡Copiadas! Pégalas en el chat';
+      setTimeout(() => (copy.textContent = 'Copiar todas'), 2500);
+    };
+    const clear = button('Borrar todas');
+    clear.onclick = () => {
+      if (confirm('¿Borrar todas las notas?')) {
+        writeNotes([]);
+        renderDrawer();
+        renderDock();
+      }
+    };
+    foot.append(copy, clear);
+    drawer.appendChild(foot);
   };
 
   const setPicking = (on: boolean) => {
     picking = on;
     if (!on && !selected) place(null);
-    renderPanel();
+    renderDock();
   };
 
-  // Mientras se señala, ningún toque llega a la app (no navega ni pulsa botones). El elemento se
-  // elige al levantar el dedo o el ratón; el "click" que llega justo después también se descarta.
+  // Solo mientras se señala, el toque no llega a la app (no navega ni pulsa botones). El elemento
+  // se elige al levantar el dedo o el ratón; el "click" que llega justo después también se descarta.
+  // En cuanto se elige, la app vuelve a funcionar con normalidad.
   let swallowUntil = 0;
   const swallow = (e: Event) => {
     if ((!picking && Date.now() > swallowUntil) || inUi(e.target)) return;
@@ -354,20 +510,27 @@ function mount(): () => void {
     e.stopImmediatePropagation();
     const t = (document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null) ?? (e.target as HTMLElement);
     if (inUi(t)) return;
+    if (selected && draft.trim()) saveSelected(); // si había otra a medias, se guarda
     selected = t;
-    picking = false;
+    draft = '';
     swallowUntil = Date.now() + 700;
+    setPicking(false);
     place(t);
-    renderPanel();
+    renderComposer();
   };
   const hover = (e: PointerEvent) => {
     if (!picking || inUi(e.target)) return;
     place(document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null);
   };
   const key = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && picking) setPicking(false);
+    if (e.key !== 'Escape') return;
+    if (picking) setPicking(false);
+    else if (selected) closeComposer();
   };
-  const follow = () => place(selected);
+  const follow = () => {
+    place(selected);
+    placeComposer();
+  };
 
   const opts = { capture: true, passive: false } as AddEventListenerOptions;
   const swallowed = ['pointerdown', 'mousedown', 'touchstart', 'mouseup', 'touchend', 'click'] as const;
@@ -378,11 +541,21 @@ function mount(): () => void {
   window.addEventListener('scroll', follow, true);
   window.addEventListener('resize', follow);
 
-  toggle.onclick = () => {
-    selected = null;
-    setPicking(!picking);
+  pickBtn.onclick = () => setPicking(!picking);
+  notesBtn.onclick = () => {
+    drawerOpen = !drawerOpen;
+    renderDrawer();
+    renderDock();
   };
-  renderPanel();
+  minBtn.onclick = () => {
+    minimized = true;
+    setPicking(false);
+  };
+  bubble.onclick = () => {
+    minimized = false;
+    renderDock();
+  };
+  renderDock();
 
   return () => {
     swallowed.forEach((t) => window.removeEventListener(t, swallow, opts));
@@ -391,6 +564,7 @@ function mount(): () => void {
     window.removeEventListener('keydown', key, true);
     window.removeEventListener('scroll', follow, true);
     window.removeEventListener('resize', follow);
+    clearTimeout(toastTimer);
     root.remove();
   };
 }

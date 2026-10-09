@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart, TrendSeries } from '@/components/TrendChart';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 import { loadSeedData } from '@/data/seedData';
@@ -202,6 +202,18 @@ export const MyDataScreen = () => {
           );
         })()}
 
+        {/* Perfil genético: antecedentes familiares ("Know your roots") y, más adelante, resultados */}
+        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
+          <View style={styles.geneticIcon}>
+            <MaterialCommunityIcons name="dna" size={20} color={Colors.gold} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.geneticTitle}>Your genetic profile</Text>
+            <Text style={styles.geneticSub}>Know your roots: what runs in your family</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
+
         {sex === 'female' && cycle && show('cycle') && (
           <>
             <View style={styles.sectionHeader}>
@@ -390,6 +402,28 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bioAgeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  genetic: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+  },
+  geneticIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: withAlpha(Colors.gold, 0.14),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  geneticTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  geneticSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   bioAgeTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   bioAgeTag: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
   bioAgeValue: { color: Colors.accent, fontSize: 34, fontWeight: '800', marginTop: 8 },

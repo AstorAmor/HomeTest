@@ -39,6 +39,7 @@ export interface DoseLog {
 export interface ScheduledDose {
   medId: string;
   name: string;
+  kind?: MedKind;
   dose?: string;
   at: Date;
   log?: DoseLog;

@@ -14,31 +14,38 @@ export interface KnownMed {
   shortCourseDays?: number; // duración típica si es un tratamiento puntual
   withFood?: MedicationItem['withFood'];
   tip: string;
+  icon: string; // MaterialCommunityIcons: un dibujo propio para lo conocido
 }
 
 export const KNOWN_MEDS: KnownMed[] = [
-  { names: ['vitamin d', 'vitamina d', 'd3'], label: 'Vitamin D', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'with', tip: 'Best with a meal that has some fat.' },
-  { names: ['magnesium', 'magnesio'], label: 'Magnesium', kind: 'supplement', schedule: { type: 'times', times: ['21:30'] }, withFood: 'any', tip: 'Many people take it in the evening.' },
-  { names: ['omega', 'fish oil', 'aceite de pescado'], label: 'Omega-3', kind: 'supplement', schedule: { type: 'times', times: ['13:30'] }, withFood: 'with', tip: 'With a meal it is absorbed better and repeats less.' },
-  { names: ['iron', 'hierro', 'ferroso'], label: 'Iron', kind: 'supplement', schedule: { type: 'weekdays', days: [1, 3, 5], times: ['08:00'] }, withFood: 'empty', tip: 'Every other day absorbs as well as daily and upsets the stomach less. Not with coffee, tea or calcium.' },
-  { names: ['b12', 'cobalamin', 'cianocobalamina'], label: 'Vitamin B12', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: 'Once a day is usual.' },
-  { names: ['folic', 'fólico', 'folico', 'folato'], label: 'Folic acid', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: '400 µg a day is the usual dose before and during early pregnancy.' },
-  { names: ['zinc'], label: 'Zinc', kind: 'supplement', schedule: { type: 'times', times: ['13:30'] }, withFood: 'with', tip: 'With food it upsets the stomach less.' },
-  { names: ['creatine', 'creatina'], label: 'Creatine', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: '3–5 g a day, any time. It raises blood creatinine without harming the kidneys: tell your doctor before a blood test.' },
-  { names: ['melatonin', 'melatonina'], label: 'Melatonin', kind: 'supplement', schedule: { type: 'times', times: ['22:30'] }, withFood: 'any', tip: '30–60 minutes before bed.' },
-  { names: ['probiotic', 'probiótico', 'probiotico'], label: 'Probiotic', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: 'Once a day.' },
-  { names: ['biotin', 'biotina'], label: 'Biotin', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: 'High doses can change some blood test results: stop it 2–3 days before a test.' },
-  { names: ['levothyroxine', 'levotiroxina', 'eutirox', 'thyroxine'], label: 'Levothyroxine', kind: 'medication', schedule: { type: 'times', times: ['07:30'] }, withFood: 'empty', tip: 'On an empty stomach, 30–60 minutes before breakfast.' },
-  { names: ['metformin', 'metformina'], label: 'Metformin', kind: 'medication', schedule: { type: 'times', times: ['08:30', '20:30'] }, withFood: 'with', tip: 'With meals.' },
-  { names: ['contracept', 'anticonceptiv', 'the pill', 'píldora', 'pildora'], label: 'Contraceptive pill', kind: 'medication', schedule: { type: 'times', times: ['22:00'] }, withFood: 'any', tip: 'Same time every day.' },
-  { names: ['amoxicillin', 'amoxicilina'], label: 'Amoxicillin', kind: 'medication', schedule: { type: 'every_hours', hours: 8, firstTime: '07:00' }, shortCourseDays: 7, withFood: 'any', tip: 'Antibiotics: finish the course your doctor prescribed, even if you feel better.' },
-  { names: ['azithromycin', 'azitromicina'], label: 'Azithromycin', kind: 'medication', schedule: { type: 'times', times: ['09:00'] }, shortCourseDays: 3, withFood: 'any', tip: 'Often a 3-day course. Follow your prescription.' },
-  { names: ['ibuprofen', 'ibuprofeno'], label: 'Ibuprofen', kind: 'medication', schedule: { type: 'every_hours', hours: 8, firstTime: '07:00' }, shortCourseDays: 3, withFood: 'with', tip: 'With food. Without medical advice, no more than 3 days for fever or 5 for pain.' },
-  { names: ['paracetamol', 'acetaminophen'], label: 'Paracetamol', kind: 'medication', schedule: { type: 'every_hours', hours: 8, firstTime: '07:00' }, shortCourseDays: 3, withFood: 'any', tip: 'Leave at least 4–6 hours between doses and do not exceed the daily maximum on the leaflet.' },
-  { names: ['omeprazole', 'omeprazol'], label: 'Omeprazole', kind: 'medication', schedule: { type: 'times', times: ['08:00'] }, shortCourseDays: 14, withFood: 'empty', tip: 'Before breakfast. Long-term use can lower vitamin B12: worth checking in your blood test.' },
+  { names: ['vitamin d', 'vitamina d', 'd3'], label: 'Vitamin D', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'with', tip: 'Best with a meal that has some fat.', icon: 'weather-sunny' },
+  { names: ['magnesium', 'magnesio'], label: 'Magnesium', kind: 'supplement', schedule: { type: 'times', times: ['21:30'] }, withFood: 'any', tip: 'Many people take it in the evening.', icon: 'moon-waning-crescent' },
+  { names: ['omega', 'fish oil', 'aceite de pescado'], label: 'Omega-3', kind: 'supplement', schedule: { type: 'times', times: ['13:30'] }, withFood: 'with', tip: 'With a meal it is absorbed better and repeats less.', icon: 'fish' },
+  { names: ['iron', 'hierro', 'ferroso'], label: 'Iron', kind: 'supplement', schedule: { type: 'weekdays', days: [1, 3, 5], times: ['08:00'] }, withFood: 'empty', tip: 'Every other day absorbs as well as daily and upsets the stomach less. Not with coffee, tea or calcium.', icon: 'water' },
+  { names: ['b12', 'cobalamin', 'cianocobalamina'], label: 'Vitamin B12', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: 'Once a day is usual.', icon: 'lightning-bolt-outline' },
+  { names: ['folic', 'fólico', 'folico', 'folato'], label: 'Folic acid', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: '400 µg a day is the usual dose before and during early pregnancy.', icon: 'human-pregnant' },
+  { names: ['zinc'], label: 'Zinc', kind: 'supplement', schedule: { type: 'times', times: ['13:30'] }, withFood: 'with', tip: 'With food it upsets the stomach less.', icon: 'shield-plus-outline' },
+  { names: ['creatine', 'creatina'], label: 'Creatine', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: '3–5 g a day, any time. It raises blood creatinine without harming the kidneys: tell your doctor before a blood test.', icon: 'dumbbell' },
+  { names: ['melatonin', 'melatonina'], label: 'Melatonin', kind: 'supplement', schedule: { type: 'times', times: ['22:30'] }, withFood: 'any', tip: '30–60 minutes before bed.', icon: 'sleep' },
+  { names: ['probiotic', 'probiótico', 'probiotico'], label: 'Probiotic', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: 'Once a day.', icon: 'bacteria-outline' },
+  { names: ['biotin', 'biotina'], label: 'Biotin', kind: 'supplement', schedule: { type: 'times', times: ['09:00'] }, withFood: 'any', tip: 'High doses can change some blood test results: stop it 2–3 days before a test.', icon: 'hair-dryer-outline' },
+  { names: ['levothyroxine', 'levotiroxina', 'eutirox', 'thyroxine'], label: 'Levothyroxine', kind: 'medication', schedule: { type: 'times', times: ['07:30'] }, withFood: 'empty', tip: 'On an empty stomach, 30–60 minutes before breakfast.', icon: 'butterfly-outline' },
+  { names: ['metformin', 'metformina'], label: 'Metformin', kind: 'medication', schedule: { type: 'times', times: ['08:30', '20:30'] }, withFood: 'with', tip: 'With meals.', icon: 'diabetes' },
+  { names: ['contracept', 'anticonceptiv', 'the pill', 'píldora', 'pildora'], label: 'Contraceptive pill', kind: 'medication', schedule: { type: 'times', times: ['22:00'] }, withFood: 'any', tip: 'Same time every day.', icon: 'pill-multiple' },
+  { names: ['amoxicillin', 'amoxicilina'], label: 'Amoxicillin', kind: 'medication', schedule: { type: 'every_hours', hours: 8, firstTime: '07:00' }, shortCourseDays: 7, withFood: 'any', tip: 'Antibiotics: finish the course your doctor prescribed, even if you feel better.', icon: 'bottle-tonic-plus-outline' },
+  { names: ['azithromycin', 'azitromicina'], label: 'Azithromycin', kind: 'medication', schedule: { type: 'times', times: ['09:00'] }, shortCourseDays: 3, withFood: 'any', tip: 'Often a 3-day course. Follow your prescription.', icon: 'bottle-tonic-plus-outline' },
+  { names: ['ibuprofen', 'ibuprofeno'], label: 'Ibuprofen', kind: 'medication', schedule: { type: 'every_hours', hours: 8, firstTime: '07:00' }, shortCourseDays: 3, withFood: 'with', tip: 'With food. Without medical advice, no more than 3 days for fever or 5 for pain.', icon: 'head-flash-outline' },
+  { names: ['paracetamol', 'acetaminophen'], label: 'Paracetamol', kind: 'medication', schedule: { type: 'every_hours', hours: 8, firstTime: '07:00' }, shortCourseDays: 3, withFood: 'any', tip: 'Leave at least 4–6 hours between doses and do not exceed the daily maximum on the leaflet.', icon: 'thermometer-low' },
+  { names: ['omeprazole', 'omeprazol'], label: 'Omeprazole', kind: 'medication', schedule: { type: 'times', times: ['08:00'] }, shortCourseDays: 14, withFood: 'empty', tip: 'Before breakfast. Long-term use can lower vitamin B12: worth checking in your blood test.', icon: 'stomach' },
 ];
 
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+// Icono de cada cosa: los conocidos tienen el suyo (sol para la vitamina D, pez para el omega-3,
+// mariposa para la tiroides…); el resto, una hoja si es suplemento o una cápsula si es medicamento.
+export function medIcon(name: string, kind: MedKind): { name: string; family: 'mci' } {
+  return { name: findKnownMed(name)?.icon ?? (kind === 'supplement' ? 'leaf' : 'pill'), family: 'mci' };
+}
 
 export function findKnownMed(text: string): KnownMed | null {
   const t = norm(text);
@@ -160,6 +167,7 @@ export function dosesForDay(items: MedicationItem[], day: Date, logs: DoseLog[])
       out.push({
         medId: item.id,
         name: item.name,
+        kind: item.kind,
         dose: item.dose,
         at: time,
         log: logs.find((l) => l.medId === item.id && new Date(l.scheduledFor).getTime() === time.getTime()),

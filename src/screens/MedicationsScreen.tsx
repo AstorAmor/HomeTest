@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { doseRepository, medicationRepository } from '@/data/medicationRepository';
 import { muteUntil } from '@/logic/nudges';
@@ -13,6 +13,7 @@ import { MUTE_OPTIONS, MuteOption } from '@/logic/nudges/types';
 import { courseEnd, courseProgress, dosesForDay, isActiveOn, isReminderMuted, MUTED_FOREVER, scheduleText } from '@/logic/medication';
 import { DoseLog, MedicationItem } from '@/types/medication';
 import { DoseRows } from '@/components/DoseRows';
+import { MedIcon } from '@/components/MedIcon';
 import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
 
 
@@ -82,13 +83,7 @@ export const MedicationsScreen = () => {
           onPress={() => router.push({ pathname: '/medication-setup', params: { id: item.id } })}
           activeOpacity={0.85}
         >
-          <View style={[styles.kindIcon, { backgroundColor: withAlpha(item.kind === 'supplement' ? Colors.green : Colors.gold, 0.14) }]}>
-            <Ionicons
-              name={item.kind === 'supplement' ? 'leaf-outline' : 'medical-outline'}
-              size={18}
-              color={item.kind === 'supplement' ? Colors.green : Colors.gold}
-            />
-          </View>
+          <MedIcon name={item.name} kind={item.kind} />
           <View style={{ flex: 1 }}>
             <Text style={styles.itemTitle}>
               {item.name}
@@ -231,7 +226,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   itemMain: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14 },
-  kindIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   itemTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   itemDose: { color: Colors.textSecondary, fontWeight: '500' },
   itemSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },

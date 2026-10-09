@@ -662,3 +662,44 @@ ya guardan en las carpetas nuevas.
   HbA1c ~3 meses, ferritina lento) o en S (HOMA-IR: el hábito tarda unas semanas en notarse). Una línea por marcador
   explica cuándo se espera el cambio. **Plazos orientativos, pendientes de validación clínica.**
 - Servidor de pruebas sin cuentas: `.claude/launch.json` → `expo-web-demo` (puerto 8082, `EXPO_PUBLIC_PUBLIC_DEMO=1`).
+
+## 2026-10-08/09 — Avisos, simulador, intestino/vejiga, medicación, ciclo y "Know your roots"
+(Antes vivía en `WIP-2026-10-08.md`; se pasó aquí al publicar.)
+- **Motor de avisos** (`src/logic/nudges`, umbrales en `MEASURE_LIMITS`, pendientes de revisión médica) y bandeja
+  `/notifications` (silenciar 7d/1m/3m/siempre). Avisos por duración: tensión alta semanas (ESH ≥135/85; ≥4 semanas →
+  médico), tensión muy alta (≥180/110), glucosa alta semanas (≥180 mg/dL), energía baja y sueño corto ≥2 semanas.
+  Si falta una tabla de Supabase, esa fuente se salta con un aviso en consola.
+- **Usuarios simulados**: `simulation/personas/*.json` (13), `npm run simulate` → `simulation/output/report.md`;
+  Developer mode → Simulated users, y **Build a case** (`/case-builder`; CLI `npm run simulate -- --case bp_high --days 56`).
+- **Gut / Bladder** (`/digestive`, `/log-bowel`, `/log-urine`, regla de hidratación), **ciclo** (encuesta de la
+  primera vez `/cycle-goal`, consejo de fertilidad ASRM/NICE con tono suave, temperatura basal `/log-temperature` y
+  lecturas de termómetro aparte), **medicación y suplementos** (`/medications`, `/medication-setup`: texto libre,
+  varios a la vez, pauta habitual de lo común, "+ Other time" con ruedas, tratamientos cortos con 3/5/7/10/14 días o
+  **"+ Other" (rueda de 1 a 90 días)**, Taken/Skip en Today, aviso de cambio de zona horaria). **Iconos propios** para
+  lo conocido (`KNOWN_MEDS[].icon`, MaterialCommunityIcons: sol vitamina D, pez omega-3, mancuerna creatina, mariposa
+  levotiroxina…); el resto hoja (suplemento) o cápsula (medicamento) — componente `MedIcon`.
+- **Evidencia**: `src/data/evidence.ts` + `/evidence` + iconos (i) `InfoButton`. **Configure my experience**, guía de
+  funciones con vista previa, plan de partida personalizado (`src/logic/plan.ts`). Tabla BORRADOR objetivo→secciones en
+  `src/data/goalEffects.ts`, **pendiente de decisión del fundador**.
+- **Your genetic profile** (`/genetic-profile`, entrada en My Data debajo de la edad biológica, icono ADN):
+  "Your genetic results" = hueco "Coming later" (no se inventan resultados) y **Know your roots**
+  (`/know-your-roots`, `KnowYourRootsScreen`): embudo de asesor genético en 3 bloques con tiempo estimado (4–6 min),
+  barra de 3 tramos fija y **guardado en cada respuesta** (`user_flags` claves `family_history_draft` y
+  `family_history`, sin migración) para retomar en la misma pregunta.
+  - Bloque 1: 10 sí/no (mama, ovario, colon/útero, páncreas/próstata, variante conocida, asquenazí, cáncer propio,
+    corazón precoz, colesterol familiar, muerte súbita). Todo negativo → termina ("Population risk").
+  - Bloque 2: quién (por rama, con contador para tías/primos…), qué cáncer, edad por tramos, bilateral.
+  - Motor puro `src/logic/genetics.ts` (tests en `logic/__tests__/genetics.test.ts`), tablas con su fuente en
+    `src/data/genetics/scoring.ts`: **PAT** (≥8 en una rama), **Ontario FHAT** (≥10), **Manchester** (15 ≈ 10 %;
+    20 para no afectados, criterio NHS), patrones **Amsterdam II / Bethesda** para Lynch. Comprobado contra la revisión
+    de la USPSTF (Apéndice C1, NBK545866), NHS GeNotes y Umar 2004. Supuestos marcados "SUPUESTO" (hijos = fila de
+    hermanos en FHAT; "premenopáusica" ≈ diagnóstico <50; Amsterdam sin verificar parentesco exacto ni anatomía
+    patológica). Corazón (AHA/ACC 2018: familiar de 1.er grado con ECV precoz, H <55 / M <65 → Lp(a)) en tarjeta aparte.
+  - Moderado/alto → texto para el médico con puntos clave dinámicos, "Find a genetic counsellor" (`/professionals`
+    rol geneticist) y "Share with my doctor". Referencias visibles al final. **Todo pendiente de revisión del asesor
+    médico**; ojo con MDR (es orientación, no diagnóstico).
+- **Modo Señalar** (solo web, `DevInspector.web.tsx`, `?inspect=1` en las webs publicadas): barra "🎯 Señalar ·
+  💬 Notas · –". Señalar elige UN elemento y la app vuelve a funcionar; la tarjeta de comentar no bloquea la app y
+  cerrarla con ✕ guarda lo escrito; la lista de notas se abre/cierra cuando quieras (editar, borrar una, copiar todas).
+- Pendiente: notificaciones push reales (expo-notifications + APK nueva, preguntar al usuario); SEO/GEO de la web
+  pública (segunda capa de preguntas con fuentes) en HomeTest-web, que sigue sin publicar.

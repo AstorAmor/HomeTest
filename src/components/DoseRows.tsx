@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { doseRepository } from '@/data/medicationRepository';
+import { MedIcon } from './MedIcon';
 import { DoseLog, ScheduledDose } from '@/types/medication';
 
 // Tomas de hoy con su hora y los botones Taken / Skip. Las usan Medication & supplements y la
@@ -25,6 +26,7 @@ export function DoseRows({ doses, onChange }: { doses: ScheduledDose[]; onChange
       {doses.map((d, i) => (
         <View key={`${d.medId}-${d.at.toISOString()}`} style={[styles.doseRow, i > 0 && styles.divider]}>
           <Text style={styles.doseTime}>{hhmm(d.at)}</Text>
+          <MedIcon name={d.name} kind={d.kind ?? 'medication'} size={15} />
           <View style={{ flex: 1 }}>
             <Text style={styles.doseName}>{d.name}</Text>
             {d.dose ? <Text style={styles.doseSub}>{d.dose}</Text> : null}
