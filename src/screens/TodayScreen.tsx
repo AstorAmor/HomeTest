@@ -157,13 +157,17 @@ export const TodayScreen = () => {
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
     userFlags.get(reportSeenKey(currentReport.report_id)).then((v) => setReportSeen(!!v));
-    nudgeStore.refresh().then(({ inbox }) => setUnread(inbox.filter((i) => !i.read)));
-    Promise.all([medicationRepository.getAll(), doseRepository.getAll()]).then(([m, l]) =>
-      setDosesToday(dosesForDay(m.filter((i) => isActiveOn(i, new Date())), new Date(), l))
-    );
-    Promise.all([bowelRepository.getAll(), urineRepository.getAll()]).then(([b, u]) =>
-      setBathroomToday({ bowel: !!entryForDay(b, dayKey(new Date())), urine: !!entryForDay(u, dayKey(new Date())) })
-    );
+    nudgeStore
+      .refresh()
+      .then(({ inbox }) => setUnread(inbox.filter((i) => !i.read)))
+      .catch((e) => console.warn('Notifications not refreshed', e));
+    // Sin la tabla de medicación (migración pendiente) simplemente no hay tomas que enseñar
+    Promise.all([medicationRepository.getAll(), doseRepository.getAll()])
+      .then(([m, l]) => setDosesToday(dosesForDay(m.filter((i) => isActiveOn(i, new Date())), new Date(), l)))
+      .catch(() => setDosesToday([]));
+    Promise.all([bowelRepository.getAll(), urineRepository.getAll()])
+      .then(([b, u]) => setBathroomToday({ bowel: !!entryForDay(b, dayKey(new Date())), urine: !!entryForDay(u, dayKey(new Date())) }))
+      .catch(() => undefined);
     const [p, checkIns, cycleEntries, strength, meals, workoutList, mealList, mindfulList, mindfulThisWeek] =
       await Promise.all([
         profileRepository.get(),

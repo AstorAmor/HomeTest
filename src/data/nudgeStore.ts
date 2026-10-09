@@ -41,22 +41,30 @@ const ageFrom = (dob?: string) => {
   return age;
 };
 
+// Si una fuente falla (p. ej. una tabla de Supabase cuya migración aún no está aplicada), los
+// avisos se calculan sin ella en vez de tumbar la pantalla que los pide.
+const orEmpty = <T,>(source: string, p: Promise<T[]>): Promise<T[]> =>
+  p.catch((e) => {
+    console.warn(`Notifications: skipping ${source}`, e instanceof Error ? e.message : e);
+    return [];
+  });
+
 export async function buildNudgeContext(now = new Date()): Promise<NudgeContext> {
   const [profile, checkIns, workouts, meals, cycle, goal, basal, bowel, urine, wearable, medications, doses, bp, glucose] = await Promise.all([
     profileRepository.get(),
-    checkInRepository.getAll(),
-    workoutRepository.getAll(),
-    mealRepository.getAll(),
-    cycleRepository.getAll(),
-    cycleGoalStore.get(),
-    basalTemperatureRepository.getAll(),
-    bowelRepository.getAll(),
-    urineRepository.getAll(),
-    wearableRepository.getRecords(), // solo lo sincronizado de verdad, nunca los datos de ejemplo
-    medicationRepository.getAll(),
-    doseRepository.getAll(),
-    bloodPressureRepository.getAll(),
-    glucoseRepository.getAll(),
+    orEmpty('check-ins', checkInRepository.getAll()),
+    orEmpty('workouts', workoutRepository.getAll()),
+    orEmpty('meals', mealRepository.getAll()),
+    orEmpty('cycle', cycleRepository.getAll()),
+    cycleGoalStore.get().catch(() => null),
+    orEmpty('basal temperature', basalTemperatureRepository.getAll()),
+    orEmpty('bowel logs', bowelRepository.getAll()),
+    orEmpty('urine logs', urineRepository.getAll()),
+    orEmpty('wearable', wearableRepository.getRecords()), // solo lo sincronizado de verdad, nunca los datos de ejemplo
+    orEmpty('medications', medicationRepository.getAll()),
+    orEmpty('medication doses', doseRepository.getAll()),
+    orEmpty('blood pressure', bloodPressureRepository.getAll()),
+    orEmpty('glucose', glucoseRepository.getAll()),
   ]);
   return {
     now,
