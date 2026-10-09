@@ -65,13 +65,15 @@ export function ColorSwatches<T extends string>({
   options,
   value,
   onChange,
+  center,
 }: {
   options: { id: T; label: string; swatch: string }[];
   value: T | undefined;
   onChange: (id: T) => void;
+  center?: boolean;
 }) {
   return (
-    <View style={styles.swatches}>
+    <View style={[styles.swatches, center && { justifyContent: 'center' }]}>
       {options.map((o) => {
         const selected = value === o.id;
         return (

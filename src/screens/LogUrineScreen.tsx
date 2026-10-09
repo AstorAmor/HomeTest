@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { ColorSwatches } from '@/components/BathroomVisuals';
 import { dayKey, entryForDay, noonOf, urineRepository } from '@/data/bathroomRepository';
-import { dailyTotalNote, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
+import { dailyTotalNote, urineAdvice, UrineAdvice, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
 import { UrineColor, UrineEntry, URINE_COLORS, VOID_VOLUMES, VoidVolume } from '@/types/bathroom';
 import { logScreenStyles } from './LogBowelScreen';
 
@@ -34,6 +34,9 @@ export const LogUrineScreen = () => {
   const [total, setTotal] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  // Tras guardar: si el color o las veces dicen algo (p. ej. que le falta agua), se le cuenta
+  // antes de cerrar en vez de guardarlo sin más
+  const [advice, setAdvice] = useState<UrineAdvice | null>(null);
 
   useEffect(() => {
     urineRepository.getAll().then((all) => {
@@ -72,7 +75,9 @@ export const LogUrineScreen = () => {
     try {
       if (existing) await urineRepository.update(existing.id, values);
       else await urineRepository.save({ id: `${Date.now()}`, fecha: noonOf(day), createdAt: new Date().toISOString(), ...values });
-      router.back();
+      const a = urineAdvice(values);
+      if (a) setAdvice(a);
+      else router.back();
     } finally {
       setSaving(false);
     }
@@ -88,6 +93,28 @@ export const LogUrineScreen = () => {
           : suggestion?.kind === 'collect_24h'
             ? 'It still did not feel usual. Pharmacies sell 24-hour urine containers (2–3 litres) so you can measure a whole day.'
             : null;
+
+  if (advice) {
+    const color = advice.level === 'tip' ? Colors.gold : Colors.attention;
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.adviceScreen]}>
+        <View style={[styles.adviceIcon, { backgroundColor: withAlpha(color, 0.16) }]}>
+          <Ionicons name={advice.level === 'see_doctor' ? 'medkit-outline' : 'water'} size={30} color={color} />
+        </View>
+        <Text style={styles.savedText}>Saved</Text>
+        <Text style={styles.adviceTitle}>{advice.title}</Text>
+        <Text style={styles.adviceBody}>{advice.body}</Text>
+        {advice.level === 'see_doctor' && (
+          <TouchableOpacity onPress={() => router.replace({ pathname: '/professionals', params: { role: 'doctor' } })}>
+            <Text style={styles.adviceLink}>Find a doctor</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.adviceButton} onPress={() => router.back()} activeOpacity={0.85}>
+          <Text style={styles.adviceButtonText}>Got it</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -110,7 +137,7 @@ export const LogUrineScreen = () => {
         </View>
 
         <Text style={styles.label}>How many times today?</Text>
-        <View style={styles.stepper}>
+        <View style={[styles.stepper, styles.centered]}>
           <TouchableOpacity style={styles.stepButton} onPress={() => setCount((c) => Math.max(0, c - 1))}>
             <Ionicons name="remove" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
@@ -121,16 +148,20 @@ export const LogUrineScreen = () => {
         </View>
 
         <Text style={styles.label}>Times you woke up at night to go</Text>
-        <ChoiceChips options={NIGHTS} value={nightCount} onChange={setNightCount} />
+        <ChoiceChips options={NIGHTS} value={nightCount} onChange={setNightCount} center />
 
         <Text style={styles.label}>Colour</Text>
-        <ColorSwatches options={URINE_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} />
+        <ColorSwatches options={URINE_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
         {color === 'red' && (
           <View style={styles.askCard}>
             <Text style={styles.askTitle}>Could something explain it?</Text>
             <ChoiceChips options={[...RED_CAUSES, NONE].map((c) => ({ id: c, label: c }))} value={cause} onChange={setCause} />
             {cause === NONE && <Text style={styles.askAdvice}>Blood in the urine always needs checking: please see a doctor soon.</Text>}
-            {cause && cause !== NONE && <Text style={styles.askOk}>That is the likely cause. It should clear within a day.</Text>}
+            {cause && cause !== NONE && (
+              <Text style={styles.askOk}>
+                That is the likely cause. It should clear within a day. Keep an eye on it and, if you have any doubt, see a doctor.
+              </Text>
+            )}
           </View>
         )}
         {color === 'brown' && (
@@ -140,7 +171,7 @@ export const LogUrineScreen = () => {
         )}
 
         <Text style={styles.label}>Any burning or pain?</Text>
-        <ChoiceChips options={[{ id: 'no', label: 'No' }, { id: 'yes', label: 'Yes' }]} value={burning} onChange={setBurning} />
+        <ChoiceChips options={[{ id: 'no', label: 'No' }, { id: 'yes', label: 'Yes' }]} value={burning} onChange={setBurning} center />
 
         {/* Prueba de volumen */}
         <TouchableOpacity style={styles.volumeHeader} onPress={() => setShowVolume((v) => !v)} activeOpacity={0.85}>
@@ -206,6 +237,22 @@ export const LogUrineScreen = () => {
 const styles = StyleSheet.create({
   ...logScreenStyles,
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 18 },
+  centered: { justifyContent: 'center' },
+  adviceScreen: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28, gap: 10 },
+  adviceIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  savedText: { color: Colors.textMuted, fontSize: 13, fontWeight: '600' },
+  adviceTitle: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center' },
+  adviceBody: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  adviceLink: { color: Colors.accent, fontSize: 14, fontWeight: '700', marginTop: 4 },
+  adviceButton: {
+    alignSelf: 'stretch',
+    backgroundColor: Colors.accent,
+    borderRadius: 26,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 18,
+  },
+  adviceButtonText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
   stepButton: {
     width: 44,
     height: 44,

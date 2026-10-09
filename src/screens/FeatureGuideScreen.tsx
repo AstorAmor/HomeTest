@@ -60,7 +60,7 @@ export const FeatureGuideScreen = () => {
                   onPress={() => router.push({ pathname: '/evidence', params: { topic: g.evidenceTopic! } })}
                 >
                   <Ionicons name="information-circle-outline" size={16} color={Colors.accent} />
-                  <Text style={styles.how}>How we calculate it, and sources</Text>
+                  <Text style={styles.how}>How we calculate it</Text>
                 </TouchableOpacity>
               )}
             </View>

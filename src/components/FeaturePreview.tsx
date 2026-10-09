@@ -9,6 +9,8 @@ import { CycleStrip } from '@/components/CycleStrip';
 import { BristolShape } from '@/components/BathroomVisuals';
 import { currentCyclePhase } from '@/utils/cyclePhase';
 import { AppSection } from '@/data/appPrefs';
+import { GaugeBar } from '@/components/GaugeBar';
+import { URINE_COLORS } from '@/types/bathroom';
 
 // Vista previa de cada parte de la app (con datos de ejemplo), para que se vea cómo quedará antes
 // de encenderla. Usa los mismos componentes que la pantalla real cuando se puede.
@@ -91,7 +93,7 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
     />
   ),
   cycle: <CycleStrip info={currentCyclePhase([])} />,
-  digestive: (
+  gut: (
     <View style={{ gap: 10 }}>
       <View style={styles.week}>
         {[1, 2, 1, 0, 1, 1, 2].map((n, i) => (
@@ -109,6 +111,30 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
         icon={<Ionicons name="checkmark-circle" size={18} color={Colors.ok} />}
         title="Your digestion looks regular"
         sub="Frequency, colour and consistency are within the usual range."
+      />
+    </View>
+  ),
+  bladder: (
+    <View style={{ gap: 10 }}>
+      <View style={styles.week}>
+        {(['pale', 'yellow', 'pale', 'dark', 'yellow', 'pale', 'pale'] as const).map((c, i) => (
+          <View key={i} style={[styles.dot, { backgroundColor: URINE_COLORS.find((u) => u.id === c)!.swatch }]}>
+            <Text style={[styles.dotText, { color: '#3A3320' }]}>{[6, 7, 6, 4, 6, 7, 6][i]}</Text>
+          </View>
+        ))}
+      </View>
+      <GaugeBar
+        min={0}
+        max={4}
+        value={1}
+        stops={URINE_COLORS.slice(0, 5).map((c, i) => ({ at: i, color: c.swatch }))}
+        leftLabel="Hydrated"
+        rightLabel="Drink more"
+      />
+      <Row
+        icon={<Ionicons name="water" size={18} color={Colors.ok} />}
+        title="Well hydrated this week"
+        sub="One darker day: you got a tip to drink a bit more."
       />
     </View>
   ),

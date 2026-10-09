@@ -148,7 +148,8 @@ export async function loadPersona(p: Persona): Promise<void> {
   await nudgeStore.saveInbox(inbox);
   // Las secciones opcionales que usa este usuario, encendidas (las demás como estuvieran)
   const optIn: AppSection[] = [];
-  if (x.bowel.length || x.urine.length) optIn.push('digestive');
+  if (x.bowel.length) optIn.push('gut');
+  if (x.urine.length) optIn.push('bladder');
   if (x.medications.length) optIn.push('medication');
   for (const section of optIn) await appPrefs.setSectionVisible(section, true);
   await userFlags.set(SIM_KEY, { personaId: p.id, name: p.name, day0: start.toISOString() } as unknown as Record<string, unknown>);

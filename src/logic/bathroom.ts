@@ -295,3 +295,90 @@ export function dailyTotalNote(ml: number): Observation {
     return { id: 'total_high', level: 'see_doctor', title: 'A lot in 24 hours', body: 'More than 3 litres a day is a lot unless you drink that much. Mention it to a doctor.' };
   return { id: 'total_ok', level: 'good', title: 'A usual daily amount', body: 'Between about 0.8 and 2 litres a day is typical.' };
 }
+
+// --- Hidratación de hoy y consejo al guardar la orina --------------------------------------
+
+// Escala de hidratación por el color (de más a menos hidratado). Marrón, rojo y turbio no
+// hablan de hidratación: tienen su propio consejo.
+export const HYDRATION_SCALE: NonNullable<UrineEntry['color']>[] = ['clear', 'pale', 'yellow', 'dark', 'amber'];
+
+export interface Hydration {
+  position: number | null; // 0 (muy hidratado) … 4 (deshidratado), para la regla de Today
+  label: string;
+  level: 'good' | 'tip' | 'low' | 'check' | 'unknown';
+}
+
+export function hydrationFromUrine(e?: Pick<UrineEntry, 'color' | 'count'> | null): Hydration {
+  if (!e) return { position: null, label: 'Tap to log', level: 'unknown' };
+  const fewTimes = e.count != null && e.count <= 3;
+  if (e.color && !HYDRATION_SCALE.includes(e.color)) return { position: null, label: 'See note', level: 'check' };
+  if (!e.color) {
+    return fewTimes
+      ? { position: 3, label: 'Drink a bit more', level: 'tip' }
+      : { position: null, label: 'Add the colour', level: 'unknown' };
+  }
+  // Pocas veces al día empuja un punto hacia "deshidratado"
+  const position = Math.min(4, HYDRATION_SCALE.indexOf(e.color) + (fewTimes ? 1 : 0));
+  const labels: Record<number, Hydration> = {
+    0: { position: 0, label: 'Very well hydrated', level: 'good' },
+    1: { position: 1, label: 'Well hydrated', level: 'good' },
+    2: { position: 2, label: 'Hydrated', level: 'good' },
+    3: { position: 3, label: 'Drink a bit more', level: 'tip' },
+    4: { position: 4, label: 'Drink water now', level: 'low' },
+  };
+  return labels[position];
+}
+
+export interface UrineAdvice {
+  level: 'tip' | 'low' | 'see_doctor';
+  title: string;
+  body: string;
+}
+
+// Lo que se le dice al guardar el apunte del día (null = nada que decir, se cierra sin más).
+// Textos orientativos; PENDIENTES DE VALIDACIÓN CLÍNICA.
+export function urineAdvice(e: Pick<UrineEntry, 'color' | 'count' | 'burning' | 'explainedBy'>): UrineAdvice | null {
+  if (e.color === 'red' && !e.explainedBy)
+    return {
+      level: 'see_doctor',
+      title: 'Please see a doctor soon',
+      body: 'Pink or red urine that no food or medicine explains can be blood, and that always needs checking. Get urgent help if there is a lot of blood or you cannot pee.',
+    };
+  if (e.color === 'brown')
+    return {
+      level: 'see_doctor',
+      title: 'Keep an eye on this colour',
+      body: 'Brown urine can come from severe dehydration, some foods or medicines, but also from the liver or the muscles. Drink water now: if it is not lighter within a day, see a doctor.',
+    };
+  if (e.burning)
+    return {
+      level: 'see_doctor',
+      title: 'Burning when you pee',
+      body: 'Burning or pain, especially if you also need to go often, is usually a urine infection. Drink water and talk to a doctor or pharmacist if it lasts more than a day, or straight away if you have fever or back pain.',
+    };
+  if (e.color === 'amber')
+    return {
+      level: 'low',
+      title: 'You may be dehydrated',
+      body: 'Amber or honey-coloured urine usually means your body is short of water. Drink a large glass now and keep sipping through the day: it should get lighter within a few hours. If it is still this dark tomorrow even though you are drinking, or you feel dizzy or confused, talk to a doctor.',
+    };
+  if (e.color === 'dark')
+    return {
+      level: 'tip',
+      title: 'You could drink a bit more',
+      body: 'Dark yellow is an early sign of mild dehydration. Have a glass of water now and keep a bottle nearby today. Heat, exercise and coffee all add to it.',
+    };
+  if (e.count != null && e.count <= 3)
+    return {
+      level: 'tip',
+      title: 'Not many times today',
+      body: 'Going 3 times or fewer in a day often means you are not drinking enough. Have a glass of water now and see how you are tomorrow.',
+    };
+  if (e.color === 'cloudy')
+    return {
+      level: 'tip',
+      title: 'Cloudy urine',
+      body: 'It is often harmless, for example after a meal. If it keeps happening, or comes with burning, a strong smell or fever, talk to a doctor.',
+    };
+  return null;
+}

@@ -25,6 +25,9 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
 import { InboxItem, nudgeStore } from '@/data/nudgeStore';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
+import { hydrationFromUrine, HYDRATION_SCALE } from '@/logic/bathroom';
+import { BowelEntry, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
+import { GaugeBar } from '@/components/GaugeBar';
 import { doseRepository, medicationRepository } from '@/data/medicationRepository';
 import { dosesForDay, isActiveOn } from '@/logic/medication';
 import { ScheduledDose } from '@/types/medication';
@@ -151,7 +154,10 @@ export const TodayScreen = () => {
   const [reportSeen, setReportSeen] = useState(true);
   // Avisos sin leer (src/logic/nudges: se evalúan al abrir Today) y registro de baño de hoy
   const [unread, setUnread] = useDeepState<InboxItem[]>([]);
-  const [bathroomToday, setBathroomToday] = useDeepState({ bowel: false, urine: false });
+  const [bathroomToday, setBathroomToday] = useDeepState<{ bowel: BowelEntry | null; urine: UrineEntry | null }>({
+    bowel: null,
+    urine: null,
+  });
   const [dosesToday, setDosesToday] = useDeepState<ScheduledDose[]>([]);
 
   const load = useCallback(async () => {
@@ -166,7 +172,7 @@ export const TodayScreen = () => {
       .then(([m, l]) => setDosesToday(dosesForDay(m.filter((i) => isActiveOn(i, new Date())), new Date(), l)))
       .catch(() => setDosesToday([]));
     Promise.all([bowelRepository.getAll(), urineRepository.getAll()])
-      .then(([b, u]) => setBathroomToday({ bowel: !!entryForDay(b, dayKey(new Date())), urine: !!entryForDay(u, dayKey(new Date())) }))
+      .then(([b, u]) => setBathroomToday({ bowel: entryForDay(b, dayKey(new Date())) ?? null, urine: entryForDay(u, dayKey(new Date())) ?? null }))
       .catch(() => undefined);
     const [p, checkIns, cycleEntries, strength, meals, workoutList, mealList, mindfulList, mindfulThisWeek] =
       await Promise.all([
@@ -352,36 +358,6 @@ export const TodayScreen = () => {
           </>
         )}
 
-        {show('digestive') && (
-          <TouchableOpacity style={styles.bathroomCard} onPress={() => router.push('/digestive')} activeOpacity={0.85}>
-            <View style={styles.inboxIcon}>
-              <MaterialCommunityIcons name="stomach" size={20} color={Colors.green} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.fullPlanTitle}>Gut and bladder</Text>
-              <Text style={styles.fullPlanSub}>
-                {bathroomToday.bowel && bathroomToday.urine ? 'Both logged today' : 'Two taps to log today'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.miniLog, bathroomToday.bowel && styles.miniLogDone]}
-              onPress={() => router.push('/log-bowel')}
-              hitSlop={6}
-            >
-              <Ionicons name={bathroomToday.bowel ? 'checkmark' : 'add'} size={14} color={bathroomToday.bowel ? Colors.ok : Colors.accent} />
-              <Text style={styles.miniLogText}>Gut</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.miniLog, bathroomToday.urine && styles.miniLogDone]}
-              onPress={() => router.push('/log-urine')}
-              hitSlop={6}
-            >
-              <Ionicons name={bathroomToday.urine ? 'checkmark' : 'add'} size={14} color={bathroomToday.urine ? Colors.ok : Colors.accent} />
-              <Text style={styles.miniLogText}>Urine</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        )}
-
         {show('medication') && (
           <TouchableOpacity style={styles.bathroomCard} onPress={() => router.push('/medications')} activeOpacity={0.85}>
             <View style={styles.inboxIcon}>
@@ -514,9 +490,77 @@ export const TodayScreen = () => {
                 color={temp != null && temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
                 onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}
                 wide
-              />
+              >
+                {/* Franja normal (36,1–37,2 °C) y el punto en el valor de hoy */}
+                <GaugeBar
+                  min={35.5}
+                  max={38.5}
+                  value={temp ?? null}
+                  range={[36.1, 37.2]}
+                  rangeLabel="Normal 36.1–37.2"
+                  stops={[
+                    { at: 35.5, color: Colors.sky },
+                    { at: 36.1, color: Colors.green },
+                    { at: 37.2, color: Colors.green },
+                    { at: 38.5, color: Colors.coral },
+                  ]}
+                  leftLabel="35.5"
+                  rightLabel="38.5 °C"
+                />
+              </BiomarkerCard>
             </>
           )}
+          {show('gut') && (() => {
+            const b = bathroomToday.bowel;
+            const flag = STOOL_COLORS.find((c) => c.id === b?.color)?.flag;
+            const status = !b
+              ? 'Tap to log'
+              : b.count === 0
+                ? 'None today'
+                : flag && !b.explainedBy
+                  ? 'See note'
+                  : b.consistency && b.consistency <= 2
+                    ? 'A bit hard'
+                    : b.consistency && b.consistency >= 6
+                      ? 'Loose'
+                      : 'Regular';
+            const tone = !b ? Colors.textMuted : status === 'Regular' ? Colors.ok : status === 'See note' ? Colors.attention : Colors.warning;
+            return (
+              <BiomarkerCard
+                name="Gut"
+                value={b ? String(b.count) : '—'}
+                unit={b?.count === 1 ? 'time' : 'times'}
+                status={status}
+                color={tone}
+                onPress={() => router.push({ pathname: '/digestive', params: { part: 'gut' } })}
+              />
+            );
+          })()}
+          {show('bladder') && (() => {
+            const u = bathroomToday.urine;
+            const h = hydrationFromUrine(u);
+            const tone = { good: Colors.ok, tip: Colors.warning, low: Colors.attention, check: Colors.attention, unknown: Colors.textMuted }[h.level];
+            return (
+              <BiomarkerCard
+                name="Bladder"
+                value={u?.count != null ? String(u.count) : '—'}
+                unit="times"
+                status={h.label}
+                color={tone}
+                onPress={() => router.push({ pathname: '/digestive', params: { part: 'bladder' } })}
+              >
+                {/* Regla de hidratación: del color más claro al más oscuro de la orina */}
+                <GaugeBar
+                  min={0}
+                  max={HYDRATION_SCALE.length - 1}
+                  value={h.position}
+                  stops={HYDRATION_SCALE.map((c, i) => ({ at: i, color: URINE_COLORS.find((x) => x.id === c)!.swatch }))}
+                  leftLabel="Hydrated"
+                  rightLabel="Drink more"
+                />
+              </BiomarkerCard>
+            );
+          })()}
         </View>
 
         {/* Your plan */}
@@ -569,7 +613,7 @@ export const TodayScreen = () => {
                 );
               })}
             </View>
-            <Text style={styles.planNote}>Sample plan. It will come from your personalised recommendations.</Text>
+            <Text style={styles.planNote}>Built from your answers. Your results will add to it when they arrive.</Text>
           </>
         )}
 
@@ -631,6 +675,7 @@ const BiomarkerCard = ({
   color,
   onPress,
   wide,
+  children,
 }: {
   name: string;
   value: string;
@@ -639,6 +684,7 @@ const BiomarkerCard = ({
   color: string;
   onPress: () => void;
   wide?: boolean;
+  children?: React.ReactNode; // p. ej. una regla con el rango normal
 }) => (
   <TouchableOpacity style={[styles.biomarkerCard, wide && styles.biomarkerCardWide]} onPress={onPress} activeOpacity={0.85}>
     <Text style={styles.biomarkerName}>{name}</Text>
@@ -647,6 +693,7 @@ const BiomarkerCard = ({
       <Text style={styles.biomarkerUnit}> {unit.split(' ')[0]}</Text>
     </View>
     <Text style={[styles.biomarkerStatus, { color }]}>{status}</Text>
+    {children ? <View style={{ marginTop: 10 }}>{children}</View> : null}
   </TouchableOpacity>
 );
 

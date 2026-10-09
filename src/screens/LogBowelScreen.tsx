@@ -91,18 +91,18 @@ export const LogBowelScreen = () => {
         </View>
 
         <Text style={styles.label}>How many times did you go today?</Text>
-        <ChoiceChips options={COUNTS} value={count} onChange={setCount} />
+        <ChoiceChips options={COUNTS} value={count} onChange={setCount} center />
 
         {count != null && count > 0 && (
           <>
             <Text style={styles.label}>Colour</Text>
-            <ColorSwatches options={STOOL_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} />
+            <ColorSwatches options={STOOL_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
 
             {causes && (
               <View style={styles.askCard}>
                 <Text style={styles.askTitle}>Could something explain it?</Text>
                 <Text style={styles.askText}>In the last two days, did you have any of these?</Text>
-                <ChoiceChips options={[...causes, NONE].map((c) => ({ id: c, label: c }))} value={cause} onChange={setCause} />
+                <ChoiceChips options={[...causes, NONE].map((c) => ({ id: c, label: c }))} value={cause} onChange={setCause} center />
                 {cause === NONE && (
                   <Text style={styles.askAdvice}>
                     {color === 'black'
@@ -111,7 +111,10 @@ export const LogBowelScreen = () => {
                   </Text>
                 )}
                 {cause && cause !== NONE && (
-                  <Text style={styles.askOk}>That is the most likely reason. It should look normal again within a day or two.</Text>
+                  <Text style={styles.askOk}>
+                    That is the most likely reason. It should look normal again within a day or two. Keep an eye on it and,
+                    if you have any doubt, see a doctor.
+                  </Text>
                 )}
               </View>
             )}

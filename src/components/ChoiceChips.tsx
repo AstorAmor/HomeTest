@@ -7,13 +7,15 @@ export function ChoiceChips<T extends string | number>({
   options,
   value,
   onChange,
+  center,
 }: {
   options: { id: T; label: string }[];
   value: T | undefined | null;
   onChange: (id: T) => void;
+  center?: boolean;
 }) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, center && { justifyContent: 'center' }]}>
       {options.map((o) => {
         const selected = value === o.id;
         return (

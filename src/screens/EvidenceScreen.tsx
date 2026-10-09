@@ -14,7 +14,8 @@ export const EvidenceScreen = () => {
   const params = useLocalSearchParams<{ topic?: string }>();
   const [open, setOpen] = useState<Set<string>>(new Set(params.topic ? [params.topic] : []));
   const first = EVIDENCE.find((t) => t.id === params.topic);
-  const ordered = first ? [first, ...EVIDENCE.filter((t) => t !== first)] : EVIDENCE;
+  const [showAll, setShowAll] = useState(!first);
+  const ordered = !first ? EVIDENCE : showAll ? [first, ...EVIDENCE.filter((t) => t !== first)] : [first];
 
   const toggle = (id: string) =>
     setOpen((prev) => {
@@ -75,12 +76,19 @@ export const EvidenceScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="How Kuova works" showBack />
-        <Text style={styles.intro}>
-          How we calculate what you see, and the studies and guidelines behind it. Look for the (i) next to a number or
-          a suggestion to jump straight to its explanation.
-        </Text>
+        <ScreenHeader title={first && !showAll ? 'How we calculate it' : 'How Kuova works'} showBack />
+        {(!first || showAll) && (
+          <Text style={styles.intro}>
+            How we calculate what you see, and the studies and guidelines behind it. Look for the (i) next to a number
+            or a suggestion to jump straight to its explanation.
+          </Text>
+        )}
         {ordered.map(renderTopic)}
+        {first && !showAll && (
+          <TouchableOpacity style={styles.allButton} onPress={() => setShowAll(true)} activeOpacity={0.8}>
+            <Text style={styles.allText}>See how everything else works</Text>
+          </TouchableOpacity>
+        )}
         <Text style={styles.footer}>
           Kuova helps you understand your health and does not replace your doctor. If something worries you, talk to a
           professional.
@@ -122,5 +130,7 @@ const styles = StyleSheet.create({
   sourceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   sourceLink: { flex: 1, color: Colors.accent, fontSize: 13, lineHeight: 18, textDecorationLine: 'underline' },
   sourceText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  allButton: { alignSelf: 'center', paddingVertical: 12 },
+  allText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   footer: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, paddingHorizontal: 20, marginTop: 10 },
 });

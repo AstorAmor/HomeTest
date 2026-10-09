@@ -41,7 +41,8 @@ export const ProfileScreen = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
   const prefs = useAppPrefs();
-  const purpose = PURPOSE_OPTIONS.find((p) => p.id === prefs.purpose);
+  const chosen = PURPOSE_OPTIONS.filter((p) => prefs.purposes.includes(p.id));
+  const purpose = chosen.length === 1 ? chosen[0] : undefined;
 
   const load = useCallback(() => {
     profileRepository.get().then(setProfile);
@@ -104,7 +105,7 @@ export const ProfileScreen = () => {
         <View style={[styles.card, styles.purposeCard]}>
           <Ionicons name={(purpose?.icon ?? 'apps-outline') as any} size={20} color={Colors.accent} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.purposeTitle}>{purpose?.title ?? 'Everything'}</Text>
+            <Text style={styles.purposeTitle}>{chosen.length ? chosen.map((c) => c.title).join(' · ') : 'Everything'}</Text>
             <Text style={styles.purposeSubtitle}>
               {prefs.hidden.length
                 ? `${prefs.hidden.length} section${prefs.hidden.length === 1 ? '' : 's'} hidden`

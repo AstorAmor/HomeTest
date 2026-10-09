@@ -8,9 +8,8 @@ import { SectionToggles } from '@/components/SectionToggles';
 import { Colors, withAlpha } from '@/constants/colors';
 import { appPrefs, isSectionVisible, PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 
-// More → Configure my experience: para qué usa Kuova (aplica una configuración de secciones), qué
-// partes ve (las opcionales, como medicación o Gut and bladder, solo si las enciende) y, desde cada
-// una, su guía con vista previa.
+// More → Configure my experience: para qué usa Kuova (una o varias cosas; aplica una configuración
+// de secciones), qué partes ve y, desde cada una, su guía con vista previa.
 export const AppSectionsScreen = () => {
   const router = useRouter();
   const prefs = useAppPrefs();
@@ -23,12 +22,14 @@ export const AppSectionsScreen = () => {
         <Text style={styles.sectionTitle}>What do you use Kuova for?</Text>
         <View style={styles.list}>
           {PURPOSE_OPTIONS.map((o) => {
-            const selected = prefs.purpose === o.id;
+            const selected = prefs.purposes.includes(o.id);
             return (
               <TouchableOpacity
                 key={o.id}
                 style={[styles.purpose, selected && styles.purposeSelected]}
-                onPress={() => appPrefs.setPurpose(o.id)}
+                onPress={() =>
+                  appPrefs.setPurposes(selected ? prefs.purposes.filter((p) => p !== o.id) : [...prefs.purposes, o.id])
+                }
                 activeOpacity={0.85}
               >
                 <Ionicons name={o.icon as any} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
@@ -37,7 +38,7 @@ export const AppSectionsScreen = () => {
                   <Text style={styles.purposeSubtitle}>{o.subtitle}</Text>
                 </View>
                 <Ionicons
-                  name={selected ? 'radio-button-on' : 'radio-button-off'}
+                  name={selected ? 'checkmark-circle' : 'ellipse-outline'}
                   size={22}
                   color={selected ? Colors.accent : Colors.textMuted}
                 />
@@ -53,8 +54,7 @@ export const AppSectionsScreen = () => {
           </TouchableOpacity>
         </View>
         <Text style={styles.hint}>
-          Turn on only what you want. Optional parts stay off until you switch them on. Choosing an option above resets
-          the others.
+          Turn on only what you want. Changing your choice above resets what you see below.
         </Text>
         <View style={{ marginHorizontal: 20 }}>
           <SectionToggles isOn={(id) => isSectionVisible(prefs, id)} onToggle={(id, on) => appPrefs.setSectionVisible(id, on)} />

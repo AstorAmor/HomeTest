@@ -18,8 +18,8 @@ import {
   UserProfile,
   profileRepository,
 } from '@/data/profileRepository';
-import { AppPurpose, AppSection, appPrefs, isSectionVisible, OPT_IN_SECTIONS, PURPOSE_OPTIONS, SECTION_OPTIONS } from '@/data/appPrefs';
-import { SectionToggles } from '@/components/SectionToggles';
+import { AppPurpose, appPrefs, PURPOSE_OPTIONS, wantsPlan } from '@/data/appPrefs';
+import { answersPreview, sectionsFromAnswers } from '@/data/goalEffects';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -27,16 +27,12 @@ const YEARS = Array.from({ length: 81 }, (_, i) => String(1930 + i));
 const HEIGHTS = Array.from({ length: 71 }, (_, i) => String(140 + i));
 const WEIGHTS = Array.from({ length: 111 }, (_, i) => String(40 + i));
 
-type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals' | 'features';
+type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals';
 
-// Las preguntas dependen de para qué quiere la app: quien solo quiere guardar sus
-// analíticas no tiene por qué contestar hábitos ni objetivos. El último paso siempre deja claro
-// qué partes va a ver (y enciende las opcionales, como medicación, solo si las elige).
-const stepsFor = (purpose?: AppPurpose): Step[] => {
-  if (purpose === 'records') return ['purpose', 'dob', 'sex', 'body', 'health', 'features'];
-  if (purpose === 'understand') return ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'features'];
-  return ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'goals', 'features'];
-};
+// Mismos pasos para todos (la barra de avance no cambia según lo que elija). Lo que se ve en la
+// app no se pregunta: sale de estas respuestas (src/data/goalEffects.ts) y se ajusta luego en
+// More → Configure my experience.
+const STEPS: Step[] = ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'goals'];
 
 interface ChipOption<T extends string> {
   id: T;
@@ -90,18 +86,15 @@ export const OnboardingScreen = () => {
   const [medications, setMedications] = useState('');
   const [conditions, setConditions] = useState<ConditionId[]>([]);
   const [conditionsOther, setConditionsOther] = useState('');
-  const [purpose, setPurpose] = useState<AppPurpose>();
-  // Partes encendidas en el último paso (se rellena al llegar a él, según el propósito elegido)
-  const [featureOn, setFeatureOn] = useState<AppSection[] | null>(null);
-  const STEPS = stepsFor(purpose);
+  const [purposes, setPurposes] = useState<AppPurpose[]>([]);
   // Sin plan (solo historial, o entender sin plan) no se "construye" ningún plan al final
-  const buildsPlan = purpose === undefined || purpose === 'improve';
+  const buildsPlan = wantsPlan(purposes);
 
   // Al editar el perfil, el cuestionario parte de las respuestas ya guardadas
   useEffect(() => {
     appPrefs
       .load()
-      .then((p) => setPurpose(p.purpose))
+      .then((p) => setPurposes(p.purposes))
       .catch(() => undefined);
     profileRepository
       .get()
@@ -132,14 +125,6 @@ export const OnboardingScreen = () => {
 
   const step = STEPS[stepIndex];
 
-  useEffect(() => {
-    if (step === 'features' && featureOn === null) {
-      const prefs = appPrefs.get();
-      setFeatureOn(SECTION_OPTIONS.filter((o) => isSectionVisible(prefs, o.id)).map((o) => o.id));
-    }
-  }, [step, featureOn]);
-  const featureSections = SECTION_OPTIONS.map((o) => o.id).filter((id) => id !== 'cycle' || sex === 'female');
-
   const buildProfile = async (): Promise<UserProfile> => {
     const current = await profileRepository.get();
     const profile: UserProfile = { ...current, goals };
@@ -161,23 +146,23 @@ export const OnboardingScreen = () => {
     return profile;
   };
 
+  // Enciende lo que piden sus respuestas (p. ej. medicación si toma alguna, el ciclo si cuida su
+  // salud reproductiva y es mujer); lo demás queda como esté
+  const applySections = async (profile: UserProfile) => {
+    for (const section of sectionsFromAnswers(profile)) await appPrefs.setSectionVisible(section, true);
+  };
+
   const skipAll = async () => {
-    if (purpose) await appPrefs.setPurpose(purpose);
-    await profileRepository.save(await buildProfile());
+    if (purposes.length) await appPrefs.setPurposes(purposes);
+    const profile = await buildProfile();
+    await profileRepository.save(profile);
+    await applySections(profile);
     router.replace('/(tabs)');
   };
 
   const next = async () => {
     setAnswered((prev) => new Set(prev).add(step));
-    if (step === 'purpose' && purpose) await appPrefs.setPurpose(purpose);
-    if (step === 'features' && featureOn) {
-      const ids = SECTION_OPTIONS.map((o) => o.id);
-      await appPrefs.save({
-        purpose: appPrefs.get().purpose,
-        hidden: ids.filter((id) => !OPT_IN_SECTIONS.includes(id) && !featureOn.includes(id)),
-        enabled: ids.filter((id) => OPT_IN_SECTIONS.includes(id) && featureOn.includes(id)),
-      });
-    }
+    if (step === 'purpose' && purposes.length) await appPrefs.setPurposes(purposes);
     if (stepIndex < STEPS.length - 1) {
       setStepIndex(stepIndex + 1);
       return;
@@ -185,6 +170,7 @@ export const OnboardingScreen = () => {
     const profile = await buildProfile();
     profile.completedAt = new Date().toISOString();
     await profileRepository.save(profile);
+    await applySections(profile);
     if (buildsPlan) setPhase('building');
     else router.replace('/(tabs)');
   };
@@ -214,6 +200,21 @@ export const OnboardingScreen = () => {
 
   const toggleGoal = (id: GoalId) =>
     setGoals((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
+  const togglePurpose = (id: AppPurpose) =>
+    setPurposes((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
+
+  // Vista previa de lo que cambia con lo elegido (plan de partida y secciones que se encienden)
+  const preview = answersPreview({
+    goals,
+    sex,
+    activity,
+    sleep,
+    smoking,
+    alcohol,
+    conditions,
+    takesMedication,
+    dateOfBirth: answered.has('dob') ? `${YEARS[year]}-${String(month + 1).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}` : undefined,
+  });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -238,24 +239,25 @@ export const OnboardingScreen = () => {
           <>
             <Text style={styles.title}>What do you want Kuova for?</Text>
             <Text style={styles.subtitle}>
-              We'll only show what you need. You can change it anytime in More → Customise your app.
+              Pick one or more. We'll only show what you need, and you can change it anytime in More → Configure my
+              experience.
             </Text>
             <View style={styles.goalList}>
               {PURPOSE_OPTIONS.map((o) => {
-                const selected = purpose === o.id;
+                const selected = purposes.includes(o.id);
                 return (
                   <TouchableOpacity
                     key={o.id}
                     style={[styles.goalRow, styles.purposeRow, selected && styles.bigOptionSelected]}
-                    onPress={() => setPurpose(o.id)}
+                    onPress={() => togglePurpose(o.id)}
                   >
                     <Ionicons name={o.icon as any} size={24} color={selected ? Colors.accent : Colors.textSecondary} />
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.purposeTitle, selected && { color: Colors.textPrimary }]}>{o.title}</Text>
+                      <Text style={[styles.purposeTitle, selected && { color: Colors.accent }]}>{o.title}</Text>
                       <Text style={styles.purposeSubtitle}>{o.subtitle}</Text>
                     </View>
                     <Ionicons
-                      name={selected ? 'radio-button-on' : 'radio-button-off'}
+                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
                       size={22}
                       color={selected ? Colors.accent : Colors.textMuted}
                     />
@@ -271,9 +273,9 @@ export const OnboardingScreen = () => {
             <Text style={styles.title}>When were you born?</Text>
             <Text style={styles.subtitle}>Reference ranges change with age.</Text>
             <View style={styles.wheels}>
-              <WheelPicker items={DAYS} selectedIndex={day} onChange={setDay} width={70} />
-              <WheelPicker items={MONTHS} selectedIndex={month} onChange={setMonth} width={90} />
-              <WheelPicker items={YEARS} selectedIndex={year} onChange={setYear} width={100} />
+              <WheelPicker items={DAYS} selectedIndex={day} onChange={setDay} width={84} />
+              <WheelPicker items={MONTHS} selectedIndex={month} onChange={setMonth} width={104} />
+              <WheelPicker items={YEARS} selectedIndex={year} onChange={setYear} width={110} />
             </View>
           </>
         )}
@@ -313,11 +315,11 @@ export const OnboardingScreen = () => {
             <Text style={styles.subtitle}>Used for body composition and energy needs.</Text>
             <View style={styles.wheels}>
               <View style={styles.wheelColumn}>
-                <WheelPicker items={HEIGHTS} selectedIndex={height} onChange={setHeight} width={100} />
+                <WheelPicker items={HEIGHTS} selectedIndex={height} onChange={setHeight} width={130} />
                 <Text style={styles.wheelUnit}>cm</Text>
               </View>
               <View style={styles.wheelColumn}>
-                <WheelPicker items={WEIGHTS} selectedIndex={weight} onChange={setWeight} width={100} />
+                <WheelPicker items={WEIGHTS} selectedIndex={weight} onChange={setWeight} width={130} />
                 <Text style={styles.wheelUnit}>kg</Text>
               </View>
             </View>
@@ -327,7 +329,7 @@ export const OnboardingScreen = () => {
         {step === 'habits' && (
           <>
             <Text style={styles.title}>Your habits</Text>
-            <Text style={styles.subtitle}>Answer what you want. Everything is optional.</Text>
+            <Text style={styles.subtitle}>Knowing where you start from helps us build a plan that fits you.</Text>
             <Text style={styles.question}>How active are you?</Text>
             <ChipGroup
               value={activity}
@@ -431,7 +433,7 @@ export const OnboardingScreen = () => {
         {step === 'goals' && (
           <>
             <Text style={styles.title}>What do you want to achieve?</Text>
-            <Text style={styles.subtitle}>Pick as many as you like. Your plan is built around them.</Text>
+            <Text style={styles.subtitle}>Everyone has their own goals. Choose yours and we will build your plan around them.</Text>
             <View style={styles.goalList}>
               {GOAL_OPTIONS.map((g) => {
                 const selected = goals.includes(g.id);
@@ -442,7 +444,7 @@ export const OnboardingScreen = () => {
                     onPress={() => toggleGoal(g.id)}
                   >
                     <Ionicons name={g.icon as any} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
-                    <Text style={[styles.goalText, selected && { color: Colors.textPrimary }]}>{g.label}</Text>
+                    <Text style={[styles.goalText, selected && { color: Colors.accent }]}>{g.label}</Text>
                     <Ionicons
                       name={selected ? 'checkmark-circle' : 'ellipse-outline'}
                       size={22}
@@ -452,20 +454,20 @@ export const OnboardingScreen = () => {
                 );
               })}
             </View>
-          </>
-        )}
-        {step === 'features' && featureOn && (
-          <>
-            <Text style={styles.title}>Choose what you want to use</Text>
-            <Text style={styles.subtitle}>
-              Optional parts, like medication or gut and bladder, stay off unless you switch them on. Tap any of them to
-              see how it works. You can change all of this later in More → Configure my experience.
-            </Text>
-            <SectionToggles
-              sections={featureSections}
-              isOn={(id) => featureOn.includes(id)}
-              onToggle={(id, on) => setFeatureOn((prev) => (on ? [...(prev ?? []), id] : (prev ?? []).filter((x) => x !== id)))}
-            />
+            {buildsPlan && (
+              <View style={styles.preview}>
+                <Text style={styles.previewTitle}>Your starting plan</Text>
+                {preview.plan.map((t, i) => (
+                  <Text key={t} style={styles.previewItem}>
+                    {i + 1}. {t}
+                  </Text>
+                ))}
+                {preview.sections.length > 0 && (
+                  <Text style={styles.previewNote}>Also switched on for you: {preview.sections.join(', ')}.</Text>
+                )}
+                <Text style={styles.previewNote}>It changes as you choose, and again when your results arrive.</Text>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -531,10 +533,10 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginBottom: 28,
   },
+  // Ruedas pegadas: las rayas de la selección forman una sola franja de lado a lado
   wheels: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12,
     marginTop: 12,
   },
   wheelColumn: {
@@ -660,6 +662,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  preview: {
+    marginTop: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.accent, 0.35),
+    backgroundColor: withAlpha(Colors.accent, 0.06),
+    padding: 14,
+    gap: 4,
+  },
+  previewTitle: { color: Colors.accent, fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
+  previewItem: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  previewNote: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 4 },
   buildingText: {
     color: Colors.textSecondary,
     fontSize: 15,

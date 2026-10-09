@@ -131,14 +131,14 @@ export const WheelPicker = ({
 };
 
 const styles = StyleSheet.create({
+  // La selección se marca con dos rayas horizontales (arriba y abajo), sin recuadro
   highlight: {
     position: 'absolute',
-    left: 4,
-    right: 4,
-    borderRadius: 10,
-    backgroundColor: Colors.accentSoft,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.35),
+    left: 0,
+    right: 0,
+    borderTopWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: withAlpha(Colors.accent, 0.7),
   },
   item: {
     justifyContent: 'center',

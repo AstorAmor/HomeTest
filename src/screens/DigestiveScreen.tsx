@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
 import { Colors, withAlpha } from '@/constants/colors';
@@ -25,11 +25,14 @@ const lastSevenDays = () =>
     return d;
   });
 
-// Gut & bladder: los últimos 7 días y lo que notamos esta semana. Las observaciones se
-// calculan al momento (también desde el aviso semanal); las preguntas de contexto van antes de
-// recomendar el médico.
+// Gut y Bladder (?part=gut|bladder desde su tarjeta de Today; sin part, las dos): los últimos 7
+// días y lo que notamos esta semana. Las observaciones se calculan al momento (también desde el
+// aviso semanal); las preguntas de contexto van antes de recomendar el médico.
 export const DigestiveScreen = () => {
   const router = useRouter();
+  const { part } = useLocalSearchParams<{ part?: 'gut' | 'bladder' }>();
+  const showGut = part !== 'bladder';
+  const showBladder = part !== 'gut';
   const [bowel, setBowel] = useDeepState<BowelEntry[]>([]);
   const [urine, setUrine] = useDeepState<UrineEntry[]>([]);
   const [volume, setVolume] = useDeepState<VolumeCheckSuggestion>(null);
@@ -109,104 +112,116 @@ export const DigestiveScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Gut and bladder" showBack />
+        <ScreenHeader title={part === 'gut' ? 'Gut' : part === 'bladder' ? 'Bladder' : 'Gut and bladder'} showBack />
         <Text style={styles.intro}>
-          A quick daily note on your digestion and urine. Each week we tell you what we notice, and you can check any
-          time.
+          {part === 'gut'
+            ? 'A quick daily note on your digestion.'
+            : part === 'bladder'
+              ? 'A quick daily note on your urine: it says a lot about how hydrated you are.'
+              : 'A quick daily note on your digestion and urine.'}{' '}
+          Each week we tell you what we notice, and you can check any time.
         </Text>
 
         {/* Digestión */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <MaterialCommunityIcons name="stomach" size={20} color={Colors.green} />
-            <Text style={styles.cardTitle}>Digestion</Text>
-            <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-bowel')}>
-              <Text style={styles.logButtonText}>{bowelToday ? 'Edit today' : 'Log today'}</Text>
+        {showGut && (
+          <>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <MaterialCommunityIcons name="stomach" size={20} color={Colors.green} />
+              <Text style={styles.cardTitle}>Digestion</Text>
+              <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-bowel')}>
+                <Text style={styles.logButtonText}>{bowelToday ? 'Edit today' : 'Log today'}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.week}>
+              {days.map((d) => {
+                const e = entryForDay(bowel, dayKey(d));
+                const swatch = STOOL_COLORS.find((c) => c.id === e?.color)?.swatch;
+                return (
+                  <TouchableOpacity
+                    key={d.toISOString()}
+                    style={styles.dayCol}
+                    onPress={() => router.push({ pathname: '/log-bowel', params: { day: dayKey(d) } })}
+                  >
+                    <Text style={styles.dayLabel}>{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</Text>
+                    <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
+                      {e && <Text style={[styles.dayCount, swatch ? { color: '#FFFFFF' } : null]}>{e.count}</Text>}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+          <View style={styles.sectionRow}>
+            <View style={styles.titleWithInfo}>
+              <Text style={styles.sectionTitle}>This week</Text>
+              <InfoButton topic="digestion" />
+            </View>
+            <TouchableOpacity onPress={load}>
+              <Text style={styles.link}>Check now</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.week}>
-            {days.map((d) => {
-              const e = entryForDay(bowel, dayKey(d));
-              const swatch = STOOL_COLORS.find((c) => c.id === e?.color)?.swatch;
-              return (
-                <TouchableOpacity
-                  key={d.toISOString()}
-                  style={styles.dayCol}
-                  onPress={() => router.push({ pathname: '/log-bowel', params: { day: dayKey(d) } })}
-                >
-                  <Text style={styles.dayLabel}>{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</Text>
-                  <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
-                    {e && <Text style={[styles.dayCount, swatch ? { color: '#FFFFFF' } : null]}>{e.count}</Text>}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-        <View style={styles.sectionRow}>
-          <View style={styles.titleWithInfo}>
-            <Text style={styles.sectionTitle}>This week</Text>
-            <InfoButton topic="digestion" />
-          </View>
-          <TouchableOpacity onPress={load}>
-            <Text style={styles.link}>Check now</Text>
-          </TouchableOpacity>
-        </View>
-        {renderObservations(bowelObservations(bowel))}
+          {renderObservations(bowelObservations(bowel))}
+          </>
+        )}
 
         {/* Orina */}
-        <View style={[styles.card, { marginTop: 22 }]}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="water-outline" size={20} color={Colors.green} />
-            <Text style={styles.cardTitle}>Urine</Text>
-            <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-urine')}>
-              <Text style={styles.logButtonText}>{urineToday ? 'Edit today' : 'Log today'}</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.week}>
-            {days.map((d) => {
-              const e = entryForDay(urine, dayKey(d));
-              const swatch = URINE_COLORS.find((c) => c.id === e?.color)?.swatch;
-              return (
-                <TouchableOpacity
-                  key={d.toISOString()}
-                  style={styles.dayCol}
-                  onPress={() => router.push({ pathname: '/log-urine', params: { day: dayKey(d) } })}
-                >
-                  <Text style={styles.dayLabel}>{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</Text>
-                  <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
-                    {e?.count != null && <Text style={styles.dayCount}>{e.count}</Text>}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-        {volume && (
-          <TouchableOpacity
-            style={styles.volumeCard}
-            onPress={() => router.push({ pathname: '/log-urine', params: { volume: '1' } })}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="beaker-outline" size={20} color={Colors.gold} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{volume.kind === 'collect_24h' ? 'Measure a whole day' : 'Quick volume check'}</Text>
-              <Text style={styles.obsBody}>
-                {volume.kind === 'collect_24h'
-                  ? 'A 24-hour urine container from the pharmacy shows exactly how much you pass in a day.'
-                  : volume.kind === 'repeat'
-                    ? 'Last time it did not feel usual. Try once more on a normal day.'
-                    : 'Pee once into a 500 ml bottle to get an idea of your usual amount.'}
-              </Text>
+        {showBladder && (
+          <>
+          <View style={[styles.card, showGut && { marginTop: 22 }]}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="water-outline" size={20} color={Colors.green} />
+              <Text style={styles.cardTitle}>Urine</Text>
+              <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-urine')}>
+                <Text style={styles.logButtonText}>{urineToday ? 'Edit today' : 'Log today'}</Text>
+              </TouchableOpacity>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
+            <View style={styles.week}>
+              {days.map((d) => {
+                const e = entryForDay(urine, dayKey(d));
+                const swatch = URINE_COLORS.find((c) => c.id === e?.color)?.swatch;
+                return (
+                  <TouchableOpacity
+                    key={d.toISOString()}
+                    style={styles.dayCol}
+                    onPress={() => router.push({ pathname: '/log-urine', params: { day: dayKey(d) } })}
+                  >
+                    <Text style={styles.dayLabel}>{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</Text>
+                    <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
+                      {e?.count != null && <Text style={styles.dayCount}>{e.count}</Text>}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+          {volume && (
+            <TouchableOpacity
+              style={styles.volumeCard}
+              onPress={() => router.push({ pathname: '/log-urine', params: { volume: '1' } })}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="beaker-outline" size={20} color={Colors.gold} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardTitle}>{volume.kind === 'collect_24h' ? 'Measure a whole day' : 'Quick volume check'}</Text>
+                <Text style={styles.obsBody}>
+                  {volume.kind === 'collect_24h'
+                    ? 'A 24-hour urine container from the pharmacy shows exactly how much you pass in a day.'
+                    : volume.kind === 'repeat'
+                      ? 'Last time it did not feel usual. Try once more on a normal day.'
+                      : 'Pee once into a 500 ml bottle to get an idea of your usual amount.'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            </TouchableOpacity>
+          )}
+          <View style={styles.titleWithInfo}>
+            <Text style={styles.sectionTitle}>This week</Text>
+            <InfoButton topic="urine" />
+          </View>
+          {renderObservations(urineObservations(urine))}
+          </>
         )}
-        <View style={styles.titleWithInfo}>
-          <Text style={styles.sectionTitle}>This week</Text>
-          <InfoButton topic="urine" />
-        </View>
-        {renderObservations(urineObservations(urine))}
 
         <Text style={styles.footer}>
           Checked {checkedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}. These notes are general

@@ -14,7 +14,9 @@ export type GoalId =
   | 'performance'
   | 'reduce_stress'
   | 'manage_condition'
-  | 'longevity';
+  | 'longevity'
+  | 'prevent_disease'
+  | 'reproductive_health';
 
 // Respuestas del cuestionario de onboarding. Todo es opcional: el usuario
 // puede saltarse el cuestionario en cualquier momento.
@@ -39,6 +41,7 @@ export interface UserProfile {
 
 export const GOAL_OPTIONS: { id: GoalId; label: string; icon: string }[] = [
   { id: 'general_health', label: 'Improve my general health', icon: 'heart-outline' },
+  { id: 'prevent_disease', label: 'Prevent disease', icon: 'shield-checkmark-outline' },
   { id: 'more_energy', label: 'Have more energy', icon: 'flash-outline' },
   { id: 'sleep_better', label: 'Sleep better', icon: 'moon-outline' },
   { id: 'lose_weight', label: 'Lose weight', icon: 'scale-outline' },
@@ -46,6 +49,7 @@ export const GOAL_OPTIONS: { id: GoalId; label: string; icon: string }[] = [
   { id: 'reduce_stress', label: 'Reduce stress', icon: 'leaf-outline' },
   { id: 'manage_condition', label: 'Keep a condition under control', icon: 'medkit-outline' },
   { id: 'longevity', label: 'Longevity', icon: 'hourglass-outline' },
+  { id: 'reproductive_health', label: 'Take care of my reproductive health', icon: 'rose-outline' },
 ];
 
 export type ConditionId =

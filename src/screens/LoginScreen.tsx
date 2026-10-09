@@ -204,11 +204,14 @@ export const LoginScreen = () => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.demoHint}>
+          <View style={[styles.demoHint, authMode !== 'demo' && styles.privacyHint]}>
+            <Ionicons
+              name={authMode === 'demo' ? 'information-circle-outline' : 'lock-closed-outline'}
+              size={16}
+              color={authMode === 'demo' ? Colors.warning : Colors.accent}
+            />
             <Text style={styles.demoText}>
-              {authMode === 'demo'
-                ? '💡 Demo mode: use any email/password'
-                : '🔒 Your data is private to your account'}
+              {authMode === 'demo' ? 'Demo mode: use any email/password' : 'Your data is private to your account'}
             </Text>
           </View>
         </ScrollView>
@@ -351,6 +354,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   demoHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: withAlpha(Colors.card, 0.72),
     borderLeftWidth: 4,
     borderLeftColor: Colors.warning,
@@ -358,7 +364,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 4,
   },
+  privacyHint: { borderLeftColor: Colors.accent },
   demoText: {
+    flex: 1,
     fontSize: 13,
     color: Colors.textSecondary,
   },

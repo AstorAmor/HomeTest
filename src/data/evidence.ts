@@ -18,6 +18,81 @@ export interface EvidenceTopic {
 
 export const EVIDENCE: EvidenceTopic[] = [
   {
+    id: 'plan',
+    title: 'How we build your plan',
+    summary: 'From what you tell us at the start, and from your blood tests once they arrive.',
+    body: [
+      'Before your first test, your plan starts from your answers: how active you are, how you sleep, your habits, your goals, any condition you have and your age.',
+      'Each possible action gets points for how much it can help you. Sitting most of the day or wanting to lose weight move walking up; sleeping under 6 hours or wanting more energy move sleep up; high blood pressure turns the food action into eating less salt. We keep the 3 or 4 actions with the most points.',
+      'Targets start a step above where you are, not at an ideal: 6,000 steps if you mostly sit, two short strength sessions a week if you are starting out.',
+      'When your results arrive, the plan adds what your markers show, and at your next test you see how they moved.',
+    ],
+    sources: [
+      { label: 'WHO 2020 guidelines on physical activity and sedentary behaviour (Bull et al., Br J Sports Med 2020)', url: 'https://doi.org/10.1136/bjsports-2020-102955' },
+      { label: 'Daily steps and all-cause mortality, 15 cohorts (Paluch et al., Lancet Public Health 2022)', url: 'https://doi.org/10.1016/S2468-2667(21)00302-9' },
+      { label: 'Recommended amount of sleep for adults: 7 hours or more (Watson et al., Sleep 2015)', url: 'https://doi.org/10.5665/sleep.4716' },
+    ],
+    status: 'pending',
+  },
+  {
+    id: 'checkin',
+    title: 'Your daily check-in',
+    summary: 'How your energy and mood change over time, compared with your own usual.',
+    body: [
+      'Each check-in records your energy from 1 to 5, your mood and, if you want, a note. We draw them as a line so you see your own pattern, not a comparison with other people.',
+      'Three days in a row at 2 out of 5 or lower bring a gentle note. If it lasts two weeks or more, we suggest talking to a professional.',
+      'Nobody else sees your check-ins unless you choose to share them.',
+    ],
+    sources: [],
+    status: 'pending',
+  },
+  {
+    id: 'wearables',
+    title: 'Your wearable data',
+    summary: 'Sleep, heart rate, HRV, steps and temperature, compared with your own usual values.',
+    body: [
+      'We read what your watch or ring already measures, through Health Connect or its own app. We never change your data.',
+      'Resting heart rate and HRV vary a lot from one person to another, so we compare each day with your own recent average instead of a population value.',
+      'Temperature is shown against a usual range of 36.1 to 37.2 °C. Wearables measure the skin at night, so small differences from a thermometer are normal.',
+    ],
+    sources: [],
+    status: 'pending',
+  },
+  {
+    id: 'badges',
+    title: 'How badges work',
+    summary: 'For things you actually do, never just for receiving something.',
+    body: [
+      'Badges mark streaks and milestones you reach yourself: days logged in a row, steps, breathing or strength sessions.',
+      'There are no badges for receiving your results or your plan, and nothing is taken away if a streak breaks.',
+    ],
+    sources: [],
+    status: 'validated',
+  },
+  {
+    id: 'specialists',
+    title: 'When we suggest a specialist',
+    summary: 'Only when your data or your goals point to someone who can help.',
+    body: [
+      'We suggest a doctor when a rule says something needs checking, for example a very high blood pressure reading or black stools without an explanation.',
+      'We suggest a dietitian, trainer or physio when it fits your goals or your plan.',
+      'Booking is always your choice, and you decide what they can see and for how long.',
+    ],
+    sources: [],
+    status: 'pending',
+  },
+  {
+    id: 'learning',
+    title: 'Where our reads come from',
+    summary: 'Short reads written from guidelines and studies, linked to what you see in your results.',
+    body: [
+      'Each read explains one idea in plain words, such as why a marker varies from one test to the next or when it is worth testing again.',
+      'They are written from clinical guidelines and studies, are being reviewed by our medical team, and never replace a professional.',
+    ],
+    sources: [],
+    status: 'pending',
+  },
+  {
     id: 'notifications',
     title: 'How we decide what to send you',
     summary: 'Clear rules, a minimum gap between reminders and at most two a day.',

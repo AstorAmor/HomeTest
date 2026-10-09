@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
-import { AppSection, OPT_IN_SECTIONS, SECTION_OPTIONS } from '@/data/appPrefs';
+import { AppSection, SECTION_OPTIONS } from '@/data/appPrefs';
 
 // Lista de partes de la app con su interruptor. Tocar la fila abre su guía con vista previa.
 // La usan Configure my experience y el último paso del onboarding.
@@ -33,7 +33,6 @@ export const SectionToggles = ({
               <View style={{ flex: 1 }}>
                 <View style={styles.titleRow}>
                   <Text style={styles.rowTitle}>{o.title}</Text>
-                  {OPT_IN_SECTIONS.includes(o.id) && <Text style={styles.optional}>Optional</Text>}
                 </View>
                 <Text style={styles.rowSubtitle}>{o.subtitle}</Text>
                 <Text style={styles.more}>See how it works</Text>

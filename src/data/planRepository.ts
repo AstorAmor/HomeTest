@@ -2,81 +2,9 @@ import { createMetricRepository, definedOnly } from './metricRepository';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { compressPhoto } from '@/utils/imageUpload';
 
-// "Your plan" en Today: versión simplificada de las recomendaciones personalizadas.
-// DUMMY por ahora: se construye con reglas sencillas a partir del perfil (objetivos
-// y hábitos). Cuando exista el motor de recomendaciones, solo hay que cambiar
-// buildPlan (o cargar su salida); la UI lee de aquí.
-export type PlanItemKind = 'strength' | 'steps' | 'nutrition' | 'sleep' | 'mindfulness';
-
-export interface PlanItem {
-  kind: PlanItemKind;
-  title: string;
-  subtitle: string;
-  target: number; // meta en la unidad del tipo (sesiones/semana, pasos/día, comidas/día, horas, sesiones/semana)
-  why: string; // por qué está en tu plan
-  how: string[]; // recomendaciones concretas
-}
-
-const STRENGTH: PlanItem = {
-  kind: 'strength',
-  title: 'Hit 3 days of strength training',
-  subtitle: 'Supports insulin sensitivity and muscle mass',
-  target: 3,
-  why: 'Muscle is your biggest glucose sink. Two to three strength sessions a week improve insulin sensitivity, protect your bones and keep your metabolism up as you age.',
-  how: [
-    '3 sessions of 30-45 min on non-consecutive days',
-    'Full body: squats, hinges, pushes, pulls',
-    'Finish each set with 1-2 reps left in the tank',
-  ],
-};
-
-const STEPS: PlanItem = {
-  kind: 'steps',
-  title: 'Walk 8,000 steps a day',
-  subtitle: 'Updated from your wearable',
-  target: 8000,
-  why: 'Daily movement lowers blood pressure, triglycerides and resting heart rate. Around 8,000 steps a day is where most of the health benefit shows up.',
-  how: ['A 10-min walk after each main meal', 'Take calls on foot', 'Your wearable updates progress automatically'],
-};
-
-const NUTRITION: PlanItem = {
-  kind: 'nutrition',
-  title: 'Reduce added sugar',
-  subtitle: 'Snap your meals to track it',
-  target: 3,
-  why: 'Added sugar drives glucose spikes and raises triglycerides. Building meals around protein, fibre and vegetables keeps your energy steady.',
-  how: ['Half the plate vegetables, a quarter protein', 'Swap sugary drinks for water or sparkling water', 'Snap your meals: we track added sugar for you'],
-};
-
-const SLEEP: PlanItem = {
-  kind: 'sleep',
-  title: 'Sleep 7-8 hours',
-  subtitle: 'Measured by your wearable',
-  target: 7.5,
-  why: 'Short sleep raises cortisol and glucose the next day and lowers HRV. Regular sleep is one of the fastest levers on how you feel.',
-  how: ['Same wake-up time every day, weekends included', 'No screens 30 min before bed', 'Keep the bedroom cool and dark'],
-};
-
-const MINDFULNESS: PlanItem = {
-  kind: 'mindfulness',
-  title: '3 short calm sessions a week',
-  subtitle: 'Breathing or body scan, 3-10 min',
-  target: 3,
-  why: 'Chronic stress keeps cortisol high and HRV low. A few minutes of slow breathing measurably shifts your nervous system towards recovery.',
-  how: ['Box breathing when you feel tense', 'Body scan before bed', 'Start from a check-in: we suggest the right one'],
-};
-
-// Plan por defecto (sin perfil)
-export const CURRENT_PLAN: PlanItem[] = [STRENGTH, STEPS, NUTRITION];
-
-// Reglas simples: siempre fuerza, pasos y nutrición; sueño y mindfulness según objetivos y hábitos.
-export function buildPlan(profile?: { goals?: string[]; sleep?: string } | null): PlanItem[] {
-  const goals = profile?.goals ?? [];
-  const plan = [STRENGTH, STEPS, NUTRITION];
-  if (goals.includes('sleep_better') || profile?.sleep === 'lt6') plan.push(SLEEP);
-  if (goals.includes('reduce_stress')) plan.push(MINDFULNESS);
-  return plan;
-}
+// El plan de partida (lógica pura, también en los tests) vive en src/logic/plan.ts
+export { buildPlan, planSummary } from '@/logic/plan';
+export type { PlanItem, PlanItemKind, PlanProfile } from '@/logic/plan';
 
 export type WorkoutType = 'strength' | 'cardio' | 'mobility' | 'sport';
 
