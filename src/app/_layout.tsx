@@ -102,6 +102,7 @@ export default function Layout() {
             <Stack.Screen name="pro-patients" options={{ animation: 'fade' }} />
             <Stack.Screen name="pro-inbox" options={{ animation: 'fade' }} />
             <Stack.Screen name="pro-settings" options={{ animation: 'fade' }} />
+            <Stack.Screen name="pro-templates" options={{ animation: 'fade' }} />
             <Stack.Screen name="pro-room" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
             <Stack.Screen name="pro-plan" />
             <Stack.Screen name="chat" />

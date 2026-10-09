@@ -17,12 +17,13 @@ export const useIsWide = () => {
   return Platform.OS === 'web' && width >= 900;
 };
 
-export type ProSection = 'agenda' | 'patients' | 'inbox' | 'settings';
+export type ProSection = 'agenda' | 'patients' | 'inbox' | 'templates' | 'settings';
 
 const NAV: { id: ProSection; label: string; icon: string; href: string }[] = [
   { id: 'agenda', label: 'Agenda', icon: 'calendar-outline', href: '/pro' },
   { id: 'patients', label: 'Patients', icon: 'people-outline', href: '/pro-patients' },
   { id: 'inbox', label: 'Inbox', icon: 'chatbubbles-outline', href: '/pro-inbox' },
+  { id: 'templates', label: 'Templates', icon: 'documents-outline', href: '/pro-templates' },
   { id: 'settings', label: 'Profile', icon: 'person-circle-outline', href: '/pro-settings' },
 ];
 

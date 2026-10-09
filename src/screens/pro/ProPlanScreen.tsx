@@ -10,14 +10,14 @@ import { draftActionsForMarkers } from '@/utils/planUpdate';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 // "Generar plan de acción": borrador a partir de los valores fuera de rango del
-// paciente; el especialista edita recomendaciones y prescripciones y lo envía.
+// paciente; el especialista edita las recomendaciones y lo envía. Kuova no emite
+// recetas: si hace falta una, el médico la hace fuera (su plataforma o papel).
 // El paciente lo recibe como nueva versión de su plan ("Updated by your specialist").
 export const ProPlanScreen = () => {
   const router = useRouter();
   const { patient: patientId } = useLocalSearchParams<{ patient: string }>();
   const [name, setName] = useState('');
   const [items, setItems] = useState<PlanVersionItem[]>([]);
-  const [prescriptions, setPrescriptions] = useState<string[]>([]);
   const [note, setNote] = useState('');
   const [state, setState] = useState<'idle' | 'saving' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -45,7 +45,7 @@ export const ProPlanScreen = () => {
     setState('saving');
     setError('');
     try {
-      await portal.createActionPlan(patientId, clean, prescriptions.map((p) => p.trim()).filter(Boolean), note.trim());
+      await portal.createActionPlan(patientId, clean, note.trim());
       setState('sent');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not send the plan');
@@ -99,21 +99,6 @@ export const ProPlanScreen = () => {
         <Text style={styles.addText}>Add recommendation</Text>
       </TouchableOpacity>
 
-      <Text style={styles.section}>Prescriptions</Text>
-      {prescriptions.map((p, i) => (
-        <View key={i} style={styles.rxRow}>
-          <Ionicons name="medkit-outline" size={16} color={Colors.textSecondary} />
-          <TextInput style={[styles.input, { flex: 1, minHeight: 40 }]} value={p} onChangeText={(t) => setPrescriptions((prev) => prev.map((x, j) => (j === i ? t : x)))} placeholder="e.g. Vitamin D3 2000 IU daily, 3 months" placeholderTextColor={Colors.textMuted} />
-          <TouchableOpacity onPress={() => setPrescriptions((prev) => prev.filter((_, j) => j !== i))} hitSlop={8}>
-            <Ionicons name="close-circle-outline" size={20} color={Colors.textMuted} />
-          </TouchableOpacity>
-        </View>
-      ))}
-      <TouchableOpacity style={styles.add} onPress={() => setPrescriptions((prev) => [...prev, ''])}>
-        <Ionicons name="add" size={18} color={Colors.accent} />
-        <Text style={styles.addText}>Add prescription</Text>
-      </TouchableOpacity>
-
       <Text style={styles.section}>Note to the patient</Text>
       <TextInput style={[styles.input, { minHeight: 80 }]} multiline value={note} onChangeText={setNote} placeholder="A few words in plain language" placeholderTextColor={Colors.textMuted} />
     </ProLayout>
@@ -132,7 +117,6 @@ const styles = StyleSheet.create({
   based: { color: Colors.textMuted, fontSize: 11 },
   add: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6 },
   addText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  rxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   send: { backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7 },
   sendText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
   done: { alignItems: 'center', gap: 12, marginTop: 60, paddingHorizontal: 20 },

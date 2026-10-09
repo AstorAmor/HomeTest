@@ -703,3 +703,29 @@ ya guardan en las carpetas nuevas.
   cerrarla con ✕ guarda lo escrito; la lista de notas se abre/cierra cuando quieras (editar, borrar una, copiar todas).
 - Pendiente: notificaciones push reales (expo-notifications + APK nueva, preguntar al usuario); SEO/GEO de la web
   pública (segunda capa de preguntas con fuentes) en HomeTest-web, que sigue sin publicar.
+
+## 2026-10-09 (noche) — Portal del médico: Señalar en escritorio, sin recetas, biblioteca de plantillas
+- **Modo Señalar en el portal**: en `/pro*` (y el chat con `side=pro`) las notas van a su propia lista
+  (`kuova.inspector.notes.portal`, "Notas · portal del médico"); en escritorio la barra va abajo a la derecha de la
+  barra lateral y se recoloca al cambiar de pantalla o de ancho; "Descargar .md" para mandar las notas (p. ej. al
+  asesor médico).
+- **Kuova no receta** (decisión del fundador): fuera "Prescriptions" del plan de acción del especialista
+  (`ProPlanScreen`, `portal.createActionPlan` ya no lo manda; la columna `action_plans.prescriptions` queda en `[]`)
+  y las consultas del catálogo ya no prometen receta. Si un médico necesita recetar, lo hace fuera (plataforma de
+  receta privada de su colegio —SREP: REMPe, Docline…— o papel).
+- **Biblioteca de plantillas (sin IA)**: sección **Templates** del portal (`/pro-templates`, `ProTemplatesScreen`):
+  lista + editor (nombre, tema, palabras clave, texto), importar .txt/.md/.docx en la web
+  (`utils/importTextFile.web.ts`, lee el .docx sin librerías; PDF → copiar y pegar), duplicar, borrar.
+  Temas: ciclo, analíticas, hormonas/tiroides, energía/hierro/vitaminas, colesterol/corazón, glucosa, otros.
+  Al contestar (Inbox, ficha del paciente y chat del especialista) salen hasta 3 **sugeridas** por la pregunta
+  (inglés y español, `suggestTemplates` en `src/data/proTemplates.ts`, tests en `src/data/__tests__/`) y
+  "Browse all"; insertar rellena `[name]` y `[doctor]`, y **no se puede enviar mientras quede un hueco [ ]**.
+  Las respuestas enviadas se pueden guardar como plantilla (el nombre del paciente vuelve a `[name]`).
+  Demo: 7 plantillas de ejemplo y 2 dudas nuevas (Elena: ciclo; Laura: cansancio). Cuenta real: tabla
+  `pro_templates` — **migración `20261009120000_pro_templates.sql` + test `pro_templates.test.sql` SIN APLICAR**
+  (pedir OK al fundador); mientras tanto se guardan en el dispositivo y la pantalla lo avisa.
+- Decidido: la "respuesta asistida por IA" se deja para más adelante (coste ~1–2 céntimos por borrador, pero exige
+  Gemini de pago + DPA y no hay volumen aún); se montaría encima de esta biblioteca.
+- Pendiente del portal: simular X pacientes con lo que comparte cada uno (ficha con categorías compartidas / 🔒) y
+  checklist de privacidad prueba → lanzamiento (Supabase de staging, plan de pago + DPA, registro de accesos del
+  profesional, MFA, EIPD, BAA de Daily).

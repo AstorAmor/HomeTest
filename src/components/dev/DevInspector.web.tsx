@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { TABS } from '@/components/BottomTabBar';
 
 // Modo "Señalar" (solo web): una barra flotante para tocar cualquier cosa de la app, escribir qué
 // quieres cambiar y copiar todas las notas para pegárselas a Claude. Nunca bloquea la app: tras
@@ -11,7 +12,13 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 // Todo es DOM directo: no toca el árbol de React Native ni la navegación.
 
 const NOTES_KEY = 'kuova.inspector.notes';
+// El portal del médico tiene su propia lista de notas (se revisa aparte, sobre todo en el ordenador)
+const PORTAL_NOTES_KEY = 'kuova.inspector.notes.portal';
 const ON_KEY = 'kuova.inspector';
+
+// ¿Estamos en el portal del especialista? (/pro, /pro-…, o chat/vídeo abiertos desde el portal)
+const isPortal = () => /^\/pro(-|\/|$)/.test(location.pathname) || new URLSearchParams(location.search).get('side') === 'pro';
+const notesKey = () => (isPortal() ? PORTAL_NOTES_KEY : NOTES_KEY);
 const GOLD = '#C9A36B';
 const INK = '#0E2A24';
 
@@ -112,16 +119,26 @@ function describe(el: HTMLElement): string {
   return parts.join(' · ');
 }
 
+// Pantalla legible: las pestañas de abajo comparten la ruta "/", así que se añade cuál es
+function screenLabel(): string {
+  const path = `${location.pathname}${location.search}`;
+  if (location.pathname === '/' || location.pathname === '/(tabs)') {
+    const n = Number(new URLSearchParams(location.search).get('tab') ?? 0) || 0;
+    return `${path} (pestaña ${TABS[n]?.label ?? TABS[0].label})`;
+  }
+  return path;
+}
+
 function readNotes(): Note[] {
   try {
-    return JSON.parse(localStorage.getItem(NOTES_KEY) ?? '[]');
+    return JSON.parse(localStorage.getItem(notesKey()) ?? '[]');
   } catch {
     return [];
   }
 }
 function writeNotes(notes: Note[]) {
   try {
-    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    localStorage.setItem(notesKey(), JSON.stringify(notes));
   } catch {
     // sin almacenamiento (modo privado): las notas viven mientras la página esté abierta
   }
@@ -306,6 +323,12 @@ function mount(): () => void {
 
   const renderDock = () => {
     const n = readNotes().length;
+    // Portal en escritorio: no hay pestañas abajo; la barra va abajo, a la derecha de la barra lateral (230 px)
+    const desk = isPortal() && window.innerWidth >= 900;
+    const left = desk ? '246px' : '12px';
+    Object.assign(dock.style, { left, bottom: desk ? '16px' : '96px' });
+    Object.assign(bubble.style, { left, bottom: desk ? '16px' : '96px' });
+    Object.assign(toast.style, { left, bottom: desk ? '62px' : '142px' });
     pickBtn.textContent = picking ? '✕ Cancelar (Esc)' : '🎯 Señalar';
     pickBtn.style.background = picking ? GOLD : '#fff';
     notesBtn.textContent = `💬 Notas${n ? ` · ${n}` : ''}`;
@@ -320,7 +343,7 @@ function mount(): () => void {
     writeNotes([
       ...readNotes(),
       {
-        route: `${location.pathname}${location.search}`,
+        route: screenLabel(),
         chain: componentChain(selected),
         details: describe(selected),
         note: draft.trim(),
@@ -357,6 +380,7 @@ function mount(): () => void {
     composer.appendChild(head);
     composer.appendChild(el('div', { marginTop: '6px', fontWeight: '600', wordBreak: 'break-word' }, componentChain(selected)));
     composer.appendChild(el('div', { color: '#5B6662', fontSize: '12px', marginTop: '2px' }, describe(selected)));
+    composer.appendChild(el('div', { color: '#5B6662', fontSize: '12px' }, `Pantalla: ${screenLabel()}`));
 
     const parent = button('↑ Coger lo que lo contiene');
     Object.assign(parent.style, { marginTop: '8px', padding: '6px 10px', fontSize: '12px' });
@@ -420,7 +444,7 @@ function mount(): () => void {
     if (!drawerOpen) return;
     const notes = readNotes();
     const head = el('div', { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '8px' });
-    head.append(el('strong', { fontSize: '14px' }, `Notas (${notes.length})`));
+    head.append(el('strong', { fontSize: '14px' }, `${isPortal() ? 'Notas · portal del médico' : 'Notas'} (${notes.length})`));
     const close = button('✕');
     close.title = 'Cerrar (las notas se quedan guardadas)';
     close.onclick = () => {
@@ -485,7 +509,17 @@ function mount(): () => void {
         renderDock();
       }
     };
-    foot.append(copy, clear);
+    // Descargar como .md: para mandar las notas por correo (p. ej. al asesor médico)
+    const download = button('Descargar .md');
+    download.onclick = () => {
+      const blob = new Blob([formatNotes(readNotes().filter((x) => x.note.trim()))], { type: 'text/markdown' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `notas-${isPortal() ? 'portal-medico' : 'app'}-${new Date().toISOString().slice(0, 10)}.md`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    };
+    foot.append(copy, download, clear);
     drawer.appendChild(foot);
   };
 
@@ -531,6 +565,11 @@ function mount(): () => void {
     place(selected);
     placeComposer();
   };
+  // Al cambiar el ancho, el portal pasa de barra lateral a pestañas abajo: recolocar la barra
+  const onResize = () => {
+    follow();
+    renderDock();
+  };
 
   const opts = { capture: true, passive: false } as AddEventListenerOptions;
   const swallowed = ['pointerdown', 'mousedown', 'touchstart', 'mouseup', 'touchend', 'click'] as const;
@@ -539,7 +578,7 @@ function mount(): () => void {
   window.addEventListener('pointermove', hover, true);
   window.addEventListener('keydown', key, true);
   window.addEventListener('scroll', follow, true);
-  window.addEventListener('resize', follow);
+  window.addEventListener('resize', onResize);
 
   pickBtn.onclick = () => setPicking(!picking);
   notesBtn.onclick = () => {
@@ -557,13 +596,24 @@ function mount(): () => void {
   };
   renderDock();
 
+  // Al cambiar de pantalla (app ↔ portal) cambian la lista de notas y el sitio de la barra
+  let lastPath = location.pathname + location.search;
+  const routeTimer = setInterval(() => {
+    const now = location.pathname + location.search;
+    if (now === lastPath) return;
+    lastPath = now;
+    renderDock();
+    if (drawerOpen) renderDrawer();
+  }, 800);
+
   return () => {
+    clearInterval(routeTimer);
     swallowed.forEach((t) => window.removeEventListener(t, swallow, opts));
     window.removeEventListener('pointerup', pick, opts);
     window.removeEventListener('pointermove', hover, true);
     window.removeEventListener('keydown', key, true);
     window.removeEventListener('scroll', follow, true);
-    window.removeEventListener('resize', follow);
+    window.removeEventListener('resize', onResize);
     clearTimeout(toastTimer);
     root.remove();
   };
@@ -572,7 +622,7 @@ function mount(): () => void {
 function formatNotes(notes: Note[]): string {
   const day = new Date().toLocaleDateString('es-ES');
   return [
-    `Notas sobre la app (modo Señalar) · ${day}`,
+    `${isPortal() ? 'Notas sobre el portal del médico' : 'Notas sobre la app'} (modo Señalar) · ${day}`,
     '',
     ...notes.map((n, i) =>
       [`${i + 1}. Pantalla ${n.route}`, `   Elemento: ${n.chain}`, `   Detalles: ${n.details}`, `   Cambio: ${n.note}`].join('\n')

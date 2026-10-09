@@ -46,7 +46,7 @@ interface DemoState {
   notes: ClinicalNote[];
   conversations: Conversation[];
   availability: Availability;
-  plans: { patientId: string; items: PlanVersionItem[]; prescriptions: string[]; note: string; createdAt: string }[];
+  plans: { patientId: string; items: PlanVersionItem[]; note: string; createdAt: string }[];
   privateData: { personalPhone: string; personalEmail: string };
 }
 
@@ -86,6 +86,8 @@ function demoSeed(): DemoState {
       { id: 'r1', patientId: 'p-carlos', patientName: 'Carlos Ruiz', professionalId: DEMO_PRO, kind: 'question', message: 'My blood pressure was 145/92 this morning. Should I be worried before our call?', status: 'open', response: null, createdAt: at(0, 8, 5), answeredAt: null },
       { id: 'r2', patientId: 'p-javier', patientName: 'Javier Soto', professionalId: DEMO_PRO, kind: 'results_review', message: 'Could you look at my LDL and triglycerides? I uploaded my last test.', status: 'open', response: null, createdAt: at(-1, 19, 40), answeredAt: null },
       { id: 'r3', patientId: 'p-laura', patientName: 'Laura Martín', professionalId: DEMO_PRO, kind: 'question', message: 'Can I take iron and vitamin D together?', status: 'answered', response: 'Yes, but take iron on an empty stomach with some vitamin C, and vitamin D with a meal.', createdAt: at(-5, 9, 0), answeredAt: at(-5, 13, 0) },
+      { id: 'r4', patientId: 'p-elena', patientName: 'Elena Gómez', professionalId: DEMO_PRO, kind: 'question', message: 'Since I started training for a half marathon my period comes every 38–40 days. Is that normal? Could it be related to my iron?', status: 'open', response: null, createdAt: at(0, 7, 20), answeredAt: null },
+      { id: 'r5', patientId: 'p-laura', patientName: 'Laura Martín', professionalId: DEMO_PRO, kind: 'question', message: "I've been really tired for a month even though I sleep 7 hours. My ferritin was 24 in March. Should I repeat the test?", status: 'open', response: null, createdAt: at(-1, 22, 15), answeredAt: null },
     ],
     notes: [
       { id: 'n1', patientId: 'p-laura', appointmentId: 'a5', subjective: 'Tired in the afternoons, sleeps ~6 h.', objective: 'Ferritin 24 ng/mL, vitamin D 18 ng/mL (March).', assessment: 'Low iron stores and vitamin D deficiency.', plan: 'Iron-rich diet + vitamin C, vitamin D 2000 IU/day, retest in 6 months.', createdAt: at(-14, 11, 40), updatedAt: at(-14, 11, 40) },
@@ -109,6 +111,8 @@ async function demo(): Promise<DemoState> {
     const fresh = demoSeed();
     // Otro día: citas y solicitudes nuevas relativas a hoy; se conservan notas y planes.
     demoCache = stored && stored.seededOn === fresh.seededOn ? stored : { ...fresh, notes: stored?.notes ?? fresh.notes, plans: stored?.plans ?? [], availability: stored?.availability ?? fresh.availability, privateData: stored?.privateData ?? fresh.privateData };
+    // Solicitudes de ejemplo añadidas después de guardar el estado de hoy: aparecen igualmente
+    for (const r of fresh.requests) if (!demoCache.requests.some((x) => x.id === r.id)) demoCache.requests.push(r);
   } catch {
     demoCache = demoSeed();
   }
@@ -505,9 +509,10 @@ export const portal = {
     fail(error);
   },
 
-  async createActionPlan(patientId: string, items: PlanVersionItem[], prescriptions: string[], note: string) {
+  // Sin recetas: Kuova no prescribe (la columna action_plans.prescriptions queda vacía, '[]').
+  async createActionPlan(patientId: string, items: PlanVersionItem[], note: string) {
     if (isPortalDemo()) {
-      (await demo()).plans.push({ patientId, items, prescriptions, note, createdAt: new Date().toISOString() });
+      (await demo()).plans.push({ patientId, items, note, createdAt: new Date().toISOString() });
       return saveDemo();
     }
     const { error } = await supabase!.from('action_plans').insert({
@@ -515,7 +520,6 @@ export const portal = {
       professional_id: getCurrentUserId(),
       source: 'professional',
       items,
-      prescriptions,
       note,
     });
     fail(error);

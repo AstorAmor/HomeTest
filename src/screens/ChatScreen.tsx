@@ -7,6 +7,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { chat, isRemoteConversation } from '@/data/chat';
 import { ChatMessage } from '@/data/specialistTypes';
+import { TemplatePicker } from '@/components/pro/TemplatePicker';
+import { findGaps } from '@/data/proTemplates';
 
 const time = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
@@ -17,6 +19,7 @@ export const ChatScreen = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState('');
   const [error, setError] = useState('');
+  const [showTemplates, setShowTemplates] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const me = chat.myId();
   const demo = !isRemoteConversation(conversation);
@@ -49,9 +52,13 @@ export const ChatScreen = () => {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
   }, [messages.length]);
 
+  // El especialista puede insertar una plantilla; no se envía con huecos [ ] sin rellenar
+  const gaps = side === 'pro' ? findGaps(text) : [];
+  const lastFromPatient = [...messages].reverse().find((m) => m.senderId !== me)?.body ?? '';
+
   const send = async () => {
     const body = text.trim();
-    if (!body) return;
+    if (!body || gaps.length) return;
     setText('');
     setError('');
     try {
@@ -96,7 +103,28 @@ export const ChatScreen = () => {
           ListEmptyComponent={<Text style={styles.empty}>No messages yet. Say hello 👋</Text>}
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
+        {side === 'pro' && showTemplates && (
+          <View style={styles.templates}>
+            <TemplatePicker
+              question={lastFromPatient}
+              patientName={title ?? ''}
+              startOpen
+              onInsert={(t) => {
+                setText((prev) => (prev.trim() ? `${prev.trimEnd()}
+
+${t}` : t));
+                setShowTemplates(false);
+              }}
+            />
+          </View>
+        )}
+        {gaps.length > 0 && <Text style={styles.gaps}>Fill in or delete before sending: {gaps.slice(0, 4).join('  ')}</Text>}
         <View style={styles.composer}>
+          {side === 'pro' && (
+            <TouchableOpacity style={[styles.tplBtn, showTemplates && { backgroundColor: Colors.accent }]} onPress={() => setShowTemplates((v) => !v)} accessibilityLabel="Templates">
+              <Ionicons name="documents-outline" size={20} color={showTemplates ? Colors.background : Colors.accent} />
+            </TouchableOpacity>
+          )}
           <TextInput
             style={styles.input}
             placeholder="Write a message"
@@ -106,7 +134,7 @@ export const ChatScreen = () => {
             multiline
             onSubmitEditing={send}
           />
-          <TouchableOpacity style={[styles.send, !text.trim() && { opacity: 0.5 }]} onPress={send} disabled={!text.trim()}>
+          <TouchableOpacity style={[styles.send, (!text.trim() || gaps.length > 0) && { opacity: 0.5 }]} onPress={send} disabled={!text.trim() || gaps.length > 0}>
             <Ionicons name="send" size={18} color={Colors.background} />
           </TouchableOpacity>
         </View>
@@ -128,5 +156,8 @@ const styles = StyleSheet.create({
   error: { color: Colors.danger, fontSize: 12, marginHorizontal: 16 },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, padding: 12, borderTopWidth: 1, borderTopColor: Colors.divider },
   input: { flex: 1, maxHeight: 120, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9, color: Colors.textPrimary, fontSize: 15 },
+  templates: { paddingHorizontal: 12, paddingTop: 8, borderTopWidth: 1, borderTopColor: Colors.divider },
+  gaps: { color: Colors.attention, fontSize: 12, fontWeight: '700', marginHorizontal: 16, marginTop: 6 },
+  tplBtn: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
   send: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
 });

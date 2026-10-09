@@ -5,6 +5,9 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { portal } from '@/data/specialistPortal';
 import { StoredAudio } from '@/components/VoiceNote';
 import { ClinicalNote, ConsultRequest, PatientLabResult, PatientMarker, REQUEST_KIND_LABEL } from '@/data/specialistTypes';
+import { TemplatePicker } from '@/components/pro/TemplatePicker';
+import { useProIdentity } from '@/components/pro/ProLayout';
+import { TEMPLATE_TOPICS, TemplateTopic, findGaps, guessTopic, templates, toTemplateBody } from '@/data/proTemplates';
 
 const shortDate = (iso: string | null) =>
   iso ? new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
@@ -81,7 +84,7 @@ const FIELDS: { key: 'subjective' | 'objective' | 'assessment' | 'plan'; label: 
   { key: 'subjective', label: 'S · Subjective', hint: 'What the patient tells you' },
   { key: 'objective', label: 'O · Objective', hint: 'Results, measurements' },
   { key: 'assessment', label: 'A · Assessment', hint: 'Your clinical judgement' },
-  { key: 'plan', label: 'P · Plan', hint: 'Next steps, prescriptions' },
+  { key: 'plan', label: 'P · Plan', hint: 'Next steps, tests, follow-up' },
 ];
 
 // Editor de notas privadas. `live`: guarda solo al dejar de escribir (en consulta).
@@ -175,50 +178,145 @@ export const NotesPanel = ({ patientId, appointmentId, live }: { patientId: stri
 };
 
 // ---------------------------------------------------------------- Solicitudes
+// Contestar con plantillas: se sugieren por la pregunta, se insertan y no se puede enviar
+// mientras quede un hueco [entre corchetes] sin rellenar.
 export const RequestsPanel = ({ requests, onAnswered }: { requests: ConsultRequest[]; onAnswered: () => void }) => {
   const [answer, setAnswer] = useState<Record<string, string>>({});
   if (requests.length === 0) return <Text style={styles.muted}>No requests from this patient.</Text>;
   return (
     <View style={{ gap: 10 }}>
-      {requests.map((r) => (
-        <View key={r.id} style={styles.request}>
-          <View style={styles.requestHead}>
-            <Text style={styles.requestKind}>{REQUEST_KIND_LABEL[r.kind]}</Text>
-            <Text style={[styles.requestStatus, { color: r.status === 'open' ? Colors.attention : Colors.ok }]}>
-              {r.status === 'open' ? 'Pending' : r.status === 'answered' ? 'Answered' : 'Closed'}
-            </Text>
-          </View>
-          {r.message ? <Text style={styles.requestMsg}>{r.message}</Text> : null}
-          {r.audioPath ? <StoredAudio path={r.audioPath} label="Voice note from the patient" /> : null}
-          <Text style={styles.muted}>{shortDate(r.createdAt)}</Text>
-          {r.response ? (
-            <View style={styles.response}>
-              <Text style={styles.responseText}>{r.response}</Text>
+      {requests.map((r) => {
+        const text = answer[r.id] ?? '';
+        const gaps = findGaps(text);
+        const canSend = !!text.trim() && gaps.length === 0;
+        return (
+          <View key={r.id} style={styles.request}>
+            <View style={styles.requestHead}>
+              <Text style={styles.requestKind}>{REQUEST_KIND_LABEL[r.kind]}</Text>
+              <Text style={[styles.requestStatus, { color: r.status === 'open' ? Colors.attention : Colors.ok }]}>
+                {r.status === 'open' ? 'Pending' : r.status === 'answered' ? 'Answered' : 'Closed'}
+              </Text>
             </View>
-          ) : (
-            <>
-              <TextInput
-                style={styles.input}
-                multiline
-                placeholder="Write your answer"
-                placeholderTextColor={Colors.textMuted}
-                value={answer[r.id] ?? ''}
-                onChangeText={(t) => setAnswer((a) => ({ ...a, [r.id]: t }))}
-              />
-              <TouchableOpacity
-                style={[styles.btn, !(answer[r.id] ?? '').trim() && { opacity: 0.5 }]}
-                disabled={!(answer[r.id] ?? '').trim()}
-                onPress={async () => {
-                  await portal.answerRequest(r.id, answer[r.id].trim());
-                  onAnswered();
-                }}
-              >
-                <Text style={styles.btnText}>Send answer</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      ))}
+            {r.message ? <Text style={styles.requestMsg}>{r.message}</Text> : null}
+            {r.audioPath ? <StoredAudio path={r.audioPath} label="Voice note from the patient" /> : null}
+            <Text style={styles.muted}>{shortDate(r.createdAt)}</Text>
+            {r.response ? (
+              <>
+                <View style={styles.response}>
+                  <Text style={styles.responseText}>{r.response}</Text>
+                </View>
+                <SaveAsTemplate request={r} />
+              </>
+            ) : (
+              <>
+                <TemplatePicker
+                  question={r.message}
+                  patientName={r.patientName}
+                  extraTopic={r.kind === 'results_review' ? 'blood_test' : undefined}
+                  onInsert={(t) => setAnswer((a) => ({ ...a, [r.id]: a[r.id]?.trim() ? `${a[r.id].trimEnd()}\n\n${t}` : t }))}
+                />
+                <TextInput
+                  style={[styles.input, { minHeight: Math.min(420, 56 + text.split('\n').length * 18) }]}
+                  multiline
+                  placeholder="Write your answer, or insert a template"
+                  placeholderTextColor={Colors.textMuted}
+                  value={text}
+                  onChangeText={(t) => setAnswer((a) => ({ ...a, [r.id]: t }))}
+                />
+                {gaps.length > 0 && (
+                  <View style={styles.gaps}>
+                    <Ionicons name="create-outline" size={14} color={Colors.attention} />
+                    <Text style={styles.gapsText}>
+                      Fill in or delete before sending: {gaps.slice(0, 4).join('  ')}
+                      {gaps.length > 4 ? `  +${gaps.length - 4} more` : ''}
+                    </Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={[styles.btn, !canSend && { opacity: 0.5 }]}
+                  disabled={!canSend}
+                  onPress={async () => {
+                    await portal.answerRequest(r.id, text.trim());
+                    onAnswered();
+                  }}
+                >
+                  <Text style={styles.btnText}>Send answer</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
+// Una respuesta ya enviada se puede guardar como plantilla (el nombre del paciente pasa a [name])
+const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
+  const me = useProIdentity();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [topic, setTopic] = useState<TemplateTopic>('other');
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  if (state === 'saved') {
+    return (
+      <View style={styles.savedRow}>
+        <Ionicons name="checkmark-circle" size={14} color={Colors.ok} />
+        <Text style={styles.saved}>Saved to your templates</Text>
+      </View>
+    );
+  }
+  if (!open) {
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          setTopic(guessTopic(`${request.message} ${request.response ?? ''}`));
+          setOpen(true);
+        }}
+      >
+        <Text style={styles.link}>Save this answer as a template</Text>
+      </TouchableOpacity>
+    );
+  }
+  return (
+    <View style={styles.saveBox}>
+      <TextInput
+        style={[styles.input, { minHeight: 40 }]}
+        placeholder="Template name, e.g. “Iron and vitamin D together”"
+        placeholderTextColor={Colors.textMuted}
+        value={title}
+        onChangeText={setTitle}
+        autoFocus
+      />
+      <View style={styles.topics}>
+        {TEMPLATE_TOPICS.map((t) => (
+          <TouchableOpacity key={t.id} style={[styles.topic, topic === t.id && styles.topicOn]} onPress={() => setTopic(t.id)}>
+            <Text style={[styles.topicText, topic === t.id && { color: Colors.background }]}>{t.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {state === 'error' && <Text style={styles.error}>Could not save the template. Try again.</Text>}
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <TouchableOpacity
+          style={[styles.btn, { flex: 1 }, !title.trim() && { opacity: 0.5 }]}
+          disabled={!title.trim() || state === 'saving'}
+          onPress={async () => {
+            setState('saving');
+            try {
+              await templates.save({ title, topic, keywords: [], body: toTemplateBody(request.response ?? '', request.patientName, me.name) });
+              setState('saved');
+            } catch {
+              setState('error');
+            }
+          }}
+        >
+          <Text style={styles.btnText}>Save template</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.btnGhost} onPress={() => setOpen(false)}>
+          <Text style={styles.btnGhostText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -254,4 +352,15 @@ const styles = StyleSheet.create({
   requestMsg: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
   response: { borderLeftWidth: 3, borderLeftColor: Colors.accent, paddingLeft: 10 },
   responseText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  gaps: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  gapsText: { color: Colors.attention, fontSize: 12, fontWeight: '700', flex: 1, lineHeight: 17 },
+  savedRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  saveBox: { gap: 8, borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 8 },
+  topics: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  topic: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5 },
+  topicOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
+  topicText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  error: { color: Colors.danger, fontSize: 12 },
+  btnGhost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
+  btnGhostText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
 });
