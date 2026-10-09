@@ -69,7 +69,7 @@ export const SECTION_OPTIONS: { id: AppSection; title: string; subtitle: string;
   { id: 'cycle', title: 'Cycle tracking', subtitle: 'Period dates and predictions', icon: 'rose-outline' },
   { id: 'gut', title: 'Gut', subtitle: 'Bowel movements: how often, colour and consistency', icon: 'nutrition-outline' },
   { id: 'bladder', title: 'Bladder', subtitle: 'Urine: how often, colour and how hydrated you are', icon: 'water-outline' },
-  { id: 'medication', title: 'Medication and supplements', subtitle: 'What you take, when, and reminders if you want them', icon: 'medical-outline' },
+  { id: 'medication', title: 'Medication & supplements', subtitle: 'What you take, when, and reminders if you want them', icon: 'medical-outline' },
   { id: 'badges', title: 'Badges', subtitle: 'Achievements and streaks', icon: 'ribbon-outline' },
   { id: 'specialists', title: 'Specialist suggestions', subtitle: '"Talk to a specialist" on Today', icon: 'people-outline' },
   { id: 'learning', title: 'Learning', subtitle: 'Short reads about your health', icon: 'book-outline' },

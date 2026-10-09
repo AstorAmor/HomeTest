@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { courseProgress, dosesForDay, findKnownMed, isActiveOn, parseMedicationText } from '@/logic/medication';
+import { courseProgress, dosesForDay, findKnownMed, isActiveOn, parseMedicationText, shiftSchedule, shiftTime, zoneChange } from '@/logic/medication';
 import { MedicationItem } from '@/types/medication';
 
 describe('parseMedicationText', () => {
@@ -65,5 +65,20 @@ describe('tomas del día', () => {
       { id: 'l', fecha: at.toISOString(), createdAt: at.toISOString(), medId: 'm1', scheduledFor: at.toISOString(), status: 'taken' },
     ]);
     expect(doses[0].log?.status).toBe('taken');
+  });
+});
+
+describe('cambio de zona horaria', () => {
+  const madrid = { zone: 'Europe/Madrid', offset: 120 };
+  it('mismo sitio o solo horario de verano: no pregunta', () => {
+    expect(zoneChange(madrid, madrid)).toBeNull();
+    expect(zoneChange(madrid, { zone: 'Europe/Madrid', offset: 60 })).toBeNull();
+    expect(zoneChange(null, madrid)).toBeNull();
+  });
+  it('Madrid → Nueva York: −6 h y las 08:00 pasan a las 02:00', () => {
+    const diff = zoneChange(madrid, { zone: 'America/New_York', offset: -240 })!;
+    expect(diff).toBe(-360);
+    expect(shiftSchedule({ type: 'times', times: ['08:00', '22:00'] }, diff)).toEqual({ type: 'times', times: ['02:00', '16:00'] });
+    expect(shiftTime('03:30', 120 - -240)).toBe('09:30');
   });
 });

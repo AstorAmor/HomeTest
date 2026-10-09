@@ -255,7 +255,7 @@ export const CycleGoalScreen = () => {
               <View
                 style={[
                   styles.adviceCard,
-                  advice.level !== 'keep_trying' && { borderColor: withAlpha(Colors.attention, 0.6) },
+                  advice.level !== 'keep_trying' && { borderColor: withAlpha(Colors.gold, 0.5) },
                 ]}
               >
                 <Text style={styles.adviceTitle}>{advice.title}</Text>

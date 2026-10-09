@@ -107,7 +107,7 @@ export const CycleGoalPanel = () => {
       </TouchableOpacity>
 
       {advice && (
-        <View style={[styles.card, advice.level !== 'keep_trying' && { borderColor: withAlpha(Colors.attention, 0.6) }]}>
+        <View style={[styles.card, advice.level !== 'keep_trying' && { borderColor: withAlpha(Colors.gold, 0.5) }]}>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { flex: 1 }]}>{advice.title}</Text>
             <InfoButton topic="fertility" />

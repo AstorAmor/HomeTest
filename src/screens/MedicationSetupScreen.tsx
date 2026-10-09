@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
+import { WheelPicker } from '@/components/WheelPicker';
 import { medicationRepository } from '@/data/medicationRepository';
 import { dayKey } from '@/data/bathroomRepository';
 import { defaultTimes, findKnownMed, KnownMed, parseMedicationText, scheduleText } from '@/logic/medication';
@@ -13,7 +14,9 @@ import { MedicationItem, MedKind, MedSchedule } from '@/types/medication';
 type Step = 'what' | 'dose' | 'when' | 'duration' | 'reminders' | 'summary';
 type Frequency = 'once' | 'twice' | 'three' | 'every_hours' | 'weekdays' | 'as_needed';
 
-const REGULAR_SUGGESTIONS = ['Vitamin D', 'Magnesium', 'Omega-3', 'Iron', 'Folic acid', 'Levothyroxine', 'Contraceptive pill'];
+const REGULAR_SUGGESTIONS = ['Vitamin D', 'Magnesium', 'Omega-3', 'Creatine', 'Iron', 'Folic acid', 'Vitamin B12', 'Levothyroxine', 'Contraceptive pill'];
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 const SHORT_SUGGESTIONS = ['Ibuprofen', 'Paracetamol', 'Amoxicillin', 'Omeprazole'];
 const SLOTS = [
   { id: '08:00', label: 'Morning 08:00' },
@@ -39,7 +42,8 @@ const frequencyOf = (s: MedSchedule): Frequency =>
 
 // Alta guiada de una medicación o suplemento: lo habitual (?mode=regular) o un tratamiento
 // puntual (?mode=short). Lo que el usuario escribe ("ibuprofeno 600 cada 8 horas 3 días") se
-// interpreta para rellenar los pasos siguientes; siempre se puede corregir.
+// interpreta para rellenar los pasos siguientes; siempre se puede corregir. Se pueden elegir
+// varios a la vez: se configuran uno detrás de otro.
 export const MedicationSetupScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string; id?: string }>();
@@ -59,6 +63,14 @@ export const MedicationSetupScreen = () => {
   const [withFood, setWithFood] = useState<MedicationItem['withFood']>();
   const [courseDays, setCourseDays] = useState<number | undefined>();
   const [reminders, setReminders] = useState<'yes' | 'no' | undefined>();
+  // Varios a la vez: los elegidos en la lista y los que faltan por configurar
+  const [picked, setPicked] = useState<string[]>([]);
+  const [queue, setQueue] = useState<string[]>([]);
+  const [total, setTotal] = useState(1);
+  // "Other time": ruedas de hora y minutos
+  const [otherOpen, setOtherOpen] = useState(false);
+  const [otherHour, setOtherHour] = useState(9);
+  const [otherMinute, setOtherMinute] = useState(0);
 
   // Editar: partir de lo guardado
   useEffect(() => {
@@ -94,11 +106,12 @@ export const MedicationSetupScreen = () => {
   };
 
   // Paso 1 → rellenar el resto con lo que se entiende del texto y con la pauta habitual
-  const understand = () => {
-    const parsed = parseMedicationText(text);
-    const k = findKnownMed(text);
+  const understand = (input = text) => {
+    const parsed = parseMedicationText(input);
+    const k = findKnownMed(input);
+    setText(input);
     setKnown(k);
-    setName(parsed.name ?? k?.label ?? text.trim());
+    setName(parsed.name ?? k?.label ?? input.trim());
     setKind(k?.kind ?? (isShort ? 'medication' : kind));
     if (parsed.dose) setDose(parsed.dose);
     const schedule = parsed.schedule ?? k?.schedule;
@@ -121,9 +134,16 @@ export const MedicationSetupScreen = () => {
   const steps: Step[] = ['what', 'dose', 'when', ...(isShort ? (['duration'] as Step[]) : []), 'reminders', 'summary'];
   const index = steps.indexOf(step);
   // Al editar no se vuelve a interpretar el texto (pisaría lo que ya se corrigió)
-  const next = () => (step === 'what' && !existing ? understand() : setStep(steps[index + 1]));
+  const start = () => {
+    const typed = text.trim();
+    const list = [...(typed.length > 1 && !picked.includes(typed) ? [typed] : []), ...picked];
+    setQueue(list.slice(1));
+    setTotal(list.length);
+    understand(list[0]);
+  };
+  const next = () => (step === 'what' && !existing ? start() : setStep(steps[index + 1]));
   const canContinue =
-    (step === 'what' && text.trim().length > 1) ||
+    (step === 'what' && (text.trim().length > 1 || picked.length > 0)) ||
     step === 'dose' ||
     (step === 'when' && (frequency === 'as_needed' || times.length > 0)) ||
     (step === 'duration' && !!courseDays) ||
@@ -149,12 +169,34 @@ export const MedicationSetupScreen = () => {
     };
     if (existing) await medicationRepository.update(existing.id, item);
     else await medicationRepository.save(item);
+    if (queue.length) {
+      // El siguiente de la lista, desde cero
+      const [nextOne, ...rest] = queue;
+      setQueue(rest);
+      setDose('');
+      setFrequency('once');
+      setTimes(['08:00']);
+      setWithFood(undefined);
+      setCourseDays(undefined);
+      setReminders(undefined);
+      setKind(isShort ? 'medication' : 'supplement');
+      understand(nextOne);
+      return;
+    }
     router.back();
   };
 
   const toggleTime = (t: string) =>
     setTimes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t].sort()));
   const slotOptions = [...SLOTS, ...times.filter((t) => !SLOTS.some((s) => s.id === t)).map((t) => ({ id: t, label: t }))];
+  const togglePicked = (name: string) =>
+    setPicked((prev) => (prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name]));
+  const addOther = () => {
+    const t = `${HOURS[otherHour]}:${MINUTES[otherMinute]}`;
+    setTimes((prev) => (prev.includes(t) ? prev : [...prev, t].sort()));
+    setOtherOpen(false);
+  };
+  const position = total > 1 ? `${total - queue.length} of ${total}` : null;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -182,12 +224,23 @@ export const MedicationSetupScreen = () => {
               placeholderTextColor={Colors.textMuted}
               autoFocus
             />
-            <Text style={styles.label}>Or pick one</Text>
-            <ChoiceChips
-              options={(isShort ? SHORT_SUGGESTIONS : REGULAR_SUGGESTIONS).map((s) => ({ id: s, label: s }))}
-              value={text}
-              onChange={setText}
-            />
+            <Text style={styles.label}>Or pick one or more</Text>
+            <View style={styles.slots}>
+              {(isShort ? SHORT_SUGGESTIONS : REGULAR_SUGGESTIONS).map((s) => {
+                const on = picked.includes(s);
+                return (
+                  <TouchableOpacity key={s} style={[styles.slot, on && styles.slotOn]} onPress={() => togglePicked(s)}>
+                    <Text style={[styles.slotText, on && { color: Colors.textPrimary }]}>
+                      {on ? '✓ ' : ''}
+                      {s}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {picked.length > 1 && (
+              <Text style={styles.tip}>We will set them up one after the other ({picked.length}).</Text>
+            )}
           </>
         )}
 
@@ -199,6 +252,7 @@ export const MedicationSetupScreen = () => {
                 <Text style={styles.prefilledText}>We filled in the next steps from what you wrote. Check them.</Text>
               </View>
             )}
+            {position && <Text style={styles.position}>{position}</Text>}
             <Text style={styles.title}>{name || 'How much?'}</Text>
             <Text style={styles.label}>Is it a medicine or a supplement?</Text>
             <ChoiceChips
@@ -280,7 +334,24 @@ export const MedicationSetupScreen = () => {
                       </TouchableOpacity>
                     );
                   })}
+                  <TouchableOpacity style={[styles.slot, otherOpen && styles.slotOn]} onPress={() => setOtherOpen((v) => !v)}>
+                    <Text style={[styles.slotText, otherOpen && { color: Colors.textPrimary }]}>+ Other time</Text>
+                  </TouchableOpacity>
                 </View>
+                {otherOpen && (
+                  <View style={styles.otherBox}>
+                    <View style={styles.wheels}>
+                      <WheelPicker items={HOURS} selectedIndex={otherHour} onChange={setOtherHour} width={90} />
+                      <Text style={styles.colon}>:</Text>
+                      <WheelPicker items={MINUTES} selectedIndex={otherMinute} onChange={setOtherMinute} width={90} />
+                    </View>
+                    <TouchableOpacity style={styles.addTime} onPress={addOther} activeOpacity={0.85}>
+                      <Text style={styles.addTimeText}>
+                        Add {HOURS[otherHour]}:{MINUTES[otherMinute]}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </>
             )}
             {frequency !== 'as_needed' && (
@@ -367,7 +438,7 @@ export const MedicationSetupScreen = () => {
         onPress={step === 'summary' ? save : next}
         disabled={!canContinue}
       >
-        <Text style={styles.ctaText}>{step === 'summary' ? 'Save' : 'Continue'}</Text>
+        <Text style={styles.ctaText}>{step === 'summary' ? (queue.length ? `Save and set up ${queue[0]}` : 'Save') : 'Continue'}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -386,6 +457,20 @@ const styles = StyleSheet.create({
   },
   progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.green },
+  position: { color: Colors.gold, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', marginBottom: 4 },
+  otherBox: {
+    marginTop: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 14,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  colon: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginHorizontal: 4 },
+  addTime: { backgroundColor: Colors.accent, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 9, marginTop: 6, marginBottom: 6 },
+  addTimeText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
   content: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 24 },
   title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 16 },

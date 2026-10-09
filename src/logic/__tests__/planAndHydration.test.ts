@@ -68,3 +68,14 @@ describe('consejo al guardar la orina', () => {
     expect(urineAdvice({ color: 'pale', count: 6 })).toBeNull();
   });
 });
+
+describe('sueño: quien ya duerme bastante', () => {
+  it('más de 8 h y quiere dormir mejor: horarios regulares, no "duerme más"', () => {
+    const sleep = buildPlan({ sleep: 'gt8', goals: ['sleep_better'] }).find((p) => p.kind === 'sleep');
+    expect(sleep?.title).toBe('Keep regular sleep times');
+    expect(sleep?.why).not.toMatch(/need 7 hours/);
+  });
+  it('más de 8 h sin objetivo de sueño: el sueño no entra', () => {
+    expect(buildPlan({ sleep: 'gt8' }).some((p) => p.kind === 'sleep')).toBe(false);
+  });
+});

@@ -40,7 +40,7 @@ export const PROFESSIONAL_ROLES: { id: ProfessionalRole; label: string }[] = [
   { id: 'dietitian', label: 'Dietitian' },
   { id: 'trainer', label: 'Personal trainer' },
   { id: 'physio', label: 'Physiotherapist' },
-  { id: 'geneticist', label: 'Geneticist' },
+  { id: 'geneticist', label: 'Genetic counsellor' },
 ];
 
 export const roleLabel = (id: string) => PROFESSIONAL_ROLES.find((r) => r.id === id)?.label ?? id;

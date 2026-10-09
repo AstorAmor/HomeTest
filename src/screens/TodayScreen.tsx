@@ -28,8 +28,11 @@ import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/ba
 import { hydrationFromUrine, HYDRATION_SCALE } from '@/logic/bathroom';
 import { BowelEntry, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
 import { GaugeBar } from '@/components/GaugeBar';
+import { thermometerRepository } from '@/data/temperatureRepository';
 import { doseRepository, medicationRepository } from '@/data/medicationRepository';
-import { dosesForDay, isActiveOn } from '@/logic/medication';
+import { dosesForDay, isActiveOn, isReminderMuted } from '@/logic/medication';
+import { DoseRows } from '@/components/DoseRows';
+import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
 import { ScheduledDose } from '@/types/medication';
 import {
   mockBiomarkers,
@@ -159,6 +162,10 @@ export const TodayScreen = () => {
     urine: null,
   });
   const [dosesToday, setDosesToday] = useDeepState<ScheduledDose[]>([]);
+  // Lo que tiene recordatorio: sus tomas de hoy se marcan desde aquí (Taken / Skip)
+  const [reminderIds, setReminderIds] = useDeepState<string[]>([]);
+  // Última lectura con termómetro de las últimas 24 h (manda sobre la del wearable)
+  const [thermo, setThermo] = useDeepState<number | null>(null);
 
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
@@ -169,8 +176,19 @@ export const TodayScreen = () => {
       .catch((e) => console.warn('Notifications not refreshed', e));
     // Sin la tabla de medicación (migración pendiente) simplemente no hay tomas que enseñar
     Promise.all([medicationRepository.getAll(), doseRepository.getAll()])
-      .then(([m, l]) => setDosesToday(dosesForDay(m.filter((i) => isActiveOn(i, new Date())), new Date(), l)))
+      .then(([m, l]) => {
+        const active = m.filter((i) => isActiveOn(i, new Date()));
+        setDosesToday(dosesForDay(active, new Date(), l));
+        setReminderIds(active.filter((i) => i.reminders && !isReminderMuted(i)).map((i) => i.id));
+      })
       .catch(() => setDosesToday([]));
+    thermometerRepository
+      .getAll()
+      .then((all) => {
+        const last = all.reduce<(typeof all)[number] | null>((a, t) => (!a || t.fecha > a.fecha ? t : a), null);
+        setThermo(last && Date.now() - new Date(last.fecha).getTime() < 24 * 3600 * 1000 ? last.valor : null);
+      })
+      .catch(() => setThermo(null));
     Promise.all([bowelRepository.getAll(), urineRepository.getAll()])
       .then(([b, u]) => setBathroomToday({ bowel: entryForDay(b, dayKey(new Date())) ?? null, urine: entryForDay(u, dayKey(new Date())) ?? null }))
       .catch(() => undefined);
@@ -200,7 +218,7 @@ export const TodayScreen = () => {
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
-  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, setBathroomToday, setDosesToday]);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, setBathroomToday, setDosesToday, setReminderIds, setThermo]);
 
   useReloadOnFocus(load);
 
@@ -213,7 +231,7 @@ export const TodayScreen = () => {
   const bp = biomarkers.find((b) => b.id === 'blood_pressure');
   const rhr = latest(series.resting_heart_rate);
   const hrv = latest(series.hrv);
-  const temp = latest(series.body_temperature);
+  const temp = thermo ?? latest(series.body_temperature);
 
   const lastMood = lastCheckIn?.mood ? MOOD_OPTIONS.find((m) => m.id === lastCheckIn.mood) : null;
   const lastMoment = lastCheckIn ? MOMENT_OPTIONS.find((m) => m.id === lastCheckIn.moment) : null;
@@ -306,18 +324,6 @@ export const TodayScreen = () => {
 
         <NextConsultationCard />
 
-        {show('plan') && (
-          <TouchableOpacity style={styles.fullPlan} onPress={() => router.push('/plans')} activeOpacity={0.85}>
-            <View style={styles.fullPlanIcon}>
-              <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.fullPlanTitle}>See full plan</Text>
-              <Text style={styles.fullPlanSub}>Your latest plan with target ranges, and earlier ones</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-          </TouchableOpacity>
-        )}
 
         {/* Check-in */}
         {show('checkin') && (
@@ -359,12 +365,14 @@ export const TodayScreen = () => {
         )}
 
         {show('medication') && (
-          <TouchableOpacity style={styles.bathroomCard} onPress={() => router.push('/medications')} activeOpacity={0.85}>
+          <View style={styles.medCard}>
+          <ZoneChangeBanner onChanged={load} />
+          <TouchableOpacity style={styles.medHeader} onPress={() => router.push('/medications')} activeOpacity={0.85}>
             <View style={styles.inboxIcon}>
               <Ionicons name="medical-outline" size={20} color={Colors.gold} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.fullPlanTitle}>Medication</Text>
+              <Text style={styles.fullPlanTitle}>Medication & supplements</Text>
               <Text style={styles.fullPlanSub}>
                 {dosesToday.length === 0
                   ? 'Add what you take to keep track'
@@ -379,6 +387,12 @@ export const TodayScreen = () => {
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
           </TouchableOpacity>
+          {dosesToday.some((d) => reminderIds.includes(d.medId)) && (
+            <View style={styles.medDoses}>
+              <DoseRows doses={dosesToday.filter((d) => reminderIds.includes(d.medId))} onChange={load} />
+            </View>
+          )}
+          </View>
         )}
 
         {cycle && show('cycle') && (
@@ -614,6 +628,11 @@ export const TodayScreen = () => {
               })}
             </View>
             <Text style={styles.planNote}>Built from your answers. Your results will add to it when they arrive.</Text>
+            <TouchableOpacity style={styles.fullPlanLink} onPress={() => router.push('/plans')} activeOpacity={0.8}>
+              <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
+              <Text style={styles.fullPlanLinkText}>See your full plan and earlier ones</Text>
+              <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
+            </TouchableOpacity>
           </>
         )}
 
@@ -746,6 +765,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  fullPlanLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
+  fullPlanLinkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  medCard: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  medHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  medDoses: { marginTop: 8, borderTopWidth: 1, borderTopColor: Colors.divider },
   bathroomCard: {
     flexDirection: 'row',
     alignItems: 'center',

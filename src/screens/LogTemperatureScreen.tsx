@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
-import { basalTemperatureRepository } from '@/data/temperatureRepository';
+import { basalTemperatureRepository, thermometerRepository } from '@/data/temperatureRepository';
 import { dayKey } from '@/data/bathroomRepository';
 import { logScreenStyles } from './LogBowelScreen';
 
@@ -13,14 +13,23 @@ const MIN = 35.0;
 const MAX = 38.0;
 
 // Temperatura basal: al despertar, antes de levantarse, siempre a la misma hora. Se parte de la
-// última para que baste con tocar + o − un par de veces.
+// última para que baste con tocar + o − un par de veces. Con ?mode=thermometer es una lectura
+// suelta con el termómetro (cualquier hora, varias al día), que no se mezcla con la basal.
 export const LogTemperatureScreen = () => {
   const router = useRouter();
+  const thermometer = useLocalSearchParams<{ mode?: string }>().mode === 'thermometer';
   const [value, setValue] = useState(36.5);
   const [existingId, setExistingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (thermometer) {
+      thermometerRepository
+        .getAll()
+        .then((all) => setValue(all.length ? all.reduce((a, t) => (t.fecha > a.fecha ? t : a)).valor : 36.8))
+        .catch(() => setValue(36.8));
+      return;
+    }
     basalTemperatureRepository.getAll().then((all) => {
       const today = all.find((t) => dayKey(new Date(t.fecha)) === dayKey(new Date()));
       if (today) {
@@ -30,7 +39,7 @@ export const LogTemperatureScreen = () => {
         setValue(all.reduce((a, t) => (t.fecha > a.fecha ? t : a)).valor);
       }
     });
-  }, []);
+  }, [thermometer]);
 
   const change = (delta: number) =>
     setValue((v) => Math.min(MAX, Math.max(MIN, Math.round((v + delta) * 100) / 100)));
@@ -38,7 +47,10 @@ export const LogTemperatureScreen = () => {
   const save = async () => {
     setSaving(true);
     try {
-      if (existingId) await basalTemperatureRepository.update(existingId, { valor: value });
+      if (thermometer) {
+        const now = new Date().toISOString();
+        await thermometerRepository.save({ id: `${Date.now()}`, valor: value, unidad: '°C', fecha: now, createdAt: now });
+      } else if (existingId) await basalTemperatureRepository.update(existingId, { valor: value });
       else {
         const now = new Date().toISOString();
         await basalTemperatureRepository.save({ id: `${Date.now()}`, valor: value, unidad: '°C', fecha: now, createdAt: now });
@@ -64,9 +76,11 @@ export const LogTemperatureScreen = () => {
           <View style={styles.iconBadge}>
             <Ionicons name="thermometer-outline" size={26} color={Colors.gold} />
           </View>
-          <Text style={styles.title}>Morning temperature</Text>
+          <Text style={styles.title}>{thermometer ? 'Thermometer reading' : 'Morning temperature'}</Text>
           <Text style={styles.subtitle}>
-            Take it as soon as you wake up, before getting out of bed, at about the same time each day.
+            {thermometer
+              ? 'Any time, for example when you feel unwell. It is saved with the time you take it.'
+              : 'Take it as soon as you wake up, before getting out of bed, at about the same time each day.'}
           </Text>
         </View>
 
@@ -85,8 +99,9 @@ export const LogTemperatureScreen = () => {
 
         <View style={styles.askCard}>
           <Text style={styles.askText}>
-            A digital basal thermometer (two decimals) works best. Illness, alcohol or a bad night can raise it: add a
-            note in your check-in if so.
+            {thermometer
+              ? '38 °C or more is a fever. Rest and drink fluids; see a doctor if it lasts more than 3 days, goes above 39.5 °C or comes with a stiff neck, a rash or trouble breathing.'
+              : 'A digital basal thermometer (two decimals) works best. Illness, alcohol or a bad night can raise it: add a note in your check-in if so.'}
           </Text>
         </View>
       </ScrollView>

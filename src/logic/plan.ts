@@ -192,12 +192,36 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
 }
 
 function sleepItem(p: PlanProfile, has: (g: string) => boolean): Candidate {
+  // Si ya duerme 7 h o más, la acción no es dormir más horas sino a horas regulares
+  const enough = p.sleep === '7to8' || p.sleep === 'gt8';
   let score = 0;
   if (p.sleep === 'lt6') score += 5;
   if (p.sleep === '6to7') score += 2;
+  // Ya duerme bastante: el sueño solo entra si quiere dormir mejor (y entonces, horarios regulares)
+  if (p.sleep === 'gt8' && !has('sleep_better')) score -= 3;
+  if (p.sleep === '7to8' && !has('sleep_better')) score -= 1;
   if (has('sleep_better')) score += 4;
   if (has('more_energy')) score += 2;
   if (has('reduce_stress')) score += 1;
+  if (enough) {
+    const why = [
+      `You already sleep ${p.sleep === 'gt8' ? 'over 8' : '7-8'} hours, so the goal is not more hours but steadier ones.`,
+      'Going to bed and waking up at the same times makes the same hours more restful.',
+    ];
+    if (p.sleep === 'gt8' && has('more_energy'))
+      why.push('If you regularly sleep over 9 hours and still wake up tired, it is worth mentioning to a doctor.');
+    return {
+      score,
+      item: {
+        kind: 'sleep',
+        title: 'Keep regular sleep times',
+        subtitle: 'Measured by your wearable',
+        target: p.sleep === 'gt8' ? 8 : 7.5,
+        why: why.join(' '),
+        how: ['Same wake-up time every day, weekends included', 'Daylight in the first hour after waking', 'A short wind-down routine before bed'],
+      },
+    };
+  }
   const why: string[] = [];
   if (p.sleep === 'lt6') why.push('You told us you usually sleep under 6 hours.');
   else if (p.sleep === '6to7') why.push('You usually sleep 6-7 hours, just under what most adults need.');

@@ -11,9 +11,10 @@ import { doseRepository, medicationRepository } from '@/data/medicationRepositor
 import { muteUntil } from '@/logic/nudges';
 import { MUTE_OPTIONS, MuteOption } from '@/logic/nudges/types';
 import { courseEnd, courseProgress, dosesForDay, isActiveOn, isReminderMuted, MUTED_FOREVER, scheduleText } from '@/logic/medication';
-import { DoseLog, MedicationItem, ScheduledDose } from '@/types/medication';
+import { DoseLog, MedicationItem } from '@/types/medication';
+import { DoseRows } from '@/components/DoseRows';
+import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
 
-const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
 // Medicación y suplementos: las tomas de hoy (marcar tomada u omitida), lo que toma de forma
 // habitual y los tratamientos puntuales. Cada recordatorio se enciende, apaga o silencia aparte.
@@ -38,11 +39,6 @@ export const MedicationsScreen = () => {
   const today = dosesForDay(active, now, logs);
   const asNeeded = active.filter((i) => i.schedule.type === 'as_needed');
 
-  const mark = async (dose: ScheduledDose, status: DoseLog['status']) => {
-    const at = new Date().toISOString();
-    await doseRepository.save({ id: `${Date.now()}`, fecha: at, createdAt: at, medId: dose.medId, scheduledFor: dose.at.toISOString(), status });
-    load();
-  };
   const logNow = async (item: MedicationItem) => {
     const at = new Date().toISOString();
     await doseRepository.save({ id: `${Date.now()}`, fecha: at, createdAt: at, medId: item.id, scheduledFor: at, status: 'taken' });
@@ -145,8 +141,11 @@ export const MedicationsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Medication" showBack />
+        <ScreenHeader title="Medication & supplements" showBack />
 
+        <View style={{ marginHorizontal: 20 }}>
+          <ZoneChangeBanner onChanged={load} />
+        </View>
         <View style={styles.titleRow}>
           <Text style={[styles.sectionTitle, { paddingHorizontal: 0 }]}>Today</Text>
           <InfoButton topic="medication" />
@@ -155,34 +154,7 @@ export const MedicationsScreen = () => {
           <Text style={styles.empty}>Nothing scheduled for today.</Text>
         ) : (
           <View style={styles.card}>
-            {today.map((d, i) => (
-              <View key={`${d.medId}-${d.at.toISOString()}`} style={[styles.doseRow, i > 0 && styles.divider]}>
-                <Text style={styles.doseTime}>{hhmm(d.at)}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.doseName}>{d.name}</Text>
-                  {d.dose ? <Text style={styles.itemSub}>{d.dose}</Text> : null}
-                </View>
-                {d.log ? (
-                  <View style={styles.doneTag}>
-                    <Ionicons
-                      name={d.log.status === 'taken' ? 'checkmark-circle' : 'remove-circle-outline'}
-                      size={16}
-                      color={d.log.status === 'taken' ? Colors.ok : Colors.textMuted}
-                    />
-                    <Text style={styles.doneText}>{d.log.status === 'taken' ? 'Taken' : 'Skipped'}</Text>
-                  </View>
-                ) : (
-                  <>
-                    <TouchableOpacity style={styles.skip} onPress={() => mark(d, 'skipped')}>
-                      <Text style={styles.skipText}>Skip</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.take} onPress={() => mark(d, 'taken')}>
-                      <Text style={styles.takeText}>Taken</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            ))}
+            <DoseRows doses={today} onChange={load} />
             {asNeeded.map((item) => (
               <View key={item.id} style={[styles.doseRow, (today.length > 0 || item !== asNeeded[0]) && styles.divider]}>
                 <Text style={styles.doseTime}>—</Text>

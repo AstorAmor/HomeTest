@@ -183,3 +183,44 @@ export const MUTED_FOREVER = '9999-12-31T00:00:00.000Z';
 
 export const isReminderMuted = (item: MedicationItem, now = new Date()) =>
   !!item.remindersMutedUntil && new Date(item.remindersMutedUntil) > now;
+
+// --- Cambio de zona horaria (viajes) --------------------------------------------------------
+// Las horas de las tomas se guardan como hora local ("08:00"). Si el móvil cambia de zona horaria
+// (no el cambio de hora de verano, que no cambia la zona), se pregunta si mantener las mismas horas
+// del reloj o mover las tomas para que caigan en el mismo momento que en casa.
+
+export interface ZoneStamp {
+  zone: string; // p. ej. "Europe/Madrid"
+  offset: number; // minutos respecto a UTC (Madrid en verano: 120)
+}
+
+export const currentZone = (d = new Date()): ZoneStamp => ({
+  zone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'local',
+  offset: -d.getTimezoneOffset(),
+});
+
+// Diferencia en minutos si ha cambiado de zona (null si es la misma o solo es el horario de verano)
+export function zoneChange(prev: ZoneStamp | null | undefined, now: ZoneStamp): number | null {
+  if (!prev || prev.zone === now.zone || prev.offset === now.offset) return null;
+  return now.offset - prev.offset;
+}
+
+export function shiftTime(hhmm: string, minutes: number): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  const total = (((h * 60 + m + minutes) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+// Mover todas las tomas: mismo momento que en casa, expresado en la hora local nueva
+export function shiftSchedule(s: MedSchedule, minutes: number): MedSchedule {
+  if (s.type === 'times') return { ...s, times: s.times.map((t) => shiftTime(t, minutes)).sort() };
+  if (s.type === 'weekdays') return { ...s, times: s.times.map((t) => shiftTime(t, minutes)).sort() };
+  if (s.type === 'every_hours') return { ...s, firstTime: shiftTime(s.firstTime, minutes) };
+  return s;
+}
+
+export const offsetText = (minutes: number) => {
+  const sign = minutes < 0 ? '−' : '+';
+  const abs = Math.abs(minutes);
+  return `${sign}${Math.floor(abs / 60)} h${abs % 60 ? ` ${abs % 60} min` : ''}`;
+};

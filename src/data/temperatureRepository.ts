@@ -12,6 +12,13 @@ export const basalTemperatureRepository = createMetricRepository<SimpleMetricEnt
   simpleMetricRemote('basal_temperature')
 );
 
+// Temperatura con termómetro en cualquier momento (p. ej. si se encuentra mal). Va aparte de la
+// basal para no mezclar una fiebre con la regla de la ovulación. metric_readings, kind "body_temperature".
+export const thermometerRepository = createMetricRepository<SimpleMetricEntry>(
+  'hometest:thermometer_temperature',
+  simpleMetricRemote('body_temperature')
+);
+
 // Lecturas manuales y del wearable juntas, para la regla de la subida tras la ovulación
 export function temperatureReadings(manual: SimpleMetricEntry[], wearable: DailyWearableRecord[]): TempReading[] {
   return [

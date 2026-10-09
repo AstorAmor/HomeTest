@@ -48,27 +48,27 @@ export function fertilityAdvice(input: FertilityInput): FertilityAdvice {
   if ((age != null && age >= 40) || input.regularCycles === 'no' || known) {
     return {
       level: 'see_doctor_now',
-      title: 'Talk to a doctor now',
+      title: 'We recommend talking to a doctor',
       body:
         age != null && age >= 40
-          ? 'From 40, guidelines recommend seeing a fertility specialist straight away rather than waiting.'
-          : 'With irregular cycles or a known condition, it is worth seeing a doctor early instead of waiting a year.',
+          ? 'From 40, guidelines suggest seeing a fertility specialist early rather than waiting. It is a routine step, and there is a lot they can help with.'
+          : 'With irregular cycles or a known condition, it can help to see a doctor early instead of waiting a year. It is a routine step, and there is a lot they can help with.',
       tips,
     };
   }
   if (age != null && age >= 35 && months >= 6) {
     return {
       level: 'see_doctor',
-      title: 'Time to talk to a doctor',
-      body: 'From 35, guidelines recommend a fertility check after 6 months of trying. It is common and there is a lot that can help.',
+      title: 'It may be a good moment to talk to a doctor',
+      body: 'From 35, guidelines suggest a fertility check after 6 months of trying. It is very common, and there is a lot that can help.',
       tips,
     };
   }
   if (months >= 12) {
     return {
       level: 'see_doctor',
-      title: 'Time to talk to a doctor',
-      body: 'After a year of trying, guidelines recommend a fertility check for you and your partner. It is common and there is a lot that can help.',
+      title: 'It may be a good moment to talk to a doctor',
+      body: 'After a year of trying, guidelines suggest a fertility check for you and your partner. It is very common, and there is a lot that can help.',
       tips,
     };
   }

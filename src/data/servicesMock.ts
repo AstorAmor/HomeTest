@@ -25,7 +25,7 @@ export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string }
   dietitian: { label: 'Dietitians', icon: 'nutrition-outline' },
   trainer: { label: 'Personal trainers', icon: 'barbell-outline' },
   physio: { label: 'Physiotherapists', icon: 'body-outline' },
-  geneticist: { label: 'Geneticists', icon: 'git-network-outline' },
+  geneticist: { label: 'Genetic counsellors', icon: 'git-network-outline' },
 };
 
 export const mockProfessionals: Professional[] = [
@@ -139,6 +139,20 @@ export const mockProfessionals: Professional[] = [
     reviews: 22,
     languages: ['Spanish', 'English'],
     nextAvailable: 'Mon 7 Oct, 16:00',
+    online: true,
+  },
+  {
+    id: 'pro-8',
+    name: 'Marta Ibáñez, MSc',
+    role: 'geneticist',
+    specialty: 'Genetic counselling · Family history and hereditary cancer',
+    bio: 'Goes through your family history with you, explains your risk in plain words and tells you if a genetic test makes sense, and which one.',
+    pricePerSession: 80,
+    sessionMinutes: 45,
+    rating: 4.9,
+    reviews: 31,
+    languages: ['Spanish', 'English'],
+    nextAvailable: 'Thu 10 Oct, 12:00',
     online: true,
   },
 ];

@@ -16,6 +16,7 @@ import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
+import { baselineReport, currentReport } from '@/data/reportRepository';
 import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
@@ -169,6 +170,38 @@ export const MyDataScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title="My Data" />
 
+        {/* Edad biológica (PhenoAge) de la última analítica: lo primero que se ve */}
+        {(() => {
+          const now = currentReport.summary.phenoage;
+          const before = baselineReport.summary.phenoage;
+          if (!now.available) return null;
+          const mid = (p: typeof now) => (p.low + p.high) / 2;
+          const younger = now.chronological_age - mid(now);
+          return (
+            <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/report-summary')} activeOpacity={0.85}>
+              <View style={styles.bioAgeHeader}>
+                <Ionicons name="hourglass-outline" size={18} color={Colors.accent} />
+                <Text style={styles.bioAgeTitle}>Your biological age</Text>
+                <Text style={styles.bioAgeTag}>sample</Text>
+                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+              </View>
+              <Text style={styles.bioAgeValue}>
+                {Math.round(now.low)}–{Math.round(now.high)}
+                <Text style={styles.bioAgeUnit}> years</Text>
+              </Text>
+              <Text style={styles.bioAgeSub}>
+                {(() => {
+                  const n = Math.round(Math.abs(younger));
+                  return `About ${n} year${n === 1 ? '' : 's'} ${younger >= 0 ? 'younger' : 'older'}`;
+                })()}{' '}
+                than your age (
+                {now.chronological_age})
+                {before.available && mid(before) > mid(now) ? ` · down from ${Math.round(before.low)}–${Math.round(before.high)} at your previous test` : ''}
+              </Text>
+            </TouchableOpacity>
+          );
+        })()}
+
         {sex === 'female' && cycle && show('cycle') && (
           <>
             <View style={styles.sectionHeader}>
@@ -231,9 +264,15 @@ export const MyDataScreen = () => {
         )}
 
         <View style={[styles.sectionHeader, { marginTop: 16 }]}>
-          <Text style={styles.sectionTitle}>Blood tests</Text>
+          <Text style={styles.sectionTitle}>Biomarkers</Text>
           <Text style={styles.sectionMeta}>Tap to see history and log</Text>
         </View>
+        {/* Sin datos todavía: la tarjeta sale igual, para registrar la primera lectura */}
+        {!glucose && <MetricCard title="Sugar" icon="water" iconColor={Colors.accent} value="—" avg="tap to log" onPress={() => router.push('/glucose-detail')} />}
+        {!cholesterol && (
+          <MetricCard title="Total cholesterol" icon="analytics" iconColor={Colors.amber} value="—" avg="tap to log" onPress={() => router.push('/cholesterol-detail')} />
+        )}
+        {!cortisol && <MetricCard title="Cortisol" icon="sunny" iconColor={Colors.violet} value="—" avg="tap to log" onPress={() => router.push('/cortisol-detail')} />}
         {glucose && (
           <MetricCard title="Sugar" icon="water" iconColor={Colors.accent} value={glucose.latest} unit="mg/dL" avg={glucose.isSample ? 'sample' : ''} onPress={() => router.push('/glucose-detail')}>
             <TrendChart labels={glucose.labels} series={glucose.series} height={90} band={{ low: 70, high: 99 }} />
@@ -250,7 +289,7 @@ export const MyDataScreen = () => {
           </MetricCard>
         )}
 
-        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Your tests</Text>
+        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>Tests</Text>
         <View style={styles.diagnosticGrid}>
           {mockDiagnosticTests.map((test) => {
             const icon = diagnosticIcon(test.status);
@@ -309,7 +348,7 @@ const MetricCard = ({
   unit?: string;
   avg?: string;
   onPress: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) => (
   <TouchableOpacity style={styles.metricCard} onPress={onPress} activeOpacity={0.85}>
     <View style={styles.metricHeader}>
@@ -341,6 +380,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     gap: 2,
   },
+  bioAge: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 16,
+  },
+  bioAgeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bioAgeTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  bioAgeTag: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
+  bioAgeValue: { color: Colors.accent, fontSize: 34, fontWeight: '800', marginTop: 8 },
+  bioAgeUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '600' },
+  bioAgeSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 2 },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,9 @@ import { TrendChart } from '@/components/TrendChart';
 import { Colors } from '@/constants/colors';
 import { DailyPoint, formatSleep, shortDate, useDailyWearables } from '@/wearables/dailySeries';
 import { WearableMetric } from '@/wearables/types';
+import { thermometerRepository } from '@/data/temperatureRepository';
+import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { SimpleMetricEntry } from '@/types/simpleMetric';
 
 // Información orientativa por métrica (texto de bienestar, no diagnóstico).
 // Pendiente de revisión médica antes de usuarios reales.
@@ -136,6 +139,16 @@ export const MetricDetailScreen = () => {
   const change = previous.length ? (mean(recent) - mean(previous)) / mean(previous) : NaN;
   const trendGood = info.higherIsBetter === null ? null : info.higherIsBetter ? change > 0 : change < 0;
 
+  // Lecturas con termómetro (solo en la temperatura)
+  const [thermo, setThermo] = useState<SimpleMetricEntry[]>([]);
+  useReloadOnFocus(
+    useCallback(async () => {
+      if (kind !== 'body_temperature') return;
+      const all = await thermometerRepository.getAll().catch(() => []);
+      setThermo([...all].sort((a, b) => b.fecha.localeCompare(a.fecha)));
+    }, [kind])
+  );
+
   const chartScale = kind === 'sleep_duration' ? (v: number) => `${(v / 60).toFixed(1)}h` : kind === 'steps' ? (v: number) => `${(v / 1000).toFixed(1)}k` : undefined;
 
   return (
@@ -150,6 +163,32 @@ export const MetricDetailScreen = () => {
           <Text style={styles.value}>{latestValue !== undefined ? info.format(latestValue) : '—'}</Text>
           <Text style={styles.valueSub}>Latest{isSample ? ' · sample data' : ''}</Text>
         </View>
+
+        {kind === 'body_temperature' && (
+          <>
+            <TouchableOpacity
+              style={styles.thermoButton}
+              onPress={() => router.push({ pathname: '/log-temperature', params: { mode: 'thermometer' } })}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="thermometer-outline" size={20} color={Colors.background} />
+              <Text style={styles.thermoText}>Add a thermometer reading</Text>
+            </TouchableOpacity>
+            {thermo.length > 0 && (
+              <View style={styles.thermoList}>
+                <Text style={styles.thermoTitle}>Your thermometer readings</Text>
+                {thermo.slice(0, 5).map((t) => (
+                  <View key={t.id} style={styles.thermoRow}>
+                    <Text style={styles.thermoDate}>
+                      {new Date(t.fecha).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                    <Text style={[styles.thermoValue, t.valor >= 38 && { color: Colors.attention }]}>{t.valor.toFixed(1)} °C</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
 
         <View style={styles.tabs}>
           {RANGES.map((r) => (
@@ -238,6 +277,32 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 32 },
   hero: { alignItems: 'center', marginBottom: 14 },
+  thermoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.accent,
+    borderRadius: 24,
+    paddingVertical: 12,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  thermoText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
+  thermoList: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 14,
+    gap: 6,
+  },
+  thermoTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  thermoRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  thermoDate: { color: Colors.textSecondary, fontSize: 13 },
+  thermoValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   icon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   value: { color: Colors.textPrimary, fontSize: 34, fontWeight: '800' },
   valueSub: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
