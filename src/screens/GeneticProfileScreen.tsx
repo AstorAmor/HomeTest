@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,14 +35,14 @@ export const GeneticProfileScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Your genetic profile" showBack />
+        <ScreenHeader title={t('Your genetic profile')} showBack />
 
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
             <MaterialCommunityIcons name="dna" size={30} color={Colors.gold} />
           </View>
           <Text style={styles.heroText}>
-            What runs in your family, and later what your genes say. Everything here is private to you.
+            {t('What runs in your family, and later what your genes say. Everything here is private to you.')}
           </Text>
         </View>
 
@@ -53,21 +53,21 @@ export const GeneticProfileScreen = () => {
         >
           <View style={styles.cardHeader}>
             <MaterialCommunityIcons name="family-tree" size={22} color={Colors.gold} />
-            <Text style={styles.cardTitle}>Know your roots</Text>
+            <Text style={styles.cardTitle}>{t('Know your roots')}</Text>
             <InfoButton topic="family_history" />
             <View style={{ flex: 1 }} />
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </View>
           {!loaded ? null : draft ? (
             <>
-              <Text style={styles.cardBody}>You started it. Your answers are saved: continue at the same question.</Text>
-              <Text style={styles.cardCta}>Continue</Text>
+              <Text style={styles.cardBody}>{t('You started it. Your answers are saved: continue at the same question.')}</Text>
+              <Text style={styles.cardCta}>{t('Continue')}</Text>
             </>
           ) : record && level ? (
             <>
               <View style={[styles.tag, { backgroundColor: withAlpha(tagColor, 0.16) }]}>
                 <Text style={[styles.tagText, { color: tagColor }]}>
-                  {level === 'population' ? 'Population risk' : level === 'low' ? 'Low' : level === 'moderate' ? 'Moderate' : 'High'}
+                  {level === 'population' ? t('Population risk') : level === 'low' ? t('Low risk') : level === 'moderate' ? t('Moderate risk') : t('High risk')}
                 </Text>
               </View>
               <Text style={styles.cardBody}>{LEVEL_TEXT[level].title}</Text>
@@ -79,46 +79,43 @@ export const GeneticProfileScreen = () => {
           ) : (
             <>
               <Text style={styles.cardBody}>
-                The questions a genetic counsellor asks at a first visit: cancer and heart disease in your family. You find out
-                whether it is worth talking to a professional, and what to tell them.
+                {t('The questions a genetic counsellor asks at a first visit: cancer and heart disease in your family. You find out whether it is worth talking to a professional, and what to tell them.')}
               </Text>
-              <Text style={styles.cardMeta}>About 4–6 minutes · saved as you go</Text>
-              <Text style={styles.cardCta}>Start</Text>
+              <Text style={styles.cardMeta}>{t('About 4–6 minutes · saved as you go')}</Text>
+              <Text style={styles.cardCta}>{t('Start')}</Text>
             </>
           )}
         </TouchableOpacity>
         {record && !draft && (
           <TouchableOpacity style={styles.update} onPress={() => router.push({ pathname: '/know-your-roots', params: { edit: '1' } })}>
             <Ionicons name="create-outline" size={16} color={Colors.accent} />
-            <Text style={styles.updateText}>Update my answers</Text>
+            <Text style={styles.updateText}>{t('Update my answers')}</Text>
           </TouchableOpacity>
         )}
 
         <View style={[styles.card, styles.soon]}>
           <View style={styles.cardHeader}>
             <Ionicons name="flask-outline" size={20} color={Colors.textMuted} />
-            <Text style={[styles.cardTitle, { color: Colors.textSecondary }]}>Your genetic results</Text>
+            <Text style={[styles.cardTitle, { color: Colors.textSecondary }]}>{t('Your genetic results')}</Text>
             <View style={styles.soonTag}>
-              <Text style={styles.soonTagText}>Coming later</Text>
+              <Text style={styles.soonTagText}>{t('Coming later')}</Text>
             </View>
           </View>
           <Text style={styles.cardBody}>
-            When you do a genetic test with us, its results will appear here, explained in plain words and reviewed by a
-            professional.
+            {t('When you do a genetic test with us, its results will appear here, explained in plain words and reviewed by a professional.')}
           </Text>
         </View>
 
         <TouchableOpacity style={styles.pro} onPress={() => router.push({ pathname: '/professionals', params: { role: 'geneticist' } })}>
           <Ionicons name="people-outline" size={18} color={Colors.textPrimary} />
-          <Text style={styles.proText}>Talk to a genetic counsellor</Text>
+          <Text style={styles.proText}>{t('Talk to a genetic counsellor')}</Text>
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
 
         <View style={styles.privacy}>
           <Ionicons name="lock-closed-outline" size={15} color={Colors.textMuted} />
           <Text style={styles.privacyText}>
-            Family history and genetic data are special-category health data. Only you see them, unless you choose to share them
-            with a professional.
+            {t('Family history and genetic data are special-category health data. Only you see them, unless you choose to share them with a professional.')}
           </Text>
         </View>
       </ScrollView>

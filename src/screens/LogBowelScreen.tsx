@@ -8,6 +8,7 @@ import { ChoiceChips } from '@/components/ChoiceChips';
 import { BristolShape, ColorSwatches } from '@/components/BathroomVisuals';
 import { bowelRepository, dayKey, entryForDay, noonOf } from '@/data/bathroomRepository';
 import { BowelEntry, BRISTOL_TYPES, BristolType, STOOL_COLORS, StoolColor } from '@/types/bathroom';
+import { t as tr } from '@/i18n';
 
 // Lo que suele explicar un color llamativo: se pregunta antes de recomendar el médico
 const CAUSES: Partial<Record<StoolColor, string[]>> = {
@@ -86,34 +87,33 @@ export const LogBowelScreen = () => {
           <View style={styles.iconBadge}>
             <MaterialCommunityIcons name="stomach" size={26} color={Colors.green} />
           </View>
-          <Text style={styles.title}>Digestion today</Text>
-          <Text style={styles.subtitle}>Takes 10 seconds. It helps us spot changes early, and nobody else sees it.</Text>
+          <Text style={styles.title}>{tr('Digestion today')}</Text>
+          <Text style={styles.subtitle}>{tr('Takes 10 seconds. It helps us spot changes early, and nobody else sees it.')}</Text>
         </View>
 
-        <Text style={styles.label}>How many times did you go today?</Text>
+        <Text style={styles.label}>{tr('How many times did you go today?')}</Text>
         <ChoiceChips options={COUNTS} value={count} onChange={setCount} center />
 
         {count != null && count > 0 && (
           <>
-            <Text style={styles.label}>Colour</Text>
+            <Text style={styles.label}>{tr('Colour')}</Text>
             <ColorSwatches options={STOOL_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
 
             {causes && (
               <View style={styles.askCard}>
-                <Text style={styles.askTitle}>Could something explain it?</Text>
-                <Text style={styles.askText}>In the last two days, did you have any of these?</Text>
+                <Text style={styles.askTitle}>{tr('Could something explain it?')}</Text>
+                <Text style={styles.askText}>{tr('In the last two days, did you have any of these?')}</Text>
                 <ChoiceChips options={[...causes, NONE].map((c) => ({ id: c, label: c }))} value={cause} onChange={setCause} center />
                 {cause === NONE && (
                   <Text style={styles.askAdvice}>
                     {color === 'black'
-                      ? 'Please see a doctor soon. If you also feel dizzy or weak, get urgent help.'
-                      : 'Please talk to a doctor in the next few days. Get urgent help if there is a lot of blood.'}
+                      ? tr('Please see a doctor soon. If you also feel dizzy or weak, get urgent help.')
+                      : tr('Please talk to a doctor in the next few days. Get urgent help if there is a lot of blood.')}
                   </Text>
                 )}
                 {cause && cause !== NONE && (
                   <Text style={styles.askOk}>
-                    That is the most likely reason. It should look normal again within a day or two. Keep an eye on it and,
-                    if you have any doubt, see a doctor.
+                    {tr('That is the most likely reason. It should look normal again within a day or two. Keep an eye on it and, if you have any doubt, see a doctor.')}
                   </Text>
                 )}
               </View>
@@ -121,12 +121,12 @@ export const LogBowelScreen = () => {
             {flag === 'doctor' && (
               <View style={styles.askCard}>
                 <Text style={styles.askText}>
-                  Pale or clay-coloured stools are worth mentioning to a doctor, especially if they happen more than once.
+                  {tr('Pale or clay-coloured stools are worth mentioning to a doctor, especially if they happen more than once.')}
                 </Text>
               </View>
             )}
 
-            <Text style={styles.label}>Consistency</Text>
+            <Text style={styles.label}>{tr('Consistency')}</Text>
             <View style={styles.types}>
               {BRISTOL_TYPES.map((t) => {
                 const selected = consistency === t.id;
@@ -139,7 +139,7 @@ export const LogBowelScreen = () => {
                   >
                     <BristolShape type={t.id} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.typeTitle}>{t.label}</Text>
+                      <Text style={styles.typeTitle}>{tr(t.label)}</Text>
                       <Text style={styles.typeHint}>{t.hint}</Text>
                     </View>
                     <Ionicons
@@ -154,12 +154,12 @@ export const LogBowelScreen = () => {
           </>
         )}
 
-        <Text style={styles.label}>Anything else? (optional)</Text>
+        <Text style={styles.label}>{tr('Anything else? (optional)')}</Text>
         <TextInput
           style={styles.note}
           value={note}
           onChangeText={setNote}
-          placeholder="Travelling, new food, tummy ache…"
+          placeholder={tr('Travelling, new food, tummy ache…')}
           placeholderTextColor={Colors.textMuted}
           multiline
         />

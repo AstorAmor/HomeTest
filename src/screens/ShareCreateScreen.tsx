@@ -14,6 +14,7 @@ import {
   ShareScope,
 } from '@/data/sharing';
 import { profileRepository } from '@/data/profileRepository';
+import { t } from '@/i18n';
 
 const EXPIRY_OPTIONS: { id: string; label: string; days: number | null }[] = [
   { id: '30', label: '30 days', days: 30 },
@@ -77,13 +78,13 @@ export const ShareCreateScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Share your data" showBack />
+        <ScreenHeader title={t('Share your data')} showBack />
 
-        <Text style={styles.step}>1 · Who</Text>
+        <Text style={styles.step}>{t('1 · Who')}</Text>
         {professionals === null && !error ? (
           <ActivityIndicator color={Colors.accent} />
         ) : professionals && professionals.length === 0 ? (
-          <Text style={styles.muted}>There are no verified professionals yet.</Text>
+          <Text style={styles.muted}>{t('There are no verified professionals yet.')}</Text>
         ) : (
           (professionals ?? []).map((p) => {
             const selected = selectedPro === p.id;
@@ -114,11 +115,11 @@ export const ShareCreateScreen = () => {
         )}
 
         <View style={styles.stepRow}>
-          <Text style={styles.step}>2 · What</Text>
+          <Text style={styles.step}>{t('2 · What')}</Text>
           <TouchableOpacity
             onPress={() => setScopes(allSelected ? new Set() : new Set(scopeOptions.map((s) => s.id)))}
           >
-            <Text style={styles.link}>{allSelected ? 'Clear all' : 'Select all'}</Text>
+            <Text style={styles.link}>{allSelected ? t('Clear all') : t('Select all')}</Text>
           </TouchableOpacity>
         </View>
         {scopeOptions.map((s) => {
@@ -143,7 +144,7 @@ export const ShareCreateScreen = () => {
           );
         })}
 
-        <Text style={styles.step}>3 · For how long</Text>
+        <Text style={styles.step}>{t('3 · For how long')}</Text>
         <View style={styles.expiryRow}>
           {EXPIRY_OPTIONS.map((o) => (
             <TouchableOpacity
@@ -151,7 +152,7 @@ export const ShareCreateScreen = () => {
               style={[styles.expiryChip, expiry === o.id && styles.expiryChipSelected]}
               onPress={() => setExpiry(o.id)}
             >
-              <Text style={[styles.expiryText, expiry === o.id && { color: Colors.textPrimary }]}>{o.label}</Text>
+              <Text style={[styles.expiryText, expiry === o.id && { color: Colors.textPrimary }]}>{t(o.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -163,14 +164,14 @@ export const ShareCreateScreen = () => {
         <Text style={styles.summary}>
           {pro
             ? `${pro.displayName} will be able to read ${scopes.size} categor${scopes.size === 1 ? 'y' : 'ies'}. You can revoke it anytime.`
-            : 'Choose a professional to continue.'}
+            : t('Choose a professional to continue.')}
         </Text>
         <TouchableOpacity
           style={[styles.cta, (!selectedPro || scopes.size === 0 || saving) && styles.ctaDisabled]}
           disabled={!selectedPro || scopes.size === 0 || saving}
           onPress={submit}
         >
-          {saving ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>Share</Text>}
+          {saving ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{t('Share')}</Text>}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

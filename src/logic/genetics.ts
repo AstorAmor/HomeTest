@@ -19,6 +19,7 @@ import {
   Relative,
   TriageId,
 } from '@/types/familyHistory';
+import { t } from '@/i18n';
 
 // "Know your roots": motor puro (sin React) que puntúa los antecedentes familiares con las tres
 // herramientas validadas y criterios de Lynch, y dice qué recordarle al médico. Explicable a
@@ -148,22 +149,23 @@ function lynchForSide(people: Relative[]) {
 }
 
 // ── Textos ─────────────────────────────────────────────────────────────────────────────────────
-const SIDE_LABEL: Record<Side, string> = { maternal: "your mother's side", paternal: "your father's side" };
+const SIDE_TEXT: Record<Side, string> = { maternal: "your mother's side", paternal: "your father's side" };
+const SIDE_LABEL = new Proxy(SIDE_TEXT, { get: (o, k: string) => t(o[k as Side]) }) as Record<Side, string>;
 
 const ageText = (c: CancerEntry, possessive: string) =>
   c.age === 'unknown'
-    ? 'age at diagnosis unknown'
+    ? t('age at diagnosis unknown')
     : c.age === 'u30'
-      ? 'diagnosed under 30'
+      ? t('diagnosed under 30')
       : c.age === '60plus'
-        ? 'diagnosed at 60 or older'
-        : `diagnosed in ${possessive} ${AGE_LABEL[c.age].slice(0, 2)}s`;
+        ? t('diagnosed at 60 or older')
+        : t('diagnosed in {possessive} {decade}s', { possessive, decade: AGE_LABEL[c.age].slice(0, 2) });
 
 const personLine = (r: Relative) => {
   const self = r.relation === 'self';
-  const who = self ? 'You' : RELATIONS[r.relation].label;
+  const who = self ? t('You') : t(RELATIONS[r.relation].label);
   const possessive = self ? 'your' : RELATIONS[r.relation].sex === 'M' ? 'his' : 'her';
-  const parts = r.cancers.map((c) => `${CANCER_LABEL[c.type].toLowerCase()}${c.bilateral ? ' in both breasts' : ''}, ${ageText(c, possessive)}`);
+  const parts = r.cancers.map((c) => `${t(CANCER_LABEL[c.type]).toLowerCase()}${c.bilateral ? t(' in both breasts') : ''}, ${ageText(c, possessive)}`);
   return `${who}: ${parts.join('; ')}.`;
 };
 
@@ -210,57 +212,59 @@ export function assessFamilyHistory(answers: FamilyHistoryAnswers, opts: { selfS
     reasons.push(why);
   };
 
-  if (knownVariant) raise('high', 'A relative has a known inherited change (variant) linked to cancer.');
-  if (lynch.amsterdamLike) raise('high', `Several bowel, womb or related cancers over two generations on ${SIDE_LABEL[lynchSide ?? 'maternal']}, one before 50 (Amsterdam II pattern).`);
+  if (knownVariant) raise('high', t('A relative has a known inherited change (variant) linked to cancer.'));
+  if (lynch.amsterdamLike) raise('high', t('Several bowel, womb or related cancers over two generations on {side}, one before 50 (Amsterdam II pattern).', { side: SIDE_LABEL[lynchSide ?? 'maternal'] }));
   if (ms.combined >= MANCHESTER.unaffectedRelativeThreshold)
-    raise('high', `Manchester score ${ms.combined} on ${SIDE_LABEL[msSide]}: 20 or more is the level at which relatives without cancer are usually offered testing.`);
+    raise('high', t('Manchester score {score} on {side}: 20 or more is the level at which relatives without cancer are usually offered testing.', { score: ms.combined, side: SIDE_LABEL[msSide] }));
   else if (selfAffected && (ms.combined >= MANCHESTER.combinedThreshold || Math.max(ms.brca1, ms.brca2) >= MANCHESTER.singleGeneThreshold))
-    raise('high', `Manchester score ${ms.combined} including your own diagnosis: at about a 10% chance of a BRCA1/2 variant, testing is usually offered.`);
+    raise('high', t('Manchester score {score} including your own diagnosis: at about a 10% chance of a BRCA1/2 variant, testing is usually offered.', { score: ms.combined }));
   else if (ms.combined >= MANCHESTER.combinedThreshold || Math.max(ms.brca1, ms.brca2) >= MANCHESTER.singleGeneThreshold)
-    raise('moderate', `Manchester score ${ms.combined} on ${SIDE_LABEL[msSide]}: about a 10% chance that the affected relative carries a BRCA1/2 variant.`);
-  if (patBest >= PAT.threshold) raise('moderate', `Pedigree Assessment Tool score ${patBest} (referral from ${PAT.threshold}).`);
-  if (fhatBest >= FHAT.threshold) raise('moderate', `Ontario family history score ${fhatBest} (referral from ${FHAT.threshold}: about double the usual lifetime risk of breast cancer).`);
-  if (lynch.bethesdaLike && !lynch.amsterdamLike) raise('moderate', `A pattern of bowel or related cancers on ${SIDE_LABEL[lynchSide ?? 'maternal']} that meets the Bethesda criteria for checking Lynch syndrome.`);
+    raise('moderate', t('Manchester score {score} on {side}: about a 10% chance that the affected relative carries a BRCA1/2 variant.', { score: ms.combined, side: SIDE_LABEL[msSide] }));
+  if (patBest >= PAT.threshold) raise('moderate', t('Pedigree Assessment Tool score {score} (referral from {threshold}).', { score: patBest, threshold: PAT.threshold }));
+  if (fhatBest >= FHAT.threshold) raise('moderate', t('Ontario family history score {score} (referral from {threshold}: about double the usual lifetime risk of breast cancer).', { score: fhatBest, threshold: FHAT.threshold }));
+  if (lynch.bethesdaLike && !lynch.amsterdamLike) raise('moderate', t('A pattern of bowel or related cancers on {side} that meets the Bethesda criteria for checking Lynch syndrome.', { side: SIDE_LABEL[lynchSide ?? 'maternal'] }));
   if (level === 'population' && (people.length > 0 || ashkenazi === 'maternal' || ashkenazi === 'paternal' || ashkenazi === 'both'))
-    raise('low', 'There is some cancer in your family, but not a pattern that points to an inherited cause.');
+    raise('low', t('There is some cancer in your family, but not a pattern that points to an inherited cause.'));
 
   // Puntos para el médico
   const keyPoints: string[] = [];
   for (const g of genes) {
     keyPoints.push(
       g === 'other'
-        ? 'A relative has a genetic variant linked to cancer: ask whether you should be tested for the same one, and bring the report if you can.'
-        : `A relative carries a ${g === 'Lynch' ? 'Lynch syndrome (MLH1, MSH2, MSH6, PMS2 or EPCAM)' : g} variant: ask whether you should be tested for that same variant.`
+        ? t('A relative has a genetic variant linked to cancer: ask whether you should be tested for the same one, and bring the report if you can.')
+        : t('A relative carries a {gene} variant: ask whether you should be tested for that same variant.', { gene: g === 'Lynch' ? t('Lynch syndrome (MLH1, MSH2, MSH6, PMS2 or EPCAM)') : g })
     );
   }
   if (knownVariant && genes.length === 0)
-    keyPoints.push('A relative has a genetic variant linked to cancer: ask whether you should be tested for the same one, and bring the report if you can.');
+    keyPoints.push(t('A relative has a genetic variant linked to cancer: ask whether you should be tested for the same one, and bring the report if you can.'));
   for (const r of people) keyPoints.push(personLine(r));
   if (ashkenazi && ashkenazi !== 'no' && ashkenazi !== 'unsure')
     keyPoints.push(
-      `Ashkenazi Jewish ancestry on ${ashkenazi === 'both' ? 'both sides' : SIDE_LABEL[ashkenazi]}: some BRCA1/2 variants are more common in this ancestry.`
+      t('Ashkenazi Jewish ancestry on {side}: some BRCA1/2 variants are more common in this ancestry.', { side: ashkenazi === 'both' ? t('both sides') : SIDE_LABEL[ashkenazi] })
     );
   if (lynch.amsterdamLike || lynch.bethesdaLike)
-    keyPoints.push('Ask whether a bowel tumour from the family can be tested for Lynch syndrome (MSI or immunohistochemistry), or whether you should see a genetics service.');
+    keyPoints.push(t('Ask whether a bowel tumour from the family can be tested for Lynch syndrome (MSI or immunohistochemistry), or whether you should see a genetics service.'));
   if (people.length) {
     keyPoints.push(
-      `Scores on the worse side: Manchester ${ms.combined} (BRCA1 ${ms.brca1}, BRCA2 ${ms.brca2}), Pedigree Assessment Tool ${patBest}, Ontario FHAT ${fhatBest}.`
+      t('Scores on the worse side: Manchester {ms} (BRCA1 {b1}, BRCA2 {b2}), Pedigree Assessment Tool {pat}, Ontario FHAT {fhat}.', { ms: ms.combined, b1: ms.brca1, b2: ms.brca2, pat: patBest, fhat: fhatBest })
     );
   }
-  if (unknownAges) keyPoints.push('Some ages at diagnosis are unknown. Asking relatives before the appointment makes the assessment more accurate.');
+  if (unknownAges) keyPoints.push(t('Some ages at diagnosis are unknown. Asking relatives before the appointment makes the assessment more accurate.'));
 
   // Corazón (no cambia el nivel de cáncer; va en su propia tarjeta)
   const heartPoints: string[] = [];
   if (positive(answers, 'heart_early')) {
-    const who = (answers.heartRelatives ?? []).map((id) => RELATIONS[id].short.toLowerCase());
+    const who = (answers.heartRelatives ?? []).map((id) => t(RELATIONS[id].short).toLowerCase());
     heartPoints.push(
-      `${who.length ? `Your ${who.join(', ')}` : 'A parent, brother, sister or child'} had heart disease or a stroke young (men before 55, women before 65). This counts as a risk-enhancing factor: ask for a cholesterol test that includes Lp(a).`
+      who.length
+        ? t('Your {who} had heart disease or a stroke young (men before 55, women before 65). This counts as a risk-enhancing factor: ask for a cholesterol test that includes Lp(a).', { who: who.join(', ') })
+        : t('A parent, brother, sister or child had heart disease or a stroke young (men before 55, women before 65). This counts as a risk-enhancing factor: ask for a cholesterol test that includes Lp(a).')
     );
   }
   if (positive(answers, 'cholesterol'))
-    heartPoints.push('Very high cholesterol or familial hypercholesterolaemia runs in your close family: ask your doctor for a full cholesterol test (and whether it could be familial).');
+    heartPoints.push(t('Very high cholesterol or familial hypercholesterolaemia runs in your close family: ask your doctor for a full cholesterol test (and whether it could be familial).'));
   if (positive(answers, 'sudden_death'))
-    heartPoints.push('A relative died suddenly at a young age without a clear cause: tell your doctor, some heart conditions run in families and can be checked.');
+    heartPoints.push(t('A relative died suddenly at a young age without a clear cause: tell your doctor, some heart conditions run in families and can be checked.'));
 
   return {
     level,
@@ -302,22 +306,23 @@ export function cancerTypesFor(a: FamilyHistoryAnswers, isSelf: boolean, sex: 'F
 
 export const LEVEL_TEXT: Record<GeneticRiskLevel, { title: string; body: string }> = {
   population: {
-    title: 'Like most people',
-    body: 'Your answers do not point to an inherited cancer risk. Keep up the usual screening for your age.',
+    title: t('Like most people'),
+    body: t('Your answers do not point to an inherited cancer risk. Keep up the usual screening for your age.'),
   },
   low: {
-    title: 'Some cancer in the family, no inherited pattern',
-    body: 'Cancer is common, and many families have a case or two. Your answers do not meet the criteria for a genetics referral today. If something new happens in your family, update your answers.',
+    title: t('Some cancer in the family, no inherited pattern'),
+    body: t('Cancer is common, and many families have a case or two. Your answers do not meet the criteria for a genetics referral today. If something new happens in your family, update your answers.'),
   },
   moderate: {
-    title: 'Worth talking to a professional',
-    body: 'Your family history meets at least one of the criteria doctors use to consider a referral to genetic counselling.',
+    title: t('Worth talking to a professional'),
+    body: t('Your family history meets at least one of the criteria doctors use to consider a referral to genetic counselling.'),
   },
   high: {
-    title: 'A genetic counselling appointment is recommended',
-    body: 'Your family history meets the criteria at which genetic counselling, and often a genetic test, is usually offered.',
+    title: t('A genetic counselling appointment is recommended'),
+    body: t('Your family history meets the criteria at which genetic counselling, and often a genetic test, is usually offered.'),
   },
 };
 
-export const REFERRAL_INTRO =
-  'Based on your answers and on clinical prevention criteria, we strongly recommend talking to your GP or a genetic counsellor. When you go, remind them of these key points:';
+export const REFERRAL_INTRO = t(
+  'Based on your answers and on clinical prevention criteria, we strongly recommend talking to your GP or a genetic counsellor. When you go, remind them of these key points:',
+);

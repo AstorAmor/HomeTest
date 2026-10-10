@@ -7,6 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { EVIDENCE, EvidenceTopic } from '@/data/evidence';
+import { t as tr } from '@/i18n';
 
 // More → How KUOVA works, o el (i) de cada sitio (?topic=…): cómo calculamos cada cosa y las
 // fuentes. Lo que aún revisa el equipo médico lo dice claramente.
@@ -46,12 +47,12 @@ export const EvidenceScreen = () => {
             {t.status === 'pending' && (
               <View style={styles.pending}>
                 <Ionicons name="time-outline" size={14} color={Colors.attention} />
-                <Text style={styles.pendingText}>Being reviewed by our medical team</Text>
+                <Text style={styles.pendingText}>{tr('Being reviewed by our medical team')}</Text>
               </View>
             )}
             {t.sources.length > 0 && (
               <>
-                <Text style={styles.sourcesTitle}>Sources</Text>
+                <Text style={styles.sourcesTitle}>{tr('Sources')}</Text>
                 {t.sources.map((s) =>
                   s.url ? (
                     <TouchableOpacity key={s.label} onPress={() => WebBrowser.openBrowserAsync(s.url!)} style={styles.sourceRow}>
@@ -76,22 +77,20 @@ export const EvidenceScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={first && !showAll ? 'How we calculate it' : 'How KUOVA works'} showBack />
+        <ScreenHeader title={first && !showAll ? tr('How we calculate it') : tr('How KUOVA works')} showBack />
         {(!first || showAll) && (
           <Text style={styles.intro}>
-            How we calculate what you see, and the studies and guidelines behind it. Look for the (i) next to a number
-            or a suggestion to jump straight to its explanation.
+            {tr('How we calculate what you see, and the studies and guidelines behind it. Look for the (i) next to a number or a suggestion to jump straight to its explanation.')}
           </Text>
         )}
         {ordered.map(renderTopic)}
         {first && !showAll && (
           <TouchableOpacity style={styles.allButton} onPress={() => setShowAll(true)} activeOpacity={0.8}>
-            <Text style={styles.allText}>See how everything else works</Text>
+            <Text style={styles.allText}>{tr('See how everything else works')}</Text>
           </TouchableOpacity>
         )}
         <Text style={styles.footer}>
-          Kuova helps you understand your health and does not replace your doctor. If something worries you, talk to a
-          professional.
+          {tr('Kuova helps you understand your health and does not replace your doctor. If something worries you, talk to a professional.')}
         </Text>
       </ScrollView>
     </SafeAreaView>

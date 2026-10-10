@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionToggles } from '@/components/SectionToggles';
 import { Colors, withAlpha } from '@/constants/colors';
 import { appPrefs, isSectionVisible, PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
+import { t } from '@/i18n';
 
 // More → Configure my experience: para qué usa Kuova (una o varias cosas; aplica una configuración
 // de secciones), qué partes ve y, desde cada una, su guía con vista previa.
@@ -17,9 +18,9 @@ export const AppSectionsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Configure my experience" showBack />
+        <ScreenHeader title={t('Configure my experience')} showBack />
 
-        <Text style={styles.sectionTitle}>What do you use Kuova for?</Text>
+        <Text style={styles.sectionTitle}>{t('What do you use Kuova for?')}</Text>
         <View style={styles.list}>
           {PURPOSE_OPTIONS.map((o) => {
             const selected = prefs.purposes.includes(o.id);
@@ -34,8 +35,8 @@ export const AppSectionsScreen = () => {
               >
                 <Ionicons name={o.icon as any} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.purposeTitle}>{o.title}</Text>
-                  <Text style={styles.purposeSubtitle}>{o.subtitle}</Text>
+                  <Text style={styles.purposeTitle}>{t(o.title)}</Text>
+                  <Text style={styles.purposeSubtitle}>{t(o.subtitle)}</Text>
                 </View>
                 <Ionicons
                   name={selected ? 'checkmark-circle' : 'ellipse-outline'}
@@ -48,18 +49,18 @@ export const AppSectionsScreen = () => {
         </View>
 
         <View style={styles.headerRow}>
-          <Text style={[styles.sectionTitle, styles.inline]}>What you see</Text>
+          <Text style={[styles.sectionTitle, styles.inline]}>{t('What you see')}</Text>
           <TouchableOpacity onPress={() => router.push('/feature-guide')}>
-            <Text style={styles.link}>How each part works</Text>
+            <Text style={styles.link}>{t('How each part works')}</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.hint}>
-          Turn on only what you want. Changing your choice above resets what you see below.
+          {t('Turn on only what you want. Changing your choice above resets what you see below.')}
         </Text>
         <View style={{ marginHorizontal: 20 }}>
           <SectionToggles isOn={(id) => isSectionVisible(prefs, id)} onToggle={(id, on) => appPrefs.setSectionVisible(id, on)} />
         </View>
-        <Text style={styles.footnote}>Your results, tests, sharing and professionals are always there.</Text>
+        <Text style={styles.footnote}>{t('Your results, tests, sharing and professionals are always there.')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

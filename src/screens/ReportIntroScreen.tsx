@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,12 +23,11 @@ export const ReportIntroScreen = () => {
         </View>
 
         <Text style={styles.eyebrow}>{formatFullDate(currentReport.test_date)}</Text>
-        <Text style={styles.title}>Your report is here!</Text>
-        <Text style={styles.subtitle}>And the improvement shows.</Text>
+        <Text style={styles.title}>{t('Your report is here!')}</Text>
+        <Text style={styles.subtitle}>{t('And the improvement shows.')}</Text>
 
         <Text style={styles.teaser}>
-          Your cholesterol, glucose, and inflammation markers have clearly improved over the
-          last 6 months — right in step with better sleep and more movement.
+          {t('Your cholesterol, glucose, and inflammation markers have clearly improved over the last 6 months — right in step with better sleep and more movement.')}
         </Text>
 
         <TouchableOpacity
@@ -36,7 +35,7 @@ export const ReportIntroScreen = () => {
           onPress={() => router.push('/report-summary')}
           activeOpacity={0.85}
         >
-          <Text style={styles.ctaText}>View my report</Text>
+          <Text style={styles.ctaText}>{t('View my report')}</Text>
           <Ionicons name="arrow-forward" size={18} color={Colors.background} />
         </TouchableOpacity>
       </View>

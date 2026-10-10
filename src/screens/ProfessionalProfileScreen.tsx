@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { t } from '@/i18n';
 import {
   LANGUAGES,
   Modality,
@@ -133,7 +134,7 @@ export const ProfessionalProfileScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ScreenHeader title="Professional profile" showBack />
+          <ScreenHeader title={t('Professional profile')} showBack />
 
           <TouchableOpacity style={styles.photoWrap} onPress={pickPhoto} disabled={uploading} activeOpacity={0.85}>
             {professional.photoUrl ? (
@@ -151,12 +152,12 @@ export const ProfessionalProfileScreen = () => {
               )}
             </View>
           </TouchableOpacity>
-          <Text style={styles.photoHint}>Patients see this photo in the directory</Text>
+          <Text style={styles.photoHint}>{t('Patients see this photo in the directory')}</Text>
 
-          <Text style={styles.label}>Full name</Text>
-          <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} placeholder="Dr. Laura Méndez" placeholderTextColor={Colors.textMuted} />
+          <Text style={styles.label}>{t('Full name')}</Text>
+          <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName} placeholder={t('Dr. Laura Méndez')} placeholderTextColor={Colors.textMuted} />
 
-          <Text style={styles.label}>Profession</Text>
+          <Text style={styles.label}>{t('Profession')}</Text>
           <View style={styles.chips}>
             {PROFESSIONAL_ROLES.map((r) => (
               <TouchableOpacity key={r.id} style={[styles.chip, role === r.id && styles.chipOn]} onPress={() => setRole(r.id)}>
@@ -165,27 +166,27 @@ export const ProfessionalProfileScreen = () => {
             ))}
           </View>
 
-          <Text style={styles.label}>Specialty</Text>
-          <TextInput style={styles.input} value={specialty} onChangeText={setSpecialty} placeholder="e.g. Internal medicine" placeholderTextColor={Colors.textMuted} />
+          <Text style={styles.label}>{t('Specialty')}</Text>
+          <TextInput style={styles.input} value={specialty} onChangeText={setSpecialty} placeholder={t('e.g. Internal medicine')} placeholderTextColor={Colors.textMuted} />
 
           <View style={styles.row2}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Registration number</Text>
-              <TextInput style={styles.input} value={licenseNumber} onChangeText={setLicenseNumber} placeholder="Nº de colegiado" placeholderTextColor={Colors.textMuted} />
+              <Text style={styles.label}>{t('Registration number')}</Text>
+              <TextInput style={styles.input} value={licenseNumber} onChangeText={setLicenseNumber} placeholder={t('Registration number')} placeholderTextColor={Colors.textMuted} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>Years of experience</Text>
+              <Text style={styles.label}>{t('Years of experience')}</Text>
               <TextInput style={styles.input} value={years} onChangeText={setYears} keyboardType="number-pad" placeholder="10" placeholderTextColor={Colors.textMuted} />
             </View>
           </View>
 
-          <Text style={styles.label}>Professional college</Text>
-          <TextInput style={styles.input} value={licenseCollege} onChangeText={setLicenseCollege} placeholder="e.g. Colegio de Médicos de Madrid" placeholderTextColor={Colors.textMuted} />
+          <Text style={styles.label}>{t('Professional college')}</Text>
+          <TextInput style={styles.input} value={licenseCollege} onChangeText={setLicenseCollege} placeholder={t('e.g. Colegio de Médicos de Madrid')} placeholderTextColor={Colors.textMuted} />
 
-          <Text style={styles.label}>City</Text>
-          <TextInput style={styles.input} value={city} onChangeText={setCity} placeholder="Madrid" placeholderTextColor={Colors.textMuted} />
+          <Text style={styles.label}>{t('City')}</Text>
+          <TextInput style={styles.input} value={city} onChangeText={setCity} placeholder={t('Madrid')} placeholderTextColor={Colors.textMuted} />
 
-          <Text style={styles.label}>Languages</Text>
+          <Text style={styles.label}>{t('Languages')}</Text>
           <View style={styles.chips}>
             {LANGUAGES.map((l) => (
               <TouchableOpacity key={l} style={[styles.chip, languages.includes(l) && styles.chipOn]} onPress={() => setLanguages(toggle(languages, l))}>
@@ -194,26 +195,26 @@ export const ProfessionalProfileScreen = () => {
             ))}
           </View>
 
-          <Text style={styles.label}>How you see patients</Text>
+          <Text style={styles.label}>{t('How you see patients')}</Text>
           <View style={styles.chips}>
             {MODALITIES.map((m) => (
               <TouchableOpacity key={m.id} style={[styles.chip, modalities.includes(m.id) && styles.chipOn]} onPress={() => setModalities(toggle(modalities, m.id))}>
-                <Text style={[styles.chipText, modalities.includes(m.id) && styles.chipTextOn]}>{m.label}</Text>
+                <Text style={[styles.chipText, modalities.includes(m.id) && styles.chipTextOn]}>{t(m.label)}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.label}>About you</Text>
+          <Text style={styles.label}>{t('About you')}</Text>
           <TextInput
             style={[styles.input, styles.bio]}
             value={bio}
             onChangeText={setBio}
             multiline
-            placeholder="What you help patients with, your approach…"
+            placeholder={t('What you help patients with, your approach…')}
             placeholderTextColor={Colors.textMuted}
           />
 
-          <Text style={styles.label}>Hourly rate (€)</Text>
+          <Text style={styles.label}>{t('Hourly rate (€)')}</Text>
           <TextInput style={styles.input} value={rate} onChangeText={setRate} keyboardType="decimal-pad" placeholder="90" placeholderTextColor={Colors.textMuted} />
           <View style={styles.rateStatus}>
             <View style={[styles.dot, { backgroundColor: status.color }]} />
@@ -225,7 +226,7 @@ export const ProfessionalProfileScreen = () => {
             </Text>
           </View>
           <Text style={styles.hint}>
-            Kuova reviews every rate before patients see it. Changing it sends it back to review.
+            {t('Kuova reviews every rate before patients see it. Changing it sends it back to review.')}
           </Text>
           {professional.reviewNote ? <Text style={styles.note}>Note from Kuova: {professional.reviewNote}</Text> : null}
 
@@ -233,7 +234,7 @@ export const ProfessionalProfileScreen = () => {
         </ScrollView>
 
         <TouchableOpacity style={[styles.cta, saving && styles.ctaDisabled]} onPress={save} disabled={saving}>
-          {saving ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>Save profile</Text>}
+          {saving ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{t('Save profile')}</Text>}
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>

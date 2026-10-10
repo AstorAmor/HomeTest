@@ -16,6 +16,7 @@ import {
   getMarkerValueTextEn,
 } from '@/data/reportContentEn';
 import { TIER_COLOR, FLAG_LABEL, FLAG_ICON, categoryLabel } from '@/utils/reportDisplay';
+import { t } from '@/i18n';
 
 // Proxy simplificado: "mejora" = cambio significativo que además ya aterrizó en rango.
 // No tenemos (todavía) una tabla de qué dirección es clínicamente buena por marcador,
@@ -48,10 +49,10 @@ export const ReportSummaryScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Your Report" showBack />
+        <ScreenHeader title={t('Your Report')} showBack />
 
         <View style={styles.headlineBlock}>
-          <Text style={styles.headline}>Your improvement shows in the numbers</Text>
+          <Text style={styles.headline}>{t('Your improvement shows in the numbers')}</Text>
           <View style={styles.improvementPill}>
             <Ionicons name="trending-up" size={14} color={Colors.accent} />
             <Text style={styles.improvementPillText}>
@@ -105,7 +106,7 @@ export const ReportSummaryScreen = () => {
         )}
 
         {/* Informe objetivo: sin edad biológica (está en My Data), sin plan ni hábitos */}
-        <Text style={styles.sectionTitle}>Markers that need a look</Text>
+        <Text style={styles.sectionTitle}>{t('Markers that need a look')}</Text>
         <View style={styles.markersList}>
           {markersNeedingReview.map((marker) => {
             const color = TIER_COLOR[marker.tier];

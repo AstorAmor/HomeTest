@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { strengthSessionsThisWeek, workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
+import { t as tr } from '@/i18n';
 
 const TYPES: { id: WorkoutType; label: string; icon: string }[] = [
   { id: 'strength', label: 'Strength', icon: 'dumbbell' },
@@ -41,14 +42,14 @@ export const LogWorkoutScreen = () => {
         <View style={styles.doneIcon}>
           <MaterialCommunityIcons name="dumbbell" size={40} color={Colors.coral} />
         </View>
-        <Text style={styles.doneTitle}>{goalHit ? 'Weekly goal reached!' : 'Workout logged!'}</Text>
+        <Text style={styles.doneTitle}>{goalHit ? tr('Weekly goal reached!') : tr('Workout logged!')}</Text>
         <Text style={styles.doneText}>
           {type === 'strength'
             ? `${savedCount} of 3 strength sessions this week.`
-            : 'Nice. Every bit of movement counts.'}
+            : tr('Nice. Every bit of movement counts.')}
         </Text>
         <TouchableOpacity style={[styles.cta, { alignSelf: 'stretch' }]} onPress={() => router.back()}>
-          <Text style={styles.ctaText}>Done</Text>
+          <Text style={styles.ctaText}>{tr('Done')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -60,12 +61,12 @@ export const LogWorkoutScreen = () => {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="close" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>Log a workout</Text>
+        <Text style={styles.topTitle}>{tr('Log a workout')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.body}>
-        <Text style={styles.label}>Type</Text>
+        <Text style={styles.label}>{tr('Type')}</Text>
         <View style={styles.typeGrid}>
           {TYPES.map((t) => {
             const selected = type === t.id;
@@ -76,13 +77,13 @@ export const LogWorkoutScreen = () => {
                 onPress={() => setType(t.id)}
               >
                 <MaterialCommunityIcons name={t.icon as any} size={26} color={selected ? Colors.coral : Colors.textSecondary} />
-                <Text style={[styles.typeText, selected && { color: Colors.textPrimary }]}>{t.label}</Text>
+                <Text style={[styles.typeText, selected && { color: Colors.textPrimary }]}>{tr(t.label)}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        <Text style={styles.label}>Duration</Text>
+        <Text style={styles.label}>{tr('Duration')}</Text>
         <View style={styles.chips}>
           {DURATIONS.map((d) => (
             <TouchableOpacity key={d} style={[styles.chip, minutes === d && styles.selected]} onPress={() => setMinutes(d)}>
@@ -91,7 +92,7 @@ export const LogWorkoutScreen = () => {
           ))}
         </View>
 
-        <Text style={styles.label}>Intensity</Text>
+        <Text style={styles.label}>{tr('Intensity')}</Text>
         <View style={styles.chips}>
           {INTENSITIES.map((i) => (
             <TouchableOpacity
@@ -99,14 +100,14 @@ export const LogWorkoutScreen = () => {
               style={[styles.chip, intensity === i.id && styles.selected]}
               onPress={() => setIntensity(i.id)}
             >
-              <Text style={[styles.chipText, intensity === i.id && { color: Colors.textPrimary }]}>{i.label}</Text>
+              <Text style={[styles.chipText, intensity === i.id && { color: Colors.textPrimary }]}>{tr(i.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
 
       <TouchableOpacity style={styles.cta} onPress={save}>
-        <Text style={styles.ctaText}>Save workout</Text>
+        <Text style={styles.ctaText}>{tr('Save workout')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

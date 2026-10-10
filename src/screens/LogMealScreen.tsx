@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
+import { t } from '@/i18n';
 
 const MEAL_TYPES: { id: MealEntry['mealType']; label: string }[] = [
   { id: 'breakfast', label: 'Breakfast' },
@@ -80,15 +81,15 @@ export const LogMealScreen = () => {
         <Confetti count={50} />
         <View style={styles.pointsBadge}>
           <Text style={styles.pointsText}>+10</Text>
-          <Text style={styles.pointsLabel}>points</Text>
+          <Text style={styles.pointsLabel}>{t('points')}</Text>
         </View>
-        <Text style={styles.doneTitle}>Meal logged!</Text>
+        <Text style={styles.doneTitle}>{t('Meal logged!')}</Text>
         <Text style={styles.doneText}>
           {streak > 1 ? `🔥 ${streak}-day streak. Keep it going!` : 'Log tomorrow too to start a streak.'}
           {addedSugar === false ? '\nNo added sugar, nice one.' : ''}
         </Text>
         <TouchableOpacity style={[styles.cta, { alignSelf: 'stretch' }]} onPress={() => router.back()}>
-          <Text style={styles.ctaText}>Done</Text>
+          <Text style={styles.ctaText}>{t('Done')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -100,7 +101,7 @@ export const LogMealScreen = () => {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="close" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>Snap your meal</Text>
+        <Text style={styles.topTitle}>{t('Snap your meal')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -113,26 +114,26 @@ export const LogMealScreen = () => {
               <View style={styles.cameraCircle}>
                 <Ionicons name="camera" size={34} color={Colors.background} />
               </View>
-              <Text style={styles.photoText}>Tap to take a photo</Text>
+              <Text style={styles.photoText}>{t('Tap to take a photo')}</Text>
             </>
           )}
         </TouchableOpacity>
         <TouchableOpacity onPress={pickFromGallery} style={styles.galleryLink}>
           <Ionicons name="images-outline" size={16} color={Colors.accent} />
-          <Text style={styles.galleryText}>{photoUri ? 'Choose another photo' : 'Or choose from gallery'}</Text>
+          <Text style={styles.galleryText}>{photoUri ? t('Choose another photo') : t('Or choose from gallery')}</Text>
         </TouchableOpacity>
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <Text style={styles.label}>What is it?</Text>
+        <Text style={styles.label}>{t('What is it?')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g. Rice with chicken and salad"
+          placeholder={t('e.g. Rice with chicken and salad')}
           placeholderTextColor={Colors.textMuted}
           value={description}
           onChangeText={setDescription}
         />
 
-        <Text style={styles.label}>Meal</Text>
+        <Text style={styles.label}>{t('Meal')}</Text>
         <View style={styles.chips}>
           {MEAL_TYPES.map((m) => (
             <TouchableOpacity
@@ -140,12 +141,12 @@ export const LogMealScreen = () => {
               style={[styles.chip, mealType === m.id && styles.selected]}
               onPress={() => setMealType(m.id)}
             >
-              <Text style={[styles.chipText, mealType === m.id && { color: Colors.textPrimary }]}>{m.label}</Text>
+              <Text style={[styles.chipText, mealType === m.id && { color: Colors.textPrimary }]}>{t(m.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={styles.label}>Any added sugar?</Text>
+        <Text style={styles.label}>{t('Any added sugar?')}</Text>
         <View style={styles.chips}>
           {[
             { v: false, label: 'No', icon: 'check-circle-outline' },
@@ -161,7 +162,7 @@ export const LogMealScreen = () => {
                 size={16}
                 color={addedSugar === o.v ? Colors.amber : Colors.textSecondary}
               />
-              <Text style={[styles.chipText, addedSugar === o.v && { color: Colors.textPrimary }]}>{o.label}</Text>
+              <Text style={[styles.chipText, addedSugar === o.v && { color: Colors.textPrimary }]}>{t(o.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -172,7 +173,7 @@ export const LogMealScreen = () => {
         onPress={save}
         disabled={!photoUri && !description.trim()}
       >
-        <Text style={styles.ctaText}>Save meal · +10 points</Text>
+        <Text style={styles.ctaText}>{t('Save meal · +10 points')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

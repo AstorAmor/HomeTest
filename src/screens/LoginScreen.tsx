@@ -17,6 +17,7 @@ import { CosmicBackground } from '@/components/CosmicBackground';
 import { KuovaWordmark } from '@/components/KuovaLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
+import { t } from '@/i18n';
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -73,20 +74,20 @@ export const LoginScreen = () => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <View accessible accessibilityRole="header" accessibilityLabel="Kuova Health">
+            <View accessible accessibilityRole="header" accessibilityLabel={t('Kuova Health')}>
               <KuovaWordmark height={34} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />
             </View>
-            <Text style={styles.health}>HEALTH</Text>
-            <Text style={styles.subtitle}>Know more. Live better.</Text>
+            <Text style={styles.health}>{t('HEALTH')}</Text>
+            <Text style={styles.subtitle}>{t('Know more. Live better.')}</Text>
           </View>
 
           <View style={styles.form}>
             {isSignUp && (
               <>
-                <Text style={styles.label}>Full name</Text>
+                <Text style={styles.label}>{t('Full name')}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="John Smith"
+                  placeholder={t('John Smith')}
                   placeholderTextColor={Colors.textMuted}
                   value={nombre}
                   onChangeText={setNombre}
@@ -104,13 +105,13 @@ export const LoginScreen = () => {
                       size={22}
                       color={isProfessional ? Colors.accent : Colors.textSecondary}
                     />
-                    <Text style={styles.proToggleText}>I'm a healthcare professional</Text>
+                    <Text style={styles.proToggleText}>{t("I'm a healthcare professional")}</Text>
                   </TouchableOpacity>
                 )}
 
                 {isProfessional && (
                   <View style={styles.proBox}>
-                    <Text style={[styles.label, { marginTop: 0 }]}>Profession</Text>
+                    <Text style={[styles.label, { marginTop: 0 }]}>{t('Profession')}</Text>
                     <View style={styles.roleChips}>
                       {PROFESSIONAL_ROLES.map((r) => (
                         <TouchableOpacity
@@ -124,36 +125,36 @@ export const LoginScreen = () => {
                         </TouchableOpacity>
                       ))}
                     </View>
-                    <Text style={styles.label}>Specialty (optional)</Text>
+                    <Text style={styles.label}>{t('Specialty (optional)')}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="e.g. Internal medicine"
+                      placeholder={t('e.g. Internal medicine')}
                       placeholderTextColor={Colors.textMuted}
                       value={specialty}
                       onChangeText={setSpecialty}
                       editable={!loading}
                     />
-                    <Text style={styles.label}>License / registration number</Text>
+                    <Text style={styles.label}>{t('License / registration number')}</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Nº de colegiado"
+                      placeholder={t('Registration number')}
                       placeholderTextColor={Colors.textMuted}
                       value={licenseNumber}
                       onChangeText={setLicenseNumber}
                       editable={!loading}
                     />
                     <Text style={styles.proNote}>
-                      Kuova verifies every professional before patients can share data with them.
+                      {t('Kuova verifies every professional before patients can share data with them.')}
                     </Text>
                   </View>
                 )}
               </>
             )}
 
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t('Email')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="you@email.com"
+              placeholder={t('you@email.com')}
               placeholderTextColor={Colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -162,7 +163,7 @@ export const LoginScreen = () => {
               editable={!loading}
             />
 
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t('Password')}</Text>
             <TextInput
               style={styles.input}
               placeholder="••••••••"
@@ -184,7 +185,7 @@ export const LoginScreen = () => {
                 <ActivityIndicator color={Colors.background} />
               ) : (
                 <Text style={styles.buttonText}>
-                  {isSignUp ? 'Create account' : 'Sign in'}
+                  {isSignUp ? t('Create account') : t('Sign in')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -198,7 +199,7 @@ export const LoginScreen = () => {
             >
               <Text style={styles.toggleText}>
                 {isSignUp
-                  ? 'Already have an account? Sign in'
+                  ? t('Already have an account? Sign in')
                   : "Don't have an account? Create one"}
               </Text>
             </TouchableOpacity>
@@ -211,7 +212,7 @@ export const LoginScreen = () => {
               color={authMode === 'demo' ? Colors.warning : Colors.accent}
             />
             <Text style={styles.demoText}>
-              {authMode === 'demo' ? 'Demo mode: use any email/password' : 'Your data is private to your account'}
+              {authMode === 'demo' ? t('Demo mode: use any email/password') : t('Your data is private to your account')}
             </Text>
           </View>
         </ScrollView>

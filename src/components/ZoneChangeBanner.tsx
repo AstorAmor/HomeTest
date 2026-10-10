@@ -5,6 +5,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { medicationRepository } from '@/data/medicationRepository';
 import { userFlags } from '@/data/userFlags';
 import { currentZone, isActiveOn, offsetText, shiftSchedule, ZoneStamp, zoneChange } from '@/logic/medication';
+import { t } from '@/i18n';
 
 // "Hemos notado un cambio de hora": si el móvil cambia de zona horaria (un viaje) y hay tomas
 // programadas, se pregunta si mantener las horas del reloj o moverlas para que caigan en el mismo
@@ -52,7 +53,7 @@ export function ZoneChangeBanner({ onChanged }: { onChanged?: () => void }) {
     <View style={styles.card}>
       <View style={styles.header}>
         <Ionicons name="time-outline" size={18} color={Colors.gold} />
-        <Text style={styles.title}>We noticed a time change</Text>
+        <Text style={styles.title}>{t('We noticed a time change')}</Text>
       </View>
       <Text style={styles.body}>
         Your phone moved from {place(change.from.zone)} to {place(change.to.zone)} ({offsetText(change.diff)}). Do you want
@@ -62,9 +63,9 @@ export function ZoneChangeBanner({ onChanged }: { onChanged?: () => void }) {
         <Text style={styles.primaryText}>Same moment as at home ({offsetText(change.diff)})</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.secondary} onPress={keep} activeOpacity={0.85}>
-        <Text style={styles.secondaryText}>Keep the same clock times</Text>
+        <Text style={styles.secondaryText}>{t('Keep the same clock times')}</Text>
       </TouchableOpacity>
-      <Text style={styles.note}>For the pill or medicines with a strict schedule, ask your pharmacist if unsure.</Text>
+      <Text style={styles.note}>{t('For the pill or medicines with a strict schedule, ask your pharmacist if unsure.')}</Text>
     </View>
   );
 }

@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { mockProfessionals, ROLE_INFO } from '@/data/servicesMock';
 import { listVerifiedProfessionals, roleLabel } from '@/data/sharing';
 import { consult, isRealProfessional, ProCapabilities } from '@/data/consultations';
+import { t } from '@/i18n';
 
 interface ProView {
   id: string;
@@ -86,14 +87,14 @@ export const ProfessionalDetailScreen = () => {
   if (!pro) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title="Specialist" showBack />
+        <ScreenHeader title={t('Specialist')} showBack />
       </SafeAreaView>
     );
   }
 
   const params = { pro: pro.id, name: pro.name };
   const openChat = async () => {
-    const conv = await consult.conversationWith(pro.id, user?.nombre ?? 'Patient');
+    const conv = await consult.conversationWith(pro.id, user?.nombre ?? t('Patient'));
     router.push({ pathname: '/chat', params: { conversation: conv, title: pro.name, side: 'patient' } });
   };
 
@@ -113,19 +114,19 @@ export const ProfessionalDetailScreen = () => {
           {pro.real && (
             <View style={styles.verified}>
               <Ionicons name="shield-checkmark" size={13} color={Colors.ok} />
-              <Text style={styles.verifiedText}>Verified by Kuova</Text>
+              <Text style={styles.verifiedText}>{t('Verified by Kuova')}</Text>
             </View>
           )}
           <View style={styles.statsRow}>
             {pro.rating !== null && <Stat icon="star" color={Colors.amber} value={pro.rating.toFixed(1)} label={`${pro.reviews} reviews`} />}
             <Stat icon="cash-outline" color={Colors.accent} value={pro.price ? `€${pro.price}` : '—'} label={`${pro.minutes} min`} />
-            <Stat icon={pro.online ? 'videocam-outline' : 'location-outline'} color={Colors.violet} value={pro.online ? 'Online' : 'In person'} label={pro.city || 'Spain'} />
+            <Stat icon={pro.online ? 'videocam-outline' : 'location-outline'} color={Colors.violet} value={pro.online ? t('Online') : t('In person')} label={pro.city || t('Spain')} />
           </View>
         </View>
 
         {pro.bio ? (
           <>
-            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.sectionTitle}>{t('About')}</Text>
             <Text style={styles.bio}>{pro.bio}</Text>
           </>
         ) : null}
@@ -136,25 +137,25 @@ export const ProfessionalDetailScreen = () => {
           {caps.video && (
             <Action
               icon="videocam"
-              title="Book a video consultation"
+              title={t('Book a video consultation')}
               sub={`${pro.minutes} min · ${pro.price ? `€${pro.price}` : 'price on request'} · pick a free slot`}
               primary
               onPress={() => router.push({ pathname: '/consult-book', params })}
             />
           )}
           {caps.requests && (
-            <Action icon="paper-plane-outline" title="Send a request" sub="A question or a results review, answered in the app" onPress={() => router.push({ pathname: '/consult-request', params })} />
+            <Action icon="paper-plane-outline" title={t('Send a request')} sub={t('A question or a results review, answered in the app')} onPress={() => router.push({ pathname: '/consult-request', params })} />
           )}
           {caps.chat ? (
-            <Action icon="chatbubbles-outline" title="Chat" sub="Message them directly" onPress={openChat} />
+            <Action icon="chatbubbles-outline" title={t('Chat')} sub={t('Message them directly')} onPress={openChat} />
           ) : (
             <View style={styles.chatOff}>
               <Ionicons name="chatbubbles-outline" size={16} color={Colors.textMuted} />
-              <Text style={styles.chatOffText}>This specialist doesn't offer chat. Use a request instead.</Text>
+              <Text style={styles.chatOffText}>{t("This specialist doesn't offer chat. Use a request instead.")}</Text>
             </View>
           )}
         </View>
-        {!pro.real && <Text style={styles.proto}>Example specialist: bookings and messages stay on your phone.</Text>}
+        {!pro.real && <Text style={styles.proto}>{t('Example specialist: bookings and messages stay on your phone.')}</Text>}
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -67,7 +67,7 @@ export const MedicationsScreen = () => {
     if (!item.reminders) return 'No reminders';
     if (isReminderMuted(item)) {
       return item.remindersMutedUntil === MUTED_FOREVER
-        ? 'Reminders muted'
+        ? t('Reminders muted')
         : `Muted until ${new Date(item.remindersMutedUntil!).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}`;
     }
     return 'Reminders on';
@@ -110,23 +110,23 @@ export const MedicationsScreen = () => {
           <View style={styles.menu}>
             {item.schedule.type !== 'as_needed' && (
               <TouchableOpacity style={styles.menuRow} onPress={() => setReminders(item, !item.reminders)}>
-                <Text style={styles.menuText}>{item.reminders ? 'Turn reminders off' : 'Turn reminders on'}</Text>
+                <Text style={styles.menuText}>{item.reminders ? t('Turn reminders off') : t('Turn reminders on')}</Text>
               </TouchableOpacity>
             )}
             {item.reminders && item.schedule.type !== 'as_needed' && (
               <>
-                <Text style={styles.menuLabel}>Mute reminders for</Text>
+                <Text style={styles.menuLabel}>{t('Mute reminders for')}</Text>
                 <View style={styles.chipRow}>
                   {MUTE_OPTIONS.map((o) => (
                     <TouchableOpacity key={o.id} style={styles.chip} onPress={() => mute(item, o.id)}>
-                      <Text style={styles.chipText}>{o.label}</Text>
+                      <Text style={styles.chipText}>{t(o.label)}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </>
             )}
             <TouchableOpacity style={styles.menuRow} onPress={() => stop(item)}>
-              <Text style={[styles.menuText, { color: Colors.danger }]}>I stopped taking it</Text>
+              <Text style={[styles.menuText, { color: Colors.danger }]}>{t('I stopped taking it')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -137,17 +137,17 @@ export const MedicationsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Medication & supplements" showBack />
+        <ScreenHeader title={t('Medication & supplements')} showBack />
 
         <View style={{ marginHorizontal: 20 }}>
           <ZoneChangeBanner onChanged={load} />
         </View>
         <View style={styles.titleRow}>
-          <Text style={[styles.sectionTitle, { paddingHorizontal: 0 }]}>Today</Text>
+          <Text style={[styles.sectionTitle, { paddingHorizontal: 0 }]}>{t('Today')}</Text>
           <InfoButton topic="medication" />
         </View>
         {today.length === 0 && asNeeded.length === 0 ? (
-          <Text style={styles.empty}>Nothing scheduled for today.</Text>
+          <Text style={styles.empty}>{t('Nothing scheduled for today.')}</Text>
         ) : (
           <View style={styles.card}>
             <DoseRows doses={today} onChange={load} />
@@ -161,22 +161,22 @@ export const MedicationsScreen = () => {
                   </Text>
                 </View>
                 <TouchableOpacity style={styles.take} onPress={() => logNow(item)}>
-                  <Text style={styles.takeText}>Took one</Text>
+                  <Text style={styles.takeText}>{t('Took one')}</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>What I take regularly</Text>
-        {regular.length ? regular.map(renderItem) : <Text style={styles.empty}>Nothing yet.</Text>}
+        <Text style={styles.sectionTitle}>{t('What I take regularly')}</Text>
+        {regular.length ? regular.map(renderItem) : <Text style={styles.empty}>{t('Nothing yet.')}</Text>}
         <TouchableOpacity style={styles.add} onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'regular' } })}>
           <Ionicons name="add-circle-outline" size={20} color={Colors.accent} />
-          <Text style={styles.addText}>Add a medicine or supplement</Text>
+          <Text style={styles.addText}>{t('Add a medicine or supplement')}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>Short courses</Text>
-        <Text style={styles.hint}>For when you are ill: antibiotics, painkillers… They end on their own.</Text>
+        <Text style={styles.sectionTitle}>{t('Short courses')}</Text>
+        <Text style={styles.hint}>{t('For when you are ill: antibiotics, painkillers… They end on their own.')}</Text>
         {courses.map(renderItem)}
         {finished.map((i) => (
           <Text key={i.id} style={styles.finished}>
@@ -185,7 +185,7 @@ export const MedicationsScreen = () => {
         ))}
         <TouchableOpacity style={styles.add} onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'short' } })}>
           <Ionicons name="add-circle-outline" size={20} color={Colors.accent} />
-          <Text style={styles.addText}>Add a short course</Text>
+          <Text style={styles.addText}>{t('Add a short course')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

@@ -10,6 +10,7 @@ import { medicationRepository } from '@/data/medicationRepository';
 import { dayKey } from '@/data/bathroomRepository';
 import { defaultTimes, findKnownMed, KnownMed, medIcon, parseMedicationText, scheduleText } from '@/logic/medication';
 import { MedicationItem, MedKind, MedSchedule } from '@/types/medication';
+import { t as tr } from '@/i18n';
 
 type Step = 'what' | 'dose' | 'when' | 'duration' | 'reminders' | 'summary';
 type Frequency = 'once' | 'twice' | 'three' | 'every_hours' | 'weekdays' | 'as_needed';
@@ -216,7 +217,7 @@ export const MedicationSetupScreen = () => {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {step === 'what' && (
           <>
-            <Text style={styles.title}>{isShort ? 'What are you taking?' : 'What do you take regularly?'}</Text>
+            <Text style={styles.title}>{isShort ? tr('What are you taking?') : tr('What do you take regularly?')}</Text>
             <Text style={styles.subtitle}>
               Write it the way you would say it. For example: {isShort ? '"Ibuprofen 600 every 8 hours for 3 days"' : '"Vitamin D 1000 IU once a day"'}.
             </Text>
@@ -224,11 +225,11 @@ export const MedicationSetupScreen = () => {
               style={styles.bigInput}
               value={text}
               onChangeText={setText}
-              placeholder={isShort ? 'Name, dose, how often, for how long' : 'Name, dose, how often'}
+              placeholder={isShort ? tr('Name, dose, how often, for how long') : tr('Name, dose, how often')}
               placeholderTextColor={Colors.textMuted}
               autoFocus
             />
-            <Text style={styles.label}>Or pick one or more</Text>
+            <Text style={styles.label}>{tr('Or pick one or more')}</Text>
             <View style={styles.slots}>
               {(isShort ? SHORT_SUGGESTIONS : REGULAR_SUGGESTIONS).map((s) => {
                 const on = picked.includes(s);
@@ -258,12 +259,12 @@ export const MedicationSetupScreen = () => {
             {prefilled && (
               <View style={styles.prefilled}>
                 <Ionicons name="sparkles-outline" size={16} color={Colors.gold} />
-                <Text style={styles.prefilledText}>We filled in the next steps from what you wrote. Check them.</Text>
+                <Text style={styles.prefilledText}>{tr('We filled in the next steps from what you wrote. Check them.')}</Text>
               </View>
             )}
             {position && <Text style={styles.position}>{position}</Text>}
-            <Text style={styles.title}>{name || 'How much?'}</Text>
-            <Text style={styles.label}>Is it a medicine or a supplement?</Text>
+            <Text style={styles.title}>{name || tr('How much?')}</Text>
+            <Text style={styles.label}>{tr('Is it a medicine or a supplement?')}</Text>
             <ChoiceChips
               options={[
                 { id: 'medication', label: 'Medicine' },
@@ -272,12 +273,12 @@ export const MedicationSetupScreen = () => {
               value={kind}
               onChange={(v) => setKind(v as MedKind)}
             />
-            <Text style={styles.label}>How much each time? (optional)</Text>
+            <Text style={styles.label}>{tr('How much each time? (optional)')}</Text>
             <TextInput
               style={styles.input}
               value={dose}
               onChangeText={setDose}
-              placeholder="1 tablet, 600 mg, 1000 IU…"
+              placeholder={tr('1 tablet, 600 mg, 1000 IU…')}
               placeholderTextColor={Colors.textMuted}
             />
           </>
@@ -285,7 +286,7 @@ export const MedicationSetupScreen = () => {
 
         {step === 'when' && (
           <>
-            <Text style={styles.title}>How often and when?</Text>
+            <Text style={styles.title}>{tr('How often and when?')}</Text>
             <ChoiceChips
               options={[
                 { id: 'once', label: 'Once a day' },
@@ -300,9 +301,9 @@ export const MedicationSetupScreen = () => {
             />
             {frequency === 'every_hours' && (
               <>
-                <Text style={styles.label}>Every</Text>
+                <Text style={styles.label}>{tr('Every')}</Text>
                 <ChoiceChips options={[4, 6, 8, 12].map((h) => ({ id: h, label: `${h} hours` }))} value={hours} onChange={setHours} />
-                <Text style={styles.label}>First dose of the day</Text>
+                <Text style={styles.label}>{tr('First dose of the day')}</Text>
                 <ChoiceChips
                   options={['06:00', '07:00', '08:00', '09:00'].map((t) => ({ id: t, label: t }))}
                   value={times[0]}
@@ -312,7 +313,7 @@ export const MedicationSetupScreen = () => {
             )}
             {frequency === 'weekdays' && (
               <>
-                <Text style={styles.label}>Which days?</Text>
+                <Text style={styles.label}>{tr('Which days?')}</Text>
                 <View style={styles.weekRow}>
                   {WEEKDAYS.map((d, i) => {
                     const on = days.includes(i);
@@ -339,12 +340,12 @@ export const MedicationSetupScreen = () => {
                     const on = times.includes(s.id);
                     return (
                       <TouchableOpacity key={s.id} style={[styles.slot, on && styles.slotOn]} onPress={() => toggleTime(s.id)}>
-                        <Text style={[styles.slotText, on && { color: Colors.textPrimary }]}>{s.label}</Text>
+                        <Text style={[styles.slotText, on && { color: Colors.textPrimary }]}>{tr(s.label)}</Text>
                       </TouchableOpacity>
                     );
                   })}
                   <TouchableOpacity style={[styles.slot, otherOpen && styles.slotOn]} onPress={() => setOtherOpen((v) => !v)}>
-                    <Text style={[styles.slotText, otherOpen && { color: Colors.textPrimary }]}>+ Other time</Text>
+                    <Text style={[styles.slotText, otherOpen && { color: Colors.textPrimary }]}>{tr('+ Other time')}</Text>
                   </TouchableOpacity>
                 </View>
                 {otherOpen && (
@@ -365,7 +366,7 @@ export const MedicationSetupScreen = () => {
             )}
             {frequency !== 'as_needed' && (
               <>
-                <Text style={styles.label}>With food?</Text>
+                <Text style={styles.label}>{tr('With food?')}</Text>
                 <ChoiceChips
                   options={[
                     { id: 'with', label: 'With food' },
@@ -383,11 +384,11 @@ export const MedicationSetupScreen = () => {
 
         {step === 'duration' && (
           <>
-            <Text style={styles.title}>For how long?</Text>
+            <Text style={styles.title}>{tr('For how long?')}</Text>
             <Text style={styles.subtitle}>
               {known?.shortCourseDays
                 ? `${known.label} is often taken for ${known.shortCourseDays} days. Follow what your doctor or the leaflet says.`
-                : 'Check your prescription or the leaflet.'}
+                : tr('Check your prescription or the leaflet.')}
             </Text>
             {/* Duraciones típicas + "Other" con rueda (como la hora), y la que ya tenga si no es típica */}
             <ChoiceChips
@@ -412,7 +413,7 @@ export const MedicationSetupScreen = () => {
               <View style={styles.otherBox}>
                 <View style={styles.wheels}>
                   <WheelPicker items={DAY_ITEMS} selectedIndex={otherDays} onChange={setOtherDays} width={90} />
-                  <Text style={styles.wheelUnit}>days</Text>
+                  <Text style={styles.wheelUnit}>{tr('days')}</Text>
                 </View>
                 <TouchableOpacity
                   style={styles.addTime}
@@ -435,13 +436,13 @@ export const MedicationSetupScreen = () => {
         {step === 'reminders' && (
           <>
             <Ionicons name="notifications-outline" size={32} color={Colors.gold} style={{ alignSelf: 'center', marginBottom: 8 }} />
-            <Text style={styles.title}>Do you want a reminder?</Text>
+            <Text style={styles.title}>{tr('Do you want a reminder?')}</Text>
             {frequency === 'as_needed' ? (
-              <Text style={styles.subtitle}>You take it only when you need it, so there are no reminders. Log it when you take it.</Text>
+              <Text style={styles.subtitle}>{tr('You take it only when you need it, so there are no reminders. Log it when you take it.')}</Text>
             ) : (
               <>
                 <Text style={styles.subtitle}>
-                  We can remind you at each dose, or you can keep track yourself. You can change it or mute it any time.
+                  {tr('We can remind you at each dose, or you can keep track yourself. You can change it or mute it any time.')}
                 </Text>
                 <ChoiceChips
                   options={[
@@ -458,24 +459,24 @@ export const MedicationSetupScreen = () => {
 
         {step === 'summary' && (
           <>
-            <Text style={styles.title}>Check it</Text>
+            <Text style={styles.title}>{tr('Check it')}</Text>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryName}>{name || text}</Text>
               <Text style={styles.summaryLine}>
-                {kind === 'supplement' ? 'Supplement' : 'Medicine'}
+                {kind === 'supplement' ? tr('Supplement') : tr('Medicine')}
                 {dose ? ` · ${dose}` : ''}
               </Text>
               <Text style={styles.summaryLine}>{scheduleText(schedule())}</Text>
               {isShort && <Text style={styles.summaryLine}>For {courseDays} days, from today</Text>}
               {withFood && withFood !== 'any' && (
-                <Text style={styles.summaryLine}>{withFood === 'with' ? 'With food' : 'On an empty stomach'}</Text>
+                <Text style={styles.summaryLine}>{withFood === 'with' ? tr('With food') : tr('On an empty stomach')}</Text>
               )}
               <Text style={styles.summaryLine}>
-                {frequency === 'as_needed' ? 'No reminders' : reminders === 'yes' ? 'Reminders on' : 'No reminders, I track it'}
+                {frequency === 'as_needed' ? tr('No reminders') : reminders === 'yes' ? tr('Reminders on') : tr('No reminders, I track it')}
               </Text>
             </View>
             {known && <Text style={styles.tip}>{known.tip}</Text>}
-            <Text style={styles.disclaimer}>Always follow your prescription and the leaflet. Kuova does not change your treatment.</Text>
+            <Text style={styles.disclaimer}>{tr('Always follow your prescription and the leaflet. Kuova does not change your treatment.')}</Text>
           </>
         )}
       </ScrollView>
@@ -485,7 +486,7 @@ export const MedicationSetupScreen = () => {
         onPress={step === 'summary' ? save : next}
         disabled={!canContinue}
       >
-        <Text style={styles.ctaText}>{step === 'summary' ? (queue.length ? `Save and set up ${queue[0]}` : 'Save') : 'Continue'}</Text>
+        <Text style={styles.ctaText}>{step === 'summary' ? (queue.length ? `Save and set up ${queue[0]}` : 'Save') : tr('Continue')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

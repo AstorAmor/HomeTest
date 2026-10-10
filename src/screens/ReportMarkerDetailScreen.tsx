@@ -14,6 +14,7 @@ import {
   RETEST_REASON_EN,
 } from '@/data/reportContentEn';
 import { TIER_COLOR, FLAG_LABEL } from '@/utils/reportDisplay';
+import { t } from '@/i18n';
 
 export const ReportMarkerDetailScreen = () => {
   const { markerId } = useLocalSearchParams<{ markerId: string }>();
@@ -24,8 +25,8 @@ export const ReportMarkerDetailScreen = () => {
   if (!marker) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title="Marker" showBack />
-        <Text style={styles.notFound}>Marker not found.</Text>
+        <ScreenHeader title={t('Marker')} showBack />
+        <Text style={styles.notFound}>{t('Marker not found.')}</Text>
       </SafeAreaView>
     );
   }
@@ -64,7 +65,7 @@ export const ReportMarkerDetailScreen = () => {
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>What this means</Text>
+        <Text style={styles.sectionTitle}>{t('What this means')}</Text>
         <Text style={styles.explanation}>{getMarkerExplanation(marker.marker_id)}</Text>
 
         {retest && (
@@ -82,7 +83,7 @@ export const ReportMarkerDetailScreen = () => {
             <View style={styles.bookedConfirmation}>
               <Ionicons name="checkmark-circle" size={18} color={Colors.accent} />
               <Text style={styles.bookedConfirmationText}>
-                Noted — a real booking flow isn't wired up in this prototype yet.
+                {t("Noted — a real booking flow isn't wired up in this prototype yet.")}
               </Text>
             </View>
           ) : (
@@ -92,7 +93,7 @@ export const ReportMarkerDetailScreen = () => {
               activeOpacity={0.85}
             >
               <Ionicons name="flask-outline" size={18} color={Colors.background} />
-              <Text style={styles.bookTestButtonText}>Book a new test</Text>
+              <Text style={styles.bookTestButtonText}>{t('Book a new test')}</Text>
             </TouchableOpacity>
           ))}
       </ScrollView>

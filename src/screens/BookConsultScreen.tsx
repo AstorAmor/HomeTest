@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -49,7 +49,7 @@ export const BookConsultScreen = () => {
       await consult.requestAppointment({
         proId,
         proName,
-        patientName: user?.nombre ?? 'Patient',
+        patientName: user?.nombre ?? t('Patient'),
         startsAt: slot,
         kind,
         modality,
@@ -68,7 +68,7 @@ export const BookConsultScreen = () => {
   if (state === 'done' && slot) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScreenHeader title="Consultation requested" showBack />
+        <ScreenHeader title={t('Consultation requested')} showBack />
         <View style={styles.done}>
           <Ionicons name="checkmark-circle" size={60} color={Colors.ok} />
           <Text style={styles.doneTitle}>
@@ -77,9 +77,9 @@ export const BookConsultScreen = () => {
           <Text style={styles.muted}>
             {proName} will confirm it shortly. You'll find it in Manage your schedule, and the video link will appear there.
           </Text>
-          {!isRealProfessional(proId) && <Text style={styles.proto}>Prototype: this specialist isn't on Kuova yet, nothing was sent.</Text>}
+          {!isRealProfessional(proId) && <Text style={styles.proto}>{t("Prototype: this specialist isn't on Kuova yet, nothing was sent.")}</Text>}
           <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
-            <Text style={styles.ctaText}>Done</Text>
+            <Text style={styles.ctaText}>{t('Done')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -89,25 +89,25 @@ export const BookConsultScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Book a consultation" showBack />
+        <ScreenHeader title={t('Book a consultation')} showBack />
         <Text style={styles.intro}>with {proName}</Text>
 
-        <Text style={styles.section}>Type</Text>
+        <Text style={styles.section}>{t('Type')}</Text>
         <View style={styles.chips}>
           {(['results_review', 'first', 'follow_up'] as AppointmentKind[]).map((k) => (
             <Chip key={k} on={kind === k} label={KIND_LABEL[k]} onPress={() => setKind(k)} />
           ))}
         </View>
         <View style={[styles.chips, { marginTop: 8 }]}>
-          <Chip on={modality === 'video'} label="Video" icon="videocam-outline" onPress={() => setModality('video')} />
-          <Chip on={modality === 'voice'} label="Phone call" icon="call-outline" onPress={() => setModality('voice')} />
+          <Chip on={modality === 'video'} label={t('Video')} icon="videocam-outline" onPress={() => setModality('video')} />
+          <Chip on={modality === 'voice'} label={t('Phone call')} icon="call-outline" onPress={() => setModality('voice')} />
         </View>
 
-        <Text style={styles.section}>Choose a time</Text>
+        <Text style={styles.section}>{t('Choose a time')}</Text>
         {slots === null ? (
           <ActivityIndicator color={Colors.accent} />
         ) : days.length === 0 ? (
-          <Text style={styles.muted}>No free slots in the next days. Send a request instead.</Text>
+          <Text style={styles.muted}>{t('No free slots in the next days. Send a request instead.')}</Text>
         ) : (
           <>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.days}>
@@ -125,8 +125,8 @@ export const BookConsultScreen = () => {
           </>
         )}
 
-        <Text style={styles.section}>What would you like to talk about? (optional)</Text>
-        <TextInput style={styles.input} multiline value={reason} onChangeText={setReason} placeholder="e.g. My ferritin and how to improve it" placeholderTextColor={Colors.textMuted} />
+        <Text style={styles.section}>{t('What would you like to talk about? (optional)')}</Text>
+        <TextInput style={styles.input} multiline value={reason} onChangeText={setReason} placeholder={t('e.g. My ferritin and how to improve it')} placeholderTextColor={Colors.textMuted} />
 
         <TouchableOpacity style={styles.shareRow} onPress={() => setShare((v) => !v)}>
           <Ionicons name={share ? 'checkbox' : 'square-outline'} size={22} color={share ? Colors.accent : Colors.textMuted} />

@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,7 +51,7 @@ export const CycleDetailScreen = () => {
       );
       const data = await response.json();
       if (!response.ok || data.error) {
-        setPredictionError(data.error ?? 'Could not compute prediction');
+        setPredictionError(data.error ?? t('Could not compute prediction'));
         setPrediction(null);
       } else {
         setPrediction(data as CyclePrediction);
@@ -92,13 +92,13 @@ export const CycleDetailScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Menstrual Cycle" showBack />
+        <ScreenHeader title={t('Menstrual Cycle')} showBack />
         <CycleGoalPanel />
 
         {loadingPrediction && (
           <View style={styles.statusRow}>
             <ActivityIndicator color={Colors.pulseAccent} />
-            <Text style={styles.statusText}>Computing prediction…</Text>
+            <Text style={styles.statusText}>{t('Computing prediction…')}</Text>
           </View>
         )}
 
@@ -115,7 +115,7 @@ export const CycleDetailScreen = () => {
               </View>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={styles.predictionLabel}>Next period predicted</Text>
+              <Text style={styles.predictionLabel}>{t('Next period predicted')}</Text>
               <InfoButton topic="cycle_prediction" size={16} />
             </View>
             <Text style={styles.predictionDate}>
@@ -126,15 +126,15 @@ export const CycleDetailScreen = () => {
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{prediction.median_cycle_length}</Text>
-                <Text style={styles.statLabel}>Median length</Text>
+                <Text style={styles.statLabel}>{t('Median length')}</Text>
               </View>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{prediction.avg_cycle_length}</Text>
-                <Text style={styles.statLabel}>Average length</Text>
+                <Text style={styles.statLabel}>{t('Average length')}</Text>
               </View>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{avgPeriod ?? '—'}</Text>
-                <Text style={styles.statLabel}>Period days</Text>
+                <Text style={styles.statLabel}>{t('Period days')}</Text>
               </View>
             </View>
 
@@ -147,19 +147,19 @@ export const CycleDetailScreen = () => {
         {entries.length < 2 && !loadingPrediction && (
           <View style={styles.emptyPredictionCard}>
             <Text style={styles.emptyText}>
-              Log at least 2 periods to get a prediction.
+              {t('Log at least 2 periods to get a prediction.')}
             </Text>
           </View>
         )}
 
         <TouchableOpacity style={styles.addButton} onPress={() => router.push('/log-cycle')}>
           <Ionicons name="add-circle-outline" size={20} color={Colors.pulseAccent} />
-          <Text style={styles.addButtonText}>Log period</Text>
+          <Text style={styles.addButtonText}>{t('Log period')}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>History</Text>
+        <Text style={styles.sectionTitle}>{t('History')}</Text>
         {historyDesc.length === 0 ? (
-          <Text style={styles.emptyText}>No entries yet.</Text>
+          <Text style={styles.emptyText}>{t('No entries yet.')}</Text>
         ) : (
           <View style={styles.historyList}>
             {historyDesc.map((entry) => (
@@ -172,7 +172,7 @@ export const CycleDetailScreen = () => {
                 <Text style={styles.historyValue}>
                   {entry.endFecha
                     ? `until ${formatListDate(entry.endFecha)} · ${periodDays(entry)} days`
-                    : 'Ongoing / end not logged'}
+                    : t('Ongoing / end not logged')}
                 </Text>
                 <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />
               </TouchableOpacity>

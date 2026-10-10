@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { mockPatient } from '@/data/mockData';
 import { buildPlanDoc } from '@/utils/planPdf';
 import { planShareSupport, printPlan, sharePlanPdf } from '@/utils/sharePlan';
+import { t } from '@/i18n';
 
 type Action = 'send' | 'print';
 
@@ -49,23 +50,23 @@ export const SharePlanButton = () => {
     <>
       <TouchableOpacity style={styles.button} onPress={() => setOpen(true)} activeOpacity={0.85}>
         <Ionicons name="share-outline" size={18} color={Colors.accent} />
-        <Text style={styles.buttonText}>Share or print</Text>
+        <Text style={styles.buttonText}>{t('Share or print')}</Text>
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Share your plan</Text>
+          <Text style={styles.sheetTitle}>{t('Share your plan')}</Text>
           <Text style={styles.sheetText}>
-            A clean PDF with your actions, why they matter and what we expect to improve.
+            {t('A clean PDF with your actions, why they matter and what we expect to improve.')}
           </Text>
 
           {support.sendPdf && (
             <Option
               icon="paper-plane-outline"
-              title="Send as PDF"
-              subtitle="WhatsApp, email, your doctor…"
+              title={t('Send as PDF')}
+              subtitle={t('WhatsApp, email, your doctor…')}
               loading={busy === 'send'}
               onPress={() => run('send')}
             />
@@ -73,16 +74,16 @@ export const SharePlanButton = () => {
           {support.print && (
             <Option
               icon={Platform.OS === 'web' ? 'download-outline' : 'print-outline'}
-              title={Platform.OS === 'web' ? 'Save as PDF or print' : 'Print'}
-              subtitle={Platform.OS === 'web' ? 'Choose "Save as PDF" to attach it anywhere' : 'Or save it as a PDF'}
+              title={Platform.OS === 'web' ? t('Save as PDF or print') : t('Print')}
+              subtitle={Platform.OS === 'web' ? t('Choose "Save as PDF" to attach it anywhere') : t('Or save it as a PDF')}
               loading={busy === 'print'}
               onPress={() => run('print')}
             />
           )}
           <Option
             icon="medkit-outline"
-            title="Share with a Kuova professional"
-            subtitle="Give them access to your plan in the app"
+            title={t('Share with a Kuova professional')}
+            subtitle={t('Give them access to your plan in the app')}
             onPress={() => {
               setOpen(false);
               router.push({ pathname: '/share-new', params: { scope: 'plan' } });

@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,7 +32,7 @@ export const ActionPlanScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Your action plan" showBack />
+        <ScreenHeader title={t('Your action plan')} showBack />
         <Text style={styles.intro}>
           Built from your blood test of {longDate(currentReport.test_date)} and your wearable data. Each action shows
           why it matters for you and where the marker could be at your next test.
@@ -43,7 +43,7 @@ export const ActionPlanScreen = () => {
 
         {latest && (
           <View style={styles.updated}>
-            <Text style={styles.updatedTitle}>Your plan today</Text>
+            <Text style={styles.updatedTitle}>{t('Your plan today')}</Text>
             <Text style={styles.updatedSub}>Updated {longDate(latest.createdAt.slice(0, 10))} with your latest results</Text>
             {latest.items.map((it, i) => (
               <View key={`${it.title}-${i}`} style={styles.updatedRow}>
@@ -65,18 +65,18 @@ export const ActionPlanScreen = () => {
           {show('wearables') && (
             <TouchableOpacity style={styles.link} onPress={() => router.push('/habits')}>
               <Ionicons name="stats-chart-outline" size={18} color={Colors.accent} />
-              <Text style={styles.linkText}>Your habits and 6-month trends</Text>
+              <Text style={styles.linkText}>{t('Your habits and 6-month trends')}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.link} onPress={() => router.push('/plans')}>
             <Ionicons name="time-outline" size={18} color={Colors.accent} />
-            <Text style={styles.linkText}>Earlier plans</Text>
+            <Text style={styles.linkText}>{t('Earlier plans')}</Text>
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.link} onPress={() => router.push('/talk-to-specialist')}>
             <Ionicons name="chatbubbles-outline" size={18} color={Colors.accent} />
-            <Text style={styles.linkText}>Talk to a specialist about your plan</Text>
+            <Text style={styles.linkText}>{t('Talk to a specialist about your plan')}</Text>
             <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
           </TouchableOpacity>
         </View>

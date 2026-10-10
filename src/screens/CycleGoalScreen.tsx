@@ -10,6 +10,7 @@ import { profileRepository } from '@/data/profileRepository';
 import { userFlags } from '@/data/userFlags';
 import { CYCLE_GOAL_OPTIONS, CycleGoal, CycleGoalAnswers } from '@/types/cycleGoal';
 import { fertilityAdvice, SexFrequency, Timing, TryingFor } from '@/logic/fertility';
+import { t as tr } from '@/i18n';
 
 type Step = 'goal' | 'cycle' | 'trying' | 'temperature' | 'result';
 
@@ -112,7 +113,7 @@ export const CycleGoalScreen = () => {
         </View>
         {step !== 'result' ? (
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={styles.skip}>Skip</Text>
+            <Text style={styles.skip}>{tr('Skip')}</Text>
           </TouchableOpacity>
         ) : (
           <View style={{ width: 30 }} />
@@ -123,8 +124,8 @@ export const CycleGoalScreen = () => {
         {step === 'goal' && (
           <>
             <Ionicons name="rose-outline" size={34} color={Colors.pulseAccent} style={styles.icon} />
-            <Text style={styles.title}>What would you like to do?</Text>
-            <Text style={styles.subtitle}>We will adapt your cycle predictions and tips. You can change it any time.</Text>
+            <Text style={styles.title}>{tr('What would you like to do?')}</Text>
+            <Text style={styles.subtitle}>{tr('We will adapt your cycle predictions and tips. You can change it any time.')}</Text>
             {CYCLE_GOAL_OPTIONS.map((o) => {
               const selected = goal === o.id;
               return (
@@ -136,8 +137,8 @@ export const CycleGoalScreen = () => {
                 >
                   <Ionicons name={o.icon as any} size={22} color={selected ? Colors.pulseAccent : Colors.textSecondary} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.optionTitle}>{o.title}</Text>
-                    <Text style={styles.optionSubtitle}>{o.subtitle}</Text>
+                    <Text style={styles.optionTitle}>{tr(o.title)}</Text>
+                    <Text style={styles.optionSubtitle}>{tr(o.subtitle)}</Text>
                   </View>
                   <Ionicons
                     name={selected ? 'radio-button-on' : 'radio-button-off'}
@@ -152,9 +153,9 @@ export const CycleGoalScreen = () => {
 
         {step === 'cycle' && (
           <>
-            <Text style={styles.title}>About your cycle</Text>
-            <Text style={styles.label}>Are your periods usually regular?</Text>
-            <Text style={styles.hint}>Regular means they come every 21 to 35 days and roughly on time.</Text>
+            <Text style={styles.title}>{tr('About your cycle')}</Text>
+            <Text style={styles.label}>{tr('Are your periods usually regular?')}</Text>
+            <Text style={styles.hint}>{tr('Regular means they come every 21 to 35 days and roughly on time.')}</Text>
             <ChoiceChips
               options={[
                 { id: 'yes', label: 'Yes' },
@@ -164,8 +165,8 @@ export const CycleGoalScreen = () => {
               value={regular}
               onChange={(v) => setRegular(v as CycleGoalAnswers['regularCycles'])}
             />
-            <Text style={styles.label}>Are you using hormonal contraception?</Text>
-            <Text style={styles.hint}>It changes how your cycle and predictions behave.</Text>
+            <Text style={styles.label}>{tr('Are you using hormonal contraception?')}</Text>
+            <Text style={styles.hint}>{tr('It changes how your cycle and predictions behave.')}</Text>
             <ChoiceChips
               options={[
                 { id: 'none', label: 'No' },
@@ -181,11 +182,11 @@ export const CycleGoalScreen = () => {
 
         {step === 'trying' && (
           <>
-            <Text style={styles.title}>Trying to conceive</Text>
+            <Text style={styles.title}>{tr('Trying to conceive')}</Text>
             <Text style={styles.subtitle}>
-              These help us tell you when it is worth seeing a doctor. Only the first one is needed.
+              {tr('These help us tell you when it is worth seeing a doctor. Only the first one is needed.')}
             </Text>
-            <Text style={styles.label}>How long have you been trying?</Text>
+            <Text style={styles.label}>{tr('How long have you been trying?')}</Text>
             <ChoiceChips
               options={[
                 { id: 'under_6m', label: 'Less than 6 months' },
@@ -196,7 +197,7 @@ export const CycleGoalScreen = () => {
               value={tryingFor}
               onChange={(v) => setTryingFor(v as TryingFor)}
             />
-            <Text style={styles.label}>How often do you have sex? (optional)</Text>
+            <Text style={styles.label}>{tr('How often do you have sex? (optional)')}</Text>
             <ChoiceChips
               options={[
                 { id: 'several_week', label: 'Several times a week' },
@@ -207,7 +208,7 @@ export const CycleGoalScreen = () => {
               value={frequency}
               onChange={(v) => setFrequency(v as SexFrequency | 'skip')}
             />
-            <Text style={styles.label}>Do you plan it around your fertile days? (optional)</Text>
+            <Text style={styles.label}>{tr('Do you plan it around your fertile days? (optional)')}</Text>
             <ChoiceChips
               options={[
                 { id: 'yes', label: 'Yes' },
@@ -224,7 +225,7 @@ export const CycleGoalScreen = () => {
         {step === 'temperature' && (
           <>
             <Ionicons name="thermometer-outline" size={34} color={Colors.gold} style={styles.icon} />
-            <Text style={styles.title}>Add your morning temperature?</Text>
+            <Text style={styles.title}>{tr('Add your morning temperature?')}</Text>
             <Text style={styles.subtitle}>
               Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you
               get up, lets us confirm when it happened{goal === 'conceive' ? ' and learn your fertile window' : ''}.
@@ -232,8 +233,7 @@ export const CycleGoalScreen = () => {
             <View style={styles.infoCard}>
               <Ionicons name="watch-outline" size={18} color={Colors.textSecondary} />
               <Text style={styles.infoText}>
-                If your wearable measures temperature at night, we use it too. It is less precise than a thermometer,
-                so the two together work best.
+                {tr('If your wearable measures temperature at night, we use it too. It is less precise than a thermometer, so the two together work best.')}
               </Text>
             </View>
             <ChoiceChips
@@ -250,7 +250,7 @@ export const CycleGoalScreen = () => {
         {step === 'result' && (
           <>
             <Ionicons name="checkmark-circle" size={40} color={Colors.ok} style={styles.icon} />
-            <Text style={styles.title}>All set</Text>
+            <Text style={styles.title}>{tr('All set')}</Text>
             {advice ? (
               <View
                 style={[
@@ -271,29 +271,28 @@ export const CycleGoalScreen = () => {
                     style={styles.secondaryCta}
                     onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}
                   >
-                    <Text style={styles.secondaryCtaText}>Find a gynaecologist or fertility specialist</Text>
+                    <Text style={styles.secondaryCtaText}>{tr('Find a gynaecologist or fertility specialist')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
             ) : (
               <Text style={styles.subtitle}>
                 {goal === 'symptoms'
-                  ? 'Log how you feel through the month and we will show you patterns by cycle phase.'
+                  ? tr('Log how you feel through the month and we will show you patterns by cycle phase.')
                   : goal === 'perimenopause'
-                    ? 'We will keep an eye on changes in your cycle length and symptoms over time.'
-                    : 'We will predict your next period and your fertile days from what you log.'}
+                    ? tr('We will keep an eye on changes in your cycle length and symptoms over time.')
+                    : tr('We will predict your next period and your fertile days from what you log.')}
               </Text>
             )}
             <Text style={styles.disclaimer}>
-              Kuova is not a contraceptive method and does not diagnose fertility problems. Guidance based on ASRM and
-              NICE fertility guidelines.
+              {tr('Kuova is not a contraceptive method and does not diagnose fertility problems. Guidance based on ASRM and NICE fertility guidelines.')}
             </Text>
           </>
         )}
       </ScrollView>
 
       <TouchableOpacity style={[styles.cta, !canContinue && styles.ctaDisabled]} onPress={next} disabled={!canContinue}>
-        <Text style={styles.ctaText}>{step === 'result' ? 'Done' : 'Continue'}</Text>
+        <Text style={styles.ctaText}>{step === 'result' ? tr('Done') : tr('Continue')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

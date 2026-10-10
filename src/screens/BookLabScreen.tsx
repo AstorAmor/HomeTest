@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -57,12 +57,12 @@ export const BookLabScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.content}>
-          <ScreenHeader title="Book an appointment" showBack />
+          <ScreenHeader title={t('Book an appointment')} showBack />
           <View style={styles.done}>
             <View style={styles.doneIcon}>
               <Ionicons name="checkmark" size={32} color={Colors.background} />
             </View>
-            <Text style={styles.doneTitle}>Appointment requested</Text>
+            <Text style={styles.doneTitle}>{t('Appointment requested')}</Text>
             <Text style={styles.doneText}>
               {longDate(booked.date)} at {booked.time}
               {'\n'}
@@ -71,12 +71,11 @@ export const BookLabScreen = () => {
               {center.address}
             </Text>
             <Text style={styles.prep}>
-              Bring your ID. For most blood tests, fast for 8 hours beforehand (water is fine) and avoid intense exercise
-              the day before.
+              {t('Bring your ID. For most blood tests, fast for 8 hours beforehand (water is fine) and avoid intense exercise the day before.')}
             </Text>
-            <Text style={styles.proto}>Prototype: the lab has not received this booking yet.</Text>
+            <Text style={styles.proto}>{t('Prototype: the lab has not received this booking yet.')}</Text>
           </View>
-          <Text style={styles.section}>Add to your calendar</Text>
+          <Text style={styles.section}>{t('Add to your calendar')}</Text>
           <View style={styles.row}>
             {(['google', 'outlook', 'yahoo'] as const).map((k) => (
               <TouchableOpacity key={k} style={styles.chip} onPress={() => Linking.openURL(links[k])}>
@@ -86,7 +85,7 @@ export const BookLabScreen = () => {
           </View>
           <TouchableOpacity style={styles.linkRow} onPress={() => Linking.openURL(directionsUrl(center))}>
             <Ionicons name="navigate-outline" size={18} color={Colors.accent} />
-            <Text style={styles.link}>Get directions</Text>
+            <Text style={styles.link}>{t('Get directions')}</Text>
           </TouchableOpacity>
         </ScrollView>
         <TouchableOpacity
@@ -97,7 +96,7 @@ export const BookLabScreen = () => {
             setTime(null);
           }}
         >
-          <Text style={styles.ctaText}>Done</Text>
+          <Text style={styles.ctaText}>{t('Done')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -106,12 +105,12 @@ export const BookLabScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Book an appointment" showBack />
-        <Text style={styles.intro}>Blood draw at a partner lab near you. Madrid · Eurofins Megalab.</Text>
+        <ScreenHeader title={t('Book an appointment')} showBack />
+        <Text style={styles.intro}>{t('Blood draw at a partner lab near you. Madrid · Eurofins Megalab.')}</Text>
 
         {upcoming.length > 0 && (
           <View style={styles.upcoming}>
-            <Text style={styles.section}>Your appointments</Text>
+            <Text style={styles.section}>{t('Your appointments')}</Text>
             {upcoming.map((a) => {
               const c = LAB_CENTERS.find((x) => x.id === a.centerId);
               return (
@@ -123,7 +122,7 @@ export const BookLabScreen = () => {
                     <Text style={styles.muted}>{c ? `${c.network} ${c.name}` : 'Lab'}</Text>
                   </Text>
                   <TouchableOpacity onPress={() => cancel(a.id)}>
-                    <Text style={styles.cancel}>Cancel</Text>
+                    <Text style={styles.cancel}>{t('Cancel')}</Text>
                   </TouchableOpacity>
                 </View>
               );
@@ -135,7 +134,7 @@ export const BookLabScreen = () => {
           <TileMap points={LAB_CENTERS} selectedId={selectedId} onSelect={selectCenter} height={320} />
         </View>
 
-        <Text style={styles.section}>{center ? 'Your lab' : `${LAB_CENTERS.length} labs in Madrid`}</Text>
+        <Text style={styles.section}>{center ? t('Your lab') : `${LAB_CENTERS.length} labs in Madrid`}</Text>
         {(center ? [center] : LAB_CENTERS).map((c) => (
           <TouchableOpacity
             key={c.id}
@@ -162,13 +161,13 @@ export const BookLabScreen = () => {
               setTime(null);
             }}
           >
-            <Text style={styles.change}>Choose another lab</Text>
+            <Text style={styles.change}>{t('Choose another lab')}</Text>
           </TouchableOpacity>
         )}
 
         {center && (
           <>
-            <Text style={styles.section}>Choose a day</Text>
+            <Text style={styles.section}>{t('Choose a day')}</Text>
             <View style={styles.calendar}>
               <MonthCalendar
                 month={month}
@@ -186,7 +185,7 @@ export const BookLabScreen = () => {
                 <Text style={styles.section}>{longDate(day)}</Text>
                 {slots.length === 0 ? (
                   <Text style={styles.muted}>
-                    {windowFor(center, day) ? 'No times left today.' : 'This lab is closed that day. Try another day.'}
+                    {windowFor(center, day) ? t('No times left today.') : t('This lab is closed that day. Try another day.')}
                   </Text>
                 ) : (
                   <View style={styles.slots}>
@@ -197,7 +196,7 @@ export const BookLabScreen = () => {
                     ))}
                   </View>
                 )}
-                <Text style={styles.prep}>Tip: early slots make fasting easier.</Text>
+                <Text style={styles.prep}>{t('Tip: early slots make fasting easier.')}</Text>
               </>
             )}
           </>

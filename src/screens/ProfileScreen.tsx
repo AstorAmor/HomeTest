@@ -21,7 +21,7 @@ const LABELS: Record<string, string> = {
   undisclosed: t('Prefer not to say'),
   sedentary: t('Mostly sitting'),
   light: t('Light activity'),
-  active: t('Active'),
+  active: t('Fairly active'),
   very_active: t('Very active'),
   lt6: t('< 6 h'),
   '6to7': t('6–7 h'),

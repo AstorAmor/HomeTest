@@ -10,6 +10,7 @@ import { dayKey, entryForDay, noonOf, urineRepository } from '@/data/bathroomRep
 import { dailyTotalNote, urineAdvice, UrineAdvice, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
 import { UrineColor, UrineEntry, URINE_COLORS, VOID_VOLUMES, VoidVolume } from '@/types/bathroom';
 import { logScreenStyles } from './LogBowelScreen';
+import { t } from '@/i18n';
 
 const RED_CAUSES = ['Beetroot', 'Blackberries', 'Rhubarb', 'A new medicine'];
 const NONE = 'None of these';
@@ -85,13 +86,13 @@ export const LogUrineScreen = () => {
 
   const suggestionText =
     suggestion?.kind === 'first'
-      ? 'You have not done a volume check yet. It takes one pee and a bottle.'
+      ? t('You have not done a volume check yet. It takes one pee and a bottle.')
       : suggestion?.kind === 'periodic'
         ? `Your last volume check was ${suggestion.daysSince} days ago.`
         : suggestion?.kind === 'repeat'
-          ? 'Last time the amount did not feel usual. Try it again on a normal day.'
+          ? t('Last time the amount did not feel usual. Try it again on a normal day.')
           : suggestion?.kind === 'collect_24h'
-            ? 'It still did not feel usual. Pharmacies sell 24-hour urine containers (2–3 litres) so you can measure a whole day.'
+            ? t('It still did not feel usual. Pharmacies sell 24-hour urine containers (2–3 litres) so you can measure a whole day.')
             : null;
 
   if (advice) {
@@ -101,16 +102,16 @@ export const LogUrineScreen = () => {
         <View style={[styles.adviceIcon, { backgroundColor: withAlpha(color, 0.16) }]}>
           <Ionicons name={advice.level === 'see_doctor' ? 'medkit-outline' : 'water'} size={30} color={color} />
         </View>
-        <Text style={styles.savedText}>Saved</Text>
+        <Text style={styles.savedText}>{t('Saved')}</Text>
         <Text style={styles.adviceTitle}>{advice.title}</Text>
         <Text style={styles.adviceBody}>{advice.body}</Text>
         {advice.level === 'see_doctor' && (
           <TouchableOpacity onPress={() => router.replace({ pathname: '/professionals', params: { role: 'doctor' } })}>
-            <Text style={styles.adviceLink}>Find a doctor</Text>
+            <Text style={styles.adviceLink}>{t('Find a doctor')}</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.adviceButton} onPress={() => router.back()} activeOpacity={0.85}>
-          <Text style={styles.adviceButtonText}>Got it</Text>
+          <Text style={styles.adviceButtonText}>{t('Got it')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -132,11 +133,11 @@ export const LogUrineScreen = () => {
           <View style={styles.iconBadge}>
             <Ionicons name="water-outline" size={26} color={Colors.green} />
           </View>
-          <Text style={styles.title}>Urine today</Text>
-          <Text style={styles.subtitle}>Colour and how often say a lot about how hydrated you are.</Text>
+          <Text style={styles.title}>{t('Urine today')}</Text>
+          <Text style={styles.subtitle}>{t('Colour and how often say a lot about how hydrated you are.')}</Text>
         </View>
 
-        <Text style={styles.label}>How many times today?</Text>
+        <Text style={styles.label}>{t('How many times today?')}</Text>
         <View style={[styles.stepper, styles.centered]}>
           <TouchableOpacity style={styles.stepButton} onPress={() => setCount((c) => Math.max(0, c - 1))}>
             <Ionicons name="remove" size={20} color={Colors.textPrimary} />
@@ -147,49 +148,49 @@ export const LogUrineScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Times you woke up at night to go</Text>
+        <Text style={styles.label}>{t('Times you woke up at night to go')}</Text>
         <ChoiceChips options={NIGHTS} value={nightCount} onChange={setNightCount} center />
 
-        <Text style={styles.label}>Colour</Text>
+        <Text style={styles.label}>{t('Colour')}</Text>
         <ColorSwatches options={URINE_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
         {color === 'red' && (
           <View style={styles.askCard}>
-            <Text style={styles.askTitle}>Could something explain it?</Text>
+            <Text style={styles.askTitle}>{t('Could something explain it?')}</Text>
             <ChoiceChips options={[...RED_CAUSES, NONE].map((c) => ({ id: c, label: c }))} value={cause} onChange={setCause} />
-            {cause === NONE && <Text style={styles.askAdvice}>Blood in the urine always needs checking: please see a doctor soon.</Text>}
+            {cause === NONE && <Text style={styles.askAdvice}>{t('Blood in the urine always needs checking: please see a doctor soon.')}</Text>}
             {cause && cause !== NONE && (
               <Text style={styles.askOk}>
-                That is the likely cause. It should clear within a day. Keep an eye on it and, if you have any doubt, see a doctor.
+                {t('That is the likely cause. It should clear within a day. Keep an eye on it and, if you have any doubt, see a doctor.')}
               </Text>
             )}
           </View>
         )}
         {color === 'brown' && (
           <View style={styles.askCard}>
-            <Text style={styles.askText}>If it does not clear with more water, brown urine is worth checking with a doctor.</Text>
+            <Text style={styles.askText}>{t('If it does not clear with more water, brown urine is worth checking with a doctor.')}</Text>
           </View>
         )}
 
-        <Text style={styles.label}>Any burning or pain?</Text>
+        <Text style={styles.label}>{t('Any burning or pain?')}</Text>
         <ChoiceChips options={[{ id: 'no', label: 'No' }, { id: 'yes', label: 'Yes' }]} value={burning} onChange={setBurning} center />
 
         {/* Prueba de volumen */}
         <TouchableOpacity style={styles.volumeHeader} onPress={() => setShowVolume((v) => !v)} activeOpacity={0.85}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.volumeTitle}>Quick volume check</Text>
-            <Text style={styles.volumeSub}>{suggestionText ?? 'Optional, every few months.'}</Text>
+            <Text style={styles.volumeTitle}>{t('Quick volume check')}</Text>
+            <Text style={styles.volumeSub}>{suggestionText ?? t('Optional, every few months.')}</Text>
           </View>
           <Ionicons name={showVolume ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
         </TouchableOpacity>
         {showVolume && (
           <View style={styles.askCard}>
             <Text style={styles.askText}>
-              Next time you go, pee into an empty 500 ml bottle or a measuring jug. How full was it?
+              {t('Next time you go, pee into an empty 500 ml bottle or a measuring jug. How full was it?')}
             </Text>
             <ChoiceChips options={VOID_VOLUMES.map((v) => ({ id: v.id, label: v.label }))} value={voidVolume} onChange={setVoidVolume} />
             {voidVolume && (
               <>
-                <Text style={styles.askTitle}>Is that about what you usually pass?</Text>
+                <Text style={styles.askTitle}>{t('Is that about what you usually pass?')}</Text>
                 <ChoiceChips
                   options={[
                     { id: 'yes', label: 'Yes' },
@@ -200,32 +201,32 @@ export const LogUrineScreen = () => {
                   onChange={(v) => setVolumeUsual(v as UrineEntry['volumeUsual'])}
                 />
                 {volumeUsual === 'no' && (
-                  <Text style={styles.askText}>Try again another day. Most adults pass about 200–400 ml each time.</Text>
+                  <Text style={styles.askText}>{t('Try again another day. Most adults pass about 200–400 ml each time.')}</Text>
                 )}
               </>
             )}
-            <Text style={[styles.askTitle, { marginTop: 6 }]}>Measured a whole day? (optional)</Text>
+            <Text style={[styles.askTitle, { marginTop: 6 }]}>{t('Measured a whole day? (optional)')}</Text>
             <Text style={styles.askText}>
-              Pharmacies sell 24-hour urine containers. Collect everything for a day and write the total.
+              {t('Pharmacies sell 24-hour urine containers. Collect everything for a day and write the total.')}
             </Text>
             <TextInput
               style={styles.input}
               value={total}
               onChangeText={setTotal}
               keyboardType="number-pad"
-              placeholder="Total in ml, e.g. 1500"
+              placeholder={t('Total in ml, e.g. 1500')}
               placeholderTextColor={Colors.textMuted}
             />
             {totalMl ? <Text style={styles.askText}>{dailyTotalNote(totalMl).body}</Text> : null}
           </View>
         )}
 
-        <Text style={styles.label}>Anything else? (optional)</Text>
+        <Text style={styles.label}>{t('Anything else? (optional)')}</Text>
         <TextInput
           style={styles.note}
           value={note}
           onChangeText={setNote}
-          placeholder="Drank less today, very hot, new medicine…"
+          placeholder={t('Drank less today, very hot, new medicine…')}
           placeholderTextColor={Colors.textMuted}
           multiline
         />

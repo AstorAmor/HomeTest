@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t as tr } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -69,7 +69,7 @@ export const ConsultRequestScreen = () => {
     setState('sending');
     setError('');
     try {
-      await consult.sendRequest({ proId, proName, patientName: user?.nombre ?? 'Patient', kind, message: message.trim(), audioUri });
+      await consult.sendRequest({ proId, proName, patientName: user?.nombre ?? tr('Patient'), kind, message: message.trim(), audioUri });
       setMessage('');
       setAudioUri(null);
       setRecorderKey((k) => k + 1);
@@ -84,7 +84,7 @@ export const ConsultRequestScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ScreenHeader title="Send a request" showBack />
+        <ScreenHeader title={tr('Send a request')} showBack />
         <Text style={styles.intro}>to {proName}. They'll answer in the app, usually within 48 h.</Text>
 
         <View style={{ gap: 8 }}>
@@ -108,7 +108,7 @@ export const ConsultRequestScreen = () => {
             setMessage(t);
             if (state === 'sent') setState('idle');
           }}
-          placeholder="Write your message"
+          placeholder={tr('Write your message')}
           placeholderTextColor={Colors.textMuted}
         />
         <View style={{ marginTop: 10 }}>
@@ -124,10 +124,10 @@ export const ConsultRequestScreen = () => {
             </Text>
           </View>
         ) : localShared ? (
-          <Text style={styles.sent}>Shared ✓ (prototype: this specialist isn’t on Kuova yet)</Text>
+          <Text style={styles.sent}>{tr('Shared ✓ (prototype: this specialist isn’t on Kuova yet)')}</Text>
         ) : (
           <>
-            <Text style={styles.shareHint}>So they can answer with your real results. You can revoke it anytime.</Text>
+            <Text style={styles.shareHint}>{tr('So they can answer with your real results. You can revoke it anytime.')}</Text>
             <View style={styles.scopes}>
               {SHARE_SCOPES.map((s) => {
                 const on = scopes.includes(s.id);
@@ -145,9 +145,9 @@ export const ConsultRequestScreen = () => {
             </View>
             <TouchableOpacity style={[styles.shareBtn, scopes.length === 0 && { opacity: 0.5 }]} disabled={scopes.length === 0 || shareState === 'saving'} onPress={doShare}>
               <Ionicons name="share-social-outline" size={16} color={Colors.accent} />
-              <Text style={styles.shareBtnText}>{shareState === 'saving' ? 'Sharing…' : `Share with ${proName}`}</Text>
+              <Text style={styles.shareBtnText}>{shareState === 'saving' ? tr('Sharing…') : `Share with ${proName}`}</Text>
             </TouchableOpacity>
-            {shareState === 'error' ? <Text style={styles.error}>Could not share. Try again.</Text> : null}
+            {shareState === 'error' ? <Text style={styles.error}>{tr('Could not share. Try again.')}</Text> : null}
           </>
         )}
         {state === 'sent' && (
@@ -159,11 +159,11 @@ export const ConsultRequestScreen = () => {
 
         {history.length > 0 && (
           <>
-            <Text style={styles.section}>Your requests</Text>
+            <Text style={styles.section}>{tr('Your requests')}</Text>
             {history.map((r) => (
               <View key={r.id} style={styles.card}>
                 <Text style={styles.meta}>
-                  {REQUEST_KIND_LABEL[r.kind]} · {shortDate(r.createdAt)} · {r.status === 'open' ? 'Waiting for an answer' : 'Answered'}
+                  {REQUEST_KIND_LABEL[r.kind]} · {shortDate(r.createdAt)} · {r.status === 'open' ? tr('Waiting for an answer') : tr('Answered')}
                 </Text>
                 {r.message ? <Text style={styles.msg}>{r.message}</Text> : null}
                 {r.audioPath ? <StoredAudio path={r.audioPath} /> : null}
@@ -178,7 +178,7 @@ export const ConsultRequestScreen = () => {
         )}
       </ScrollView>
       <TouchableOpacity style={[styles.cta, !message.trim() && !audioUri && { opacity: 0.5 }]} disabled={(!message.trim() && !audioUri) || state === 'sending'} onPress={send}>
-        {state === 'sending' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>Send request</Text>}
+        {state === 'sending' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{tr('Send request')}</Text>}
       </TouchableOpacity>
     </SafeAreaView>
   );

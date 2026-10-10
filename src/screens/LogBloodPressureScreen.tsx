@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -89,7 +89,7 @@ export const LogBloodPressureScreen = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setProcessingError(data.error ?? 'Error extracting data');
+        setProcessingError(data.error ?? t('Error extracting data'));
         setSystolic('');
         setDiastolic('');
         setPulse('');
@@ -209,23 +209,23 @@ export const LogBloodPressureScreen = () => {
   if (step === 'select') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title="Blood Pressure" showBack />
+        <ScreenHeader title={t('Blood Pressure')} showBack />
         <View style={styles.methodList}>
           <TouchableOpacity style={styles.methodButton} onPress={takePhoto}>
             <Ionicons name="camera-outline" size={22} color={Colors.accent} />
-            <Text style={styles.methodButtonText}>Take photo</Text>
+            <Text style={styles.methodButtonText}>{t('Take photo')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.methodButton} onPress={pickImage}>
             <Ionicons name="images-outline" size={22} color={Colors.accent} />
-            <Text style={styles.methodButtonText}>Choose image</Text>
+            <Text style={styles.methodButtonText}>{t('Choose image')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.methodButton} onPress={pickFile}>
             <Ionicons name="document-text-outline" size={22} color={Colors.accent} />
-            <Text style={styles.methodButtonText}>Choose file</Text>
+            <Text style={styles.methodButtonText}>{t('Choose file')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.methodButton} onPress={startManual}>
             <Ionicons name="create-outline" size={22} color={Colors.accent} />
-            <Text style={styles.methodButtonText}>Manual entry</Text>
+            <Text style={styles.methodButtonText}>{t('Manual entry')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -237,7 +237,7 @@ export const LogBloodPressureScreen = () => {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.processingWrap}>
           <ActivityIndicator color={Colors.accent} size="large" />
-          <Text style={styles.processingText}>Reading the blood pressure monitor screen…</Text>
+          <Text style={styles.processingText}>{t('Reading the blood pressure monitor screen…')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -263,58 +263,58 @@ export const LogBloodPressureScreen = () => {
           <View style={styles.iconBadge}>
             <Ionicons name="heart" size={26} color={Colors.danger} />
           </View>
-          <Text style={styles.title}>Blood Pressure</Text>
+          <Text style={styles.title}>{t('Blood Pressure')}</Text>
         </View>
 
         {processingError ? <Text style={styles.errorText}>{processingError}</Text> : null}
 
         <View style={styles.list}>
           <TouchableOpacity style={styles.row} onPress={() => setPickerMode('date')}>
-            <Text style={styles.rowLabel}>Date</Text>
+            <Text style={styles.rowLabel}>{t('Date')}</Text>
             <View style={styles.rowValuePill}>
               <Text style={styles.rowValueText}>{formatDate(dateTime)}</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.row} onPress={() => setPickerMode('time')}>
-            <Text style={styles.rowLabel}>Time</Text>
+            <Text style={styles.rowLabel}>{t('Time')}</Text>
             <View style={styles.rowValuePill}>
               <Text style={styles.rowValueText}>{formatTime(dateTime)}</Text>
             </View>
           </TouchableOpacity>
 
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Systolic</Text>
+            <Text style={styles.rowLabel}>{t('Systolic')}</Text>
             <TextInput
               style={styles.inlineInput}
               value={systolic}
               onChangeText={setSystolic}
               keyboardType="number-pad"
-              placeholder="mmHg"
+              placeholder={t('mmHg')}
               placeholderTextColor={Colors.textMuted}
             />
           </View>
 
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Diastolic</Text>
+            <Text style={styles.rowLabel}>{t('Diastolic')}</Text>
             <TextInput
               style={styles.inlineInput}
               value={diastolic}
               onChangeText={setDiastolic}
               keyboardType="number-pad"
-              placeholder="mmHg"
+              placeholder={t('mmHg')}
               placeholderTextColor={Colors.textMuted}
             />
           </View>
 
           <View style={[styles.row, styles.rowLast]}>
-            <Text style={styles.rowLabel}>Pulse</Text>
+            <Text style={styles.rowLabel}>{t('Pulse')}</Text>
             <TextInput
               style={styles.inlineInput}
               value={pulse}
               onChangeText={setPulse}
               keyboardType="number-pad"
-              placeholder="bpm (opcional)"
+              placeholder={t('bpm (optional)')}
               placeholderTextColor={Colors.textMuted}
             />
           </View>
@@ -323,7 +323,7 @@ export const LogBloodPressureScreen = () => {
         {isEditing && (
           <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
             <Ionicons name="trash-outline" size={16} color={Colors.danger} />
-            <Text style={styles.deleteButtonText}>Delete entry</Text>
+            <Text style={styles.deleteButtonText}>{t('Delete entry')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>

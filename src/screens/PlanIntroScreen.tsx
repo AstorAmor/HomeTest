@@ -18,6 +18,7 @@ import { Colors, OnDark } from '@/constants/colors';
 import { buildPlan, PlanItem } from '@/data/planRepository';
 import { profileRepository, Sex } from '@/data/profileRepository';
 import { planImage } from '@/data/planImages';
+import { t as tr } from '@/i18n';
 
 // "Here is your plan": una tarjeta a pantalla completa por cada elemento del plan,
 // con su foto de fondo difuminada, el porqué y las recomendaciones.
@@ -91,9 +92,9 @@ export const PlanIntroScreen = () => {
               <View>
                 <Text style={styles.number}>{i + 1}</Text>
                 <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.label}>Why</Text>
+                <Text style={styles.label}>{tr('Why')}</Text>
                 <Text style={styles.why}>{item.why}</Text>
-                <Text style={styles.label}>How</Text>
+                <Text style={styles.label}>{tr('How')}</Text>
                 {item.how.map((h) => (
                   <View key={h} style={styles.howRow}>
                     <Ionicons name="checkmark-circle" size={18} color={Colors.accent} />
@@ -120,7 +121,7 @@ export const PlanIntroScreen = () => {
         </TouchableOpacity>
         {!last && (
           <TouchableOpacity onPress={finish}>
-            <Text style={styles.skip}>Skip</Text>
+            <Text style={styles.skip}>{tr('Skip')}</Text>
           </TouchableOpacity>
         )}
       </SafeAreaView>

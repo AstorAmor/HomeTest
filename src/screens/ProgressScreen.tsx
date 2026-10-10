@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -54,7 +54,7 @@ export const ProgressScreen = () => {
   if (!upload || !result) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title="Your progress" showBack />
+        <ScreenHeader title={t('Your progress')} showBack />
       </SafeAreaView>
     );
   }
@@ -67,20 +67,20 @@ export const ProgressScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Your progress" showBack />
+        <ScreenHeader title={t('Your progress')} showBack />
         <Text style={styles.intro}>
-          {upload.testDate ? shortDate(upload.testDate) : 'Uploaded test'} · {upload.labName ?? 'User upload'}. Compared with the last value
+          {upload.testDate ? shortDate(upload.testDate) : t('Uploaded test')} · {upload.labName ?? t('User upload')}. Compared with the last value
           we had for each marker. Markers that weren't in this test stay as they were.
         </Text>
 
         <View style={styles.summary}>
-          <Stat value={better} label="Better" color={Colors.ok} />
-          <Stat value={same} label="No change" color={Colors.textSecondary} />
-          <Stat value={worse} label="To watch" color={worse ? Colors.danger : Colors.textSecondary} />
+          <Stat value={better} label={t('Better')} color={Colors.ok} />
+          <Stat value={same} label={t('No change')} color={Colors.textSecondary} />
+          <Stat value={worse} label={t('To watch')} color={worse ? Colors.danger : Colors.textSecondary} />
         </View>
 
         {result.changes.length === 0 && (
-          <Text style={styles.empty}>None of these markers had an earlier value to compare with.</Text>
+          <Text style={styles.empty}>{t('None of these markers had an earlier value to compare with.')}</Text>
         )}
 
         {result.changes.map((c) => (
@@ -133,7 +133,7 @@ export const ProgressScreen = () => {
       {show('plan') && (
         <TouchableOpacity style={styles.cta} onPress={() => router.push({ pathname: '/plan-update', params: { upload: upload.id } })}>
           <Ionicons name="sparkles" size={18} color={Colors.background} />
-          <Text style={styles.ctaText}>Update my plan</Text>
+          <Text style={styles.ctaText}>{t('Update my plan')}</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

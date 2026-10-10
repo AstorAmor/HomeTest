@@ -11,6 +11,7 @@ import { familyHistoryStore } from '@/data/familyHistoryStore';
 import { profileRepository } from '@/data/profileRepository';
 import { AGE_LABEL, CANCER_LABEL, RELATION_GROUPS, RELATIONS } from '@/data/genetics/scoring';
 import { assessFamilyHistory, cancerTypesFor, LEVEL_TEXT, REFERRAL_INTRO } from '@/logic/genetics';
+import { t as tr } from '@/i18n';
 import {
   AgeBand,
   AshkenaziAnswer,
@@ -269,9 +270,9 @@ export const KnowYourRootsScreen = () => {
     }));
 
   const relTitle = (r: Relative) => {
-    if (r.relation === 'self') return 'You';
+    if (r.relation === 'self') return tr('You');
     const same = answers.relatives.filter((x) => x.relation === r.relation);
-    return same.length > 1 ? `${RELATIONS[r.relation].label} (${same.indexOf(r) + 1})` : RELATIONS[r.relation].label;
+    return same.length > 1 ? `${tr(RELATIONS[r.relation].label)} (${same.indexOf(r) + 1})` : tr(RELATIONS[r.relation].label);
   };
 
   // ── Qué se puede pulsar ──
@@ -316,7 +317,7 @@ export const KnowYourRootsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={viewOnly ? () => router.back() : goBack} accessibilityLabel="Back">
+        <TouchableOpacity style={styles.circleButton} onPress={viewOnly ? () => router.back() : goBack} accessibilityLabel={tr('Back')}>
           <Ionicons name={index > 0 && !viewOnly ? 'chevron-back' : 'close'} size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
@@ -327,11 +328,11 @@ export const KnowYourRootsScreen = () => {
               </View>
             ))}
           </View>
-          {block > 0 && <Text style={styles.blockLabel}>{`${block} of 3 · ${BLOCKS[block - 1]}`}</Text>}
+          {block > 0 && <Text style={styles.blockLabel}>{tr('{n} of 3 · {what}', { n: block, what: tr(BLOCKS[block - 1]) })}</Text>}
         </View>
         {step !== 'intro' && step !== 'result' ? (
           <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={styles.exit}>Save & exit</Text>
+            <Text style={styles.exit}>{tr('Save & exit')}</Text>
           </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
@@ -342,10 +343,9 @@ export const KnowYourRootsScreen = () => {
         {step === 'intro' && (
           <>
             <MaterialCommunityIcons name="family-tree" size={40} color={Colors.gold} style={styles.icon} />
-            <Text style={[styles.title, { textAlign: 'center' }]}>Know your roots</Text>
+            <Text style={[styles.title, { textAlign: 'center' }]}>{tr('Know your roots')}</Text>
             <Text style={[styles.subtitle, { textAlign: 'center' }]}>
-              The questions a genetic counsellor asks at a first visit. Your answers show whether your family history is worth
-              talking about with a professional.
+              {tr('The questions a genetic counsellor asks at a first visit. Your answers show whether your family history is worth talking about with a professional.')}
             </Text>
             {resumeAt && (
               <View style={styles.resume}>
@@ -358,7 +358,7 @@ export const KnowYourRootsScreen = () => {
             <View style={styles.card}>
               <View style={styles.timeHeader}>
                 <Ionicons name="time-outline" size={18} color={Colors.accent} />
-                <Text style={styles.timeTitle}>About 4–6 minutes</Text>
+                <Text style={styles.timeTitle}>{tr('About 4–6 minutes')}</Text>
               </View>
               {[
                 ['1', 'Quick check', 'About 1 minute · 10 yes/no questions'],
@@ -368,22 +368,22 @@ export const KnowYourRootsScreen = () => {
                 <View key={n} style={styles.timeRow}>
                   <Text style={styles.timeNum}>{n}</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.timeRowTitle}>{t}</Text>
-                    <Text style={styles.timeRowSub}>{s}</Text>
+                    <Text style={styles.timeRowTitle}>{tr(t)}</Text>
+                    <Text style={styles.timeRowSub}>{tr(s)}</Text>
                   </View>
                 </View>
               ))}
-              <Text style={styles.small}>Every answer is saved as you go. You can close the app and continue at the same question.</Text>
+              <Text style={styles.small}>{tr('Every answer is saved as you go. You can close the app and continue at the same question.')}</Text>
             </View>
             <View style={styles.note}>
               <Ionicons name="lock-closed-outline" size={16} color={Colors.textSecondary} />
               <Text style={styles.noteText}>
-                Only you see this. Family history is sensitive health data: it is never shared unless you choose to share it.
+                {tr('Only you see this. Family history is sensitive health data: it is never shared unless you choose to share it.')}
               </Text>
             </View>
             <View style={styles.note}>
               <Ionicons name="information-circle-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.noteText}>Guidance to talk to a professional, not a diagnosis.</Text>
+              <Text style={styles.noteText}>{tr('Guidance to talk to a professional, not a diagnosis.')}</Text>
             </View>
           </>
         )}
@@ -391,8 +391,8 @@ export const KnowYourRootsScreen = () => {
         {triage && (
           <>
             <MaterialCommunityIcons name={triage.icon as any} size={34} color={Colors.gold} style={styles.icon} />
-            <Text style={styles.title}>{triage.title}</Text>
-            {triage.hint ? <Text style={styles.subtitle}>{triage.hint}</Text> : <View style={{ height: 12 }} />}
+            <Text style={styles.title}>{tr(triage.title)}</Text>
+            {triage.hint ? <Text style={styles.subtitle}>{tr(triage.hint)}</Text> : <View style={{ height: 12 }} />}
             {(triage.id === 'ashkenazi' ? ASHKENAZI : YES_NO).map((o) => {
               const value = triage.id === 'ashkenazi' ? answers.ashkenazi : answers.triage[triage.id as TriageId];
               const on = value === o.id;
@@ -403,7 +403,7 @@ export const KnowYourRootsScreen = () => {
                   onPress={() => answerTriage(triage.id, o.id)}
                   activeOpacity={0.85}
                 >
-                  <Text style={[styles.optionText, on && styles.optionTextOn]}>{o.label}</Text>
+                  <Text style={[styles.optionText, on && styles.optionTextOn]}>{tr(o.label)}</Text>
                   <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={20} color={on ? Colors.gold : Colors.textMuted} />
                 </TouchableOpacity>
               );
@@ -414,8 +414,8 @@ export const KnowYourRootsScreen = () => {
         {step === 'genes' && (
           <>
             <MaterialCommunityIcons name="dna" size={34} color={Colors.gold} style={styles.icon} />
-            <Text style={styles.title}>Which gene was it?</Text>
-            <Text style={styles.subtitle}>If you have the report, it is worth bringing to your appointment. Optional.</Text>
+            <Text style={styles.title}>{tr('Which gene was it?')}</Text>
+            <Text style={styles.subtitle}>{tr('If you have the report, it is worth bringing to your appointment. Optional.')}</Text>
             <View style={styles.chips}>
               {GENES.map((g) => {
                 const on = (answers.knownGenes ?? []).includes(g.id);
@@ -430,7 +430,7 @@ export const KnowYourRootsScreen = () => {
                       }))
                     }
                   >
-                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{on ? `✓ ${g.label}` : g.label}</Text>
+                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{on ? `✓ ${tr(g.label)}` : tr(g.label)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -440,13 +440,13 @@ export const KnowYourRootsScreen = () => {
 
         {step === 'people' && (
           <>
-            <Text style={styles.title}>Who had cancer?</Text>
+            <Text style={styles.title}>{tr('Who had cancer?')}</Text>
             <Text style={styles.subtitle}>
-              Tap everyone you know of. If there were two aunts, add two. Only blood relatives.
+              {tr('Tap everyone you know of. If there were two aunts, add two. Only blood relatives.')}
             </Text>
             {RELATION_GROUPS.map((g) => (
               <View key={g.title} style={{ marginBottom: 14 }}>
-                <Text style={styles.groupTitle}>{g.title}</Text>
+                <Text style={styles.groupTitle}>{tr(g.title)}</Text>
                 <View style={styles.chips}>
                   {g.ids.map((id) => {
                     const n = countOf(id);
@@ -454,14 +454,14 @@ export const KnowYourRootsScreen = () => {
                     if (n > 0 && info.plural) {
                       return (
                         <View key={id} style={[styles.chip, styles.chipOn, styles.counter]}>
-                          <TouchableOpacity onPress={() => removeRelative(id)} hitSlop={8} accessibilityLabel={`One less ${info.short}`}>
+                          <TouchableOpacity onPress={() => removeRelative(id)} hitSlop={8} accessibilityLabel={tr('One less: {who}', { who: tr(info.short) })}>
                             <Ionicons name="remove-circle-outline" size={20} color={Colors.gold} />
                           </TouchableOpacity>
                           <Text style={[styles.chipText, styles.chipTextOn]}>
-                            {info.short}
+                            {tr(info.short)}
                             {n > 1 ? ` ×${n}` : ''}
                           </Text>
-                          <TouchableOpacity onPress={() => addRelative(id)} hitSlop={8} accessibilityLabel={`One more ${info.short}`}>
+                          <TouchableOpacity onPress={() => addRelative(id)} hitSlop={8} accessibilityLabel={tr('One more: {who}', { who: tr(info.short) })}>
                             <Ionicons name="add-circle-outline" size={20} color={Colors.gold} />
                           </TouchableOpacity>
                         </View>
@@ -485,15 +485,15 @@ export const KnowYourRootsScreen = () => {
 
         {step.startsWith('types:') && (
           <>
-            <Text style={styles.position}>{current ? relTitle(current) : 'You'}</Text>
-            <Text style={styles.title}>{step === 'types:self' ? 'Which cancer did you have?' : `Which cancer did ${current ? pronoun(current) : 'they'} have?`}</Text>
-            <Text style={styles.subtitle}>Pick one or more.</Text>
+            <Text style={styles.position}>{current ? relTitle(current) : tr('You')}</Text>
+            <Text style={styles.title}>{step === 'types:self' ? tr('Which cancer did you have?') : tr(`Which cancer did ${current ? pronoun(current) : 'they'} have?`)}</Text>
+            <Text style={styles.subtitle}>{tr('Pick one or more.')}</Text>
             <View style={styles.chips}>
               {cancerTypesFor(answers, step === 'types:self', step === 'types:self' ? 'self' : RELATIONS[current?.relation ?? 'mother'].sex, selfSex).map((t) => {
                 const on = !!current?.cancers.some((c) => c.type === t);
                 return (
                   <TouchableOpacity key={t} style={[styles.chip, on && styles.chipOn]} onPress={() => toggleType(step.slice(6), t)}>
-                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{on ? `✓ ${CANCER_LABEL[t]}` : CANCER_LABEL[t]}</Text>
+                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{on ? `✓ ${tr(CANCER_LABEL[t])}` : tr(CANCER_LABEL[t])}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -508,12 +508,12 @@ export const KnowYourRootsScreen = () => {
           return (
             <>
               <Text style={styles.position}>
-                {relTitle(current)} · {CANCER_LABEL[type]}
+                {relTitle(current)} · {tr(CANCER_LABEL[type])}
               </Text>
-              <Text style={styles.title}>{self ? 'How old were you when it was diagnosed?' : `How old was ${pronoun(current)} when it was diagnosed?`}</Text>
-              <Text style={styles.subtitle}>A rough guess is fine. The age is what changes the risk most.</Text>
+              <Text style={styles.title}>{self ? tr('How old were you when it was diagnosed?') : tr(`How old was ${pronoun(current)} when it was diagnosed?`)}</Text>
+              <Text style={styles.subtitle}>{tr('A rough guess is fine. The age is what changes the risk most.')}</Text>
               <ChoiceChips
-                options={AGES.map((a) => ({ id: a, label: AGE_LABEL[a] }))}
+                options={AGES.map((a) => ({ id: a, label: tr(AGE_LABEL[a]) }))}
                 value={cancer?.ageGiven ? cancer.age : undefined}
                 onChange={(v) => setCancer(step.split(':')[1], type, { age: v as AgeBand })}
               />
@@ -524,7 +524,7 @@ export const KnowYourRootsScreen = () => {
                   activeOpacity={0.85}
                 >
                   <Ionicons name={cancer?.bilateral ? 'checkbox' : 'square-outline'} size={22} color={cancer?.bilateral ? Colors.gold : Colors.textMuted} />
-                  <Text style={styles.checkText}>It was in both breasts (or in several places in one)</Text>
+                  <Text style={styles.checkText}>{tr('It was in both breasts (or in several places in one)')}</Text>
                 </TouchableOpacity>
               )}
             </>
@@ -534,8 +534,8 @@ export const KnowYourRootsScreen = () => {
         {step === 'heart-who' && (
           <>
             <MaterialCommunityIcons name="heart-pulse" size={34} color={Colors.gold} style={styles.icon} />
-            <Text style={styles.title}>Who had heart disease young?</Text>
-            <Text style={styles.subtitle}>Optional, but it helps your doctor.</Text>
+            <Text style={styles.title}>{tr('Who had heart disease young?')}</Text>
+            <Text style={styles.subtitle}>{tr('Optional, but it helps your doctor.')}</Text>
             <View style={styles.chips}>
               {FIRST_DEGREE.map((id) => {
                 const on = (answers.heartRelatives ?? []).includes(id);
@@ -561,7 +561,7 @@ export const KnowYourRootsScreen = () => {
         {step === 'result' && (
           <>
             <MaterialCommunityIcons name="dna" size={34} color={Colors.gold} style={styles.icon} />
-            <Text style={[styles.title, { textAlign: 'center' }]}>Your family history</Text>
+            <Text style={[styles.title, { textAlign: 'center' }]}>{tr('Your family history')}</Text>
             <View
               style={[
                 styles.levelCard,
@@ -570,7 +570,7 @@ export const KnowYourRootsScreen = () => {
             >
               <View style={[styles.levelTag, { backgroundColor: withAlpha(result.level === 'population' || result.level === 'low' ? Colors.green : Colors.gold, 0.16) }]}>
                 <Text style={[styles.levelTagText, { color: result.level === 'population' || result.level === 'low' ? Colors.green : Colors.gold }]}>
-                  {result.level === 'population' ? 'Population risk' : result.level === 'low' ? 'Low' : result.level === 'moderate' ? 'Moderate' : 'High'}
+                  {result.level === 'population' ? tr('Population risk') : result.level === 'low' ? tr('Low risk') : result.level === 'moderate' ? tr('Moderate risk') : tr('High risk')}
                 </Text>
               </View>
               <Text style={styles.levelTitle}>{LEVEL_TEXT[result.level].title}</Text>
@@ -601,18 +601,18 @@ export const KnowYourRootsScreen = () => {
                   onPress={() => router.push({ pathname: '/professionals', params: { role: 'geneticist' } })}
                 >
                   <MaterialCommunityIcons name="dna" size={18} color={Colors.background} />
-                  <Text style={styles.primaryButtonText}>Find a genetic counsellor</Text>
+                  <Text style={styles.primaryButtonText}>{tr('Find a genetic counsellor')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.secondaryButton} onPress={() => shareSummary(shareText())}>
                   <Ionicons name="share-outline" size={18} color={Colors.accent} />
-                  <Text style={styles.secondaryButtonText}>Share with my doctor</Text>
+                  <Text style={styles.secondaryButtonText}>{tr('Share with my doctor')}</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             {(result.level === 'population' || result.level === 'low') && result.keyPoints.length > 0 && (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>Worth remembering</Text>
+                <Text style={styles.cardTitle}>{tr('Worth remembering')}</Text>
                 {result.keyPoints.map((p) => (
                   <View key={p} style={styles.bullet}>
                     <Ionicons name="ellipse" size={6} color={Colors.textMuted} style={{ marginTop: 7 }} />
@@ -626,7 +626,7 @@ export const KnowYourRootsScreen = () => {
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
                   <MaterialCommunityIcons name="heart-pulse" size={18} color={Colors.coral} />
-                  <Text style={styles.cardTitle}>Your heart</Text>
+                  <Text style={styles.cardTitle}>{tr('Your heart')}</Text>
                 </View>
                 {result.heart.points.map((p) => (
                   <View key={p} style={styles.bullet}>
@@ -638,7 +638,7 @@ export const KnowYourRootsScreen = () => {
             )}
 
             <TouchableOpacity style={styles.howRow} onPress={() => setShowScores((v) => !v)} activeOpacity={0.85}>
-              <Text style={styles.howText}>How we got this</Text>
+              <Text style={styles.howText}>{tr('How we got this')}</Text>
               <InfoButton topic="family_history" />
               <View style={{ flex: 1 }} />
               <Ionicons name={showScores ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
@@ -655,7 +655,7 @@ export const KnowYourRootsScreen = () => {
                   ],
                   [
                     'Lynch syndrome criteria',
-                    result.lynch.amsterdamLike ? 'Amsterdam II pattern' : result.lynch.bethesdaLike ? 'Bethesda criteria met' : 'Not met',
+                    result.lynch.amsterdamLike ? tr('Amsterdam II pattern') : result.lynch.bethesdaLike ? tr('Bethesda criteria met') : tr('Not met'),
                     'Bowel, womb and related cancers',
                   ],
                 ].map(([t, v, s]) => (
@@ -669,11 +669,10 @@ export const KnowYourRootsScreen = () => {
             )}
 
             <Text style={styles.disclaimer}>
-              This is not a diagnosis. Only a genetic test, interpreted by a professional, can confirm whether there is an inherited
-              change in your family. Scoring pending review by our medical advisor.
+              {tr('This is not a diagnosis. Only a genetic test, interpreted by a professional, can confirm whether there is an inherited change in your family. Scoring pending review by our medical advisor.')}
             </Text>
 
-            <Text style={styles.refsTitle}>References</Text>
+            <Text style={styles.refsTitle}>{tr('References')}</Text>
             {sources.map((s) => (
               <TouchableOpacity key={s.label} onPress={() => s.url && Linking.openURL(s.url)} disabled={!s.url}>
                 <Text style={styles.ref}>{s.label}</Text>
@@ -682,7 +681,7 @@ export const KnowYourRootsScreen = () => {
 
             {!viewOnly && (
               <TouchableOpacity style={styles.linkRow} onPress={() => setStep('t:breast')}>
-                <Text style={styles.link}>Change my answers</Text>
+                <Text style={styles.link}>{tr('Change my answers')}</Text>
               </TouchableOpacity>
             )}
           </>
@@ -706,13 +705,13 @@ export const KnowYourRootsScreen = () => {
           <Text style={styles.ctaText}>
             {step === 'intro'
               ? resumeAt
-                ? 'Continue where I left off'
-                : 'Start'
+                ? tr('Continue where I left off')
+                : tr('Start')
               : step === 'result'
-                ? 'Done'
+                ? tr('Done')
                 : (step === 'genes' && !(answers.knownGenes ?? []).length) || (step === 'heart-who' && !(answers.heartRelatives ?? []).length)
-                  ? 'Skip'
-                  : 'Continue'}
+                  ? tr('Skip')
+                  : tr('Continue')}
           </Text>
         </TouchableOpacity>
       )}
@@ -726,7 +725,7 @@ export const KnowYourRootsScreen = () => {
             setStep('t:breast');
           }}
         >
-          <Text style={styles.link}>Start again</Text>
+          <Text style={styles.link}>{tr('Start again')}</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

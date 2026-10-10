@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -134,33 +134,33 @@ export const LogGlucoseScreen = () => {
         <View style={styles.iconBadge}>
           <Ionicons name="pulse" size={26} color={Colors.accent} />
         </View>
-        <Text style={styles.title}>Blood Glucose</Text>
+        <Text style={styles.title}>{t('Blood Glucose')}</Text>
       </View>
 
       <View style={styles.list}>
         <TouchableOpacity style={styles.row} onPress={() => setPickerMode('date')}>
-          <Text style={styles.rowLabel}>Date</Text>
+          <Text style={styles.rowLabel}>{t('Date')}</Text>
           <View style={styles.rowValuePill}>
             <Text style={styles.rowValueText}>{formatDate(dateTime)}</Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.row} onPress={() => setPickerMode('time')}>
-          <Text style={styles.rowLabel}>Time</Text>
+          <Text style={styles.rowLabel}>{t('Time')}</Text>
           <View style={styles.rowValuePill}>
             <Text style={styles.rowValueText}>{formatTime(dateTime)}</Text>
           </View>
         </TouchableOpacity>
 
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>Blood Glucose</Text>
+          <Text style={styles.rowLabel}>{t('Blood Glucose')}</Text>
           <Text style={styles.rowValuePlain}>
             {value ? `${value} mg/dL` : 'mg/dL'}
           </Text>
         </View>
 
         <TouchableOpacity style={styles.row} onPress={() => setShowMealPicker(true)}>
-          <Text style={styles.rowLabel}>Meal Time</Text>
+          <Text style={styles.rowLabel}>{t('Meal Time')}</Text>
           <View style={styles.rowValuePill}>
             <Text style={styles.rowValueText}>{MEAL_TYPE_LABEL[mealType]}</Text>
           </View>
@@ -190,7 +190,7 @@ export const LogGlucoseScreen = () => {
       {isEditing && (
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
           <Ionicons name="trash-outline" size={16} color={Colors.danger} />
-          <Text style={styles.deleteButtonText}>Delete entry</Text>
+          <Text style={styles.deleteButtonText}>{t('Delete entry')}</Text>
         </TouchableOpacity>
       )}
 

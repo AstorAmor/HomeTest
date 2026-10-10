@@ -11,6 +11,7 @@ import { mockProfessionals, ProfessionalRole, ROLE_INFO } from '@/data/servicesM
 import { listVerifiedProfessionals, ProfessionalAccount } from '@/data/sharing';
 import { isRemoteActive } from '@/lib/supabase';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { t } from '@/i18n';
 
 const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
 
@@ -49,9 +50,9 @@ export const ProfessionalsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Professionals" showBack />
+        <ScreenHeader title={t('Professionals')} showBack />
         <Text style={styles.intro}>
-          Doctors, psychologists, dietitians, trainers, genetic counsellors and more, all with access to your results if you allow it.
+          {t('Doctors, psychologists, dietitians, trainers, genetic counsellors and more, all with access to your results if you allow it.')}
         </Text>
 
         <View style={styles.searchRow}>
@@ -59,7 +60,7 @@ export const ProfessionalsScreen = () => {
             <Ionicons name="search" size={16} color={Colors.textMuted} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by name or specialty"
+              placeholder={t('Search by name or specialty')}
               placeholderTextColor={Colors.textMuted}
               value={query}
               onChangeText={setQuery}
@@ -79,7 +80,7 @@ export const ProfessionalsScreen = () => {
 
         {showFilters && (
           <View style={styles.panel}>
-            <Text style={styles.panelLabel}>Languages</Text>
+            <Text style={styles.panelLabel}>{t('Languages')}</Text>
             <View style={styles.chips}>
               {allLanguages.map((l) => {
                 const on = langs.includes(l);
@@ -92,12 +93,12 @@ export const ProfessionalsScreen = () => {
             </View>
             <View style={styles.switchRow}>
               <Ionicons name="videocam-outline" size={18} color={Colors.accent} />
-              <Text style={styles.switchLabel}>Offers video consultations</Text>
+              <Text style={styles.switchLabel}>{t('Offers video consultations')}</Text>
               <Switch value={videoOnly} onValueChange={setVideoOnly} trackColor={{ true: Colors.accent, false: Colors.cardBorder }} />
             </View>
             {activeFilters > 0 && (
               <TouchableOpacity onPress={() => { setLangs([]); setVideoOnly(false); }}>
-                <Text style={styles.clear}>Clear filters</Text>
+                <Text style={styles.clear}>{t('Clear filters')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -105,7 +106,7 @@ export const ProfessionalsScreen = () => {
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
           <TouchableOpacity style={[styles.filter, role === 'all' && styles.filterActive]} onPress={() => setRole('all')}>
-            <Text style={[styles.filterText, role === 'all' && styles.filterTextActive]}>All</Text>
+            <Text style={[styles.filterText, role === 'all' && styles.filterTextActive]}>{t('All')}</Text>
           </TouchableOpacity>
           {ROLES.map((r) => (
             <TouchableOpacity key={r} style={[styles.filter, role === r && styles.filterActive]} onPress={() => setRole(r)}>
@@ -117,7 +118,7 @@ export const ProfessionalsScreen = () => {
 
         {realList.length > 0 && (
           <>
-            <Text style={styles.groupTitle}>On Kuova</Text>
+            <Text style={styles.groupTitle}>{t('On Kuova')}</Text>
             <View style={[styles.list, { marginBottom: 20 }]}>
               {realList.map((p) => (
                 <TouchableOpacity
@@ -143,11 +144,11 @@ export const ProfessionalsScreen = () => {
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={styles.groupTitle}>Examples</Text>
+            <Text style={styles.groupTitle}>{t('Examples')}</Text>
           </>
         )}
 
-        {realList.length === 0 && list.length === 0 && <Text style={styles.empty}>No specialists match your search.</Text>}
+        {realList.length === 0 && list.length === 0 && <Text style={styles.empty}>{t('No specialists match your search.')}</Text>}
 
         <View style={styles.list}>
           {list.map((p) => (

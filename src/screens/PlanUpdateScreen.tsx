@@ -10,6 +10,7 @@ import { planVersionRepository, PlanItemStatus } from '@/data/planVersions';
 import { compareUpload } from '@/utils/progress';
 import { basePlanItems, PlanProposal, proposeUpdatedPlan, STATUS_LABEL } from '@/utils/planUpdate';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { t as tr } from '@/i18n';
 
 export const statusColor = (s: PlanItemStatus) =>
   ({
@@ -64,9 +65,9 @@ export const PlanUpdateScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Update your plan" showBack />
+        <ScreenHeader title={tr('Update your plan')} showBack />
         <Text style={styles.intro}>
-          Here's how your plan changes with these results. Actions whose markers weren't in this test stay as they are.
+          {tr("Here's how your plan changes with these results. Actions whose markers weren't in this test stay as they are.")}
         </Text>
 
         {proposal && (
@@ -95,8 +96,7 @@ export const PlanUpdateScreen = () => {
         ))}
 
         <Text style={styles.disclaimer}>
-          Suggested automatically from your results. It isn't a diagnosis: if something is getting worse, talk to one of
-          our specialists.
+          {tr("Suggested automatically from your results. It isn't a diagnosis: if something is getting worse, talk to one of our specialists.")}
         </Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
@@ -107,7 +107,7 @@ export const PlanUpdateScreen = () => {
         ) : (
           <>
             <Ionicons name="checkmark" size={18} color={Colors.background} />
-            <Text style={styles.ctaText}>Apply to my plan</Text>
+            <Text style={styles.ctaText}>{tr('Apply to my plan')}</Text>
           </>
         )}
       </TouchableOpacity>

@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,7 +31,7 @@ const VersionCard = ({ v, current, open, onToggle }: { v: PlanVersion; current: 
         <Ionicons name={current ? 'sparkles' : 'git-branch-outline'} size={20} color={current ? Colors.background : Colors.accent} />
       </View>
       <View style={{ flex: 1 }}>
-        {current && <Text style={styles.badge}>Current plan</Text>}
+        {current && <Text style={styles.badge}>{t('Current plan')}</Text>}
         <Text style={styles.title}>{dayMonthYear(v.createdAt)}</Text>
         <Text style={styles.sub}>
           {SOURCE_LABEL[v.source]} · {v.items.length} actions
@@ -78,8 +78,8 @@ export const PlansScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Your plans" showBack />
-        <Text style={styles.intro}>A new plan comes with every blood test. Earlier plans stay here so you can see how far you've come.</Text>
+        <ScreenHeader title={t('Your plans')} showBack />
+        <Text style={styles.intro}>{t("A new plan comes with every blood test. Earlier plans stay here so you can see how far you've come.")}</Text>
 
         {versions.map((v, i) => (
           <VersionCard key={v.id} v={v} current={i === 0} open={openId === v.id} onToggle={() => setOpenId(openId === v.id ? null : v.id)} />
@@ -100,7 +100,7 @@ export const PlansScreen = () => {
                   <Ionicons name={p.latest ? 'sparkles' : 'time-outline'} size={20} color={p.latest ? Colors.background : Colors.accent} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  {p.latest && <Text style={styles.badge}>Current plan</Text>}
+                  {p.latest && <Text style={styles.badge}>{t('Current plan')}</Text>}
                   <Text style={styles.title}>{monthYear(p.date)}</Text>
                   <Text style={styles.sub}>
                     {p.label} · {p.items.length} actions
@@ -111,7 +111,7 @@ export const PlansScreen = () => {
 
               {p.fromReport && (
                 <TouchableOpacity style={styles.cta} onPress={() => router.push('/report-plan')}>
-                  <Text style={styles.ctaText}>See full plan</Text>
+                  <Text style={styles.ctaText}>{t('See full plan')}</Text>
                 </TouchableOpacity>
               )}
 
@@ -139,7 +139,7 @@ export const PlansScreen = () => {
                       })}
                     </View>
                   ))}
-                  <Text style={styles.note}>Values from your first test → your follow-up test.</Text>
+                  <Text style={styles.note}>{t('Values from your first test → your follow-up test.')}</Text>
                 </View>
               )}
             </View>

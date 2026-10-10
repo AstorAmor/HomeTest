@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t as tr } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -155,7 +155,7 @@ export const MetricDetailScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={info.title} showBack />
+        <ScreenHeader title={tr(info.title)} showBack />
 
         <View style={styles.hero}>
           <View style={[styles.icon, { backgroundColor: `${info.color}22` }]}>
@@ -173,11 +173,11 @@ export const MetricDetailScreen = () => {
               activeOpacity={0.85}
             >
               <Ionicons name="thermometer-outline" size={20} color={Colors.background} />
-              <Text style={styles.thermoText}>Add a thermometer reading</Text>
+              <Text style={styles.thermoText}>{tr('Add a thermometer reading')}</Text>
             </TouchableOpacity>
             {thermo.length > 0 && (
               <View style={styles.thermoList}>
-                <Text style={styles.thermoTitle}>Your thermometer readings</Text>
+                <Text style={styles.thermoTitle}>{tr('Your thermometer readings')}</Text>
                 {thermo.slice(0, 5).map((t) => (
                   <View key={t.id} style={styles.thermoRow}>
                     <Text style={styles.thermoDate}>
@@ -209,7 +209,7 @@ export const MetricDetailScreen = () => {
             formatValue={info.format}
           />
           <Text style={styles.tapHint}>
-            {byWeek ? 'Weekly averages · tap the chart to see each week' : 'Tap the chart to see each day'}
+            {byWeek ? tr('Weekly averages · tap the chart to see each week') : tr('Tap the chart to see each day')}
           </Text>
         </View>
 
@@ -221,7 +221,7 @@ export const MetricDetailScreen = () => {
           ].map((s) => (
             <View key={s.label} style={styles.stat}>
               <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
+              <Text style={styles.statLabel}>{tr(s.label)}</Text>
             </View>
           ))}
         </View>
@@ -240,21 +240,21 @@ export const MetricDetailScreen = () => {
         )}
 
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>What it is</Text>
+          <Text style={styles.infoTitle}>{tr('What it is')}</Text>
           <Text style={styles.infoText}>{info.what}</Text>
-          <Text style={styles.infoTitle}>Typical range</Text>
+          <Text style={styles.infoTitle}>{tr('Typical range')}</Text>
           <Text style={styles.infoText}>{info.typical}</Text>
-          <Text style={styles.infoTitle}>What affects it</Text>
+          <Text style={styles.infoTitle}>{tr('What affects it')}</Text>
           <Text style={styles.infoText}>{info.affects}</Text>
-          <Text style={styles.disclaimer}>General information, not a diagnosis.</Text>
+          <Text style={styles.disclaimer}>{tr('General information, not a diagnosis.')}</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>{byWeek ? 'Weekly averages' : 'Daily values'}</Text>
+        <Text style={styles.sectionTitle}>{byWeek ? tr('Weekly averages') : tr('Daily values')}</Text>
         <View style={styles.list}>
           {[...points].reverse().map((p, i) => (
             <View key={p.date} style={[styles.listRow, i > 0 && styles.listDivider]}>
               <Text style={styles.listDate}>
-                {byWeek ? 'Week of ' : ''}
+                {byWeek ? tr('Week of ') : ''}
                 {new Date(`${p.date}T12:00:00`).toLocaleDateString(
                   dateLocale(),
                   byWeek ? { day: 'numeric', month: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' },
@@ -267,7 +267,7 @@ export const MetricDetailScreen = () => {
 
         <TouchableOpacity style={styles.manage} onPress={() => router.push('/wearables')}>
           <Ionicons name="watch-outline" size={18} color={Colors.accent} />
-          <Text style={styles.manageText}>Manage connected devices</Text>
+          <Text style={styles.manageText}>{tr('Manage connected devices')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

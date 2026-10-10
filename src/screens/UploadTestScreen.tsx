@@ -23,6 +23,7 @@ import { prepareImage, chunk } from '@/utils/imageUpload';
 import { useRouter } from 'expo-router';
 import { labUploadRepository } from '@/data/labUploads';
 import { useSections } from '@/data/appPrefs';
+import { t } from '@/i18n';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
 
@@ -128,7 +129,7 @@ export const UploadTestScreen = () => {
           ? `A batch took longer than ${REQUEST_TIMEOUT_MS / 1000}s and was canceled. Try fewer pages per batch or lighter photos.`
           : err instanceof Error
             ? err.message
-            : 'Unknown error'
+            : t('Unknown error')
       );
     } finally {
       setProgress(null);
@@ -233,20 +234,20 @@ export const UploadTestScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title="Upload lab report" showBack />
+        <ScreenHeader title={t('Upload lab report')} showBack />
 
         <View style={styles.buttons}>
           <TouchableOpacity style={styles.button} onPress={pickDocument} disabled={isBusy}>
             <Ionicons name="document-text-outline" size={20} color={Colors.accent} />
-            <Text style={styles.buttonText}>Choose PDF</Text>
+            <Text style={styles.buttonText}>{t('Choose PDF')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={addPhoto} disabled={isBusy}>
             <Ionicons name="camera-outline" size={20} color={Colors.accent} />
-            <Text style={styles.buttonText}>Add photo</Text>
+            <Text style={styles.buttonText}>{t('Add photo')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={pickFromGallery} disabled={isBusy}>
             <Ionicons name="images-outline" size={20} color={Colors.accent} />
-            <Text style={styles.buttonText}>Add from gallery</Text>
+            <Text style={styles.buttonText}>{t('Add from gallery')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -289,17 +290,17 @@ export const UploadTestScreen = () => {
             <ActivityIndicator color={Colors.accent} />
             <Text style={styles.statusText}>
               {status === 'reading'
-                ? 'Reading files…'
+                ? t('Reading files…')
                 : progress
                   ? `Extracting batch ${progress.done + 1} of ${progress.total}…`
-                  : 'Extracting data with AI…'}
+                  : t('Extracting data with AI…')}
             </Text>
           </View>
         )}
 
         {status === 'error' && errorText ? (
           <View style={styles.resultBox}>
-            <Text style={[styles.resultLabel, { color: Colors.danger }]}>Error</Text>
+            <Text style={[styles.resultLabel, { color: Colors.danger }]}>{t('Error')}</Text>
             <Text style={styles.rawText}>{errorText}</Text>
           </View>
         ) : null}
@@ -309,15 +310,15 @@ export const UploadTestScreen = () => {
             <LabReportTable report={report} onUpdateParametro={updateParametro} />
 
             <View style={styles.nextActions}>
-              <Text style={styles.nextTitle}>Check the values above, then:</Text>
+              <Text style={styles.nextTitle}>{t('Check the values above, then:')}</Text>
               <TouchableOpacity style={styles.nextPrimary} onPress={() => saveAndGo('/progress')}>
                 <Ionicons name="trending-up" size={18} color={Colors.background} />
-                <Text style={styles.nextPrimaryText}>See my progress</Text>
+                <Text style={styles.nextPrimaryText}>{t('See my progress')}</Text>
               </TouchableOpacity>
               {show('plan') && (
                 <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/plan-update')}>
                   <Ionicons name="sparkles-outline" size={18} color={Colors.accent} />
-                  <Text style={styles.nextSecondaryText}>Update plan</Text>
+                  <Text style={styles.nextSecondaryText}>{t('Update plan')}</Text>
                 </TouchableOpacity>
               )}
               {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
@@ -325,7 +326,7 @@ export const UploadTestScreen = () => {
 
             <TouchableOpacity style={styles.rawToggle} onPress={() => setShowRaw((v) => !v)}>
               <Text style={styles.rawToggleText}>
-                {showRaw ? 'Hide raw JSON' : 'View raw JSON'}
+                {showRaw ? t('Hide raw JSON') : t('View raw JSON')}
               </Text>
             </TouchableOpacity>
 

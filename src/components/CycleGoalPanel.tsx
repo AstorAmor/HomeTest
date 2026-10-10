@@ -14,6 +14,7 @@ import { basalTemperatureRepository, temperatureReadings } from '@/data/temperat
 import { wearableRepository } from '@/wearables/wearableRepository';
 import { CYCLE_GOAL_OPTIONS, CycleGoalAnswers } from '@/types/cycleGoal';
 import { dailyTemps, detectTempShift, FertilityAdvice, fertilityAdvice, TempReading, TempShift } from '@/logic/fertility';
+import { t as tr } from '@/i18n';
 
 const ageFrom = (dob?: string) => {
   if (!dob) return null;
@@ -86,7 +87,7 @@ export const CycleGoalPanel = () => {
   const wearableAligned = chartDays.map((d) => wearableByDay.get(d.date));
   const series = [
     {
-      label: manualDays.length >= 3 ? 'Thermometer' : 'Wearable',
+      label: manualDays.length >= 3 ? tr('Thermometer') : tr('Wearable'),
       color: Colors.gold,
       values: chartDays.map((d) => d.celsius),
     },
@@ -100,10 +101,10 @@ export const CycleGoalPanel = () => {
       <TouchableOpacity style={styles.goalRow} onPress={() => router.push('/cycle-goal')} activeOpacity={0.85}>
         <Ionicons name={(option?.icon ?? 'rose-outline') as any} size={20} color={Colors.pulseAccent} />
         <View style={{ flex: 1 }}>
-          <Text style={styles.goalLabel}>Your goal</Text>
-          <Text style={styles.goalTitle}>{option?.title ?? 'Tell us what you are looking for'}</Text>
+          <Text style={styles.goalLabel}>{tr('Your goal')}</Text>
+          <Text style={styles.goalTitle}>{option?.title ?? tr('Tell us what you are looking for')}</Text>
         </View>
-        <Text style={styles.link}>{goal ? 'Change' : 'Start'}</Text>
+        <Text style={styles.link}>{goal ? tr('Change') : tr('Start')}</Text>
       </TouchableOpacity>
 
       {advice && (
@@ -115,7 +116,7 @@ export const CycleGoalPanel = () => {
           <Text style={styles.cardText}>{advice.body}</Text>
           {advice.level !== 'keep_trying' && (
             <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-              <Text style={styles.link}>Find a gynaecologist or fertility specialist</Text>
+              <Text style={styles.link}>{tr('Find a gynaecologist or fertility specialist')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -125,10 +126,10 @@ export const CycleGoalPanel = () => {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="thermometer-outline" size={18} color={Colors.gold} />
-            <Text style={[styles.cardTitle, { flex: 1 }]}>Morning temperature</Text>
+            <Text style={[styles.cardTitle, { flex: 1 }]}>{tr('Morning temperature')}</Text>
             <InfoButton topic="temperature" />
             <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-temperature')}>
-              <Text style={styles.logButtonText}>Log today</Text>
+              <Text style={styles.logButtonText}>{tr('Log today')}</Text>
             </TouchableOpacity>
           </View>
           {chartDays.length >= 3 ? (
@@ -141,20 +142,19 @@ export const CycleGoalPanel = () => {
               interactive
             />
           ) : (
-            <Text style={styles.cardText}>Log a few mornings to see your curve.</Text>
+            <Text style={styles.cardText}>{tr('Log a few mornings to see your curve.')}</Text>
           )}
           <Text style={styles.cardText}>
             {shift
               ? `Your temperature rose on ${shortDay(shift.shiftDate)}: you most likely ovulated around ${shortDay(shift.likelyOvulation)}${shift.confidence === 'low' ? ' (from your wearable, less precise)' : ''}.`
-              : 'After ovulation your temperature rises about 0.2–0.5 °C and stays up until your period. We will mark it when we see it.'}
+              : tr('After ovulation your temperature rises about 0.2–0.5 °C and stays up until your period. We will mark it when we see it.')}
           </Text>
         </View>
       ) : (
         <TouchableOpacity style={styles.card} onPress={() => router.push('/cycle-goal')} activeOpacity={0.85}>
-          <Text style={styles.cardTitle}>Add your morning temperature</Text>
+          <Text style={styles.cardTitle}>{tr('Add your morning temperature')}</Text>
           <Text style={styles.cardText}>
-            It confirms when you ovulate and makes predictions more accurate. If your wearable measures temperature at
-            night, we use it too.
+            {tr('It confirms when you ovulate and makes predictions more accurate. If your wearable measures temperature at night, we use it too.')}
           </Text>
         </TouchableOpacity>
       )}

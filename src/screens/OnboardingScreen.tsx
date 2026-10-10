@@ -20,6 +20,7 @@ import {
 } from '@/data/profileRepository';
 import { AppPurpose, appPrefs, PURPOSE_OPTIONS, wantsPlan } from '@/data/appPrefs';
 import { answersPreview, sectionsFromAnswers } from '@/data/goalEffects';
+import { t as tr } from '@/i18n';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -58,7 +59,7 @@ function ChipGroup<T extends string>({
             style={[styles.chip, selected && styles.chipSelected]}
             onPress={() => onChange(o.id)}
           >
-            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{o.label}</Text>
+            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{tr(o.label)}</Text>
           </TouchableOpacity>
         );
       })}
@@ -186,7 +187,7 @@ export const OnboardingScreen = () => {
     return (
       <SafeAreaView style={[styles.safeArea, styles.centered]}>
         <ActivityIndicator size="large" color={Colors.accent} />
-        <Text style={styles.buildingText}>Building your personalised plan…</Text>
+        <Text style={styles.buildingText}>{tr('Building your personalised plan…')}</Text>
       </SafeAreaView>
     );
   }
@@ -230,17 +231,16 @@ export const OnboardingScreen = () => {
           <View style={[styles.progressFill, { width: `${((stepIndex + 1) / STEPS.length) * 100}%` }]} />
         </View>
         <TouchableOpacity onPress={skipAll} hitSlop={12}>
-          <Text style={styles.skip}>Skip</Text>
+          <Text style={styles.skip}>{tr('Skip')}</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         {step === 'purpose' && (
           <>
-            <Text style={styles.title}>What do you want Kuova for?</Text>
+            <Text style={styles.title}>{tr('What do you want Kuova for?')}</Text>
             <Text style={styles.subtitle}>
-              Pick one or more. We'll only show what you need, and you can change it anytime in More → Configure my
-              experience.
+              {tr("Pick one or more. We'll only show what you need, and you can change it anytime in More → Configure my experience.")}
             </Text>
             <View style={styles.goalList}>
               {PURPOSE_OPTIONS.map((o) => {
@@ -253,8 +253,8 @@ export const OnboardingScreen = () => {
                   >
                     <Ionicons name={o.icon as any} size={24} color={selected ? Colors.accent : Colors.textSecondary} />
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.purposeTitle, selected && { color: Colors.accent }]}>{o.title}</Text>
-                      <Text style={styles.purposeSubtitle}>{o.subtitle}</Text>
+                      <Text style={[styles.purposeTitle, selected && { color: Colors.accent }]}>{tr(o.title)}</Text>
+                      <Text style={styles.purposeSubtitle}>{tr(o.subtitle)}</Text>
                     </View>
                     <Ionicons
                       name={selected ? 'checkmark-circle' : 'ellipse-outline'}
@@ -270,8 +270,8 @@ export const OnboardingScreen = () => {
 
         {step === 'dob' && (
           <>
-            <Text style={styles.title}>When were you born?</Text>
-            <Text style={styles.subtitle}>Reference ranges change with age.</Text>
+            <Text style={styles.title}>{tr('When were you born?')}</Text>
+            <Text style={styles.subtitle}>{tr('Reference ranges change with age.')}</Text>
             <View style={styles.wheels}>
               <WheelPicker items={DAYS} selectedIndex={day} onChange={setDay} width={84} />
               <WheelPicker items={MONTHS} selectedIndex={month} onChange={setMonth} width={104} />
@@ -282,8 +282,8 @@ export const OnboardingScreen = () => {
 
         {step === 'sex' && (
           <>
-            <Text style={styles.title}>What's your biological sex?</Text>
-            <Text style={styles.subtitle}>Many markers (iron, hormones…) have different ranges.</Text>
+            <Text style={styles.title}>{tr("What's your biological sex?")}</Text>
+            <Text style={styles.subtitle}>{tr('Many markers (iron, hormones…) have different ranges.')}</Text>
             <View style={styles.bigOptions}>
               {(
                 [
@@ -301,7 +301,7 @@ export const OnboardingScreen = () => {
                     onPress={() => setSex(o.id)}
                   >
                     <Ionicons name={o.icon} size={26} color={selected ? Colors.accent : Colors.textSecondary} />
-                    <Text style={[styles.bigOptionText, selected && { color: Colors.textPrimary }]}>{o.label}</Text>
+                    <Text style={[styles.bigOptionText, selected && { color: Colors.textPrimary }]}>{tr(o.label)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -311,16 +311,16 @@ export const OnboardingScreen = () => {
 
         {step === 'body' && (
           <>
-            <Text style={styles.title}>Height and weight</Text>
-            <Text style={styles.subtitle}>Used for body composition and energy needs.</Text>
+            <Text style={styles.title}>{tr('Height and weight')}</Text>
+            <Text style={styles.subtitle}>{tr('Used for body composition and energy needs.')}</Text>
             <View style={styles.wheels}>
               <View style={styles.wheelColumn}>
                 <WheelPicker items={HEIGHTS} selectedIndex={height} onChange={setHeight} width={130} />
-                <Text style={styles.wheelUnit}>cm</Text>
+                <Text style={styles.wheelUnit}>{tr('cm')}</Text>
               </View>
               <View style={styles.wheelColumn}>
                 <WheelPicker items={WEIGHTS} selectedIndex={weight} onChange={setWeight} width={130} />
-                <Text style={styles.wheelUnit}>kg</Text>
+                <Text style={styles.wheelUnit}>{tr('kg')}</Text>
               </View>
             </View>
           </>
@@ -328,20 +328,20 @@ export const OnboardingScreen = () => {
 
         {step === 'habits' && (
           <>
-            <Text style={styles.title}>Your habits</Text>
-            <Text style={styles.subtitle}>Knowing where you start from helps us build a plan that fits you.</Text>
-            <Text style={styles.question}>How active are you?</Text>
+            <Text style={styles.title}>{tr('Your habits')}</Text>
+            <Text style={styles.subtitle}>{tr('Knowing where you start from helps us build a plan that fits you.')}</Text>
+            <Text style={styles.question}>{tr('How active are you?')}</Text>
             <ChipGroup
               value={activity}
               onChange={setActivity}
               options={[
                 { id: 'sedentary', label: 'Mostly sitting' },
                 { id: 'light', label: 'Light activity' },
-                { id: 'active', label: 'Active' },
+                { id: 'active', label: 'Fairly active' },
                 { id: 'very_active', label: 'Very active' },
               ]}
             />
-            <Text style={styles.question}>How much do you usually sleep?</Text>
+            <Text style={styles.question}>{tr('How much do you usually sleep?')}</Text>
             <ChipGroup
               value={sleep}
               onChange={setSleep}
@@ -352,7 +352,7 @@ export const OnboardingScreen = () => {
                 { id: 'gt8', label: '> 8 h' },
               ]}
             />
-            <Text style={styles.question}>Do you smoke?</Text>
+            <Text style={styles.question}>{tr('Do you smoke?')}</Text>
             <ChipGroup
               value={smoking}
               onChange={setSmoking}
@@ -363,7 +363,7 @@ export const OnboardingScreen = () => {
                 { id: 'current', label: 'Yes' },
               ]}
             />
-            <Text style={styles.question}>Alcohol</Text>
+            <Text style={styles.question}>{tr('Alcohol')}</Text>
             <ChipGroup
               value={alcohol}
               onChange={setAlcohol}
@@ -379,12 +379,11 @@ export const OnboardingScreen = () => {
 
         {step === 'health' && (
           <>
-            <Text style={styles.title}>Your health background</Text>
+            <Text style={styles.title}>{tr('Your health background')}</Text>
             <Text style={styles.subtitle}>
-              Some medicines and conditions change how results should be read. Only you and the professionals you
-              choose can see this.
+              {tr('Some medicines and conditions change how results should be read. Only you and the professionals you choose can see this.')}
             </Text>
-            <Text style={styles.question}>Do you take any regular medication?</Text>
+            <Text style={styles.question}>{tr('Do you take any regular medication?')}</Text>
             <ChipGroup
               value={takesMedication === undefined ? undefined : takesMedication ? 'yes' : 'no'}
               onChange={(v) => setTakesMedication(v === 'yes')}
@@ -398,12 +397,12 @@ export const OnboardingScreen = () => {
                 style={styles.textInput}
                 value={medications}
                 onChangeText={setMedications}
-                placeholder="Which ones? e.g. levothyroxine 50 µg, contraceptive pill"
+                placeholder={tr('Which ones? e.g. levothyroxine 50 µg, contraceptive pill')}
                 placeholderTextColor={Colors.textMuted}
                 multiline
               />
             )}
-            <Text style={styles.question}>Have you been diagnosed with any condition?</Text>
+            <Text style={styles.question}>{tr('Have you been diagnosed with any condition?')}</Text>
             <View style={styles.chips}>
               {CONDITION_OPTIONS.filter((c) => !c.femaleOnly || sex === 'female').map((c) => {
                 const selected = conditions.includes(c.id);
@@ -413,7 +412,7 @@ export const OnboardingScreen = () => {
                     style={[styles.chip, selected && styles.chipSelected]}
                     onPress={() => toggleCondition(c.id)}
                   >
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{c.label}</Text>
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{tr(c.label)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -423,7 +422,7 @@ export const OnboardingScreen = () => {
                 style={styles.textInput}
                 value={conditionsOther}
                 onChangeText={setConditionsOther}
-                placeholder="Tell us which"
+                placeholder={tr('Tell us which')}
                 placeholderTextColor={Colors.textMuted}
               />
             )}
@@ -432,8 +431,8 @@ export const OnboardingScreen = () => {
 
         {step === 'goals' && (
           <>
-            <Text style={styles.title}>What do you want to achieve?</Text>
-            <Text style={styles.subtitle}>Everyone has their own goals. Choose yours and we will build your plan around them.</Text>
+            <Text style={styles.title}>{tr('What do you want to achieve?')}</Text>
+            <Text style={styles.subtitle}>{tr('Everyone has their own goals. Choose yours and we will build your plan around them.')}</Text>
             <View style={styles.goalList}>
               {GOAL_OPTIONS.map((g) => {
                 const selected = goals.includes(g.id);
@@ -444,7 +443,7 @@ export const OnboardingScreen = () => {
                     onPress={() => toggleGoal(g.id)}
                   >
                     <Ionicons name={g.icon as any} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
-                    <Text style={[styles.goalText, selected && { color: Colors.accent }]}>{g.label}</Text>
+                    <Text style={[styles.goalText, selected && { color: Colors.accent }]}>{tr(g.label)}</Text>
                     <Ionicons
                       name={selected ? 'checkmark-circle' : 'ellipse-outline'}
                       size={22}
@@ -456,7 +455,7 @@ export const OnboardingScreen = () => {
             </View>
             {buildsPlan && (
               <View style={styles.preview}>
-                <Text style={styles.previewTitle}>Your starting plan</Text>
+                <Text style={styles.previewTitle}>{tr('Your starting plan')}</Text>
                 {preview.plan.map((t, i) => (
                   <Text key={t} style={styles.previewItem}>
                     {i + 1}. {t}
@@ -465,7 +464,7 @@ export const OnboardingScreen = () => {
                 {preview.sections.length > 0 && (
                   <Text style={styles.previewNote}>Also switched on for you: {preview.sections.join(', ')}.</Text>
                 )}
-                <Text style={styles.previewNote}>It changes as you choose, and again when your results arrive.</Text>
+                <Text style={styles.previewNote}>{tr('It changes as you choose, and again when your results arrive.')}</Text>
               </View>
             )}
           </>
@@ -474,7 +473,7 @@ export const OnboardingScreen = () => {
 
       <TouchableOpacity style={styles.cta} onPress={next} activeOpacity={0.85}>
         <Text style={styles.ctaText}>
-          {stepIndex < STEPS.length - 1 ? 'Continue' : buildsPlan ? 'Create my plan' : 'Done'}
+          {stepIndex < STEPS.length - 1 ? tr('Continue') : buildsPlan ? tr('Create my plan') : tr('Done')}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>
