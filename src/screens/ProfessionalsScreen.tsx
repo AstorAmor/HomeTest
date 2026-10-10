@@ -12,6 +12,7 @@ import { listVerifiedProfessionals, ProfessionalAccount } from '@/data/sharing';
 import { isRemoteActive } from '@/lib/supabase';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { t } from '@/i18n';
+import { formatPrice } from '@/data/testCatalog';
 
 const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
 
@@ -137,7 +138,7 @@ export const ProfessionalsScreen = () => {
                     <Text style={styles.specialty}>{p.specialty ?? ROLE_INFO[p.role as ProfessionalRole]?.label ?? p.role}</Text>
                     <View style={styles.metaRow}>
                       <Ionicons name="shield-checkmark" size={12} color={Colors.ok} />
-                      <Text style={styles.meta}>Verified{p.hourlyRateEur ? ` · €${p.hourlyRateEur} / h` : ''}</Text>
+                      <Text style={styles.meta}>{t('Verified')}{p.hourlyRateEur ? ` · ${formatPrice(p.hourlyRateEur)} / h` : ''}</Text>
                     </View>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
@@ -169,10 +170,10 @@ export const ProfessionalsScreen = () => {
                   </Text>
                   <Text style={styles.metaDot}>·</Text>
                   <Text style={styles.meta}>
-                    €{p.pricePerSession} / {p.sessionMinutes} min
+                    {formatPrice(p.pricePerSession)} / {p.sessionMinutes} min
                   </Text>
                 </View>
-                <Text style={styles.next}>Next: {p.nextAvailable}</Text>
+                <Text style={styles.next}>{t('Next: {when}', { when: p.nextAvailable })}</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
             </TouchableOpacity>

@@ -323,7 +323,7 @@ export const MedicationSetupScreen = () => {
                         style={[styles.weekDay, on && styles.weekDayOn]}
                         onPress={() => setDays((prev) => (on ? prev.filter((x) => x !== i) : [...prev, i].sort()))}
                       >
-                        <Text style={[styles.weekDayText, on && { color: Colors.background }]}>{d}</Text>
+                        <Text style={[styles.weekDayText, on && { color: Colors.background }]}>{tr(d)}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -395,8 +395,8 @@ export const MedicationSetupScreen = () => {
               options={[
                 ...[...COURSE_DAYS, ...(courseDays && !COURSE_DAYS.includes(courseDays) ? [courseDays] : [])]
                   .sort((a, b) => a - b)
-                  .map((d) => ({ id: d, label: `${d} day${d === 1 ? '' : 's'}` })),
-                { id: 0, label: '+ Other' },
+                  .map((d) => ({ id: d, label: tr(d === 1 ? '{n} day' : '{n} days', { n: d }) })),
+                { id: 0, label: tr('+ Other') },
               ]}
               value={otherDaysOpen ? 0 : courseDays}
               onChange={(d) => {

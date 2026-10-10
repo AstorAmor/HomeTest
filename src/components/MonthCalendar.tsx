@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 // Calendario mensual propio (funciona igual en Android, iOS y web). Sirve para:
 // - marcar días con puntos de color (agenda de pruebas)
 // - seleccionar un rango (inicio y fin del periodo)
@@ -72,7 +72,7 @@ export const MonthCalendar = ({
       <View style={styles.row}>
         {WEEKDAYS.map((w) => (
           <Text key={w} style={styles.weekday}>
-            {w}
+            {t(w)}
           </Text>
         ))}
       </View>

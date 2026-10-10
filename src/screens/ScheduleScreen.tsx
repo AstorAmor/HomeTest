@@ -90,7 +90,7 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
           {selected ? formatDay(selected) : month.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' })}
         </Text>
         {shown.length === 0 ? (
-          <Text style={styles.empty}>Nothing scheduled.</Text>
+          <Text style={styles.empty}>{t('Nothing scheduled.')}</Text>
         ) : (
           shown.map((e) => <EventCard key={e.id} event={e} showDate={!selected} />)
         )}
@@ -98,8 +98,7 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
         <View style={styles.syncNote}>
           <Ionicons name="sync-outline" size={16} color={Colors.textSecondary} />
           <Text style={styles.syncText}>
-            Add any event to Google Calendar, Outlook or Yahoo with one tap. Automatic two-way sync comes with your
-            professional appointments.
+            {t('Add any event to Google Calendar, Outlook or Yahoo with one tap. Automatic two-way sync comes with your professional appointments.')}
           </Text>
         </View>
       </ScrollView>
@@ -122,7 +121,7 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
       <Text style={styles.eventTitle}>{event.title}</Text>
       <Text style={styles.eventDetail}>{event.detail}</Text>
       <View style={styles.addRow}>
-        <Text style={styles.addLabel}>Add to</Text>
+        <Text style={styles.addLabel}>{t('Add to')}</Text>
         {(
           [
             ['Google', links.google, 'logo-google'],

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LAB_CENTERS, LabCenter } from './labCenters';
 import type { ScheduleEvent } from './schedule';
+import { t } from '@/i18n';
 
 // Citas en laboratorio. PROTOTIPO: se guardan en el móvil y NO se envían a Eurofins;
 // cuando haya acuerdo con el laboratorio, "confirm" llamará a su sistema de reservas
@@ -48,8 +49,8 @@ export function appointmentEvent(a: LabAppointment, c: LabCenter): ScheduleEvent
     date: a.date,
     start: a.time,
     end,
-    title: `Blood draw at ${c.network} ${c.name}`,
-    detail: `${c.address}. Bring your ID. Fast for 8 hours if your test requires it (water is fine).`,
+    title: t('Blood draw at {lab}', { lab: `${c.network} ${c.name}` }),
+    detail: `${c.address}. ${t('Bring your ID. Fast for 8 hours if your test requires it (water is fine).')}`,
   };
 }
 

@@ -2,13 +2,14 @@ import { useRouter } from 'expo-router';
 import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { cortisolRepository } from '@/data/cortisolRepository';
 import { Colors } from '@/constants/colors';
+import { t } from '@/i18n';
 
 export default function CortisolDetail() {
   const router = useRouter();
 
   return (
     <SimpleMetricDetailScreen
-      title="Cortisol"
+      title={t('Cortisol')}
       color={Colors.warning}
       loadEntries={async () => {
         const entries = await cortisolRepository.getAll();

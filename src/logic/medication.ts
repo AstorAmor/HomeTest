@@ -1,4 +1,5 @@
 import { DoseLog, MedicationItem, MedKind, MedSchedule, ScheduledDose } from '@/types/medication';
+import { t } from '@/i18n';
 
 // Lógica de medicación y suplementos: entender lo que escribe el usuario ("Ibuprofeno 600 cada 8
 // horas 3 días"), proponer la pauta habitual de lo más común y calcular las tomas de cada día.
@@ -178,13 +179,13 @@ export function dosesForDay(items: MedicationItem[], day: Date, logs: DoseLog[])
 }
 
 export function scheduleText(s: MedSchedule): string {
-  if (s.type === 'as_needed') return 'Only when needed';
-  if (s.type === 'every_hours') return `Every ${s.hours} hours from ${s.firstTime}`;
+  if (s.type === 'as_needed') return t('Only when needed');
+  if (s.type === 'every_hours') return t('Every {n} hours from {time}', { n: s.hours, time: s.firstTime });
   if (s.type === 'weekdays') {
     const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return `${s.days.map((d) => names[d]).join(', ')} at ${s.times.join(', ')}`;
+    return t('{days} at {times}', { days: s.days.map((d) => t(names[d])).join(', '), times: s.times.join(', ') });
   }
-  return s.times.length === 1 ? `Every day at ${s.times[0]}` : `Every day at ${s.times.join(', ')}`;
+  return t('Every day at {times}', { times: s.times.join(', ') });
 }
 
 export const MUTED_FOREVER = '9999-12-31T00:00:00.000Z';

@@ -35,7 +35,7 @@ export const ScreenHeader = ({ title, showBack = false, showAvatar = false, back
       <Text style={styles.title}>{title}</Text>
 
       <View style={[styles.side, styles.sideRight]}>
-        {showAvatar && <UserAvatar size={38} />}
+        {showAvatar && !shellRoot && <UserAvatar size={38} />}
       </View>
     </View>
   );

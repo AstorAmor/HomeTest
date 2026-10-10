@@ -2,13 +2,14 @@ import { useRouter } from 'expo-router';
 import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { Colors } from '@/constants/colors';
+import { t } from '@/i18n';
 
 export default function CholesterolDetail() {
   const router = useRouter();
 
   return (
     <SimpleMetricDetailScreen
-      title="Total Cholesterol"
+      title={t('Total Cholesterol')}
       color={Colors.accent}
       loadEntries={async () => {
         const entries = await cholesterolRepository.getAll();

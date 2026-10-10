@@ -3,13 +3,14 @@ import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { MEAL_TYPE_LABEL } from '@/types/glucose';
 import { Colors } from '@/constants/colors';
+import { t } from '@/i18n';
 
 export default function GlucoseDetail() {
   const router = useRouter();
 
   return (
     <SimpleMetricDetailScreen
-      title="Blood Glucose"
+      title={t('Blood Glucose')}
       color={Colors.accent}
       loadEntries={async () => {
         const entries = await getGlucoseEntries();
@@ -18,7 +19,7 @@ export default function GlucoseDetail() {
           valor: e.valor,
           unidad: e.unidad,
           fecha: e.fecha,
-          extra: MEAL_TYPE_LABEL[e.mealType],
+          extra: t(MEAL_TYPE_LABEL[e.mealType]),
         }));
       }}
       onAddPress={() => router.push('/log-glucose')}

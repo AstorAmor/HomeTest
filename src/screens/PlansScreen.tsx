@@ -103,7 +103,7 @@ export const PlansScreen = () => {
                   {p.latest && <Text style={styles.badge}>{t('Current plan')}</Text>}
                   <Text style={styles.title}>{monthYear(p.date)}</Text>
                   <Text style={styles.sub}>
-                    {p.label} · {p.items.length} actions
+                    {p.label} · {t(p.items.length === 1 ? '{n} action' : '{n} actions', { n: p.items.length })}
                   </Text>
                 </View>
                 <Ionicons name={p.fromReport ? 'chevron-forward' : open ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />

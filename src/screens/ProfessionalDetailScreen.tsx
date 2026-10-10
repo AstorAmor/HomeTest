@@ -12,6 +12,7 @@ import { mockProfessionals, ROLE_INFO } from '@/data/servicesMock';
 import { listVerifiedProfessionals, roleLabel } from '@/data/sharing';
 import { consult, isRealProfessional, ProCapabilities } from '@/data/consultations';
 import { t } from '@/i18n';
+import { formatPrice } from '@/data/testCatalog';
 
 interface ProView {
   id: string;
@@ -119,7 +120,7 @@ export const ProfessionalDetailScreen = () => {
           )}
           <View style={styles.statsRow}>
             {pro.rating !== null && <Stat icon="star" color={Colors.amber} value={pro.rating.toFixed(1)} label={`${pro.reviews} reviews`} />}
-            <Stat icon="cash-outline" color={Colors.accent} value={pro.price ? `€${pro.price}` : '—'} label={`${pro.minutes} min`} />
+            <Stat icon="cash-outline" color={Colors.accent} value={pro.price ? formatPrice(pro.price) : '—'} label={`${pro.minutes} min`} />
             <Stat icon={pro.online ? 'videocam-outline' : 'location-outline'} color={Colors.violet} value={pro.online ? t('Online') : t('In person')} label={pro.city || t('Spain')} />
           </View>
         </View>
@@ -132,13 +133,13 @@ export const ProfessionalDetailScreen = () => {
         ) : null}
         {pro.languages.length > 0 && <Text style={styles.languages}>Speaks {pro.languages.join(' and ')}</Text>}
 
-        <Text style={styles.sectionTitle}>How can {pro.name.split(' ').slice(0, 2).join(' ')} help you?</Text>
+        <Text style={styles.sectionTitle}>{t('How can {name} help you?', { name: pro.name.split(' ').slice(0, 2).join(' ') })}</Text>
         <View style={styles.actions}>
           {caps.video && (
             <Action
               icon="videocam"
               title={t('Book a video consultation')}
-              sub={`${pro.minutes} min · ${pro.price ? `€${pro.price}` : 'price on request'} · pick a free slot`}
+              sub={`${pro.minutes} min · ${pro.price ? formatPrice(pro.price) : t('price on request')} · ${t('pick a free slot')}`}
               primary
               onPress={() => router.push({ pathname: '/consult-book', params })}
             />

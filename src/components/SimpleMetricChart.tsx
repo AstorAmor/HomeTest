@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import Svg, { Polyline, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
+import { t } from '@/i18n';
 
 interface Point {
   valor: number;
@@ -37,7 +38,7 @@ export const SimpleMetricChart = ({ entries, color }: SimpleMetricChartProps) =>
     return (
       <View style={styles.emptyWrap}>
         <Text style={styles.emptyText}>
-          Add at least 2 entries in this range to see the chart
+          {t('Add at least 2 entries in this range to see the chart')}
         </Text>
       </View>
     );

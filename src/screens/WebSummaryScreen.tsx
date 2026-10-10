@@ -177,6 +177,8 @@ export const WebSummaryScreen = () => {
   if (upcoming[0])
     todo.push({ key: 'next', icon: upcoming[0].icon, color: Colors.accent, text: upcoming[0].text, onPress: () => router.navigate(upcoming[0].target as any) });
   const today = now.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+  // Lo que ya sale en "Para hoy" no se repite en "Próximamente"
+  const comingUp = todo.slice(0, 3).some((x) => x.key === 'next') ? upcoming.slice(1) : upcoming;
 
   const cards: (Omit<CardProps, 'width'> & { key: string })[] = [
     {
@@ -325,11 +327,11 @@ export const WebSummaryScreen = () => {
         ))}
       </View>
 
-      {upcoming.length > 0 && (
+      {comingUp.length > 0 && (
         <>
           <Text style={styles.section}>{t('Coming up')}</Text>
           <View style={styles.panel}>
-            {upcoming.map((l, i) => (
+            {comingUp.map((l, i) => (
               <TouchableOpacity key={l.id} style={[styles.row, i > 0 && styles.rowBorder]} onPress={() => router.navigate(l.target as any)}>
                 <Ionicons name={l.icon as any} size={18} color={Colors.accent} />
                 <Text style={styles.rowText}>{l.text}</Text>

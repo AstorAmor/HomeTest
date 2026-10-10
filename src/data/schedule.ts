@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses } from './mockData';
 import { currentReport } from './reportRepository';
+import { t } from '@/i18n';
 
 // Agenda del paciente: se deriva de los análisis programados (DUMMY hasta que haya
 // pedidos reales) + la próxima analítica de la membresía (6 meses tras la última).
@@ -52,7 +53,7 @@ export function buildSchedule(): ScheduleEvent[] {
       date: a.fecha,
       start,
       end,
-      title: `${a.nombre}: kit delivery`,
+      title: t('{name}: kit delivery', { name: a.nombre }),
       detail: `${a.sampleType}. ${a.preparation.join('. ')}.`,
     });
     events.push({
@@ -61,23 +62,23 @@ export function buildSchedule(): ScheduleEvent[] {
       date: addDays(a.fecha, 1),
       start: '09:00',
       end: '13:00',
-      title: `${a.nombre}: sample pickup`,
-      detail: 'Leave the sealed sample ready for the courier.',
+      title: t('{name}: sample pickup', { name: a.nombre }),
+      detail: t('Leave the sealed sample ready for the courier.'),
     });
     events.push({
       id: `${a.id}-results`,
       type: 'results',
       date: addWorkingDays(a.fecha, 5),
-      title: `${a.nombre}: results expected`,
-      detail: 'You will get a notification when your report is ready in the app.',
+      title: t('{name}: results expected', { name: a.nombre }),
+      detail: t('You will get a notification when your report is ready in the app.'),
     });
   }
   events.push({
     id: 'membership-followup',
     type: 'membership',
     date: addDays(currentReport.test_date, 182),
-    title: '6-month follow-up blood test',
-    detail: 'Included in your subscription. We will send your kit a few days before.',
+    title: t('6-month follow-up blood test'),
+    detail: t('Included in your subscription. We will send your kit a few days before.'),
   });
   return events.sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? '')));
 }

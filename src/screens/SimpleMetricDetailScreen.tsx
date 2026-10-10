@@ -6,6 +6,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { SimpleMetricChart } from '@/components/SimpleMetricChart';
 import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { t } from '@/i18n';
 
 export interface GenericMetricEntry {
   id: string;
@@ -84,12 +85,12 @@ export const SimpleMetricDetailScreen = ({
 
         <TouchableOpacity style={styles.addButton} onPress={onAddPress}>
           <Ionicons name="add-circle-outline" size={20} color={color} />
-          <Text style={[styles.addButtonText, { color }]}>Add reading</Text>
+          <Text style={[styles.addButtonText, { color }]}>{t('Add reading')}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>History</Text>
+        <Text style={styles.sectionTitle}>{t('History')}</Text>
         {historyDesc.length === 0 ? (
-          <Text style={styles.emptyText}>No entries yet.</Text>
+          <Text style={styles.emptyText}>{t('No entries yet.')}</Text>
         ) : (
           <View style={styles.historyList}>
             {historyDesc.map((entry) => (

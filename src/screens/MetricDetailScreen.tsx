@@ -162,7 +162,7 @@ export const MetricDetailScreen = () => {
             <Ionicons name={info.icon as any} size={22} color={info.color} />
           </View>
           <Text style={styles.value}>{latestValue !== undefined ? info.format(latestValue) : '—'}</Text>
-          <Text style={styles.valueSub}>Latest{isSample ? ' · sample data' : ''}</Text>
+          <Text style={styles.valueSub}>{tr('Latest')}{isSample ? ` · ${tr('sample data')}` : ''}</Text>
         </View>
 
         {kind === 'body_temperature' && (
@@ -234,18 +234,18 @@ export const MetricDetailScreen = () => {
               color={trendGood === null ? Colors.textSecondary : trendGood ? Colors.accent : Colors.warning}
             />
             <Text style={styles.trendText}>
-              Last 7 days {change >= 0 ? 'up' : 'down'} {Math.abs(change * 100).toFixed(0)}% vs the previous 7
+              {tr(change >= 0 ? 'Last 7 days up {n}% vs the previous 7' : 'Last 7 days down {n}% vs the previous 7', { n: Math.abs(change * 100).toFixed(0) })}
             </Text>
           </View>
         )}
 
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>{tr('What it is')}</Text>
-          <Text style={styles.infoText}>{info.what}</Text>
+          <Text style={styles.infoText}>{tr(info.what)}</Text>
           <Text style={styles.infoTitle}>{tr('Typical range')}</Text>
-          <Text style={styles.infoText}>{info.typical}</Text>
+          <Text style={styles.infoText}>{tr(info.typical)}</Text>
           <Text style={styles.infoTitle}>{tr('What affects it')}</Text>
-          <Text style={styles.infoText}>{info.affects}</Text>
+          <Text style={styles.infoText}>{tr(info.affects)}</Text>
           <Text style={styles.disclaimer}>{tr('General information, not a diagnosis.')}</Text>
         </View>
 

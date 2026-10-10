@@ -8,6 +8,7 @@ import { LabScreen } from './LabScreen';
 import { MoreScreen } from './MoreScreen';
 import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
+import { useWebShell } from '@/web/webMode';
 
 const LAST = TABS.length - 1;
 
@@ -17,6 +18,8 @@ const LAST = TABS.length - 1;
 // y el modo Señalar sabe en qué pestaña estás.
 export const MainTabsScreen = () => {
   const router = useRouter();
+  // Web del paciente en escritorio: el menú lateral elige la pestaña, sin barra abajo
+  const shell = useWebShell();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const [currentPage, setCurrentPage] = useState(Math.min(LAST, Math.max(0, Number(tab) || 0)));
 
@@ -42,7 +45,7 @@ export const MainTabsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.page}>{pages[currentPage]}</View>
-      <BottomTabBar currentIndex={currentPage} onTabPress={select} />
+      {!shell && <BottomTabBar currentIndex={currentPage} onTabPress={select} />}
     </View>
   );
 };

@@ -9,6 +9,7 @@ import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { BloodPressureEntry } from '@/types/bloodPressure';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
+import { t } from '@/i18n';
 
 type Range = 'D' | 'M' | '3M' | '6M';
 
@@ -46,7 +47,7 @@ export const BloodPressureDetailScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Blood Pressure" showBack />
+        <ScreenHeader title={t('Blood Pressure')} showBack />
 
         <View style={styles.rangeTabs}>
           {RANGES.map((r) => (
@@ -68,13 +69,13 @@ export const BloodPressureDetailScreen = () => {
 
         <TouchableOpacity style={styles.addButton} onPress={() => router.push('/log-blood-pressure')}>
           <Ionicons name="add-circle-outline" size={20} color={Colors.accent} />
-          <Text style={styles.addButtonText}>Log blood pressure</Text>
+          <Text style={styles.addButtonText}>{t('Log blood pressure')}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>History</Text>
+        <Text style={styles.sectionTitle}>{t('History')}</Text>
         {historyDesc.length === 0 ? (
           <Text style={styles.emptyText}>
-            No entries yet. Add one with "Log blood pressure" above.
+            {t('No entries yet. Add one with "Log blood pressure" above.')}
           </Text>
         ) : (
           <View style={styles.historyList}>

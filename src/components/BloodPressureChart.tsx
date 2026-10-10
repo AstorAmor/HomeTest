@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Polyline, Circle, Polygon } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { BloodPressureEntry } from '@/types/bloodPressure';
+import { t } from '@/i18n';
 
 interface BloodPressureChartProps {
   entries: BloodPressureEntry[]; // ya filtradas por rango y ordenadas ascendente
@@ -32,7 +33,7 @@ export const BloodPressureChart = ({ entries }: BloodPressureChartProps) => {
     return (
       <View style={styles.emptyWrap}>
         <Text style={styles.emptyText}>
-          Add at least 2 entries in this range to see the chart
+          {t('Add at least 2 entries in this range to see the chart')}
         </Text>
       </View>
     );
@@ -79,7 +80,7 @@ export const BloodPressureChart = ({ entries }: BloodPressureChartProps) => {
 
   return (
     <View>
-      <Text style={styles.chartUnit}>mmHg</Text>
+      <Text style={styles.chartUnit}>{t('mmHg')}</Text>
       <View style={styles.chartRow}>
         <View style={[styles.yAxis, { height: BP_CHART_HEIGHT }]}>
           <Text style={styles.axisLabel}>{Math.round(bpMax)}</Text>
@@ -104,7 +105,7 @@ export const BloodPressureChart = ({ entries }: BloodPressureChartProps) => {
         </Svg>
       </View>
 
-      <Text style={[styles.chartUnit, { marginTop: 20 }]}>BPM</Text>
+      <Text style={[styles.chartUnit, { marginTop: 20 }]}>{t('BPM')}</Text>
       <View style={styles.chartRow}>
         <View style={[styles.yAxis, { height: PULSE_CHART_HEIGHT }]}>
           <Text style={styles.axisLabel}>{Math.round(pulseMax)}</Text>
