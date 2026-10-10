@@ -9,29 +9,7 @@ import { getBiomarkerCodes } from '@/knowledge/standardCodes';
 import { CanonicalBiomarker, MeasurementType } from '@/types/knowledge';
 import { getLang, t } from '@/i18n';
 import { catalogCardEs } from '@/i18n/catalogEs';
-
-// Etiquetas legibles para las categorias provisionales de knowledge/biomarcadores/*.json.
-const CATEGORY_LABELS: Record<string, string> = {
-  metabolico: 'Metabolic',
-  lipidico: 'Heart & Lipids',
-  renal: 'Kidneys',
-  hepatico: 'Liver',
-  electrolitos: 'Electrolytes',
-  hematologia: 'Blood',
-  endocrino: 'Stress & Aging',
-  vitales: 'Vitals',
-  tiroides: 'Thyroid',
-  autoinmunidad: 'Autoimmunity',
-  regulacion_inmune: 'Immune Regulation',
-  hormonas: 'Hormones',
-  salud_femenina: 'Female Health',
-  salud_masculina: 'Male Health',
-  toxinas_ambientales: 'Environmental Toxins',
-  nutrientes: 'Nutrients',
-  pancreas: 'Pancreas',
-  orina: 'Urine',
-  edad_biologica: 'Biological Age',
-};
+import { BIOMARKER_CATEGORY_LABELS, biomarkerDisplayName } from '@/utils/biomarkerLabels';
 
 // Los datos de knowledge/ tienen nombres en español (canonical_name) e inglés (canonical_name_en);
 // la muestra y alguna unidad vienen en español: aquí se muestran en el idioma de la app.
@@ -44,7 +22,8 @@ const SAMPLE_EN: Record<string, string> = {
 const UNIT_EN: Record<string, string> = { años: 'years' };
 
 const es = () => getLang() === 'es';
-const displayName = (b: CanonicalBiomarker) => (es() ? b.canonical_name : b.canonical_name_en ?? b.canonical_name);
+const displayName = biomarkerDisplayName;
+const CATEGORY_LABELS = BIOMARKER_CATEGORY_LABELS;
 const sampleName = (s: string) => (es() ? s.replace('N/A (calculado)', 'Calculado') : SAMPLE_EN[s] ?? s);
 const unitName = (u: string) => (es() ? u : UNIT_EN[u] ?? u);
 const MEASUREMENT_LABEL: Record<MeasurementType, string> = {

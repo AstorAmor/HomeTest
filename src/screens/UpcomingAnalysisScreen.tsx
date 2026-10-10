@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,20 +41,20 @@ export const UpcomingAnalysisScreen = () => {
             <Ionicons name={status === 'cancelled' ? 'close-circle-outline' : 'calendar'} size={26} color={Colors.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.heroDate}>{status === 'cancelled' ? 'Cancelled' : formatLongDate(date)}</Text>
-            {status !== 'cancelled' && <Text style={styles.heroSlot}>Delivery {analysis.timeSlot}</Text>}
+            <Text style={styles.heroDate}>{status === 'cancelled' ? t('Cancelled') : formatLongDate(date)}</Text>
+            {status !== 'cancelled' && <Text style={styles.heroSlot}>{t('Delivery {time}', { time: analysis.timeSlot })}</Text>}
             <Text style={styles.heroSample}>{analysis.sampleType}</Text>
           </View>
           {status === 'confirmed' && (
             <View style={styles.confirmedPill}>
               <Ionicons name="checkmark" size={12} color={Colors.background} />
-              <Text style={styles.confirmedText}>Confirmed</Text>
+              <Text style={styles.confirmedText}>{t('Confirmed')}</Text>
             </View>
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>What we'll measure</Text>
-        <Text style={styles.sectionSubtitle}>{markerCount} markers</Text>
+        <Text style={styles.sectionTitle}>{t("What we'll measure")}</Text>
+        <Text style={styles.sectionSubtitle}>{t('{n} markers', { n: markerCount })}</Text>
         <View style={styles.card}>
           {analysis.markerGroups.map((g, i) => (
             <View key={g.category} style={[styles.group, i > 0 && styles.groupDivider]}>
@@ -70,7 +70,7 @@ export const UpcomingAnalysisScreen = () => {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>How to prepare</Text>
+        <Text style={styles.sectionTitle}>{t('How to prepare')}</Text>
         <View style={styles.card}>
           {analysis.preparation.map((p) => (
             <View key={p} style={styles.prepRow}>
@@ -85,11 +85,11 @@ export const UpcomingAnalysisScreen = () => {
         <View style={styles.actions}>
           {status === 'scheduled' && (
             <TouchableOpacity style={styles.primary} onPress={() => setStatus('confirmed')}>
-              <Text style={styles.primaryText}>Confirm date</Text>
+              <Text style={styles.primaryText}>{t('Confirm date')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.secondary} onPress={() => setSheet('menu')}>
-            <Text style={styles.secondaryText}>Reschedule or cancel</Text>
+            <Text style={styles.secondaryText}>{t('Reschedule or cancel')}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -100,20 +100,20 @@ export const UpcomingAnalysisScreen = () => {
           <View style={styles.sheetHandle} />
           {sheet === 'menu' && (
             <>
-              <Text style={styles.sheetTitle}>Change this test</Text>
+              <Text style={styles.sheetTitle}>{t('Change this test')}</Text>
               <TouchableOpacity style={styles.sheetOption} onPress={() => setSheet('reschedule')}>
                 <Ionicons name="calendar-outline" size={22} color={Colors.accent} />
-                <Text style={styles.sheetOptionText}>Reschedule</Text>
+                <Text style={styles.sheetOptionText}>{t('Reschedule')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.sheetOption} onPress={() => setSheet('cancel')}>
                 <Ionicons name="close-circle-outline" size={22} color={Colors.danger} />
-                <Text style={[styles.sheetOptionText, { color: Colors.danger }]}>Cancel test</Text>
+                <Text style={[styles.sheetOptionText, { color: Colors.danger }]}>{t('Cancel test')}</Text>
               </TouchableOpacity>
             </>
           )}
           {sheet === 'reschedule' && (
             <>
-              <Text style={styles.sheetTitle}>Pick a new date</Text>
+              <Text style={styles.sheetTitle}>{t('Pick a new date')}</Text>
               {slots.map((s) => (
                 <TouchableOpacity
                   key={s}
@@ -134,9 +134,9 @@ export const UpcomingAnalysisScreen = () => {
           )}
           {sheet === 'cancel' && (
             <>
-              <Text style={styles.sheetTitle}>Cancel this test?</Text>
+              <Text style={styles.sheetTitle}>{t('Cancel this test?')}</Text>
               <Text style={styles.sheetText}>
-                It stays included in your subscription, so you can book it again whenever you want.
+                {t('It stays included in your subscription, so you can book it again whenever you want.')}
               </Text>
               <TouchableOpacity
                 style={[styles.primary, { backgroundColor: Colors.danger }]}
@@ -145,10 +145,10 @@ export const UpcomingAnalysisScreen = () => {
                   setSheet(null);
                 }}
               >
-                <Text style={styles.primaryText}>Yes, cancel</Text>
+                <Text style={styles.primaryText}>{t('Yes, cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.secondary} onPress={() => setSheet(null)}>
-                <Text style={styles.secondaryText}>Keep it</Text>
+                <Text style={styles.secondaryText}>{t('Keep it')}</Text>
               </TouchableOpacity>
             </>
           )}

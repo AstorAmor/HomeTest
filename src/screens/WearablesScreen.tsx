@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -52,7 +52,7 @@ export const WearablesScreen = () => {
     try {
       setMessage(await fn());
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Something went wrong');
+      setMessage(err instanceof Error ? err.message : t('Something went wrong'));
     } finally {
       setBusy(null);
     }
@@ -61,27 +61,27 @@ export const WearablesScreen = () => {
   const loadDummy = () =>
     run('dummy', async () => {
       setRecords(await wearableRepository.upsertRecords(generateHuaweiDummy(14)));
-      return 'Loaded 14 days of dummy Huawei Health data.';
+      return t('Loaded 14 days of dummy Huawei Health data.');
     });
 
   const connectHc = () =>
     run('hc-connect', async () => {
       const ok = await connectHealthConnect();
-      return ok ? 'Health Connect permissions granted. Now sync your data.' : 'No permissions were granted.';
+      return ok ? t('Health Connect permissions granted. Now sync your data.') : t('No permissions were granted.');
     });
 
   const syncHc = () =>
     run('hc-sync', async () => {
       const fresh = await readHealthConnectDaily(7);
       setRecords(await wearableRepository.upsertRecords(fresh));
-      return fresh.length ? `Synced ${fresh.length} daily values from Health Connect.` : 'No data found in Health Connect for the last 7 days.';
+      return fresh.length ? t('Synced {n} daily values from Health Connect.', { n: fresh.length }) : t('No data found in Health Connect for the last 7 days.');
     });
 
   const clearAll = () =>
     run('clear', async () => {
       await wearableRepository.clearRecords();
       setRecords([]);
-      return 'Wearable data cleared.';
+      return t('Wearable data cleared.');
     });
 
   // Últimos 7 días con datos, agrupados por fecha.
@@ -104,49 +104,49 @@ export const WearablesScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Wearables" showBack />
+        <ScreenHeader title={t('Wearables')} showBack />
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="watch-outline" size={24} color={Colors.accent} />
-            <Text style={styles.cardTitle}>Huawei Health</Text>
+            <Text style={styles.cardTitle}>{t('Huawei Health')}</Text>
           </View>
           <Text style={styles.cardText}>
-            Direct connection coming soon. Until then, load test data with the same shape Huawei will send.
+            {t('Direct connection coming soon. Until then, load test data with the same shape Huawei will send.')}
           </Text>
-          <Button id="dummy" label="Load dummy Huawei data" onPress={loadDummy} />
+          <Button id="dummy" label={t('Load dummy Huawei data')} onPress={loadDummy} />
         </View>
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="fitness-outline" size={24} color={Colors.accent} />
-            <Text style={styles.cardTitle}>Health Connect</Text>
+            <Text style={styles.cardTitle}>{t('Health Connect')}</Text>
           </View>
-          <Text style={styles.cardText}>Xiaomi, Garmin, Oura, Samsung, Google and others that sync to Health Connect.</Text>
+          <Text style={styles.cardText}>{t('Xiaomi, Garmin, Oura, Samsung, Google and others that sync to Health Connect.')}</Text>
           {hcAvailable === false ? (
             <Text style={styles.warning}>
-              Not available in this build. Health Connect needs the Kuova development build (it does not work in Expo Go).
+              {t('Not available in this build. Health Connect needs the Kuova development build (it does not work in Expo Go).')}
             </Text>
           ) : (
             <View style={styles.row}>
-              <Button id="hc-connect" label="Connect" onPress={connectHc} disabled={!hcAvailable} />
-              <Button id="hc-sync" label="Sync last 7 days" onPress={syncHc} disabled={!hcAvailable} />
+              <Button id="hc-connect" label={t('Connect')} onPress={connectHc} disabled={!hcAvailable} />
+              <Button id="hc-sync" label={t('Sync last 7 days')} onPress={syncHc} disabled={!hcAvailable} />
             </View>
           )}
         </View>
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
 
-        <Text style={styles.sectionTitle}>Your last days</Text>
+        <Text style={styles.sectionTitle}>{t('Your last days')}</Text>
         {byDate.length === 0 ? (
-          <Text style={styles.cardText}>No wearable data yet.</Text>
+          <Text style={styles.cardText}>{t('No wearable data yet.')}</Text>
         ) : (
           byDate.map(([date, rows]) => (
             <View key={date} style={styles.dayCard}>
               <Text style={styles.dayTitle}>{formatDate(date)}</Text>
               {rows.map((r) => (
                 <View key={`${r.metric}|${r.sourceName}|${r.rawTypeId}`} style={styles.metricRow}>
-                  <Text style={styles.metricLabel}>{METRIC_LABEL[r.metric].label}</Text>
+                  <Text style={styles.metricLabel}>{t(METRIC_LABEL[r.metric].label)}</Text>
                   <View style={styles.metricRight}>
                     <Text style={styles.metricValue}>{formatValue(r.metric, r.value)}</Text>
                     <Text style={styles.metricSource}>{r.sourceName}</Text>
@@ -159,7 +159,7 @@ export const WearablesScreen = () => {
 
         {records.length > 0 && (
           <TouchableOpacity onPress={clearAll} style={styles.clear}>
-            <Text style={styles.clearText}>Clear wearable data</Text>
+            <Text style={styles.clearText}>{t('Clear wearable data')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>

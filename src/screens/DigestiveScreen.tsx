@@ -1,11 +1,12 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
+import { IntestineIcon } from '@/components/IntestineIcon';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
@@ -88,10 +89,10 @@ export const DigestiveScreen = () => {
               {!a ? (
                 <View style={styles.answerRow}>
                   <TouchableOpacity style={styles.answer} onPress={() => answer(o, 'yes')}>
-                    <Text style={styles.answerText}>Yes</Text>
+                    <Text style={styles.answerText}>{t('Yes')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.answer} onPress={() => answer(o, 'no')}>
-                    <Text style={styles.answerText}>No</Text>
+                    <Text style={styles.answerText}>{t('No')}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -103,7 +104,7 @@ export const DigestiveScreen = () => {
           )}
           {(o.level === 'see_doctor' || a === 'no') && (
             <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-              <Text style={styles.link}>Find a doctor</Text>
+              <Text style={styles.link}>{t('Find a doctor')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -113,14 +114,14 @@ export const DigestiveScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={part === 'gut' ? 'Gut' : part === 'bladder' ? 'Bladder' : 'Gut and bladder'} showBack />
+        <ScreenHeader title={part === 'gut' ? t('Gut') : part === 'bladder' ? t('Bladder') : t('Gut and bladder')} showBack />
         <Text style={styles.intro}>
           {part === 'gut'
-            ? 'A quick daily note on your digestion.'
+            ? t('A quick daily note on your digestion.')
             : part === 'bladder'
-              ? 'A quick daily note on your urine: it says a lot about how hydrated you are.'
-              : 'A quick daily note on your digestion and urine.'}{' '}
-          Each week we tell you what we notice, and you can check any time.
+              ? t('A quick daily note on your urine: it says a lot about how hydrated you are.')
+              : t('A quick daily note on your digestion and urine.')}{' '}
+          {t('Each week we tell you what we notice, and you can check any time.')}
         </Text>
 
         {/* Digestión */}
@@ -128,10 +129,10 @@ export const DigestiveScreen = () => {
           <>
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="stomach" size={20} color={Colors.green} />
-              <Text style={styles.cardTitle}>Digestion</Text>
+              <IntestineIcon size={20} color={Colors.green} />
+              <Text style={styles.cardTitle}>{t('Digestion')}</Text>
               <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-bowel')}>
-                <Text style={styles.logButtonText}>{bowelToday ? 'Edit today' : 'Log today'}</Text>
+                <Text style={styles.logButtonText}>{bowelToday ? t('Edit today') : t('Log today')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.week}>
@@ -155,11 +156,11 @@ export const DigestiveScreen = () => {
           </View>
           <View style={styles.sectionRow}>
             <View style={styles.titleWithInfo}>
-              <Text style={styles.sectionTitle}>This week</Text>
+              <Text style={styles.sectionTitle}>{t('This week')}</Text>
               <InfoButton topic="digestion" />
             </View>
             <TouchableOpacity onPress={load}>
-              <Text style={styles.link}>Check now</Text>
+              <Text style={styles.link}>{t('Check now')}</Text>
             </TouchableOpacity>
           </View>
           {renderObservations(bowelObservations(bowel))}
@@ -172,9 +173,9 @@ export const DigestiveScreen = () => {
           <View style={[styles.card, showGut && { marginTop: 22 }]}>
             <View style={styles.cardHeader}>
               <Ionicons name="water-outline" size={20} color={Colors.green} />
-              <Text style={styles.cardTitle}>Urine</Text>
+              <Text style={styles.cardTitle}>{t('Urine')}</Text>
               <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-urine')}>
-                <Text style={styles.logButtonText}>{urineToday ? 'Edit today' : 'Log today'}</Text>
+                <Text style={styles.logButtonText}>{urineToday ? t('Edit today') : t('Log today')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.week}>
@@ -204,20 +205,20 @@ export const DigestiveScreen = () => {
             >
               <Ionicons name="beaker-outline" size={20} color={Colors.gold} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.cardTitle}>{volume.kind === 'collect_24h' ? 'Measure a whole day' : 'Quick volume check'}</Text>
+                <Text style={styles.cardTitle}>{volume.kind === 'collect_24h' ? t('Measure a whole day') : t('Quick volume check')}</Text>
                 <Text style={styles.obsBody}>
                   {volume.kind === 'collect_24h'
-                    ? 'A 24-hour urine container from the pharmacy shows exactly how much you pass in a day.'
+                    ? t('A 24-hour urine container from the pharmacy shows exactly how much you pass in a day.')
                     : volume.kind === 'repeat'
-                      ? 'Last time it did not feel usual. Try once more on a normal day.'
-                      : 'Pee once into a 500 ml bottle to get an idea of your usual amount.'}
+                      ? t('Last time it did not feel usual. Try once more on a normal day.')
+                      : t('Pee once into a 500 ml bottle to get an idea of your usual amount.')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
           )}
           <View style={styles.titleWithInfo}>
-            <Text style={styles.sectionTitle}>This week</Text>
+            <Text style={styles.sectionTitle}>{t('This week')}</Text>
             <InfoButton topic="urine" />
           </View>
           {renderObservations(urineObservations(urine))}
@@ -225,9 +226,8 @@ export const DigestiveScreen = () => {
         )}
 
         <Text style={styles.footer}>
-          Checked {checkedAt.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })}. These notes are general
-          guidance, not a diagnosis. Get urgent help if there is a lot of blood, black sticky stools with dizziness, strong
-          tummy pain, or you cannot pee.
+          {t('Checked {time}.', { time: checkedAt.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' }) })}{' '}
+          {t('These notes are general guidance, not a diagnosis. Get urgent help if there is a lot of blood, black sticky stools with dizziness, strong tummy pain, or you cannot pee.')}
         </Text>
       </ScrollView>
     </SafeAreaView>

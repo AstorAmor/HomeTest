@@ -18,9 +18,9 @@ export const SubscriptionScreen = () => {
         <View style={{ marginHorizontal: 20 }}>
           <SubscriptionCard />
         </View>
-        <TouchableOpacity style={styles.link} onPress={() => router.push('/store')}>
+        <TouchableOpacity style={styles.link} onPress={() => router.push({ pathname: '/store', params: { view: 'tests' } })}>
           <Ionicons name="pricetags-outline" size={18} color={Colors.accent} />
-          <Text style={styles.linkText}>{t('Plans and tests')}</Text>
+          <Text style={styles.linkText}>{t('See test catalogue')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

@@ -8,6 +8,7 @@ import { FeaturePreview } from '@/components/FeaturePreview';
 import { Colors, withAlpha } from '@/constants/colors';
 import { AppSection, appPrefs, isSectionVisible, SECTION_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { FEATURE_GUIDE } from '@/data/featureGuide';
+import { t } from '@/i18n';
 
 // Guía de cada parte de la app: para qué sirve, qué haces tú, qué recibes, qué avisos manda y
 // una vista previa. ?id=<sección> abre una; sin id, todas.
@@ -20,15 +21,15 @@ export const FeatureGuideScreen = () => {
 
   const block = (label: string, text: string) => (
     <View style={styles.block}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.text}>{text}</Text>
+      <Text style={styles.label}>{t(label)}</Text>
+      <Text style={styles.text}>{t(text)}</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={one ? one.title : 'How each part works'} showBack />
+        <ScreenHeader title={one ? t(one.title) : t('How each part works')} showBack />
         {list.map((o) => {
           const g = FEATURE_GUIDE[o.id as AppSection];
           const on = isSectionVisible(prefs, o.id);
@@ -37,16 +38,16 @@ export const FeatureGuideScreen = () => {
               {!one && (
                 <View style={styles.titleRow}>
                   <Ionicons name={o.icon as any} size={20} color={Colors.accent} />
-                  <Text style={styles.title}>{o.title}</Text>
+                  <Text style={styles.title}>{t(o.title)}</Text>
                 </View>
               )}
               <FeaturePreview section={o.id} />
               {block('What it is for', g.what)}
               {block('What you do', g.youDo)}
               {block('What you get', g.youGet)}
-              {g.notifications && block('Notifications', `${g.notifications} You can mute any of them.`)}
+              {g.notifications && block('Notifications', `${t(g.notifications)} ${t('You can mute any of them.')}`)}
               <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>{on ? 'On in your app' : 'Off in your app'}</Text>
+                <Text style={styles.switchLabel}>{on ? t('On in your app') : t('Off in your app')}</Text>
                 <Switch
                   value={on}
                   onValueChange={(v) => appPrefs.setSectionVisible(o.id, v)}
@@ -60,7 +61,7 @@ export const FeatureGuideScreen = () => {
                   onPress={() => router.push({ pathname: '/evidence', params: { topic: g.evidenceTopic! } })}
                 >
                   <Ionicons name="information-circle-outline" size={16} color={Colors.accent} />
-                  <Text style={styles.how}>How we calculate it</Text>
+                  <Text style={styles.how}>{t('How we calculate it')}</Text>
                 </TouchableOpacity>
               )}
             </View>

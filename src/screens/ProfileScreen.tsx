@@ -11,27 +11,28 @@ import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 import { PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
+import { t } from '@/i18n';
 
-
+// Se evalúa con el idioma ya cargado (index.js); cambiar de idioma recarga la app.
 const LABELS: Record<string, string> = {
-  female: 'Female',
-  male: 'Male',
-  other: 'Other',
-  undisclosed: 'Prefer not to say',
-  sedentary: 'Mostly sitting',
-  light: 'Light activity',
-  active: 'Active',
-  very_active: 'Very active',
-  lt6: '< 6 h',
-  '6to7': '6–7 h',
-  '7to8': '7–8 h',
-  gt8: '> 8 h',
-  never: 'Never',
-  former: 'Used to',
-  current: 'Yes',
-  occasional: 'Occasionally',
-  weekly: 'Every week',
-  daily: 'Daily',
+  female: t('Female'),
+  male: t('Male'),
+  other: t('Other'),
+  undisclosed: t('Prefer not to say'),
+  sedentary: t('Mostly sitting'),
+  light: t('Light activity'),
+  active: t('Active'),
+  very_active: t('Very active'),
+  lt6: t('< 6 h'),
+  '6to7': t('6–7 h'),
+  '7to8': t('7–8 h'),
+  gt8: t('> 8 h'),
+  never: t('Never'),
+  former: t('Used to'),
+  current: t('Yes'),
+  occasional: t('Occasionally'),
+  weekly: t('Every week'),
+  daily: t('Daily'),
 };
 
 export const ProfileScreen = () => {
@@ -50,28 +51,28 @@ export const ProfileScreen = () => {
 
   const age = ageFromDob(profile?.dateOfBirth);
   const rows: { label: string; value?: string }[] = [
-    { label: 'Age', value: age != null ? `${age}` : undefined },
-    { label: 'Sex', value: profile?.sex && LABELS[profile.sex] },
-    { label: 'Height', value: profile?.heightCm ? `${profile.heightCm} cm` : undefined },
-    { label: 'Weight', value: profile?.weightKg ? `${profile.weightKg} kg` : undefined },
-    { label: 'Activity', value: profile?.activity && LABELS[profile.activity] },
-    { label: 'Sleep', value: profile?.sleep && LABELS[profile.sleep] },
-    { label: 'Smoking', value: profile?.smoking && LABELS[profile.smoking] },
-    { label: 'Alcohol', value: profile?.alcohol && LABELS[profile.alcohol] },
+    { label: t('Age'), value: age != null ? `${age}` : undefined },
+    { label: t('Sex'), value: profile?.sex && LABELS[profile.sex] },
+    { label: t('Height'), value: profile?.heightCm ? `${profile.heightCm} cm` : undefined },
+    { label: t('Weight'), value: profile?.weightKg ? `${profile.weightKg} kg` : undefined },
+    { label: t('Activity'), value: profile?.activity && LABELS[profile.activity] },
+    { label: t('Sleep'), value: profile?.sleep && LABELS[profile.sleep] },
+    { label: t('Smoking'), value: profile?.smoking && LABELS[profile.smoking] },
+    { label: t('Alcohol'), value: profile?.alcohol && LABELS[profile.alcohol] },
     {
-      label: 'Medication',
+      label: t('Medication'),
       value:
         profile?.takesMedication === undefined
           ? undefined
           : profile.takesMedication
-            ? profile.medications || 'Yes'
-            : 'None',
+            ? profile.medications || t('Yes')
+            : t('None'),
     },
     {
-      label: 'Conditions',
+      label: t('Conditions'),
       value: profile?.conditions?.length
         ? profile.conditions
-            .map((c) => (c === 'other' ? profile.conditionsOther || 'Other' : CONDITION_OPTIONS.find((o) => o.id === c)?.label ?? c))
+            .map((c) => (c === 'other' ? profile.conditionsOther || t('Other') : t(CONDITION_OPTIONS.find((o) => o.id === c)?.label ?? c)))
             .join(', ')
         : undefined,
     },
@@ -81,7 +82,7 @@ export const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="My Profile" showBack />
+        <ScreenHeader title={t('My Profile')} showBack />
 
         <View style={styles.hero}>
           <UserAvatar size={84} />
@@ -90,51 +91,51 @@ export const ProfileScreen = () => {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>What you use Kuova for</Text>
+          <Text style={styles.sectionTitle}>{t('What you use Kuova for')}</Text>
           <TouchableOpacity onPress={() => router.push('/app-sections')}>
-            <Text style={styles.edit}>Change</Text>
+            <Text style={styles.edit}>{t('Change')}</Text>
           </TouchableOpacity>
         </View>
         <View style={[styles.card, styles.purposeCard]}>
           <Ionicons name={(purpose?.icon ?? 'apps-outline') as any} size={20} color={Colors.accent} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.purposeTitle}>{chosen.length ? chosen.map((c) => c.title).join(' · ') : 'Everything'}</Text>
+            <Text style={styles.purposeTitle}>{chosen.length ? chosen.map((c) => t(c.title)).join(' · ') : t('Everything')}</Text>
             <Text style={styles.purposeSubtitle}>
               {prefs.hidden.length
-                ? `${prefs.hidden.length} section${prefs.hidden.length === 1 ? '' : 's'} hidden`
-                : 'All sections visible'}
+                ? t(prefs.hidden.length === 1 ? '{n} section hidden' : '{n} sections hidden', { n: prefs.hidden.length })
+                : t('All sections visible')}
             </Text>
           </View>
         </View>
 
         <View style={[styles.sectionHeader, styles.afterCard]}>
-          <Text style={styles.sectionTitle}>About you</Text>
+          <Text style={styles.sectionTitle}>{t('About you')}</Text>
           <TouchableOpacity onPress={() => router.push('/onboarding')}>
-            <Text style={styles.edit}>Edit</Text>
+            <Text style={styles.edit}>{t('Edit')}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.card}>
           {rows.map((r, i) => (
             <View key={r.label} style={[styles.row, i > 0 && styles.rowDivider]}>
               <Text style={styles.rowLabel}>{r.label}</Text>
-              <Text style={[styles.rowValue, styles.rowValueWrap, !r.value && styles.rowEmpty]}>{r.value ?? 'Not answered'}</Text>
+              <Text style={[styles.rowValue, styles.rowValueWrap, !r.value && styles.rowEmpty]}>{r.value ?? t('Not answered')}</Text>
             </View>
           ))}
         </View>
 
         {!prefs.hidden.includes('plan') && (
           <>
-            <Text style={[styles.sectionTitle, styles.spaced]}>Your goals</Text>
+            <Text style={[styles.sectionTitle, styles.spaced]}>{t('Your goals')}</Text>
             <View style={styles.goals}>
               {goals.length ? (
                 goals.map((g) => (
                   <View key={g.id} style={styles.goalChip}>
                     <Ionicons name={g.icon as any} size={14} color={Colors.accent} />
-                    <Text style={styles.goalText}>{g.label}</Text>
+                    <Text style={styles.goalText}>{t(g.label)}</Text>
                   </View>
                 ))
               ) : (
-                <Text style={styles.rowEmpty}>No goals yet. Tap Edit to add them.</Text>
+                <Text style={styles.rowEmpty}>{t('No goals yet. Tap Edit to add them.')}</Text>
               )}
             </View>
           </>

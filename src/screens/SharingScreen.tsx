@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,7 +28,7 @@ export const SharingScreen = () => {
       setShares(await listMyShares());
       setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load your shares');
+      setError(err instanceof Error ? err.message : t('Could not load your shares'));
     }
   }, [authMode]);
 
@@ -40,7 +40,7 @@ export const SharingScreen = () => {
       setConfirmingId(null);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not revoke');
+      setError(err instanceof Error ? err.message : t('Could not revoke'));
     }
   };
 
@@ -50,19 +50,17 @@ export const SharingScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Sharing & privacy" showBack />
+        <ScreenHeader title={t('Sharing & privacy')} showBack />
 
         <View style={styles.intro}>
           <Ionicons name="shield-checkmark" size={22} color={Colors.accent} />
           <Text style={styles.introText}>
-            You decide what each professional can see and for how long. They can only read your data, never
-            change it, and you can stop sharing at any time. Your name is visible to the professionals you share
-            with.
+            {t('You decide what each professional can see and for how long. They can only read your data, never change it, and you can stop sharing at any time. Your name is visible to the professionals you share with.')}
           </Text>
         </View>
 
         {authMode !== 'supabase' ? (
-          <Text style={styles.muted}>Sharing needs a Kuova account (not available in demo mode).</Text>
+          <Text style={styles.muted}>{t('Sharing needs a Kuova account (not available in demo mode).')}</Text>
         ) : shares === null && !error ? (
           <ActivityIndicator color={Colors.accent} style={{ marginTop: 24 }} />
         ) : (
@@ -71,12 +69,12 @@ export const SharingScreen = () => {
 
             <TouchableOpacity style={styles.cta} onPress={() => router.push('/share-new')} activeOpacity={0.85}>
               <Ionicons name="person-add-outline" size={20} color={Colors.background} />
-              <Text style={styles.ctaText}>Share with a professional</Text>
+              <Text style={styles.ctaText}>{t('Share with a professional')}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.sectionTitle}>Active</Text>
+            <Text style={styles.sectionTitle}>{t('Sharing now')}</Text>
             {active.length === 0 ? (
-              <Text style={styles.muted}>You are not sharing data with anyone.</Text>
+              <Text style={styles.muted}>{t('You are not sharing data with anyone.')}</Text>
             ) : (
               active.map((s) => (
                 <View key={s.id} style={styles.card}>
@@ -87,8 +85,8 @@ export const SharingScreen = () => {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.name}>{s.professionalName}</Text>
                       <Text style={styles.meta}>
-                        {roleLabel(s.professionalRole)} · since {formatDate(s.createdAt)}
-                        {s.expiresAt ? ` · until ${formatDate(s.expiresAt)}` : ' · no expiry'}
+                        {roleLabel(s.professionalRole)} · {t('since {date}', { date: formatDate(s.createdAt) })}
+                        {' · '}{s.expiresAt ? t('until {date}', { date: formatDate(s.expiresAt) }) : t('no expiry')}
                       </Text>
                     </View>
                   </View>
@@ -101,17 +99,17 @@ export const SharingScreen = () => {
                   </View>
                   {confirmingId === s.id ? (
                     <View style={styles.confirmRow}>
-                      <Text style={styles.confirmText}>Stop sharing with {s.professionalName}?</Text>
+                      <Text style={styles.confirmText}>{t('Stop sharing with {name}?', { name: s.professionalName })}</Text>
                       <TouchableOpacity style={styles.revokeConfirm} onPress={() => revoke(s.id)}>
-                        <Text style={styles.revokeConfirmText}>Stop sharing</Text>
+                        <Text style={styles.revokeConfirmText}>{t('Stop sharing')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setConfirmingId(null)}>
-                        <Text style={styles.cancelText}>Cancel</Text>
+                        <Text style={styles.cancelText}>{t('Cancel')}</Text>
                       </TouchableOpacity>
                     </View>
                   ) : (
                     <TouchableOpacity style={styles.revoke} onPress={() => setConfirmingId(s.id)}>
-                      <Text style={styles.revokeText}>Revoke access</Text>
+                      <Text style={styles.revokeText}>{t('Revoke access')}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -120,13 +118,13 @@ export const SharingScreen = () => {
 
             {history.length > 0 && (
               <>
-                <Text style={styles.sectionTitle}>History</Text>
+                <Text style={styles.sectionTitle}>{t('History')}</Text>
                 {history.map((s) => (
                   <View key={s.id} style={[styles.card, styles.cardMuted]}>
                     <Text style={styles.name}>{s.professionalName}</Text>
                     <Text style={styles.meta}>
                       {s.scopes.map(scopeLabel).join(', ')} · {formatDate(s.createdAt)} →{' '}
-                      {s.revokedAt ? `revoked ${formatDate(s.revokedAt)}` : `expired ${formatDate(s.expiresAt!)}`}
+                      {s.revokedAt ? t('revoked {date}', { date: formatDate(s.revokedAt) }) : t('expired {date}', { date: formatDate(s.expiresAt!) })}
                     </Text>
                   </View>
                 ))}

@@ -7,12 +7,16 @@ import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
-import { CATALOG, CatalogTest, formatPrice, PLANS, testIcon } from '@/data/testCatalog';
+import { CATALOG, CatalogTest, formatPrice, localizeTest, PLANS, testIcon } from '@/data/testCatalog';
+import { t } from '@/i18n';
 import { getOrderStatus, startCheckout } from '@/data/orders';
 
 type Stage = 'review' | 'starting' | 'simulated' | 'confirming' | 'paid' | 'pending' | 'cancelled' | 'error';
 
-const findProduct = (id?: string): CatalogTest | undefined => [...PLANS, ...CATALOG].find((t) => t.id === id);
+const findProduct = (id?: string): CatalogTest | undefined => {
+  const p = [...PLANS, ...CATALOG].find((x) => x.id === id);
+  return p && localizeTest(p);
+};
 
 // Pago de un test o plan. Con Revolut configurado abre su página de pago segura (la app
 // nunca ve la tarjeta) y espera a que el webhook confirme el cobro. Sin Revolut (o en
@@ -57,7 +61,7 @@ export const CheckoutScreen = () => {
         await confirm(queryParams.order_id);
       } else setStage('cancelled');
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Something went wrong');
+      setMessage(e instanceof Error ? e.message : t('Something went wrong'));
       setStage('error');
     }
   };
@@ -65,8 +69,8 @@ export const CheckoutScreen = () => {
   if (!product && stage === 'review') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title="Checkout" showBack />
-        <Text style={styles.body}>This product is not available.</Text>
+        <ScreenHeader title={t('Checkout')} showBack />
+        <Text style={styles.body}>{t('This product is not available.')}</Text>
       </SafeAreaView>
     );
   }
@@ -77,7 +81,7 @@ export const CheckoutScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Checkout" showBack />
+        <ScreenHeader title={t('Checkout')} showBack />
 
         {product && !done && (
           <View style={styles.card}>
@@ -87,7 +91,7 @@ export const CheckoutScreen = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{product.name}</Text>
-                <Text style={styles.small}>{product.perYear ? 'Annual subscription · renews every year' : 'One-off payment'}</Text>
+                <Text style={styles.small}>{product.perYear ? t('Annual subscription · renews every year') : t('One-off payment')}</Text>
               </View>
             </View>
             {product.includes.map((i) => (
@@ -97,10 +101,10 @@ export const CheckoutScreen = () => {
               </View>
             ))}
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>{t('Total')}</Text>
               <Text style={styles.total}>
                 {formatPrice(product.price)}
-                {product.perYear ? <Text style={styles.small}> /year</Text> : null}
+                {product.perYear ? <Text style={styles.small}> {t('/year')}</Text> : null}
               </Text>
             </View>
           </View>
@@ -110,23 +114,22 @@ export const CheckoutScreen = () => {
           <View style={styles.secure}>
             <Ionicons name="lock-closed" size={14} color={Colors.textSecondary} />
             <Text style={styles.small}>
-              You'll pay on Revolut's secure page (card, Apple Pay, Google Pay or Revolut Pay). Kuova never sees or stores your card details.
+              {t("You'll pay on Revolut's secure page (card, Apple Pay, Google Pay or Revolut Pay). Kuova never sees or stores your card details.")}
             </Text>
           </View>
         ) : null}
 
         {isSimulation && (
           <View style={[styles.card, styles.simCard]}>
-            <Text style={styles.simTitle}>Payment simulation</Text>
+            <Text style={styles.simTitle}>{t('Payment simulation')}</Text>
             <Text style={styles.body}>
-              Payments aren't switched on yet, so this is where Revolut's secure payment page will open. Nothing will be
-              charged.
+              {t("Payments aren't switched on yet, so this is where Revolut's secure payment page will open. Nothing will be charged.")}
             </Text>
             <TouchableOpacity style={styles.cta} onPress={() => setStage('paid')}>
-              <Text style={styles.ctaText}>Simulate successful payment</Text>
+              <Text style={styles.ctaText}>{t('Simulate successful payment')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setStage('cancelled')}>
-              <Text style={styles.link}>Simulate cancelled payment</Text>
+              <Text style={styles.link}>{t('Simulate cancelled payment')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -134,7 +137,7 @@ export const CheckoutScreen = () => {
         {stage === 'confirming' && (
           <View style={styles.result}>
             <ActivityIndicator color={Colors.accent} />
-            <Text style={styles.body}>Confirming your payment…</Text>
+            <Text style={styles.body}>{t('Confirming your payment…')}</Text>
           </View>
         )}
 
@@ -150,23 +153,23 @@ export const CheckoutScreen = () => {
             <Text style={styles.resultTitle}>
               {stage === 'paid'
                 ? product?.perYear
-                  ? 'Welcome to Kuova!'
-                  : 'Order confirmed'
+                  ? t('Welcome to Kuova!')
+                  : t('Order confirmed')
                 : stage === 'pending'
-                  ? 'Payment received'
+                  ? t('Payment received')
                   : stage === 'cancelled'
-                    ? 'Payment cancelled'
-                    : 'Payment failed'}
+                    ? t('Payment cancelled')
+                    : t('Payment failed')}
             </Text>
             <Text style={[styles.body, { textAlign: 'center' }]}>
               {stage === 'paid'
                 ? simulated
-                  ? 'Simulated payment: nothing was charged and no order was created.'
-                  : "We'll send your first kit or book your appointment in the next few days."
+                  ? t('Simulated payment: nothing was charged and no order was created.')
+                  : t("We'll send your first kit or book your appointment in the next few days.")
                 : stage === 'pending'
-                  ? "We're waiting for the bank's confirmation. It will show up in the app in a few minutes."
+                  ? t("We're waiting for the bank's confirmation. It will show up in the app in a few minutes.")
                   : stage === 'cancelled'
-                    ? 'Nothing was charged. You can try again whenever you like.'
+                    ? t('Nothing was charged. You can try again whenever you like.')
                     : message}
             </Text>
           </View>
@@ -178,7 +181,7 @@ export const CheckoutScreen = () => {
           {stage === 'starting' ? (
             <ActivityIndicator color={Colors.background} />
           ) : (
-            <Text style={styles.ctaText}>Pay {formatPrice(product.price)}</Text>
+            <Text style={styles.ctaText}>{t('Pay {price}', { price: formatPrice(product.price) })}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -187,7 +190,7 @@ export const CheckoutScreen = () => {
           style={styles.bottomCta}
           onPress={() => (stage === 'cancelled' || stage === 'error' ? setStage('review') : router.back())}
         >
-          <Text style={styles.ctaText}>{stage === 'cancelled' || stage === 'error' ? 'Try again' : 'Done'}</Text>
+          <Text style={styles.ctaText}>{stage === 'cancelled' || stage === 'error' ? t('Try again') : t('Done')}</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

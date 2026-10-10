@@ -3,12 +3,12 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
-import { formatPrice, PLANS, testIcon } from '@/data/testCatalog';
+import { formatPrice, localizeTest, PLANS, testIcon } from '@/data/testCatalog';
 import { getMySubscription, MySubscription } from '@/data/orders';
 import { mockNextTestDate } from '@/data/mockData';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { dateLocale, t } from '@/i18n';
 
-import { dateLocale } from '@/i18n';
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -31,16 +31,16 @@ export const SubscriptionCard = () => {
   if (!sub) {
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>No active subscription</Text>
-        <Text style={styles.text}>Join to get two full blood tests a year, a doctor's review and your personalised plan.</Text>
-        <TouchableOpacity style={styles.cta} onPress={() => router.push('/store')}>
-          <Text style={styles.ctaText}>See subscriptions</Text>
+        <Text style={styles.title}>{t('No active subscription')}</Text>
+        <Text style={styles.text}>{t("Join to get two full blood tests a year, a doctor's review and your personalised plan.")}</Text>
+        <TouchableOpacity style={styles.cta} onPress={() => router.push('/compare-plans')}>
+          <Text style={styles.ctaText}>{t('See subscriptions')}</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const plan = PLANS.find((p) => p.id === sub.productId)!;
+  const plan = localizeTest(PLANS.find((p) => p.id === sub.productId)!);
   const isPremium = sub.productId === 'premium';
 
   return (
@@ -52,29 +52,29 @@ export const SubscriptionCard = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{plan.name}</Text>
           <Text style={styles.text}>
-            {formatPrice(plan.price)} / year · {isPremium ? 'test every 3 months' : 'test every 6 months'}
-            {sub.sample ? ' · sample' : ''}
+            {formatPrice(plan.price)} {t('/ year')} · {isPremium ? t('test every 3 months') : t('test every 6 months')}
+            {sub.sample ? ` · ${t('sample')}` : ''}
           </Text>
         </View>
         <View style={styles.active}>
-          <Text style={styles.activeText}>Active</Text>
+          <Text style={styles.activeText}>{t('Active')}</Text>
         </View>
       </View>
 
       <View style={styles.rows}>
-        {sub.since && <Row icon="calendar-outline" label="Member since" value={longDate(sub.since)} />}
-        {sub.renewsOn && <Row icon="refresh-outline" label="Renews on" value={longDate(sub.renewsOn)} />}
-        <Row icon="flask-outline" label="Next blood test" value={longDate(mockNextTestDate)} />
+        {sub.since && <Row icon="calendar-outline" label={t('Member since')} value={longDate(sub.since)} />}
+        {sub.renewsOn && <Row icon="refresh-outline" label={t('Renews on')} value={longDate(sub.renewsOn)} />}
+        <Row icon="flask-outline" label={t('Next blood test')} value={longDate(mockNextTestDate)} />
       </View>
 
       <View style={styles.actions}>
         {!isPremium && (
           <TouchableOpacity style={styles.cta} onPress={() => router.push({ pathname: '/checkout', params: { id: 'premium' } })}>
-            <Text style={styles.ctaText}>Upgrade to Premium</Text>
+            <Text style={styles.ctaText}>{t('Upgrade to Premium')}</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity style={styles.secondary} onPress={() => router.push('/store')}>
-          <Text style={styles.secondaryText}>Compare subscriptions</Text>
+        <TouchableOpacity style={styles.secondary} onPress={() => router.push('/compare-plans')}>
+          <Text style={styles.secondaryText}>{t('Compare subscriptions')}</Text>
         </TouchableOpacity>
       </View>
     </View>

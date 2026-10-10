@@ -2,6 +2,7 @@ import { bowelObservations, urineObservations } from '@/logic/bathroom';
 import { fertilityAdvice } from '@/logic/fertility';
 import { dosesForDay, isReminderMuted } from '@/logic/medication';
 import { NudgeCheck, NudgeContext, NudgeRule } from './types';
+import { t } from '@/i18n';
 
 // Reglas de los avisos. Para cambiar un umbral, un texto o el tiempo mínimo entre avisos, se
 // toca aquí: la app, el simulador (npm run simulate) y los tests leen esta misma tabla.
@@ -134,7 +135,7 @@ export function shortSleepStreak(ctx: NudgeContext) {
   return { weeks, avg: r.length ? Math.round(mean(r.map((n) => n.minutes))) : 0 };
 }
 
-const weeksText = (w: number) => (w === 1 ? 'this week' : `for ${w} weeks`);
+const weeksText = (w: number) => (w === 1 ? t('this week') : t('for {n} weeks', { n: w }));
 const hm = (min: number) => `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')} min`;
 
 export const NUDGE_RULES: NudgeRule[] = [
@@ -156,8 +157,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `${top.systolic}/${top.diastolic} mmHg in the last 24 h (${systolic}/${diastolic} or above)`,
-        title: 'Very high blood pressure reading',
-        body: 'Sit and rest for 5 minutes, then measure again. If it stays this high, call your doctor today. With chest pain, shortness of breath, weakness or trouble speaking, call 112.',
+        title: t('Very high blood pressure reading'),
+        body: t('Sit and rest for 5 minutes, then measure again. If it stays this high, call your doctor today. With chest pain, shortness of breath, weakness or trouble speaking, call 112.'),
         route: '/blood-pressure-detail',
       };
     },
@@ -176,10 +177,10 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `Home average ${s.sys}/${s.dia} mmHg over ${s.readings} readings, high ${s.weeks} week(s) in a row`,
-        title: doctor ? `High blood pressure for ${s.weeks} weeks` : 'Your blood pressure is running high',
+        title: doctor ? t('High blood pressure for {n} weeks', { n: s.weeks }) : t('Your blood pressure is running high'),
         body: doctor
-          ? `Your home readings have stayed above ${systolic}/${diastolic} for ${s.weeks} weeks (average ${s.sys}/${s.dia}). Book a check with your doctor and bring your readings.`
-          : `Your home readings average ${s.sys}/${s.dia} mmHg ${weeksText(s.weeks)}. Measure twice in the morning and twice in the evening for 7 days so your doctor can see the full picture.`,
+          ? t('Your home readings have stayed above {limit} for {n} weeks (average {avg}). Book a check with your doctor and bring your readings.', { limit: `${systolic}/${diastolic}`, n: s.weeks, avg: `${s.sys}/${s.dia}` })
+          : t('Your home readings average {avg} mmHg {when}. Measure twice in the morning and twice in the evening for 7 days so your doctor can see the full picture.', { avg: `${s.sys}/${s.dia}`, when: weeksText(s.weeks) }),
         route: '/blood-pressure-detail',
       };
     },
@@ -222,8 +223,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `${missed.length} dose(s) today not marked (first: ${first.name} at ${hhmm})`,
-        title: missed.length === 1 ? `Did you take your ${first.name}?` : `${missed.length} doses not marked today`,
-        body: `It was due at ${hhmm}. Mark it as taken or skipped so your record stays right.`,
+        title: missed.length === 1 ? t('Did you take your {name}?', { name: first.name }) : t('{n} doses not marked today', { n: missed.length }),
+        body: t('It was due at {time}. Mark it as taken or skipped so your record stays right.', { time: hhmm }),
         route: '/medications',
       };
     },
@@ -241,8 +242,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `${recent[0].color} logged ${daysSince(recent[0].fecha, ctx.now)} day(s) ago, not explained`,
-        title: 'About the colour you logged',
-        body: 'One quick question can tell us if it was something you ate.',
+        title: t('About the colour you logged'),
+        body: t('One quick question can tell us if it was something you ate.'),
         route: '/digestive',
       };
     },
@@ -265,10 +266,10 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `${late} days past the expected start (cycle ~${median} days)`,
-        title: `Your period is ${late} days late`,
+        title: t('Your period is {n} days late', { n: late }),
         body: conceive
-          ? 'If you have been trying, a pregnancy test now can give you an answer.'
-          : 'Stress, travel and illness can delay it. Log it when it comes.',
+          ? t('If you have been trying, a pregnancy test now can give you an answer.')
+          : t('Stress, travel and illness can delay it. Log it when it comes.'),
         route: '/cycle-detail',
       };
     },
@@ -285,8 +286,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `${dark} of the last 3 days dark or amber`,
-        title: 'Your urine has been dark',
-        body: 'Have a glass of water now and keep a bottle nearby today.',
+        title: t('Your urine has been dark'),
+        body: t('Probably worth drinking a bit more: a bottle nearby today usually helps.'),
         route: '/digestive',
       };
     },
@@ -304,8 +305,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: 'Logged no bowel movement today, yesterday and the day before',
-        title: 'No bowel movement for 3 days',
-        body: 'Water, fibre and moving every day usually help. We have a couple of questions for you.',
+        title: t('No bowel movement for 3 days'),
+        body: t('Water, fibre and moving every day usually help. We have a couple of questions for you.'),
         route: '/digestive',
       };
     },
@@ -324,10 +325,10 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `${s.high} readings at ${limit} mg/dL or more, ${s.weeks} week(s) in a row`,
-        title: doctor ? `High glucose for ${s.weeks} weeks` : 'Several high glucose readings',
+        title: doctor ? t('High glucose for {n} weeks', { n: s.weeks }) : t('Several high glucose readings'),
         body: doctor
-          ? `Your readings have often been above ${limit} mg/dL for ${s.weeks} weeks. Book a visit with your doctor: an HbA1c blood test shows your average over the last months.`
-          : `${s.high} readings above ${limit} mg/dL ${weeksText(s.weeks)}. Note what you ate and when you measured: it helps to read them.`,
+          ? t('Your readings have often been above {limit} mg/dL for {n} weeks. Book a visit with your doctor: an HbA1c blood test shows your average over the last months.', { limit, n: s.weeks })
+          : t('{count} readings above {limit} mg/dL {when}. Note what you ate and when you measured: it helps to read them.', { count: s.high, limit, when: weeksText(s.weeks) }),
         route: '/glucose-detail',
       };
     },
@@ -344,10 +345,10 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `Half or more of check-in days at 2/5 or lower, ${weeks} weeks in a row`,
-        title: `Low energy for ${weeks} weeks`,
+        title: t('Low energy for {n} weeks', { n: weeks }),
         body: doctor
-          ? 'This has lasted a while. Book a visit with your doctor: a blood test can rule out common causes such as low iron or a thyroid problem.'
-          : 'Most of your recent check-ins show low energy. Sleep, stress and food all play a part, and a professional can help you find out what is behind it.',
+          ? t('This has lasted a while. Book a visit with your doctor: a blood test can rule out common causes such as low iron or a thyroid problem.')
+          : t('Most of your recent check-ins show low energy. Sleep, stress and food all play a part, and a professional can help you find out what is behind it.'),
         route: '/professionals',
       };
     },
@@ -364,10 +365,10 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `Average ${hm(avg)} a night, under 6 h ${weeks} weeks in a row`,
-        title: `Short sleep for ${weeks} weeks`,
+        title: t('Short sleep for {n} weeks', { n: weeks }),
         body: doctor
-          ? `You have averaged ${hm(avg)} a night for ${weeks} weeks. If you sleep badly despite trying, talk to a professional: months of short sleep affect energy, mood and blood sugar.`
-          : `You have averaged ${hm(avg)} a night. Most adults need 7 hours or more: try moving your bedtime 20 minutes earlier this week.`,
+          ? t('You have averaged {time} a night for {n} weeks. If you sleep badly despite trying, talk to a professional: months of short sleep affect energy, mood and blood sugar.', { time: hm(avg), n: weeks })
+          : t('You have averaged {time} a night. Most adults need 7 hours or more: try moving your bedtime 20 minutes earlier this week.', { time: hm(avg) }),
         route: '/metric?kind=sleep_duration',
       };
     },
@@ -390,8 +391,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: 'Energy 2/5 or lower in check-ins on 3 days in a row',
-        title: 'Three low-energy days in a row',
-        body: 'Sleep, stress and food all play a part. A short breathing session may help, or talk it through with a specialist.',
+        title: t('Three low-energy days in a row'),
+        body: t('Sleep, stress and food all play a part. A short breathing session may help, or talk it through with a specialist.'),
         route: '/professionals',
       };
     },
@@ -415,8 +416,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: 'Under 6 hours of sleep 3 nights in a row',
-        title: 'Short nights lately',
-        body: 'Three nights under 6 hours. An earlier wind-down tonight could help your energy tomorrow.',
+        title: t('Short nights lately'),
+        body: t('Three nights under 6 hours. An earlier wind-down tonight could help your energy tomorrow.'),
         route: '/metric?kind=sleep_duration',
       };
     },
@@ -439,8 +440,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: last ? `No temperature for ${since} days` : 'Switched on but never logged',
-        title: 'Log your morning temperature',
-        body: 'Take it before getting up, at the same time each day. It helps us confirm when you ovulate.',
+        title: t('Log your morning temperature'),
+        body: t('Take it before getting up, at the same time each day. It helps us confirm when you ovulate.'),
         route: '/log-temperature',
       };
     },
@@ -462,8 +463,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `${weekBowel} gut and ${weekUrine} bladder day(s) logged this week`,
-        title: 'Your weekly gut and bladder summary',
-        body: first ? `${first.title}. Tap to see what we noticed.` : 'Everything looks regular this week.',
+        title: t('Your weekly gut and bladder summary'),
+        body: first ? t('{what}. Tap to see what we noticed.', { what: first.title }) : t('Everything looks regular this week.'),
         route: '/digestive',
       };
     },
@@ -487,8 +488,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `Checked in on ${habitDays} of 10 days, then nothing for ${since} days`,
-        title: 'How have you been?',
-        body: 'You were checking in regularly. 30 seconds keeps your trends going.',
+        title: t('How have you been?'),
+        body: t('You were checking in regularly. 30 seconds keeps your trends going.'),
         route: '/check-in',
       };
     },
@@ -515,8 +516,8 @@ export const NUDGE_RULES: NudgeRule[] = [
       return {
         due: true,
         reason: `No records of any kind for ${since} days`,
-        title: 'We have not heard from you in a while',
-        body: 'A 30-second check-in keeps your trends and your plan useful.',
+        title: t('We have not heard from you in a while'),
+        body: t('A 30-second check-in keeps your trends and your plan useful.'),
         route: '/check-in',
       };
     },

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { ProgressRing } from '@/components/ProgressRing';
 import { TrendChart } from '@/components/TrendChart';
@@ -11,12 +10,13 @@ import { currentCyclePhase } from '@/utils/cyclePhase';
 import { AppSection } from '@/data/appPrefs';
 import { GaugeBar } from '@/components/GaugeBar';
 import { URINE_COLORS } from '@/types/bathroom';
+import { t } from '@/i18n';
 
 // Vista previa de cada parte de la app (con datos de ejemplo), para que se vea cómo quedará antes
 // de encenderla. Usa los mismos componentes que la pantalla real cuando se puede.
 export const FeaturePreview = ({ section }: { section: AppSection }) => (
   <View style={styles.frame}>
-    <Text style={styles.tag}>Preview</Text>
+    <Text style={styles.tag}>{t('Preview')}</Text>
     {previews()[section]}
   </View>
 );
@@ -51,44 +51,50 @@ const Pill = ({ text }: { text: string }) => (
 const previews = (): Record<AppSection, React.ReactNode> => ({
   plan: (
     <View style={{ gap: 10 }}>
-      <Bar label="Hit 3 days of strength training" value={0.66} color={Colors.coral} />
-      <Bar label="Walk 8,000 steps a day" value={0.85} color={Colors.sky} />
-      <Bar label="Reduce added sugar" value={0.4} color={Colors.amber} />
+      <Bar label={t('Hit 3 days of strength training')} value={0.66} color={Colors.coral} />
+      <Bar label={t('Walk 8,000 steps a day')} value={0.85} color={Colors.sky} />
+      <Bar label={t('Reduce added sugar')} value={0.4} color={Colors.amber} />
     </View>
   ),
+  // Igual que la tarjeta de Hoy (círculo dorado con la carita) y la escala del check-in real
   checkin: (
-    <Row
-      icon={
-        <Svg width={36} height={36}>
-          <Defs>
-            <RadialGradient id="pv-orb" cx="34%" cy="28%" r="78%">
-              <Stop offset="0" stopColor="#F3E2B8" />
-              <Stop offset="0.25" stopColor={Colors.gold} />
-              <Stop offset="0.6" stopColor={Colors.green} />
-              <Stop offset="1" stopColor="#0E2A24" />
-            </RadialGradient>
-          </Defs>
-          <Circle cx={18} cy={18} r={17} fill="url(#pv-orb)" />
-        </Svg>
-      }
-      title="How are you feeling?"
-      sub="🤩 Excited · 😊 Happy · 😌 Calm · 😔 Sad"
-      right={<Pill text="Check in" />}
-    />
+    <View style={{ gap: 12 }}>
+      <Row
+        icon={
+          <View style={styles.orb}>
+            <Ionicons name="happy-outline" size={22} color={Colors.isLight ? '#FFFFFF' : '#0E2A24'} />
+          </View>
+        }
+        title={t('How are you feeling?')}
+        sub={`${t('Last check-in {ago}', { ago: t('{n} h ago', { n: 2 }) })} · 😊 ${t('Happy')}`}
+        right={<Pill text={t('Check in')} />}
+      />
+      <View style={{ gap: 6 }}>
+        <Text style={styles.rowTitle}>{t("How's your energy level?")}</Text>
+        <View style={styles.levelRow}>
+          {['Drained', 'Low', 'OK', 'Good', 'Full'].map((label, i) => (
+            <View key={label} style={styles.levelItem}>
+              <View style={[styles.levelBar, { height: 10 + i * 7 }, i <= 3 && { backgroundColor: Colors.accent, opacity: 0.45 + i * 0.13 }]} />
+              <Text style={[styles.levelLabel, i === 3 && styles.levelLabelOn]}>{t(label)}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
   ),
   readiness: (
     <View style={{ alignItems: 'center' }}>
       <ProgressRing size={96} strokeWidth={9} progress={0.72} color={Colors.green} gradient={[Colors.coral, Colors.gold, Colors.green]}>
         <Text style={styles.big}>72</Text>
       </ProgressRing>
-      <Text style={styles.rowSub}>Ready for a normal day</Text>
+      <Text style={styles.rowSub}>{t('Ready for a normal day')}</Text>
     </View>
   ),
   wearables: (
     <TrendChart
       height={70}
-      labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']}
-      series={[{ label: 'Sleep (h)', color: Colors.violet, values: [7.1, 6.4, 7.8, 6.9, 7.3, 8.1, 7.6] }]}
+      labels={['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => t(d))}
+      series={[{ label: t('Sleep (h)'), color: Colors.violet, values: [7.1, 6.4, 7.8, 6.9, 7.3, 8.1, 7.6] }]}
       formatY={(v) => v.toFixed(0)}
     />
   ),
@@ -109,8 +115,8 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
       </View>
       <Row
         icon={<Ionicons name="checkmark-circle" size={18} color={Colors.ok} />}
-        title="Your digestion looks regular"
-        sub="Frequency, colour and consistency are within the usual range."
+        title={t('Your digestion looks regular')}
+        sub={t('Frequency, colour and consistency are within the usual range.')}
       />
     </View>
   ),
@@ -128,13 +134,13 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
         max={4}
         value={1}
         stops={URINE_COLORS.slice(0, 5).map((c, i) => ({ at: i, color: c.swatch }))}
-        leftLabel="Hydrated"
-        rightLabel="Drink more"
+        leftLabel={t('Hydrated')}
+        rightLabel={t('Drink more')}
       />
       <Row
         icon={<Ionicons name="water" size={18} color={Colors.ok} />}
-        title="Well hydrated this week"
-        sub="One darker day: you got a tip to drink a bit more."
+        title={t('Well hydrated this week')}
+        sub={t('One darker day: you got a tip to drink a bit more.')}
       />
     </View>
   ),
@@ -142,15 +148,15 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
     <View style={{ gap: 8 }}>
       <Row
         icon={<Ionicons name="medical-outline" size={16} color={Colors.gold} />}
-        title="07:30 · Levothyroxine"
-        sub="50 µg · empty stomach"
+        title={`07:30 · ${t('Levothyroxine')}`}
+        sub={`50 µg · ${t('empty stomach')}`}
         right={<Ionicons name="checkmark-circle" size={18} color={Colors.ok} />}
       />
       <Row
         icon={<Ionicons name="leaf-outline" size={16} color={Colors.green} />}
-        title="21:30 · Magnesium"
+        title={`21:30 · ${t('Magnesium')}`}
         sub="300 mg"
-        right={<Pill text="Taken" />}
+        right={<Pill text={t('Taken')} />}
       />
     </View>
   ),
@@ -166,15 +172,15 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
   specialists: (
     <Row
       icon={<Ionicons name="medkit-outline" size={16} color={Colors.accent} />}
-      title="Talk to a dietitian"
-      sub="Your ferritin is low: a dietitian can help with iron-rich meals."
+      title={t('Talk to a dietitian')}
+      sub={t('Your ferritin is low: a dietitian can help with iron-rich meals.')}
     />
   ),
   learning: (
     <Row
       icon={<MaterialCommunityIcons name="book-open-variant" size={16} color={Colors.accent} />}
-      title="What is HbA1c?"
-      sub="Your average blood sugar over about 3 months. 3 min read"
+      title={t('What is HbA1c?')}
+      sub={t('Your average blood sugar over about 3 months. 3 min read')}
     />
   ),
 });
@@ -218,5 +224,11 @@ const styles = StyleSheet.create({
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   dotText: { color: Colors.textPrimary, fontSize: 11, fontWeight: '800' },
   shapes: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
+  orb: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.gold, alignItems: 'center', justifyContent: 'center' },
+  levelRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
+  levelItem: { flex: 1, alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
+  levelBar: { width: '100%', borderRadius: 6, backgroundColor: Colors.divider },
+  levelLabel: { color: Colors.textMuted, fontSize: 10, fontWeight: '600' },
+  levelLabelOn: { color: Colors.textPrimary, fontWeight: '800' },
   badge: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
 });

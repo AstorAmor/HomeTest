@@ -5,6 +5,9 @@
 // supabase/functions/_shared/products.ts (el servidor cobra con esa tabla, nunca
 // con el precio que envía la app). `npm run check:prices` compara ambas.
 
+import { getLang } from '@/i18n';
+import { CATEGORY_LABEL_ES, DELIVERY_ES, SAMPLE_ES, TEST_COPY_ES } from '@/i18n/testCatalogEs';
+
 export type TestCategory = 'membership' | 'blood' | 'hormonal' | 'preventive' | 'digestive' | 'sexual' | 'consultation';
 
 export const CATEGORY_LABEL: Record<TestCategory, string> = {
@@ -127,4 +130,36 @@ export const CATALOG: CatalogTest[] = [
   { id: 'consult_sti', category: 'consultation', name: 'STI medical consultation', price: 50, description: 'Online review of STI results. If you need treatment, the doctor explains the next steps.', includes: ['Video consultation', 'Next steps if you need treatment'], sample: '—', delivery: CONSULT_DELIVERY, block: 3, discreet: true },
 ];
 
-export const formatPrice = (p: number) => `€${p.toFixed(2).replace(/\.00$/, '')}`;
+// Precio en el formato del idioma: €124.99 en inglés, 124,99 € en español.
+export const formatPrice = (p: number) => {
+  const n = p.toFixed(2).replace(/\.00$/, '');
+  return getLang() === 'en' ? `€${n}` : `${n.replace('.', ',')} €`;
+};
+
+export const categoryLabel = (c: TestCategory) => (getLang() === 'es' ? CATEGORY_LABEL_ES[c] : CATEGORY_LABEL[c]);
+
+const PLAN_DELIVERY = 'First kit or appointment within 7 days of joining';
+const DISCREET = 'Discreet packaging · ';
+const DELIVERY_TO_ES: Record<string, string> = {
+  [BLOOD_DELIVERY]: DELIVERY_ES.blood,
+  [BREATH_DELIVERY]: DELIVERY_ES.breath,
+  [CONSULT_DELIVERY]: DELIVERY_ES.consult,
+  [PLAN_DELIVERY]: DELIVERY_ES.plan,
+};
+const deliveryEs = (d: string) =>
+  d.startsWith(DISCREET) ? `${DELIVERY_ES.discreet} · ${DELIVERY_TO_ES[d.slice(DISCREET.length)] ?? d.slice(DISCREET.length)}` : DELIVERY_TO_ES[d] ?? d;
+
+// El producto con sus textos en el idioma de la app (los datos de arriba están en inglés).
+export function localizeTest(test: CatalogTest): CatalogTest {
+  if (getLang() !== 'es') return test;
+  const es = TEST_COPY_ES[test.id];
+  if (!es) return test;
+  return {
+    ...test,
+    name: es.name,
+    description: es.description,
+    includes: es.includes,
+    sample: es.sample ?? SAMPLE_ES[test.sample] ?? test.sample,
+    delivery: es.delivery ?? deliveryEs(test.delivery),
+  };
+}

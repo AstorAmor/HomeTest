@@ -58,7 +58,7 @@ const ShipmentCard = ({ shipment, demo }: { shipment: Shipment; demo?: boolean }
               </Text>
               {step.detail ? <Text style={styles.stepDetail}>{t(step.detail)}</Text> : null}
             </View>
-            {step.date ? <Text style={styles.stepDate}>{step.date}</Text> : null}
+            {step.date ? <Text style={styles.stepDate}>{t(step.date)}</Text> : null}
           </View>
         ))}
       </View>

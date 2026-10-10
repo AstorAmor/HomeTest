@@ -65,7 +65,7 @@ export const LabScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Lab')} />
 
-        <Text style={styles.sectionTitle}>Upcoming Analysis</Text>
+        <Text style={styles.sectionTitle}>{t('Upcoming Analysis')}</Text>
         <View style={styles.sectionBlock}>
           {mockUpcomingAnalyses.map((item) => (
             <TouchableOpacity
@@ -88,7 +88,7 @@ export const LabScreen = () => {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Lab Results</Text>
+        <Text style={styles.sectionTitle}>{t('Lab Results')}</Text>
         <View style={styles.sectionBlock}>
           {LAB_REPORTS.map(({ id, title, lab, report }) => {
             const counts = reportCounts(report);
@@ -111,9 +111,9 @@ export const LabScreen = () => {
                       <Text style={styles.resultLab}> · {lab}</Text>
                     </Text>
                     <Text style={styles.resultCounts}>
-                      <Text style={{ color: Colors.ok }}>{counts.inRange} in range</Text>
+                      <Text style={{ color: Colors.ok }}>{t('{n} in range', { n: counts.inRange })}</Text>
                       {'  ·  '}
-                      <Text style={{ color: Colors.attention }}>{counts.needsReview} need a look</Text>
+                      <Text style={{ color: Colors.attention }}>{t('{n} need a look', { n: counts.needsReview })}</Text>
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
@@ -161,15 +161,15 @@ export const LabScreen = () => {
                     ]}
                   />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.resultName}>Uploaded analysis</Text>
+                    <Text style={styles.resultName}>{t('Uploaded analysis')}</Text>
                     <Text style={styles.resultDate}>
                       {u.testDate ? formatReportDate(u.testDate) : formatReportDate(u.createdAt.slice(0, 10))}
                       <Text style={styles.resultLab}> · User upload{u.labName ? ` · ${u.labName}` : ''}</Text>
                     </Text>
                     <Text style={styles.resultCounts}>
-                      <Text style={{ color: Colors.ok }}>{c.inRange} in range</Text>
+                      <Text style={{ color: Colors.ok }}>{t('{n} in range', { n: c.inRange })}</Text>
                       {'  ·  '}
-                      <Text style={{ color: Colors.attention }}>{c.out} need a look</Text>
+                      <Text style={{ color: Colors.attention }}>{t('{n} need a look', { n: c.out })}</Text>
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
@@ -203,13 +203,13 @@ export const LabScreen = () => {
 
         <TouchableOpacity style={styles.requestButton} onPress={() => router.push('/store')}>
           <Ionicons name="flask-outline" size={20} color={Colors.background} />
-          <Text style={styles.requestButtonText}>Request a new test</Text>
+          <Text style={styles.requestButtonText}>{t('Request a new test')}</Text>
         </TouchableOpacity>
 
 
         <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
           <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
-          <Text style={styles.uploadButtonText}>Upload lab report (test)</Text>
+          <Text style={styles.uploadButtonText}>{t('Upload lab report (test)')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

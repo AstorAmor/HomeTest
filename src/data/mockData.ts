@@ -1,4 +1,5 @@
 import { Patient } from '@/types';
+import { t } from '@/i18n';
 
 export const mockPatient: Patient = {
   id: 'patient-001',
@@ -95,38 +96,41 @@ export interface UpcomingAnalysis {
   markerGroups: UpcomingMarkerGroup[];
 }
 
+// Primera letra en mayúscula (algunas traducciones se usan también a mitad de frase)
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export const mockUpcomingAnalyses: UpcomingAnalysis[] = [
   {
     id: 'up-1',
-    nombre: 'Blood Analysis',
-    descripcion: 'Glucose, Insulin, Lipid Profile...',
+    nombre: cap(t('Blood Analysis')),
+    descripcion: t('Glucose, Insulin, Lipid Profile...'),
     fecha: '2026-10-10',
     timeSlot: '08:00 – 10:00',
-    sampleType: 'At-home blood collection kit',
+    sampleType: t('At-home blood collection kit'),
     preparation: [
-      'Fast for 8 hours (water is fine)',
-      'Avoid intense exercise the day before',
-      'Take the sample before 10:00',
+      t('Fast for 8 hours (water is fine)'),
+      t('Avoid intense exercise the day before'),
+      t('Take the sample before 10:00'),
     ],
     markerGroups: [
-      { category: 'Metabolic', markers: ['Glucose', 'HbA1c', 'Insulin', 'HOMA-IR'] },
-      { category: 'Lipids', markers: ['Total cholesterol', 'LDL', 'HDL', 'Triglycerides', 'ApoB'] },
-      { category: 'Liver', markers: ['ALT', 'AST', 'GGT'] },
-      { category: 'Kidney', markers: ['Creatinine', 'eGFR'] },
-      { category: 'Thyroid', markers: ['TSH', 'Free T4'] },
-      { category: 'Inflammation', markers: ['hs-CRP'] },
-      { category: 'Vitamins & iron', markers: ['Vitamin D', 'Vitamin B12', 'Ferritin'] },
+      { category: t('Metabolic'), markers: [t('Glucose'), t('HbA1c'), t('Insulin'), t('HOMA-IR')] },
+      { category: t('Lipids'), markers: [t('Total cholesterol'), t('LDL'), t('HDL'), t('Triglycerides'), t('ApoB')] },
+      { category: t('Liver'), markers: [t('ALT'), t('AST'), t('GGT')] },
+      { category: t('Kidney'), markers: [t('Creatinine'), t('eGFR')] },
+      { category: t('Thyroid'), markers: [t('TSH'), t('Free T4')] },
+      { category: t('Inflammation'), markers: [t('hs-CRP')] },
+      { category: t('Vitamins & iron'), markers: [t('Vitamin D'), t('Vitamin B12'), t('Ferritin')] },
     ],
   },
   {
     id: 'up-2',
-    nombre: 'Diagnostic Test',
-    descripcion: 'FOBT...',
+    nombre: t('Diagnostic Test'),
+    descripcion: t('FOBT...'),
     fecha: '2026-10-17',
-    timeSlot: 'Any time',
-    sampleType: 'Stool sample kit',
-    preparation: ['Follow the kit instructions', 'Send it back within 24 hours'],
-    markerGroups: [{ category: 'Colorectal screening', markers: ['Faecal occult blood (FOBT)'] }],
+    timeSlot: t('Any time'),
+    sampleType: t('Stool sample kit'),
+    preparation: [t('Follow the kit instructions'), t('Send it back within 24 hours')],
+    markerGroups: [{ category: t('Colorectal screening'), markers: [t('Faecal occult blood (FOBT)')] }],
   },
 ];
 

@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_OPTIONS, Mood } from '@/types/checkIn';
 import { checkInRepository, checkInSuggestions, suggestMoment, Suggestion } from '@/data/checkInRepository';
+import { t } from '@/i18n';
 
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
 type ScaleId = Exclude<QuestionId, 'mood'>;
@@ -41,7 +42,7 @@ const LevelScale = ({ value, onChange, labels }: { value?: number; onChange: (v:
               ]}
             />
           </View>
-          <Text style={[styles.levelLabel, selected && styles.levelLabelSelected]}>{label}</Text>
+          <Text style={[styles.levelLabel, selected && styles.levelLabelSelected]}>{t(label)}</Text>
         </TouchableOpacity>
       );
     })}
@@ -94,14 +95,14 @@ export const CheckInScreen = () => {
         ) : (
           <View style={{ width: 24 }} />
         )}
-        <Text style={styles.topTitle}>Check in</Text>
+        <Text style={styles.topTitle}>{t('Check in')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {!done && (
           <>
-            <Text style={styles.question}>What does your day look like?</Text>
+            <Text style={styles.question}>{t('What does your day look like?')}</Text>
             <View style={styles.momentRow}>
               {MOMENT_OPTIONS.map((o) => {
                 const selected = moment === o.id;
@@ -114,17 +115,17 @@ export const CheckInScreen = () => {
                   >
                     <Ionicons name={o.icon as any} size={18} color={selected ? Colors.accent : Colors.textSecondary} />
                     <Text style={[styles.momentText, selected && { color: Colors.textPrimary }]} numberOfLines={2}>
-                      {o.label}
+                      {t(o.label)}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-            {moment === suggested && <Text style={styles.hint}>Suggested from the time of day.</Text>}
+            {moment === suggested && <Text style={styles.hint}>{t('Suggested from the time of day.')}</Text>}
 
             {scales.map((q) => (
               <View key={q} style={styles.block}>
-                <Text style={styles.question}>{QUESTION_TEXT[q].title}</Text>
+                <Text style={styles.question}>{t(QUESTION_TEXT[q].title)}</Text>
                 <LevelScale
                   value={answers[q]}
                   labels={QUESTION_TEXT[q].labels}
@@ -134,7 +135,7 @@ export const CheckInScreen = () => {
             ))}
 
             <View style={styles.block}>
-              <Text style={styles.question}>How are you feeling?</Text>
+              <Text style={styles.question}>{t('How are you feeling?')}</Text>
               <View style={styles.moodGrid}>
                 {MOOD_OPTIONS.map((m) => {
                   const selected = mood === m.id;
@@ -145,7 +146,7 @@ export const CheckInScreen = () => {
                       onPress={() => setMood(m.id)}
                     >
                       <Text style={styles.moodEmoji}>{m.emoji}</Text>
-                      <Text style={[styles.moodLabel, selected && { color: Colors.textPrimary }]}>{m.label}</Text>
+                      <Text style={[styles.moodLabel, selected && { color: Colors.textPrimary }]}>{t(m.label)}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -153,10 +154,10 @@ export const CheckInScreen = () => {
             </View>
 
             <View style={styles.block}>
-              <Text style={styles.question}>Anything else? (optional)</Text>
+              <Text style={styles.question}>{t('Anything else? (optional)')}</Text>
               <TextInput
                 style={styles.noteInput}
-                placeholder="e.g. Big presentation today, slept badly…"
+                placeholder={t('e.g. Big presentation today, slept badly…')}
                 placeholderTextColor={Colors.textMuted}
                 value={note}
                 onChangeText={setNote}
@@ -171,9 +172,9 @@ export const CheckInScreen = () => {
             <View style={styles.doneIcon}>
               <Ionicons name="checkmark" size={34} color={Colors.background} />
             </View>
-            <Text style={[styles.title, { textAlign: 'center' }]}>Checked in</Text>
+            <Text style={[styles.title, { textAlign: 'center' }]}>{t('Checked in')}</Text>
             <Text style={[styles.subtitle, { textAlign: 'center' }]}>
-              Here are a few ideas for right now. All optional.
+              {t('Here are a few ideas for right now. All optional.')}
             </Text>
             <View style={styles.optionList}>
               {suggestions.map((s) => {
@@ -184,9 +185,9 @@ export const CheckInScreen = () => {
                       <Ionicons name={s.icon as any} size={22} color={Colors.green} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.suggestionTitle}>{s.title}</Text>
+                      <Text style={styles.suggestionTitle}>{t(s.title)}</Text>
                       <Text style={styles.suggestionSubtitle}>
-                        {s.minutes} min · {s.subtitle}
+                        {s.minutes} min · {t(s.subtitle)}
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -197,7 +198,7 @@ export const CheckInScreen = () => {
                       }}
                     >
                       <Text style={[styles.startText, isAccepted && { color: Colors.accent }]}>
-                        {isAccepted ? 'Again' : 'Start'}
+                        {isAccepted ? t('Again') : t('Start')}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -210,11 +211,11 @@ export const CheckInScreen = () => {
 
       {!done ? (
         <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>
-          <Text style={styles.ctaText}>Save check-in</Text>
+          <Text style={styles.ctaText}>{t('Save check-in')}</Text>
         </TouchableOpacity>
       ) : (
         <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
-          <Text style={styles.ctaText}>Done</Text>
+          <Text style={styles.ctaText}>{t('Done')}</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

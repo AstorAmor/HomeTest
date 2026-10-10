@@ -2,19 +2,24 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
-import { CATALOG, CATEGORY_LABEL, CatalogTest, formatPrice, PLANS, TestCategory, testIcon } from '@/data/testCatalog';
-import { listMyPaidProducts } from '@/data/orders';
+import { CATALOG, categoryLabel, CatalogTest, formatPrice, localizeTest, PLANS, TestCategory, testIcon } from '@/data/testCatalog';
+import { getMySubscription, listMyPaidProducts } from '@/data/orders';
+import { t as tr } from '@/i18n';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const FILTERS: (TestCategory | 'all')[] = ['all', 'blood', 'hormonal', 'preventive', 'digestive', 'sexual', 'consultation'];
 
 // Tienda de tests. "Order"/"Join" lleva a /checkout (Revolut cuando esté configurado;
 // si no, pago simulado). Lo pagado se lee de la tabla orders (la escribe el webhook).
+// ?view=tests = catálogo de pruebas sin las suscripciones (desde "My subscription").
 export const StoreScreen = () => {
   const router = useRouter();
+  const { view } = useLocalSearchParams<{ view?: string }>();
+  const testsOnly = view === 'tests';
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [filter, setFilter] = useState<TestCategory | 'all'>('all');
   const [openId, setOpenId] = useState<string | null>(null);
   const [paid, setPaid] = useState<Set<string>>(new Set());
@@ -22,14 +27,16 @@ export const StoreScreen = () => {
   useReloadOnFocus(
     useCallback(async () => {
       setPaid(new Set(await listMyPaidProducts()));
+      setCurrentPlan((await getMySubscription())?.productId ?? null);
     }, []),
   );
 
-  const list = filter === 'all' ? CATALOG : CATALOG.filter((t) => t.category === filter);
+  const list = (filter === 'all' ? CATALOG : CATALOG.filter((t) => t.category === filter)).map(localizeTest);
 
   const Card = ({ t, featured }: { t: CatalogTest; featured?: boolean }) => {
     const open = openId === t.id || featured;
     const isPaid = paid.has(t.id);
+    const isCurrent = t.perYear && currentPlan === t.id;
     return (
       <TouchableOpacity
         style={[styles.card, featured && styles.featured]}
@@ -48,22 +55,31 @@ export const StoreScreen = () => {
           </View>
           <View style={styles.priceBox}>
             <Text style={styles.price}>{formatPrice(t.price)}</Text>
-            {t.perYear && <Text style={styles.priceUnit}>/year</Text>}
+            {t.perYear && <Text style={styles.priceUnit}>{tr('/year')}</Text>}
           </View>
         </View>
 
         {open && (
           <View style={styles.details}>
-            <Text style={styles.detailLabel}>What's included</Text>
-            {t.includes.map((i) => (
-              <View key={i} style={styles.includeRow}>
-                <Ionicons name="checkmark" size={14} color={Colors.accent} />
-                <Text style={styles.includeText}>{i}</Text>
-              </View>
-            ))}
+            <Text style={styles.detailLabel}>{tr("What's included")}</Text>
+            {t.includes.map((i, n) =>
+              // En las suscripciones, la primera línea (las analíticas) lleva a la lista de marcadores
+              t.perYear && n === 0 ? (
+                <TouchableOpacity key={i} style={styles.includeRow} onPress={() => router.push('/panel-markers')}>
+                  <Ionicons name="checkmark" size={14} color={Colors.accent} />
+                  <Text style={[styles.includeText, styles.includeLink]}>{i}</Text>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.accent} />
+                </TouchableOpacity>
+              ) : (
+                <View key={i} style={styles.includeRow}>
+                  <Ionicons name="checkmark" size={14} color={Colors.accent} />
+                  <Text style={styles.includeText}>{i}</Text>
+                </View>
+              ),
+            )}
             <View style={styles.metaRow}>
               <Ionicons name="flask-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.meta}>Sample: {t.sample}</Text>
+              <Text style={styles.meta}>{tr('Sample: {what}', { what: t.sample })}</Text>
             </View>
             <View style={styles.metaRow}>
               <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
@@ -72,18 +88,18 @@ export const StoreScreen = () => {
             {t.discreet && (
               <View style={styles.metaRow}>
                 <Ionicons name="lock-closed-outline" size={14} color={Colors.textSecondary} />
-                <Text style={styles.meta}>Results only visible to you. Not shared unless you choose to.</Text>
+                <Text style={styles.meta}>{tr('Results only visible to you. Not shared unless you choose to.')}</Text>
               </View>
             )}
             <TouchableOpacity
-              style={[styles.order, isPaid && styles.orderDone]}
-              disabled={isPaid && t.perYear}
+              style={[styles.order, (isPaid || isCurrent) && styles.orderDone]}
+              disabled={isCurrent}
               onPress={() => router.push({ pathname: '/checkout', params: { id: t.id } })}
             >
-              <Text style={[styles.orderText, isPaid && { color: Colors.accent }]}>
-                {isPaid && t.perYear
-                  ? 'Your active subscription'
-                  : `${t.perYear ? 'Subscribe' : isPaid ? 'Order again' : 'Order'} · ${formatPrice(t.price)}`}
+              <Text style={[styles.orderText, (isPaid || isCurrent) && { color: Colors.accent }]}>
+                {isCurrent
+                  ? tr('Your current plan')
+                  : `${t.perYear ? (currentPlan ? tr('Upgrade to Premium') : tr('Subscribe')) : isPaid ? tr('Order again') : tr('Order')} · ${formatPrice(t.price)}`}
               </Text>
             </TouchableOpacity>
           </View>
@@ -95,17 +111,18 @@ export const StoreScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Tests & panels" showBack />
+        <ScreenHeader title={testsOnly ? tr('Test catalogue') : tr('Tests & panels')} showBack />
 
-        {PLANS.map((p) => (
-          <Card key={p.id} t={p} featured />
-        ))}
+        {!testsOnly &&
+          PLANS.filter((p) => !(currentPlan === 'premium' && p.id === 'membership')).map((p) => (
+            <Card key={p.id} t={localizeTest(p)} featured />
+          ))}
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
           {FILTERS.map((f) => (
             <TouchableOpacity key={f} style={[styles.filter, filter === f && styles.filterOn]} onPress={() => setFilter(f)}>
               <Text style={[styles.filterText, filter === f && styles.filterTextOn]}>
-                {f === 'all' ? 'All' : CATEGORY_LABEL[f]}
+                {f === 'all' ? tr('All') : categoryLabel(f)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -116,7 +133,7 @@ export const StoreScreen = () => {
         ))}
 
         <Text style={styles.footnote}>
-          Prices include medical review of your results. Payments are processed by Revolut; until they are switched on, checkout is simulated and nothing is charged.
+          {tr('Prices include medical review of your results. Payments are processed by Revolut; until they are switched on, checkout is simulated and nothing is charged.')}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -146,7 +163,8 @@ const styles = StyleSheet.create({
   details: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.divider, gap: 6 },
   detailLabel: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
   includeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  includeText: { color: Colors.textPrimary, fontSize: 13 },
+  includeText: { color: Colors.textPrimary, fontSize: 13, flexShrink: 1 },
+  includeLink: { color: Colors.accent, fontWeight: '700', textDecorationLine: 'underline' },
   metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 4 },
   meta: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flex: 1 },
   order: { backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11, alignItems: 'center', marginTop: 8 },
