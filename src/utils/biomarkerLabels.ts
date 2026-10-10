@@ -40,6 +40,9 @@ export interface PanelMarker {
 // Marcadores de la suscripción: el panel completo son los biomarcadores incluidos de la base
 // de conocimiento y el seguimiento, los que se miden dos veces al año. Lista orientativa hasta
 // cerrar el panel con el laboratorio (ver memoria: catálogo de paneles Vivolabs).
+// Además de los que la base marca como 2 veces al año: decisión del fundador (2026-10-10).
+const EXTRA_FOLLOW_UP = new Set(['VITAMIN_D']);
+
 export function subscriptionPanelMarkers(): PanelMarker[] {
   return getAllCanonicalBiomarkers()
     // Las puntuaciones (edad biológica) no son marcadores de la analítica: se calculan en Mis datos
@@ -48,7 +51,7 @@ export function subscriptionPanelMarkers(): PanelMarker[] {
       id: b.canonical_id,
       name: biomarkerDisplayName(b),
       category: b.category,
-      followUp: b.external_sources.some((s) => s.testing_frequency === '2x/year'),
+      followUp: EXTRA_FOLLOW_UP.has(b.canonical_id) || b.external_sources.some((s) => s.testing_frequency === '2x/year'),
       calculated: b.measurement_type === 'DERIVED',
     }));
 }

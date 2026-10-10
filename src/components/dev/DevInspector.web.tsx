@@ -7,8 +7,8 @@ import { TABS } from '@/components/BottomTabBar';
 // elegir un elemento todo vuelve a funcionar, y las notas se guardan aunque cierres las ventanas. Cada nota lleva la pantalla,
 // el componente de React que lo pinta (p. ej. "CheckInScreen › MoodOrb"), el icono, el texto, los
 // colores y el tamaño, así se encuentra en el código sin adivinar.
-// Se ve en el servidor local (npm run web) y en cualquier web de la app abriendo una vez la
-// dirección con ?inspect=1 (se recuerda en ese navegador; ?inspect=0 lo quita).
+// Se ve en el servidor local y, desde 2026-10-10, en las webs publicadas por defecto (para
+// recoger comentarios). ?inspect=0 lo quita en ese navegador y ?inspect=1 lo vuelve a poner.
 // Todo es DOM directo: no toca el árbol de React Native ni la navegación.
 
 const NOTES_KEY = 'kuova.inspector.notes';
@@ -147,9 +147,10 @@ function writeNotes(notes: Note[]) {
 function enabled(): boolean {
   try {
     const q = new URLSearchParams(window.location.search).get('inspect');
+    // Activo por defecto (se enseña la app para recoger comentarios); ?inspect=0 lo quita en ese navegador
     if (q === '1') localStorage.setItem(ON_KEY, '1');
-    if (q === '0') localStorage.removeItem(ON_KEY);
-    return __DEV__ || localStorage.getItem(ON_KEY) === '1';
+    if (q === '0') localStorage.setItem(ON_KEY, '0');
+    return __DEV__ || localStorage.getItem(ON_KEY) !== '0';
   } catch {
     return __DEV__;
   }
