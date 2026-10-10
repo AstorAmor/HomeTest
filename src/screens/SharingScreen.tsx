@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +11,7 @@ import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { DataShare, isShareActive, listMyShares, revokeShare, roleLabel, scopeLabel } from '@/data/sharing';
 
 const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
 // Paciente: con quién comparte qué, y revocar. Cada permiso es un consentimiento
 // explícito; al revocarlo queda en el historial.

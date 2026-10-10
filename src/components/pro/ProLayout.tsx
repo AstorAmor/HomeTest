@@ -8,7 +8,7 @@ import { Colors } from '@/constants/colors';
 import { KuovaWordmark } from '@/components/KuovaLogo';
 import { useAuth } from '@/context/AuthContext';
 import { useLogout } from '@/hooks/useLogout';
-import { t } from '@/i18n';
+import { getLang, t } from '@/i18n';
 import { roleLabel } from '@/data/sharing';
 import { isPortalDemo } from '@/data/specialistPortal';
 
@@ -19,7 +19,7 @@ export const useIsWide = () => {
   return Platform.OS === 'web' && width >= 900;
 };
 
-export type ProSection = 'agenda' | 'patients' | 'inbox' | 'templates' | 'settings';
+export type ProSection = 'agenda' | 'patients' | 'inbox' | 'templates' | 'settings' | 'preferences';
 
 const NAV: { id: ProSection; label: string; icon: string; href: string }[] = [
   { id: 'agenda', label: 'Agenda', icon: 'calendar-outline', href: '/pro' },
@@ -27,6 +27,7 @@ const NAV: { id: ProSection; label: string; icon: string; href: string }[] = [
   { id: 'inbox', label: 'Inbox', icon: 'chatbubbles-outline', href: '/pro-inbox' },
   { id: 'templates', label: 'Templates', icon: 'documents-outline', href: '/pro-templates' },
   { id: 'settings', label: 'Profile', icon: 'person-circle-outline', href: '/pro-settings' },
+  { id: 'preferences', label: 'Settings', icon: 'settings-outline', href: '/pro-preferences' },
 ];
 
 // Identidad visible del especialista (real o de demo).
@@ -41,7 +42,7 @@ export const useProIdentity = () => {
       demo: false,
     };
   }
-  return { name: 'Dra. Marta Echeverría', role: 'Doctor', photoUrl: null as string | null, verified: true, demo: true };
+  return { name: 'Dra. Marta Echeverría', role: getLang() === 'es' ? 'Médica' : 'Doctor', photoUrl: null as string | null, verified: true, demo: true };
 };
 
 interface Props {
@@ -80,13 +81,13 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
       {isPortalDemo() && (
         <View style={styles.demo}>
           <Ionicons name="flask-outline" size={14} color={Colors.warning} />
-          <Text style={styles.demoText}>Demo portal · sample patients, nothing is sent</Text>
+          <Text style={styles.demoText}>{t('Demo portal · sample patients, nothing is sent')}</Text>
         </View>
       )}
       {!me.verified && (
         <View style={styles.demo}>
           <Ionicons name="time-outline" size={14} color={Colors.warning} />
-          <Text style={styles.demoText}>Your account is being verified by Kuova. Patients can't find you yet.</Text>
+          <Text style={styles.demoText}>{t("Your account is being verified by Kuova. Patients can't find you yet.")}</Text>
         </View>
       )}
     </>
@@ -97,17 +98,17 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
       <View style={styles.wideRoot}>
         <View style={styles.sidebar}>
           <View style={styles.brand}>
-            <View accessible accessibilityLabel="Kuova Health" style={styles.brandLogo}>
+            <View accessible accessibilityLabel={t('Kuova Health')} style={styles.brandLogo}>
               <KuovaWordmark height={18} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />
             </View>
-            <Text style={styles.brandSub}>for specialists</Text>
+            <Text style={styles.brandSub}>{t('for specialists')}</Text>
           </View>
           {NAV.map((n) => {
             const on = n.id === active;
             return (
               <TouchableOpacity key={n.id} style={[styles.navItem, on && styles.navItemOn]} onPress={() => go(n.href)}>
                 <Ionicons name={n.icon as any} size={20} color={on ? Colors.accent : Colors.textSecondary} />
-                <Text style={[styles.navText, on && { color: Colors.textPrimary }]}>{n.label}</Text>
+                <Text style={[styles.navText, on && { color: Colors.textPrimary }]}>{t(n.label)}</Text>
                 {!!badge?.[n.id] && <Text style={styles.navBadge}>{badge[n.id]}</Text>}
               </TouchableOpacity>
             );
@@ -155,7 +156,7 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
                 <Ionicons name={n.icon as any} size={22} color={on ? Colors.tabBarActive : Colors.tabBarInactive} />
                 {!!badge?.[n.id] && <View style={styles.tabDot} />}
               </View>
-              <Text style={[styles.tabText, on && { color: Colors.tabBarActive }]}>{n.label}</Text>
+              <Text style={[styles.tabText, on && { color: Colors.tabBarActive }]}>{t(n.label)}</Text>
             </TouchableOpacity>
           );
         })}

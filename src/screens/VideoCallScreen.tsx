@@ -7,6 +7,7 @@ import { DailyCall } from '@/components/DailyCall';
 import { OnDark } from '@/constants/colors';
 import { getVideoJoinUrl } from '@/data/video';
 
+import { t } from '@/i18n';
 // Videoconsulta del paciente (Daily): pide la sala al servidor y la abre.
 export const VideoCallScreen = () => {
   const router = useRouter();
@@ -28,7 +29,7 @@ export const VideoCallScreen = () => {
         <Text style={styles.title} numberOfLines={1}>
           {title ?? 'Video consultation'}
         </Text>
-        <TouchableOpacity onPress={close} hitSlop={10} accessibilityLabel="Close">
+        <TouchableOpacity onPress={close} hitSlop={10} accessibilityLabel={t('Close')}>
           <Ionicons name="close" size={26} color={OnDark.text} />
         </TouchableOpacity>
       </View>
@@ -43,7 +44,7 @@ export const VideoCallScreen = () => {
         ) : (
           <View style={styles.center}>
             <ActivityIndicator color={OnDark.text} />
-            <Text style={styles.text}>Preparing your video room…</Text>
+            <Text style={styles.text}>{t('Preparing your video room…')}</Text>
           </View>
         )}
       </View>

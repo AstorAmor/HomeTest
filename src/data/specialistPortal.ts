@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { currentReport } from './reportRepository';
-import { getMarkerDisplayNameEn } from './reportContentEn';
+import { getMarkerDisplayNameEn, getUnitLabelEn } from './reportContentEn';
 import { markerIdForExtractedName } from './markerMatching';
 import { PlanVersionItem } from './planVersions';
+import { getLang, t } from '@/i18n';
 import {
   Appointment,
   AppointmentKind,
@@ -36,7 +37,8 @@ const fail = (error: { message: string } | null) => {
 // ---------------------------------------------------------------------------
 // Demo
 // ---------------------------------------------------------------------------
-const DEMO_KEY = 'proDemo.v1';
+const DEMO_KEY_BASE = 'proDemo.v1';
+const demoKey = () => (getLang() === 'en' ? DEMO_KEY_BASE : `${DEMO_KEY_BASE}:${getLang()}`);
 const DEMO_PRO = 'demo-pro';
 
 interface DemoState {
@@ -65,10 +67,10 @@ const soon = (hours: number) => {
 };
 
 const DEMO_PATIENTS: (PatientSummary & { labFromReport?: boolean })[] = [
-  { id: 'p-laura', name: 'Laura Martín', scopes: ['profile', 'lab_reports', 'wearables', 'cycle'], openRequests: 0, unreadMessages: 1, nextAppointment: null, appointmentToday: false, flaggedMarkers: 0, age: 38, sex: 'Female', goals: ['More energy', 'Sleep better'], labFromReport: true },
-  { id: 'p-carlos', name: 'Carlos Ruiz', scopes: ['profile', 'lab_reports', 'glucose', 'blood_pressure'], openRequests: 1, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 3, age: 52, sex: 'Male', goals: ['Keep a condition under control'] },
-  { id: 'p-elena', name: 'Elena Gómez', scopes: ['profile', 'lab_reports'], openRequests: 0, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 0, age: 29, sex: 'Female', goals: ['Perform better in sport'] },
-  { id: 'p-javier', name: 'Javier Soto', scopes: ['lab_reports'], openRequests: 1, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 2, age: 45, sex: 'Male', goals: ['Lose weight'] },
+  { id: 'p-laura', name: 'Laura Martín', scopes: ['profile', 'lab_reports', 'wearables', 'cycle'], openRequests: 0, unreadMessages: 1, nextAppointment: null, appointmentToday: false, flaggedMarkers: 0, age: 38, sex: t('Female'), goals: [t('More energy'), t('Sleep better')], labFromReport: true },
+  { id: 'p-carlos', name: 'Carlos Ruiz', scopes: ['profile', 'lab_reports', 'glucose', 'blood_pressure'], openRequests: 1, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 3, age: 52, sex: t('Male'), goals: [t('Keep a condition under control')] },
+  { id: 'p-elena', name: 'Elena Gómez', scopes: ['profile', 'lab_reports'], openRequests: 0, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 0, age: 29, sex: t('Female'), goals: [t('Perform better in sport')] },
+  { id: 'p-javier', name: 'Javier Soto', scopes: ['lab_reports'], openRequests: 1, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 2, age: 45, sex: t('Male'), goals: [t('Lose weight')] },
 ];
 
 function demoSeed(): DemoState {
@@ -76,21 +78,21 @@ function demoSeed(): DemoState {
   return {
     seededOn: new Date().toDateString(),
     appointments: [
-      { id: 'a1', professionalId: DEMO_PRO, patientId: 'p-laura', patientName: 'Laura Martín', startsAt: soon(0.25), durationMin: 30, kind: 'results_review', modality: 'video', status: 'confirmed', reason: 'Go through my September results' },
-      { id: 'a2', professionalId: DEMO_PRO, patientId: 'p-carlos', patientName: 'Carlos Ruiz', startsAt: soon(2), durationMin: 15, kind: 'follow_up', modality: 'voice', status: 'confirmed', reason: 'Blood pressure follow-up' },
-      { id: 'a3', professionalId: DEMO_PRO, patientId: 'p-elena', patientName: 'Elena Gómez', startsAt: at(1, 9, 30), durationMin: 30, kind: 'first', modality: 'video', status: 'pending', reason: 'Training and iron', createdAt: at(-1, 18, 12) },
-      { id: 'a4', professionalId: DEMO_PRO, patientId: 'p-javier', patientName: 'Javier Soto', startsAt: at(3, 17, 0), durationMin: 30, kind: 'results_review', modality: 'video', status: 'pending', reason: 'High cholesterol', createdAt: at(-1, 21, 3) },
+      { id: 'a1', professionalId: DEMO_PRO, patientId: 'p-laura', patientName: 'Laura Martín', startsAt: soon(0.25), durationMin: 30, kind: 'results_review', modality: 'video', status: 'confirmed', reason: t('Go through my September results') },
+      { id: 'a2', professionalId: DEMO_PRO, patientId: 'p-carlos', patientName: 'Carlos Ruiz', startsAt: soon(2), durationMin: 15, kind: 'follow_up', modality: 'voice', status: 'confirmed', reason: t('Blood pressure follow-up') },
+      { id: 'a3', professionalId: DEMO_PRO, patientId: 'p-elena', patientName: 'Elena Gómez', startsAt: at(1, 9, 30), durationMin: 30, kind: 'first', modality: 'video', status: 'pending', reason: t('Training and iron'), createdAt: at(-1, 18, 12) },
+      { id: 'a4', professionalId: DEMO_PRO, patientId: 'p-javier', patientName: 'Javier Soto', startsAt: at(3, 17, 0), durationMin: 30, kind: 'results_review', modality: 'video', status: 'pending', reason: t('High cholesterol'), createdAt: at(-1, 21, 3) },
       { id: 'a5', professionalId: DEMO_PRO, patientId: 'p-laura', patientName: 'Laura Martín', startsAt: at(-14, 11, 0), durationMin: 30, kind: 'first', modality: 'video', status: 'completed' },
     ],
     requests: [
-      { id: 'r1', patientId: 'p-carlos', patientName: 'Carlos Ruiz', professionalId: DEMO_PRO, kind: 'question', message: 'My blood pressure was 145/92 this morning. Should I be worried before our call?', status: 'open', response: null, createdAt: at(0, 8, 5), answeredAt: null },
-      { id: 'r2', patientId: 'p-javier', patientName: 'Javier Soto', professionalId: DEMO_PRO, kind: 'results_review', message: 'Could you look at my LDL and triglycerides? I uploaded my last test.', status: 'open', response: null, createdAt: at(-1, 19, 40), answeredAt: null },
-      { id: 'r3', patientId: 'p-laura', patientName: 'Laura Martín', professionalId: DEMO_PRO, kind: 'question', message: 'Can I take iron and vitamin D together?', status: 'answered', response: 'Yes, but take iron on an empty stomach with some vitamin C, and vitamin D with a meal.', createdAt: at(-5, 9, 0), answeredAt: at(-5, 13, 0) },
-      { id: 'r4', patientId: 'p-elena', patientName: 'Elena Gómez', professionalId: DEMO_PRO, kind: 'question', message: 'Since I started training for a half marathon my period comes every 38–40 days. Is that normal? Could it be related to my iron?', status: 'open', response: null, createdAt: at(0, 7, 20), answeredAt: null },
-      { id: 'r5', patientId: 'p-laura', patientName: 'Laura Martín', professionalId: DEMO_PRO, kind: 'question', message: "I've been really tired for a month even though I sleep 7 hours. My ferritin was 24 in March. Should I repeat the test?", status: 'open', response: null, createdAt: at(-1, 22, 15), answeredAt: null },
+      { id: 'r1', patientId: 'p-carlos', patientName: 'Carlos Ruiz', professionalId: DEMO_PRO, kind: 'question', message: t('My blood pressure was 145/92 this morning. Should I be worried before our call?'), status: 'open', response: null, createdAt: at(0, 8, 5), answeredAt: null },
+      { id: 'r2', patientId: 'p-javier', patientName: 'Javier Soto', professionalId: DEMO_PRO, kind: 'results_review', message: t('Could you look at my LDL and triglycerides? I uploaded my last test.'), status: 'open', response: null, createdAt: at(-1, 19, 40), answeredAt: null },
+      { id: 'r3', patientId: 'p-laura', patientName: 'Laura Martín', professionalId: DEMO_PRO, kind: 'question', message: t('Can I take iron and vitamin D together?'), status: 'answered', response: t('Yes, but take iron on an empty stomach with some vitamin C, and vitamin D with a meal.'), createdAt: at(-5, 9, 0), answeredAt: at(-5, 13, 0) },
+      { id: 'r4', patientId: 'p-elena', patientName: 'Elena Gómez', professionalId: DEMO_PRO, kind: 'question', message: t('Since I started training for a half marathon my period comes every 38–40 days. Is that normal? Could it be related to my iron?'), status: 'open', response: null, createdAt: at(0, 7, 20), answeredAt: null },
+      { id: 'r5', patientId: 'p-laura', patientName: 'Laura Martín', professionalId: DEMO_PRO, kind: 'question', message: t("I've been really tired for a month even though I sleep 7 hours. My ferritin was 24 in March. Should I repeat the test?"), status: 'open', response: null, createdAt: at(-1, 22, 15), answeredAt: null },
     ],
     notes: [
-      { id: 'n1', patientId: 'p-laura', appointmentId: 'a5', subjective: 'Tired in the afternoons, sleeps ~6 h.', objective: 'Ferritin 24 ng/mL, vitamin D 18 ng/mL (March).', assessment: 'Low iron stores and vitamin D deficiency.', plan: 'Iron-rich diet + vitamin C, vitamin D 2000 IU/day, retest in 6 months.', createdAt: at(-14, 11, 40), updatedAt: at(-14, 11, 40) },
+      { id: 'n1', patientId: 'p-laura', appointmentId: 'a5', subjective: t('Tired in the afternoons, sleeps ~6 h.'), objective: t('Ferritin 24 ng/mL, vitamin D 18 ng/mL (March).'), assessment: t('Low iron stores and vitamin D deficiency.'), plan: t('Iron-rich diet + vitamin C, vitamin D 2000 IU/day, retest in 6 months.'), createdAt: at(-14, 11, 40), updatedAt: at(-14, 11, 40) },
     ],
     conversations: [
       { id: 'demo-conv-p-laura', patientId: 'p-laura', patientName: 'Laura Martín', professionalId: DEMO_PRO, lastMessageAt: now },
@@ -106,7 +108,7 @@ let chatSeeded = false;
 async function demo(): Promise<DemoState> {
   if (demoCache) return demoCache;
   try {
-    const raw = await AsyncStorage.getItem(DEMO_KEY);
+    const raw = await AsyncStorage.getItem(demoKey());
     const stored: DemoState | null = raw ? JSON.parse(raw) : null;
     const fresh = demoSeed();
     // Otro día: citas y solicitudes nuevas relativas a hoy; se conservan notas y planes.
@@ -120,11 +122,13 @@ async function demo(): Promise<DemoState> {
     chatSeeded = true;
     // Primer mensaje de ejemplo en el chat de Laura
     const key = 'chat.v1:demo-conv-p-laura';
-    if (!(await AsyncStorage.getItem(key).catch(() => null))) {
+    const stored = await AsyncStorage.getItem(key).catch(() => null);
+    const onlySeed = stored ? (JSON.parse(stored) as { id: string; body: string }[]) : null;
+    if (!stored || (onlySeed?.length === 1 && onlySeed[0].id === 'm0' && onlySeed[0].body !== t('Hi! I have my results review with you today. Should I be fasting?'))) {
       await AsyncStorage.setItem(
         key,
         JSON.stringify([
-          { id: 'm0', conversationId: 'demo-conv-p-laura', senderId: 'demo-other', body: 'Hi! I have my results review with you today. Should I be fasting?', createdAt: at(0, 7, 50), readAt: null },
+          { id: 'm0', conversationId: 'demo-conv-p-laura', senderId: 'demo-other', body: t('Hi! I have my results review with you today. Should I be fasting?'), createdAt: at(0, 7, 50), readAt: null },
         ]),
       ).catch(() => undefined);
     }
@@ -132,7 +136,7 @@ async function demo(): Promise<DemoState> {
   return demoCache!;
 }
 async function saveDemo() {
-  if (demoCache) await AsyncStorage.setItem(DEMO_KEY, JSON.stringify(demoCache)).catch(() => undefined);
+  if (demoCache) await AsyncStorage.setItem(demoKey(), JSON.stringify(demoCache)).catch(() => undefined);
 }
 
 function reportMarkers(): PatientMarker[] {
@@ -146,7 +150,7 @@ function reportMarkers(): PatientMarker[] {
         id: m.marker_id,
         name: getMarkerDisplayNameEn(m.marker_id, m.display_name),
         value: m.value,
-        unit: m.unit === 'índice' ? 'index' : m.unit ?? '',
+        unit: getUnitLabelEn(m.unit),
         low,
         high,
         status: low !== null && v < low ? 'low' : high !== null && v > high ? 'high' : 'in',
@@ -162,7 +166,7 @@ const demoLab = (patientId: string): PatientLabResult | null => {
   // Cada paciente de ejemplo con valores algo distintos: basta con el mismo informe
   // para Laura y un subconjunto para el resto.
   const markers = p.labFromReport ? all : all.filter((_, i) => i % 3 === 0);
-  return { title: 'Blood analysis', date: currentReport.test_date, lab: p.labFromReport ? 'Eurofins Megalab' : 'User upload · Synlab', markers };
+  return { title: t('Blood analysis'), date: currentReport.test_date, lab: p.labFromReport ? 'Eurofins Megalab' : `${t('User upload')} · Synlab`, markers };
 };
 
 // ---------------------------------------------------------------------------
@@ -172,7 +176,7 @@ const toAppointment = (r: any): Appointment => ({
   id: r.id,
   professionalId: r.professional_id,
   patientId: r.patient_id,
-  patientName: r.patient_name ?? 'Patient',
+  patientName: r.patient_name ?? t('Patient'),
   startsAt: r.starts_at,
   durationMin: r.duration_min,
   kind: r.kind,
@@ -186,7 +190,7 @@ const toAppointment = (r: any): Appointment => ({
 const toRequest = (r: any): ConsultRequest => ({
   id: r.id,
   patientId: r.patient_id,
-  patientName: r.patient_name ?? 'Patient',
+  patientName: r.patient_name ?? t('Patient'),
   professionalId: r.professional_id,
   kind: r.kind,
   message: r.message,
@@ -212,7 +216,7 @@ const toNote = (r: any): ClinicalNote => ({
 const toConversation = (r: any): Conversation => ({
   id: r.id,
   patientId: r.patient_id,
-  patientName: r.patient_name ?? 'Patient',
+  patientName: r.patient_name ?? t('Patient'),
   professionalId: r.professional_id,
   lastMessageAt: r.last_message_at,
 });
@@ -355,7 +359,7 @@ export const portal = {
           status: p.rango_min !== null && p.valor < p.rango_min ? 'low' : p.rango_max !== null && p.valor > p.rango_max ? 'high' : 'in',
         });
       }
-    return { title: 'Uploaded analysis', date: u.test_date, lab: `User upload${u.lab_name ? ` · ${u.lab_name}` : ''}`, markers };
+    return { title: t('Uploaded analysis'), date: u.test_date, lab: `${t('User upload')}${u.lab_name ? ` · ${u.lab_name}` : ''}`, markers };
   },
 
   async listRequests(patientId?: string): Promise<ConsultRequest[]> {

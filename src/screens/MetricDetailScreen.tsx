@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -69,7 +70,7 @@ const INFO: Partial<Record<WearableMetric, MetricInfo>> = {
     icon: 'footsteps',
     color: Colors.sky,
     higherIsBetter: true,
-    format: (v) => Math.round(v).toLocaleString('en-GB'),
+    format: (v) => Math.round(v).toLocaleString(dateLocale()),
     what: 'Total steps per day counted by your phone or wearable.',
     typical: 'Health benefits grow up to around 8,000-10,000 steps a day. Any increase from your baseline helps.',
     affects: 'Short walks after meals, taking calls on foot and stairs add up quickly.',
@@ -180,7 +181,7 @@ export const MetricDetailScreen = () => {
                 {thermo.slice(0, 5).map((t) => (
                   <View key={t.id} style={styles.thermoRow}>
                     <Text style={styles.thermoDate}>
-                      {new Date(t.fecha).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(t.fecha).toLocaleString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </Text>
                     <Text style={[styles.thermoValue, t.valor >= 38 && { color: Colors.attention }]}>{t.valor.toFixed(1)} °C</Text>
                   </View>
@@ -255,7 +256,7 @@ export const MetricDetailScreen = () => {
               <Text style={styles.listDate}>
                 {byWeek ? 'Week of ' : ''}
                 {new Date(`${p.date}T12:00:00`).toLocaleDateString(
-                  'en-GB',
+                  dateLocale(),
                   byWeek ? { day: 'numeric', month: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' },
                 )}
               </Text>

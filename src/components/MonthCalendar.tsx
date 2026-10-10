@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 
+import { dateLocale } from '@/i18n';
 // Calendario mensual propio (funciona igual en Android, iOS y web). Sirve para:
 // - marcar días con puntos de color (agenda de pruebas)
 // - seleccionar un rango (inicio y fin del periodo)
@@ -61,7 +62,7 @@ export const MonthCalendar = ({
           <Ionicons name="chevron-back" size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.monthTitle}>
-          {month.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+          {month.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' })}
         </Text>
         <TouchableOpacity onPress={() => shift(1)} hitSlop={10}>
           <Ionicons name="chevron-forward" size={22} color={Colors.textPrimary} />

@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +20,7 @@ const formatListDate = (iso: string) => {
 
 const formatFullDate = (iso: string) => {
   const d = new Date(iso);
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 const CONFIDENCE_LABEL: Record<string, string> = {

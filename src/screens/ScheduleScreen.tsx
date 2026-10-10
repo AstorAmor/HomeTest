@@ -87,7 +87,7 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
         </View>
 
         <Text style={styles.sectionTitle}>
-          {selected ? formatDay(selected) : month.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+          {selected ? formatDay(selected) : month.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' })}
         </Text>
         {shown.length === 0 ? (
           <Text style={styles.empty}>Nothing scheduled.</Text>
@@ -115,7 +115,7 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
       <View style={styles.eventHeader}>
         <Text style={[styles.eventType, { color }]}>{t(TYPE_LABEL[event.type])}</Text>
         <Text style={styles.eventTime}>
-          {showDate ? `${new Date(`${event.date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ` : ''}
+          {showDate ? `${new Date(`${event.date}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })} · ` : ''}
           {event.start ? `${event.start}${event.end ? `–${event.end}` : ''}` : 'All day'}
         </Text>
       </View>

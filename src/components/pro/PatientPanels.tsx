@@ -9,8 +9,9 @@ import { TemplatePicker } from '@/components/pro/TemplatePicker';
 import { useProIdentity } from '@/components/pro/ProLayout';
 import { TEMPLATE_TOPICS, TemplateTopic, findGaps, guessTopic, templates, toTemplateBody } from '@/data/proTemplates';
 
+import { dateLocale, num, t as tr } from '@/i18n';
 const shortDate = (iso: string | null) =>
-  iso ? new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  iso ? new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
 // Posición 0-1 del valor dentro de una barra que va de low-20% a high+20%.
 const barPos = (m: PatientMarker) => {
@@ -26,7 +27,7 @@ const barPos = (m: PatientMarker) => {
 export const ResultsPanel = ({ lab, compact }: { lab: PatientLabResult | null; compact?: boolean }) => {
   const [all, setAll] = useState(false);
   if (!lab) {
-    return <Text style={styles.muted}>No lab results shared yet. Ask the patient to share "Lab reports" with you.</Text>;
+    return <Text style={styles.muted}>{tr('No lab results shared yet. Ask the patient to share "Lab reports" with you.')}</Text>;
   }
   const out = lab.markers.filter((m) => m.status !== 'in');
   const shown = all ? lab.markers : out;
@@ -37,13 +38,13 @@ export const ResultsPanel = ({ lab, compact }: { lab: PatientLabResult | null; c
         <View style={{ flex: 1 }}>
           <Text style={styles.labTitle}>{lab.title}</Text>
           <Text style={styles.muted}>
-            {shortDate(lab.date)} · {lab.lab} · {out.length} of {lab.markers.length} out of range
+            {shortDate(lab.date)} · {lab.lab} · {tr('{n} of {total} out of range', { n: out.length, total: lab.markers.length })}
           </Text>
         </View>
         {!compact && (
           <TouchableOpacity style={styles.fileBtn}>
             <Ionicons name="attach-outline" size={16} color={Colors.accent} />
-            <Text style={styles.fileText}>PDF</Text>
+            <Text style={styles.fileText}>{tr('PDF')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -57,7 +58,7 @@ export const ResultsPanel = ({ lab, compact }: { lab: PatientLabResult | null; c
                 {m.name}
               </Text>
               <Text style={styles.range}>
-                {m.low ?? '–'} – {m.high ?? '–'} {m.unit}
+                {m.low === null ? '–' : num(m.low)} – {m.high === null ? '–' : num(m.high)} {m.unit}
               </Text>
             </View>
             {pos !== null && (
@@ -67,13 +68,13 @@ export const ResultsPanel = ({ lab, compact }: { lab: PatientLabResult | null; c
               </View>
             )}
             <Text style={[styles.markerValue, { color }]}>
-              {m.value} {m.status === 'high' ? '↑' : m.status === 'low' ? '↓' : ''}
+              {num(m.value)} {m.status === 'high' ? '↑' : m.status === 'low' ? '↓' : ''}
             </Text>
           </View>
         );
       })}
       <TouchableOpacity onPress={() => setAll((v) => !v)}>
-        <Text style={styles.link}>{all ? 'Show only out-of-range values' : `Show all ${lab.markers.length} values`}</Text>
+        <Text style={styles.link}>{all ? tr('Show only out-of-range values') : tr('Show all {n} values', { n: lab.markers.length })}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,7 +82,7 @@ export const ResultsPanel = ({ lab, compact }: { lab: PatientLabResult | null; c
 
 // ---------------------------------------------------------------- Notas SOAP
 const FIELDS: { key: 'subjective' | 'objective' | 'assessment' | 'plan'; label: string; hint: string }[] = [
-  { key: 'subjective', label: 'S · Subjective', hint: 'What the patient tells you' },
+  { key: 'subjective', label: 'S · Subjective', hint: 'What the patient tells you' }, // se traducen al pintar
   { key: 'objective', label: 'O · Objective', hint: 'Results, measurements' },
   { key: 'assessment', label: 'A · Assessment', hint: 'Your clinical judgement' },
   { key: 'plan', label: 'P · Plan', hint: 'Next steps, tests, follow-up' },
@@ -133,17 +134,17 @@ export const NotesPanel = ({ patientId, appointmentId, live }: { patientId: stri
     <View style={{ gap: 10 }}>
       <View style={styles.notesHead}>
         <Ionicons name="lock-closed-outline" size={14} color={Colors.textSecondary} />
-        <Text style={styles.muted}>Private notes — only you can see them</Text>
+        <Text style={styles.muted}>{tr('Private notes — only you can see them')}</Text>
         <View style={{ flex: 1 }} />
-        {state === 'saving' ? <ActivityIndicator size="small" color={Colors.accent} /> : state === 'saved' ? <Text style={styles.saved}>Saved</Text> : null}
+        {state === 'saving' ? <ActivityIndicator size="small" color={Colors.accent} /> : state === 'saved' ? <Text style={styles.saved}>{tr('Saved')}</Text> : null}
       </View>
       {FIELDS.map((f) => (
         <View key={f.key}>
-          <Text style={styles.fieldLabel}>{f.label}</Text>
+          <Text style={styles.fieldLabel}>{tr(f.label)}</Text>
           <TextInput
             style={styles.input}
             multiline
-            placeholder={f.hint}
+            placeholder={tr(f.hint)}
             placeholderTextColor={Colors.textMuted}
             value={(draft[f.key] as string) ?? ''}
             onChangeText={(t) => change(f.key, t)}
@@ -152,12 +153,12 @@ export const NotesPanel = ({ patientId, appointmentId, live }: { patientId: stri
       ))}
       {!live && (
         <TouchableOpacity style={styles.btn} onPress={() => save(draft)}>
-          <Text style={styles.btnText}>{draft.id ? 'Update note' : 'Save note'}</Text>
+          <Text style={styles.btnText}>{draft.id ? tr('Update note') : tr('Save note')}</Text>
         </TouchableOpacity>
       )}
       {history.length > 0 && (
         <View style={{ gap: 8, marginTop: 6 }}>
-          <Text style={styles.sectionLabel}>Earlier notes</Text>
+          <Text style={styles.sectionLabel}>{tr('Earlier notes')}</Text>
           {history.map((n) => (
             <TouchableOpacity key={n.id} style={styles.pastNote} onPress={() => !live && setDraft(n)}>
               <Text style={styles.pastDate}>{shortDate(n.createdAt)}</Text>
@@ -182,7 +183,7 @@ export const NotesPanel = ({ patientId, appointmentId, live }: { patientId: stri
 // mientras quede un hueco [entre corchetes] sin rellenar.
 export const RequestsPanel = ({ requests, onAnswered }: { requests: ConsultRequest[]; onAnswered: () => void }) => {
   const [answer, setAnswer] = useState<Record<string, string>>({});
-  if (requests.length === 0) return <Text style={styles.muted}>No requests from this patient.</Text>;
+  if (requests.length === 0) return <Text style={styles.muted}>{tr('No requests from this patient.')}</Text>;
   return (
     <View style={{ gap: 10 }}>
       {requests.map((r) => {
@@ -194,11 +195,11 @@ export const RequestsPanel = ({ requests, onAnswered }: { requests: ConsultReque
             <View style={styles.requestHead}>
               <Text style={styles.requestKind}>{REQUEST_KIND_LABEL[r.kind]}</Text>
               <Text style={[styles.requestStatus, { color: r.status === 'open' ? Colors.attention : Colors.ok }]}>
-                {r.status === 'open' ? 'Pending' : r.status === 'answered' ? 'Answered' : 'Closed'}
+                {r.status === 'open' ? tr('Pending') : r.status === 'answered' ? tr('Answered') : tr('Closed')}
               </Text>
             </View>
             {r.message ? <Text style={styles.requestMsg}>{r.message}</Text> : null}
-            {r.audioPath ? <StoredAudio path={r.audioPath} label="Voice note from the patient" /> : null}
+            {r.audioPath ? <StoredAudio path={r.audioPath} label={tr('Voice note from the patient')} /> : null}
             <Text style={styles.muted}>{shortDate(r.createdAt)}</Text>
             {r.response ? (
               <>
@@ -218,7 +219,7 @@ export const RequestsPanel = ({ requests, onAnswered }: { requests: ConsultReque
                 <TextInput
                   style={[styles.input, { minHeight: Math.min(420, 56 + text.split('\n').length * 18) }]}
                   multiline
-                  placeholder="Write your answer, or insert a template"
+                  placeholder={tr('Write your answer, or insert a template')}
                   placeholderTextColor={Colors.textMuted}
                   value={text}
                   onChangeText={(t) => setAnswer((a) => ({ ...a, [r.id]: t }))}
@@ -240,7 +241,7 @@ export const RequestsPanel = ({ requests, onAnswered }: { requests: ConsultReque
                     onAnswered();
                   }}
                 >
-                  <Text style={styles.btnText}>Send answer</Text>
+                  <Text style={styles.btnText}>{tr('Send answer')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -263,7 +264,7 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
     return (
       <View style={styles.savedRow}>
         <Ionicons name="checkmark-circle" size={14} color={Colors.ok} />
-        <Text style={styles.saved}>Saved to your templates</Text>
+        <Text style={styles.saved}>{tr('Saved to your templates')}</Text>
       </View>
     );
   }
@@ -275,7 +276,7 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
           setOpen(true);
         }}
       >
-        <Text style={styles.link}>Save this answer as a template</Text>
+        <Text style={styles.link}>{tr('Save this answer as a template')}</Text>
       </TouchableOpacity>
     );
   }
@@ -283,7 +284,7 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
     <View style={styles.saveBox}>
       <TextInput
         style={[styles.input, { minHeight: 40 }]}
-        placeholder="Template name, e.g. “Iron and vitamin D together”"
+        placeholder={tr('Template name, e.g. “Iron and vitamin D together”')}
         placeholderTextColor={Colors.textMuted}
         value={title}
         onChangeText={setTitle}
@@ -296,7 +297,7 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
           </TouchableOpacity>
         ))}
       </View>
-      {state === 'error' && <Text style={styles.error}>Could not save the template. Try again.</Text>}
+      {state === 'error' && <Text style={styles.error}>{tr('Could not save the template. Try again.')}</Text>}
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <TouchableOpacity
           style={[styles.btn, { flex: 1 }, !title.trim() && { opacity: 0.5 }]}
@@ -311,10 +312,10 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
             }
           }}
         >
-          <Text style={styles.btnText}>Save template</Text>
+          <Text style={styles.btnText}>{tr('Save template')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnGhost} onPress={() => setOpen(false)}>
-          <Text style={styles.btnGhostText}>Cancel</Text>
+          <Text style={styles.btnGhostText}>{tr('Cancel')}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, supabase } from '@/lib/supabase';
 import { isPortalDemo } from './specialistPortal';
+import { SAMPLE_TEMPLATES_ES } from './proTemplatesEs';
+import { getLang, t } from '@/i18n';
 
 // Biblioteca de plantillas del especialista: textos que ya escribió (o escribe una vez) para
 // las dudas que se repiten — regla, analíticas, hormonas, energía, colesterol, glucosa — y que
@@ -15,16 +17,16 @@ import { isPortalDemo } from './specialistPortal';
 export type TemplateTopic = 'cycle' | 'blood_test' | 'hormones' | 'energy' | 'cholesterol' | 'glucose' | 'other';
 
 export const TEMPLATE_TOPICS: { id: TemplateTopic; label: string; icon: string }[] = [
-  { id: 'cycle', label: 'Menstrual cycle', icon: 'rose-outline' },
-  { id: 'blood_test', label: 'Blood test results', icon: 'flask-outline' },
-  { id: 'hormones', label: 'Hormones & thyroid', icon: 'pulse-outline' },
-  { id: 'energy', label: 'Energy, iron & vitamins', icon: 'battery-half-outline' },
-  { id: 'cholesterol', label: 'Cholesterol & heart', icon: 'heart-outline' },
-  { id: 'glucose', label: 'Blood sugar', icon: 'water-outline' },
-  { id: 'other', label: 'Other', icon: 'ellipsis-horizontal-circle-outline' },
+  { id: 'cycle', label: t('Menstrual cycle'), icon: 'rose-outline' },
+  { id: 'blood_test', label: t('Blood test results'), icon: 'flask-outline' },
+  { id: 'hormones', label: t('Hormones & thyroid'), icon: 'pulse-outline' },
+  { id: 'energy', label: t('Energy, iron & vitamins'), icon: 'battery-half-outline' },
+  { id: 'cholesterol', label: t('Cholesterol & heart'), icon: 'heart-outline' },
+  { id: 'glucose', label: t('Blood sugar'), icon: 'water-outline' },
+  { id: 'other', label: t('Other'), icon: 'ellipsis-horizontal-circle-outline' },
 ];
 
-export const topicLabel = (id: TemplateTopic) => TEMPLATE_TOPICS.find((t) => t.id === id)?.label ?? 'Other';
+export const topicLabel = (id: TemplateTopic) => TEMPLATE_TOPICS.find((x) => x.id === id)?.label ?? t('Other');
 export const topicIcon = (id: TemplateTopic) => TEMPLATE_TOPICS.find((t) => t.id === id)?.icon ?? 'document-text-outline';
 
 export interface ProTemplate {
@@ -140,6 +142,9 @@ export function suggestTemplates(text: string, templates: ProTemplate[], limit =
 // Plantillas de ejemplo (demo, y botón "Start with sample templates" en cuentas reales).
 // Escritas con la voz de una médica; los huecos [ ] son lo que cambia de un paciente a otro.
 // ---------------------------------------------------------------------------
+// Ejemplos en el idioma de la app (español: proTemplatesEs.ts)
+export const samplesForLang = (): TemplateDraft[] => (getLang() === 'es' ? SAMPLE_TEMPLATES_ES : SAMPLE_TEMPLATES);
+
 export const SAMPLE_TEMPLATES: TemplateDraft[] = [
   {
     title: 'Low ferritin and tiredness',
@@ -291,7 +296,7 @@ async function readLocal(key: string, seed: boolean): Promise<ProTemplate[]> {
   } catch {
     // sin almacenamiento: lista vacía (o ejemplos en demo)
   }
-  return seed ? SAMPLE_TEMPLATES.map((d) => fromDraft(d)) : [];
+  return seed ? samplesForLang().map((d) => fromDraft(d)) : [];
 }
 async function writeLocal(key: string, list: ProTemplate[]) {
   await AsyncStorage.setItem(key, JSON.stringify(list)).catch(() => undefined);
@@ -311,8 +316,9 @@ const toTemplate = (r: any): ProTemplate => ({
 
 const byRecent = (a: ProTemplate, b: ProTemplate) => (b.lastUsedAt ?? b.updatedAt).localeCompare(a.lastUsedAt ?? a.updatedAt);
 
+// La demo guarda una biblioteca por idioma: al cambiar a español salen los ejemplos en español
 const localStore = (): { key: string; seed: boolean } | null =>
-  isPortalDemo() ? { key: DEMO_KEY, seed: true } : cloudMissing || !supabase ? { key: deviceKey(), seed: false } : null;
+  isPortalDemo() ? { key: getLang() === 'en' ? DEMO_KEY : `${DEMO_KEY}:${getLang()}`, seed: true } : cloudMissing || !supabase ? { key: deviceKey(), seed: false } : null;
 
 export const templates = {
   where(): TemplateStore {
@@ -375,6 +381,6 @@ export const templates = {
 
   // Cuenta real con la biblioteca vacía: empezar con los ejemplos y adaptarlos
   async addSamples() {
-    for (const d of SAMPLE_TEMPLATES) await templates.save(d);
+    for (const d of samplesForLang()) await templates.save(d);
   },
 };

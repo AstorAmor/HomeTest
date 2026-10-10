@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,13 +27,13 @@ const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string }> = {
 
 const formatValue = (metric: WearableMetric, value: number) => {
   if (metric === 'sleep_duration') return `${Math.floor(value / 60)}h ${String(value % 60).padStart(2, '0')}m`;
-  if (metric === 'steps') return value.toLocaleString('en-GB');
+  if (metric === 'steps') return value.toLocaleString(dateLocale());
   const unit = METRIC_LABEL[metric].unit;
   return unit ? `${value} ${unit}` : String(value);
 };
 
 const formatDate = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 
 export const WearablesScreen = () => {
   const [records, setRecords] = useState<DailyWearableRecord[]>([]);

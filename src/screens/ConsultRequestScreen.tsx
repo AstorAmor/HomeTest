@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,7 +19,7 @@ const KINDS: { id: RequestKind; icon: string; hint: string }[] = [
   { id: 'async_video', icon: 'film-outline', hint: 'Get a short video explaining your results' },
 ];
 
-const shortDate = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
 
 // "Send request": pregunta o petición que el especialista contesta cuando puede
 // (sin cita). Debajo, las solicitudes anteriores con este especialista y su respuesta.

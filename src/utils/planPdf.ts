@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import { currentReport, findMarkerInCurrentReport } from '@/data/reportRepository';
 import {
   getActionPlanContentEn,
@@ -68,7 +69,7 @@ export function buildPlanDoc(patientName: string, generatedAt = new Date()): Pla
   return { patientName, testDate: currentReport.test_date, generatedAt, actions };
 }
 
-const longDate = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const longDate = (d: Date) => d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 const isoToDate = (iso: string) => new Date(`${iso}T12:00:00`);
 
 export const planFileName = (doc: PlanDoc) => `Kuova-plan-${doc.generatedAt.toISOString().slice(0, 10)}`;

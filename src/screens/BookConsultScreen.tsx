@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,8 +11,8 @@ import { consult, isRealProfessional } from '@/data/consultations';
 import { createShare } from '@/data/sharing';
 import { AppointmentKind, AppointmentModality, KIND_LABEL } from '@/data/specialistTypes';
 
-const dayLabel = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-const time = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+const dayLabel = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
+const time = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 
 // Reservar una videoconsulta (o llamada) en los huecos libres del especialista.
 export const BookConsultScreen = () => {

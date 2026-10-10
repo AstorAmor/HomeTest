@@ -10,16 +10,17 @@ import { Appointment, AppointmentStatus, KIND_LABEL } from '@/data/specialistTyp
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { calendarLinks } from '@/data/schedule';
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+import { dateLocale, t } from '@/i18n';
+const time = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 const longDay = (key: string) =>
-  new Date(`${key}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(`${key}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 export const statusStyle = (s: AppointmentStatus) =>
   ({
-    pending: { label: 'Pending', color: Colors.attention },
-    confirmed: { label: 'Confirmed', color: Colors.ok },
-    completed: { label: 'Completed', color: Colors.textSecondary },
-    cancelled: { label: 'Cancelled', color: Colors.danger },
+    pending: { label: t('Pending'), color: Colors.attention },
+    confirmed: { label: t('Confirmed'), color: Colors.ok },
+    completed: { label: t('Completed'), color: Colors.textSecondary },
+    cancelled: { label: t('Cancelled'), color: Colors.danger },
   })[s];
 
 const startOfWeek = (d: Date) => {
@@ -86,39 +87,39 @@ export const ProAgendaScreen = () => {
       start: hm(start),
       end: hm(end),
       title: `${KIND_LABEL[a.kind]} - ${a.patientName} (${a.modality === 'video' ? 'video' : 'call'})`,
-      detail: `Kuova consultation${a.reason ? `: ${a.reason}` : ''}. Open the Kuova portal to start it.`,
+      detail: `${t('Kuova consultation')}${a.reason ? `: ${a.reason}` : ''}. ${t('Open the Kuova portal to start it.')}`,
     });
   };
 
   const fmt = (iso: string, withDay = true) =>
-    new Date(iso).toLocaleString('en-GB', withDay ? { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    new Date(iso).toLocaleString(dateLocale(), withDay ? { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   const requestsBlock =
     requests.length > 0 ? (
       <View style={styles.requests}>
-        <Text style={styles.reqTitle}>Requests · {requests.length}</Text>
-        <Text style={styles.reqSub}>Oldest first. Approve or decline each one.</Text>
+        <Text style={styles.reqTitle}>{t('Requests')} · {requests.length}</Text>
+        <Text style={styles.reqSub}>{t('Oldest first. Approve or decline each one.')}</Text>
         {requests.map((a, i) => (
           <View key={a.id} style={styles.reqItem}>
             <Text style={styles.reqNum}>{i + 1}</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.itemName}>{a.patientName}</Text>
               <Text style={styles.metaText}>
-                {fmt(a.startsAt)} · {KIND_LABEL[a.kind]} · {a.modality === 'video' ? 'Video' : 'Call'}
+                {fmt(a.startsAt)} · {t(KIND_LABEL[a.kind])} · {a.modality === 'video' ? t('Video') : t('Call')}
               </Text>
               {a.reason ? <Text style={styles.reason}>{`"${a.reason}"`}</Text> : null}
-              {a.createdAt ? <Text style={styles.requested}>Requested {fmt(a.createdAt, false)}</Text> : null}
+              {a.createdAt ? <Text style={styles.requested}>{t('Requested {date}', { date: fmt(a.createdAt, false) })}</Text> : null}
               <View style={[styles.actions, { marginTop: 8 }]}>
                 <TouchableOpacity style={styles.btn} onPress={() => confirm(a)}>
                   <Ionicons name="checkmark" size={16} color={Colors.background} />
-                  <Text style={styles.btnText}>Approve</Text>
+                  <Text style={styles.btnText}>{t('Approve')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.btnGhost} onPress={() => decline(a)}>
                   <Ionicons name="close" size={16} color={Colors.danger} />
-                  <Text style={[styles.btnGhostText, { color: Colors.danger }]}>Decline</Text>
+                  <Text style={[styles.btnGhostText, { color: Colors.danger }]}>{t('Decline')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.btnGhost} onPress={() => router.push({ pathname: '/pro-patient', params: { id: a.patientId } })}>
-                  <Text style={styles.btnGhostText}>Patient</Text>
+                  <Text style={styles.btnGhostText}>{t('Patient')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -132,12 +133,12 @@ export const ProAgendaScreen = () => {
       <View style={styles.toggleRow}>
         {(['week', 'month'] as const).map((v) => (
           <TouchableOpacity key={v} style={[styles.toggle, view === v && styles.toggleOn]} onPress={() => setView(v)}>
-            <Text style={[styles.toggleText, view === v && { color: Colors.background }]}>{v === 'week' ? 'Week' : 'Month'}</Text>
+            <Text style={[styles.toggleText, view === v && { color: Colors.background }]}>{v === 'week' ? t('Week') : t('Month')}</Text>
           </TouchableOpacity>
         ))}
         <View style={{ flex: 1 }} />
         <TouchableOpacity onPress={() => { const t = new Date(); setSelected(toDayKey(t)); setMonth(t); }}>
-          <Text style={styles.today}>Today</Text>
+          <Text style={styles.today}>{t('Today')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -150,7 +151,7 @@ export const ProAgendaScreen = () => {
               <Ionicons name="chevron-back" size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
             <Text style={styles.weekTitle}>
-              {week[0].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {week[6].toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              {week[0].toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })} – {week[6].toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}
             </Text>
             <TouchableOpacity onPress={() => { const d = new Date(weekStart); d.setDate(d.getDate() + 7); setSelected(toDayKey(d)); setMonth(d); }} hitSlop={10}>
               <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
@@ -163,7 +164,7 @@ export const ProAgendaScreen = () => {
               const on = key === selected;
               return (
                 <TouchableOpacity key={key} style={[styles.weekDay, on && styles.weekDayOn]} onPress={() => setSelected(key)}>
-                  <Text style={[styles.weekDow, on && { color: Colors.background }]}>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</Text>
+                  <Text style={[styles.weekDow, on && { color: Colors.background }]}>{d.toLocaleDateString(dateLocale(), { weekday: 'short' })}</Text>
                   <Text style={[styles.weekNum, on && { color: Colors.background }]}>{d.getDate()}</Text>
                   <Text style={[styles.weekCount, on && { color: Colors.background }]}>{n ? `${n}` : '·'}</Text>
                 </TouchableOpacity>
@@ -179,7 +180,7 @@ export const ProAgendaScreen = () => {
     <View style={{ flex: 1 }}>
       {requestsBlock}
       <Text style={styles.dayTitle}>{longDay(selected)}</Text>
-      {dayList.length === 0 && <Text style={styles.empty}>No consultations this day.</Text>}
+      {dayList.length === 0 && <Text style={styles.empty}>{t('No consultations this day.')}</Text>}
       {dayList.map((a) => {
         const st = statusStyle(a.status);
         return (
@@ -191,7 +192,7 @@ export const ProAgendaScreen = () => {
                 <View style={styles.meta}>
                   <Text style={styles.metaText}>{KIND_LABEL[a.kind]}</Text>
                   <Ionicons name={a.modality === 'video' ? 'videocam-outline' : 'call-outline'} size={13} color={Colors.textSecondary} />
-                  <Text style={styles.metaText}>{a.modality === 'video' ? 'Video' : 'Call'} · {a.durationMin}′</Text>
+                  <Text style={styles.metaText}>{a.modality === 'video' ? t('Video') : t('Call')} · {a.durationMin}′</Text>
                 </View>
                 {a.reason ? <Text style={styles.reason}>“{a.reason}”</Text> : null}
               </View>
@@ -201,23 +202,23 @@ export const ProAgendaScreen = () => {
               {a.status === 'pending' && (
                 <TouchableOpacity style={styles.btnGhost} onPress={() => confirm(a)}>
                   <Ionicons name="checkmark" size={16} color={Colors.accent} />
-                  <Text style={styles.btnGhostText}>Confirm</Text>
+                  <Text style={styles.btnGhostText}>{t('Confirm')}</Text>
                 </TouchableOpacity>
               )}
               {a.status !== 'completed' && (
                 <TouchableOpacity style={styles.btn} onPress={() => router.push({ pathname: '/pro-room', params: { appt: a.id, patient: a.patientId } })}>
                   <Ionicons name={a.modality === 'video' ? 'videocam' : 'call'} size={16} color={Colors.background} />
-                  <Text style={styles.btnText}>Start consultation</Text>
+                  <Text style={styles.btnText}>{t('Start consultation')}</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.btnGhost} onPress={() => router.push({ pathname: '/pro-patient', params: { id: a.patientId } })}>
                 <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
-                <Text style={styles.btnGhostText}>View history</Text>
+                <Text style={styles.btnGhostText}>{t('View history')}</Text>
               </TouchableOpacity>
               {a.status === 'confirmed' && (
                 <TouchableOpacity style={styles.btnGhost} onPress={() => setOpenCal(openCal === a.id ? null : a.id)}>
                   <Ionicons name="calendar-outline" size={16} color={Colors.accent} />
-                  <Text style={styles.btnGhostText}>Add to calendar</Text>
+                  <Text style={styles.btnGhostText}>{t('Add to calendar')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -240,9 +241,9 @@ export const ProAgendaScreen = () => {
   return (
     <ProLayout
       active="agenda"
-      title="Agenda"
+      title={t('Agenda')}
       badge={{ agenda: pendingCount }}
-      right={pendingCount ? <Text style={styles.pending}>{pendingCount} to confirm</Text> : null}
+      right={pendingCount ? <Text style={styles.pending}>{t('{n} to confirm', { n: pendingCount })}</Text> : null}
     >
       {wide ? (
         <View style={styles.wideRow}>

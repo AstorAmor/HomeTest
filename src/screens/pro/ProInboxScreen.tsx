@@ -9,6 +9,7 @@ import { portal } from '@/data/specialistPortal';
 import { ConsultRequest, Conversation } from '@/data/specialistTypes';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
+import { dateLocale, t as tr } from '@/i18n';
 // Bandeja del especialista: solicitudes de los pacientes y chats abiertos.
 export const ProInboxScreen = () => {
   const router = useRouter();
@@ -26,12 +27,12 @@ export const ProInboxScreen = () => {
   const open = requests.filter((r) => r.status === 'open').length;
 
   return (
-    <ProLayout active="inbox" title="Inbox" badge={{ inbox: open }}>
+    <ProLayout active="inbox" title={tr('Inbox')} badge={{ inbox: open }}>
       <View style={styles.tabs}>
         {(['requests', 'chats'] as const).map((t) => (
           <TouchableOpacity key={t} style={[styles.tab, tab === t && styles.tabOn]} onPress={() => setTab(t)}>
             <Text style={[styles.tabText, tab === t && { color: Colors.background }]}>
-              {t === 'requests' ? `Requests${open ? ` · ${open}` : ''}` : `Chats · ${convs.length}`}
+              {t === 'requests' ? `${tr('Requests')}${open ? ` · ${open}` : ''}` : `${tr('Chats')} · ${convs.length}`}
             </Text>
           </TouchableOpacity>
         ))}
@@ -39,7 +40,7 @@ export const ProInboxScreen = () => {
 
       {tab === 'requests' ? (
         <View style={{ gap: 14 }}>
-          {requests.length === 0 && <Text style={styles.muted}>No requests yet.</Text>}
+          {requests.length === 0 && <Text style={styles.muted}>{tr('No requests yet.')}</Text>}
           {Object.entries(
             requests.reduce<Record<string, ConsultRequest[]>>((acc, r) => {
               (acc[r.patientId] ??= []).push(r);
@@ -57,7 +58,7 @@ export const ProInboxScreen = () => {
         </View>
       ) : (
         <View style={{ gap: 8 }}>
-          {convs.length === 0 && <Text style={styles.muted}>No chats yet. Patients can write to you when chat is on (Profile → Channels).</Text>}
+          {convs.length === 0 && <Text style={styles.muted}>{tr('No chats yet. Patients can write to you when chat is on (Profile → Channels).')}</Text>}
           {convs.map((c) => (
             <TouchableOpacity
               key={c.id}
@@ -70,7 +71,7 @@ export const ProInboxScreen = () => {
               <View style={{ flex: 1 }}>
                 <Text style={styles.convName}>{c.patientName}</Text>
                 <Text style={styles.muted}>
-                  {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No messages yet'}
+                  {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString(dateLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : tr('No messages yet')}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />

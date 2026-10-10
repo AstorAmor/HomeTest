@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -133,7 +134,7 @@ export const NotificationsScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.itemTitle}>{label(id)}</Text>
                   <Text style={styles.itemMeta}>
-                    {m.until ? `Until ${new Date(m.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : 'For good'}
+                    {m.until ? `Until ${new Date(m.until).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' })}` : 'For good'}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => unmute(id)}>

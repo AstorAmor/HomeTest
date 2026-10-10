@@ -10,6 +10,7 @@ import { ConsultRequest, PatientLabResult, PatientSummary } from '@/data/special
 import { scopeLabel } from '@/data/sharing';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
+import { t as tr } from '@/i18n';
 type Tab = 'results' | 'notes' | 'requests';
 
 const notify = (title: string, body: string) => (Platform.OS === 'web' ? window.alert(`${title}\n\n${body}`) : Alert.alert(title, body));
@@ -33,30 +34,30 @@ export const ProPatientDetailScreen = () => {
   }, [id, setPatient, setLab, setRequests]);
   useReloadOnFocus(load);
 
-  if (!patient) return <ProLayout active="patients" title="Patient">{null}</ProLayout>;
+  if (!patient) return <ProLayout active="patients" title={tr('Patient')}>{null}</ProLayout>;
 
   const openChat = async () => {
     try {
       const conv = await portal.conversationWith(patient.id, patient.name);
       router.push({ pathname: '/chat', params: { conversation: conv, title: patient.name, side: 'pro' } });
     } catch {
-      notify('Chat is off', 'Turn on chat in Profile → Channels to message your patients.');
+      notify(tr('Chat is off'), tr('Turn on chat in Profile → Channels to message your patients.'));
     }
   };
 
   const actions: { icon: string; label: string; onPress: () => void; primary?: boolean }[] = [
-    { icon: 'call-outline', label: 'Call', onPress: () => router.push({ pathname: '/pro-room', params: { patient: patient.id, mode: 'voice' } }) },
-    { icon: 'videocam-outline', label: 'Video call', onPress: () => router.push({ pathname: '/pro-room', params: { patient: patient.id, mode: 'video' } }) },
-    { icon: 'chatbubble-outline', label: 'Message', onPress: openChat },
-    { icon: 'mail-outline', label: 'Email', onPress: () => notify('Email', "The patient hasn't shared an email address. Use Message: it stays inside Kuova and is encrypted in transit.") },
-    { icon: 'film-outline', label: 'Video explanation', onPress: () => notify('Video explanation', 'Prototype: you will be able to record a short video (up to 3 min) explaining the results, and the patient will get it in their app.') },
-    { icon: 'sparkles-outline', label: 'Generate action plan', onPress: () => router.push({ pathname: '/pro-plan', params: { patient: patient.id } }), primary: true },
+    { icon: 'call-outline', label: tr('Call'), onPress: () => router.push({ pathname: '/pro-room', params: { patient: patient.id, mode: 'voice' } }) },
+    { icon: 'videocam-outline', label: tr('Video call'), onPress: () => router.push({ pathname: '/pro-room', params: { patient: patient.id, mode: 'video' } }) },
+    { icon: 'chatbubble-outline', label: tr('Message'), onPress: openChat },
+    { icon: 'mail-outline', label: tr('Email'), onPress: () => notify(tr('Email'), tr("The patient hasn't shared an email address. Use Message: it stays inside Kuova and is encrypted in transit.")) },
+    { icon: 'film-outline', label: tr('Video explanation'), onPress: () => notify(tr('Video explanation'), tr('Prototype: you will be able to record a video explaining the results, and the patient will get it in their app.')) },
+    { icon: 'sparkles-outline', label: tr('Generate action plan'), onPress: () => router.push({ pathname: '/pro-plan', params: { patient: patient.id } }), primary: true },
   ];
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: 'results', label: 'Biomarkers & results', count: lab ? lab.markers.filter((m) => m.status !== 'in').length : 0 },
-    { id: 'notes', label: 'History & notes' },
-    { id: 'requests', label: 'Messages & requests', count: requests.filter((r) => r.status === 'open').length },
+    { id: 'results', label: tr('Biomarkers & results'), count: lab ? lab.markers.filter((m) => m.status !== 'in').length : 0 },
+    { id: 'notes', label: tr('History & notes') },
+    { id: 'requests', label: tr('Messages & requests'), count: requests.filter((r) => r.status === 'open').length },
   ];
 
   return (
@@ -74,10 +75,10 @@ export const ProPatientDetailScreen = () => {
           <Text style={styles.avatarText}>{patient.name.split(' ').map((p) => p[0]).slice(0, 2).join('')}</Text>
         </View>
         <View style={{ flex: 1, gap: 4 }}>
-          <Text style={styles.sub}>{[patient.age ? `${patient.age} years` : null, patient.sex].filter(Boolean).join(' · ') || 'Patient'}</Text>
-          {patient.goals?.length ? <Text style={styles.sub}>Goals: {patient.goals.join(', ')}</Text> : null}
+          <Text style={styles.sub}>{[patient.age ? tr('{n} years', { n: patient.age }) : null, patient.sex ? tr(patient.sex) : null].filter(Boolean).join(' · ') || tr('Patient')}</Text>
+          {patient.goals?.length ? <Text style={styles.sub}>{tr('Goals: {what}', { what: patient.goals.join(', ') })}</Text> : null}
           <Text style={styles.scopes}>
-            {patient.scopes.length ? `Shares with you: ${patient.scopes.map(scopeLabel).join(', ')}` : 'Has not shared data with you yet'}
+            {patient.scopes.length ? tr('Shares with you: {what}', { what: patient.scopes.map((s) => tr(scopeLabel(s))).join(', ') }) : tr('Has not shared data with you yet')}
           </Text>
         </View>
       </View>
@@ -108,7 +109,7 @@ export const ProPatientDetailScreen = () => {
             <TouchableOpacity style={styles.chatLink} onPress={openChat}>
               <Ionicons name="chatbubbles-outline" size={18} color={Colors.accent} />
               <Text style={styles.chatLinkText}>
-                Open chat{patient.unreadMessages ? ` · ${patient.unreadMessages} new` : ''}
+                {tr('Open chat')}{patient.unreadMessages ? ` · ${tr(patient.unreadMessages === 1 ? '{n} new message' : '{n} new messages', { n: patient.unreadMessages })}` : ''}
               </Text>
               <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
             </TouchableOpacity>

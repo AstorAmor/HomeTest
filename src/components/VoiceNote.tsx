@@ -12,6 +12,7 @@ import {
 import { Colors, withAlpha } from '@/constants/colors';
 import { audioUrl } from '@/data/consultations';
 
+import { t } from '@/i18n';
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const MAX_SECONDS = 180;
 
@@ -69,7 +70,7 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
     return (
       <View style={styles.row}>
         <AudioPlayerButton uri={uri} label={`Voice note · ${mmss(seconds)}`} />
-        <TouchableOpacity onPress={discard} hitSlop={8} accessibilityLabel="Delete voice note">
+        <TouchableOpacity onPress={discard} hitSlop={8} accessibilityLabel={t('Delete voice note')}>
           <Ionicons name="trash-outline" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
       </View>
@@ -89,7 +90,7 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
         </Text>
       </TouchableOpacity>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {Platform.OS === 'web' && state === 'idle' ? <Text style={styles.hint}>Your browser will ask for the microphone.</Text> : null}
+      {Platform.OS === 'web' && state === 'idle' ? <Text style={styles.hint}>{t('Your browser will ask for the microphone.')}</Text> : null}
     </View>
   );
 };

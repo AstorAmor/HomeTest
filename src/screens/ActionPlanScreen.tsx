@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +16,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
 
 const longDate = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
 // "Full view" desde Today → Your plan: el action plan del último informe, con el
 // porqué de cada acción y la proyección de su marcador.

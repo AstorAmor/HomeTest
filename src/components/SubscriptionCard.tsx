@@ -8,8 +8,9 @@ import { getMySubscription, MySubscription } from '@/data/orders';
 import { mockNextTestDate } from '@/data/mockData';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
+import { dateLocale } from '@/i18n';
 const longDate = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
 // "My subscription": suscripción activa, renovación, próxima analítica y mejora a Premium.
 // Se usa en el perfil y en Lab.

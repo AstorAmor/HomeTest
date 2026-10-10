@@ -1,15 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { AppearanceSwitch } from '@/components/AppearanceSwitch';
+import { PreferencesBlock } from '@/components/PreferencesBlock';
 import { Colors } from '@/constants/colors';
 import { useLogout } from '@/hooks/useLogout';
-import { getLang, Lang, LANGUAGES, saveLanguage, t } from '@/i18n';
-import { getTextSize, saveTextSize, TEXT_SIZES, TextSize } from '@/theme/textSize';
-import { reloadKeepingPlace } from '@/theme/appearance';
+import { t } from '@/i18n';
 
 const PERMISSIONS: { icon: string; title: string; why: string }[] = [
   { icon: 'notifications-outline', title: 'Notifications', why: 'Reminders for your medication, check-ins and tests.' },
@@ -24,67 +22,12 @@ const PERMISSIONS: { icon: string; title: string; why: string }[] = [
 export const SettingsScreen = () => {
   const router = useRouter();
   const exit = useLogout();
-  const [size, setSize] = useState<TextSize>('default');
-  const lang = getLang();
-  useEffect(() => {
-    getTextSize().then(setSize);
-  }, []);
-
-  const chooseLang = async (id: Lang) => {
-    if (id === lang) return;
-    await saveLanguage(id);
-    await reloadKeepingPlace(Colors.background, '/settings');
-  };
-  const chooseSize = async (id: TextSize) => {
-    if (id === size) return;
-    setSize(id);
-    await saveTextSize(id);
-    await reloadKeepingPlace(Colors.background, '/settings');
-  };
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Settings')} showBack backFallback="/(tabs)?tab=4" />
 
-        <Text style={styles.section}>{t('Appearance')}</Text>
-        <View style={styles.block}>
-          <AppearanceSwitch returnTo="/settings" />
-        </View>
-
-        <Text style={styles.section}>{t('Language')}</Text>
-        <View style={styles.card}>
-          {LANGUAGES.map((l, i) => {
-            const on = l.id === lang;
-            return (
-              <TouchableOpacity
-                key={l.id}
-                style={[styles.row, i > 0 && styles.divider, !l.ready && { opacity: 0.5 }]}
-                disabled={!l.ready}
-                onPress={() => chooseLang(l.id)}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: on, disabled: !l.ready }}
-              >
-                <Text style={styles.rowTitle}>{l.name}</Text>
-                {!l.ready && <Text style={styles.soon}>{t('Coming soon')}</Text>}
-                <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={20} color={on ? Colors.accent : Colors.textMuted} />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <Text style={styles.section}>{t('Text size')}</Text>
-        <View style={styles.sizes}>
-          {TEXT_SIZES.map((s) => {
-            const on = s.id === size;
-            return (
-              <TouchableOpacity key={s.id} style={[styles.size, on && styles.sizeOn]} onPress={() => chooseSize(s.id)}>
-                <Text style={[styles.sizeSample, { fontSize: 15 * s.scale }, on && styles.sizeTextOn]}>Aa</Text>
-                <Text style={[styles.sizeLabel, on && styles.sizeTextOn]}>{t(s.label)}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <PreferencesBlock returnTo="/settings" />
 
         <Text style={styles.section}>{t('Your experience')}</Text>
         <View style={styles.card}>

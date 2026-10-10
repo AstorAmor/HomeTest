@@ -22,7 +22,7 @@ import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import { CycleStrip } from '@/components/CycleStrip';
 import { useSections } from '@/data/appPrefs';
-import { t } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -65,7 +65,7 @@ function simpleChart(entries: DatedValue[], mockId: string, color: string): Char
   const now = new Date();
   const labels = mock.history.map((_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (mock.history.length - 1 - i), 1);
-    return d.toLocaleDateString('en-GB', { month: 'short' });
+    return d.toLocaleDateString(dateLocale(), { month: 'short' });
   });
   return { labels, series: [{ color, values: mock.history }], latest: mock.valor, isSample: true };
 }
@@ -162,7 +162,7 @@ export const MyDataScreen = () => {
   const hr = wearableChart(series.resting_heart_rate, Colors.coral, (v) => `${Math.round(v)}`);
   const hrv = wearableChart(series.hrv, Colors.accent, (v) => `${Math.round(v)}`);
   const sleep = wearableChart(series.sleep_duration, Colors.violet, formatSleep);
-  const steps = wearableChart(series.steps, Colors.sky, (v) => Math.round(v).toLocaleString('en-GB'));
+  const steps = wearableChart(series.steps, Colors.sky, (v) => Math.round(v).toLocaleString(dateLocale()));
   const kcal = wearableChart(series.active_energy, Colors.amber, (v) => `${Math.round(v)}`);
   const temp = wearableChart(series.body_temperature, Colors.pinkSoft, (v) => v.toFixed(1));
 

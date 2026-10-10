@@ -6,6 +6,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { useProIdentity } from '@/components/pro/ProLayout';
 import { ProTemplate, TemplateTopic, fillTemplate, suggestTemplates, templates, topicIcon, topicLabel } from '@/data/proTemplates';
 
+import { t as tr } from '@/i18n';
 interface Props {
   question: string; // texto del paciente: de aquí salen las sugerencias
   patientName: string;
@@ -49,7 +50,7 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
     return (
       <TouchableOpacity style={styles.emptyRow} onPress={() => router.push('/pro-templates')}>
         <Ionicons name="documents-outline" size={15} color={Colors.accent} />
-        <Text style={styles.emptyText}>Save the answers you repeat as templates and insert them here</Text>
+        <Text style={styles.emptyText}>{tr('Save the answers you repeat as templates and insert them here')}</Text>
         <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
       </TouchableOpacity>
     );
@@ -59,7 +60,7 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
     <View style={{ gap: 8 }}>
       <View style={styles.row}>
         <Ionicons name="documents-outline" size={15} color={Colors.textSecondary} />
-        <Text style={styles.label}>{suggested.length ? 'Suggested' : 'Templates'}</Text>
+        <Text style={styles.label}>{suggested.length ? tr('Suggested') : tr('Templates')}</Text>
         {suggested.map((t) => (
           <TouchableOpacity key={t.id} style={styles.chip} onPress={() => insert(t)}>
             <Ionicons name={topicIcon(t.topic) as any} size={13} color={Colors.accent} />
@@ -69,7 +70,7 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
           </TouchableOpacity>
         ))}
         <TouchableOpacity style={[styles.chip, styles.browse]} onPress={() => setOpen((v) => !v)}>
-          <Text style={styles.browseText}>{open ? 'Close' : `Browse all · ${list.length}`}</Text>
+          <Text style={styles.browseText}>{open ? tr('Close') : `${tr('Browse all')} · ${list.length}`}</Text>
         </TouchableOpacity>
       </View>
 
@@ -79,7 +80,7 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
             <Ionicons name="search" size={14} color={Colors.textMuted} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search your templates"
+              placeholder={tr('Search your templates')}
               placeholderTextColor={Colors.textMuted}
               value={query}
               onChangeText={setQuery}
@@ -96,13 +97,13 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
                     {topicLabel(t.topic)} · {t.body.replace(/^.*\n+/, '').replace(/\s+/g, ' ').slice(0, 140)}
                   </Text>
                 </View>
-                <Text style={styles.insert}>Insert</Text>
+                <Text style={styles.insert}>{tr('Insert')}</Text>
               </TouchableOpacity>
             ))}
             {shown.length === 0 && <Text style={styles.muted}>No template matches “{query}”.</Text>}
           </ScrollView>
           <TouchableOpacity onPress={() => router.push('/pro-templates')}>
-            <Text style={styles.manage}>Manage templates</Text>
+            <Text style={styles.manage}>{tr('Manage templates')}</Text>
           </TouchableOpacity>
         </View>
       )}

@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -71,7 +72,7 @@ export const GeneticProfileScreen = () => {
               </View>
               <Text style={styles.cardBody}>{LEVEL_TEXT[level].title}</Text>
               <Text style={styles.cardMeta}>
-                Answered {new Date(record.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · tap
+                Answered {new Date(record.completedAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' })} · tap
                 to see what to tell your doctor
               </Text>
             </>

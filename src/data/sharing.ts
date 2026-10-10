@@ -1,6 +1,7 @@
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { compressPhoto } from '@/utils/imageUpload';
 
+import { t } from '@/i18n';
 // Categorías que un paciente puede compartir. Deben coincidir con el CHECK de
 // data_shares.scopes en supabase/migrations/..._professional_sharing.sql.
 export type ShareScope =
@@ -17,17 +18,17 @@ export type ShareScope =
   | 'wearables';
 
 export const SHARE_SCOPES: { id: ShareScope; label: string; description: string; icon: string }[] = [
-  { id: 'lab_reports', label: 'Lab results', description: 'Your blood test reports', icon: 'flask-outline' },
-  { id: 'plan', label: 'Your plan', description: 'Your personalised action plan and its updates', icon: 'document-text-outline' },
-  { id: 'glucose', label: 'Glucose', description: 'Glucose readings you log', icon: 'water-outline' },
-  { id: 'blood_pressure', label: 'Blood pressure', description: 'Blood pressure and pulse readings', icon: 'speedometer-outline' },
-  { id: 'metrics', label: 'Other biomarkers', description: 'Cholesterol, cortisol and similar', icon: 'analytics-outline' },
-  { id: 'cycle', label: 'Menstrual cycle', description: 'Period start dates and predictions', icon: 'rose-outline' },
-  { id: 'wellbeing', label: 'Mood & check-ins', description: 'Sleep, energy, mood and diary notes', icon: 'happy-outline' },
-  { id: 'activity', label: 'Activity & workouts', description: 'Workouts you log', icon: 'barbell-outline' },
-  { id: 'nutrition', label: 'Nutrition', description: 'Meals and meal photos', icon: 'nutrition-outline' },
-  { id: 'wearables', label: 'Wearables', description: 'Steps, sleep, heart rate, HRV, temperature', icon: 'watch-outline' },
-  { id: 'profile', label: 'Profile & goals', description: 'Age, sex, height, weight, habits and goals', icon: 'person-outline' },
+  { id: 'lab_reports', label: t('Lab results'), description: t('Your blood test reports'), icon: 'flask-outline' },
+  { id: 'plan', label: t('Your plan'), description: t('Your personalised action plan and its updates'), icon: 'document-text-outline' },
+  { id: 'glucose', label: t('Glucose'), description: t('Glucose readings you log'), icon: 'water-outline' },
+  { id: 'blood_pressure', label: t('Blood pressure'), description: t('Blood pressure and pulse readings'), icon: 'speedometer-outline' },
+  { id: 'metrics', label: t('Other biomarkers'), description: t('Cholesterol, cortisol and similar'), icon: 'analytics-outline' },
+  { id: 'cycle', label: t('Menstrual cycle'), description: t('Period start dates and predictions'), icon: 'rose-outline' },
+  { id: 'wellbeing', label: t('Mood & check-ins'), description: t('Sleep, energy, mood and diary notes'), icon: 'happy-outline' },
+  { id: 'activity', label: t('Activity & workouts'), description: t('Workouts you log'), icon: 'barbell-outline' },
+  { id: 'nutrition', label: t('Nutrition'), description: t('Meals and meal photos'), icon: 'nutrition-outline' },
+  { id: 'wearables', label: t('Wearables'), description: t('Steps, sleep, heart rate, HRV, temperature'), icon: 'watch-outline' },
+  { id: 'profile', label: t('Profile & goals'), description: t('Age, sex, height, weight, habits and goals'), icon: 'person-outline' },
 ];
 
 export const scopeLabel = (id: string) => SHARE_SCOPES.find((s) => s.id === id)?.label ?? id;
@@ -35,13 +36,13 @@ export const scopeLabel = (id: string) => SHARE_SCOPES.find((s) => s.id === id)?
 export type ProfessionalRole = 'doctor' | 'psychologist' | 'midwife' | 'dietitian' | 'trainer' | 'physio' | 'geneticist';
 
 export const PROFESSIONAL_ROLES: { id: ProfessionalRole; label: string }[] = [
-  { id: 'doctor', label: 'Doctor' },
-  { id: 'psychologist', label: 'Psychologist' },
-  { id: 'midwife', label: 'Midwife' },
-  { id: 'dietitian', label: 'Dietitian' },
-  { id: 'trainer', label: 'Personal trainer' },
-  { id: 'physio', label: 'Physiotherapist' },
-  { id: 'geneticist', label: 'Genetic counsellor' },
+  { id: 'doctor', label: t('Doctor') },
+  { id: 'psychologist', label: t('Psychologist') },
+  { id: 'midwife', label: t('Midwife') },
+  { id: 'dietitian', label: t('Dietitian') },
+  { id: 'trainer', label: t('Personal trainer') },
+  { id: 'physio', label: t('Physiotherapist') },
+  { id: 'geneticist', label: t('Genetic counsellor') },
 ];
 
 export const roleLabel = (id: string) => PROFESSIONAL_ROLES.find((r) => r.id === id)?.label ?? id;

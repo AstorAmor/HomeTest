@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 // Tipos compartidos por el portal del especialista y por la parte del paciente
 // (citas, solicitudes, chat, notas clínicas, disponibilidad).
 
@@ -71,13 +72,13 @@ export interface ClinicalNote {
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 export const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 export const WEEKDAY_LABEL: Record<Weekday, string> = {
-  mon: 'Mon',
-  tue: 'Tue',
-  wed: 'Wed',
-  thu: 'Thu',
-  fri: 'Fri',
-  sat: 'Sat',
-  sun: 'Sun',
+  mon: t('Mon'),
+  tue: t('Tue'),
+  wed: t('Wed'),
+  thu: t('Thu'),
+  fri: t('Fri'),
+  sat: t('Sat'),
+  sun: t('Sun'),
 };
 
 export interface TimeRange {
@@ -139,16 +140,16 @@ export interface PatientLabResult {
 }
 
 export const KIND_LABEL: Record<AppointmentKind, string> = {
-  first: 'First visit',
-  follow_up: 'Follow-up',
-  results_review: 'Results review',
+  first: t('First visit'),
+  follow_up: t('Follow-up'),
+  results_review: t('Results review'),
 };
 
 export const REQUEST_KIND_LABEL: Record<RequestKind, string> = {
-  question: 'Question',
-  results_review: 'Review my results',
-  video_call: 'Video consultation',
-  async_video: 'Video explanation',
+  question: t('Question'),
+  results_review: t('Review my results'),
+  video_call: t('Video consultation'),
+  async_video: t('Video explanation'),
 };
 
 const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));

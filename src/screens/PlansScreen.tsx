@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +15,7 @@ import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const dayMonthYear = (iso: string) =>
-  new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
 const SOURCE_LABEL: Record<PlanVersion['source'], string> = {
   upload: 'Updated from your uploaded test',
@@ -56,7 +57,7 @@ const VersionCard = ({ v, current, open, onToggle }: { v: PlanVersion; current: 
 );
 
 const monthYear = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
 
 // "See full plan": el plan completo más reciente y los anteriores, con cómo han
 // evolucionado los marcadores que trabajaba cada acción.

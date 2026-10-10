@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -33,10 +34,10 @@ type Step = 'select' | 'processing' | 'edit';
 const REQUEST_TIMEOUT_MS = 60000;
 
 const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  date.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
 
 const formatTime = (date: Date) =>
-  date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  date.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 
 export const LogBloodPressureScreen = () => {
   const router = useRouter();

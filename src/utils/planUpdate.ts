@@ -2,6 +2,7 @@ import { currentReport } from '@/data/reportRepository';
 import { getActionPlanContentEn } from '@/data/reportContentEn';
 import { PlanVersion, PlanVersionItem } from '@/data/planVersions';
 import { MarkerChange, ProgressResult } from './progress';
+import { num, t } from '@/i18n';
 
 // Propone un plan actualizado a partir de lo que ha cambiado en una analítica nueva.
 // - Acción cuyos marcadores no se han vuelto a medir → se queda igual ("not retested").
@@ -24,7 +25,7 @@ export function basePlanItems(latest: PlanVersion | null): BaseItem[] {
   });
 }
 
-const fmt = (c: MarkerChange) => `${c.name} ${c.before} → ${c.after} ${c.unit}`.trim();
+const fmt = (c: MarkerChange) => `${c.name} ${num(c.before)} → ${num(c.after)} ${c.unit}`.trim();
 
 interface Rule {
   markers: string[];
@@ -60,19 +61,19 @@ export function proposeUpdatedPlan(base: BaseItem[], progress: ProgressResult): 
   const items: PlanVersionItem[] = base.map((it) => {
     const tested = it.markers.map((m) => byMarker.get(m)).filter(Boolean) as MarkerChange[];
     it.markers.forEach((m) => covered.add(m));
-    if (tested.length === 0) return { ...it, status: 'not_retested', note: 'Not in this test — unchanged.' };
+    if (tested.length === 0) return { ...it, status: 'not_retested', note: t('Not in this test — unchanged.') };
     const note = tested.map(fmt).join(' · ');
     const allRetested = tested.length === it.markers.length;
     if (tested.every((c) => c.afterStatus === 'in')) {
       return allRetested
-        ? { ...it, status: 'reached', note: `${note}. Goal reached — keep it as a habit.` }
-        : { ...it, status: 'on_track', note: `${note}. In range; the rest of its markers weren't in this test.` };
+        ? { ...it, status: 'reached', note: `${note}. ${t('Goal reached — keep it as a habit.')}` }
+        : { ...it, status: 'on_track', note: `${note}. ${t("In range; the rest of its markers weren't in this test.")}` };
     }
     if (tested.some((c) => c.verdict === 'worsening' || c.verdict === 'newly_out'))
-      return { ...it, status: 'needs_attention', note: `${note}. Worth reviewing with a specialist.` };
+      return { ...it, status: 'needs_attention', note: `${note}. ${t('Worth reviewing with a specialist.')}` };
     if (tested.some((c) => c.verdict === 'improving' || c.verdict === 'back_in_range'))
-      return { ...it, status: 'on_track', note: `${note}. Moving the right way — keep going.` };
-    return { ...it, status: 'needs_attention', note: `${note}. No real change yet.` };
+      return { ...it, status: 'on_track', note: `${note}. ${t('Moving the right way — keep going.')}` };
+    return { ...it, status: 'needs_attention', note: `${note}. ${t('No real change yet.')}` };
   });
 
   // Marcadores fuera de rango que ninguna acción trabaja → acciones nuevas (una por regla)
@@ -88,11 +89,11 @@ export function proposeUpdatedPlan(base: BaseItem[], progress: ProgressResult): 
       continue;
     }
     added.set(key, {
-      title: rule?.title ?? `${DOCTOR_RULE.title}: ${c.name}`,
-      why: rule?.why ?? DOCTOR_RULE.why,
+      title: rule ? t(rule.title) : `${t(DOCTOR_RULE.title)}: ${c.name}`,
+      why: t(rule?.why ?? DOCTOR_RULE.why),
       markers: [c.markerId],
       status: 'new',
-      note: `New from this test: ${fmt(c)}`,
+      note: t('New from this test: {what}', { what: fmt(c) }),
     });
   }
 
@@ -103,11 +104,11 @@ export function proposeUpdatedPlan(base: BaseItem[], progress: ProgressResult): 
 }
 
 export const STATUS_LABEL: Record<PlanVersionItem['status'], string> = {
-  reached: 'Goal reached',
-  on_track: 'On track',
-  needs_attention: 'Needs attention',
-  not_retested: 'Not retested',
-  new: 'New',
+  reached: t('Goal reached'),
+  on_track: t('On track'),
+  needs_attention: t('Needs attention'),
+  not_retested: t('Not retested'),
+  new: t('New'),
 };
 
 // Borrador de plan para el especialista a partir de los valores fuera de rango
@@ -117,7 +118,7 @@ export function draftActionsForMarkers(markers: { id: string; name: string; valu
   for (const m of markers) {
     const rule = RULES.find((r) => r.markers.includes(m.id));
     const key = rule?.title ?? `${DOCTOR_RULE.title}: ${m.name}`;
-    const line = `${m.name} ${m.value} ${m.unit}`.trim();
+    const line = `${m.name} ${num(m.value)} ${m.unit}`.trim();
     const existing = out.get(key);
     if (existing) {
       existing.markers.push(m.id);
@@ -125,8 +126,8 @@ export function draftActionsForMarkers(markers: { id: string; name: string; valu
       continue;
     }
     out.set(key, {
-      title: rule?.title ?? `Follow up: ${m.name}`,
-      why: rule?.why ?? DOCTOR_RULE.why,
+      title: rule ? t(rule.title) : t('Follow up: {what}', { what: m.name }),
+      why: t(rule?.why ?? DOCTOR_RULE.why),
       markers: [m.id],
       status: 'new',
       note: line,

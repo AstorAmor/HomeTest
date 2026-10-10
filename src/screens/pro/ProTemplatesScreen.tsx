@@ -17,13 +17,14 @@ import {
 import { canImportTextFile, pickTextFile } from '@/utils/importTextFile';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
+import { t as tr } from '@/i18n';
 const confirmDelete = (title: string) =>
   Platform.OS === 'web'
-    ? Promise.resolve(window.confirm(`Delete “${title}”?`))
+    ? Promise.resolve(window.confirm(tr('Delete “{title}”?', { title })))
     : new Promise<boolean>((resolve) =>
         Alert.alert('Delete template', `Delete “${title}”?`, [
-          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
-          { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+          { text: tr('Cancel'), style: 'cancel', onPress: () => resolve(false) },
+          { text: tr('Delete'), style: 'destructive', onPress: () => resolve(true) },
         ])
       );
 
@@ -45,7 +46,7 @@ export const ProTemplatesScreen = () => {
     try {
       setList(await templates.list());
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load your templates');
+      setError(e instanceof Error ? e.message : tr('Could not load your templates'));
       setList([]);
     }
   }, []);
@@ -77,7 +78,7 @@ export const ProTemplatesScreen = () => {
   const save = async () => {
     if (!draft) return;
     if (!draft.title.trim() || !draft.body.trim()) {
-      setError('Give the template a name and some text.');
+      setError(tr('Give the template a name and some text.'));
       return;
     }
     setState('saving');
@@ -88,7 +89,7 @@ export const ProTemplatesScreen = () => {
       setState('saved');
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save');
+      setError(e instanceof Error ? e.message : tr('Could not save'));
       setState('idle');
     }
   };
@@ -108,7 +109,7 @@ export const ProTemplatesScreen = () => {
       const title = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
       open({ title, topic: guessTopic(`${title} ${file.text}`), keywords: [], body: file.text.slice(0, 20000) });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not read the file');
+      setError(e instanceof Error ? e.message : tr('Could not read the file'));
     }
   };
 
@@ -118,22 +119,22 @@ export const ProTemplatesScreen = () => {
   const listView = (
     <View style={{ gap: 10 }}>
       <Text style={styles.intro}>
-        Write once what you explain again and again. When you answer a patient, Kuova suggests the right template.{' '}
-        <Text style={styles.code}>[name]</Text> and <Text style={styles.code}>[doctor]</Text> fill themselves; anything else in [brackets] you
-        complete before sending.
+        {tr('Write once what you explain again and again. When you answer a patient, Kuova suggests the right template.')}{' '}
+        <Text style={styles.code}>{tr('[name]')}</Text> {tr('and')} <Text style={styles.code}>{tr('[doctor]')}</Text>{' '}
+        {tr('fill themselves; anything else in [brackets] you complete before sending.')}
       </Text>
       {where === 'device' && (
         <View style={styles.notice}>
           <Ionicons name="phone-portrait-outline" size={14} color={Colors.warning} />
-          <Text style={styles.noticeText}>Saved on this device for now: the database update for templates isn’t applied yet.</Text>
+          <Text style={styles.noticeText}>{tr('Saved on this device for now: the database update for templates isn’t applied yet.')}</Text>
         </View>
       )}
       <View style={styles.search}>
         <Ionicons name="search" size={15} color={Colors.textMuted} />
-        <TextInput style={styles.searchInput} placeholder="Search templates" placeholderTextColor={Colors.textMuted} value={query} onChangeText={setQuery} />
+        <TextInput style={styles.searchInput} placeholder={tr('Search templates')} placeholderTextColor={Colors.textMuted} value={query} onChangeText={setQuery} />
       </View>
       <View style={styles.filters}>
-        {[{ id: 'all' as const, label: 'All' }, ...TEMPLATE_TOPICS].map((t) => {
+        {[{ id: 'all' as const, label: tr('All') }, ...TEMPLATE_TOPICS].map((t) => {
           const n = t.id === 'all' ? list?.length ?? 0 : counts[t.id] ?? 0;
           if (t.id !== 'all' && n === 0) return null;
           const on = filter === t.id;
@@ -152,8 +153,8 @@ export const ProTemplatesScreen = () => {
       ) : list.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="documents-outline" size={36} color={Colors.accent} />
-          <Text style={styles.emptyTitle}>Your library is empty</Text>
-          <Text style={styles.muted}>Start from our examples (iron, vitamin D, cholesterol, cycle, thyroid, glucose) and make them yours, or write your own.</Text>
+          <Text style={styles.emptyTitle}>{tr('Your library is empty')}</Text>
+          <Text style={styles.muted}>{tr('Start from our examples (iron, vitamin D, cholesterol, cycle, thyroid, glucose) and make them yours, or write your own.')}</Text>
           <TouchableOpacity
             style={styles.primary}
             onPress={async () => {
@@ -161,7 +162,7 @@ export const ProTemplatesScreen = () => {
               load();
             }}
           >
-            <Text style={styles.primaryText}>Start with sample templates</Text>
+            <Text style={styles.primaryText}>{tr('Start with sample templates')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -184,7 +185,7 @@ export const ProTemplatesScreen = () => {
               </TouchableOpacity>
             );
           })}
-          {shown.length === 0 && <Text style={styles.muted}>No templates match.</Text>}
+          {shown.length === 0 && <Text style={styles.muted}>{tr('No templates match.')}</Text>}
         </View>
       )}
     </View>
@@ -200,21 +201,21 @@ export const ProTemplatesScreen = () => {
             <Ionicons name="chevron-back" size={22} color={Colors.textSecondary} />
           </TouchableOpacity>
         )}
-        <Text style={styles.editorTitle}>{draft.id ? 'Edit template' : 'New template'}</Text>
+        <Text style={styles.editorTitle}>{draft.id ? tr('Edit template') : tr('New template')}</Text>
         <View style={{ flex: 1 }} />
-        {state === 'saved' && !dirty ? <Text style={styles.saved}>Saved</Text> : null}
+        {state === 'saved' && !dirty ? <Text style={styles.saved}>{tr('Saved')}</Text> : null}
       </View>
 
-      <Text style={styles.fieldLabel}>Name</Text>
+      <Text style={styles.fieldLabel}>{tr('Name')}</Text>
       <TextInput
         style={[styles.input, { minHeight: 42 }]}
         value={draft.title}
         onChangeText={(t) => setDraft({ ...draft, title: t })}
-        placeholder="e.g. Low ferritin and tiredness"
+        placeholder={tr('e.g. Low ferritin and tiredness')}
         placeholderTextColor={Colors.textMuted}
       />
 
-      <Text style={styles.fieldLabel}>Topic</Text>
+      <Text style={styles.fieldLabel}>{tr('Topic')}</Text>
       <View style={styles.filters}>
         {TEMPLATE_TOPICS.map((t) => {
           const on = draft.topic === t.id;
@@ -226,16 +227,16 @@ export const ProTemplatesScreen = () => {
         })}
       </View>
 
-      <Text style={styles.fieldLabel}>Words that should suggest it (optional)</Text>
+      <Text style={styles.fieldLabel}>{tr('Words that should suggest it (optional)')}</Text>
       <TextInput
         style={[styles.input, { minHeight: 42 }]}
         value={keywordsText}
         onChangeText={setKeywordsText}
-        placeholder="ferritin, hierro, tired, cansancio"
+        placeholder={tr('ferritin, hierro, tired, cansancio')}
         placeholderTextColor={Colors.textMuted}
       />
 
-      <Text style={styles.fieldLabel}>Text</Text>
+      <Text style={styles.fieldLabel}>{tr('Text')}</Text>
       <TextInput
         style={[styles.input, styles.body]}
         multiline
@@ -246,14 +247,14 @@ export const ProTemplatesScreen = () => {
       />
       <Text style={styles.hint}>
         {gaps.length
-          ? `Gaps to complete for each patient: ${gaps.slice(0, 6).join('  ')}${gaps.length > 6 ? ' …' : ''}`
-          : 'Tip: put what changes from patient to patient in [brackets], e.g. [value] or [3 months].'}
+          ? `${tr('Gaps to complete for each patient:')} ${gaps.slice(0, 6).join('  ')}${gaps.length > 6 ? ' …' : ''}`
+          : tr('Tip: put what changes from patient to patient in [brackets], e.g. [value] or [3 months].')}
       </Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <View style={styles.actions}>
         <TouchableOpacity style={[styles.primary, { flex: 1 }, (!dirty || state === 'saving') && { opacity: 0.5 }]} disabled={!dirty || state === 'saving'} onPress={save}>
-          {state === 'saving' ? <ActivityIndicator size="small" color={Colors.background} /> : <Text style={styles.primaryText}>Save template</Text>}
+          {state === 'saving' ? <ActivityIndicator size="small" color={Colors.background} /> : <Text style={styles.primaryText}>{tr('Save template')}</Text>}
         </TouchableOpacity>
         {draft.id && (
           <TouchableOpacity style={styles.ghost} onPress={() => open({ ...draft, id: undefined, title: `${draft.title} (copy)` })}>
@@ -270,7 +271,7 @@ export const ProTemplatesScreen = () => {
   ) : (
     <View style={styles.placeholder}>
       <Ionicons name="create-outline" size={28} color={Colors.textMuted} />
-      <Text style={styles.muted}>Choose a template to edit it, or create a new one.</Text>
+      <Text style={styles.muted}>{tr('Choose a template to edit it, or create a new one.')}</Text>
     </View>
   );
 
@@ -279,19 +280,19 @@ export const ProTemplatesScreen = () => {
       {canImportTextFile && (
         <TouchableOpacity style={styles.headerBtn} onPress={importFile}>
           <Ionicons name="cloud-upload-outline" size={16} color={Colors.accent} />
-          {wide && <Text style={styles.headerBtnText}>Import .docx / .txt</Text>}
+          {wide && <Text style={styles.headerBtnText}>{tr('Import .docx / .txt')}</Text>}
         </TouchableOpacity>
       )}
       <TouchableOpacity style={[styles.headerBtn, styles.headerBtnPrimary]} onPress={() => open({ ...EMPTY, topic: filter === 'all' ? 'blood_test' : filter })}>
         <Ionicons name="add" size={16} color={Colors.background} />
-        <Text style={[styles.headerBtnText, { color: Colors.background }]}>New</Text>
+        <Text style={[styles.headerBtnText, { color: Colors.background }]}>{tr('New')}</Text>
       </TouchableOpacity>
     </View>
   );
 
   if (wide) {
     return (
-      <ProLayout active="templates" title="Templates" right={headerRight}>
+      <ProLayout active="templates" title={tr('Templates')} right={headerRight}>
         <View style={styles.split}>
           <View style={styles.left}>{listView}</View>
           <View style={styles.right}>{editor}</View>
@@ -300,7 +301,7 @@ export const ProTemplatesScreen = () => {
     );
   }
   return (
-    <ProLayout active="templates" title="Templates" right={headerRight}>
+    <ProLayout active="templates" title={tr('Templates')} right={headerRight}>
       {draft ? editor : listView}
     </ProLayout>
   );

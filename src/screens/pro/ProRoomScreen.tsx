@@ -12,6 +12,7 @@ import { DailyCall } from '@/components/DailyCall';
 import { getVideoJoinUrl } from '@/data/video';
 import { Appointment, PatientLabResult, PatientSummary } from '@/data/specialistTypes';
 
+import { t } from '@/i18n';
 type Panel = 'results' | 'notes';
 
 // D. Sala de consulta. Web de escritorio → SplitScreenConsultation (vídeo a la
@@ -49,7 +50,7 @@ export const ProRoomScreen = () => {
           a?.id ??
           (await portal.scheduleFollowUp(
             patientId,
-            patients.find((p) => p.id === patientId)?.name ?? 'Patient',
+            patients.find((p) => p.id === patientId)?.name ?? t('Patient'),
             new Date().toISOString(),
             'follow_up',
             modeParam === 'voice' ? 'voice' : 'video',
@@ -58,7 +59,7 @@ export const ProRoomScreen = () => {
         setRealApptId(id);
         setJoinUrl(await getVideoJoinUrl(id));
       } catch (e) {
-        setVideoError(e instanceof Error ? e.message : 'Could not open the video room');
+        setVideoError(e instanceof Error ? e.message : t('Could not open the video room'));
       }
     }
   }, [apptId, patientId, modeParam]);
@@ -68,7 +69,7 @@ export const ProRoomScreen = () => {
   }, [load]);
 
   const mode: 'video' | 'voice' = (appt?.modality ?? (modeParam === 'voice' ? 'voice' : 'video')) as 'video' | 'voice';
-  const name = patient?.name ?? appt?.patientName ?? 'Patient';
+  const name = patient?.name ?? appt?.patientName ?? t('Patient');
 
   const end = async () => {
     const id = appt?.id ?? realApptId;
@@ -83,7 +84,7 @@ export const ProRoomScreen = () => {
       <Text style={styles.videoStateText}>{videoError || 'Preparing the video room…'}</Text>
       {videoError ? (
         <TouchableOpacity onPress={end}>
-          <Text style={styles.videoStateLink}>Close</Text>
+          <Text style={styles.videoStateLink}>{t('Close')}</Text>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -109,7 +110,7 @@ const PanelTabs = ({ value, onChange }: { value: Panel; onChange: (p: Panel) => 
     {(['results', 'notes'] as Panel[]).map((p) => (
       <TouchableOpacity key={p} style={[styles.tab, value === p && styles.tabOn]} onPress={() => onChange(p)}>
         <Ionicons name={p === 'results' ? 'flask-outline' : 'create-outline'} size={16} color={value === p ? Colors.background : Colors.textSecondary} />
-        <Text style={[styles.tabText, value === p && { color: Colors.background }]}>{p === 'results' ? 'Results' : 'Live notes'}</Text>
+        <Text style={[styles.tabText, value === p && { color: Colors.background }]}>{p === 'results' ? t('Results') : t('Live notes')}</Text>
       </TouchableOpacity>
     ))}
   </View>
@@ -126,7 +127,7 @@ const SplitScreenConsultation = ({ name, mode, patientId, apptId, lab, onEnd, vi
           <Text style={styles.sideTitle}>{name}</Text>
           {video ? (
             <TouchableOpacity style={styles.endBtn} onPress={onEnd}>
-              <Text style={styles.endBtnText}>End consultation</Text>
+              <Text style={styles.endBtnText}>{t('End consultation')}</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -167,11 +168,11 @@ const MobileVideoConsultation = ({ name, mode, patientId, apptId, lab, onEnd, vi
       <SafeAreaView edges={['bottom']} style={styles.mobileBar} pointerEvents="box-none">
         <TouchableOpacity style={styles.mobileBtn} onPress={() => open('results')}>
           <Ionicons name="flask-outline" size={18} color={OnDark.text} />
-          <Text style={styles.mobileBtnText}>Results</Text>
+          <Text style={styles.mobileBtnText}>{t('Results')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.mobileBtn} onPress={() => open('notes')}>
           <Ionicons name="create-outline" size={18} color={OnDark.text} />
-          <Text style={styles.mobileBtnText}>Notes</Text>
+          <Text style={styles.mobileBtnText}>{t('Notes')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
 

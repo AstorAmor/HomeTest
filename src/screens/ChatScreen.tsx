@@ -10,7 +10,8 @@ import { ChatMessage } from '@/data/specialistTypes';
 import { TemplatePicker } from '@/components/pro/TemplatePicker';
 import { findGaps } from '@/data/proTemplates';
 
-const time = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+import { dateLocale, t } from '@/i18n';
+const time = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 
 // Chat paciente ↔ especialista (lo usan los dos lados). Mensajes en directo con
 // Supabase Realtime; en demo, en el móvil con una respuesta automática.
@@ -77,11 +78,11 @@ export const ChatScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScreenHeader title={title ?? 'Chat'} showBack />
+        <ScreenHeader title={title ?? t('Chat')} showBack />
         <Text style={styles.notice}>
           {side === 'pro'
-            ? 'Messages are stored in Kuova and only you and your patient can read them.'
-            : 'For urgent symptoms call 112. Messages are private between you and your specialist.'}
+            ? t('Messages are stored in Kuova and only you and your patient can read them.')
+            : t('For urgent symptoms call 112. Messages are private between you and your specialist.')}
         </Text>
         <FlatList
           ref={listRef}
@@ -100,7 +101,7 @@ export const ChatScreen = () => {
               </View>
             );
           }}
-          ListEmptyComponent={<Text style={styles.empty}>No messages yet. Say hello 👋</Text>}
+          ListEmptyComponent={<Text style={styles.empty}>{t('No messages yet. Say hello 👋')}</Text>}
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {side === 'pro' && showTemplates && (
@@ -121,13 +122,13 @@ ${t}` : t));
         {gaps.length > 0 && <Text style={styles.gaps}>Fill in or delete before sending: {gaps.slice(0, 4).join('  ')}</Text>}
         <View style={styles.composer}>
           {side === 'pro' && (
-            <TouchableOpacity style={[styles.tplBtn, showTemplates && { backgroundColor: Colors.accent }]} onPress={() => setShowTemplates((v) => !v)} accessibilityLabel="Templates">
+            <TouchableOpacity style={[styles.tplBtn, showTemplates && { backgroundColor: Colors.accent }]} onPress={() => setShowTemplates((v) => !v)} accessibilityLabel={t('Templates')}>
               <Ionicons name="documents-outline" size={20} color={showTemplates ? Colors.background : Colors.accent} />
             </TouchableOpacity>
           )}
           <TextInput
             style={styles.input}
-            placeholder="Write a message"
+            placeholder={t('Write a message')}
             placeholderTextColor={Colors.textMuted}
             value={text}
             onChangeText={setText}

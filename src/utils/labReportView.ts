@@ -1,3 +1,4 @@
+import { dateLocale, getLang } from '@/i18n';
 import { baselineReport, currentReport } from '@/data/reportRepository';
 import { HomeTestReport, ReportMarker } from '@/types/report';
 import { Colors } from '@/constants/colors';
@@ -37,7 +38,7 @@ export const flagColor = (m: ReportMarker) =>
   m.flag === 'en_rango' ? Colors.ok : m.flag.startsWith('limite') ? Colors.attention : Colors.danger;
 
 export const formatReportDate = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
 // Siglas que se muestran en mayúsculas al derivar el nombre desde el id.
 const ACRONYMS = new Set([
@@ -49,6 +50,7 @@ const ACRONYMS = new Set([
 
 // Nombre en inglés; si no hay traducción, se deriva del id (el display_name del JSON está en español).
 export const markerNameEn = (m: ReportMarker) => {
+  if (getLang() === 'es') return getMarkerDisplayNameEn(m.marker_id, m.display_name);
   const fromId = m.marker_id
     .split('_')
     .map((w, i) => (ACRONYMS.has(w) ? w.toUpperCase() : i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w))

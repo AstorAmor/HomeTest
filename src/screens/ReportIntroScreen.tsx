@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +9,7 @@ import { currentReport } from '@/data/reportRepository';
 
 const formatFullDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  return date.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 export const ReportIntroScreen = () => {

@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,7 +13,7 @@ import { calendarLinks } from '@/data/schedule';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 const longDate = (day: string) =>
-  new Date(`${day}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 // "Book an appointment": elegir centro en el mapa o en la lista, día y hora.
 // PROTOTIPO: la cita se guarda en el móvil; aún no se reserva en el laboratorio.
@@ -206,7 +207,7 @@ export const BookLabScreen = () => {
       {center && day && time && (
         <TouchableOpacity style={styles.cta} onPress={confirm}>
           <Text style={styles.ctaText}>
-            Confirm · {new Date(`${day}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}, {time}
+            Confirm · {new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}, {time}
           </Text>
         </TouchableOpacity>
       )}

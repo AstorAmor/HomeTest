@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +9,7 @@ import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses } from '@/data/mockData';
 
 const formatLongDate = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
 // Huecos alternativos (dummy): los próximos días laborables a partir de la fecha actual del test.
 function nextSlots(fromIso: string, count = 5) {

@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,10 +10,10 @@ import { createMetricRepository } from '@/data/metricRepository';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
 
 const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  date.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
 
 const formatTime = (date: Date) =>
-  date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  date.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 
 interface LogSimpleMetricScreenProps {
   title: string;

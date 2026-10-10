@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -143,7 +144,7 @@ export const DigestiveScreen = () => {
                     style={styles.dayCol}
                     onPress={() => router.push({ pathname: '/log-bowel', params: { day: dayKey(d) } })}
                   >
-                    <Text style={styles.dayLabel}>{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</Text>
+                    <Text style={styles.dayLabel}>{d.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}</Text>
                     <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
                       {e && <Text style={[styles.dayCount, swatch ? { color: '#FFFFFF' } : null]}>{e.count}</Text>}
                     </View>
@@ -186,7 +187,7 @@ export const DigestiveScreen = () => {
                     style={styles.dayCol}
                     onPress={() => router.push({ pathname: '/log-urine', params: { day: dayKey(d) } })}
                   >
-                    <Text style={styles.dayLabel}>{d.toLocaleDateString('en-GB', { weekday: 'narrow' })}</Text>
+                    <Text style={styles.dayLabel}>{d.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}</Text>
                     <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
                       {e?.count != null && <Text style={styles.dayCount}>{e.count}</Text>}
                     </View>
@@ -224,7 +225,7 @@ export const DigestiveScreen = () => {
         )}
 
         <Text style={styles.footer}>
-          Checked {checkedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}. These notes are general
+          Checked {checkedAt.toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })}. These notes are general
           guidance, not a diagnosis. Get urgent help if there is a lot of blood, black sticky stools with dizziness, strong
           tummy pain, or you cannot pee.
         </Text>

@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 // Datos DUMMY de servicios (profesionales y seguimiento de envíos) para el
 // prototipo. Nombres ficticios; tarifas alineadas con el business case v2
 // (médico ~€100, dietista ~€70, entrenador ~€60).
@@ -22,13 +23,13 @@ export interface Professional {
 // Icono de cada tipo de profesional (MaterialCommunityIcons): el mismo en Today (carrusel), en el
 // filtro de Professionals y donde aparezca el rol.
 export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string; palette: [string, string, string] }> = {
-  doctor: { label: 'Doctors', icon: 'stethoscope', palette: ['#0E2A24', '#2E6B57', '#C9A36B'] },
-  psychologist: { label: 'Psychologists', icon: 'head-heart-outline', palette: ['#1E2A4A', '#4B5BA6', '#C7B6F2'] },
-  midwife: { label: 'Midwives', icon: 'human-pregnant', palette: ['#7A2E4E', '#C2477A', '#F7B6D2'] },
-  dietitian: { label: 'Dietitians', icon: 'food-apple-outline', palette: ['#3E6B5C', '#8DB6A2', '#E9D7B8'] },
-  trainer: { label: 'Personal trainers', icon: 'dumbbell', palette: ['#9C4A2F', '#D9663F', '#F0B84D'] },
-  physio: { label: 'Physiotherapists', icon: 'human-handsup', palette: ['#0F3D4C', '#2F8FA6', '#9FE0E8'] },
-  geneticist: { label: 'Genetic counsellors', icon: 'dna', palette: ['#8A6D3F', '#C9A36B', '#F3E2B8'] },
+  doctor: { label: t('Doctors'), icon: 'stethoscope', palette: ['#0E2A24', '#2E6B57', '#C9A36B'] },
+  psychologist: { label: t('Psychologists'), icon: 'head-heart-outline', palette: ['#1E2A4A', '#4B5BA6', '#C7B6F2'] },
+  midwife: { label: t('Midwives'), icon: 'human-pregnant', palette: ['#7A2E4E', '#C2477A', '#F7B6D2'] },
+  dietitian: { label: t('Dietitians'), icon: 'food-apple-outline', palette: ['#3E6B5C', '#8DB6A2', '#E9D7B8'] },
+  trainer: { label: t('Personal trainers'), icon: 'dumbbell', palette: ['#9C4A2F', '#D9663F', '#F0B84D'] },
+  physio: { label: t('Physiotherapists'), icon: 'human-handsup', palette: ['#0F3D4C', '#2F8FA6', '#9FE0E8'] },
+  geneticist: { label: t('Genetic counsellors'), icon: 'dna', palette: ['#8A6D3F', '#C9A36B', '#F3E2B8'] },
 };
 
 export const mockProfessionals: Professional[] = [

@@ -3,6 +3,8 @@
 // Todo lo que el usuario ve debe estar en inglés; los campos del JSON se quedan
 // en español como datos, y esta es la capa de copy que sí se muestra.
 
+import { getLang, num } from '@/i18n';
+
 export const MARKER_DISPLAY_NAMES_EN: Record<string, string> = {
   ferritin: 'Ferritin',
   hs_crp: 'hs-CRP (inflammation)',
@@ -22,7 +24,29 @@ export const MARKER_DISPLAY_NAMES_EN: Record<string, string> = {
   triglycerides: 'Triglycerides',
 };
 
+// En español el display_name del JSON ya vale; solo afinamos los que llevan aclaración.
+const MARKER_DISPLAY_NAMES_ES: Record<string, string> = {
+  ferritin: 'Ferritina',
+  hs_crp: 'PCR ultrasensible (inflamación)',
+  uric_acid: 'Ácido úrico',
+  ast: 'AST (enzima hepática)',
+  alt: 'ALT (enzima hepática)',
+  hdl: 'HDL (colesterol «bueno»)',
+  glucose: 'Glucosa en ayunas',
+  homa_ir: 'HOMA-IR (resistencia a la insulina)',
+  ldl: 'LDL (colesterol «malo»)',
+  total_cholesterol: 'Colesterol total',
+  non_hdl_cholesterol: 'Colesterol no HDL',
+  apob: 'Apolipoproteína B (ApoB)',
+  vitamin_d: 'Vitamina D (25-OH)',
+  ana: 'Anticuerpos antinucleares (ANA)',
+  hba1c: 'HbA1c',
+  triglycerides: 'Triglicéridos',
+};
+
+// Nombre visible del marcador en el idioma activo (el nombre "En" se queda por compatibilidad).
 export function getMarkerDisplayNameEn(markerId: string, fallback: string): string {
+  if (getLang() === 'es') return MARKER_DISPLAY_NAMES_ES[markerId] ?? fallback;
   return MARKER_DISPLAY_NAMES_EN[markerId] ?? fallback;
 }
 
@@ -34,12 +58,14 @@ const UNIT_LABEL_EN: Record<string, string> = {
 };
 
 export function getMarkerValueTextEn(value: number | string, unit: string | null): string {
+  if (getLang() === 'es') return unit ? `${num(value)} ${unit}` : num(value);
   if (unit && UNIT_LABEL_EN[unit]) return `${value} ${UNIT_LABEL_EN[unit]}`;
   return unit ? `${value} ${unit}` : `${value}`;
 }
 
 export function getUnitLabelEn(unit: string | null): string {
   if (!unit) return '';
+  if (getLang() === 'es') return unit;
   return UNIT_LABEL_EN[unit] ?? unit;
 }
 
@@ -113,5 +139,6 @@ export function getActionPlanContentEn(
   actionId: string,
   fallback: ActionPlanContentEn
 ): ActionPlanContentEn {
+  if (getLang() === 'es') return fallback; // el JSON ya viene en español
   return ACTION_PLAN_CONTENT_EN[actionId] ?? fallback;
 }

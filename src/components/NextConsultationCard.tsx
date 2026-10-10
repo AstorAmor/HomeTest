@@ -7,8 +7,9 @@ import { consult } from '@/data/consultations';
 import { Appointment, KIND_LABEL } from '@/data/specialistTypes';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
+import { dateLocale } from '@/i18n';
 const when = (iso: string) =>
-  new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  new Date(iso).toLocaleString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 // Today: la próxima consulta con un especialista, con "Join video" cuando está confirmada.
 export const NextConsultationCard = () => {

@@ -9,6 +9,7 @@ import { PatientSummary } from '@/data/specialistTypes';
 import { scopeLabel } from '@/data/sharing';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
+import { dateLocale, t } from '@/i18n';
 const initials = (name: string) =>
   name
     .split(' ')
@@ -18,7 +19,7 @@ const initials = (name: string) =>
     .toUpperCase();
 
 const when = (iso: string) =>
-  new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  new Date(iso).toLocaleString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 // C. Mis pacientes: tarjetas con avisos arriba a la derecha:
 // triángulo = acciones pendientes o valores alterados; teléfono = consulta hoy.
@@ -35,7 +36,7 @@ export const ProPatientsScreen = () => {
         setPatients(await portal.listPatients());
         setError('');
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Could not load patients');
+        setError(e instanceof Error ? e.message : t('Could not load patients'));
       }
     }, [setPatients]),
   );
@@ -44,12 +45,12 @@ export const ProPatientsScreen = () => {
   const alerts = patients.filter((p) => p.openRequests > 0 || p.flaggedMarkers > 0 || p.unreadMessages > 0).length;
 
   return (
-    <ProLayout active="patients" title="My patients" badge={{ patients: alerts }}>
+    <ProLayout active="patients" title={t('My patients')} badge={{ patients: alerts }}>
       <View style={styles.search}>
         <Ionicons name="search" size={16} color={Colors.textMuted} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search patients"
+          placeholder={t('Search patients')}
           placeholderTextColor={Colors.textMuted}
           value={query}
           onChangeText={setQuery}
@@ -58,7 +59,7 @@ export const ProPatientsScreen = () => {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       {!error && patients.length === 0 && (
         <Text style={styles.empty}>
-          Patients appear here when they share their data with you, book a consultation, send you a request or open a chat.
+          {t('Patients appear here when they share their data with you, book a consultation, send you a request or open a chat.')}
         </Text>
       )}
 
@@ -91,19 +92,19 @@ export const ProPatientsScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.name}>{p.name}</Text>
                   <Text style={styles.sub}>
-                    {[p.age ? `${p.age} y` : null, p.sex].filter(Boolean).join(' · ') || (p.scopes.length ? `${p.scopes.length} data categories shared` : 'No data shared yet')}
+                    {[p.age ? t('{n} y', { n: p.age }) : null, p.sex ? t(p.sex) : null].filter(Boolean).join(' · ') || (p.scopes.length ? t('{n} data categories shared', { n: p.scopes.length }) : t('No data shared yet'))}
                   </Text>
                 </View>
               </View>
               <View style={styles.chips}>
-                {p.flaggedMarkers > 0 && <Chip icon="flask" color={Colors.attention} text={`${p.flaggedMarkers} values out of range`} />}
-                {p.openRequests > 0 && <Chip icon="help-circle" color={Colors.attention} text={`${p.openRequests} pending request${p.openRequests > 1 ? 's' : ''}`} />}
-                {p.unreadMessages > 0 && <Chip icon="chatbubble" color={Colors.accent} text={`${p.unreadMessages} new message${p.unreadMessages > 1 ? 's' : ''}`} />}
+                {p.flaggedMarkers > 0 && <Chip icon="flask" color={Colors.attention} text={t(p.flaggedMarkers === 1 ? '{n} value out of range' : '{n} values out of range', { n: p.flaggedMarkers })} />}
+                {p.openRequests > 0 && <Chip icon="help-circle" color={Colors.attention} text={t(p.openRequests === 1 ? '{n} pending request' : '{n} pending requests', { n: p.openRequests })} />}
+                {p.unreadMessages > 0 && <Chip icon="chatbubble" color={Colors.accent} text={t(p.unreadMessages === 1 ? '{n} new message' : '{n} new messages', { n: p.unreadMessages })} />}
                 {p.nextAppointment && <Chip icon="calendar" color={Colors.textSecondary} text={when(p.nextAppointment)} />}
               </View>
               {p.scopes.length > 0 && (
                 <Text style={styles.scopes} numberOfLines={1}>
-                  Shares: {p.scopes.map(scopeLabel).join(', ')}
+                  {t('Shares: {what}', { what: p.scopes.map((s) => t(scopeLabel(s))).join(', ') })}
                 </Text>
               )}
             </TouchableOpacity>

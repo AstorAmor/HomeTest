@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'reac
 import { Ionicons } from '@expo/vector-icons';
 import { OnDark } from '@/constants/colors';
 
+import { t } from '@/i18n';
 // Zona de vídeo/llamada. PROTOTIPO: todavía sin proveedor de vídeo; muestra la sala,
 // los controles y el tiempo. Al integrar el proveedor (Daily, Whereby, LiveKit…), su
 // componente de vídeo sustituye al contenido de `stage` sin tocar el resto de la sala.
@@ -49,7 +50,7 @@ export const VideoPane = ({ patientName, mode, onEnd, bottomInset = 0 }: Props) 
       <View style={styles.topBar}>
         <View style={[styles.live, { backgroundColor: connected ? '#2BB673' : '#8A8F9C' }]} />
         <Text style={styles.topText}>
-          {connected ? `${patientName} · ${mm}:${ss}` : `Waiting for ${patientName}…`}
+          {connected ? `${patientName} · ${mm}:${ss}` : t('Waiting for {name}…', { name: patientName })}
         </Text>
       </View>
 
@@ -60,21 +61,21 @@ export const VideoPane = ({ patientName, mode, onEnd, bottomInset = 0 }: Props) 
           </View>
         </Animated.View>
         <Text style={styles.note}>
-          {mode === 'video' ? 'Video' : 'Voice call'} · prototype, the video provider is not connected yet
+          {mode === 'video' ? t('Video') : t('Voice call')} · {t('prototype, the video provider is not connected yet')}
         </Text>
       </View>
 
       {mode === 'video' && (
         <View style={[styles.self, { bottom: 90 + bottomInset }]}>
           {cam ? <Ionicons name="person" size={30} color={OnDark.textSecondary} /> : <Ionicons name="videocam-off" size={22} color={OnDark.textSecondary} />}
-          <Text style={styles.selfText}>You</Text>
+          <Text style={styles.selfText}>{t('You')}</Text>
         </View>
       )}
 
       <View style={[styles.controls, { bottom: 20 + bottomInset }]}>
         <Control icon={mic ? 'mic' : 'mic-off'} onPress={() => setMic((v) => !v)} off={!mic} />
         {mode === 'video' && <Control icon={cam ? 'videocam' : 'videocam-off'} onPress={() => setCam((v) => !v)} off={!cam} />}
-        <TouchableOpacity style={styles.end} onPress={onEnd} accessibilityLabel="End consultation">
+        <TouchableOpacity style={styles.end} onPress={onEnd} accessibilityLabel={t('End consultation')}>
           <Ionicons name="call" size={24} color="#FFFFFF" style={{ transform: [{ rotate: '135deg' }] }} />
         </TouchableOpacity>
       </View>

@@ -5,12 +5,11 @@ import { useRouter } from 'expo-router';
 import { ProLayout, useIsWide, useProIdentity } from '@/components/pro/ProLayout';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
-import { useLogout } from '@/hooks/useLogout';
 import { isPortalDemo, portal } from '@/data/specialistPortal';
 import { updateMyProfessionalChannels } from '@/data/sharing';
 import { Availability, DEFAULT_AVAILABILITY, TimeRange, WEEKDAYS, WEEKDAY_LABEL, Weekday } from '@/data/specialistTypes';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { AppearanceSwitch } from '@/components/AppearanceSwitch';
+import { t } from '@/i18n';
 
 const SLOT_OPTIONS = [15, 20, 30, 45, 60];
 const BUFFER_OPTIONS = [0, 5, 10, 15];
@@ -22,8 +21,7 @@ export const ProSettingsScreen = () => {
   const router = useRouter();
   const wide = useIsWide();
   const me = useProIdentity();
-  const { professional, refreshProfessional, demoMode } = useAuth();
-  const exit = useLogout();
+  const { professional, refreshProfessional } = useAuth();
   const demo = isPortalDemo();
 
   const [contact, setContact] = useState({ firstName: '', lastName: '', workPhone: '', workEmail: '' });
@@ -61,7 +59,7 @@ export const ProSettingsScreen = () => {
 
   const save = async () => {
     if (invalidRanges) {
-      setError('Check the opening hours: use HH:MM and make each end later than its start.');
+      setError(t('Check the opening hours: use HH:MM and make each end later than its start.'));
       setState('error');
       return;
     }
@@ -76,22 +74,15 @@ export const ProSettingsScreen = () => {
       if (!demo) await refreshProfessional();
       setState('saved');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save');
+      setError(e instanceof Error ? e.message : t('Could not save'));
       setState('error');
     }
   };
 
   const setDay = (d: Weekday, ranges: TimeRange[]) => setAv((a) => ({ ...a, weekly: { ...a.weekly, [d]: ranges } }));
 
-  const appearanceCard = (
-    <Section title="Appearance">
-      <AppearanceSwitch returnTo="/pro-settings" />
-      <Text style={styles.muted}>Light, dark or follow your device. The portal reloads and you stay signed in.</Text>
-    </Section>
-  );
-
   const profileCard = (
-    <Section title="Your profile">
+    <Section title={t('Public profile')}>
       <View style={styles.idRow}>
         <View style={styles.idAvatar}>
           <Ionicons name="person" size={26} color={Colors.accent} />
@@ -99,58 +90,58 @@ export const ProSettingsScreen = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.idName}>{me.name}</Text>
           <Text style={styles.muted}>
-            {me.role} · {me.verified ? 'Verified by Kuova' : 'Pending verification'}
+            {t(me.role)} · {me.verified ? t('Profile verified by Kuova') : t('Pending verification')}
           </Text>
         </View>
       </View>
       {!demo ? (
         <TouchableOpacity style={styles.linkBtn} onPress={() => router.push('/pro-profile')}>
           <Ionicons name="create-outline" size={16} color={Colors.accent} />
-          <Text style={styles.linkText}>Edit public profile: photo, specialty, licence no., bio, languages, rate</Text>
+          <Text style={styles.linkText}>{t('Edit public profile: photo, specialty, licence no., bio, languages, rate')}</Text>
         </TouchableOpacity>
       ) : (
-        <Text style={styles.muted}>In the demo the public profile can't be edited.</Text>
+        <Text style={styles.muted}>{t("In the demo the public profile can't be edited.")}</Text>
       )}
     </Section>
   );
 
   const contactCard = (
-    <Section title="Contact">
+    <Section title={t('Contact')}>
       <View style={styles.two}>
-        <Field label="First name" value={contact.firstName} onChange={(v) => setContact({ ...contact, firstName: v })} />
-        <Field label="Last name" value={contact.lastName} onChange={(v) => setContact({ ...contact, lastName: v })} />
+        <Field label={t('First name')} value={contact.firstName} onChange={(v) => setContact({ ...contact, firstName: v })} />
+        <Field label={t('Last name')} value={contact.lastName} onChange={(v) => setContact({ ...contact, lastName: v })} />
       </View>
-      <Text style={styles.groupLabel}>Professional · patients can see it</Text>
+      <Text style={styles.groupLabel}>{t('Professional · patients can see it')}</Text>
       <View style={styles.two}>
-        <Field label="Work phone" value={contact.workPhone} onChange={(v) => setContact({ ...contact, workPhone: v })} keyboard="phone-pad" />
-        <Field label="Work email" value={contact.workEmail} onChange={(v) => setContact({ ...contact, workEmail: v })} keyboard="email-address" />
+        <Field label={t('Work phone')} value={contact.workPhone} onChange={(v) => setContact({ ...contact, workPhone: v })} keyboard="phone-pad" />
+        <Field label={t('Work email')} value={contact.workEmail} onChange={(v) => setContact({ ...contact, workEmail: v })} keyboard="email-address" />
       </View>
       <Text style={styles.groupLabel}>
-        <Ionicons name="lock-closed-outline" size={12} /> Personal · only you and Kuova
+        <Ionicons name="lock-closed-outline" size={12} /> {t('Personal · only you and Kuova')}
       </Text>
       <View style={styles.two}>
-        <Field label="Personal phone" value={priv.personalPhone} onChange={(v) => setPriv({ ...priv, personalPhone: v })} keyboard="phone-pad" />
-        <Field label="Personal email" value={priv.personalEmail} onChange={(v) => setPriv({ ...priv, personalEmail: v })} keyboard="email-address" />
+        <Field label={t('Personal phone')} value={priv.personalPhone} onChange={(v) => setPriv({ ...priv, personalPhone: v })} keyboard="phone-pad" />
+        <Field label={t('Personal email')} value={priv.personalEmail} onChange={(v) => setPriv({ ...priv, personalEmail: v })} keyboard="email-address" />
       </View>
     </Section>
   );
 
   const channelsCard = (
-    <Section title="Channels you offer">
-      <Toggle label="Video and phone consultations" sub="Patients can book in your free slots" value={channels.videoEnabled} onChange={(v) => setChannels({ ...channels, videoEnabled: v })} />
-      <Toggle label="Requests" sub="Questions and results reviews, answered when it suits you" value={channels.requestsEnabled} onChange={(v) => setChannels({ ...channels, requestsEnabled: v })} />
-      <Toggle label="Chat" sub="Direct messages with your patients" value={channels.chatEnabled} onChange={(v) => setChannels({ ...channels, chatEnabled: v })} />
+    <Section title={t('Channels you offer')}>
+      <Toggle label={t('Video and phone consultations')} sub={t('Patients can book in your free slots')} value={channels.videoEnabled} onChange={(v) => setChannels({ ...channels, videoEnabled: v })} />
+      <Toggle label={t('Requests')} sub={t('Questions and results reviews, answered when it suits you')} value={channels.requestsEnabled} onChange={(v) => setChannels({ ...channels, requestsEnabled: v })} />
+      <Toggle label={t('Chat')} sub={t('Direct messages with your patients')} value={channels.chatEnabled} onChange={(v) => setChannels({ ...channels, chatEnabled: v })} />
     </Section>
   );
 
   const agendaCard = (
-    <Section title="Agenda">
-      <Text style={styles.groupLabel}>Calendar sync</Text>
+    <Section title={t('Agenda')}>
+      <Text style={styles.groupLabel}>{t('Calendar sync')}</Text>
       <View style={styles.chips}>
         {(['none', 'google', 'outlook'] as const).map((p) => (
           <TouchableOpacity key={p} style={[styles.chip, av.calendarProvider === p && styles.chipOn]} onPress={() => setAv({ ...av, calendarProvider: p })}>
             {p !== 'none' && <Ionicons name={p === 'google' ? 'logo-google' : 'logo-microsoft'} size={14} color={av.calendarProvider === p ? Colors.background : Colors.textSecondary} />}
-            <Text style={[styles.chipText, av.calendarProvider === p && { color: Colors.background }]}>{p === 'none' ? 'None' : p === 'google' ? 'Google' : 'Outlook'}</Text>
+            <Text style={[styles.chipText, av.calendarProvider === p && { color: Colors.background }]}>{p === 'none' ? t('None') : p === 'google' ? 'Google' : 'Outlook'}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -160,7 +151,7 @@ export const ProSettingsScreen = () => {
         </Text>
       )}
 
-      <Text style={styles.groupLabel}>Consultation length</Text>
+      <Text style={styles.groupLabel}>{t('Consultation length')}</Text>
       <View style={styles.chips}>
         {SLOT_OPTIONS.map((m) => (
           <TouchableOpacity key={m} style={[styles.chip, av.slotMinutes === m && styles.chipOn]} onPress={() => setAv({ ...av, slotMinutes: m })}>
@@ -168,16 +159,16 @@ export const ProSettingsScreen = () => {
           </TouchableOpacity>
         ))}
       </View>
-      <Text style={styles.groupLabel}>Buffer between consultations</Text>
+      <Text style={styles.groupLabel}>{t('Buffer between consultations')}</Text>
       <View style={styles.chips}>
         {BUFFER_OPTIONS.map((m) => (
           <TouchableOpacity key={m} style={[styles.chip, av.bufferMinutes === m && styles.chipOn]} onPress={() => setAv({ ...av, bufferMinutes: m })}>
-            <Text style={[styles.chipText, av.bufferMinutes === m && { color: Colors.background }]}>{m === 0 ? 'None' : `${m}′`}</Text>
+            <Text style={[styles.chipText, av.bufferMinutes === m && { color: Colors.background }]}>{m === 0 ? t('None') : `${m}′`}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.groupLabel}>Weekly availability</Text>
+      <Text style={styles.groupLabel}>{t('Weekly availability')}</Text>
       {WEEKDAYS.map((d) => {
         const ranges = av.weekly[d];
         return (
@@ -191,7 +182,7 @@ export const ProSettingsScreen = () => {
               <Text style={styles.dayName}>{WEEKDAY_LABEL[d]}</Text>
             </View>
             <View style={{ flex: 1, gap: 6 }}>
-              {ranges.length === 0 && <Text style={styles.muted}>Unavailable</Text>}
+              {ranges.length === 0 && <Text style={styles.muted}>{t('Unavailable')}</Text>}
               {ranges.map((r, i) => (
                 <View key={i} style={styles.rangeRow}>
                   <TextInput style={[styles.time, !isTime(r.start) && styles.bad]} value={r.start} onChangeText={(t) => setDay(d, ranges.map((x, j) => (j === i ? { ...x, start: t } : x)))} maxLength={5} />
@@ -204,7 +195,7 @@ export const ProSettingsScreen = () => {
               ))}
               {ranges.length > 0 && ranges.length < 3 && (
                 <TouchableOpacity onPress={() => setDay(d, [...ranges, { start: '16:00', end: '19:00' }])}>
-                  <Text style={styles.linkText}>+ Add hours</Text>
+                  <Text style={styles.linkText}>{t('+ Add hours')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -217,10 +208,10 @@ export const ProSettingsScreen = () => {
   return (
     <ProLayout
       active="settings"
-      title="Profile & settings"
+      title={t('Your profile')}
       right={
         <TouchableOpacity style={styles.save} onPress={save} disabled={state === 'saving'}>
-          {state === 'saving' ? <ActivityIndicator color={Colors.background} size="small" /> : <Text style={styles.saveText}>{state === 'saved' ? 'Saved ✓' : 'Save'}</Text>}
+          {state === 'saving' ? <ActivityIndicator color={Colors.background} size="small" /> : <Text style={styles.saveText}>{state === 'saved' ? t('Saved ✓') : t('Save')}</Text>}
         </TouchableOpacity>
       }
     >
@@ -234,7 +225,6 @@ export const ProSettingsScreen = () => {
           </View>
           <View style={styles.col}>
             {agendaCard}
-            {appearanceCard}
           </View>
         </View>
       ) : (
@@ -243,16 +233,8 @@ export const ProSettingsScreen = () => {
           {contactCard}
           {channelsCard}
           {agendaCard}
-          {appearanceCard}
         </>
       )}
-      <TouchableOpacity
-        style={styles.exit}
-        onPress={exit}
-      >
-        <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
-        <Text style={styles.exitText}>{demoMode === 'pro' ? 'Exit demo portal' : 'Log out'}</Text>
-      </TouchableOpacity>
     </ProLayout>
   );
 };

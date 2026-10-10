@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +11,7 @@ import { cycleRepository } from '@/data/cycleRepository';
 const DAY_MS = 24 * 3600 * 1000;
 const fromKey = (key: string) => new Date(`${key}T12:00:00`);
 const formatDay = (key: string) =>
-  fromKey(key).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  fromKey(key).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 
 // "Log period": primer día y último día de la regla (duración), en un calendario.
 // Primer toque = inicio; segundo toque = fin. Si aún no ha terminado, se guarda solo el inicio.

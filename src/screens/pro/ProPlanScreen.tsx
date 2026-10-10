@@ -9,6 +9,7 @@ import { PlanVersionItem } from '@/data/planVersions';
 import { draftActionsForMarkers } from '@/utils/planUpdate';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
+import { t } from '@/i18n';
 // "Generar plan de acción": borrador a partir de los valores fuera de rango del
 // paciente; el especialista edita las recomendaciones y lo envía. Kuova no emite
 // recetas: si hace falta una, el médico la hace fuera (su plataforma o papel).
@@ -25,7 +26,7 @@ export const ProPlanScreen = () => {
   useReloadOnFocus(
     useCallback(async () => {
       const [patients, lab] = await Promise.all([portal.listPatients(), portal.patientLab(patientId).catch(() => null)]);
-      setName(patients.find((p) => p.id === patientId)?.name ?? 'Patient');
+      setName(patients.find((p) => p.id === patientId)?.name ?? t('Patient'));
       if (items.length === 0 && lab) {
         setItems(draftActionsForMarkers(lab.markers.filter((m) => m.status !== 'in')));
       }
@@ -38,7 +39,7 @@ export const ProPlanScreen = () => {
   const send = async () => {
     const clean = items.filter((i) => i.title.trim());
     if (clean.length === 0) {
-      setError('Add at least one recommendation.');
+      setError(t('Add at least one recommendation.'));
       setState('error');
       return;
     }
@@ -48,18 +49,18 @@ export const ProPlanScreen = () => {
       await portal.createActionPlan(patientId, clean, note.trim());
       setState('sent');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send the plan');
+      setError(e instanceof Error ? e.message : t('Could not send the plan'));
       setState('error');
     }
   };
 
   if (state === 'sent') {
     return (
-      <ProLayout active="patients" title="Action plan">
+      <ProLayout active="patients" title={t('Action plan')}>
         <View style={styles.done}>
           <Ionicons name="checkmark-circle" size={56} color={Colors.ok} />
           <Text style={styles.doneTitle}>Plan sent to {name}</Text>
-          <Text style={styles.muted}>It appears in their app as their current plan, marked “Updated by your specialist”.</Text>
+          <Text style={styles.muted}>{t('It appears in their app as their current plan, marked “Updated by your specialist”.')}</Text>
           <TouchableOpacity style={styles.primary} onPress={() => router.replace({ pathname: '/pro-patient', params: { id: patientId } })}>
             <Text style={styles.primaryText}>Back to {name}</Text>
           </TouchableOpacity>
@@ -71,36 +72,36 @@ export const ProPlanScreen = () => {
   return (
     <ProLayout
       active="patients"
-      title={`Action plan · ${name}`}
+      title={`${t('Action plan')} · ${name}`}
       right={
         <TouchableOpacity style={styles.send} onPress={send} disabled={state === 'saving'}>
-          {state === 'saving' ? <ActivityIndicator size="small" color={Colors.background} /> : <Text style={styles.sendText}>Send to patient</Text>}
+          {state === 'saving' ? <ActivityIndicator size="small" color={Colors.background} /> : <Text style={styles.sendText}>{t('Send to patient')}</Text>}
         </TouchableOpacity>
       }
     >
-      <Text style={styles.intro}>Draft built from the values out of range. Edit, remove or add recommendations before sending.</Text>
+      <Text style={styles.intro}>{t('Draft built from the values out of range. Edit, remove or add recommendations before sending.')}</Text>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Text style={styles.section}>Recommendations</Text>
+      <Text style={styles.section}>{t('Recommendations')}</Text>
       {items.map((it, i) => (
         <View key={i} style={styles.card}>
           <View style={styles.cardHead}>
-            <TextInput style={styles.title} value={it.title} onChangeText={(t) => update(i, { title: t })} placeholder="Recommendation" placeholderTextColor={Colors.textMuted} />
+            <TextInput style={styles.title} value={it.title} onChangeText={(t) => update(i, { title: t })} placeholder={t('Recommendation')} placeholderTextColor={Colors.textMuted} />
             <TouchableOpacity onPress={() => setItems((prev) => prev.filter((_, j) => j !== i))} hitSlop={8}>
               <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
             </TouchableOpacity>
           </View>
-          <TextInput style={styles.input} multiline value={it.why} onChangeText={(t) => update(i, { why: t })} placeholder="What to do and why" placeholderTextColor={Colors.textMuted} />
-          {it.note ? <Text style={styles.based}>Based on: {it.note}</Text> : null}
+          <TextInput style={styles.input} multiline value={it.why} onChangeText={(t) => update(i, { why: t })} placeholder={t('What to do and why')} placeholderTextColor={Colors.textMuted} />
+          {it.note ? <Text style={styles.based}>{t('Based on: {what}', { what: it.note })}</Text> : null}
         </View>
       ))}
       <TouchableOpacity style={styles.add} onPress={() => setItems((prev) => [...prev, { title: '', why: '', markers: [], status: 'new' }])}>
         <Ionicons name="add" size={18} color={Colors.accent} />
-        <Text style={styles.addText}>Add recommendation</Text>
+        <Text style={styles.addText}>{t('Add recommendation')}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.section}>Note to the patient</Text>
-      <TextInput style={[styles.input, { minHeight: 80 }]} multiline value={note} onChangeText={setNote} placeholder="A few words in plain language" placeholderTextColor={Colors.textMuted} />
+      <Text style={styles.section}>{t('Note to the patient')}</Text>
+      <TextInput style={[styles.input, { minHeight: 80 }]} multiline value={note} onChangeText={setNote} placeholder={t('A few words in plain language')} placeholderTextColor={Colors.textMuted} />
     </ProLayout>
   );
 };

@@ -33,6 +33,10 @@ export function t(text: string, vars?: Record<string, string | number>): string 
 }
 
 // Plural sencillo: tn(n, '{n} day', '{n} days')
+// Número con la coma decimal del idioma (2.23 → 2,23 en español); deja el resto tal cual.
+export const num = (v: number | string | null | undefined): string =>
+  v === null || v === undefined ? '' : current === 'en' ? String(v) : String(v).replace(/^(-?\d+)\.(\d+)$/, '$1,$2');
+
 export const tn = (n: number, one: string, many: string) => t(n === 1 ? one : many, { n });
 
 function deviceLang(): Lang {

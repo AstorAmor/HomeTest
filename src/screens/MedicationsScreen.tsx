@@ -1,3 +1,4 @@
+import { dateLocale } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -67,7 +68,7 @@ export const MedicationsScreen = () => {
     if (isReminderMuted(item)) {
       return item.remindersMutedUntil === MUTED_FOREVER
         ? 'Reminders muted'
-        : `Muted until ${new Date(item.remindersMutedUntil!).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+        : `Muted until ${new Date(item.remindersMutedUntil!).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}`;
     }
     return 'Reminders on';
   };
@@ -92,7 +93,7 @@ export const MedicationsScreen = () => {
             <Text style={styles.itemSub}>{scheduleText(item.schedule)}</Text>
             {progress && end && (
               <Text style={styles.itemSub}>
-                Day {progress.day} of {progress.total} · ends {new Date(end.getTime() - 1).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                Day {progress.day} of {progress.total} · ends {new Date(end.getTime() - 1).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}
               </Text>
             )}
             <Text style={styles.itemMeta}>{reminderLabel(item)}</Text>
