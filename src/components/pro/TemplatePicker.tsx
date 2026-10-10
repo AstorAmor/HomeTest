@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useProIdentity } from '@/components/pro/ProLayout';
-import { ProTemplate, TemplateTopic, fillTemplate, suggestTemplates, templates, topicIcon, topicLabel } from '@/data/proTemplates';
+import { ProTemplate, TemplateTopic, fillTemplate, suggestTemplates, templateTopicIcon, templateTopicName, templates } from '@/data/proTemplates';
 
 import { t as tr } from '@/i18n';
 interface Props {
@@ -34,7 +34,7 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
     if (!list) return [];
     const q = query.trim().toLowerCase();
     if (!q) return list;
-    return list.filter((t) => `${t.title} ${topicLabel(t.topic)} ${t.keywords.join(' ')} ${t.body}`.toLowerCase().includes(q));
+    return list.filter((t) => `${t.title} ${templateTopicName(t)} ${t.keywords.join(' ')} ${t.body}`.toLowerCase().includes(q));
   }, [list, query]);
 
   const insert = (t: ProTemplate) => {
@@ -63,7 +63,7 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
         <Text style={styles.label}>{suggested.length ? tr('Suggested') : tr('Templates')}</Text>
         {suggested.map((t) => (
           <TouchableOpacity key={t.id} style={styles.chip} onPress={() => insert(t)}>
-            <Ionicons name={topicIcon(t.topic) as any} size={13} color={Colors.accent} />
+            <Ionicons name={templateTopicIcon(t) as any} size={13} color={Colors.accent} />
             <Text style={styles.chipText} numberOfLines={1}>
               {t.title}
             </Text>
@@ -90,17 +90,17 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
           <ScrollView style={{ maxHeight: 260 }} nestedScrollEnabled>
             {shown.map((t) => (
               <TouchableOpacity key={t.id} style={styles.item} onPress={() => insert(t)}>
-                <Ionicons name={topicIcon(t.topic) as any} size={16} color={Colors.accent} />
+                <Ionicons name={templateTopicIcon(t) as any} size={16} color={Colors.accent} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.itemTitle}>{t.title}</Text>
                   <Text style={styles.itemPreview} numberOfLines={2}>
-                    {topicLabel(t.topic)} · {t.body.replace(/^.*\n+/, '').replace(/\s+/g, ' ').slice(0, 140)}
+                    {templateTopicName(t)} · {t.body.replace(/^.*\n+/, '').replace(/\s+/g, ' ').slice(0, 140)}
                   </Text>
                 </View>
                 <Text style={styles.insert}>{tr('Insert')}</Text>
               </TouchableOpacity>
             ))}
-            {shown.length === 0 && <Text style={styles.muted}>No template matches “{query}”.</Text>}
+            {shown.length === 0 && <Text style={styles.muted}>{tr('No template matches “{query}”.', { query })}</Text>}
           </ScrollView>
           <TouchableOpacity onPress={() => router.push('/pro-templates')}>
             <Text style={styles.manage}>{tr('Manage templates')}</Text>

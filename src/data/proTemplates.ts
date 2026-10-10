@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, supabase } from '@/lib/supabase';
 import { isPortalDemo } from './specialistPortal';
+import { userFlags } from './userFlags';
 import { SAMPLE_TEMPLATES_ES } from './proTemplatesEs';
 import { getLang, t } from '@/i18n';
 
@@ -29,11 +30,38 @@ export const TEMPLATE_TOPICS: { id: TemplateTopic; label: string; icon: string }
 export const topicLabel = (id: TemplateTopic) => TEMPLATE_TOPICS.find((x) => x.id === id)?.label ?? t('Other');
 export const topicIcon = (id: TemplateTopic) => TEMPLATE_TOPICS.find((t) => t.id === id)?.icon ?? 'document-text-outline';
 
+// Temas propios: al elegir "Otro" el médico puede ponerle nombre (p. ej. "Embarazo"). Se guarda en
+// la plantilla (customTopic) y sale como tema la próxima vez; si lo borra, sus plantillas vuelven a "Otro".
+export const templateTopicName = (t: { topic: TemplateTopic; customTopic?: string | null }) =>
+  t.customTopic?.trim() || topicLabel(t.topic);
+export const templateTopicIcon = (t: { topic: TemplateTopic; customTopic?: string | null }) =>
+  t.customTopic?.trim() ? 'pricetag-outline' : topicIcon(t.topic);
+
+const sameTopic = (a?: string | null, b?: string | null) => !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
+
+// Temas propios que ya existen en la biblioteca (sin repetir mayúsculas/minúsculas), por orden alfabético
+export function customTopicsOf(list: { customTopic?: string | null }[]): string[] {
+  const out: string[] = [];
+  for (const t of list) {
+    const name = t.customTopic?.trim();
+    if (name && !out.some((x) => sameTopic(x, name))) out.push(name);
+  }
+  return out.sort((a, b) => a.localeCompare(b));
+}
+
+// Nombre limpio (máx. 40 caracteres); si ya existe con otra forma de escribirlo, se reutiliza esa
+export function cleanCustomTopic(name: string | null | undefined, existing: string[] = []): string | null {
+  const clean = (name ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  if (!clean) return null;
+  return existing.find((x) => sameTopic(x, clean)) ?? clean;
+}
+
 export interface ProTemplate {
   id: string;
   title: string;
   topic: TemplateTopic;
   keywords: string[]; // palabras extra para sugerirla (ferritina, TSH, regla…)
+  customTopic: string | null; // nombre del tema propio (solo con topic "other")
   body: string;
   uses: number;
   lastUsedAt: string | null;
@@ -41,7 +69,7 @@ export interface ProTemplate {
   updatedAt: string;
 }
 
-export type TemplateDraft = Pick<ProTemplate, 'title' | 'topic' | 'keywords' | 'body'> & { id?: string };
+export type TemplateDraft = Pick<ProTemplate, 'title' | 'topic' | 'keywords' | 'body'> & { id?: string; customTopic?: string | null };
 
 // ---------------------------------------------------------------------------
 // Huecos: [name] y [doctor] se rellenan solos; cualquier otro [texto] lo rellena el médico
@@ -126,7 +154,7 @@ export function suggestTemplates(text: string, templates: ProTemplate[], limit =
   );
   const scored = templates.map((tpl) => {
     let score = (topicHits[tpl.topic] ?? 0) * 2 + (extraTopic === tpl.topic ? 1 : 0);
-    for (const k of tpl.keywords) if (k.trim() && hits([norm(k.trim())], t, all)) score += 4;
+    for (const k of [...tpl.keywords, tpl.customTopic ?? '']) if (k.trim() && hits([norm(k.trim())], t, all)) score += 4;
     for (const w of norm(tpl.title).split(/[^a-z0-9()]+/)) if (w.length > 2 && tokens.has(w)) score += 2;
     score += Math.min(tpl.uses, 10) * 0.05; // a igualdad, las que más usa
     return { tpl, score };
@@ -271,17 +299,21 @@ const deviceKey = () => `proTemplates.v1:${getCurrentUserId() ?? 'anon'}`;
 
 export type TemplateStore = 'demo' | 'cloud' | 'device';
 let cloudMissing = false; // la tabla aún no existe en Supabase → este dispositivo
+let customColumnMissing = false; // falta la migración de custom_topic
 
 const isMissingTable = (e: { code?: string; message?: string } | null) =>
   !!e && (e.code === 'PGRST205' || e.code === '42P01' || /pro_templates/.test(e.message ?? ''));
 
 const newId = () => `t-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
+const draftCustomTopic = (d: TemplateDraft) => (d.topic === 'other' ? cleanCustomTopic(d.customTopic) : null);
+
 const fromDraft = (d: TemplateDraft, now = new Date().toISOString()): ProTemplate => ({
   id: d.id ?? newId(),
   title: d.title.trim(),
   topic: d.topic,
   keywords: d.keywords.map((k) => k.trim()).filter(Boolean),
+  customTopic: draftCustomTopic(d),
   body: d.body,
   uses: 0,
   lastUsedAt: null,
@@ -307,6 +339,7 @@ const toTemplate = (r: any): ProTemplate => ({
   title: r.title,
   topic: r.topic,
   keywords: r.keywords ?? [],
+  customTopic: r.custom_topic ?? null,
   body: r.body,
   uses: r.uses ?? 0,
   lastUsedAt: r.last_used_at,
@@ -343,18 +376,24 @@ export const templates = {
       const list = await readLocal(local.key, local.seed);
       const existing = d.id ? list.find((t) => t.id === d.id) : undefined;
       const saved: ProTemplate = existing
-        ? { ...existing, title: d.title.trim(), topic: d.topic, keywords: d.keywords.map((k) => k.trim()).filter(Boolean), body: d.body, updatedAt: new Date().toISOString() }
+        ? { ...existing, title: d.title.trim(), topic: d.topic, keywords: d.keywords.map((k) => k.trim()).filter(Boolean), customTopic: draftCustomTopic(d), body: d.body, updatedAt: new Date().toISOString() }
         : fromDraft(d);
       await writeLocal(local.key, [saved, ...list.filter((t) => t.id !== saved.id)]);
       return saved;
     }
-    const row = { title: d.title.trim(), topic: d.topic, keywords: d.keywords.map((k) => k.trim()).filter(Boolean), body: d.body };
+    const row: Record<string, unknown> = { title: d.title.trim(), topic: d.topic, keywords: d.keywords.map((k) => k.trim()).filter(Boolean), body: d.body };
+    if (!customColumnMissing) row.custom_topic = draftCustomTopic(d);
     const q = d.id
       ? supabase!.from('pro_templates').update(row).eq('id', d.id).select('*').single()
       : supabase!.from('pro_templates').insert(row).select('*').single();
     const { data, error } = await q;
     if (isMissingTable(error)) {
       cloudMissing = true;
+      return templates.save(d);
+    }
+    // Columna custom_topic aún sin migrar: se guarda la plantilla sin el tema propio (queda en "Otro")
+    if (error && !customColumnMissing && /custom_topic/.test(error.message ?? '')) {
+      customColumnMissing = true;
       return templates.save(d);
     }
     if (error) throw new Error(error.message);
@@ -365,6 +404,29 @@ export const templates = {
     const local = localStore();
     if (local) return writeLocal(local.key, (await readLocal(local.key, local.seed)).filter((t) => t.id !== id));
     const { error } = await supabase!.from('pro_templates').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+  },
+
+  // Borrar un tema de ejemplo (Ciclo menstrual, Glucosa…): sus plantillas pasan a "Otro"
+  async moveTopicToOther(topic: TemplateTopic) {
+    if (topic === 'other') return;
+    const local = localStore();
+    if (local) {
+      const list = await readLocal(local.key, local.seed);
+      return writeLocal(local.key, list.map((x) => (x.topic === topic ? { ...x, topic: 'other' as const, customTopic: null } : x)));
+    }
+    const { error } = await supabase!.from('pro_templates').update({ topic: 'other' }).eq('topic', topic);
+    if (error) throw new Error(error.message);
+  },
+
+  // Borrar un tema propio (p. ej. uno mal escrito): sus plantillas no se borran, pasan a "Otro"
+  async removeCustomTopic(name: string) {
+    const local = localStore();
+    if (local) {
+      const list = await readLocal(local.key, local.seed);
+      return writeLocal(local.key, list.map((x) => (sameTopic(x.customTopic, name) ? { ...x, customTopic: null } : x)));
+    }
+    const { error } = await supabase!.from('pro_templates').update({ custom_topic: null }).eq('custom_topic', name);
     if (error) throw new Error(error.message);
   },
 
@@ -382,5 +444,97 @@ export const templates = {
   // Cuenta real con la biblioteca vacía: empezar con los ejemplos y adaptarlos
   async addSamples() {
     for (const d of samplesForLang()) await templates.save(d);
+    // Si había borrado alguno de esos temas, vuelve a aparecer
+    const s = await topicSettings.get();
+    if (s.hidden.length) await topicSettings.save({ ...s, hidden: [] });
   },
 };
+
+// ---------------------------------------------------------------------------
+// Temas del médico: los de ejemplo (que puede borrar) + los que crea él. "Otro" es el cajón de
+// sastre y no se borra. La lista se guarda por médico en user_flags (clave pro_template_topics),
+// sin migración; en la demo, en este dispositivo.
+// ---------------------------------------------------------------------------
+export interface TopicSettings {
+  hidden: TemplateTopic[]; // temas de ejemplo que ha borrado
+  custom: string[]; // temas que ha creado (aunque aún no tengan plantillas)
+}
+
+export interface TopicOption {
+  key: string; // 'cycle'… o 'c:embarazo'
+  label: string;
+  icon: string;
+  fixed?: TemplateTopic;
+  custom?: string;
+}
+
+const TOPICS_FLAG = 'pro_template_topics';
+const TOPICS_DEMO_KEY = 'proTemplates.topics.demo.v1';
+
+const sanitizeTopics = (v: any): TopicSettings => ({
+  hidden: Array.isArray(v?.hidden) ? v.hidden.filter((id: unknown) => TEMPLATE_TOPICS.some((x) => x.id === id && x.id !== 'other')) : [],
+  custom: Array.isArray(v?.custom)
+    ? customTopicsOf(v.custom.filter((x: unknown) => typeof x === 'string').map((x: string) => ({ customTopic: x.slice(0, 40) })))
+    : [],
+});
+
+export const topicKeyOf = (t: { topic: TemplateTopic; customTopic?: string | null }) =>
+  t.customTopic?.trim() ? `c:${t.customTopic.trim().toLowerCase()}` : t.topic;
+
+export const topicSettings = {
+  async get(): Promise<TopicSettings> {
+    try {
+      if (isPortalDemo()) {
+        const raw = await AsyncStorage.getItem(TOPICS_DEMO_KEY);
+        return sanitizeTopics(raw ? JSON.parse(raw) : null);
+      }
+      return sanitizeTopics(await userFlags.get(TOPICS_FLAG));
+    } catch {
+      return { hidden: [], custom: [] };
+    }
+  },
+  async save(s: TopicSettings) {
+    const clean = sanitizeTopics(s);
+    if (isPortalDemo()) return AsyncStorage.setItem(TOPICS_DEMO_KEY, JSON.stringify(clean)).catch(() => undefined);
+    await userFlags.set(TOPICS_FLAG, clean as unknown as Record<string, unknown>);
+  },
+};
+
+// Temas que ve el médico (sin "Otro"): los de ejemplo que no ha borrado, y los suyos (los creados
+// y los que ya llevan sus plantillas), por orden alfabético
+export function topicOptions(settings: TopicSettings, list: { customTopic?: string | null }[]): TopicOption[] {
+  const fixed = TEMPLATE_TOPICS.filter((x) => x.id !== 'other' && !settings.hidden.includes(x.id)).map(
+    (x): TopicOption => ({ key: x.id, label: x.label, icon: x.icon, fixed: x.id })
+  );
+  const names = customTopicsOf([...settings.custom.map((c) => ({ customTopic: c })), ...list]);
+  const custom = names.map((name): TopicOption => ({ key: `c:${name.toLowerCase()}`, label: name, icon: 'pricetag-outline', custom: name }));
+  return [...fixed, ...custom];
+}
+
+// Crear un tema. Si se llama como uno de ejemplo (aunque lo hubiera borrado), se usa ese.
+export async function addTopic(name: string, list: { customTopic?: string | null }[]): Promise<TopicOption | null> {
+  const s = await topicSettings.get();
+  const clean = cleanCustomTopic(name, customTopicsOf([...s.custom.map((c) => ({ customTopic: c })), ...list]));
+  if (!clean) return null;
+  const fixed = TEMPLATE_TOPICS.find((x) => x.id !== 'other' && sameTopic(x.label, clean));
+  if (fixed) {
+    if (s.hidden.includes(fixed.id)) await topicSettings.save({ ...s, hidden: s.hidden.filter((h) => h !== fixed.id) });
+    return { key: fixed.id, label: fixed.label, icon: fixed.icon, fixed: fixed.id };
+  }
+  if (!s.custom.some((c) => sameTopic(c, clean))) await topicSettings.save({ ...s, custom: [...s.custom, clean] });
+  return { key: `c:${clean.toLowerCase()}`, label: clean, icon: 'pricetag-outline', custom: clean };
+}
+
+// Borrar un tema: las plantillas no se borran, pasan a "Otro"
+export async function deleteTopic(option: TopicOption) {
+  const s = await topicSettings.get();
+  if (option.fixed) {
+    await templates.moveTopicToOther(option.fixed);
+    await topicSettings.save({ ...s, hidden: [...s.hidden.filter((h) => h !== option.fixed), option.fixed] });
+  } else if (option.custom) {
+    await templates.removeCustomTopic(option.custom);
+    await topicSettings.save({ ...s, custom: s.custom.filter((c) => !sameTopic(c, option.custom)) });
+  }
+}
+
+export const restoreSampleTopics = async () => topicSettings.save({ ...(await topicSettings.get()), hidden: [] });

@@ -5,11 +5,12 @@ vi.mock('@react-native-async-storage/async-storage', () => ({ default: { getItem
 vi.mock('@/lib/supabase', () => ({ supabase: null, getCurrentUserId: () => null }));
 vi.mock('../specialistPortal', () => ({ isPortalDemo: () => true }));
 
-const { SAMPLE_TEMPLATES, fillTemplate, findGaps, guessTopic, suggestTemplates, toTemplateBody } = await import('../proTemplates');
+const { SAMPLE_TEMPLATES, cleanCustomTopic, customTopicsOf, fillTemplate, findGaps, guessTopic, suggestTemplates, toTemplateBody, topicOptions } = await import('../proTemplates');
 
 const samples = SAMPLE_TEMPLATES.map((d, i) => ({
   ...d,
   id: `t${i}`,
+  customTopic: null,
   uses: 0,
   lastUsedAt: null,
   createdAt: '2026-10-09T00:00:00Z',
@@ -41,6 +42,33 @@ describe('suggestTemplates', () => {
 
   it('no sugiere nada si la pregunta no tiene que ver', () => {
     expect(top('What time is my appointment tomorrow?')).toEqual([]);
+  });
+});
+
+describe('temas propios', () => {
+  it('se listan sin repetir mayúsculas y por orden alfabético', () => {
+    expect(customTopicsOf([{ customTopic: 'Embarazo' }, { customTopic: 'embarazo ' }, { customTopic: null }, { customTopic: 'Deporte' }])).toEqual([
+      'Deporte',
+      'Embarazo',
+    ]);
+  });
+
+  it('un nombre nuevo se limpia y, si ya existe con otra forma, se reutiliza esa', () => {
+    expect(cleanCustomTopic('  corazón   y  ejercicio ')).toBe('corazón y ejercicio');
+    expect(cleanCustomTopic('EMBARAZO', ['Embarazo'])).toBe('Embarazo');
+    expect(cleanCustomTopic('   ')).toBeNull();
+  });
+
+  it('el nombre del tema propio sugiere la plantilla', () => {
+    const tpl = { ...samples[0], id: 'x', title: 'Planning a pregnancy', topic: 'other' as const, keywords: [], customTopic: 'Embarazo' };
+    expect(suggestTemplates('Estoy buscando embarazo, ¿qué análisis me hago?', [tpl]).map((t) => t.id)).toEqual(['x']);
+  });
+});
+
+describe('lista de temas del médico', () => {
+  it('quita los de ejemplo borrados y añade los suyos (creados o usados en plantillas), sin "Otro"', () => {
+    const keys = topicOptions({ hidden: ['cycle', 'glucose'], custom: ['Embarazo'] }, [{ customTopic: 'deporte' }, { customTopic: 'embarazo' }]).map((o) => o.key);
+    expect(keys).toEqual(['blood_test', 'hormones', 'energy', 'cholesterol', 'c:deporte', 'c:embarazo']);
   });
 });
 

@@ -7,35 +7,61 @@ import {
   ProTemplate,
   TEMPLATE_TOPICS,
   TemplateDraft,
-  TemplateTopic,
+  TopicOption,
+  TopicSettings,
+  addTopic,
+  cleanCustomTopic,
+  customTopicsOf,
+  deleteTopic,
   findGaps,
   guessTopic,
+  restoreSampleTopics,
+  templateTopicIcon,
+  templateTopicName,
   templates,
-  topicIcon,
-  topicLabel,
+  topicKeyOf,
+  topicOptions,
+  topicSettings,
 } from '@/data/proTemplates';
 import { canImportTextFile, pickTextFile } from '@/utils/importTextFile';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
-import { t as tr } from '@/i18n';
-const confirmDelete = (title: string) =>
+import { t as tr, tn } from '@/i18n';
+const confirmAsk = (title: string, message: string) =>
   Platform.OS === 'web'
-    ? Promise.resolve(window.confirm(tr('Delete “{title}”?', { title })))
+    ? Promise.resolve(window.confirm(message))
     : new Promise<boolean>((resolve) =>
-        Alert.alert('Delete template', `Delete “${title}”?`, [
+        Alert.alert(title, message, [
           { text: tr('Cancel'), style: 'cancel', onPress: () => resolve(false) },
           { text: tr('Delete'), style: 'destructive', onPress: () => resolve(true) },
         ])
       );
 
-const EMPTY: TemplateDraft = { title: '', topic: 'blood_test', keywords: [], body: '' };
+const OTHER_TOPIC = TEMPLATE_TOPICS.find((t) => t.id === 'other')!;
+
+const EMPTY: TemplateDraft = { title: '', topic: 'other', keywords: [], body: '' };
+
+// Tema de una plantilla a partir de una opción de la lista (de ejemplo o propio)
+const topicFields = (o: TopicOption | undefined): Pick<TemplateDraft, 'topic' | 'customTopic'> =>
+  o?.fixed ? { topic: o.fixed, customTopic: null } : o?.custom ? { topic: 'other', customTopic: o.custom } : { topic: 'other', customTopic: null };
+
+// "Nueva": con un filtro puesto nace con ese tema; si no, con "Resultados de analíticas" si sigue existiendo
+const newDraftFor = (filter: string, options: TopicOption[]): TemplateDraft => ({
+  ...EMPTY,
+  ...topicFields(options.find((o) => o.key === filter) ?? options.find((o) => o.key === 'blood_test')),
+});
 
 // Biblioteca de plantillas del especialista. Escritorio: lista a la izquierda y editor a la
 // derecha. Móvil: lista y, al abrir una, el editor a pantalla completa.
 export const ProTemplatesScreen = () => {
   const wide = useIsWide();
   const [list, setList] = useState<ProTemplate[] | null>(null);
-  const [filter, setFilter] = useState<TemplateTopic | 'all'>('all');
+  // 'all', un tema de ejemplo ('cycle'…), 'other' (Otro) o un tema propio ('c:embarazo')
+  const [filter, setFilter] = useState<string>('all');
+  const [settings, setSettings] = useState<TopicSettings>({ hidden: [], custom: [] });
+  const [managing, setManaging] = useState(false); // "Editar temas" abierto en la lista
+  const [adding, setAdding] = useState<'list' | 'editor' | null>(null); // dónde se está creando un tema
+  const [newTopic, setNewTopic] = useState('');
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState<TemplateDraft | null>(null);
   const [keywordsText, setKeywordsText] = useState('');
@@ -44,7 +70,9 @@ export const ProTemplatesScreen = () => {
 
   const load = useCallback(async () => {
     try {
-      setList(await templates.list());
+      const [l, s] = await Promise.all([templates.list(), topicSettings.get()]);
+      setList(l);
+      setSettings(s);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr('Could not load your templates'));
       setList([]);
@@ -52,17 +80,22 @@ export const ProTemplatesScreen = () => {
   }, []);
   useReloadOnFocus(load);
 
+  const options = useMemo(() => topicOptions(settings, list ?? []), [settings, list]);
+  const counts = (list ?? []).reduce<Record<string, number>>((acc, t) => ({ ...acc, [topicKeyOf(t)]: (acc[topicKeyOf(t)] ?? 0) + 1 }), {});
+  const customTopics = useMemo(() => customTopicsOf(list ?? []), [list]);
+
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (list ?? []).filter(
       (t) =>
-        (filter === 'all' || t.topic === filter) &&
-        (!q || `${t.title} ${t.keywords.join(' ')} ${t.body}`.toLowerCase().includes(q))
+        (filter === 'all' || topicKeyOf(t) === filter) &&
+        (!q || `${t.title} ${t.customTopic ?? ''} ${t.keywords.join(' ')} ${t.body}`.toLowerCase().includes(q))
     );
   }, [list, filter, query]);
 
   const open = (d: TemplateDraft) => {
     setDraft(d);
+    setAdding(null);
     setKeywordsText(d.keywords.join(', '));
     setState('idle');
     setError('');
@@ -72,7 +105,14 @@ export const ProTemplatesScreen = () => {
     if (!draft) return false;
     const orig = draft.id ? list?.find((t) => t.id === draft.id) : undefined;
     if (!orig) return !!(draft.title.trim() || draft.body.trim());
-    return orig.title !== draft.title || orig.topic !== draft.topic || orig.body !== draft.body || orig.keywords.join(', ') !== keywordsText;
+    const custom = draft.topic === 'other' ? cleanCustomTopic(draft.customTopic) : null;
+    return (
+      orig.title !== draft.title ||
+      orig.topic !== draft.topic ||
+      (orig.customTopic ?? null) !== custom ||
+      orig.body !== draft.body ||
+      orig.keywords.join(', ') !== keywordsText
+    );
   })();
 
   const save = async () => {
@@ -84,8 +124,9 @@ export const ProTemplatesScreen = () => {
     setState('saving');
     setError('');
     try {
-      const saved = await templates.save({ ...draft, keywords: keywordsText.split(',') });
-      setDraft({ id: saved.id, title: saved.title, topic: saved.topic, keywords: saved.keywords, body: saved.body });
+      const customTopic = draft.topic === 'other' ? cleanCustomTopic(draft.customTopic, customTopics) : null;
+      const saved = await templates.save({ ...draft, customTopic, keywords: keywordsText.split(',') });
+      setDraft({ id: saved.id, title: saved.title, topic: saved.topic, customTopic: saved.customTopic, keywords: saved.keywords, body: saved.body });
       setState('saved');
       await load();
     } catch (e) {
@@ -95,11 +136,69 @@ export const ProTemplatesScreen = () => {
   };
 
   const remove = async () => {
-    if (!draft?.id || !(await confirmDelete(draft.title))) return;
+    if (!draft?.id || !(await confirmAsk(tr('Delete template'), tr('Delete “{title}”?', { title: draft.title })))) return;
     await templates.remove(draft.id);
     setDraft(null);
     load();
   };
+
+  // Borrar un tema (de ejemplo o propio): las plantillas no se borran, pasan a "Otro"
+  const removeTopic = async (o: TopicOption) => {
+    const n = counts[o.key] ?? 0;
+    const msg = n
+      ? tn(n, 'Delete the topic “{topic}”? Its template moves to “Other”.', 'Delete the topic “{topic}”? Its {n} templates move to “Other”.').replace('{topic}', o.label)
+      : tr('Delete the topic “{topic}”?', { topic: o.label });
+    if (!(await confirmAsk(tr('Delete topic'), msg))) return;
+    try {
+      await deleteTopic(o);
+      if (draft && topicKeyOf(draft) === o.key) setDraft({ ...draft, topic: 'other', customTopic: null });
+      if (filter === o.key) setFilter('all');
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : tr('Could not save'));
+    }
+  };
+
+  // Crear un tema; en el editor, además, se le pone a la plantilla
+  const createTopic = async () => {
+    try {
+      const o = await addTopic(newTopic, list ?? []);
+      if (!o) return;
+      if (adding === 'editor' && draft) setDraft({ ...draft, ...topicFields(o) });
+      setNewTopic('');
+      setAdding(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : tr('Could not save'));
+    }
+  };
+
+  const topicInput = (
+    <View style={styles.addRow}>
+      <TextInput
+        style={[styles.input, { flex: 1, minHeight: 38, paddingVertical: 8 }]}
+        value={newTopic}
+        onChangeText={setNewTopic}
+        onSubmitEditing={createTopic}
+        placeholder={tr('Topic name, e.g. Pregnancy')}
+        placeholderTextColor={Colors.textMuted}
+        maxLength={40}
+        autoFocus
+      />
+      <TouchableOpacity style={[styles.primary, { paddingVertical: 8 }, !newTopic.trim() && { opacity: 0.5 }]} disabled={!newTopic.trim()} onPress={createTopic}>
+        <Text style={styles.primaryText}>{tr('Add')}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          setAdding(null);
+          setNewTopic('');
+        }}
+        hitSlop={8}
+      >
+        <Ionicons name="close" size={18} color={Colors.textMuted} />
+      </TouchableOpacity>
+    </View>
+  );
 
   const importFile = async () => {
     setError('');
@@ -107,14 +206,16 @@ export const ProTemplatesScreen = () => {
       const file = await pickTextFile();
       if (!file) return;
       const title = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
-      open({ title, topic: guessTopic(`${title} ${file.text}`), keywords: [], body: file.text.slice(0, 20000) });
+      const guessed = guessTopic(`${title} ${file.text}`);
+      open({ title, ...topicFields(options.find((o) => o.key === guessed)), keywords: [], body: file.text.slice(0, 20000) });
     } catch (e) {
       setError(e instanceof Error ? e.message : tr('Could not read the file'));
     }
   };
 
   const where = templates.where();
-  const counts = (list ?? []).reduce<Record<string, number>>((acc, t) => ({ ...acc, [t.topic]: (acc[t.topic] ?? 0) + 1 }), {});
+  // Temas en orden: los de ejemplo, los propios del médico y "Otro" al final
+  const filterOptions = [{ id: 'all', label: tr('All') }, ...options.map((o) => ({ id: o.key, label: o.label })), { id: 'other', label: OTHER_TOPIC.label }];
 
   const listView = (
     <View style={{ gap: 10 }}>
@@ -134,7 +235,7 @@ export const ProTemplatesScreen = () => {
         <TextInput style={styles.searchInput} placeholder={tr('Search templates')} placeholderTextColor={Colors.textMuted} value={query} onChangeText={setQuery} />
       </View>
       <View style={styles.filters}>
-        {[{ id: 'all' as const, label: tr('All') }, ...TEMPLATE_TOPICS].map((t) => {
+        {filterOptions.map((t) => {
           const n = t.id === 'all' ? list?.length ?? 0 : counts[t.id] ?? 0;
           if (t.id !== 'all' && n === 0) return null;
           const on = filter === t.id;
@@ -146,7 +247,48 @@ export const ProTemplatesScreen = () => {
             </TouchableOpacity>
           );
         })}
+        <TouchableOpacity style={styles.editTopics} onPress={() => setManaging((v) => !v)}>
+          <Ionicons name={managing ? 'checkmark' : 'create-outline'} size={14} color={Colors.accent} />
+          <Text style={styles.editTopicsText}>{managing ? tr('Done') : tr('Edit topics')}</Text>
+        </TouchableOpacity>
       </View>
+
+      {managing && (
+        <View style={styles.manage}>
+          <Text style={styles.manageTitle}>{tr('Your topics')}</Text>
+          <View style={styles.filters}>
+            {options.map((o) => (
+              <View key={o.key} style={[styles.filter, styles.customChip]}>
+                <Ionicons name={o.icon as any} size={13} color={Colors.textSecondary} />
+                <Text style={styles.filterText}>
+                  {o.label}
+                  {counts[o.key] ? ` · ${counts[o.key]}` : ''}
+                </Text>
+                <TouchableOpacity onPress={() => removeTopic(o)} hitSlop={8} accessibilityLabel={tr('Delete topic')}>
+                  <Ionicons name="close" size={14} color={Colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+            ))}
+            {adding !== 'list' && (
+              <TouchableOpacity style={[styles.filter, styles.newChip]} onPress={() => setAdding('list')}>
+                <Text style={styles.newChipText}>+ {tr('New topic')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {adding === 'list' && topicInput}
+          <Text style={styles.hint}>{tr('Deleting a topic doesn’t delete its templates: they move to “Other”.')}</Text>
+          {settings.hidden.length > 0 && (
+            <TouchableOpacity
+              onPress={async () => {
+                await restoreSampleTopics();
+                load();
+              }}
+            >
+              <Text style={styles.link}>{tn(settings.hidden.length, 'Restore {n} deleted sample topic', 'Restore {n} deleted sample topics')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {list === null ? (
         <ActivityIndicator color={Colors.accent} />
@@ -172,13 +314,13 @@ export const ProTemplatesScreen = () => {
             return (
               <TouchableOpacity key={t.id} style={[styles.item, on && styles.itemOn]} onPress={() => open(t)}>
                 <View style={styles.itemIcon}>
-                  <Ionicons name={topicIcon(t.topic) as any} size={16} color={Colors.accent} />
+                  <Ionicons name={templateTopicIcon(t) as any} size={16} color={Colors.accent} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.itemTitle}>{t.title}</Text>
                   <Text style={styles.itemSub} numberOfLines={1}>
-                    {topicLabel(t.topic)}
-                    {t.uses ? ` · used ${t.uses} time${t.uses > 1 ? 's' : ''}` : ''}
+                    {templateTopicName(t)}
+                    {t.uses ? ` · ${tn(t.uses, 'used {n} time', 'used {n} times')}` : ''}
                   </Text>
                 </View>
                 {!wide && <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />}
@@ -217,15 +359,28 @@ export const ProTemplatesScreen = () => {
 
       <Text style={styles.fieldLabel}>{tr('Topic')}</Text>
       <View style={styles.filters}>
-        {TEMPLATE_TOPICS.map((t) => {
-          const on = draft.topic === t.id;
+        {[...options, { key: 'other', label: OTHER_TOPIC.label, icon: OTHER_TOPIC.icon } as TopicOption].map((o) => {
+          const on = topicKeyOf(draft) === o.key;
           return (
-            <TouchableOpacity key={t.id} style={[styles.filter, on && styles.filterOn]} onPress={() => setDraft({ ...draft, topic: t.id })}>
-              <Text style={[styles.filterText, on && { color: Colors.background }]}>{t.label}</Text>
-            </TouchableOpacity>
+            <View key={o.key} style={[styles.filter, styles.customChip, on && styles.filterOn]}>
+              <TouchableOpacity onPress={() => setDraft({ ...draft, ...topicFields(o.key === 'other' ? undefined : o) })}>
+                <Text style={[styles.filterText, on && { color: Colors.background }]}>{o.label}</Text>
+              </TouchableOpacity>
+              {o.key !== 'other' && (
+                <TouchableOpacity onPress={() => removeTopic(o)} hitSlop={8} accessibilityLabel={tr('Delete topic')}>
+                  <Ionicons name="close" size={13} color={on ? Colors.background : Colors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </View>
           );
         })}
+        {adding !== 'editor' && (
+          <TouchableOpacity style={[styles.filter, styles.newChip]} onPress={() => setAdding('editor')}>
+            <Text style={styles.newChipText}>+ {tr('New topic')}</Text>
+          </TouchableOpacity>
+        )}
       </View>
+      {adding === 'editor' && topicInput}
 
       <Text style={styles.fieldLabel}>{tr('Words that should suggest it (optional)')}</Text>
       <TextInput
@@ -242,7 +397,7 @@ export const ProTemplatesScreen = () => {
         multiline
         value={draft.body}
         onChangeText={(t) => setDraft({ ...draft, body: t })}
-        placeholder={'Hi [name],\n\nYour ferritin is [value] ng/mL…\n\nBest wishes,\n[doctor]'}
+        placeholder={tr('Hi [name],\n\nYour ferritin is [value] ng/mL…\n\nBest wishes,\n[doctor]')}
         placeholderTextColor={Colors.textMuted}
       />
       <Text style={styles.hint}>
@@ -283,7 +438,7 @@ export const ProTemplatesScreen = () => {
           {wide && <Text style={styles.headerBtnText}>{tr('Import .docx / .txt')}</Text>}
         </TouchableOpacity>
       )}
-      <TouchableOpacity style={[styles.headerBtn, styles.headerBtnPrimary]} onPress={() => open({ ...EMPTY, topic: filter === 'all' ? 'blood_test' : filter })}>
+      <TouchableOpacity style={[styles.headerBtn, styles.headerBtnPrimary]} onPress={() => open(newDraftFor(filter, options))}>
         <Ionicons name="add" size={16} color={Colors.background} />
         <Text style={[styles.headerBtnText, { color: Colors.background }]}>{tr('New')}</Text>
       </TouchableOpacity>
@@ -342,6 +497,15 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: Colors.accent, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
   primaryText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
   ghost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, width: 42, alignItems: 'center', justifyContent: 'center' },
+  customChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingRight: 8 },
+  newChip: { borderStyle: 'dashed', borderColor: withAlpha(Colors.accent, 0.6) },
+  newChipText: { color: Colors.accent, fontSize: 12, fontWeight: '800' },
+  addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  editTopics: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, paddingVertical: 5 },
+  editTopicsText: { color: Colors.accent, fontSize: 12, fontWeight: '800' },
+  manage: { gap: 8, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12 },
+  manageTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
+  link: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
   placeholder: { alignItems: 'center', gap: 8, paddingVertical: 60, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.cardBorder, borderRadius: 16 },
   headerBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: withAlpha(Colors.accent, 0.5), borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   headerBtnPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },

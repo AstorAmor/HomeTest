@@ -722,10 +722,21 @@ ya guardan en las carpetas nuevas.
   "Browse all"; insertar rellena `[name]` y `[doctor]`, y **no se puede enviar mientras quede un hueco [ ]**.
   Las respuestas enviadas se pueden guardar como plantilla (el nombre del paciente vuelve a `[name]`).
   Demo: 7 plantillas de ejemplo y 2 dudas nuevas (Elena: ciclo; Laura: cansancio). Cuenta real: tabla
-  `pro_templates` — **migración `20261009120000_pro_templates.sql` + test `pro_templates.test.sql` SIN APLICAR**
-  (pedir OK al fundador); mientras tanto se guardan en el dispositivo y la pantalla lo avisa.
+  `pro_templates` — migración `20261009120000_pro_templates.sql` aplicada el 2026-10-09 (RLS comprobada; el test
+  `pro_templates.test.sql` necesita Docker Desktop abierto); sin la tabla se guardarían en el dispositivo.
 - Decidido: la "respuesta asistida por IA" se deja para más adelante (coste ~1–2 céntimos por borrador, pero exige
   Gemini de pago + DPA y no hay volumen aún); se montaría encima de esta biblioteca.
 - Pendiente del portal: simular X pacientes con lo que comparte cada uno (ficha con categorías compartidas / 🔒) y
   checklist de privacidad prueba → lanzamiento (Supabase de staging, plan de pago + DPA, registro de accesos del
   profesional, MFA, EIPD, BAA de Daily).
+
+## 2026-10-10 — Plantillas: temas editables
+- El médico gestiona sus temas: **"Editar temas"** en la lista (✕ en cada tema, "+ Nuevo tema", "Recuperar N temas de
+  ejemplo borrados") y en el editor (✕ en cada chip y "+ Nuevo tema", que además se lo pone a la plantilla). Los de
+  ejemplo (Ciclo menstrual, Glucosa…) también se pueden borrar. Borrar un tema no borra plantillas: pasan a "Otro"
+  (que no se puede borrar). Recuperar un tema de ejemplo no devuelve sus plantillas (siguen en "Otro").
+- Lista de temas por médico: `topicSettings` en `src/data/proTemplates.ts` → `user_flags` clave `pro_template_topics`
+  (`{ hidden, custom }`, sin migración); en la demo, en el dispositivo. Un tema propio en una plantilla va en
+  `customTopic` / columna `custom_topic` (topic = 'other'); migración `20261010090000_pro_templates_custom_topic.sql`
+  aplicada el 2026-10-10 (si faltara, el código guarda la plantilla sin el tema propio).
+- "Guardar esta respuesta como plantilla" usa los temas del médico.

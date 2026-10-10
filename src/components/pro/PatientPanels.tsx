@@ -7,7 +7,7 @@ import { StoredAudio } from '@/components/VoiceNote';
 import { ClinicalNote, ConsultRequest, PatientLabResult, PatientMarker, REQUEST_KIND_LABEL } from '@/data/specialistTypes';
 import { TemplatePicker } from '@/components/pro/TemplatePicker';
 import { useProIdentity } from '@/components/pro/ProLayout';
-import { TEMPLATE_TOPICS, TemplateTopic, findGaps, guessTopic, templates, toTemplateBody } from '@/data/proTemplates';
+import { TEMPLATE_TOPICS, TopicOption, findGaps, guessTopic, templates, toTemplateBody, topicOptions, topicSettings } from '@/data/proTemplates';
 
 import { dateLocale, num, t as tr } from '@/i18n';
 const shortDate = (iso: string | null) =>
@@ -257,7 +257,9 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
   const me = useProIdentity();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
-  const [topic, setTopic] = useState<TemplateTopic>('other');
+  // Los temas del médico (sin los de ejemplo que haya borrado) + "Otro"
+  const [options, setOptions] = useState<TopicOption[]>([]);
+  const [topicKey, setTopicKey] = useState('other');
   const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   if (state === 'saved') {
@@ -271,8 +273,12 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
   if (!open) {
     return (
       <TouchableOpacity
-        onPress={() => {
-          setTopic(guessTopic(`${request.message} ${request.response ?? ''}`));
+        onPress={async () => {
+          const [list, settings] = await Promise.all([templates.list().catch(() => []), topicSettings.get()]);
+          const opts = topicOptions(settings, list);
+          const guessed = guessTopic(`${request.message} ${request.response ?? ''}`);
+          setOptions(opts);
+          setTopicKey(opts.some((o) => o.key === guessed) ? guessed : 'other');
           setOpen(true);
         }}
       >
@@ -291,9 +297,9 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
         autoFocus
       />
       <View style={styles.topics}>
-        {TEMPLATE_TOPICS.map((t) => (
-          <TouchableOpacity key={t.id} style={[styles.topic, topic === t.id && styles.topicOn]} onPress={() => setTopic(t.id)}>
-            <Text style={[styles.topicText, topic === t.id && { color: Colors.background }]}>{t.label}</Text>
+        {[...options, { key: 'other', label: TEMPLATE_TOPICS.find((t) => t.id === 'other')!.label, icon: '' }].map((o) => (
+          <TouchableOpacity key={o.key} style={[styles.topic, topicKey === o.key && styles.topicOn]} onPress={() => setTopicKey(o.key)}>
+            <Text style={[styles.topicText, topicKey === o.key && { color: Colors.background }]}>{o.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -305,7 +311,14 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
           onPress={async () => {
             setState('saving');
             try {
-              await templates.save({ title, topic, keywords: [], body: toTemplateBody(request.response ?? '', request.patientName, me.name) });
+              const o = options.find((x) => x.key === topicKey);
+              await templates.save({
+                title,
+                topic: o?.fixed ?? 'other',
+                customTopic: o?.custom ?? null,
+                keywords: [],
+                body: toTemplateBody(request.response ?? '', request.patientName, me.name),
+              });
               setState('saved');
             } catch {
               setState('error');
