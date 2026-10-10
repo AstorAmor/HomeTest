@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { Achievement, formatAchievementValue, TIER_COLORS } from '@/data/achievements';
+import { t } from '@/i18n';
 
 const SIZE = 64;
 
@@ -17,7 +18,7 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
   return (
     <View>
       <Text style={styles.summary}>
-        {earned} of {achievements.length} unlocked · tap a badge to see how to level it up
+        {t('{n} of {total} unlocked · tap a badge to see how to level it up', { n: earned, total: achievements.length })}
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {achievements.map((a) => {
@@ -59,7 +60,7 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
                 {a.title}
               </Text>
               <Text style={[styles.badgeTier, { color: a.level > 0 ? color : Colors.textMuted }]}>
-                {a.tier ?? 'Locked'}
+                {a.tier ? t(a.tier) : t('Locked')}
               </Text>
             </TouchableOpacity>
           );
@@ -70,14 +71,14 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
         <View style={styles.detail}>
           <Text style={styles.detailTitle}>
             {selected.title}
-            {selected.tier ? ` · ${selected.tier}` : ''}
+            {selected.tier ? ` · ${t(selected.tier)}` : ''}
           </Text>
           <Text style={styles.detailText}>{selected.description}</Text>
           <Text style={styles.detailText}>
-            Now: <Text style={styles.detailStrong}>{formatAchievementValue(selected, selected.value)}</Text>
+            {t('Now:')} <Text style={styles.detailStrong}>{formatAchievementValue(selected, selected.value)}</Text>
             {selected.nextThreshold !== null
-              ? `  ·  Next level at ${formatAchievementValue(selected, selected.nextThreshold)}`
-              : '  ·  Top level reached'}
+              ? `  ·  ${t('Next level at {value}', { value: formatAchievementValue(selected, selected.nextThreshold) })}`
+              : `  ·  ${t('Top level reached')}`}
           </Text>
         </View>
       )}

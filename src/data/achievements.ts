@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 // Logros (gamificación). Cada logro es UNA insignia con niveles (bronce → platino),
 // no una insignia nueva por cada hito, para no repetirlas. Se calculan a partir de
 // los datos del usuario cada vez; no hace falta guardarlos.
@@ -122,13 +122,13 @@ export function computeAchievements(input: AchievementInput): Achievement[] {
   const planDays = new Set([...stepDays].filter((d) => actionDays.has(d)));
 
   const list = [
-    build('step_collector', 'Step collector', 'Total steps walked', 'footsteps', totalSteps, 'steps', [100000, 250000, 500000, 1000000]),
-    build('daily_mover', 'Daily mover', `Days in a row with ${goal.toLocaleString(dateLocale())}+ steps`, 'walk', dayStreak(stepDays), 'days', [3, 7, 14, 30]),
-    build('plan_champion', 'Plan champion', 'Days in a row meeting your daily plan', 'trophy', dayStreak(planDays), 'days', [3, 7, 14, 30]),
-    build('strength_streak', 'Strength streak', 'Weeks in a row with 3 strength sessions', 'barbell', strengthWeekStreak(input.workouts), 'weeks', [1, 4, 8, 12]),
-    build('self_aware', 'Self-aware', 'Days in a row with a check-in', 'happy', dayStreak(new Set(input.checkIns.map((c) => localDay(c.fecha)))), 'days', [3, 7, 14, 30]),
-    build('food_logger', 'Food logger', 'Meals logged', 'restaurant', input.meals.length, 'meals', [5, 20, 50, 100]),
-    build('calm_mind', 'Calm mind', 'Breathing and relaxation sessions', 'leaf', input.mindful.length, 'sessions', [1, 5, 15, 30]),
+    build('step_collector', t('Step collector'), t('Total steps walked'), 'footsteps', totalSteps, 'steps', [100000, 250000, 500000, 1000000]),
+    build('daily_mover', t('Daily mover'), t('Days in a row with {n}+ steps', { n: goal.toLocaleString(dateLocale()) }), 'walk', dayStreak(stepDays), 'days', [3, 7, 14, 30]),
+    build('plan_champion', t('Plan champion'), t('Days in a row meeting your daily plan'), 'trophy', dayStreak(planDays), 'days', [3, 7, 14, 30]),
+    build('strength_streak', t('Strength streak'), t('Weeks in a row with 3 strength sessions'), 'barbell', strengthWeekStreak(input.workouts), 'weeks', [1, 4, 8, 12]),
+    build('self_aware', t('Self-aware'), t('Days in a row with a check-in'), 'happy', dayStreak(new Set(input.checkIns.map((c) => localDay(c.fecha)))), 'days', [3, 7, 14, 30]),
+    build('food_logger', t('Food logger'), t('Meals logged'), 'restaurant', input.meals.length, 'meals', [5, 20, 50, 100]),
+    build('calm_mind', t('Calm mind'), t('Breathing and relaxation sessions'), 'leaf', input.mindful.length, 'sessions', [1, 5, 15, 30]),
   ];
 
   // Conseguidos primero (mayor nivel antes), luego los más cerca de conseguirse
@@ -136,4 +136,4 @@ export function computeAchievements(input: AchievementInput): Achievement[] {
 }
 
 export const formatAchievementValue = (a: Achievement, v: number) =>
-  a.unit === 'steps' ? `${v >= 1000 ? `${Math.round(v / 1000)}k` : v} steps` : `${v} ${a.unit}`.trim();
+  a.unit === 'steps' ? `${v >= 1000 ? `${Math.round(v / 1000)}k` : v} ${t('steps')}` : `${v} ${a.unit ? t(a.unit) : ''}`.trim();

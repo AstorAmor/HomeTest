@@ -2,6 +2,7 @@ import type { ImageSourcePropType } from 'react-native';
 import { ProfessionalRole, ROLE_INFO } from './servicesMock';
 import type { PlanItemKind } from './planRepository';
 import type { Sex } from './profileRepository';
+import { t } from '@/i18n';
 
 // Imágenes del plan y de los especialistas. Los archivos de assets/images/plan y
 // assets/images/specialists son PROVISIONALES: se sustituyen por los definitivos
@@ -53,10 +54,10 @@ const roleCard = (id: ProfessionalRole, label: string, subtitle: string): Specia
 });
 
 export const SPECIALISTS: SpecialistCard[] = [
-  roleCard('doctor', 'Doctor', 'Review your results'),
-  roleCard('psychologist', 'Psychologist', 'Stress, mood and sleep'),
-  roleCard('midwife', 'Midwife', 'Cycle, fertility, pregnancy'),
-  roleCard('trainer', 'Personal trainer', 'A plan for your goals'),
-  roleCard('dietitian', 'Dietitian', 'Eat for your markers'),
-  roleCard('physio', 'Physiotherapist', 'Move without pain'),
+  roleCard('doctor', t('Doctor'), t('Review your results')),
+  roleCard('psychologist', t('Psychologist'), t('Stress, mood and sleep')),
+  roleCard('midwife', t('Midwife'), t('Cycle, fertility, pregnancy')),
+  roleCard('trainer', t('Personal trainer'), t('A plan for your goals')),
+  roleCard('dietitian', t('Dietitian'), t('Eat for your markers')),
+  roleCard('physio', t('Physiotherapist'), t('Move without pain')),
 ];
