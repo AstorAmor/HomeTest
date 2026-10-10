@@ -9,6 +9,7 @@ import { DemoMode, useAuth } from '@/context/AuthContext';
 import { currentReport } from '@/data/reportRepository';
 import { reportSeenKey, userFlags } from '@/data/userFlags';
 import { isPublicDemo } from '@/lib/supabase';
+import { useWebShell } from '@/web/webMode';
 
 const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; color: string }[] = [
   {
@@ -45,6 +46,7 @@ const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; 
 export const DevModeSelectScreen = () => {
   const router = useRouter();
   const { setDemoMode, authMode } = useAuth();
+  const webShell = useWebShell();
 
   const choose = (mode: DemoMode) => {
     setDemoMode(mode);
@@ -55,7 +57,7 @@ export const DevModeSelectScreen = () => {
       router.replace('/results-ready');
     }
     else if (mode === 'pro') router.replace('/pro');
-    else router.replace('/(tabs)');
+    else router.replace(webShell ? '/resumen' : '/(tabs)');
   };
 
   return (

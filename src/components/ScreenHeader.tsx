@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { UserAvatar } from './UserAvatar';
+import { useIsShellRoot } from './web/WebShell';
 
 
 interface ScreenHeaderProps {
@@ -17,11 +18,14 @@ interface ScreenHeaderProps {
 
 export const ScreenHeader = ({ title, showBack = false, showAvatar = false, backFallback = '/' }: ScreenHeaderProps) => {
   const router = useRouter();
+  // En la web de escritorio, las entradas del menú lateral no llevan "atrás"
+  const shellRoot = useIsShellRoot();
+  const back = showBack && !shellRoot;
 
   return (
     <View style={styles.header}>
       <View style={styles.side}>
-        {showBack && (
+        {back && (
           <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(backFallback as any))} hitSlop={12}>
             <Ionicons name="chevron-back" size={26} color={Colors.textPrimary} />
           </TouchableOpacity>

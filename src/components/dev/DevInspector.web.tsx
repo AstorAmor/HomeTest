@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { TABS } from '@/components/BottomTabBar';
+import { WEB_SHELL_ON } from '@/web/webMode';
 
 // Modo "Señalar" (solo web): una barra flotante para tocar cualquier cosa de la app, escribir qué
 // quieres cambiar y copiar todas las notas para pegárselas a Claude. Nunca bloquea la app: tras
@@ -259,6 +260,23 @@ function mount(): () => void {
     boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
   });
   bubble.title = 'Modo Señalar';
+  // Vistas de escritorio con menú lateral (web del paciente y portal del médico) frente a la app.
+  const placeDock = () => {
+    const wide = window.innerWidth >= 900;
+    const portal = wide && /^\/pro(-|$|\/)/.test(window.location.pathname);
+    const shell = wide && WEB_SHELL_ON && !portal;
+    // Web del paciente: arriba a la derecha; portal: abajo, junto a su menú (arriba tiene botones);
+    // vista de app: abajo a la izquierda, por encima de las pestañas
+    const pos = shell
+      ? { left: 'auto', bottom: 'auto', right: '20px', top: '14px' }
+      : { left: portal ? '248px' : '12px', bottom: portal ? '16px' : '96px', right: 'auto', top: 'auto' };
+    Object.assign(dock.style, pos);
+    Object.assign(bubble.style, pos);
+    Object.assign(
+      toast.style,
+      shell ? { left: 'auto', bottom: 'auto', right: '20px', top: '60px' } : { ...pos, bottom: portal ? '62px' : '142px' },
+    );
+  };
   const toast = el('div', {
     position: 'fixed',
     left: '12px',
@@ -271,6 +289,9 @@ function mount(): () => void {
     pointerEvents: 'none',
     display: 'none',
   });
+  placeDock();
+  window.addEventListener('resize', placeDock);
+  const dockTimer = setInterval(placeDock, 800);
   root.append(dock, bubble, toast);
 
   const composer = card({ width: 'min(360px, calc(100vw - 24px))' });
@@ -615,6 +636,8 @@ function mount(): () => void {
     window.removeEventListener('keydown', key, true);
     window.removeEventListener('scroll', follow, true);
     window.removeEventListener('resize', onResize);
+    window.removeEventListener('resize', placeDock);
+    clearInterval(dockTimer);
     clearTimeout(toastTimer);
     root.remove();
   };

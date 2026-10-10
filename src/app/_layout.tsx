@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/context/AuthContext';
 import { DevInspector } from '@/components/dev/DevInspector';
 import { Colors } from '@/constants/colors';
+import { WebShell } from '@/components/web/WebShell';
 
 // La pantalla de carga se mantiene desde index.js (donde se aplica el tema).
 
@@ -26,6 +27,8 @@ export default function Layout() {
       <ThemeProvider value={Colors.isLight ? DefaultTheme : DarkTheme}>
         <AuthProvider>
           <StatusBar style={Colors.isLight ? 'dark' : 'light'} />
+          {/* Web del paciente en escritorio (?web=1): menú lateral + columna; en la app no cambia nada */}
+          <WebShell>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -110,7 +113,9 @@ export default function Layout() {
             <Stack.Screen name="consult-request" />
             <Stack.Screen name="learn" />
             <Stack.Screen name="video" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+            <Stack.Screen name="resumen" options={{ animation: 'none' }} />
           </Stack>
+          </WebShell>
           {/* Modo "Señalar" para anotar cambios de diseño (solo web, ver DevInspector.web.tsx) */}
           <DevInspector />
         </AuthProvider>
