@@ -79,7 +79,7 @@ function useCurrent() {
       ? inTabs && tab === n.tab
       : pathname === n.pathname && Object.entries(n.params ?? {}).every(([k, v]) => params[k] === v),
   );
-  return { pathname, inTabs, active };
+  return { pathname, inTabs, active, tab };
 }
 
 // true si el menú lateral está a la vista (la pantalla actual sale en la columna central)
@@ -115,7 +115,7 @@ const ShellFrame = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const show = useSections();
   const { user } = useAuth();
-  const { pathname, active } = useCurrent();
+  const { pathname, active, inTabs, tab } = useCurrent();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState<Record<string, boolean>>({ categories: true, plan: true, account: true });
 
@@ -140,7 +140,8 @@ const ShellFrame = ({ children }: { children: React.ReactNode }) => {
   );
 
   // El resumen usa más ancho (rejilla de bloques); el resto, una columna cómoda de leer
-  const maxWidth = pathname === '/resumen' ? 1180 : 760;
+  // (Mis datos va en 2 columnas, así que también usa más ancho)
+  const maxWidth = pathname === '/resumen' ? 1180 : inTabs && tab === 1 ? 1080 : 760;
 
   return (
     <View style={styles.root}>

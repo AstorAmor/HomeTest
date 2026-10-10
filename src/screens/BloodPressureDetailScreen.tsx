@@ -9,6 +9,7 @@ import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { BloodPressureEntry } from '@/types/bloodPressure';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
+import { sampleBloodPressure } from '@/data/sampleReadings';
 import { t } from '@/i18n';
 
 type Range = 'D' | 'M' | '3M' | '6M';
@@ -35,12 +36,15 @@ export const BloodPressureDetailScreen = () => {
   const load = useCallback(() => getBloodPressureEntries().then(setEntries), [setEntries]);
   useReloadOnFocus(load);
 
+  // Sin registros propios: los de ejemplo (los mismos que enseña Mis datos), sin poder editarlos
+  const isSample = entries.length === 0;
+  const shown = isSample ? sampleBloodPressure() : entries;
   const cutoff = Date.now() - RANGE_DAYS[range] * 24 * 60 * 60 * 1000;
-  const filtered = entries
+  const filtered = shown
     .filter((e) => new Date(e.fecha).getTime() >= cutoff)
     .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
-  const historyDesc = [...entries].sort(
+  const historyDesc = [...shown].sort(
     (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
   );
 
@@ -63,6 +67,12 @@ export const BloodPressureDetailScreen = () => {
           ))}
         </View>
 
+        {isSample && (
+          <View style={styles.sampleNote}>
+            <Ionicons name="flask-outline" size={16} color={Colors.textSecondary} />
+            <Text style={styles.sampleNoteText}>{t('Sample data: log your first reading to see your own.')}</Text>
+          </View>
+        )}
         <View style={styles.chartCard}>
           <BloodPressureChart entries={filtered} />
         </View>
@@ -83,6 +93,7 @@ export const BloodPressureDetailScreen = () => {
               <TouchableOpacity
                 key={entry.id}
                 style={styles.historyRow}
+                disabled={isSample}
                 onPress={() =>
                   router.push({ pathname: '/log-blood-pressure', params: { id: entry.id } })
                 }
@@ -90,9 +101,9 @@ export const BloodPressureDetailScreen = () => {
                 <Text style={styles.historyDate}>{formatListDate(entry.fecha)}</Text>
                 <Text style={styles.historyValue}>
                   {entry.systolic} / {entry.diastolic} mmHg
-                  {entry.pulse !== null ? `, ${entry.pulse} BPM` : ''}
+                  {entry.pulse !== null ? `, ${entry.pulse} ${t('BPM')}` : ''}
                 </Text>
-                <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />
+                {!isSample && <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -103,6 +114,19 @@ export const BloodPressureDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  sampleNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 14,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+  },
+  sampleNoteText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,

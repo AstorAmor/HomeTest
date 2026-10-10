@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { cortisolRepository } from '@/data/cortisolRepository';
 import { Colors } from '@/constants/colors';
+import { sampleSimpleEntries } from '@/data/sampleReadings';
 import { t } from '@/i18n';
 
 export default function CortisolDetail() {
@@ -21,6 +22,7 @@ export default function CortisolDetail() {
         }));
       }}
       onAddPress={() => router.push('/log-cortisol')}
+      sample={sampleSimpleEntries('cortisol', 'µg/dL')}
       onEditPress={(id) => router.push({ pathname: '/log-cortisol', params: { id } })}
     />
   );

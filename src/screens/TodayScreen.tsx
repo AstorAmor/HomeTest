@@ -58,6 +58,7 @@ import {
   strengthSessionsThisWeek,
 } from '@/data/planRepository';
 import { computeReadiness, formatSleep, latest, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
+import { useWebShell } from '@/web/webMode';
 
 
 const statusColor = (status: Biomarker['status']) => {
@@ -117,6 +118,8 @@ export const TodayScreen = () => {
   const { demoMode } = useAuth();
   const firstName = useFirstName();
   const show = useSections();
+  // Web del paciente en escritorio: Hoy se queda con lo del día; agenda, estado y biomarcadores ya están en el resumen
+  const web = useWebShell();
   const { series, isSample } = useDailyWearables();
   const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(mockBiomarkers);
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
@@ -289,6 +292,8 @@ export const TodayScreen = () => {
           <Text style={styles.greetingTitle}>{t('Hi {name}!', { name: firstName })}</Text>
         </View>
 
+        {!web && (
+        <>
         {/* Lo próximo del calendario: citas, logística y resultados (sin nombrar categorías) */}
         <Text style={styles.sectionTitle}>{t('Your summary')}</Text>
         <View style={styles.summaryCard}>
@@ -333,7 +338,8 @@ export const TodayScreen = () => {
             <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
           </TouchableOpacity>
         )}
-
+        </>
+        )}
 
         {/* Check-in */}
         {show('checkin') && (
@@ -440,6 +446,8 @@ export const TodayScreen = () => {
           </View>
         )}
 
+        {!web && (
+        <>
         {/* Daily readiness */}
         {show('readiness') && (
           <>
@@ -615,6 +623,8 @@ export const TodayScreen = () => {
             );
           })()}
         </View>
+        </>
+        )}
 
         {/* Your plan */}
         {show('plan') && (

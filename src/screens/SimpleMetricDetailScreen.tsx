@@ -32,6 +32,8 @@ interface SimpleMetricDetailScreenProps {
   loadEntries: () => Promise<GenericMetricEntry[]>;
   onAddPress: () => void;
   onEditPress: (id: string) => void;
+  // Registros de ejemplo cuando aún no hay ninguno propio (no se pueden editar)
+  sample?: GenericMetricEntry[];
 }
 
 export const SimpleMetricDetailScreen = ({
@@ -40,6 +42,7 @@ export const SimpleMetricDetailScreen = ({
   loadEntries,
   onAddPress,
   onEditPress,
+  sample,
 }: SimpleMetricDetailScreenProps) => {
   const [entries, setEntries] = useDeepState<GenericMetricEntry[]>([]);
   const loadEntriesRef = useRef(loadEntries);
@@ -51,12 +54,14 @@ export const SimpleMetricDetailScreen = ({
   const load = useCallback(() => loadEntriesRef.current().then(setEntries), [setEntries]);
   useReloadOnFocus(load);
 
+  const isSample = entries.length === 0 && !!sample?.length;
+  const shown = isSample ? sample! : entries;
   const cutoff = Date.now() - RANGE_DAYS[range] * 24 * 60 * 60 * 1000;
-  const filtered = entries
+  const filtered = shown
     .filter((e) => new Date(e.fecha).getTime() >= cutoff)
     .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
-  const historyDesc = [...entries].sort(
+  const historyDesc = [...shown].sort(
     (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
   );
 
@@ -79,6 +84,12 @@ export const SimpleMetricDetailScreen = ({
           ))}
         </View>
 
+        {isSample && (
+          <View style={styles.sampleNote}>
+            <Ionicons name="flask-outline" size={16} color={Colors.textSecondary} />
+            <Text style={styles.sampleNoteText}>{t('Sample data: log your first reading to see your own.')}</Text>
+          </View>
+        )}
         <View style={styles.chartCard}>
           <SimpleMetricChart entries={filtered} color={color} />
         </View>
@@ -97,6 +108,7 @@ export const SimpleMetricDetailScreen = ({
               <TouchableOpacity
                 key={entry.id}
                 style={styles.historyRow}
+                disabled={isSample}
                 onPress={() => onEditPress(entry.id)}
               >
                 <Text style={styles.historyDate}>{formatListDate(entry.fecha)}</Text>
@@ -104,7 +116,7 @@ export const SimpleMetricDetailScreen = ({
                   {entry.valor} {entry.unidad}
                   {entry.extra ? ` · ${entry.extra}` : ''}
                 </Text>
-                <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />
+                {!isSample && <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -115,6 +127,19 @@ export const SimpleMetricDetailScreen = ({
 };
 
 const styles = StyleSheet.create({
+  sampleNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 14,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+  },
+  sampleNoteText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,

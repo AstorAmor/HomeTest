@@ -23,6 +23,7 @@ import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import { CycleStrip } from '@/components/CycleStrip';
 import { useSections } from '@/data/appPrefs';
 import { dateLocale, t } from '@/i18n';
+import { useWebShell } from '@/web/webMode';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -85,6 +86,8 @@ export const MyDataScreen = () => {
   const show = useSections();
   const { series, isSample } = useDailyWearables();
   const { authMode } = useAuth();
+  // Web del paciente en escritorio: las tarjetas van en 2 columnas en vez de una debajo de otra
+  const grid = useWebShell();
   const [seedStatus, setSeedStatus] = useState('');
   const [glucose, setGlucose] = useDeepState<ChartData | null>(null);
   const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(null);
@@ -228,6 +231,7 @@ export const MyDataScreen = () => {
           <Text style={styles.sectionTitle}>{show('wearables') ? t('Wearable measurements') : t('Measurements')}</Text>
           {show('wearables') && <Text style={styles.sectionMeta}>{t('Last 14 days')}{isSample ? ` · ${t('sample')}` : ''}</Text>}
         </View>
+        <View style={grid ? styles.grid : undefined}>
         {/* Orden pedido: pasos, sueño, calorías, pulso en reposo y variabilidad */}
         {show('wearables') && (
           <>
@@ -274,11 +278,13 @@ export const MyDataScreen = () => {
             />
           </MetricCard>
         )}
+        </View>
 
         <View style={[styles.sectionHeader, { marginTop: 16 }]}>
           <Text style={styles.sectionTitle}>{t('Biomarkers')}</Text>
           <Text style={styles.sectionMeta}>{t('What you have measured first. Tap any to see history or log a reading.')}</Text>
         </View>
+        <View style={grid ? styles.grid : undefined}>
         {biomarkers.map((b) => {
           const off = !b.data || b.data.isSample;
           return (
@@ -300,6 +306,7 @@ export const MyDataScreen = () => {
             </MetricCard>
           );
         })}
+        </View>
 
         <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>{t('Tests')}</Text>
         {/* Una debajo de otra: no sabemos cuántas pruebas habrá en camino */}
@@ -392,7 +399,7 @@ const MetricCard = ({
   onPress: () => void;
   children?: React.ReactNode;
 }) => (
-  <TouchableOpacity style={[styles.metricCard, off && styles.metricOff]} onPress={onPress} activeOpacity={0.85}>
+  <TouchableOpacity style={[styles.metricCard, useWebShell() && styles.metricCardHalf, off && styles.metricOff]} onPress={onPress} activeOpacity={0.85}>
     <View style={styles.metricHeader}>
       <View style={[styles.metricIcon, { backgroundColor: `${iconColor}22` }]}>
         <Ionicons name={icon as any} size={16} color={iconColor} />
@@ -475,6 +482,8 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 12,
   },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20 },
+  metricCardHalf: { width: '49%', marginHorizontal: 0 },
   metricCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,

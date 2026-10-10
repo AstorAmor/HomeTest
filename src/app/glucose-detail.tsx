@@ -3,6 +3,7 @@ import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { MEAL_TYPE_LABEL } from '@/types/glucose';
 import { Colors } from '@/constants/colors';
+import { sampleSimpleEntries } from '@/data/sampleReadings';
 import { t } from '@/i18n';
 
 export default function GlucoseDetail() {
@@ -23,6 +24,7 @@ export default function GlucoseDetail() {
         }));
       }}
       onAddPress={() => router.push('/log-glucose')}
+      sample={sampleSimpleEntries('sugar', 'mg/dL')}
       onEditPress={(id) => router.push({ pathname: '/log-glucose', params: { id } })}
     />
   );

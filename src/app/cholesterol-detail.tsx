@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { Colors } from '@/constants/colors';
+import { sampleSimpleEntries } from '@/data/sampleReadings';
 import { t } from '@/i18n';
 
 export default function CholesterolDetail() {
@@ -21,6 +22,7 @@ export default function CholesterolDetail() {
         }));
       }}
       onAddPress={() => router.push('/log-cholesterol')}
+      sample={sampleSimpleEntries('cholesterol', 'mg/dL')}
       onEditPress={(id) => router.push({ pathname: '/log-cholesterol', params: { id } })}
     />
   );

@@ -2383,4 +2383,5 @@ export const es: Record<string, string> = {
   'Cycle, fertility, pregnancy': 'Ciclo, fertilidad, embarazo',
   'A plan for your goals': 'Un plan para tus objetivos',
   'Move without pain': 'Muévete sin dolor',
+  'Sample data: log your first reading to see your own.': 'Datos de ejemplo: apunta tu primera medición para ver la tuya.',
 };
