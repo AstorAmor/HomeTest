@@ -185,7 +185,7 @@ export const WebSummaryScreen = () => {
       key: 'lab',
       title: t('Lab results'),
       color: Colors.danger,
-      icon: icon('flask', Colors.danger),
+      icon: icon('flask-outline', Colors.danger),
       when: formatReportDate(lab.report.test_date),
       caption: lab.lab,
       value: t('{n} in range', { n: counts.inRange }),
@@ -208,37 +208,37 @@ export const WebSummaryScreen = () => {
     cards.push({
       key: 'sleep',
       title: t('Sleep'),
-      color: Colors.sky,
-      icon: icon('bed', Colors.sky),
+      color: Colors.violet,
+      icon: icon('moon-outline', Colors.violet),
       when: t('Last night'),
       caption: t('Time asleep') + sampleNote,
       value: formatSleep(sleep),
-      right: <MiniBars values={values(series.sleep_duration)} color={Colors.sky} />,
+      right: <MiniBars values={values(series.sleep_duration)} color={Colors.violet} />,
       onPress: () => go('/metric', { kind: 'sleep_duration' }),
     });
   if (show('wearables') && steps != null)
     cards.push({
       key: 'steps',
       title: t('Activity'),
-      color: Colors.coral,
-      icon: icon('flame', Colors.coral),
+      color: Colors.sky,
+      icon: icon('footsteps-outline', Colors.sky),
       when: t('Today'),
       caption: t('Steps') + sampleNote,
       value: steps.toLocaleString(dateLocale()),
-      right: <MiniBars values={values(series.steps)} color={Colors.coral} />,
+      right: <MiniBars values={values(series.steps)} color={Colors.sky} />,
       onPress: () => go('/metric', { kind: 'steps' }),
     });
   if (show('wearables') && rhr != null)
     cards.push({
       key: 'rhr',
       title: t('Resting heart rate'),
-      color: Colors.danger,
-      icon: icon('heart', Colors.danger),
+      color: Colors.coral,
+      icon: icon('heart-outline', Colors.coral),
       when: t('Today'),
       caption: t('Average this week: {n} bpm', { n: Math.round(values(series.resting_heart_rate).reduce((a, b) => a + b, 0) / Math.max(1, values(series.resting_heart_rate).length)) }),
       value: String(Math.round(rhr)),
       unit: t('bpm'),
-      right: <MiniLine values={values(series.resting_heart_rate)} color={Colors.danger} />,
+      right: <MiniLine values={values(series.resting_heart_rate)} color={Colors.coral} />,
       onPress: () => go('/metric', { kind: 'resting_heart_rate' }),
     });
   if (show('readiness') && readiness)
@@ -246,19 +246,19 @@ export const WebSummaryScreen = () => {
       key: 'readiness',
       title: t('Daily readiness'),
       color: Colors.green,
-      icon: icon('speedometer', Colors.green),
+      icon: icon('speedometer-outline', Colors.green),
       when: t('Today'),
       caption: t(readiness.label),
       value: String(readiness.score),
       unit: '/ 100',
-      onPress: () => go('/(tabs)', { tab: '0' }),
+      onPress: () => go('/feature-guide', { id: 'readiness' }),
     });
   if (show('bladder'))
     cards.push({
       key: 'hydration',
       title: t('Hydration'),
       color: Colors.gold,
-      icon: icon('water-outline', Colors.gold),
+      icon: icon('beaker-outline', Colors.gold),
       when: bathroom.urine ? t('Today') : undefined,
       caption: t('From your urine colour'),
       value: t(hydration.label),
@@ -280,7 +280,7 @@ export const WebSummaryScreen = () => {
       key: 'cycle',
       title: t('Cycle'),
       color: Colors.pinkSoft,
-      icon: icon('rose', Colors.pinkSoft),
+      icon: icon('rose-outline', Colors.pinkSoft),
       when: t('Day {n} of {total}', { n: cycle.day, total: cycle.length }),
       caption: t(cycle.hint),
       value: t(cycle.label),
@@ -291,7 +291,7 @@ export const WebSummaryScreen = () => {
       key: 'meds',
       title: t('Medication'),
       color: Colors.gold,
-      icon: icon('medical', Colors.gold),
+      icon: icon('medical-outline', Colors.gold),
       when: t('Today'),
       caption: t('Doses marked as taken'),
       value: t('{n} of {total}', { n: taken, total: doses.length }),
@@ -348,13 +348,13 @@ export const WebSummaryScreen = () => {
         {show('wearables') && series.sleep_duration && series.sleep_duration.length > 1 && (
           <TouchableOpacity style={[styles.card, { width: cols > 1 ? (width - GAP) / 2 : cardW }]} onPress={() => go('/metric', { kind: 'sleep_duration' })} activeOpacity={0.85}>
             <View style={styles.cardHead}>
-              <View style={[styles.cardIcon, { backgroundColor: withAlpha(Colors.sky, 0.14) }]}>{icon('bed', Colors.sky)}</View>
+              <View style={[styles.cardIcon, { backgroundColor: withAlpha(Colors.violet, 0.14) }]}>{icon('moon-outline', Colors.violet)}</View>
               <Text style={styles.cardTitle}>{t('Sleep, last 14 days')}</Text>
             </View>
             <TrendChart
               height={90}
               labels={series.sleep_duration.map((p) => day(p.date))}
-              series={[{ color: Colors.sky, values: series.sleep_duration.map((p) => p.value / 60) }]}
+              series={[{ color: Colors.violet, values: series.sleep_duration.map((p) => p.value / 60) }]}
               formatY={(v) => `${v.toFixed(0)} h`}
               formatValue={(v) => formatSleep(Math.round(v * 60))}
             />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { TodayScreen } from './TodayScreen';
 import { MyDataScreen } from './MyDataScreen';
@@ -41,6 +41,9 @@ export const MainTabsScreen = () => {
     <LabScreen key="lab" />,
     <MoreScreen key="more" />,
   ];
+
+  // En la web del paciente, "Hoy" es el resumen
+  if (shell && currentPage === 0) return <Redirect href="/resumen" />;
 
   return (
     <View style={styles.container}>
