@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Avatar } from '@/components/Avatar';
@@ -109,7 +109,7 @@ export const ProfessionalsScreen = () => {
           </TouchableOpacity>
           {ROLES.map((r) => (
             <TouchableOpacity key={r} style={[styles.filter, role === r && styles.filterActive]} onPress={() => setRole(r)}>
-              <Ionicons name={ROLE_INFO[r].icon as any} size={14} color={role === r ? Colors.background : Colors.textSecondary} />
+              <MaterialCommunityIcons name={ROLE_INFO[r].icon as any} size={15} color={role === r ? Colors.background : Colors.textSecondary} />
               <Text style={[styles.filterText, role === r && styles.filterTextActive]}>{ROLE_INFO[r].label}</Text>
             </TouchableOpacity>
           ))}

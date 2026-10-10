@@ -7,6 +7,8 @@ import { Image } from 'expo-image';
 import { Colors } from '@/constants/colors';
 import { KuovaWordmark } from '@/components/KuovaLogo';
 import { useAuth } from '@/context/AuthContext';
+import { useLogout } from '@/hooks/useLogout';
+import { t } from '@/i18n';
 import { roleLabel } from '@/data/sharing';
 import { isPortalDemo } from '@/data/specialistPortal';
 
@@ -55,7 +57,7 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
   const router = useRouter();
   const wide = useIsWide();
   const me = useProIdentity();
-  const { logout } = useAuth();
+  const exit = useLogout();
   const go = (href: string) => router.replace(href as any);
 
   const body = scroll ? (
@@ -125,7 +127,7 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
               </Text>
               <Text style={styles.meRole}>{me.role}</Text>
             </View>
-            <TouchableOpacity onPress={logout} hitSlop={10}>
+            <TouchableOpacity onPress={exit} hitSlop={10} accessibilityLabel={t('Exit')}>
               <Ionicons name="log-out-outline" size={20} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>

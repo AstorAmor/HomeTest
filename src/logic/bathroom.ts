@@ -314,7 +314,7 @@ export function hydrationFromUrine(e?: Pick<UrineEntry, 'color' | 'count'> | nul
   if (e.color && !HYDRATION_SCALE.includes(e.color)) return { position: null, label: 'See note', level: 'check' };
   if (!e.color) {
     return fewTimes
-      ? { position: 3, label: 'Drink a bit more', level: 'tip' }
+      ? { position: 3, label: 'Could drink a bit more', level: 'tip' }
       : { position: null, label: 'Add the colour', level: 'unknown' };
   }
   // Pocas veces al día empuja un punto hacia "deshidratado"
@@ -323,8 +323,9 @@ export function hydrationFromUrine(e?: Pick<UrineEntry, 'color' | 'count'> | nul
     0: { position: 0, label: 'Very well hydrated', level: 'good' },
     1: { position: 1, label: 'Well hydrated', level: 'good' },
     2: { position: 2, label: 'Hydrated', level: 'good' },
-    3: { position: 3, label: 'Drink a bit more', level: 'tip' },
-    4: { position: 4, label: 'Drink water now', level: 'low' },
+    3: { position: 3, label: 'Could drink a bit more', level: 'tip' },
+    // Tono suave (pidió el fundador): describe lo que vemos, sin órdenes
+    4: { position: 4, label: 'Signs of dehydration', level: 'low' },
   };
   return labels[position];
 }
@@ -348,7 +349,7 @@ export function urineAdvice(e: Pick<UrineEntry, 'color' | 'count' | 'burning' | 
     return {
       level: 'see_doctor',
       title: 'Keep an eye on this colour',
-      body: 'Brown urine can come from severe dehydration, some foods or medicines, but also from the liver or the muscles. Drink water now: if it is not lighter within a day, see a doctor.',
+      body: 'Brown urine can come from severe dehydration, some foods or medicines, but also from the liver or the muscles. Drinking some water may help; if it is not lighter within a day, see a doctor.',
     };
   if (e.burning)
     return {
@@ -360,19 +361,19 @@ export function urineAdvice(e: Pick<UrineEntry, 'color' | 'count' | 'burning' | 
     return {
       level: 'low',
       title: 'You may be dehydrated',
-      body: 'Amber or honey-coloured urine usually means your body is short of water. Drink a large glass now and keep sipping through the day: it should get lighter within a few hours. If it is still this dark tomorrow even though you are drinking, or you feel dizzy or confused, talk to a doctor.',
+      body: 'Amber or honey-coloured urine usually means your body is short of water. A large glass of water and regular sips through the day usually help: it should get lighter within a few hours. If it is still this dark tomorrow even though you are drinking, or you feel dizzy or confused, talk to a doctor.',
     };
   if (e.color === 'dark')
     return {
       level: 'tip',
       title: 'You could drink a bit more',
-      body: 'Dark yellow is an early sign of mild dehydration. Have a glass of water now and keep a bottle nearby today. Heat, exercise and coffee all add to it.',
+      body: 'Dark yellow is an early sign of mild dehydration. A glass of water and a bottle nearby today usually help. Heat, exercise and coffee all add to it.',
     };
   if (e.count != null && e.count <= 3)
     return {
       level: 'tip',
       title: 'Not many times today',
-      body: 'Going 3 times or fewer in a day often means you are not drinking enough. Have a glass of water now and see how you are tomorrow.',
+      body: 'Going 3 times or fewer in a day often means you are not drinking enough. It is probably worth drinking a bit more today and seeing how you are tomorrow.',
     };
   if (e.color === 'cloudy')
     return {

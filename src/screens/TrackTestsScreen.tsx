@@ -4,15 +4,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
-import { mockShipments, mockTestHistory, Shipment, ShipmentStep } from '@/data/servicesMock';
+import { mockShipments, Shipment, ShipmentStep } from '@/data/servicesMock';
+import { t } from '@/i18n';
 
 const stepColor = (s: ShipmentStep['status']) =>
   s === 'done' ? Colors.accent : s === 'current' ? Colors.amber : Colors.cardBorder;
 
-const ShipmentCard = ({ shipment }: { shipment: Shipment }) => {
+const ShipmentCard = ({ shipment, demo }: { shipment: Shipment; demo?: boolean }) => {
   const active = shipment.steps.some((s) => s.status !== 'pending');
   return (
-    <View style={[styles.card, !active && styles.cardMuted]}>
+    <View style={[styles.card, (!active || demo) && styles.cardMuted, demo && styles.cardDemo]}>
       <View style={styles.cardHeader}>
         <View style={styles.truck}>
           <MaterialCommunityIcons
@@ -22,7 +23,7 @@ const ShipmentCard = ({ shipment }: { shipment: Shipment }) => {
           />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.testName}>{shipment.testName}</Text>
+          <Text style={styles.testName}>{t(shipment.testName)}</Text>
           <Text style={styles.carrier}>
             {shipment.carrier} · {shipment.trackingNumber}
           </Text>
@@ -31,7 +32,7 @@ const ShipmentCard = ({ shipment }: { shipment: Shipment }) => {
       <View style={styles.etaRow}>
         <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
         <Text style={styles.eta}>
-          {active ? 'Estimated delivery' : 'After you take the sample'}: {shipment.eta}
+          {active ? t('Estimated delivery') : t('After you take the sample')}: {t(shipment.eta)}
         </Text>
       </View>
 
@@ -53,9 +54,9 @@ const ShipmentCard = ({ shipment }: { shipment: Shipment }) => {
             </View>
             <View style={styles.stepBody}>
               <Text style={[styles.stepLabel, step.status === 'pending' && { color: Colors.textMuted }]}>
-                {step.label}
+                {t(step.label)}
               </Text>
-              {step.detail ? <Text style={styles.stepDetail}>{step.detail}</Text> : null}
+              {step.detail ? <Text style={styles.stepDetail}>{t(step.detail)}</Text> : null}
             </View>
             {step.date ? <Text style={styles.stepDate}>{step.date}</Text> : null}
           </View>
@@ -65,28 +66,36 @@ const ShipmentCard = ({ shipment }: { shipment: Shipment }) => {
   );
 };
 
+// "Track your tests": envíos en curso. Aún no hay pedidos reales conectados, así que en curso sale
+// vacío y debajo se enseñan dos envíos de EJEMPLO, marcados como tal. Sin historial: los
+// resultados ya están en Tests (My Data) y en Lab.
+const realShipments: Shipment[] = [];
+
 export const TrackTestsScreen = () => (
   <SafeAreaView style={styles.safeArea} edges={['top']}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title="Track your tests" showBack />
+      <ScreenHeader title={t('Track your tests')} showBack />
 
-      <Text style={styles.sectionTitle}>In progress</Text>
-      {mockShipments.map((s) => (
-        <ShipmentCard key={s.id} shipment={s} />
-      ))}
+      <Text style={styles.sectionTitle}>{t('In progress')}</Text>
+      {realShipments.length ? (
+        realShipments.map((s) => <ShipmentCard key={s.id} shipment={s} />)
+      ) : (
+        <View style={styles.empty}>
+          <MaterialCommunityIcons name="package-variant" size={22} color={Colors.textMuted} />
+          <Text style={styles.emptyText}>{t('You have no tests on the way.')}</Text>
+        </View>
+      )}
 
-      <Text style={styles.sectionTitle}>History</Text>
-      <View style={styles.historyCard}>
-        {mockTestHistory.map((h, i) => (
-          <View key={h.id} style={[styles.historyRow, i > 0 && styles.historyDivider]}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.historyName}>{h.testName}</Text>
-              <Text style={styles.historyDate}>{h.date}</Text>
-            </View>
-            <Text style={styles.historyStatus}>{h.status}</Text>
-          </View>
-        ))}
+      <View style={styles.demoHeader}>
+        <Text style={styles.sectionTitleInline}>{t('What it will look like')}</Text>
+        <View style={styles.demoTag}>
+          <Text style={styles.demoTagText}>{t('EXAMPLE')}</Text>
+        </View>
       </View>
+      <Text style={styles.demoNote}>{t('These shipments are examples to show how tracking works. They are not real orders.')}</Text>
+      {mockShipments.map((s) => (
+        <ShipmentCard key={s.id} shipment={s} demo />
+      ))}
     </ScrollView>
   </SafeAreaView>
 );
@@ -95,6 +104,25 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 32 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', paddingHorizontal: 20, marginBottom: 12, marginTop: 4 },
+  sectionTitleInline: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },
+  empty: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 20,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderStyle: 'dashed',
+  },
+  emptyText: { color: Colors.textSecondary, fontSize: 14, flex: 1 },
+  demoHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginBottom: 6 },
+  demoTag: { backgroundColor: Colors.divider, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
+  demoTagText: { color: Colors.textSecondary, fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
+  demoNote: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginBottom: 12 },
+  cardDemo: { borderStyle: 'dashed' },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -127,17 +155,4 @@ const styles = StyleSheet.create({
   stepLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
   stepDetail: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   stepDate: { color: Colors.textMuted, fontSize: 12 },
-  historyCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    marginHorizontal: 20,
-  },
-  historyRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
-  historyDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  historyName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  historyDate: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  historyStatus: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
 });

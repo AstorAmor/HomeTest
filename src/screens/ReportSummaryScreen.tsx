@@ -14,10 +14,8 @@ import {
 import {
   getMarkerDisplayNameEn,
   getMarkerValueTextEn,
-  PHENOAGE_EXPLANATION_EN,
 } from '@/data/reportContentEn';
 import { TIER_COLOR, FLAG_LABEL, FLAG_ICON, categoryLabel } from '@/utils/reportDisplay';
-import { useSections } from '@/data/appPrefs';
 
 // Proxy simplificado: "mejora" = cambio significativo que además ya aterrizó en rango.
 // No tenemos (todavía) una tabla de qué dirección es clínicamente buena por marcador,
@@ -40,7 +38,6 @@ const getCategoryBreakdown = () =>
     .filter((c) => c.inRange < c.total);
 
 export const ReportSummaryScreen = () => {
-  const show = useSections();
   const router = useRouter();
   const { summary } = currentReport;
   const counts = getComputedSummaryCounts();
@@ -107,22 +104,7 @@ export const ReportSummaryScreen = () => {
           </ScrollView>
         )}
 
-        {summary.phenoage.available && (
-          <View style={styles.phenoCard}>
-            <View style={styles.phenoHeader}>
-              <Ionicons name="hourglass-outline" size={20} color={Colors.accent} />
-              <Text style={styles.phenoTitle}>Biological age</Text>
-            </View>
-            <Text style={styles.phenoRange}>
-              {summary.phenoage.low.toFixed(1)}–{summary.phenoage.high.toFixed(1)} years
-            </Text>
-            <Text style={styles.phenoChrono}>
-              vs. {summary.phenoage.chronological_age} chronological
-            </Text>
-            <Text style={styles.phenoExplanation}>{PHENOAGE_EXPLANATION_EN}</Text>
-          </View>
-        )}
-
+        {/* Informe objetivo: sin edad biológica (está en My Data), sin plan ni hábitos */}
         <Text style={styles.sectionTitle}>Markers that need a look</Text>
         <View style={styles.markersList}>
           {markersNeedingReview.map((marker) => {
@@ -166,23 +148,6 @@ export const ReportSummaryScreen = () => {
           })}
         </View>
 
-        {show('plan') && (
-          <TouchableOpacity
-            style={styles.planButton}
-            onPress={() => router.push('/report-plan')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.planButtonText}>My personalized plan</Text>
-            <Ionicons name="arrow-forward" size={18} color={Colors.background} />
-          </TouchableOpacity>
-        )}
-        {show('wearables') && (
-          <TouchableOpacity style={styles.habitsLink} onPress={() => router.push('/habits')} activeOpacity={0.85}>
-            <Ionicons name="moon-outline" size={18} color={Colors.accent} />
-            <Text style={styles.habitsLinkText}>How your habits changed: sleep, HRV, steps…</Text>
-            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-        )}
       </ScrollView>
     </SafeAreaView>
   );

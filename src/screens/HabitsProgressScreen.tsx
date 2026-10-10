@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SimpleMetricChart } from '@/components/SimpleMetricChart';
 import { Colors } from '@/constants/colors';
-import { userProfile, wearableTimeseries } from '@/data/reportRepository';
+import { currentReport, markersBackInRange, userProfile, wearableTimeseries } from '@/data/reportRepository';
+import { getMarkerDisplayNameEn, getMarkerValueTextEn } from '@/data/reportContentEn';
+import { t } from '@/i18n';
 
 interface HabitStat {
   key: string;
@@ -93,16 +95,62 @@ const formatStat = (value: number, decimals = 0) =>
 const toSeriesEntries = (values: number[]) =>
   values.map((valor, i) => ({ valor, fecha: wearableTimeseries.months[i] }));
 
-// "Your habits": cómo han cambiado sueño, pulso en reposo, HRV, pasos… entre el informe
-// anterior y el actual, y la tendencia de 6 meses del wearable. Antes vivía dentro del
-// plan; se sacó a su propia pantalla para que el plan sea solo "qué hacer y qué se
-// espera que mejore". Se abre desde el resumen del informe y desde el plan completo.
+// "Your evolution report" (My Data → al final): cómo han cambiado tus hábitos (sueño, pulso en
+// reposo, HRV, pasos…) y qué marcadores han vuelto a su rango entre la analítica anterior y la
+// actual, más la tendencia de 6 meses del wearable. Se puede compartir como texto. El informe del
+// laboratorio se queda objetivo: esto vive aparte, en My Data.
+const backInRange = markersBackInRange(currentReport);
+
+function shareText() {
+  const lines = [
+    t('My evolution report (Kuova)'),
+    '',
+    t('Habits, then vs. now:'),
+    ...HABIT_STATS.map((s) => `• ${t(s.label)}: ${formatStat(s.baseline, s.decimals)}${s.unit} → ${formatStat(s.current, s.decimals)}${s.unit}`),
+  ];
+  if (backInRange.length) {
+    lines.push('', t('Markers back in range:'));
+    for (const m of backInRange) lines.push(`• ${getMarkerDisplayNameEn(m.marker_id, m.display_name)}: ${getMarkerValueTextEn(m.value, m.unit)}`);
+  }
+  return lines.join('\n');
+}
+
+async function share() {
+  const message = shareText();
+  try {
+    await Share.share({ message });
+  } catch {
+    try {
+      await (globalThis as any).navigator?.clipboard?.writeText(message);
+      (globalThis as any).alert?.(t('Copied. Paste it wherever you want.'));
+    } catch {
+      // nada más que hacer
+    }
+  }
+}
+
 export const HabitsProgressScreen = () => (
   <SafeAreaView style={styles.safeArea} edges={['top']}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title="Your habits" showBack />
+      <ScreenHeader title={t('Your evolution report')} showBack />
+      <Text style={styles.intro}>{t('How your habits and your markers have changed between your last two tests.')}</Text>
 
-      <Text style={styles.sectionTitle}>Then vs. now</Text>
+      {backInRange.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>{t('Back in range')}</Text>
+          <View style={styles.trendCard}>
+            {backInRange.map((m) => (
+              <View key={m.marker_id} style={styles.markerRow}>
+                <Ionicons name="checkmark-circle" size={18} color={Colors.ok} />
+                <Text style={styles.markerName}>{getMarkerDisplayNameEn(m.marker_id, m.display_name)}</Text>
+                <Text style={styles.markerValue}>{getMarkerValueTextEn(m.value, m.unit)}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
+      <Text style={styles.sectionTitle}>{t('Then vs. now')}</Text>
       <View style={styles.statsGrid}>
         {HABIT_STATS.map((stat) => {
           const improved = stat.higherIsBetter ? stat.current > stat.baseline : stat.current < stat.baseline;
@@ -116,10 +164,9 @@ export const HabitsProgressScreen = () => (
                 {formatStat(stat.current, stat.decimals)}
                 <Text style={styles.statUnit}>{stat.unit}</Text>
               </Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={styles.statLabel}>{t(stat.label)}</Text>
               <Text style={styles.statBaseline}>
-                was {formatStat(stat.baseline, stat.decimals)}
-                {stat.unit}
+                {t('was {v}', { v: `${formatStat(stat.baseline, stat.decimals)}${stat.unit}` })}
               </Text>
               {stat.note && <Text style={styles.statNote}>{stat.note}</Text>}
             </View>
@@ -127,15 +174,20 @@ export const HabitsProgressScreen = () => (
         })}
       </View>
 
-      <Text style={styles.sectionTitle}>6-month trend</Text>
+      <Text style={styles.sectionTitle}>{t('6-month trend')}</Text>
       <View style={styles.trendCard}>
-        <Text style={styles.trendLabel}>Sleep (hours/night)</Text>
+        <Text style={styles.trendLabel}>{t('Sleep (hours/night)')}</Text>
         <SimpleMetricChart entries={toSeriesEntries(wearableTimeseries.series.sleep_avg_hours)} color={Colors.accent} />
       </View>
       <View style={styles.trendCard}>
-        <Text style={styles.trendLabel}>Daily steps</Text>
+        <Text style={styles.trendLabel}>{t('Daily steps')}</Text>
         <SimpleMetricChart entries={toSeriesEntries(wearableTimeseries.series.steps_avg_daily)} color={Colors.pulseAccent} />
       </View>
+
+      <TouchableOpacity style={styles.share} onPress={share} activeOpacity={0.85}>
+        <Ionicons name="share-outline" size={18} color={Colors.background} />
+        <Text style={styles.shareText}>{t('Share my evolution report')}</Text>
+      </TouchableOpacity>
     </ScrollView>
   </SafeAreaView>
 );
@@ -148,6 +200,22 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 40,
   },
+  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
+  markerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
+  markerName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  markerValue: { color: Colors.textSecondary, fontSize: 13 },
+  share: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.accent,
+    borderRadius: 26,
+    paddingVertical: 14,
+    marginHorizontal: 20,
+    marginTop: 12,
+  },
+  shareText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',

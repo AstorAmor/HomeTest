@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { AppearanceSwitch } from '@/components/AppearanceSwitch';
 import { Colors } from '@/constants/colors';
-import { useAuth } from '@/context/AuthContext';
+import { useLogout } from '@/hooks/useLogout';
 import { getLang, Lang, LANGUAGES, saveLanguage, t } from '@/i18n';
 import { getTextSize, saveTextSize, TEXT_SIZES, TextSize } from '@/theme/textSize';
 import { reloadKeepingPlace } from '@/theme/appearance';
@@ -23,7 +23,7 @@ const PERMISSIONS: { icon: string; title: string; why: string }[] = [
 // notificaciones. Tema, idioma y letra recargan la app con un fundido y vuelven aquí.
 export const SettingsScreen = () => {
   const router = useRouter();
-  const { logout } = useAuth();
+  const exit = useLogout();
   const [size, setSize] = useState<TextSize>('default');
   const lang = getLang();
   useEffect(() => {
@@ -123,7 +123,7 @@ export const SettingsScreen = () => {
           )}
         </View>
 
-        <TouchableOpacity style={styles.logout} onPress={logout}>
+        <TouchableOpacity style={styles.logout} onPress={exit}>
           <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
           <Text style={styles.logoutText}>{t('Log out')}</Text>
         </TouchableOpacity>

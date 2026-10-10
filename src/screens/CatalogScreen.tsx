@@ -7,6 +7,8 @@ import { Colors } from '@/constants/colors';
 import { getAllCanonicalBiomarkers } from '@/knowledge/canonicalBiomarkers';
 import { getBiomarkerCodes } from '@/knowledge/standardCodes';
 import { CanonicalBiomarker, MeasurementType } from '@/types/knowledge';
+import { getLang, t } from '@/i18n';
+import { catalogCardEs } from '@/i18n/catalogEs';
 
 // Etiquetas legibles para las categorias provisionales de knowledge/biomarcadores/*.json.
 const CATEGORY_LABELS: Record<string, string> = {
@@ -31,14 +33,26 @@ const CATEGORY_LABELS: Record<string, string> = {
   edad_biologica: 'Biological Age',
 };
 
+// Los datos de knowledge/ tienen nombres en español (canonical_name) e inglés (canonical_name_en);
+// la muestra y alguna unidad vienen en español: aquí se muestran en el idioma de la app.
 const SAMPLE_EN: Record<string, string> = {
   Sangre: 'Blood',
   Orina: 'Urine',
   'Tensiómetro': 'Blood pressure monitor',
   'N/A (calculado)': 'Calculated',
 };
+const UNIT_EN: Record<string, string> = { años: 'years' };
 
-const displayName = (b: CanonicalBiomarker) => b.canonical_name_en ?? b.canonical_name;
+const es = () => getLang() === 'es';
+const displayName = (b: CanonicalBiomarker) => (es() ? b.canonical_name : b.canonical_name_en ?? b.canonical_name);
+const sampleName = (s: string) => (es() ? s.replace('N/A (calculado)', 'Calculado') : SAMPLE_EN[s] ?? s);
+const unitName = (u: string) => (es() ? u : UNIT_EN[u] ?? u);
+const MEASUREMENT_LABEL: Record<MeasurementType, string> = {
+  MEASURED: 'Measured',
+  DERIVED: 'Calculated',
+  SCORE: 'Score',
+  UNKNOWN: 'Other',
+};
 
 const MEASUREMENT_COLOR: Record<MeasurementType, string> = {
   MEASURED: Colors.accent,
@@ -78,7 +92,7 @@ export const CatalogScreen = () => {
     const built: Section[] = Array.from(byCategory.entries())
       .sort((a, b) => (CATEGORY_LABELS[a[0]] ?? a[0]).localeCompare(CATEGORY_LABELS[b[0]] ?? b[0]))
       .map(([category, data]) => ({
-        title: CATEGORY_LABELS[category] ?? category,
+        title: t(CATEGORY_LABELS[category] ?? category),
         data: [...data].sort((a, b) => displayName(a).localeCompare(displayName(b))),
       }));
 
@@ -87,13 +101,13 @@ export const CatalogScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScreenHeader title="Biomarker Catalog" showBack />
+      <ScreenHeader title={t('Biomarker Catalog')} showBack />
 
       <View style={styles.searchWrap}>
         <Ionicons name="search" size={16} color={Colors.textMuted} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search biomarker..."
+          placeholder={t('Search biomarker...')}
           placeholderTextColor={Colors.textMuted}
           value={query}
           onChangeText={setQuery}
@@ -102,7 +116,7 @@ export const CatalogScreen = () => {
         />
       </View>
 
-      <Text style={styles.count}>{total} biomarkers</Text>
+      <Text style={styles.count}>{t('{n} biomarkers', { n: total })}</Text>
 
       <SectionList
         sections={sections}
@@ -120,7 +134,7 @@ export const CatalogScreen = () => {
             }
           />
         )}
-        ListEmptyComponent={<Text style={styles.empty}>No matches for “{query}”.</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>{t('No matches for “{q}”.', { q: query })}</Text>}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -135,7 +149,7 @@ interface BiomarkerRowProps {
 
 const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
   const measurementColor = MEASUREMENT_COLOR[biomarker.measurement_type];
-  const hasFunction = biomarker.external_sources.some((s) => s.source === 'FUNCTION_HEALTH');
+  const card = es() ? { ...biomarker.knowledge_card, ...catalogCardEs[biomarker.canonical_id] } : biomarker.knowledge_card;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onToggle} activeOpacity={0.8}>
@@ -153,74 +167,53 @@ const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
       <View style={styles.badgeRow}>
         <View style={[styles.badge, { backgroundColor: `${measurementColor}22` }]}>
           <Text style={[styles.badgeText, { color: measurementColor }]}>
-            {biomarker.measurement_type}
+            {t(MEASUREMENT_LABEL[biomarker.measurement_type])}
           </Text>
         </View>
-        <View style={styles.badge}>
-          <Text style={styles.badgeTextMuted}>{biomarker.evidence_status}</Text>
-        </View>
-        {hasFunction && (
-          <View style={[styles.badge, styles.badgeOutline]}>
-            <Text style={styles.badgeTextMuted}>Function Health</Text>
-          </View>
-        )}
       </View>
 
       {expanded && (
         <View style={styles.detail}>
           <DetailRow label="ID" value={biomarker.canonical_id} />
           {biomarker.aliases.length > 0 && (
-            <DetailRow label="Aliases" value={biomarker.aliases.join(', ')} />
+            <DetailRow label={t('Also known as')} value={biomarker.aliases.join(', ')} />
           )}
-          <DetailRow label="Sample" value={SAMPLE_EN[biomarker.sample_type] ?? biomarker.sample_type} />
+          <DetailRow label={t('Sample')} value={sampleName(biomarker.sample_type)} />
           {biomarker.common_units.length > 0 && (
-            <DetailRow label="Units" value={biomarker.common_units.join(', ')} />
+            <DetailRow label={t('Units')} value={biomarker.common_units.map(unitName).join(', ')} />
           )}
           <DetailRow
             label="LOINC"
             value={(() => {
               const codes = getBiomarkerCodes(biomarker.canonical_id);
-              return codes?.loinc ? `${codes.loinc} · ${codes.loinc_display}` : 'Pending';
+              return codes?.loinc ? `${codes.loinc} · ${codes.loinc_display}` : t('Pending');
             })()}
           />
           {getBiomarkerCodes(biomarker.canonical_id)?.ucum ? (
             <DetailRow label="UCUM" value={getBiomarkerCodes(biomarker.canonical_id)!.ucum!} />
           ) : null}
 
-          {biomarker.knowledge_card.biological_role ? (
+          {card.biological_role ? (
             <>
-              <Text style={styles.kTitle}>What it is</Text>
-              <Text style={styles.knowledgeText}>{biomarker.knowledge_card.biological_role}</Text>
-              <Text style={styles.kTitle}>Why it matters</Text>
-              <Text style={styles.knowledgeText}>{biomarker.knowledge_card.clinical_relevance}</Text>
-              <Text style={styles.kTitle}>What can change it</Text>
-              <Text style={styles.knowledgeText}>{biomarker.knowledge_card.preanalytical_factors}</Text>
+              <Text style={styles.kTitle}>{t('What it is')}</Text>
+              <Text style={styles.knowledgeText}>{card.biological_role}</Text>
+              <Text style={styles.kTitle}>{t('Why it matters')}</Text>
+              <Text style={styles.knowledgeText}>{card.clinical_relevance}</Text>
+              <Text style={styles.kTitle}>{t('What can change it')}</Text>
+              <Text style={styles.knowledgeText}>{card.preanalytical_factors}</Text>
             </>
           ) : (
-            <Text style={styles.knowledgeText}>Not reviewed yet — no verified medical content for this biomarker.</Text>
+            <Text style={styles.knowledgeText}>{t('No information for this biomarker yet.')}</Text>
           )}
 
-          {biomarker.knowledge_card.limitations && (
-            <Text style={styles.limitationsText}>⚠ {biomarker.knowledge_card.limitations}</Text>
-          )}
+          {card.limitations && <Text style={styles.limitationsText}>⚠ {card.limitations}</Text>}
 
           {(biomarker.knowledge_card.references ?? []).map((r) => (
             <TouchableOpacity key={r.url} onPress={() => Linking.openURL(r.url)}>
               <Text style={styles.refText}>
                 📖 {r.title}
-                {r.link_verified ? '' : ' (link not auto-verified)'}
               </Text>
             </TouchableOpacity>
-          ))}
-          {biomarker.evidence_status === 'CLINICAL_REVIEW_REQUIRED' && (
-            <Text style={styles.reviewText}>Draft content, pending review by a Kuova doctor.</Text>
-          )}
-
-          {biomarker.external_sources.map((source, i) => (
-            <Text key={i} style={styles.sourceText}>
-              {source.source}: “{source.external_name}” · {source.external_category ?? '—'} ·{' '}
-              {source.included_or_addon ?? '—'}
-            </Text>
           ))}
         </View>
       )}

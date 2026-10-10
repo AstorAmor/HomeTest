@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View } from 'react-native';
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop, Ellipse } from 'react-native-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -6,6 +6,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 // Ilustración provisional para temas y especialistas (sustituye a las fotos): un degradado de
 // fondo con manchas suaves de color y un icono grande encima. Determinista por `seed`: la misma
 // tarjeta siempre se ve igual.
+
+// Cada ilustración necesita ids propios para sus degradados: si el mismo tema aparece dos veces en
+// el DOM (p. ej. en Today, debajo, y en "More"), url(#id) apuntaría a la copia oculta y no se vería.
+let instances = 0;
 
 const hash = (s: string) => {
   let h = 2166136261;
@@ -32,7 +36,8 @@ export const BlobArt = ({
   const h = typeof size === 'number' ? size : size.height;
   const r = hash(seed);
   const pick = (n: number, min: number, max: number) => min + (((r >> n) & 255) / 255) * (max - min);
-  const id = `b${r.toString(36)}`;
+  const instance = useRef(++instances).current;
+  const id = `b${r.toString(36)}i${instance}`;
   const [a, b, c] = palette;
   return (
     <View style={{ width: w, height: h, borderRadius: radius, overflow: 'hidden' }}>

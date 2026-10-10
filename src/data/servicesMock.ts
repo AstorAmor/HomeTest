@@ -19,14 +19,16 @@ export interface Professional {
   online: boolean;
 }
 
-export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string }> = {
-  doctor: { label: 'Doctors', icon: 'medkit-outline' },
-  psychologist: { label: 'Psychologists', icon: 'chatbubbles-outline' },
-  midwife: { label: 'Midwives', icon: 'flower-outline' },
-  dietitian: { label: 'Dietitians', icon: 'nutrition-outline' },
-  trainer: { label: 'Personal trainers', icon: 'barbell-outline' },
-  physio: { label: 'Physiotherapists', icon: 'body-outline' },
-  geneticist: { label: 'Genetic counsellors', icon: 'git-network-outline' },
+// Icono de cada tipo de profesional (MaterialCommunityIcons): el mismo en Today (carrusel), en el
+// filtro de Professionals y donde aparezca el rol.
+export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string; palette: [string, string, string] }> = {
+  doctor: { label: 'Doctors', icon: 'stethoscope', palette: ['#0E2A24', '#2E6B57', '#C9A36B'] },
+  psychologist: { label: 'Psychologists', icon: 'head-heart-outline', palette: ['#1E2A4A', '#4B5BA6', '#C7B6F2'] },
+  midwife: { label: 'Midwives', icon: 'human-pregnant', palette: ['#7A2E4E', '#C2477A', '#F7B6D2'] },
+  dietitian: { label: 'Dietitians', icon: 'food-apple-outline', palette: ['#3E6B5C', '#8DB6A2', '#E9D7B8'] },
+  trainer: { label: 'Personal trainers', icon: 'dumbbell', palette: ['#9C4A2F', '#D9663F', '#F0B84D'] },
+  physio: { label: 'Physiotherapists', icon: 'human-handsup', palette: ['#0F3D4C', '#2F8FA6', '#9FE0E8'] },
+  geneticist: { label: 'Genetic counsellors', icon: 'dna', palette: ['#8A6D3F', '#C9A36B', '#F3E2B8'] },
 };
 
 export const mockProfessionals: Professional[] = [

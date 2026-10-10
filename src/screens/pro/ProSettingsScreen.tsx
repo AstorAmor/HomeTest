@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { ProLayout, useIsWide, useProIdentity } from '@/components/pro/ProLayout';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { useLogout } from '@/hooks/useLogout';
 import { isPortalDemo, portal } from '@/data/specialistPortal';
 import { updateMyProfessionalChannels } from '@/data/sharing';
 import { Availability, DEFAULT_AVAILABILITY, TimeRange, WEEKDAYS, WEEKDAY_LABEL, Weekday } from '@/data/specialistTypes';
@@ -21,7 +22,8 @@ export const ProSettingsScreen = () => {
   const router = useRouter();
   const wide = useIsWide();
   const me = useProIdentity();
-  const { professional, refreshProfessional, logout, setDemoMode, demoMode } = useAuth();
+  const { professional, refreshProfessional, demoMode } = useAuth();
+  const exit = useLogout();
   const demo = isPortalDemo();
 
   const [contact, setContact] = useState({ firstName: '', lastName: '', workPhone: '', workEmail: '' });
@@ -246,12 +248,7 @@ export const ProSettingsScreen = () => {
       )}
       <TouchableOpacity
         style={styles.exit}
-        onPress={() => {
-          if (demoMode === 'pro') {
-            setDemoMode(null);
-            router.replace('/');
-          } else logout();
-        }}
+        onPress={exit}
       >
         <Ionicons name="log-out-outline" size={18} color={Colors.danger} />
         <Text style={styles.exitText}>{demoMode === 'pro' ? 'Exit demo portal' : 'Log out'}</Text>

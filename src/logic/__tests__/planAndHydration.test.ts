@@ -44,9 +44,9 @@ describe('hidratación por la orina', () => {
   it('sin apunte: regla vacía', () => {
     expect(hydrationFromUrine(null).position).toBeNull();
   });
-  it('amarillo oscuro: beber un poco más; ámbar: beber ya', () => {
-    expect(hydrationFromUrine({ color: 'dark', count: 6 }).label).toBe('Drink a bit more');
-    expect(hydrationFromUrine({ color: 'amber', count: 6 }).level).toBe('low');
+  it('amarillo oscuro: podría beber un poco más; ámbar: signos de deshidratación (tono suave)', () => {
+    expect(hydrationFromUrine({ color: 'dark', count: 6 }).label).toBe('Could drink a bit more');
+    expect(hydrationFromUrine({ color: 'amber', count: 6 })).toMatchObject({ level: 'low', label: 'Signs of dehydration' });
   });
   it('pocas veces al día empuja hacia deshidratado', () => {
     expect(hydrationFromUrine({ color: 'yellow', count: 3 }).position).toBe(3);

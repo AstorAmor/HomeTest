@@ -7,7 +7,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 // Mapa ligero hecho con teselas (sin módulos nativos: funciona en el APK actual,
 // Expo Go y web). Encaja todos los puntos al abrirse, se puede arrastrar y hacer zoom
 // con los botones, y cada chincheta se puede tocar.
-// Teselas: Esri "World Dark/Light Gray" según el tema (base + capa de nombres), sin clave. Atribución
+// Teselas: Esri "World Street Map" (en color, con nombres), sin clave. Atribución
 // obligatoria. CARTO ya exige clave y los servidores de OpenStreetMap bloquean apps.
 // Para producción: cuenta de ArcGIS Location Platform (nivel gratuito) u otro proveedor
 // con clave (MapTiler, Stadia…), o react-native-maps en un APK nuevo.
@@ -28,11 +28,9 @@ interface TileMapProps {
 const TILE = 256;
 const MIN_Z = 3;
 const MAX_Z = 16; // máximo del mapa base de Esri
-const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas';
-const layers = () =>
-  Colors.isLight
-    ? ['World_Light_Gray_Base', 'World_Light_Gray_Reference']
-    : ['World_Dark_Gray_Base', 'World_Dark_Gray_Reference'];
+// Mapa en color (calles, parques y agua) en vez del gris: al fundador el gris le parecía soso.
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services';
+const layers = () => ['World_Street_Map'];
 const tileUrl = (layer: string, z: number, x: number, y: number) => `${ESRI}/${layer}/MapServer/tile/${z}/${y}/${x}`;
 
 // Proyección Web Mercator: coordenadas del "mundo" en píxeles a zoom 0.
@@ -134,7 +132,7 @@ export const TileMap = ({ points, selectedId, onSelect, height = 260 }: TileMapP
           hitSlop={8}
           style={{ position: 'absolute', left: x - s / 2, top: y - s + 2, zIndex: selected ? 2 : 1 }}
         >
-          <Ionicons name="location" size={s} color={selected ? Colors.accent : Colors.isLight ? Colors.textPrimary : '#FFFFFF'} />
+          <Ionicons name="location" size={s} color={selected ? '#B8904F' : '#0E2A24'} />
         </TouchableOpacity>
       );
     });

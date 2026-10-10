@@ -179,6 +179,16 @@ export const LabScreen = () => {
           })}
         </View>
 
+        {/* El plan va fuera del informe (que es objetivo): basado en tus últimos resultados */}
+        <TouchableOpacity style={styles.planCard} onPress={() => router.push('/plans')} activeOpacity={0.85}>
+          <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.planCardSub}>{t('Based on your latest results')}</Text>
+            <Text style={styles.planCardTitle}>{t('See my personalized plan')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+        </TouchableOpacity>
+
         {/* Laboratorios cerca: el mapa de tu zona; tocarlo abre la reserva de cita */}
         <Text style={styles.sectionTitle}>{t('Find a lab near you')}</Text>
         <View style={styles.mapCard}>
@@ -196,10 +206,6 @@ export const LabScreen = () => {
           <Text style={styles.requestButtonText}>Request a new test</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/book-lab')}>
-          <Ionicons name="calendar-outline" size={20} color={Colors.accent} />
-          <Text style={styles.uploadButtonText}>Book an appointment</Text>
-        </TouchableOpacity>
 
         <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
           <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
@@ -225,6 +231,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 14,
   },
+  planCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: 20,
+    marginBottom: 28,
+    marginTop: -12,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    backgroundColor: Colors.card,
+  },
+  planCardSub: { color: Colors.textSecondary, fontSize: 12 },
+  planCardTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 2 },
   mapCard: {
     marginHorizontal: 20,
     marginBottom: 28,

@@ -343,6 +343,18 @@ export const MyDataScreen = () => {
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Informe de evolución: hábitos y marcadores entre tus dos últimas analíticas */}
+        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/habits')} activeOpacity={0.85}>
+          <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.ok, 0.14) }]}>
+            <Ionicons name="trending-up" size={20} color={Colors.ok} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.geneticTitle}>{t('Your evolution report')}</Text>
+            <Text style={styles.geneticSub}>{t('How your habits and markers have changed. Create it and share it.')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.seedButton} onPress={handleLoadSeed}>
           <Ionicons name="flask-outline" size={18} color={Colors.textMuted} />
           <Text style={styles.seedButtonText}>Load dummy data (dev)</Text>

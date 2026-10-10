@@ -149,8 +149,8 @@ export const es: Record<string, string> = {
   'Drink more': 'Bebe más',
   'Very well hydrated': 'Muy bien hidratado',
   'Well hydrated': 'Bien hidratado',
-  'Drink a bit more': 'Bebe un poco más',
-  'Drink water now': 'Bebe agua ya',
+  'Could drink a bit more': 'Podrías beber un poco más',
+  'Signs of dehydration': 'Signos de deshidratación',
   'Add the colour': 'Añade el color',
   'Your plan': 'Tu plan',
   'Full view': 'Ver todo',
@@ -236,7 +236,7 @@ export const es: Record<string, string> = {
   'Tap the pencil to give a file your own name. It only changes inside Kuova.': 'Toca el lápiz para ponerle a un archivo el nombre que quieras. Solo cambia dentro de Kuova.',
 
   // ── Lab ──
-  'Find a lab near you': 'Encuentra un laboratorio cerca',
+  'Find a lab near you': 'Encuentra un laboratorio cerca de ti',
   '{n} labs where you can give your sample': '{n} laboratorios donde puedes dejar tu muestra',
   Book: 'Reservar',
 
