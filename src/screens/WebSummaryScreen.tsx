@@ -3,15 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutChangeEvent
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Svg, { Polyline } from 'react-native-svg';
-import { Colors } from '@/constants/colors';
-import { UserAvatar } from '@/components/UserAvatar';
+import { Colors, withAlpha } from '@/constants/colors';
+import { useFirstName } from '@/components/UserAvatar';
 import { IntestineIcon } from '@/components/IntestineIcon';
 import { TrendChart } from '@/components/TrendChart';
-import { useAuth } from '@/context/AuthContext';
-import { mockPatient } from '@/data/mockData';
 import { useSections } from '@/data/appPrefs';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { dateLocale, t } from '@/i18n';
+import { dateLocale, t, tn } from '@/i18n';
 import { LAB_REPORTS, formatReportDate, flaggedMarkers, markerNameEn, reportCounts } from '@/utils/labReportView';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import { checkInRepository } from '@/data/checkInRepository';
@@ -84,8 +82,8 @@ interface CardProps {
 const Card = ({ title, color, icon, when, value, unit, caption, right, onPress, width }: CardProps) => (
   <TouchableOpacity style={[styles.card, { width }]} onPress={onPress} activeOpacity={0.85}>
     <View style={styles.cardHead}>
-      {icon}
-      <Text style={[styles.cardTitle, { color }]} numberOfLines={1}>
+      <View style={[styles.cardIcon, { backgroundColor: withAlpha(color, 0.14) }]}>{icon}</View>
+      <Text style={styles.cardTitle} numberOfLines={1}>
         {title}
       </Text>
       {!!when && <Text style={styles.cardWhen}>{when}</Text>}
@@ -108,7 +106,6 @@ const values = (points?: DailyPoint[], n = 7) => (points ?? []).slice(-n).map((p
 
 export const WebSummaryScreen = () => {
   const router = useRouter();
-  const { user } = useAuth();
   const show = useSections();
   const { series, isSample } = useDailyWearables();
   const [width, setWidth] = useState(0);
@@ -153,10 +150,33 @@ export const WebSummaryScreen = () => {
   const mood = lastCheckIn?.mood ? MOOD_OPTIONS.find((m) => m.id === lastCheckIn.mood) : null;
   const hydration = hydrationFromUrine(bathroom.urine);
   const taken = doses.filter((d) => d.log?.status === 'taken').length;
-  const name = user?.nombre || mockPatient.nombre;
+  const firstName = useFirstName();
   const go = (pathname: string, params?: Record<string, string>) => router.navigate({ pathname, params } as any);
   const icon = (n: string, c: string) => <Ionicons name={n as any} size={16} color={c} />;
   const sampleNote = isSample ? ` · ${t('sample')}` : '';
+
+  // "Para hoy": hasta 3 cosas concretas que mirar, sacadas de los datos (en vez de una ficha de perfil)
+  const now = new Date();
+  const checkedInToday = !!lastCheckIn && dayKey(new Date(lastCheckIn.fecha)) === dayKey(now);
+  const pendingDoses = doses.filter((d) => !d.log && d.at.getTime() <= now.getTime()).length;
+  const todo: { key: string; icon: string; color: string; text: string; onPress: () => void }[] = [];
+  if (show('checkin') && !checkedInToday)
+    todo.push({ key: 'checkin', icon: 'happy-outline', color: Colors.gold, text: t('Do your check-in: 30 seconds'), onPress: () => router.push('/check-in') });
+  if (counts.needsReview)
+    todo.push({
+      key: 'lab',
+      icon: 'flask-outline',
+      color: Colors.danger,
+      text: tn(counts.needsReview, '{n} marker to review in your latest lab report', '{n} markers to review in your latest lab report'),
+      onPress: () => go('/lab-report', { id: lab.id }),
+    });
+  if (show('medication') && pendingDoses)
+    todo.push({ key: 'meds', icon: 'medical-outline', color: Colors.gold, text: tn(pendingDoses, '{n} dose to mark', '{n} doses to mark'), onPress: () => go('/medications') });
+  if (show('bladder') && (hydration.level === 'tip' || hydration.level === 'low'))
+    todo.push({ key: 'water', icon: 'water-outline', color: Colors.sky, text: t('You could drink a bit more water today'), onPress: () => go('/digestive', { part: 'bladder' }) });
+  if (upcoming[0])
+    todo.push({ key: 'next', icon: upcoming[0].icon, color: Colors.accent, text: upcoming[0].text, onPress: () => router.navigate(upcoming[0].target as any) });
+  const today = now.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
   const cards: (Omit<CardProps, 'width'> & { key: string })[] = [
     {
@@ -278,18 +298,27 @@ export const WebSummaryScreen = () => {
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.hero}>
-        <UserAvatar size={72} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{name}</Text>
-          <TouchableOpacity onPress={() => go('/profile')}>
-            <Text style={styles.profileLink}>{t('Profile')} ›</Text>
-          </TouchableOpacity>
-          <Text style={styles.sync}>{t('Last updated: today at {time}', { time: time(loadedAt) })}</Text>
+      <Text style={styles.date}>{today.charAt(0).toUpperCase() + today.slice(1)}</Text>
+      <Text style={styles.greeting}>{t('Hi {name}!', { name: firstName })}</Text>
+      {todo.length > 0 && (
+        <View style={styles.todo}>
+          <Text style={styles.todoTitle}>{todo.length === 1 ? t('One thing to look at today') : t('{n} things to look at today', { n: Math.min(3, todo.length) })}</Text>
+          {todo.slice(0, 3).map((it, i) => (
+            <TouchableOpacity key={it.key} style={[styles.todoRow, i > 0 && styles.rowBorder]} onPress={it.onPress} activeOpacity={0.85}>
+              <View style={[styles.cardIcon, { backgroundColor: withAlpha(it.color, 0.14) }]}>
+                <Ionicons name={it.icon as any} size={16} color={it.color} />
+              </View>
+              <Text style={styles.rowText}>{it.text}</Text>
+              <Ionicons name="chevron-forward" size={15} color={Colors.textMuted} />
+            </TouchableOpacity>
+          ))}
         </View>
-      </View>
+      )}
 
-      <Text style={styles.section}>{t('Pinned')}</Text>
+      <View style={styles.sectionRow}>
+        <Text style={styles.section}>{t('Your dashboard')}</Text>
+        <Text style={styles.sync}>{t('Updated at {time}', { time: time(loadedAt) })}</Text>
+      </View>
       <View style={styles.grid} onLayout={onLayout}>
         {cards.map(({ key, ...c }) => (
           <Card key={key} {...c} width={cardW} />
@@ -317,8 +346,8 @@ export const WebSummaryScreen = () => {
         {show('wearables') && series.sleep_duration && series.sleep_duration.length > 1 && (
           <TouchableOpacity style={[styles.card, { width: cols > 1 ? (width - GAP) / 2 : cardW }]} onPress={() => go('/metric', { kind: 'sleep_duration' })} activeOpacity={0.85}>
             <View style={styles.cardHead}>
-              {icon('bed', Colors.sky)}
-              <Text style={[styles.cardTitle, { color: Colors.sky }]}>{t('Sleep, last 14 days')}</Text>
+              <View style={[styles.cardIcon, { backgroundColor: withAlpha(Colors.sky, 0.14) }]}>{icon('bed', Colors.sky)}</View>
+              <Text style={styles.cardTitle}>{t('Sleep, last 14 days')}</Text>
             </View>
             <TrendChart
               height={90}
@@ -331,8 +360,8 @@ export const WebSummaryScreen = () => {
         )}
         <TouchableOpacity style={[styles.card, { width: cols > 1 ? (width - GAP) / 2 : cardW }]} onPress={() => go('/lab-report', { id: lab.id })} activeOpacity={0.85}>
           <View style={styles.cardHead}>
-            {icon('alert-circle-outline', Colors.attention)}
-            <Text style={[styles.cardTitle, { color: Colors.attention }]}>{t('Markers that need a look')}</Text>
+            <View style={[styles.cardIcon, { backgroundColor: withAlpha(Colors.attention, 0.14) }]}>{icon('alert-circle-outline', Colors.attention)}</View>
+            <Text style={styles.cardTitle}>{t('Markers that need a look')}</Text>
           </View>
           {flagged.map((m) => (
             <View key={m.marker_id} style={styles.markerRow}>
@@ -357,10 +386,22 @@ export const WebSummaryScreen = () => {
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.background },
   content: { paddingHorizontal: 28, paddingTop: 28, paddingBottom: 48 },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 18, marginBottom: 26 },
-  name: { color: Colors.textPrimary, fontSize: 30, fontWeight: '800' },
-  profileLink: { color: Colors.accent, fontSize: 14, fontWeight: '700', marginTop: 2 },
-  sync: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  date: { color: Colors.textMuted, fontSize: 13, fontWeight: '700' },
+  greeting: { color: Colors.textPrimary, fontSize: 30, fontWeight: '800', marginTop: 2, marginBottom: 16 },
+  todo: {
+    backgroundColor: Colors.card,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 4,
+    marginBottom: 24,
+  },
+  todoTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  todoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 },
+  sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
+  sync: { color: Colors.textMuted, fontSize: 12 },
   section: { color: Colors.textPrimary, fontSize: 19, fontWeight: '800', marginTop: 8, marginBottom: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 18 },
   card: {
@@ -373,7 +414,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 10 },
-  cardTitle: { fontSize: 14, fontWeight: '800', flex: 1 },
+  cardIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', flex: 1 },
   cardWhen: { color: Colors.textMuted, fontSize: 12 },
   cardBody: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
   cardCaption: { color: Colors.textSecondary, fontSize: 12, marginBottom: 2 },

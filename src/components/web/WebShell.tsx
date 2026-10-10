@@ -99,12 +99,11 @@ export function useIsShellRoot(): boolean {
   return inShell && !!active;
 }
 
-const NavIcon = ({ item, on }: { item: NavItem; on: boolean }) =>
-  item.icon === 'intestine' ? (
-    <IntestineIcon size={19} color={item.color} />
-  ) : (
-    <Ionicons name={item.icon as any} size={19} color={on ? item.color : item.color} />
-  );
+// Iconos en un solo tono; el color de la categoría solo en la entrada activa
+const NavIcon = ({ item, on }: { item: NavItem; on: boolean }) => {
+  const color = on ? item.color : Colors.textSecondary;
+  return item.icon === 'intestine' ? <IntestineIcon size={19} color={color} /> : <Ionicons name={item.icon as any} size={19} color={color} />;
+};
 
 export const WebShell = ({ children }: { children: React.ReactNode }) => {
   const inShell = useInWebShell();
