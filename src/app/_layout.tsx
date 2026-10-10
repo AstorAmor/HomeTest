@@ -73,6 +73,7 @@ export default function Layout() {
             <Stack.Screen name="catalogo" />
             <Stack.Screen name="report-intro" />
             <Stack.Screen name="report-summary" />
+            <Stack.Screen name="biological-age" />
             <Stack.Screen name="report-marker-detail" />
             <Stack.Screen name="report-plan" />
             <Stack.Screen name="habits" />

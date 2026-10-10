@@ -59,8 +59,7 @@ export const ProTemplatesScreen = () => {
   // 'all', un tema de ejemplo ('cycle'…), 'other' (Otro) o un tema propio ('c:embarazo')
   const [filter, setFilter] = useState<string>('all');
   const [settings, setSettings] = useState<TopicSettings>({ hidden: [], custom: [] });
-  const [managing, setManaging] = useState(false); // "Editar temas" abierto en la lista
-  const [adding, setAdding] = useState<'list' | 'editor' | null>(null); // dónde se está creando un tema
+  const [adding, setAdding] = useState(false); // "+ Nuevo tema" abierto en el editor
   const [newTopic, setNewTopic] = useState('');
   const [query, setQuery] = useState('');
   const [draft, setDraft] = useState<TemplateDraft | null>(null);
@@ -95,7 +94,7 @@ export const ProTemplatesScreen = () => {
 
   const open = (d: TemplateDraft) => {
     setDraft(d);
-    setAdding(null);
+    setAdding(false);
     setKeywordsText(d.keywords.join(', '));
     setState('idle');
     setError('');
@@ -164,9 +163,9 @@ export const ProTemplatesScreen = () => {
     try {
       const o = await addTopic(newTopic, list ?? []);
       if (!o) return;
-      if (adding === 'editor' && draft) setDraft({ ...draft, ...topicFields(o) });
+      if (draft) setDraft({ ...draft, ...topicFields(o) });
       setNewTopic('');
-      setAdding(null);
+      setAdding(false);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : tr('Could not save'));
@@ -190,7 +189,7 @@ export const ProTemplatesScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => {
-          setAdding(null);
+          setAdding(false);
           setNewTopic('');
         }}
         hitSlop={8}
@@ -247,48 +246,7 @@ export const ProTemplatesScreen = () => {
             </TouchableOpacity>
           );
         })}
-        <TouchableOpacity style={styles.editTopics} onPress={() => setManaging((v) => !v)}>
-          <Ionicons name={managing ? 'checkmark' : 'create-outline'} size={14} color={Colors.accent} />
-          <Text style={styles.editTopicsText}>{managing ? tr('Done') : tr('Edit topics')}</Text>
-        </TouchableOpacity>
       </View>
-
-      {managing && (
-        <View style={styles.manage}>
-          <Text style={styles.manageTitle}>{tr('Your topics')}</Text>
-          <View style={styles.filters}>
-            {options.map((o) => (
-              <View key={o.key} style={[styles.filter, styles.customChip]}>
-                <Ionicons name={o.icon as any} size={13} color={Colors.textSecondary} />
-                <Text style={styles.filterText}>
-                  {o.label}
-                  {counts[o.key] ? ` · ${counts[o.key]}` : ''}
-                </Text>
-                <TouchableOpacity onPress={() => removeTopic(o)} hitSlop={8} accessibilityLabel={tr('Delete topic')}>
-                  <Ionicons name="close" size={14} color={Colors.textMuted} />
-                </TouchableOpacity>
-              </View>
-            ))}
-            {adding !== 'list' && (
-              <TouchableOpacity style={[styles.filter, styles.newChip]} onPress={() => setAdding('list')}>
-                <Text style={styles.newChipText}>+ {tr('New topic')}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          {adding === 'list' && topicInput}
-          <Text style={styles.hint}>{tr('Deleting a topic doesn’t delete its templates: they move to “Other”.')}</Text>
-          {settings.hidden.length > 0 && (
-            <TouchableOpacity
-              onPress={async () => {
-                await restoreSampleTopics();
-                load();
-              }}
-            >
-              <Text style={styles.link}>{tn(settings.hidden.length, 'Restore {n} deleted sample topic', 'Restore {n} deleted sample topics')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
 
       {list === null ? (
         <ActivityIndicator color={Colors.accent} />
@@ -374,13 +332,23 @@ export const ProTemplatesScreen = () => {
             </View>
           );
         })}
-        {adding !== 'editor' && (
-          <TouchableOpacity style={[styles.filter, styles.newChip]} onPress={() => setAdding('editor')}>
+        {!adding && (
+          <TouchableOpacity style={[styles.filter, styles.newChip]} onPress={() => setAdding(true)}>
             <Text style={styles.newChipText}>+ {tr('New topic')}</Text>
           </TouchableOpacity>
         )}
       </View>
-      {adding === 'editor' && topicInput}
+      {adding && topicInput}
+      {settings.hidden.length > 0 && (
+        <TouchableOpacity
+          onPress={async () => {
+            await restoreSampleTopics();
+            load();
+          }}
+        >
+          <Text style={styles.link}>{tn(settings.hidden.length, 'Restore {n} deleted sample topic', 'Restore {n} deleted sample topics')}</Text>
+        </TouchableOpacity>
+      )}
 
       <Text style={styles.fieldLabel}>{tr('Words that should suggest it (optional)')}</Text>
       <TextInput
@@ -501,10 +469,6 @@ const styles = StyleSheet.create({
   newChip: { borderStyle: 'dashed', borderColor: withAlpha(Colors.accent, 0.6) },
   newChipText: { color: Colors.accent, fontSize: 12, fontWeight: '800' },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  editTopics: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6, paddingVertical: 5 },
-  editTopicsText: { color: Colors.accent, fontSize: 12, fontWeight: '800' },
-  manage: { gap: 8, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12 },
-  manageTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
   link: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
   placeholder: { alignItems: 'center', gap: 8, paddingVertical: 60, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.cardBorder, borderRadius: 16 },
   headerBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: withAlpha(Colors.accent, 0.5), borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },

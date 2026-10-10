@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { mockProfessionals, ROLE_INFO } from '@/data/servicesMock';
 import { listVerifiedProfessionals, roleLabel } from '@/data/sharing';
 import { consult, isRealProfessional, ProCapabilities } from '@/data/consultations';
-import { t } from '@/i18n';
+import { num, t } from '@/i18n';
 import { formatPrice } from '@/data/testCatalog';
 
 interface ProView {
@@ -62,8 +62,8 @@ async function loadPro(id: string): Promise<ProView | null> {
     languages: m.languages,
     price: m.pricePerSession,
     minutes: m.sessionMinutes,
-    rating: m.rating,
-    reviews: m.reviews,
+    rating: m.rating || null, // 0 = aún sin valoraciones
+    reviews: m.reviews || null,
     online: m.online,
     photoUrl: null,
     city: 'Madrid',
@@ -119,7 +119,11 @@ export const ProfessionalDetailScreen = () => {
             </View>
           )}
           <View style={styles.statsRow}>
-            {pro.rating !== null && <Stat icon="star" color={Colors.amber} value={pro.rating.toFixed(1)} label={`${pro.reviews} reviews`} />}
+            {pro.rating !== null ? (
+              <Stat icon="star" color={Colors.amber} value={num(pro.rating.toFixed(1))} label={pro.reviews ? t('{n} reviews', { n: pro.reviews }) : t('Rating')} />
+            ) : (
+              !pro.real && <Stat icon="star-outline" color={Colors.amber} value="—" label={t('No reviews yet')} />
+            )}
             <Stat icon="cash-outline" color={Colors.accent} value={pro.price ? formatPrice(pro.price) : '—'} label={`${pro.minutes} min`} />
             <Stat icon={pro.online ? 'videocam-outline' : 'location-outline'} color={Colors.violet} value={pro.online ? t('Online') : t('In person')} label={pro.city || t('Spain')} />
           </View>

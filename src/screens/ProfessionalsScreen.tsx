@@ -11,7 +11,7 @@ import { mockProfessionals, ProfessionalRole, ROLE_INFO } from '@/data/servicesM
 import { listVerifiedProfessionals, ProfessionalAccount } from '@/data/sharing';
 import { isRemoteActive } from '@/lib/supabase';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { t } from '@/i18n';
+import { num, t } from '@/i18n';
 import { formatPrice } from '@/data/testCatalog';
 
 const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
@@ -159,15 +159,22 @@ export const ProfessionalsScreen = () => {
               onPress={() => router.push({ pathname: '/professional-detail', params: { id: p.id } })}
               activeOpacity={0.85}
             >
-              <Avatar nombre={p.name.replace('Dr. ', '')} size={52} />
+              <Avatar nombre={p.name.replace(/^Dra?\.\s*/, '')} size={52} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{p.name}</Text>
                 <Text style={styles.specialty}>{p.specialty}</Text>
                 <View style={styles.metaRow}>
-                  <Ionicons name="star" size={12} color={Colors.amber} />
-                  <Text style={styles.meta}>
-                    {p.rating.toFixed(1)} ({p.reviews})
-                  </Text>
+                  {p.rating > 0 ? (
+                    <>
+                      <Ionicons name="star" size={12} color={Colors.amber} />
+                      <Text style={styles.meta}>
+                        {num(p.rating.toFixed(1))}
+                        {p.reviews ? ` (${p.reviews})` : ''}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={[styles.meta, { color: Colors.accent }]}>{t('New on Kuova')}</Text>
+                  )}
                   <Text style={styles.metaDot}>·</Text>
                   <Text style={styles.meta}>
                     {formatPrice(p.pricePerSession)} / {p.sessionMinutes} min

@@ -1,5 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -109,6 +110,8 @@ const PLAN_COLOR: Record<PlanItemKind, string> = {
   mindfulness: Colors.accent,
 };
 
+const MED_OPEN_KEY = 'today.medOpen.v1';
+
 export const TodayScreen = () => {
   const router = useRouter();
   const { demoMode } = useAuth();
@@ -143,6 +146,14 @@ export const TodayScreen = () => {
   const [dosesToday, setDosesToday] = useDeepState<ScheduledDose[]>([]);
   // Lo que tiene recordatorio: sus tomas de hoy se marcan desde aquí (Taken / Skip)
   const [reminderIds, setReminderIds] = useDeepState<string[]>([]);
+  // Flechita de Medicación y suplementos: enseña u oculta todas las tomas de hoy (tengan o no
+  // recordatorio). Se recuerda en el dispositivo; sin elegir, abierta si hay alguna con recordatorio.
+  const [medOpen, setMedOpen] = useState<boolean | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem(MED_OPEN_KEY)
+      .then((v) => v !== null && setMedOpen(v === '1'))
+      .catch(() => undefined);
+  }, []);
   // Última lectura con termómetro de las últimas 24 h (manda sobre la del wearable)
   const [thermo, setThermo] = useDeepState<number | null>(null);
   // "Your summary": lo próximo del calendario (citas, logística, resultados)
@@ -267,6 +278,7 @@ export const TodayScreen = () => {
     else if (kind === 'mindfulness') router.push({ pathname: '/exercise', params: { id: 'box_breathing' } });
     else router.push('/nutrients');
   };
+  const medShown = medOpen ?? dosesToday.some((d) => reminderIds.includes(d.medId));
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -378,7 +390,8 @@ export const TodayScreen = () => {
         {show('medication') && (
           <View style={styles.medCard}>
           <ZoneChangeBanner onChanged={load} />
-          <TouchableOpacity style={styles.medHeader} onPress={() => router.push('/medications')} activeOpacity={0.85}>
+          <View style={styles.medHeader}>
+          <TouchableOpacity style={styles.medHeaderMain} onPress={() => router.push('/medications')} activeOpacity={0.85}>
             <View style={styles.inboxIcon}>
               <Ionicons name="medical-outline" size={20} color={Colors.gold} />
             </View>
@@ -396,11 +409,26 @@ export const TodayScreen = () => {
                     })()}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            {dosesToday.length === 0 && <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />}
           </TouchableOpacity>
-          {dosesToday.some((d) => reminderIds.includes(d.medId)) && (
+          {dosesToday.length > 0 && (
+            <TouchableOpacity
+              style={styles.medToggle}
+              hitSlop={10}
+              onPress={() => {
+                const next = !medShown;
+                setMedOpen(next);
+                AsyncStorage.setItem(MED_OPEN_KEY, next ? '1' : '0').catch(() => undefined);
+              }}
+              accessibilityLabel={medShown ? t('Hide today’s doses') : t('Show today’s doses')}
+            >
+              <Ionicons name={medShown ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+          </View>
+          {medShown && dosesToday.length > 0 && (
             <View style={styles.medDoses}>
-              <DoseRows doses={dosesToday.filter((d) => reminderIds.includes(d.medId))} onChange={load} />
+              <DoseRows doses={dosesToday} onChange={load} />
             </View>
           )}
           </View>
@@ -816,7 +844,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 12,
   },
-  medHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  medHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  medHeaderMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  medToggle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
   medDoses: { marginTop: 8, borderTopWidth: 1, borderTopColor: Colors.divider },
   bathroomCard: {
     flexDirection: 'row',

@@ -108,8 +108,9 @@ export function parseMedicationText(text: string): ParsedMed {
   else if (/\b(?:a week|one week|una semana)\b/.test(t)) out.courseDays = 7;
   else if (/\b(?:two weeks|dos semanas)\b/.test(t)) out.courseDays = 14;
 
-  // Nombre: lo que va antes del primer número o palabra de pauta
-  const cut = text.search(/\d|\b(?:cada|every|once|twice|una vez|dos veces|tres veces|durante|for|por la|at night|daily)\b/i);
+  // Nombre: lo que va antes del primer número suelto o palabra de pauta. Un número pegado al nombre
+  // es parte de él ("Omega-3", "Vitamina B12", "D3"), no la dosis.
+  const cut = text.search(/\s\d|\b(?:cada|every|once|twice|una vez|dos veces|tres veces|durante|for|por la|at night|daily)\b/i);
   const name = (cut > 0 ? text.slice(0, cut) : text).trim().replace(/[,;.-]+$/, '');
   if (name) out.name = name.charAt(0).toUpperCase() + name.slice(1);
   return out;

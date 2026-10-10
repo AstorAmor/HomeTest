@@ -26,7 +26,10 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
   const { width } = useWindowDimensions();
   const scrollX = useRef(new Animated.Value(0)).current;
   const step = CARD + GAP;
-  const sidePadding = (width - CARD) / 2;
+  // Margen para que la primera tarjeta quede centrada. En la web, relativo al ancho del propio
+  // carrusel (en escritorio la pantalla va en una columna centrada: con el ancho de la ventana
+  // quedaba desplazado a la derecha); en el móvil, el carrusel ocupa todo el ancho.
+  const sidePadding: any = Platform.OS === 'web' ? `calc(50% - ${CARD / 2}px)` : (width - CARD) / 2;
 
   return (
     <Animated.ScrollView

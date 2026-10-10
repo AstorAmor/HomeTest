@@ -3,6 +3,12 @@ import { courseProgress, dosesForDay, findKnownMed, isActiveOn, parseMedicationT
 import { MedicationItem } from '@/types/medication';
 
 describe('parseMedicationText', () => {
+  it('un número pegado al nombre es parte del nombre (Omega-3, B12), no la dosis', () => {
+    expect(parseMedicationText('Omega-3').name).toBe('Omega-3');
+    expect(parseMedicationText('Vitamin B12 1000 mcg').name).toBe('Vitamin B12');
+    expect(parseMedicationText('Vitamin B12 1000 mcg').dose).toBe('1000 mcg');
+  });
+
   it('español: nombre, dosis, cada 8 horas y días', () => {
     const p = parseMedicationText('Ibuprofeno 600 mg cada 8 horas durante 3 días');
     expect(p.name).toBe('Ibuprofeno');

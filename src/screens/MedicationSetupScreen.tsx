@@ -22,11 +22,11 @@ const COURSE_DAYS = [3, 5, 7, 10, 14];
 const DAY_ITEMS = Array.from({ length: 90 }, (_, i) => String(i + 1)); // "Other": de 1 a 90 días
 const SHORT_SUGGESTIONS = ['Ibuprofen', 'Paracetamol', 'Amoxicillin', 'Omeprazole'];
 const SLOTS = [
-  { id: '08:00', label: 'Morning 08:00' },
-  { id: '13:30', label: 'Midday 13:30' },
-  { id: '17:00', label: 'Afternoon 17:00' },
-  { id: '20:00', label: 'Evening 20:00' },
-  { id: '22:30', label: 'Bedtime 22:30' },
+  { id: '08:00', label: tr('Morning 08:00') },
+  { id: '13:30', label: tr('Midday 13:30') },
+  { id: '17:00', label: tr('Afternoon 17:00') },
+  { id: '20:00', label: tr('Evening 20:00') },
+  { id: '22:30', label: tr('Bedtime 22:30') },
 ];
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -201,7 +201,25 @@ export const MedicationSetupScreen = () => {
     setTimes((prev) => (prev.includes(t) ? prev : [...prev, t].sort()));
     setOtherOpen(false);
   };
-  const position = total > 1 ? `${total - queue.length} of ${total}` : null;
+  // Lo que se está configurando, a la vista en todos los pasos (con varios: cuál va y cuáles faltan)
+  const current = name || text.trim();
+  const currentBar =
+    step !== 'what' && current ? (
+      <View style={styles.current}>
+        <MaterialCommunityIcons name={medIcon(current, kind).name as any} size={18} color={kind === 'supplement' ? Colors.green : Colors.gold} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.currentName} numberOfLines={1}>
+            {current}
+          </Text>
+          {queue.length > 0 && (
+            <Text style={styles.currentNext} numberOfLines={2}>
+              {tr('Then: {names}', { names: queue.join(', ') })}
+            </Text>
+          )}
+        </View>
+        {total > 1 && <Text style={styles.currentPos}>{tr('{i} of {n}', { i: total - queue.length, n: total })}</Text>}
+      </View>
+    ) : null;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -215,11 +233,14 @@ export const MedicationSetupScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {currentBar}
         {step === 'what' && (
           <>
             <Text style={styles.title}>{isShort ? tr('What are you taking?') : tr('What do you take regularly?')}</Text>
             <Text style={styles.subtitle}>
-              Write it the way you would say it. For example: {isShort ? '"Ibuprofen 600 every 8 hours for 3 days"' : '"Vitamin D 1000 IU once a day"'}.
+              {tr('Write it the way you would say it. For example: “{example}”.', {
+                example: isShort ? tr('Ibuprofen 600 every 8 hours for 3 days') : tr('Vitamin D 1000 IU once a day'),
+              })}
             </Text>
             <TextInput
               style={styles.bigInput}
@@ -249,7 +270,7 @@ export const MedicationSetupScreen = () => {
               })}
             </View>
             {picked.length > 1 && (
-              <Text style={styles.tip}>We will set them up one after the other ({picked.length}).</Text>
+              <Text style={styles.tip}>{tr('We will set them up one after the other ({n}).', { n: picked.length })}</Text>
             )}
           </>
         )}
@@ -262,13 +283,12 @@ export const MedicationSetupScreen = () => {
                 <Text style={styles.prefilledText}>{tr('We filled in the next steps from what you wrote. Check them.')}</Text>
               </View>
             )}
-            {position && <Text style={styles.position}>{position}</Text>}
             <Text style={styles.title}>{name || tr('How much?')}</Text>
             <Text style={styles.label}>{tr('Is it a medicine or a supplement?')}</Text>
             <ChoiceChips
               options={[
-                { id: 'medication', label: 'Medicine' },
-                { id: 'supplement', label: 'Supplement' },
+                { id: 'medication', label: tr('Medicine') },
+                { id: 'supplement', label: tr('Supplement') },
               ]}
               value={kind}
               onChange={(v) => setKind(v as MedKind)}
@@ -289,12 +309,12 @@ export const MedicationSetupScreen = () => {
             <Text style={styles.title}>{tr('How often and when?')}</Text>
             <ChoiceChips
               options={[
-                { id: 'once', label: 'Once a day' },
-                { id: 'twice', label: 'Twice a day' },
-                { id: 'three', label: 'Three times a day' },
-                { id: 'every_hours', label: 'Every few hours' },
-                { id: 'weekdays', label: 'Some days of the week' },
-                { id: 'as_needed', label: 'Only when I need it' },
+                { id: 'once', label: tr('Once a day') },
+                { id: 'twice', label: tr('Twice a day') },
+                { id: 'three', label: tr('Three times a day') },
+                { id: 'every_hours', label: tr('Every few hours') },
+                { id: 'weekdays', label: tr('Some days of the week') },
+                { id: 'as_needed', label: tr('Only when I need it') },
               ]}
               value={frequency}
               onChange={(v) => setFrequency(v as Frequency)}
@@ -369,9 +389,9 @@ export const MedicationSetupScreen = () => {
                 <Text style={styles.label}>{tr('With food?')}</Text>
                 <ChoiceChips
                   options={[
-                    { id: 'with', label: 'With food' },
-                    { id: 'empty', label: 'Empty stomach' },
-                    { id: 'any', label: "Doesn't matter" },
+                    { id: 'with', label: tr('With food') },
+                    { id: 'empty', label: tr('Empty stomach') },
+                    { id: 'any', label: tr("Doesn't matter") },
                   ]}
                   value={withFood}
                   onChange={(v) => setWithFood(v as MedicationItem['withFood'])}
@@ -446,8 +466,8 @@ export const MedicationSetupScreen = () => {
                 </Text>
                 <ChoiceChips
                   options={[
-                    { id: 'yes', label: 'Remind me' },
-                    { id: 'no', label: "I'll track it myself" },
+                    { id: 'yes', label: tr('Remind me') },
+                    { id: 'no', label: tr("I'll track it myself") },
                   ]}
                   value={reminders}
                   onChange={(v) => setReminders(v as 'yes' | 'no')}
@@ -486,7 +506,7 @@ export const MedicationSetupScreen = () => {
         onPress={step === 'summary' ? save : next}
         disabled={!canContinue}
       >
-        <Text style={styles.ctaText}>{step === 'summary' ? (queue.length ? `Save and set up ${queue[0]}` : 'Save') : tr('Continue')}</Text>
+        <Text style={styles.ctaText}>{step === 'summary' ? (queue.length ? tr('Save and set up {name}', { name: queue[0] }) : tr('Save')) : tr('Continue')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -505,7 +525,10 @@ const styles = StyleSheet.create({
   },
   progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.green },
-  position: { color: Colors.gold, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', marginBottom: 4 },
+  current: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16 },
+  currentName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  currentNext: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  currentPos: { color: Colors.gold, fontSize: 12, fontWeight: '800' },
   otherBox: {
     marginTop: 12,
     backgroundColor: Colors.card,

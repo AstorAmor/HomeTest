@@ -2284,6 +2284,73 @@ export const es: Record<string, string> = {
   'pick a free slot': 'elige un hueco libre',
   Verified: 'Verificado',
   'Next: {when}': 'Próximo hueco: {when}',
+
+  // ── Profesionales con los que trabaja Kuova (2026-10-10) ──
+  'Dr. Gema Martínez Tamés': 'Dra. Gema Martínez Tamés',
+  'Dr. Alejandro Alonso Cabrero': 'Dr. Alejandro Alonso Cabrero',
+  'Dr. Covadonga Carrera': 'Dra. Covadonga Carrera',
+  'Dr. Andrea Otero Gonzalez': 'Dra. Andrea Otero Gonzalez',
+  Haematology: 'Hematología',
+  Dermatology: 'Dermatología',
+  'Genetic counselling': 'Asesoramiento genético',
+  'Hormones, thyroid and metabolism: she reviews your results and tells you what to do next.':
+    'Hormonas, tiroides y metabolismo: revisa tus resultados y te dice qué hacer a continuación.',
+  'Blood count, iron, ferritin and anaemia: what your values mean and when they need a closer look.':
+    'Hemograma, hierro, ferritina y anemia: qué significan tus valores y cuándo hay que mirarlos más de cerca.',
+  'Skin, hair and nails, and how they relate to your blood tests and hormones.':
+    'Piel, pelo y uñas, y su relación con tus analíticas y tus hormonas.',
+  'Goes through your family history with you and tells you whether a genetic test makes sense, and which one.':
+    'Repasa contigo tus antecedentes familiares y te dice si tiene sentido hacerte un test genético, y cuál.',
+  'Mon 12 Oct, 12:00': 'lun 12 oct, 12:00',
+  'Tue 13 Oct, 17:00': 'mar 13 oct, 17:00',
+  'Wed 14 Oct, 18:00': 'mié 14 oct, 18:00',
+  'Thu 15 Oct, 16:30': 'jue 15 oct, 16:30',
+  'New on Kuova': 'Nuevo en Kuova',
+  '{n} reviews': '{n} valoraciones',
+  Rating: 'Valoración',
+  'No reviews yet': 'Aún sin valoraciones',
+
+  // ── Medicación (Today y alta de varios a la vez) ──
+  'Hide today’s doses': 'Ocultar las tomas de hoy',
+  'Show today’s doses': 'Ver las tomas de hoy',
+  'Then: {names}': 'Después: {names}',
+  '{i} of {n}': '{i} de {n}',
+  'We will set them up one after the other ({n}).': 'Los configuramos uno detrás de otro ({n}).',
+  'Save and set up {name}': 'Guardar y configurar {name}',
+  'Write it the way you would say it. For example: “{example}”.': 'Escríbelo como lo dirías. Por ejemplo: «{example}».',
+  'Ibuprofen 600 every 8 hours for 3 days': 'Ibuprofeno 600 cada 8 horas durante 3 días',
+  'Vitamin D 1000 IU once a day': 'Vitamina D 1000 UI una vez al día',
+
+  // ── Tu edad biológica (cómo se calcula) ──
+  'Your age: {age}': 'Tu edad: {age}',
+  'Sample for now: we will calculate yours from your blood tests once our medical team has validated the method.':
+    'De momento es un ejemplo: calcularemos la tuya con tus analíticas cuando nuestro equipo médico haya validado el método.',
+  'How it is calculated': 'Cómo se calcula',
+  'We use PhenoAge, a method published by Levine and colleagues (2018). It combines your age with 9 values from an ordinary blood test and compares them with thousands of people followed for years in a large US health survey (NHANES).':
+    'Usamos PhenoAge, un método publicado por Levine y su equipo (2018). Combina tu edad con 9 valores de una analítica de sangre normal y los compara con los de miles de personas a las que se siguió durante años en una gran encuesta de salud de EE. UU. (NHANES).',
+  'The result is the age at which, on average, people have a profile like yours. If it comes out below your real age, your body is ageing better than average; above it, there is room to improve.':
+    'El resultado es la edad a la que, de media, la gente tiene un perfil como el tuyo. Si sale por debajo de tu edad real, tu cuerpo envejece mejor que la media; si sale por encima, hay margen de mejora.',
+  'The 9 values it uses': 'Los 9 valores que usa',
+  'Sugar metabolism': 'Metabolismo del azúcar',
+  'Liver and nutrition': 'Hígado y nutrición',
+  'Blood and defences': 'Sangre y defensas',
+  'C-reactive protein (CRP)': 'Proteína C reactiva (PCR)',
+  Albumin: 'Albúmina',
+  'Alkaline phosphatase': 'Fosfatasa alcalina',
+  'White blood cells': 'Leucocitos',
+  'Lymphocytes (%)': 'Linfocitos (%)',
+  'Red cell size (MCV)': 'Tamaño de los glóbulos rojos (VCM)',
+  'Red cell size variation (RDW)': 'Variación del tamaño de los glóbulos rojos (ADE)',
+  'See your values in Lab': 'Ver tus valores en Laboratorio',
+  'Why a range and not one number': 'Por qué un rango y no un número',
+  'The same blood test varies a little from one day to another and from one lab to another. A range is more honest than a single number: what matters is how it moves between your tests.':
+    'La misma analítica varía un poco de un día a otro y de un laboratorio a otro. Un rango es más honesto que un número exacto: lo que importa es cómo se mueve entre tus analíticas.',
+  'What moves it': 'Qué la mueve',
+  'Inflammation, blood sugar control and your general health weigh the most. Sleep, physical activity and diet can improve them. A recent cold or infection raises CRP for a few weeks and can make it look older than it is: in that case, repeat the test later.':
+    'Lo que más pesa es la inflamación, el control del azúcar y tu salud general. El sueño, la actividad física y la alimentación pueden mejorarlos. Un catarro o una infección reciente sube la PCR unas semanas y puede hacer que salga mayor de lo que es: en ese caso, repite la analítica más adelante.',
+  'What it is not': 'Lo que no es',
+  'It is not a diagnosis or a prediction for you personally: it is a statistical estimate. It is most useful to compare yourself with yourself over time.':
+    'No es un diagnóstico ni una predicción sobre ti: es una estimación estadística. Lo más útil es compararte contigo mismo con el tiempo.',
   '{n} of {total} unlocked · tap a badge to see how to level it up': '{n} de {total} conseguidas · toca una insignia para ver cómo subir de nivel',
   Locked: 'Bloqueada',
   'Now:': 'Ahora:',

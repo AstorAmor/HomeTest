@@ -740,3 +740,22 @@ ya guardan en las carpetas nuevas.
   `customTopic` / columna `custom_topic` (topic = 'other'); migración `20261010090000_pro_templates_custom_topic.sql`
   aplicada el 2026-10-10 (si faltara, el código guarda la plantilla sin el tema propio).
 - "Guardar esta respuesta como plantilla" usa los temas del médico.
+
+## 2026-10-10 (tarde) — Notas del fundador: edad biológica, profesionales, medicación, carruseles
+- **Tu edad biológica** (My Data) abre `/biological-age` (`BiologicalAgeScreen`): cómo se calcula (PhenoAge,
+  Levine 2018 / Liu 2018), los 9 valores que usa, por qué es un rango, qué la mueve y qué no es; los valores de la
+  analítica se ven en Laboratorio (botón). Sigue siendo **ejemplo**: el cálculo real está pendiente
+  (`logic/rulesEngine/biologicalAge.ts`).
+- **Profesionales**: añadidos Dra. Gema Martínez Tamés (Endocrinología, 4,9), Dr. Alejandro Alonso Cabrero
+  (Hematología), Dra. Covadonga Carrera (Dermatología) y Dra. Andrea Otero Gonzalez (asesora genética) en
+  `servicesMock.ts`. Sin valoraciones (`rating: 0`) se ve "Nuevo en Kuova" / "Aún sin valoraciones" en vez de
+  inventarlas. Bios, tarifas y huecos provisionales: confirmar con cada uno antes de enseñarlo fuera.
+- **Today → Medicación y suplementos**: la flechita enseña u oculta TODAS las tomas de hoy (con o sin
+  recordatorio); se recuerda en el dispositivo (`today.medOpen.v1`). El resto de la tarjeta abre /medications.
+- **Alta de medicación**: barra fija en todos los pasos con lo que se está configurando, "1 de 2" y "Después: …";
+  textos y opciones traducidos. Arreglado el parser: un número pegado al nombre es parte de él ("Omega-3",
+  "Vitamina B12"), antes quedaba "Omega".
+- **Carruseles (Habla con un especialista / Sigue aprendiendo)** en la web de escritorio: centrados en su
+  columna (`calc(50% - 84px)` en web; antes se calculaba con el ancho de la ventana y quedaban a la derecha).
+- Portal: fuera "Editar temas" del panel izquierdo de Plantillas (se editan en el editor, a la derecha;
+  "Recuperar temas de ejemplo" también está allí).

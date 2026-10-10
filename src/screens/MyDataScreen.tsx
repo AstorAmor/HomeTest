@@ -187,7 +187,7 @@ export const MyDataScreen = () => {
           const younger = now.chronological_age - mid(now);
           const n = Math.round(Math.abs(younger));
           return (
-            <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/report-summary')} activeOpacity={0.85}>
+            <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.85}>
               <View style={styles.bioAgeHeader}>
                 <Ionicons name="hourglass-outline" size={18} color={Colors.accent} />
                 <Text style={styles.bioAgeTitle}>{t('Your biological age')}</Text>
