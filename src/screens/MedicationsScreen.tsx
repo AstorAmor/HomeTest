@@ -63,14 +63,14 @@ export const MedicationsScreen = () => {
   };
 
   const reminderLabel = (item: MedicationItem) => {
-    if (item.schedule.type === 'as_needed') return 'Only when needed';
-    if (!item.reminders) return 'No reminders';
+    if (item.schedule.type === 'as_needed') return t('Only when needed');
+    if (!item.reminders) return t('No reminders');
     if (isReminderMuted(item)) {
       return item.remindersMutedUntil === MUTED_FOREVER
         ? t('Reminders muted')
-        : `Muted until ${new Date(item.remindersMutedUntil!).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}`;
+        : t('Muted until {date}', { date: new Date(item.remindersMutedUntil!).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }) });
     }
-    return 'Reminders on';
+    return t('Reminders on');
   };
 
   const renderItem = (item: MedicationItem) => {
@@ -93,7 +93,7 @@ export const MedicationsScreen = () => {
             <Text style={styles.itemSub}>{scheduleText(item.schedule)}</Text>
             {progress && end && (
               <Text style={styles.itemSub}>
-                Day {progress.day} of {progress.total} · ends {new Date(end.getTime() - 1).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}
+                {t('Day {n} of {total} · ends {date}', { n: progress.day, total: progress.total, date: new Date(end.getTime() - 1).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }) })}
               </Text>
             )}
             <Text style={styles.itemMeta}>{reminderLabel(item)}</Text>
@@ -180,7 +180,7 @@ export const MedicationsScreen = () => {
         {courses.map(renderItem)}
         {finished.map((i) => (
           <Text key={i.id} style={styles.finished}>
-            {i.name}: finished
+            {t('{name}: finished', { name: i.name })}
           </Text>
         ))}
         <TouchableOpacity style={styles.add} onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'short' } })}>

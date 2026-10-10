@@ -2119,4 +2119,7 @@ export const es: Record<string, string> = {
   'Hide raw JSON': 'Ocultar JSON',
   'View raw JSON': 'Ver JSON',
   'Fairly active': 'Bastante actividad',
+  'Only when needed': 'Solo cuando haga falta',
+  'Day {n} of {total} · ends {date}': 'Día {n} de {total} · termina el {date}',
+  '{name}: finished': '{name}: terminado',
 };
