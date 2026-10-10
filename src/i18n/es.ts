@@ -2384,4 +2384,31 @@ export const es: Record<string, string> = {
   'A plan for your goals': 'Un plan para tus objetivos',
   'Move without pain': 'Muévete sin dolor',
   'Sample data: log your first reading to see your own.': 'Datos de ejemplo: apunta tu primera medición para ver la tuya.',
+
+  // ── Portal: simular X pacientes y qué comparte cada uno ──
+  'Sample patients': 'Pacientes de ejemplo',
+  '{n} share data with you': '{n} comparten datos contigo',
+  'Sharing expired on {date}': 'Permiso caducado el {date}',
+  'Stopped sharing on {date}': 'Dejó de compartir el {date}',
+  'Hasn’t shared data with you yet': 'Aún no ha compartido datos contigo',
+  'What they share · {n}/{total}': 'Qué comparte · {n}/{total}',
+  'Their permission expired on {date}: you can no longer see their data. Ask them to share it again.':
+    'Su permiso caducó el {date}: ya no ves sus datos. Pídele que vuelva a compartirlos.',
+  'They stopped sharing on {date}: you can no longer see their data.': 'Dejó de compartir sus datos el {date}: ya no los ves.',
+  'Shares {n} of {total} categories with you': 'Comparte contigo {n} de {total} categorías',
+  'Shared with you': 'Compartido contigo',
+  'Not shared': 'No compartido',
+  'You only see what the patient decides to share, and only while the permission is active. They can withdraw it at any time.':
+    'Solo ves lo que el paciente decide compartir, y solo mientras el permiso esté activo. Puede retirarlo cuando quiera.',
+  'Blood test of {date} · {n} values out of range': 'Analítica del {date} · {n} valores fuera de rango',
+  'No blood test uploaded yet': 'Aún no ha subido ninguna analítica',
+  'Active plan · {n} actions': 'Plan activo · {n} acciones',
+  'Fasting glucose, 14-day average: {v} mg/dL ({n} readings)': 'Glucosa en ayunas, media de 14 días: {v} mg/dL ({n} mediciones)',
+  '14-day average: {s}/{d} mmHg ({n} readings)': 'Media de 14 días: {s}/{d} mmHg ({n} mediciones)',
+  'Home cholesterol test: LDL {v} mg/dL': 'Test de colesterol en casa: LDL {v} mg/dL',
+  'Day {d} of the cycle · cycles of {len} days': 'Día {d} del ciclo · ciclos de {len} días',
+  'Sleep {s}/5 · energy {e}/5 (last 14 days)': 'Sueño {s}/5 · energía {e}/5 (últimos 14 días)',
+  '{n} workouts in 30 days': '{n} entrenamientos en 30 días',
+  '{n} meals logged this week': '{n} comidas registradas esta semana',
+  '{steps} steps a day · {h} h of sleep': '{steps} pasos al día · {h} h de sueño',
 };

@@ -759,3 +759,17 @@ ya guardan en las carpetas nuevas.
   columna (`calc(50% - 84px)` en web; antes se calculaba con el ancho de la ventana y quedaban a la derecha).
 - Portal: fuera "Editar temas" del panel izquierdo de Plantillas (se editan en el editor, a la derecha;
   "Recuperar temas de ejemplo" también está allí).
+
+## 2026-10-11 — Portal: simular X pacientes y checklist de privacidad
+- **Pacientes → "Pacientes de ejemplo: 4 · 12 · 40"** (solo en el portal de demostración): a los 4 fijos se suman
+  pacientes generados siempre igual (`src/data/demoPatients.ts`, tests en `src/data/__tests__/demoPatients.test.ts`),
+  cada uno compartiendo cosas distintas: todo, solo analítica, tensión y glucosa, wearables, nada todavía, permiso
+  caducado o retirado (el ciclo solo en mujeres). Uno de cada tres trae una duda abierta (en la Bandeja). Sin permiso
+  de analíticas la demo no enseña analítica (como la RLS real). Tarjetas con 🔒 y el motivo.
+- **Ficha del paciente → pestaña "Qué comparte · n/11"** (`SharedDataGrid`): las 11 categorías, las compartidas con
+  un resumen de un vistazo (demo) y las demás con candado; aviso si el permiso caducó o se retiró. Con cuentas reales
+  muestra compartido / no compartido (los resúmenes reales, más adelante). `portal.sharedOverview()`.
+- **`docs/privacidad-prueba-a-lanzamiento.md`**: qué protege ya la app y qué falta antes del primer paciente real
+  (Supabase Pro + DPA, staging separado, confirmar email (hoy desactivado) y doble factor para profesionales,
+  registro de accesos, DPA y región UE de Daily/Gemini…, EIPD, DPD, descargar/borrar cuenta, contrato con
+  profesionales, plan de brechas).

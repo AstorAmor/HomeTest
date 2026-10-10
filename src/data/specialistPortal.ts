@@ -17,7 +17,10 @@ import {
   PatientLabResult,
   PatientMarker,
   PatientSummary,
+  SharedScope,
 } from './specialistTypes';
+import { DemoPatient, demoScopeSummary, syntheticPatients, syntheticRequests } from './demoPatients';
+import { SHARE_SCOPES } from './sharing';
 
 // Datos del portal del especialista. Con cuenta de especialista: Supabase (RLS decide
 // qué ve). En modo demo: pacientes, citas, solicitudes y notas de ejemplo guardados en
@@ -50,6 +53,7 @@ interface DemoState {
   availability: Availability;
   plans: { patientId: string; items: PlanVersionItem[]; note: string; createdAt: string }[];
   privateData: { personalPhone: string; personalEmail: string };
+  patientCount?: number; // "Simular X pacientes": 4 fijos + los de ejemplo hasta este número
 }
 
 const at = (dayOffset: number, h: number, m = 0) => {
@@ -71,6 +75,12 @@ const DEMO_PATIENTS: (PatientSummary & { labFromReport?: boolean })[] = [
   { id: 'p-carlos', name: 'Carlos Ruiz', scopes: ['profile', 'lab_reports', 'glucose', 'blood_pressure'], openRequests: 1, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 3, age: 52, sex: t('Male'), goals: [t('Keep a condition under control')] },
   { id: 'p-elena', name: 'Elena Gómez', scopes: ['profile', 'lab_reports'], openRequests: 0, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 0, age: 29, sex: t('Female'), goals: [t('Perform better in sport')] },
   { id: 'p-javier', name: 'Javier Soto', scopes: ['lab_reports'], openRequests: 1, unreadMessages: 0, nextAppointment: null, appointmentToday: false, flaggedMarkers: 2, age: 45, sex: t('Male'), goals: [t('Lose weight')] },
+];
+
+// Los 4 fijos + los de ejemplo hasta `count` (ver demoPatients.ts)
+const allDemoPatients = (count = 4): DemoPatient[] => [
+  ...DEMO_PATIENTS.map((p, i) => ({ ...p, shareState: 'active' as const, shareUntil: null, seed: i + 1 })),
+  ...syntheticPatients(count),
 ];
 
 function demoSeed(): DemoState {
@@ -115,6 +125,9 @@ async function demo(): Promise<DemoState> {
     demoCache = stored && stored.seededOn === fresh.seededOn ? stored : { ...fresh, notes: stored?.notes ?? fresh.notes, plans: stored?.plans ?? [], availability: stored?.availability ?? fresh.availability, privateData: stored?.privateData ?? fresh.privateData };
     // Solicitudes de ejemplo añadidas después de guardar el estado de hoy: aparecen igualmente
     for (const r of fresh.requests) if (!demoCache.requests.some((x) => x.id === r.id)) demoCache.requests.push(r);
+    // Las dudas de los pacientes de ejemplo, según cuántos haya
+    for (const r of syntheticRequests(syntheticPatients(demoCache.patientCount ?? 4), DEMO_PRO))
+      if (!demoCache.requests.some((x) => x.id === r.id)) demoCache.requests.push(r);
   } catch {
     demoCache = demoSeed();
   }
@@ -159,13 +172,14 @@ function reportMarkers(): PatientMarker[] {
   return out;
 }
 
-const demoLab = (patientId: string): PatientLabResult | null => {
-  const p = DEMO_PATIENTS.find((x) => x.id === patientId);
-  if (!p) return null;
+const demoLab = (patientId: string, count = 4): PatientLabResult | null => {
+  const p = allDemoPatients(count).find((x) => x.id === patientId);
+  // Como en la realidad (RLS): sin permiso de analíticas, el médico no ve ninguna
+  if (!p || !p.scopes.includes('lab_reports')) return null;
   const all = reportMarkers();
   // Cada paciente de ejemplo con valores algo distintos: basta con el mismo informe
   // para Laura y un subconjunto para el resto.
-  const markers = p.labFromReport ? all : all.filter((_, i) => i % 3 === 0);
+  const markers = p.labFromReport ? all : all.filter((_, i) => (i + p.seed) % 3 === 0);
   return { title: t('Blood analysis'), date: currentReport.test_date, lab: p.labFromReport ? 'Eurofins Megalab' : `${t('User upload')} · Synlab`, markers };
 };
 
@@ -304,11 +318,11 @@ export const portal = {
     if (isPortalDemo()) {
       const s = await demo();
       const today = new Date().toDateString();
-      return DEMO_PATIENTS.map(({ labFromReport, ...p }) => {
+      return allDemoPatients(s.patientCount ?? 4).map(({ labFromReport, seed, ...p }) => {
         const upcoming = s.appointments
           .filter((a) => a.patientId === p.id && (a.status === 'pending' || a.status === 'confirmed') && new Date(a.startsAt).getTime() > Date.now() - 3600000)
           .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-        const lab = demoLab(p.id);
+        const lab = demoLab(p.id, s.patientCount ?? 4);
         return {
           ...p,
           openRequests: s.requests.filter((r) => r.patientId === p.id && r.status === 'open').length,
@@ -324,6 +338,7 @@ export const portal = {
       id: r.patient_id,
       name: r.patient_name,
       scopes: r.scopes ?? [],
+      shareState: (r.scopes ?? []).length ? 'active' : 'none',
       openRequests: r.open_requests,
       unreadMessages: r.unread_messages,
       nextAppointment: r.next_appointment,
@@ -333,7 +348,7 @@ export const portal = {
   },
 
   async patientLab(patientId: string): Promise<PatientLabResult | null> {
-    if (isPortalDemo()) return demoLab(patientId);
+    if (isPortalDemo()) return demoLab(patientId, (await demo()).patientCount ?? 4);
     // Última analítica subida y compartida (RLS: solo con permiso "lab_reports" activo)
     const { data, error } = await supabase!
       .from('lab_uploads')
@@ -527,6 +542,32 @@ export const portal = {
       note,
     });
     fail(error);
+  },
+
+  // Qué comparte el paciente con este especialista, categoría a categoría. En la demo, con un
+  // resumen de ejemplo de cada dato; con cuentas reales, de momento solo compartido / no compartido.
+  async sharedOverview(patient: PatientSummary): Promise<SharedScope[]> {
+    const demoP = isPortalDemo() ? allDemoPatients((await demo()).patientCount ?? 4).find((x) => x.id === patient.id) : undefined;
+    const lab = demoP ? demoLab(demoP.id, (await demo()).patientCount ?? 4) : null;
+    const flagged = lab ? lab.markers.filter((m) => m.status !== 'in').length : 0;
+    return SHARE_SCOPES.map((sc) => {
+      const shared = patient.scopes.includes(sc.id);
+      return { scope: sc.id, shared, summary: shared && demoP ? demoScopeSummary(demoP, sc.id, flagged, lab?.date ?? null) : undefined };
+    });
+  },
+
+  // Solo demo: cuántos pacientes de ejemplo hay (4, 12 o 40)
+  async demoPatientCount(): Promise<number> {
+    return (await demo()).patientCount ?? 4;
+  },
+  async setDemoPatientCount(n: number) {
+    const s = await demo();
+    s.patientCount = n;
+    const ids = new Set(allDemoPatients(n).map((p) => p.id));
+    // Fuera las dudas de pacientes que ya no están; dentro las de los nuevos
+    s.requests = s.requests.filter((r) => !r.id.startsWith('sx-') || ids.has(r.patientId));
+    for (const r of syntheticRequests(syntheticPatients(n), DEMO_PRO)) if (!s.requests.some((x) => x.id === r.id)) s.requests.push(r);
+    await saveDemo();
   },
 
   // Solo demo: volver a los datos de ejemplo.

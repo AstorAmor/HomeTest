@@ -4,19 +4,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ProLayout, useIsWide } from '@/components/pro/ProLayout';
 import { NotesPanel, RequestsPanel, ResultsPanel } from '@/components/pro/PatientPanels';
+import { SharedDataGrid } from '@/components/pro/SharedDataGrid';
 import { Colors, withAlpha } from '@/constants/colors';
 import { portal } from '@/data/specialistPortal';
-import { ConsultRequest, PatientLabResult, PatientSummary } from '@/data/specialistTypes';
+import { ConsultRequest, PatientLabResult, PatientSummary, SharedScope } from '@/data/specialistTypes';
 import { scopeLabel } from '@/data/sharing';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
-import { t as tr } from '@/i18n';
-type Tab = 'results' | 'notes' | 'requests';
+import { dateLocale, t as tr } from '@/i18n';
+type Tab = 'shared' | 'results' | 'notes' | 'requests';
+
+const shortDay = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
 
 const notify = (title: string, body: string) => (Platform.OS === 'web' ? window.alert(`${title}\n\n${body}`) : Alert.alert(title, body));
 
 // Ficha del paciente: datos generales, acciones directas y pestañas
-// (resultados · notas privadas · mensajes y solicitudes).
+// (qué comparte · resultados · notas privadas · mensajes y solicitudes).
 export const ProPatientDetailScreen = () => {
   const router = useRouter();
   const wide = useIsWide();
@@ -24,14 +27,17 @@ export const ProPatientDetailScreen = () => {
   const [patient, setPatient] = useDeepState<PatientSummary | null>(null);
   const [lab, setLab] = useDeepState<PatientLabResult | null>(null);
   const [requests, setRequests] = useDeepState<ConsultRequest[]>([]);
-  const [tab, setTab] = useState<Tab>('results');
+  const [overview, setOverview] = useDeepState<SharedScope[]>([]);
+  const [tab, setTab] = useState<Tab | null>(null); // sin elegir: resultados, o "qué comparte" si no hay analítica
 
   const load = useCallback(async () => {
     const [all, l, reqs] = await Promise.all([portal.listPatients(), portal.patientLab(id).catch(() => null), portal.listRequests(id)]);
-    setPatient(all.find((p) => p.id === id) ?? null);
+    const p = all.find((x) => x.id === id) ?? null;
+    setPatient(p);
     setLab(l);
     setRequests(reqs);
-  }, [id, setPatient, setLab, setRequests]);
+    setOverview(p ? await portal.sharedOverview(p) : []);
+  }, [id, setPatient, setLab, setRequests, setOverview]);
   useReloadOnFocus(load);
 
   if (!patient) return <ProLayout active="patients" title={tr('Patient')}>{null}</ProLayout>;
@@ -54,7 +60,9 @@ export const ProPatientDetailScreen = () => {
     { icon: 'sparkles-outline', label: tr('Generate action plan'), onPress: () => router.push({ pathname: '/pro-plan', params: { patient: patient.id } }), primary: true },
   ];
 
+  const current: Tab = tab ?? (lab ? 'results' : 'shared');
   const tabs: { id: Tab; label: string; count?: number }[] = [
+    { id: 'shared', label: tr('What they share · {n}/{total}', { n: patient.scopes.length, total: overview.length || 11 }) },
     { id: 'results', label: tr('Biomarkers & results'), count: lab ? lab.markers.filter((m) => m.status !== 'in').length : 0 },
     { id: 'notes', label: tr('History & notes') },
     { id: 'requests', label: tr('Messages & requests'), count: requests.filter((r) => r.status === 'open').length },
@@ -78,7 +86,13 @@ export const ProPatientDetailScreen = () => {
           <Text style={styles.sub}>{[patient.age ? tr('{n} years', { n: patient.age }) : null, patient.sex ? tr(patient.sex) : null].filter(Boolean).join(' · ') || tr('Patient')}</Text>
           {patient.goals?.length ? <Text style={styles.sub}>{tr('Goals: {what}', { what: patient.goals.join(', ') })}</Text> : null}
           <Text style={styles.scopes}>
-            {patient.scopes.length ? tr('Shares with you: {what}', { what: patient.scopes.map((s) => tr(scopeLabel(s))).join(', ') }) : tr('Has not shared data with you yet')}
+            {patient.scopes.length
+              ? tr('Shares with you: {what}', { what: patient.scopes.map((s) => tr(scopeLabel(s))).join(', ') })
+              : patient.shareState === 'expired' && patient.shareUntil
+                ? tr('Their permission expired on {date}: you can no longer see their data. Ask them to share it again.', { date: shortDay(patient.shareUntil) })
+                : patient.shareState === 'revoked' && patient.shareUntil
+                  ? tr('They stopped sharing on {date}: you can no longer see their data.', { date: shortDay(patient.shareUntil) })
+                  : tr('Has not shared data with you yet')}
           </Text>
         </View>
       </View>
@@ -94,17 +108,18 @@ export const ProPatientDetailScreen = () => {
 
       <View style={styles.tabs}>
         {tabs.map((t) => (
-          <TouchableOpacity key={t.id} style={[styles.tab, tab === t.id && styles.tabOn]} onPress={() => setTab(t.id)}>
-            <Text style={[styles.tabText, tab === t.id && { color: Colors.textPrimary }]}>{t.label}</Text>
+          <TouchableOpacity key={t.id} style={[styles.tab, current === t.id && styles.tabOn]} onPress={() => setTab(t.id)}>
+            <Text style={[styles.tabText, current === t.id && { color: Colors.textPrimary }]}>{t.label}</Text>
             {!!t.count && <Text style={styles.tabCount}>{t.count}</Text>}
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.panel}>
-        {tab === 'results' && <ResultsPanel lab={lab} />}
-        {tab === 'notes' && <NotesPanel patientId={patient.id} />}
-        {tab === 'requests' && (
+        {current === 'shared' && <SharedDataGrid items={overview} wide={wide} />}
+        {current === 'results' && <ResultsPanel lab={lab} />}
+        {current === 'notes' && <NotesPanel patientId={patient.id} />}
+        {current === 'requests' && (
           <View style={{ gap: 12 }}>
             <TouchableOpacity style={styles.chatLink} onPress={openChat}>
               <Ionicons name="chatbubbles-outline" size={18} color={Colors.accent} />

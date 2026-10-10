@@ -120,6 +120,16 @@ export interface PatientSummary {
   age?: number | null;
   sex?: string | null;
   goals?: string[];
+  // Estado del permiso: compartiendo, aún nada, caducado o retirado (y desde cuándo)
+  shareState?: 'active' | 'none' | 'expired' | 'revoked';
+  shareUntil?: string | null;
+}
+
+// Un dato que el paciente puede compartir y lo que el especialista ve de él
+export interface SharedScope {
+  scope: string;
+  shared: boolean;
+  summary?: string; // resumen de un vistazo (en la demo; con cuentas reales, más adelante)
 }
 
 export interface PatientMarker {
