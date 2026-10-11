@@ -11,32 +11,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { Colors, OnDark } from '@/constants/colors';
 import { buildPlan, PlanItem } from '@/data/planRepository';
-import { profileRepository, Sex } from '@/data/profileRepository';
-import { planImage } from '@/data/planImages';
+import { profileRepository } from '@/data/profileRepository';
+import { BlobArt } from '@/components/BlobArt';
+import { KIND_ART } from '@/data/planCategories';
 import { t as tr } from '@/i18n';
 
 // "Here is your plan": una tarjeta a pantalla completa por cada elemento del plan,
-// con su foto de fondo difuminada, el porqué y las recomendaciones.
+// con su ilustración (icono sobre degradado, como los especialistas), el porqué y las recomendaciones.
 export const PlanIntroScreen = () => {
   const router = useRouter();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
   const [plan, setPlan] = useState<PlanItem[]>([]);
-  const [sex, setSex] = useState<Sex>();
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
     profileRepository
       .get()
-      .then((p) => {
-        setPlan(buildPlan(p));
-        setSex(p.sex);
-      })
+      .then((p) => setPlan(buildPlan(p)))
       .catch(() => setPlan(buildPlan(null)));
   }, []);
 
@@ -69,7 +65,9 @@ export const PlanIntroScreen = () => {
       >
         {plan.map((item, i) => (
           <View key={item.kind} style={{ width, flex: 1 }}>
-            <Image source={planImage(item.kind, sex)} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={6} />
+            <View style={StyleSheet.absoluteFill}>
+              <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={{ width, height: height * 0.6 }} radius={0} iconSize={110} />
+            </View>
             <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
               <Defs>
                 <LinearGradient id={`shade${i}`} x1="0" y1="0" x2="0" y2="1">
@@ -83,9 +81,7 @@ export const PlanIntroScreen = () => {
 
             <SafeAreaView style={styles.page} edges={['top', 'bottom']}>
               <View style={styles.top}>
-                <Text style={styles.counter}>
-                  {i + 1} of {plan.length}
-                </Text>
+                <Text style={styles.counter}>{tr('{a} of {b}', { a: i + 1, b: plan.length })}</Text>
               </View>
 
               <View style={{ flex: 1 }} />

@@ -6,7 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
-import { IntestineIcon } from '@/components/IntestineIcon';
+import { AppIcon } from '@/components/HealthIcons';
+import { AddMeasurementButton } from '@/components/MetricDetailParts';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
@@ -19,6 +20,61 @@ const LEVEL: Record<Observation['level'], { icon: string; color: string }> = {
   ask: { icon: 'help-circle-outline', color: Colors.attention },
   see_doctor: { icon: 'medkit-outline', color: Colors.danger },
 };
+
+// Barras de la semana: la altura es cuántas veces y el color, el que se apuntó (heces u orina)
+const WeekBars = ({
+  days,
+  bars,
+  onDay,
+}: {
+  days: Date[];
+  bars: { count: number | null; swatch?: string; logged: boolean }[];
+  onDay: (d: Date) => void;
+}) => {
+  const max = Math.max(3, ...bars.map((b) => b.count ?? 0));
+  return (
+    <View style={styles.week}>
+      {days.map((d, i) => {
+        const b = bars[i];
+        const h = b.logged ? 6 + ((b.count ?? 0) / max) * 58 : 0;
+        return (
+          <TouchableOpacity key={d.toISOString()} style={styles.dayCol} onPress={() => onDay(d)} activeOpacity={0.7}>
+            <Text style={styles.barCount}>{b.logged && b.count != null ? b.count : ''}</Text>
+            <View style={styles.barTrack}>
+              {b.logged ? (
+                <View style={[styles.bar, { height: h, backgroundColor: b.swatch ?? Colors.textMuted }, !b.count && styles.barZero]} />
+              ) : (
+                <View style={styles.barEmpty} />
+              )}
+            </View>
+            <Text style={styles.dayLabel}>{d.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+};
+
+// Semana de ejemplo mientras no hay nada apuntado (como en glucosa o tensión): se ve cómo quedan
+// las barras y se marca como ejemplo
+const SAMPLE_BOWEL: { count: number; color: string }[] = [
+  { count: 1, color: 'brown' },
+  { count: 2, color: 'light_brown' },
+  { count: 1, color: 'brown' },
+  { count: 0, color: '' },
+  { count: 1, color: 'brown' },
+  { count: 2, color: 'brown' },
+  { count: 1, color: 'light_brown' },
+];
+const SAMPLE_URINE: { count: number; color: string }[] = [
+  { count: 6, color: 'pale' },
+  { count: 7, color: 'pale' },
+  { count: 5, color: 'yellow' },
+  { count: 4, color: 'dark' },
+  { count: 6, color: 'pale' },
+  { count: 7, color: 'clear' },
+  { count: 6, color: 'pale' },
+];
 
 const lastSevenDays = () =>
   Array.from({ length: 7 }, (_, i) => {
@@ -51,9 +107,8 @@ export const DigestiveScreen = () => {
   useReloadOnFocus(load);
 
   const days = lastSevenDays();
-  const today = dayKey(new Date());
-  const bowelToday = entryForDay(bowel, today);
-  const urineToday = entryForDay(urine, today);
+  const bowelSample = !days.some((d) => entryForDay(bowel, dayKey(d)));
+  const urineSample = !days.some((d) => entryForDay(urine, dayKey(d)));
 
   // "Sí, lo explica algo que comí": se apunta en los registros recientes para no volver a preguntar
   const answer = async (o: Observation, value: 'yes' | 'no') => {
@@ -114,7 +169,7 @@ export const DigestiveScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={part === 'gut' ? t('Gut') : part === 'bladder' ? t('Bladder') : t('Gut and bladder')} showBack />
+        <ScreenHeader title={part === 'gut' ? t('Digestion') : part === 'bladder' ? t('Hydration') : t('Digestion and hydration')} showBack />
         <Text style={styles.intro}>
           {part === 'gut'
             ? t('A quick daily note on your digestion.')
@@ -129,31 +184,25 @@ export const DigestiveScreen = () => {
           <>
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <IntestineIcon size={20} color={Colors.green} />
-              <Text style={styles.cardTitle}>{t('Digestion')}</Text>
-              <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-bowel')}>
-                <Text style={styles.logButtonText}>{bowelToday ? t('Edit today') : t('Log today')}</Text>
-              </TouchableOpacity>
+              <AppIcon name="intestine" size={20} color={Colors.green} />
+              <Text style={styles.cardTitle}>{t('Bowel movements')}</Text>
+              <Text style={styles.cardMeta}>{t('Last 7 days')}</Text>
             </View>
-            <View style={styles.week}>
-              {days.map((d) => {
+            <WeekBars
+              days={days}
+              bars={days.map((d, i) => {
+                if (bowelSample) {
+                  const x = SAMPLE_BOWEL[i];
+                  return { count: x.count, swatch: STOOL_COLORS.find((c) => c.id === x.color)?.swatch, logged: true };
+                }
                 const e = entryForDay(bowel, dayKey(d));
-                const swatch = STOOL_COLORS.find((c) => c.id === e?.color)?.swatch;
-                return (
-                  <TouchableOpacity
-                    key={d.toISOString()}
-                    style={styles.dayCol}
-                    onPress={() => router.push({ pathname: '/log-bowel', params: { day: dayKey(d) } })}
-                  >
-                    <Text style={styles.dayLabel}>{d.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}</Text>
-                    <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
-                      {e && <Text style={[styles.dayCount, swatch ? { color: '#FFFFFF' } : null]}>{e.count}</Text>}
-                    </View>
-                  </TouchableOpacity>
-                );
+                return { count: e ? e.count : null, swatch: STOOL_COLORS.find((c) => c.id === e?.color)?.swatch, logged: !!e };
               })}
-            </View>
+              onDay={(d) => router.push({ pathname: '/log-bowel', params: { day: dayKey(d) } })}
+            />
+            {bowelSample && <Text style={styles.sampleText}>{t('Sample week: log your first day to see your own.')}</Text>}
           </View>
+          <AddMeasurementButton onPress={() => router.push('/log-bowel')} />
           <View style={styles.sectionRow}>
             <View style={styles.titleWithInfo}>
               <Text style={styles.sectionTitle}>{t('This week')}</Text>
@@ -172,31 +221,25 @@ export const DigestiveScreen = () => {
           <>
           <View style={[styles.card, showGut && { marginTop: 22 }]}>
             <View style={styles.cardHeader}>
-              <Ionicons name="water-outline" size={20} color={Colors.green} />
+              <AppIcon name="water-outline" size={20} color={Colors.gold} />
               <Text style={styles.cardTitle}>{t('Urine')}</Text>
-              <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-urine')}>
-                <Text style={styles.logButtonText}>{urineToday ? t('Edit today') : t('Log today')}</Text>
-              </TouchableOpacity>
+              <Text style={styles.cardMeta}>{t('Last 7 days')}</Text>
             </View>
-            <View style={styles.week}>
-              {days.map((d) => {
+            <WeekBars
+              days={days}
+              bars={days.map((d, i) => {
+                if (urineSample) {
+                  const x = SAMPLE_URINE[i];
+                  return { count: x.count, swatch: URINE_COLORS.find((c) => c.id === x.color)?.swatch, logged: true };
+                }
                 const e = entryForDay(urine, dayKey(d));
-                const swatch = URINE_COLORS.find((c) => c.id === e?.color)?.swatch;
-                return (
-                  <TouchableOpacity
-                    key={d.toISOString()}
-                    style={styles.dayCol}
-                    onPress={() => router.push({ pathname: '/log-urine', params: { day: dayKey(d) } })}
-                  >
-                    <Text style={styles.dayLabel}>{d.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}</Text>
-                    <View style={[styles.dayDot, swatch ? { backgroundColor: swatch } : e ? styles.dayDotZero : styles.dayDotEmpty]}>
-                      {e?.count != null && <Text style={styles.dayCount}>{e.count}</Text>}
-                    </View>
-                  </TouchableOpacity>
-                );
+                return { count: e ? e.count ?? null : null, swatch: URINE_COLORS.find((c) => c.id === e?.color)?.swatch, logged: !!e };
               })}
-            </View>
+              onDay={(d) => router.push({ pathname: '/log-urine', params: { day: dayKey(d) } })}
+            />
+            {urineSample && <Text style={styles.sampleText}>{t('Sample week: log your first day to see your own.')}</Text>}
           </View>
+          <AddMeasurementButton onPress={() => router.push('/log-urine')} />
           {volume && (
             <TouchableOpacity
               style={styles.volumeCard}
@@ -248,15 +291,16 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   cardTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  logButton: { backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
-  logButtonText: { color: Colors.background, fontSize: 12, fontWeight: '800' },
+  cardMeta: { color: Colors.textMuted, fontSize: 12 },
+  sampleText: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 10 },
   week: { flexDirection: 'row', justifyContent: 'space-between' },
-  dayCol: { alignItems: 'center', gap: 6, flex: 1 },
+  dayCol: { alignItems: 'center', gap: 4, flex: 1 },
   dayLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700' },
-  dayDot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  dayDotEmpty: { borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.cardBorder },
-  dayDotZero: { backgroundColor: Colors.divider },
-  dayCount: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800' },
+  barCount: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800', height: 16 },
+  barTrack: { height: 64, justifyContent: 'flex-end', alignItems: 'center' },
+  bar: { width: 20, borderRadius: 6 },
+  barZero: { backgroundColor: Colors.divider },
+  barEmpty: { width: 20, height: 6, borderRadius: 3, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.cardBorder },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 20 },
   titleWithInfo: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 16, marginBottom: 10 },

@@ -21,8 +21,8 @@ export function sampleSimpleEntries(mockId: 'sugar' | 'cholesterol' | 'cortisol'
 }
 
 export function sampleBloodPressure(): BloodPressureEntry[] {
-  const sys = [118, 122, 119, 125, 121, 120];
-  const dia = [78, 81, 77, 83, 80, 80];
+  const sys = [118, 122, 119, 134, 121, 120]; // una toma normal-alta para que se vea el check amarillo
+  const dia = [78, 81, 77, 86, 80, 80];
   const pulse = [64, 66, 63, 68, 65, 64];
   const dates = weekly(sys.length);
   return sys.map((s, i) => ({

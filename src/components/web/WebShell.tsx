@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useGlobalSearchParams, usePathname, useRouter, useSegments } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { KuovaWordmark } from '@/components/KuovaLogo';
-import { IntestineIcon } from '@/components/IntestineIcon';
+import { AppIcon } from '@/components/HealthIcons';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useAuth } from '@/context/AuthContext';
 import { AppSection, useSections } from '@/data/appPrefs';
@@ -20,7 +20,7 @@ interface NavItem {
   id: string;
   label: string;
   // Los mismos iconos que ya usa la app para cada cosa (pestañas, Más, Mis datos, secciones),
-  // siempre en su versión de contorno: Ionicons, 'mci:<nombre>' (MaterialCommunityIcons) o 'intestine'
+  // siempre en su versión de contorno (nombres de AppIcon: Ionicons, 'mci:<nombre>' o los propios)
   icon: string;
   color: string;
   pathname: string;
@@ -31,7 +31,7 @@ interface NavItem {
 
 // "Hoy" es el resumen (estilo propio de Kuova); la pantalla Hoy de la app no sale en la web
 const TOP: NavItem[] = [
-  { id: 'today', label: 'Today', icon: 'heart-outline', color: Colors.accent, pathname: '/resumen' },
+  { id: 'today', label: 'Today', icon: 'sunny-outline', color: Colors.accent, pathname: '/resumen' },
   { id: 'sharing', label: 'Sharing', icon: 'shield-checkmark-outline', color: Colors.sky, pathname: '/sharing' },
 ];
 
@@ -40,12 +40,12 @@ const CATEGORIES: NavItem[] = [
   { id: 'mydata', label: 'My Data', icon: 'analytics-outline', color: Colors.accent, pathname: '/(tabs)', tab: 1 },
   { id: 'activity', label: 'Activity', icon: 'footsteps-outline', color: Colors.sky, pathname: '/metric', params: { kind: 'steps' }, section: 'wearables' },
   { id: 'sleep', label: 'Sleep', icon: 'moon-outline', color: Colors.violet, pathname: '/metric', params: { kind: 'sleep_duration' }, section: 'wearables' },
-  { id: 'heart', label: 'Heart', icon: 'pulse-outline', color: Colors.coral, pathname: '/metric', params: { kind: 'resting_heart_rate' }, section: 'wearables' },
+  { id: 'heart', label: 'Heart', icon: 'heart-outline', color: Colors.coral, pathname: '/metric', params: { kind: 'resting_heart_rate' }, section: 'wearables' },
   { id: 'bp', label: 'Blood pressure', icon: 'speedometer-outline', color: Colors.coral, pathname: '/blood-pressure-detail' },
-  { id: 'glucose', label: 'Glucose', icon: 'water-outline', color: Colors.accent, pathname: '/glucose-detail' },
+  { id: 'glucose', label: 'Glucose', icon: 'glucose', color: Colors.accent, pathname: '/glucose-detail' },
   { id: 'cycle', label: 'Cycle', icon: 'rose-outline', color: Colors.pinkSoft, pathname: '/cycle-detail', section: 'cycle' },
-  { id: 'gut', label: 'Gut', icon: 'intestine', color: Colors.green, pathname: '/digestive', params: { part: 'gut' }, section: 'gut' },
-  { id: 'bladder', label: 'Bladder', icon: 'beaker-outline', color: Colors.gold, pathname: '/digestive', params: { part: 'bladder' }, section: 'bladder' },
+  { id: 'gut', label: 'Digestion', icon: 'intestine', color: Colors.green, pathname: '/digestive', params: { part: 'gut' }, section: 'gut' },
+  { id: 'bladder', label: 'Hydration', icon: 'water-outline', color: Colors.gold, pathname: '/digestive', params: { part: 'bladder' }, section: 'bladder' },
   { id: 'meds', label: 'Medication', icon: 'medical-outline', color: Colors.gold, pathname: '/medications', section: 'medication' },
   { id: 'nutrition', label: 'Nutrition', icon: 'nutrition-outline', color: Colors.green, pathname: '/nutrients' },
   { id: 'genetics', label: 'Family history', icon: 'mci:dna', color: Colors.gold, pathname: '/genetic-profile' },
@@ -104,10 +104,7 @@ export function useIsShellRoot(): boolean {
 
 // Iconos en un solo tono; el color de la categoría solo en la entrada activa
 const NavIcon = ({ item, on }: { item: NavItem; on: boolean }) => {
-  const color = on ? item.color : Colors.textSecondary;
-  if (item.icon === 'intestine') return <IntestineIcon size={19} color={color} />;
-  if (item.icon.startsWith('mci:')) return <MaterialCommunityIcons name={item.icon.slice(4) as any} size={19} color={color} />;
-  return <Ionicons name={item.icon as any} size={19} color={color} />;
+  return <AppIcon name={item.icon} size={19} color={on ? item.color : Colors.textSecondary} />;
 };
 
 export const WebShell = ({ children }: { children: React.ReactNode }) => {

@@ -25,8 +25,8 @@ import { buildSummary, SummaryLine } from '@/logic/summary';
 import { loadNutrientFocus, nutrientsDoneToday } from '@/screens/NutrientsScreen';
 import { dateLocale, t } from '@/i18n';
 import { computeAchievements } from '@/data/achievements';
-import { planImage } from '@/data/planImages';
-import { Image } from 'expo-image';
+import { BlobArt } from '@/components/BlobArt';
+import { KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
 import { InboxItem, nudgeStore } from '@/data/nudgeStore';
@@ -34,6 +34,7 @@ import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/ba
 import { hydrationFromUrine, HYDRATION_SCALE } from '@/logic/bathroom';
 import { BowelEntry, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
 import { GaugeBar } from '@/components/GaugeBar';
+import { IconBadge } from '@/components/HealthIcons';
 import { thermometerRepository } from '@/data/temperatureRepository';
 import { doseRepository, medicationRepository } from '@/data/medicationRepository';
 import { dosesForDay, isActiveOn, isReminderMuted } from '@/logic/medication';
@@ -274,13 +275,7 @@ export const TodayScreen = () => {
     return { value: nutrients.total ? nutrients.done / nutrients.total : 0, text: t('{done}/{total} done today', { done: nutrients.done, total: nutrients.total }) };
   };
 
-  const onPlanPress = (kind: PlanItemKind) => {
-    if (kind === 'strength') router.push('/log-workout');
-    else if (kind === 'steps') router.push({ pathname: '/metric', params: { kind: 'steps' } });
-    else if (kind === 'sleep') router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } });
-    else if (kind === 'mindfulness') router.push({ pathname: '/exercise', params: { id: 'box_breathing' } });
-    else router.push('/nutrients');
-  };
+  const onPlanPress = (kind: PlanItemKind) => router.push(planItemRoute(kind) as any);
   const medShown = medOpen ?? dosesToday.some((d) => reminderIds.includes(d.medId));
 
   return (
@@ -508,6 +503,8 @@ export const TodayScreen = () => {
           {sugar && (
             <BiomarkerCard
               name={t('Sugar')}
+              icon="glucose"
+              iconColor={Colors.accent}
               value={sugar.valor}
               unit={sugar.unidad}
               status={t(sugar.statusLabel)}
@@ -518,6 +515,8 @@ export const TodayScreen = () => {
           {bp && (
             <BiomarkerCard
               name={t('Blood pressure')}
+              icon="speedometer-outline"
+              iconColor={Colors.coral}
               value={bp.valor}
               unit={bp.unidad}
               status={t(bp.statusLabel)}
@@ -529,6 +528,8 @@ export const TodayScreen = () => {
             <>
               <BiomarkerCard
                 name={t('Resting HR')}
+                icon="heart-outline"
+                iconColor={Colors.coral}
                 value={rhr != null ? String(rhr) : '—'}
                 unit="bpm"
                 status={t(vsUsual(series.resting_heart_rate, false).label)}
@@ -537,6 +538,8 @@ export const TodayScreen = () => {
               />
               <BiomarkerCard
                 name={t('HRV')}
+                icon="pulse-outline"
+                iconColor={Colors.accent}
                 value={hrv != null ? String(hrv) : '—'}
                 unit="ms"
                 status={t(vsUsual(series.hrv, true).label)}
@@ -545,6 +548,8 @@ export const TodayScreen = () => {
               />
               <BiomarkerCard
                 name={t('Temperature')}
+                icon="thermometer-outline"
+                iconColor={Colors.pinkSoft}
                 value={temp != null ? temp.toFixed(1) : '—'}
                 unit="°C"
                 status={temp != null && temp >= 36.1 && temp <= 37.2 ? t('Normal') : t('Check')}
@@ -588,7 +593,9 @@ export const TodayScreen = () => {
             const tone = !b ? Colors.textMuted : status === 'Regular' ? Colors.ok : status === 'See note' ? Colors.attention : Colors.warning;
             return (
               <BiomarkerCard
-                name={t('Gut')}
+                name={t('Digestion')}
+                icon="intestine"
+                iconColor={Colors.green}
                 value={b ? String(b.count) : '—'}
                 unit={b?.count === 1 ? t('time') : t('times')}
                 status={t(status)}
@@ -603,7 +610,9 @@ export const TodayScreen = () => {
             const tone = { good: Colors.ok, tip: Colors.warning, low: Colors.attention, check: Colors.attention, unknown: Colors.textMuted }[h.level];
             return (
               <BiomarkerCard
-                name={t('Bladder')}
+                name={t('Hydration')}
+                icon="water-outline"
+                iconColor={Colors.gold}
                 value={u?.count != null ? String(u.count) : '—'}
                 unit={t('times')}
                 status={t(h.label)}
@@ -632,7 +641,7 @@ export const TodayScreen = () => {
             <View style={styles.sectionHeaderRow}>
               <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>{t('Your plan')}</Text>
               <TouchableOpacity onPress={() => router.push('/action-plan')} hitSlop={8}>
-                <Text style={styles.link}>{t('Full view')}</Text>
+                <Text style={styles.link}>{t('Full plan')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.planList}>
@@ -646,11 +655,10 @@ export const TodayScreen = () => {
                     onPress={() => onPlanPress(item.kind)}
                     activeOpacity={0.85}
                   >
-                    <View style={styles.planThumb}>
-                      <Image source={planImage(item.kind, profile?.sex)} style={StyleSheet.absoluteFill} contentFit="cover" />
-                    </View>
+                    <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={50} radius={14} iconSize={24} />
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.planTitle}>{item.kind === 'nutrition' ? t('Your nutrients') : t(item.title)}</Text>
+                      <Text style={styles.planCategory}>{t(PLAN_CATEGORIES.find((c) => c.id === KIND_CATEGORY[item.kind])!.title)}</Text>
+                      <Text style={styles.planTitle}>{planItemTitle(item, t)}</Text>
                       <View style={styles.planBarTrack}>
                         <View
                           style={[
@@ -679,7 +687,7 @@ export const TodayScreen = () => {
             <Text style={styles.planNote}>{t('Built from your answers. Your results will add to it when they arrive.')}</Text>
             <TouchableOpacity style={styles.fullPlanLink} onPress={() => router.push('/plans')} activeOpacity={0.8}>
               <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
-              <Text style={styles.fullPlanLinkText}>{t('See your full plan and earlier ones')}</Text>
+              <Text style={styles.fullPlanLinkText}>{t('Earlier plans')}</Text>
               <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
             </TouchableOpacity>
           </>
@@ -697,7 +705,7 @@ export const TodayScreen = () => {
         {show('specialists') && (
           <>
             <Text style={styles.sectionTitle}>{t('Talk to a specialist')}</Text>
-            <SpecialistCarousel onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
+            <SpecialistCarousel loop onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
           </>
         )}
 
@@ -741,6 +749,8 @@ const SmallRing = ({
 
 const BiomarkerCard = ({
   name,
+  icon,
+  iconColor,
   value,
   unit,
   status,
@@ -750,6 +760,8 @@ const BiomarkerCard = ({
   children,
 }: {
   name: string;
+  icon: string;
+  iconColor: string;
   value: string;
   unit: string;
   status: string;
@@ -759,7 +771,10 @@ const BiomarkerCard = ({
   children?: React.ReactNode; // p. ej. una regla con el rango normal
 }) => (
   <TouchableOpacity style={[styles.biomarkerCard, wide && styles.biomarkerCardWide]} onPress={onPress} activeOpacity={0.85}>
-    <Text style={styles.biomarkerName}>{name}</Text>
+    <View style={styles.biomarkerHead}>
+      <Text style={styles.biomarkerName}>{name}</Text>
+      <IconBadge name={icon} color={iconColor} size={28} />
+    </View>
     <View style={styles.biomarkerValueRow}>
       <Text style={[styles.biomarkerValue, value.length > 5 && !wide && styles.biomarkerValueLong]}>{value}</Text>
       <Text style={styles.biomarkerUnit}> {unit.split(' ')[0]}</Text>
@@ -1082,11 +1097,12 @@ const styles = StyleSheet.create({
   biomarkerCardWide: {
     width: '100%',
   },
+  biomarkerHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
   biomarkerName: {
+    flex: 1,
     color: Colors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
-    marginBottom: 10,
   },
   biomarkerValueRow: {
     flexDirection: 'row',
@@ -1136,14 +1152,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
   },
-  planThumb: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  planCategory: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
   planIcon: {
     width: 46,
     height: 46,

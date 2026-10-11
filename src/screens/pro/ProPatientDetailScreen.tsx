@@ -23,7 +23,18 @@ const notify = (title: string, body: string) => (Platform.OS === 'web' ? window.
 export const ProPatientDetailScreen = () => {
   const router = useRouter();
   const wide = useIsWide();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>();
+  // Se vuelve a donde se abrió (bandeja o agenda); si no, a Mis pacientes
+  const origin =
+    from === 'inbox'
+      ? { section: 'inbox' as const, label: tr('Inbox'), href: '/pro-inbox' }
+      : from === 'agenda'
+        ? { section: 'agenda' as const, label: tr('Agenda'), href: '/pro' }
+        : { section: 'patients' as const, label: tr('My patients'), href: '/pro-patients' };
+  const back = {
+    label: origin.label,
+    onPress: () => (router.canGoBack() ? router.back() : router.replace(origin.href as any)),
+  };
   const [patient, setPatient] = useDeepState<PatientSummary | null>(null);
   const [lab, setLab] = useDeepState<PatientLabResult | null>(null);
   const [requests, setRequests] = useDeepState<ConsultRequest[]>([]);
@@ -40,7 +51,12 @@ export const ProPatientDetailScreen = () => {
   }, [id, setPatient, setLab, setRequests, setOverview]);
   useReloadOnFocus(load);
 
-  if (!patient) return <ProLayout active="patients" title={tr('Patient')}>{null}</ProLayout>;
+  if (!patient)
+    return (
+      <ProLayout active={origin.section} title={tr('Patient')} back={back}>
+        {null}
+      </ProLayout>
+    );
 
   const openChat = async () => {
     try {
@@ -70,10 +86,11 @@ export const ProPatientDetailScreen = () => {
 
   return (
     <ProLayout
-      active="patients"
+      active={origin.section}
       title={patient.name}
+      back={back}
       right={
-        <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace('/pro-patients'))}>
+        <TouchableOpacity onPress={back.onPress}>
           <Ionicons name="close" size={24} color={Colors.textSecondary} />
         </TouchableOpacity>
       }

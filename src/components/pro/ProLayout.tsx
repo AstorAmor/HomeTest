@@ -52,9 +52,11 @@ interface Props {
   children: React.ReactNode;
   scroll?: boolean; // false cuando la pantalla gestiona su propio scroll
   badge?: Partial<Record<ProSection, number>>;
+  // Flecha para volver (p. ej. de la ficha de un paciente a la bandeja) sin pasar por el menú
+  back?: { label: string; onPress: () => void };
 }
 
-export const ProLayout = ({ active, title, right, children, scroll = true, badge }: Props) => {
+export const ProLayout = ({ active, title, right, children, scroll = true, badge, back }: Props) => {
   const router = useRouter();
   const wide = useIsWide();
   const me = useProIdentity();
@@ -71,7 +73,15 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
 
   const header = (
     <View style={styles.header}>
-      <Text style={styles.title}>{title}</Text>
+      <View style={{ flex: 1 }}>
+        {back && (
+          <TouchableOpacity style={styles.back} onPress={back.onPress} hitSlop={8}>
+            <Ionicons name="chevron-back" size={18} color={Colors.accent} />
+            <Text style={styles.backText}>{back.label}</Text>
+          </TouchableOpacity>
+        )}
+        <Text style={styles.title}>{title}</Text>
+      </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>{right}</View>
     </View>
   );
@@ -193,6 +203,8 @@ const styles = StyleSheet.create({
   main: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10 },
   title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900' },
+  back: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start', marginBottom: 4, marginLeft: -4 },
+  backText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   demo: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: 20, marginBottom: 8 },
   demoText: { color: Colors.warning, fontSize: 12, fontWeight: '600', flexShrink: 1 },
   body: { paddingHorizontal: 20, paddingBottom: 32 },

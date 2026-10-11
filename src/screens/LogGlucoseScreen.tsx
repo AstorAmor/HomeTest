@@ -13,16 +13,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Colors } from '@/constants/colors';
+import { GlucoseIcon } from '@/components/HealthIcons';
+import { WheelPicker } from '@/components/WheelPicker';
 import { MealType, MEAL_TYPE_LABEL } from '@/types/glucose';
 import { saveGlucoseEntry, updateGlucoseEntry, deleteGlucoseEntry, getGlucoseEntries } from '@/data/glucoseRepository';
 
 const MEAL_OPTIONS: MealType[] = ['desayuno', 'comida', 'cena', 'unspecified'];
-const KEYPAD_ROWS = [
-  ['1', '2', '3'],
-  ['4', '5', '6'],
-  ['7', '8', '9'],
-  ['.', '0', 'del'],
-];
+// Dos ruedas: decenas (de 2 a 40, es decir 20-409 mg/dL) y unidades. Más rápido que teclear.
+const TENS = Array.from({ length: 39 }, (_, i) => String(i + 2));
+const UNITS = Array.from({ length: 10 }, (_, i) => String(i));
+const toWheels = (v: number) => {
+  const n = Math.max(20, Math.min(409, Math.round(v)));
+  return { tens: Math.floor(n / 10) - 2, units: n % 10 };
+};
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
@@ -36,33 +39,36 @@ export const LogGlucoseScreen = () => {
   const isEditing = !!id;
 
   const [dateTime, setDateTime] = useState(new Date());
-  const [value, setValue] = useState('');
+  const [tens, setTens] = useState(toWheels(90).tens);
+  const [units, setUnits] = useState(toWheels(90).units);
+  const [wheelKey, setWheelKey] = useState(0); // vuelve a montar las ruedas al cargar un valor
+  const value = (tens + 2) * 10 + units;
+  const setValueOnWheels = (v: number) => {
+    const w = toWheels(v);
+    setTens(w.tens);
+    setUnits(w.units);
+    setWheelKey((k) => k + 1);
+  };
   const [mealType, setMealType] = useState<MealType>('unspecified');
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
   const [showMealPicker, setShowMealPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Al editar, las ruedas empiezan en ese valor; si no, en la última medición (o en 90)
   useEffect(() => {
-    if (!id) return;
     getGlucoseEntries().then((entries) => {
-      const existing = entries.find((e) => e.id === id);
+      const existing = id ? entries.find((e) => e.id === id) : undefined;
       if (existing) {
-        setValue(String(existing.valor));
+        setValueOnWheels(existing.valor);
         setDateTime(new Date(existing.fecha));
         setMealType(existing.mealType);
+      } else if (!id && entries.length) {
+        const last = [...entries].sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
+        setValueOnWheels(last.valor);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  const onKeyPress = (key: string) => {
-    if (key === 'del') {
-      setValue((v) => v.slice(0, -1));
-      return;
-    }
-    if (key === '.' && value.includes('.')) return;
-    if (value.length >= 6) return;
-    setValue((v) => v + key);
-  };
 
   const onPickerChange = (_event: unknown, selected?: Date) => {
     if (Platform.OS === 'android') setPickerMode(null);
@@ -80,8 +86,7 @@ export const LogGlucoseScreen = () => {
   };
 
   const handleSave = async () => {
-    const numericValue = parseFloat(value);
-    if (Number.isNaN(numericValue) || numericValue <= 0) return;
+    const numericValue = value;
 
     setSaving(true);
     try {
@@ -113,7 +118,7 @@ export const LogGlucoseScreen = () => {
     router.back();
   };
 
-  const isValid = value.trim() !== '' && !Number.isNaN(parseFloat(value));
+  const isValid = value > 0;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -132,7 +137,7 @@ export const LogGlucoseScreen = () => {
 
       <View style={styles.header}>
         <View style={styles.iconBadge}>
-          <Ionicons name="pulse" size={26} color={Colors.accent} />
+          <GlucoseIcon size={28} color={Colors.accent} />
         </View>
         <Text style={styles.title}>{t('Blood Glucose')}</Text>
       </View>
@@ -154,37 +159,21 @@ export const LogGlucoseScreen = () => {
 
         <View style={styles.row}>
           <Text style={styles.rowLabel}>{t('Blood Glucose')}</Text>
-          <Text style={styles.rowValuePlain}>
-            {value ? `${value} mg/dL` : 'mg/dL'}
-          </Text>
+          <Text style={styles.rowValuePlain}>{value} mg/dL</Text>
         </View>
 
         <TouchableOpacity style={styles.row} onPress={() => setShowMealPicker(true)}>
           <Text style={styles.rowLabel}>{t('Meal Time')}</Text>
           <View style={styles.rowValuePill}>
-            <Text style={styles.rowValueText}>{MEAL_TYPE_LABEL[mealType]}</Text>
+            <Text style={styles.rowValueText}>{t(MEAL_TYPE_LABEL[mealType])}</Text>
           </View>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.keypad}>
-        {KEYPAD_ROWS.map((row, i) => (
-          <View key={i} style={styles.keypadRow}>
-            {row.map((key) => (
-              <TouchableOpacity
-                key={key}
-                style={styles.key}
-                onPress={() => onKeyPress(key)}
-              >
-                {key === 'del' ? (
-                  <Ionicons name="backspace-outline" size={22} color={Colors.textPrimary} />
-                ) : (
-                  <Text style={styles.keyText}>{key}</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
+      <View style={styles.wheels} key={wheelKey}>
+        <WheelPicker items={TENS} selectedIndex={tens} onChange={setTens} width={80} />
+        <WheelPicker items={UNITS} selectedIndex={units} onChange={setUnits} width={64} />
+        <Text style={styles.wheelUnit}>mg/dL</Text>
       </View>
 
       {isEditing && (
@@ -225,7 +214,7 @@ export const LogGlucoseScreen = () => {
                     option === mealType && { color: Colors.accent },
                   ]}
                 >
-                  {MEAL_TYPE_LABEL[option]}
+                  {t(MEAL_TYPE_LABEL[option])}
                 </Text>
                 {option === mealType && (
                   <Ionicons name="checkmark" size={18} color={Colors.accent} />
@@ -317,28 +306,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  keypad: {
-    marginHorizontal: 20,
-    gap: 10,
-  },
-  keypadRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  key: {
-    flex: 1,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  keyText: {
-    color: Colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '600',
-  },
+  wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700', marginLeft: 8 },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

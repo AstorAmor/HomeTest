@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import Svg, { Path, Polygon, Circle, Line } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
+import { num, t } from '@/i18n';
 import { axisLabel, axisPadding, getResponseProfile, HORIZON_MONTHS, projectionCurve } from '@/logic/projection';
 
 interface ProjectionChartProps {
@@ -74,8 +75,8 @@ export const ProjectionChart = ({
     <View>
       <View style={styles.chartRow}>
         <View style={styles.yAxis}>
-          <Text style={styles.axisLabel}>{axisLabel(max, max - min)}</Text>
-          <Text style={styles.axisLabel}>{axisLabel(min, max - min)}</Text>
+          <Text style={styles.axisLabel}>{num(axisLabel(max, max - min))}</Text>
+          <Text style={styles.axisLabel}>{num(axisLabel(min, max - min))}</Text>
         </View>
         <Svg width={chartWidth} height={CHART_HEIGHT}>
           <Line
@@ -97,17 +98,17 @@ export const ProjectionChart = ({
         <View style={styles.yAxisSpacer} />
         <View style={[styles.xAxisLabels, { width: chartWidth }]}>
           <Text style={styles.axisLabel}>
-            Now · {currentValue}
+            {t('Now')} · {num(currentValue)}
             {unit}
           </Text>
-          <Text style={[styles.axisLabel, styles.midLabel, { left: midX - MID_LABEL_WIDTH / 2 }]}>3 mo</Text>
+          <Text style={[styles.axisLabel, styles.midLabel, { left: midX - MID_LABEL_WIDTH / 2 }]}>{t('3 mo')}</Text>
           <Text style={styles.axisLabel}>
-            6 mo · ~{expectedValueIn6Months}
+            {t('6 mo')} · ~{num(expectedValueIn6Months)}
             {unit}
           </Text>
         </View>
       </View>
-      {note && <Text style={styles.note}>{note}</Text>}
+      {note && <Text style={styles.note}>{t(note)}</Text>}
     </View>
   );
 };

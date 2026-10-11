@@ -12,6 +12,8 @@ export default function CholesterolDetail() {
     <SimpleMetricDetailScreen
       title={t('Total Cholesterol')}
       color={Colors.accent}
+      icon="analytics-outline"
+      band={{ low: 125, high: 200 }}
       loadEntries={async () => {
         const entries = await cholesterolRepository.getAll();
         return entries.map((e) => ({

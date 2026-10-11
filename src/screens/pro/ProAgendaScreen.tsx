@@ -118,7 +118,7 @@ export const ProAgendaScreen = () => {
                   <Ionicons name="close" size={16} color={Colors.danger} />
                   <Text style={[styles.btnGhostText, { color: Colors.danger }]}>{t('Decline')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.btnGhost} onPress={() => router.push({ pathname: '/pro-patient', params: { id: a.patientId } })}>
+                <TouchableOpacity style={styles.btnGhost} onPress={() => router.push({ pathname: '/pro-patient', params: { id: a.patientId, from: 'agenda' } })}>
                   <Text style={styles.btnGhostText}>{t('Patient')}</Text>
                 </TouchableOpacity>
               </View>
@@ -211,7 +211,7 @@ export const ProAgendaScreen = () => {
                   <Text style={styles.btnText}>{t('Start consultation')}</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={styles.btnGhost} onPress={() => router.push({ pathname: '/pro-patient', params: { id: a.patientId } })}>
+              <TouchableOpacity style={styles.btnGhost} onPress={() => router.push({ pathname: '/pro-patient', params: { id: a.patientId, from: 'agenda' } })}>
                 <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
                 <Text style={styles.btnGhostText}>{t('View history')}</Text>
               </TouchableOpacity>

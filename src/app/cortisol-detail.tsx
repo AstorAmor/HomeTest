@@ -12,6 +12,7 @@ export default function CortisolDetail() {
     <SimpleMetricDetailScreen
       title={t('Cortisol')}
       color={Colors.warning}
+      icon="sunny-outline"
       loadEntries={async () => {
         const entries = await cortisolRepository.getAll();
         return entries.map((e) => ({

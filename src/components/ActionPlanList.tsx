@@ -5,6 +5,8 @@ import { ProjectionChart } from "@/components/ProjectionChart";
 import { InfoButton } from "@/components/InfoButton";
 import { Colors } from "@/constants/colors";
 import { currentReport } from "@/data/reportRepository";
+import { actionCategory, PlanCategory } from "@/data/planCategories";
+import { t } from "@/i18n";
 import {
   getActionPlanContentEn,
   getMarkerDisplayNameEn,
@@ -18,9 +20,9 @@ const CONFIDENCE_COLOR: Record<string, string> = {
 };
 
 const CONFIDENCE_LABEL_EN: Record<string, string> = {
-  alta: "High",
-  media: "Medium",
-  baja: "Low",
+  alta: "High confidence",
+  media: "Medium confidence",
+  baja: "Low confidence",
 };
 
 const PROVENANCE_LABEL: Record<string, string> = {
@@ -31,14 +33,15 @@ const PROVENANCE_LABEL: Record<string, string> = {
 
 // "Your action plan" del último informe: acciones con el porqué, cómo hacerlo,
 // avisos y la proyección del marcador a 6 meses. Se usa en el informe (/report-plan)
-// y en "Full view" desde Today (/action-plan).
-export const ActionPlanList = () => {
-  const actionPlan = [...currentReport.action_plan].sort(
-    (a, b) => Number(b.pinned) - Number(a.pinned),
-  );
+// y, por bloques (hábitos, actividad, nutrición), en el "Plan completo" (/action-plan).
+export const ActionPlanList = ({ category, compact }: { category?: PlanCategory; compact?: boolean } = {}) => {
+  const actionPlan = [...currentReport.action_plan]
+    .filter((a) => !category || actionCategory(a.action_id) === category)
+    .sort((a, b) => Number(b.pinned) - Number(a.pinned));
+  if (!actionPlan.length) return null;
 
   return (
-    <View style={styles.actionList}>
+    <View style={[styles.actionList, compact && styles.actionListCompact]}>
       {actionPlan.map((item) => {
         const content = getActionPlanContentEn(item.action_id, {
           title: item.title,
@@ -62,7 +65,7 @@ export const ActionPlanList = () => {
                     { color: CONFIDENCE_COLOR[item.confidence] },
                   ]}
                 >
-                  {CONFIDENCE_LABEL_EN[item.confidence]} confidence
+                  {t(CONFIDENCE_LABEL_EN[item.confidence])}
                 </Text>
               </View>
             </View>
@@ -87,7 +90,7 @@ export const ActionPlanList = () => {
             <View style={styles.projectionWrap}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <Text style={styles.projectionLabel}>
-                  Projected:{" "}
+                  {t("Projected:")}{" "}
                   {getMarkerDisplayNameEn(
                     item.estimated_next_test.marker_id,
                     item.estimated_next_test.marker_id.replace(/_/g, " "),
@@ -105,12 +108,12 @@ export const ActionPlanList = () => {
                 expectedRangeHigh={item.estimated_next_test.expected_range_high}
               />
               <Text style={styles.uncertaintyNote}>
-                {PROJECTION_UNCERTAINTY_NOTE_EN}
+                {t(PROJECTION_UNCERTAINTY_NOTE_EN)}
               </Text>
             </View>
 
             <Text style={styles.provenanceText}>
-              {PROVENANCE_LABEL[item.provenance]}
+              {t(PROVENANCE_LABEL[item.provenance])}
             </Text>
           </View>
         );
@@ -126,6 +129,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 28,
   },
+  actionListCompact: { marginTop: 0, marginBottom: 8 },
   actionCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -154,7 +158,6 @@ const styles = StyleSheet.create({
   confidenceText: {
     fontSize: 10,
     fontWeight: "700",
-    textTransform: "capitalize",
   },
   actionWhy: {
     color: Colors.textSecondary,

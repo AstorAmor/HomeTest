@@ -7,7 +7,7 @@ import { t } from '@/i18n';
 
 export interface NutrientFocus {
   id: string;
-  icon: string; // MaterialCommunityIcons
+  icon: string; // MaterialCommunityIcons, salvo 'iron' (el "Fe" propio)
   title: string;
   why: string;
   foods: string;
@@ -28,7 +28,7 @@ export function nutrientFocus(markers: FlaggedMarker[], planTips: string[] = [])
   if (has(['ferritin', 'iron', 'transferrin_saturation', 'hemoglobin'], low))
     out.push({
       id: 'iron',
-      icon: 'water',
+      icon: 'iron', // "Fe" (propio): una gota se confunde con la sangre
       title: t('More iron'),
       why: t('Your iron stores (ferritin) came out low.'),
       foods: t('Lentils, chickpeas, clams or mussels, and red meat once or twice a week. Add vitamin C (pepper, citrus) and keep coffee and tea away from meals.'),

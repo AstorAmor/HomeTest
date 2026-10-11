@@ -22,8 +22,10 @@ import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import { CycleStrip } from '@/components/CycleStrip';
 import { useSections } from '@/data/appPrefs';
-import { dateLocale, t } from '@/i18n';
+import { dateLocale, num, t } from '@/i18n';
 import { useWebShell } from '@/web/webMode';
+import { IconBadge } from '@/components/HealthIcons';
+import { kuovaAge } from '@/logic/kuovaAge';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -171,9 +173,9 @@ export const MyDataScreen = () => {
 
   // Biomarcadores: primero lo que la persona ha medido; lo que no, "apagado" como incentivo
   const biomarkers = [
-    { key: 'sugar', title: 'Sugar', icon: 'water', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
-    { key: 'chol', title: 'Total cholesterol', icon: 'analytics', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
-    { key: 'cortisol', title: 'Cortisol', icon: 'sunny', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
+    { key: 'sugar', title: 'Sugar', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
+    { key: 'chol', title: 'Total cholesterol', icon: 'analytics-outline', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
+    { key: 'cortisol', title: 'Cortisol', icon: 'sunny-outline', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
   ].sort((a, b) => Number(!a.data || a.data.isSample) - Number(!b.data || b.data.isSample));
 
   return (
@@ -186,31 +188,30 @@ export const MyDataScreen = () => {
           const now = currentReport.summary.phenoage;
           const before = baselineReport.summary.phenoage;
           if (!now.available) return null;
-          const mid = (p: typeof now) => (p.low + p.high) / 2;
-          const younger = now.chronological_age - mid(now);
-          const n = Math.round(Math.abs(younger));
+          const k = kuovaAge(now);
+          const change = before.available ? Math.round((k.age - kuovaAge(before).age) * 10) / 10 : 0;
           return (
             <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.85}>
               <View style={styles.bioAgeHeader}>
                 <Ionicons name="hourglass-outline" size={18} color={Colors.accent} />
-                <Text style={styles.bioAgeTitle}>{t('Your biological age')}</Text>
+                <Text style={styles.bioAgeTitle}>{t('Your KUOVA age')}</Text>
                 <Text style={styles.bioAgeTag}>{t('sample')}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </View>
               <View style={styles.bioAgeValueRow}>
-                <Text style={styles.bioAgeValue}>
-                  {Math.round(now.low)}–{Math.round(now.high)}
-                </Text>
+                <Text style={styles.bioAgeValue}>{num(k.age.toFixed(1))}</Text>
                 <Text style={styles.bioAgeUnit}>{t('years')}</Text>
+                <View style={styles.bioAgeConfidence}>
+                  <Ionicons name="checkmark-circle" size={14} color={Colors.ok} />
+                  <Text style={styles.bioAgeConfidenceText}>{t('{n}% confidence', { n: k.confidence })}</Text>
+                </View>
               </View>
               <Text style={styles.bioAgeSub}>
-                {t(younger >= 0 ? (n === 1 ? 'About {n} year younger than your age ({age})' : 'About {n} years younger than your age ({age})') : n === 1 ? 'About {n} year older than your age ({age})' : 'About {n} years older than your age ({age})', {
-                  n,
+                {t(k.diff >= 0 ? 'About {n} years younger than your age ({age})' : 'About {n} years older than your age ({age})', {
+                  n: num(Math.abs(k.diff).toFixed(1)),
                   age: now.chronological_age,
                 })}
-                {before.available && mid(before) > mid(now)
-                  ? t(' · down from {low}–{high} at your previous test', { low: Math.round(before.low), high: Math.round(before.high) })
-                  : ''}
+                {change < 0 ? t(' · {n} since your previous test', { n: `−${num(Math.abs(change).toFixed(1))}` }) : ''}
               </Text>
             </TouchableOpacity>
           );
@@ -235,19 +236,19 @@ export const MyDataScreen = () => {
         {/* Orden pedido: pasos, sueño, calorías, pulso en reposo y variabilidad */}
         {show('wearables') && (
           <>
-            <MetricCard title={t('Steps')} icon="footsteps" iconColor={Colors.sky} value={steps.latest} avg={t('avg {v}', { v: steps.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
+            <MetricCard title={t('Steps')} icon="footsteps-outline" iconColor={Colors.sky} value={steps.latest} avg={t('avg {v}', { v: steps.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
               <TrendChart labels={steps.labels} series={steps.series} height={90} formatY={(v) => `${(v / 1000).toFixed(1)}k`} />
             </MetricCard>
-            <MetricCard title={t('Sleep')} icon="moon" iconColor={Colors.violet} value={sleep.latest} avg={t('avg {v}', { v: sleep.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
+            <MetricCard title={t('Sleep')} icon="moon-outline" iconColor={Colors.violet} value={sleep.latest} avg={t('avg {v}', { v: sleep.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
               <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
             </MetricCard>
-            <MetricCard title={t('Active calories')} icon="flame" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={t('avg {v}', { v: kcal.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
+            <MetricCard title={t('Active calories')} icon="flame-outline" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={t('avg {v}', { v: kcal.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
               <TrendChart labels={kcal.labels} series={kcal.series} height={90} />
             </MetricCard>
-            <MetricCard title={t('Resting heart rate')} icon="heart" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={t('avg {v}', { v: hr.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
+            <MetricCard title={t('Resting heart rate')} icon="heart-outline" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={t('avg {v}', { v: hr.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
               <TrendChart labels={hr.labels} series={hr.series} height={90} />
             </MetricCard>
-            <MetricCard title={t('Heart rate variability')} icon="pulse" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={t('avg {v}', { v: hrv.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
+            <MetricCard title={t('Heart rate variability')} icon="pulse-outline" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={t('avg {v}', { v: hrv.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
               <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
             </MetricCard>
           </>
@@ -256,7 +257,7 @@ export const MyDataScreen = () => {
         {bp && (
           <MetricCard
             title={t('Blood pressure')}
-            icon="speedometer"
+            icon="speedometer-outline"
             iconColor={Colors.coral}
             value={bp.latest}
             unit="mmHg"
@@ -268,7 +269,7 @@ export const MyDataScreen = () => {
         )}
 
         {show('wearables') && (
-          <MetricCard title={t('Temperature')} icon="thermometer" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={t('avg {v}', { v: temp.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
+          <MetricCard title={t('Temperature')} icon="thermometer-outline" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={t('avg {v}', { v: temp.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
             <TrendChart
               labels={temp.labels}
               series={temp.series}
@@ -401,9 +402,7 @@ const MetricCard = ({
 }) => (
   <TouchableOpacity style={[styles.metricCard, useWebShell() && styles.metricCardHalf, off && styles.metricOff]} onPress={onPress} activeOpacity={0.85}>
     <View style={styles.metricHeader}>
-      <View style={[styles.metricIcon, { backgroundColor: `${iconColor}22` }]}>
-        <Ionicons name={icon as any} size={16} color={iconColor} />
-      </View>
+      <IconBadge name={icon} color={iconColor} size={28} />
       <Text style={styles.metricTitle}>{title}</Text>
       <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
     </View>
@@ -439,6 +438,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bioAgeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  bioAgeConfidence: { flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 10, marginBottom: 6 },
+  bioAgeConfidenceText: { color: Colors.ok, fontSize: 12, fontWeight: '800' },
   bioAgeValueRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 4, marginTop: 8 },
   genetic: {
     flexDirection: 'row',
@@ -498,13 +499,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 8,
-  },
-  metricIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   metricTitle: {
     flex: 1,

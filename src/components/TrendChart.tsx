@@ -2,6 +2,7 @@ import React, { useId, useState } from 'react';
 import { View, Text, StyleSheet, LayoutChangeEvent } from 'react-native';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop, Line, Rect } from 'react-native-svg';
 import { Colors, withAlpha } from '@/constants/colors';
+import { t } from '@/i18n';
 
 export interface TrendSeries {
   values: number[];
@@ -32,11 +33,11 @@ function smoothPath(points: { x: number; y: number }[]) {
     const p1 = points[i];
     const p2 = points[i + 1];
     const p3 = points[i + 2] ?? p2;
-    const t = 0.18;
-    const c1x = p1.x + (p2.x - p0.x) * t;
-    const c1y = p1.y + (p2.y - p0.y) * t;
-    const c2x = p2.x - (p3.x - p1.x) * t;
-    const c2y = p2.y - (p3.y - p1.y) * t;
+    const k = 0.18; // tensión de la curva
+    const c1x = p1.x + (p2.x - p0.x) * k;
+    const c1y = p1.y + (p2.y - p0.y) * k;
+    const c2x = p2.x - (p3.x - p1.x) * k;
+    const c2y = p2.y - (p3.y - p1.y) * k;
     d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
   }
   return d;
@@ -64,7 +65,7 @@ export const TrendChart = ({
   if (pointCount < 2) {
     return (
       <View onLayout={onLayout} style={[styles.empty, { height }]}>
-        <Text style={styles.emptyText}>Not enough data yet</Text>
+        <Text style={styles.emptyText}>{t('Not enough data yet')}</Text>
       </View>
     );
   }
@@ -96,10 +97,13 @@ export const TrendChart = ({
       {width > 0 && (
         <Svg width={width} height={height}>
           <Defs>
-            <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={series[0].color} stopOpacity="0.32" />
-              <Stop offset="1" stopColor={series[0].color} stopOpacity="0" />
-            </LinearGradient>
+            {/* Color suave bajo cada línea (con dos líneas, más tenue para que no se tapen) */}
+            {series.map((s, si) => (
+              <LinearGradient key={si} id={`${gradientId}${si}`} x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={s.color} stopOpacity={series.length === 1 ? '0.32' : '0.16'} />
+                <Stop offset="1" stopColor={s.color} stopOpacity="0" />
+              </LinearGradient>
+            ))}
           </Defs>
 
           {band && (
@@ -145,12 +149,10 @@ export const TrendChart = ({
             const last = pts[pts.length - 1];
             return (
               <React.Fragment key={si}>
-                {series.length === 1 && (
-                  <Path
-                    d={`${line} L ${last.x} ${PAD_TOP + plotHeight} L ${pts[0].x} ${PAD_TOP + plotHeight} Z`}
-                    fill={`url(#${gradientId})`}
-                  />
-                )}
+                <Path
+                  d={`${line} L ${last.x} ${PAD_TOP + plotHeight} L ${pts[0].x} ${PAD_TOP + plotHeight} Z`}
+                  fill={`url(#${gradientId}${si})`}
+                />
                 <Path d={line} stroke={s.color} strokeWidth={2.5} fill="none" strokeLinecap="round" />
                 <Circle cx={last.x} cy={last.y} r={7} fill={s.color} opacity={0.2} />
                 <Circle cx={last.x} cy={last.y} r={3.8} fill={s.color} />

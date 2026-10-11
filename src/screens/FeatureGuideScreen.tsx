@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { FeaturePreview } from '@/components/FeaturePreview';
 import { Colors, withAlpha } from '@/constants/colors';
 import { AppSection, appPrefs, isSectionVisible, SECTION_OPTIONS, useAppPrefs } from '@/data/appPrefs';
+import { AppIcon } from '@/components/HealthIcons';
 import { FEATURE_GUIDE } from '@/data/featureGuide';
 import { t } from '@/i18n';
 
@@ -37,7 +38,7 @@ export const FeatureGuideScreen = () => {
             <View key={o.id} style={styles.card}>
               {!one && (
                 <View style={styles.titleRow}>
-                  <Ionicons name={o.icon as any} size={20} color={Colors.accent} />
+                  <AppIcon name={o.icon} size={20} color={Colors.accent} />
                   <Text style={styles.title}>{t(o.title)}</Text>
                 </View>
               )}

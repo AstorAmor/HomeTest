@@ -63,14 +63,16 @@ function steps(p: PlanProfile, age: number | null, has: (g: string) => boolean, 
           ? 8000
           : 9000;
   const why: string[] = [];
-  if (p.activity === 'sedentary') why.push('You told us you spend most of the day sitting, so moving more is where you can gain the most.');
-  else if (p.activity === 'light') why.push('You already move a bit: a few thousand more steps a day is a small change with a big payoff.');
+  if (p.activity === 'sedentary') why.push(t('You told us you spend most of the day sitting, so moving more is where you can gain the most.'));
+  else if (p.activity === 'light') why.push(t('You already move a bit: a few thousand more steps a day is a small change with a big payoff.'));
   const reasons = ['hypertension', 'diabetes', 'prediabetes', 'high_cholesterol'].filter(cond);
-  if (reasons.length) why.push('Walking lowers blood pressure, blood sugar and triglycerides.');
+  if (reasons.length) why.push(t('Walking lowers blood pressure, blood sugar and triglycerides.'));
   why.push(
-    older
-      ? 'In a study of 47,000 adults, the benefit kept growing up to 6,000-8,000 steps a day from age 60.'
-      : 'In a study of 47,000 adults, the benefit kept growing up to 8,000-10,000 steps a day before age 60.'
+    t(
+      older
+        ? 'In a study of 47,000 adults, the benefit kept growing up to 6,000-8,000 steps a day from age 60.'
+        : 'In a study of 47,000 adults, the benefit kept growing up to 8,000-10,000 steps a day before age 60.'
+    )
   );
   let score = 2;
   if (p.activity === 'sedentary') score += 3;
@@ -84,13 +86,13 @@ function steps(p: PlanProfile, age: number | null, has: (g: string) => boolean, 
     item: {
       kind: 'steps',
       title: t('Walk {n} steps a day', { n: fmtSteps(target) }),
-      subtitle: 'Updated from your wearable',
+      subtitle: t('Updated from your wearable'),
       target,
       why: why.join(' '),
       how: [
-        'A 10-min walk after each main meal',
-        'Take calls on foot and use the stairs',
-        target <= 6000 ? 'Once this feels easy, we will raise the goal' : 'Your wearable updates progress automatically',
+        t('A 10-min walk after each main meal'),
+        t('Take calls on foot and use the stairs'),
+        target <= 6000 ? t('Once this feels easy, we will raise the goal') : t('Your wearable updates progress automatically'),
       ],
     },
   };
@@ -100,11 +102,11 @@ function strength(p: PlanProfile, age: number | null, has: (g: string) => boolea
   const beginner = p.activity === 'sedentary' || p.activity === 'light' || !p.activity;
   const target = has('performance') || p.activity === 'very_active' ? 3 : beginner ? 2 : 3;
   const why: string[] = [];
-  if (has('performance')) why.push('You want to perform better: strength is the base for speed, power and fewer injuries.');
-  if (has('lose_weight')) why.push('Keeping muscle while you lose weight keeps your metabolism up.');
-  if (cond('diabetes') || cond('prediabetes')) why.push('Muscle is your biggest sink for blood sugar, so it helps control it.');
-  if (age != null && age >= 50) why.push('From your 50s, muscle and bone are lost faster unless you train them.');
-  why.push('The WHO recommends strength training on 2 or more days a week for every adult.');
+  if (has('performance')) why.push(t('You want to perform better: strength is the base for speed, power and fewer injuries.'));
+  if (has('lose_weight')) why.push(t('Keeping muscle while you lose weight keeps your metabolism up.'));
+  if (cond('diabetes') || cond('prediabetes')) why.push(t('Muscle is your biggest sink for blood sugar, so it helps control it.'));
+  if (age != null && age >= 50) why.push(t('From your 50s, muscle and bone are lost faster unless you train them.'));
+  why.push(t('The WHO recommends strength training on 2 or more days a week for every adult.'));
   let score = 2;
   if (has('performance')) score += 3;
   if (has('lose_weight')) score += 2;
@@ -118,13 +120,13 @@ function strength(p: PlanProfile, age: number | null, has: (g: string) => boolea
     item: {
       kind: 'strength',
       title: t('{n} strength sessions a week', { n: target }),
-      subtitle: beginner ? 'Start light: 20-30 minutes is enough' : 'Supports muscle, bones and blood sugar',
+      subtitle: t(beginner ? 'Start light: 20-30 minutes is enough' : 'Supports muscle, bones and blood sugar'),
       target,
       why: why.join(' '),
       how: [
-        `${target} sessions of ${beginner ? '20-30' : '30-45'} min on non-consecutive days`,
-        older ? 'Include balance work: standing on one leg, step-ups' : 'Full body: squats, hinges, pushes, pulls',
-        'Finish each set with 1-2 reps left in the tank',
+        t('{n} sessions of {min} min on non-consecutive days', { n: target, min: beginner ? '20-30' : '30-45' }),
+        older ? t('Include balance work: standing on one leg, step-ups') : t('Full body: squats, hinges, pushes, pulls'),
+        t('Finish each set with 1-2 reps left in the tank'),
       ],
     },
   };
@@ -132,22 +134,22 @@ function strength(p: PlanProfile, age: number | null, has: (g: string) => boolea
 
 function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string) => boolean): Candidate {
   const drinks = p.alcohol === 'daily' || p.alcohol === 'weekly';
-  const alcoholTip = drinks ? ['At least 4 alcohol-free days a week'] : [];
+  const alcoholTip = drinks ? [t('At least 4 alcohol-free days a week')] : [];
   let score = 2;
   if (has('lose_weight')) score += 2;
   if (has('more_energy')) score += 1;
   if (has('prevent_disease') || has('longevity')) score += 1;
   if (drinks) score += 1;
-  const base = { kind: 'nutrition' as const, subtitle: 'Snap your meals to track it', target: 3 };
+  const base = { kind: 'nutrition' as const, subtitle: t('Snap your meals to track it'), target: 3 };
 
   if (cond('diabetes') || cond('prediabetes'))
     return {
       score: score + 3,
       item: {
         ...base,
-        title: 'Cut down on added sugar',
-        why: `You told us about ${cond('diabetes') ? 'diabetes' : 'prediabetes'}. Added sugar and refined flour drive glucose spikes; meals built on protein, fibre and vegetables keep it steady.`,
-        how: ['Half the plate vegetables, a quarter protein', 'Swap sugary drinks for water or sparkling water', ...alcoholTip, 'Snap your meals: we track added sugar for you'].slice(0, 3),
+        title: t('Cut down on added sugar'),
+        why: t(cond('diabetes') ? 'You told us about diabetes. Added sugar and refined flour drive glucose spikes; meals built on protein, fibre and vegetables keep it steady.' : 'You told us about prediabetes. Added sugar and refined flour drive glucose spikes; meals built on protein, fibre and vegetables keep it steady.'),
+        how: [t('Half the plate vegetables, a quarter protein'), t('Swap sugary drinks for water or sparkling water'), ...alcoholTip, t('Snap your meals: we track added sugar for you')].slice(0, 3),
       },
     };
   if (cond('hypertension'))
@@ -155,9 +157,9 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
       score: score + 3,
       item: {
         ...base,
-        title: 'Cut down on salt',
-        why: 'You told us about high blood pressure. Less salt lowers it within weeks; the WHO advises under 5 g a day, about a teaspoon.',
-        how: ['Cook from scratch more often', 'Check labels: bread, cured meats and ready meals hide most salt', ...alcoholTip, 'Season with herbs, lemon or spices'].slice(0, 3),
+        title: t('Cut down on salt'),
+        why: t('You told us about high blood pressure. Less salt lowers it within weeks; the WHO advises under 5 g a day, about a teaspoon.'),
+        how: [t('Cook from scratch more often'), t('Check labels: bread, cured meats and ready meals hide most salt'), ...alcoholTip, t('Season with herbs, lemon or spices')].slice(0, 3),
       },
     };
   if (cond('high_cholesterol') || cond('heart_disease'))
@@ -165,9 +167,9 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
       score: score + 3,
       item: {
         ...base,
-        title: 'Eat the Mediterranean way',
-        why: `You told us about ${cond('heart_disease') ? 'heart disease' : 'high cholesterol'}. Olive oil, nuts, legumes and fish instead of processed meat and butter lower LDL cholesterol and heart risk.`,
-        how: ['Olive oil as your main fat', 'Legumes 3 times a week, oily fish twice', ...alcoholTip, 'Fewer processed meats and pastries'].slice(0, 3),
+        title: t('Eat the Mediterranean way'),
+        why: t(cond('heart_disease') ? 'You told us about heart disease. Olive oil, nuts, legumes and fish instead of processed meat and butter lower LDL cholesterol and heart risk.' : 'You told us about high cholesterol. Olive oil, nuts, legumes and fish instead of processed meat and butter lower LDL cholesterol and heart risk.'),
+        how: [t('Olive oil as your main fat'), t('Legumes 3 times a week, oily fish twice'), ...alcoholTip, t('Fewer processed meats and pastries')].slice(0, 3),
       },
     };
   if (has('performance') && !has('lose_weight'))
@@ -175,20 +177,22 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
       score,
       item: {
         ...base,
-        title: 'Protein at every meal',
-        why: 'You want to perform better. Spreading protein across your meals helps your muscles recover and adapt to training.',
-        how: ['A palm-sized portion of protein at each meal', 'A protein-rich snack after training', ...alcoholTip, 'Carbs around your sessions'].slice(0, 3),
+        title: t('Protein at every meal'),
+        why: t('You want to perform better. Spreading protein across your meals helps your muscles recover and adapt to training.'),
+        how: [t('A palm-sized portion of protein at each meal'), t('A protein-rich snack after training'), ...alcoholTip, t('Carbs around your sessions')].slice(0, 3),
       },
     };
   return {
     score,
     item: {
       ...base,
-      title: has('lose_weight') ? 'Protein and vegetables first' : 'Build your plate around real food',
-      why: has('lose_weight')
-        ? 'You want to lose weight. Starting meals with protein and vegetables keeps you full for longer, so eating less does not feel like a fight.'
-        : 'Most of what you eat shapes your energy and your blood markers. Simple plate rules beat strict diets.',
-      how: ['Half the plate vegetables, a quarter protein', 'Swap sugary drinks for water or sparkling water', ...alcoholTip, 'Snap your meals to see your week'].slice(0, 3),
+      title: t(has('lose_weight') ? 'Protein and vegetables first' : 'Build your plate around real food'),
+      why: t(
+        has('lose_weight')
+          ? 'You want to lose weight. Starting meals with protein and vegetables keeps you full for longer, so eating less does not feel like a fight.'
+          : 'Most of what you eat shapes your energy and your blood markers. Simple plate rules beat strict diets.'
+      ),
+      how: [t('Half the plate vegetables, a quarter protein'), t('Swap sugary drinks for water or sparkling water'), ...alcoholTip, t('Snap your meals to see your week')].slice(0, 3),
     },
   };
 }
@@ -207,42 +211,42 @@ function sleepItem(p: PlanProfile, has: (g: string) => boolean): Candidate {
   if (has('reduce_stress')) score += 1;
   if (enough) {
     const why = [
-      `You already sleep ${p.sleep === 'gt8' ? 'over 8' : '7-8'} hours, so the goal is not more hours but steadier ones.`,
-      'Going to bed and waking up at the same times makes the same hours more restful.',
+      t(p.sleep === 'gt8' ? 'You already sleep over 8 hours, so the goal is not more hours but steadier ones.' : 'You already sleep 7-8 hours, so the goal is not more hours but steadier ones.'),
+      t('Going to bed and waking up at the same times makes the same hours more restful.'),
     ];
     if (p.sleep === 'gt8' && has('more_energy'))
-      why.push('If you regularly sleep over 9 hours and still wake up tired, it is worth mentioning to a doctor.');
+      why.push(t('If you regularly sleep over 9 hours and still wake up tired, it is worth mentioning to a doctor.'));
     return {
       score,
       item: {
         kind: 'sleep',
-        title: 'Keep regular sleep times',
-        subtitle: 'Measured by your wearable',
+        title: t('Keep regular sleep times'),
+        subtitle: t('Measured by your wearable'),
         target: p.sleep === 'gt8' ? 8 : 7.5,
         why: why.join(' '),
-        how: ['Same wake-up time every day, weekends included', 'Daylight in the first hour after waking', 'A short wind-down routine before bed'],
+        how: [t('Same wake-up time every day, weekends included'), t('Daylight in the first hour after waking'), t('A short wind-down routine before bed')],
       },
     };
   }
   const why: string[] = [];
-  if (p.sleep === 'lt6') why.push('You told us you usually sleep under 6 hours.');
-  else if (p.sleep === '6to7') why.push('You usually sleep 6-7 hours, just under what most adults need.');
-  if (has('sleep_better')) why.push('Sleeping better is one of your goals.');
-  if (has('more_energy')) why.push('More sleep is the fastest way to more energy.');
-  why.push('Adults need 7 hours or more: short sleep raises next-day glucose and cortisol and lowers HRV.');
+  if (p.sleep === 'lt6') why.push(t('You told us you usually sleep under 6 hours.'));
+  else if (p.sleep === '6to7') why.push(t('You usually sleep 6-7 hours, just under what most adults need.'));
+  if (has('sleep_better')) why.push(t('Sleeping better is one of your goals.'));
+  if (has('more_energy')) why.push(t('More sleep is the fastest way to more energy.'));
+  why.push(t('Adults need 7 hours or more: short sleep raises next-day glucose and cortisol and lowers HRV.'));
   const target = p.sleep === 'lt6' ? 7 : 7.5;
   return {
     score,
     item: {
       kind: 'sleep',
-      title: p.sleep === 'lt6' ? 'Get to 7 hours of sleep' : 'Sleep 7-8 hours',
-      subtitle: 'Measured by your wearable',
+      title: t(p.sleep === 'lt6' ? 'Get to 7 hours of sleep' : 'Sleep 7-8 hours'),
+      subtitle: t('Measured by your wearable'),
       target,
       why: why.join(' '),
       how: [
-        p.sleep === 'lt6' ? 'Move your bedtime 20 minutes earlier each week' : 'Same wake-up time every day, weekends included',
-        'No screens 30 min before bed',
-        'Keep the bedroom cool and dark',
+        p.sleep === 'lt6' ? t('Move your bedtime 20 minutes earlier each week') : t('Same wake-up time every day, weekends included'),
+        t('No screens 30 min before bed'),
+        t('Keep the bedroom cool and dark'),
       ],
     },
   };
@@ -258,11 +262,11 @@ function mindfulness(has: (g: string) => boolean, cond: (c: string) => boolean):
     score,
     item: {
       kind: 'mindfulness',
-      title: '3 short calm sessions a week',
-      subtitle: 'Breathing or body scan, 3-10 min',
+      title: t('3 short calm sessions a week'),
+      subtitle: t('Breathing or body scan, 3-10 min'),
       target: 3,
-      why: `${has('reduce_stress') ? 'You want to reduce stress. ' : ''}Chronic stress keeps cortisol high and HRV low. A few minutes of slow breathing measurably shifts your nervous system towards recovery.`,
-      how: ['Box breathing when you feel tense', 'Body scan before bed', 'Start from a check-in: we suggest the right one'],
+      why: `${has('reduce_stress') ? `${t('You want to reduce stress.')} ` : ''}${t('Chronic stress keeps cortisol high and HRV low. A few minutes of slow breathing measurably shifts your nervous system towards recovery.')}`,
+      how: [t('Box breathing when you feel tense'), t('Body scan before bed'), t('Start from a check-in: we suggest the right one')],
     },
   };
 }

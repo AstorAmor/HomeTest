@@ -1,37 +1,10 @@
 import type { ImageSourcePropType } from 'react-native';
 import { ProfessionalRole, ROLE_INFO } from './servicesMock';
-import type { PlanItemKind } from './planRepository';
-import type { Sex } from './profileRepository';
 import { t } from '@/i18n';
 
-// Imágenes del plan y de los especialistas. Los archivos de assets/images/plan y
-// assets/images/specialists son PROVISIONALES: se sustituyen por los definitivos
-// con el mismo nombre (prompts en assets/images/IMAGE_PROMPTS.md).
-const PLAN = {
-  strength_female: require('../../assets/images/plan/strength_female.jpg'),
-  strength_male: require('../../assets/images/plan/strength_male.jpg'),
-  strength_mixed: require('../../assets/images/plan/strength_mixed.jpg'),
-  walking_couple: require('../../assets/images/plan/walking_couple.jpg'),
-  nutrition_salad_fish: require('../../assets/images/plan/nutrition_salad_fish.jpg'),
-  sleep: require('../../assets/images/plan/sleep.jpg'),
-  mindfulness: require('../../assets/images/plan/mindfulness.jpg'),
-};
-
-// Fuerza: mujer si el perfil es de mujer, hombre si es de hombre, y ambos en otro caso.
-export function planImage(kind: PlanItemKind, sex?: Sex): ImageSourcePropType {
-  switch (kind) {
-    case 'strength':
-      return sex === 'female' ? PLAN.strength_female : sex === 'male' ? PLAN.strength_male : PLAN.strength_mixed;
-    case 'steps':
-      return PLAN.walking_couple;
-    case 'nutrition':
-      return PLAN.nutrition_salad_fish;
-    case 'sleep':
-      return PLAN.sleep;
-    case 'mindfulness':
-      return PLAN.mindfulness;
-  }
-}
+// Ilustraciones de los especialistas. El plan ya no usa fotos (decisión del fundador, 2026-10-12):
+// usa iconos sobre degradado (src/data/planCategories.ts). Las fotos siguen en assets/images/plan
+// y assets/images/specialists por si vuelven.
 
 export interface SpecialistCard {
   id: string;

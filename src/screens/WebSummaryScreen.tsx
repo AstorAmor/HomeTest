@@ -258,7 +258,7 @@ export const WebSummaryScreen = () => {
       key: 'hydration',
       title: t('Hydration'),
       color: Colors.gold,
-      icon: icon('beaker-outline', Colors.gold),
+      icon: icon('water-outline', Colors.gold),
       when: bathroom.urine ? t('Today') : undefined,
       caption: t('From your urine colour'),
       value: t(hydration.label),
@@ -267,7 +267,7 @@ export const WebSummaryScreen = () => {
   if (show('gut'))
     cards.push({
       key: 'gut',
-      title: t('Gut'),
+      title: t('Digestion'),
       color: Colors.green,
       icon: <IntestineIcon size={16} color={Colors.green} />,
       when: bathroom.bowel ? t('Today') : undefined,

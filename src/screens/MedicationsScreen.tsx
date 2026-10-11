@@ -87,7 +87,7 @@ export const MedicationsScreen = () => {
           <MedIcon name={item.name} kind={item.kind} />
           <View style={{ flex: 1 }}>
             <Text style={styles.itemTitle}>
-              {item.name}
+              {t(item.name)}
               {item.dose ? <Text style={styles.itemDose}> · {item.dose}</Text> : null}
             </Text>
             <Text style={styles.itemSub}>{scheduleText(item.schedule)}</Text>
@@ -155,7 +155,7 @@ export const MedicationsScreen = () => {
               <View key={item.id} style={[styles.doseRow, (today.length > 0 || item !== asNeeded[0]) && styles.divider]}>
                 <Text style={styles.doseTime}>—</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.doseName}>{item.name}</Text>
+                  <Text style={styles.doseName}>{t(item.name)}</Text>
                   <Text style={styles.itemSub}>
                     When needed · {logs.filter((l) => l.medId === item.id && l.fecha.slice(0, 10) === now.toISOString().slice(0, 10)).length} today
                   </Text>
@@ -180,7 +180,7 @@ export const MedicationsScreen = () => {
         {courses.map(renderItem)}
         {finished.map((i) => (
           <Text key={i.id} style={styles.finished}>
-            {t('{name}: finished', { name: i.name })}
+            {t('{name}: finished', { name: t(i.name) })}
           </Text>
         ))}
         <TouchableOpacity style={styles.add} onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'short' } })}>

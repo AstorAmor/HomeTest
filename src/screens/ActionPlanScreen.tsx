@@ -7,9 +7,14 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ActionPlanList } from '@/components/ActionPlanList';
 import { SharePlanButton } from '@/components/SharePlanButton';
+import { BlobArt } from '@/components/BlobArt';
+import { IconBadge } from '@/components/HealthIcons';
 import { Colors } from '@/constants/colors';
 import { currentReport } from '@/data/reportRepository';
 import { PlanVersion, planVersionRepository } from '@/data/planVersions';
+import { buildPlan, PlanItem } from '@/data/planRepository';
+import { profileRepository } from '@/data/profileRepository';
+import { actionCategory, KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -18,24 +23,29 @@ import { useSections } from '@/data/appPrefs';
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
-// "Full view" desde Today → Your plan: el action plan del último informe, con el
-// porqué de cada acción y la proyección de su marcador.
+// "Plan completo" desde Today → Tu plan: el plan entero en tres bloques (hábitos, actividad física,
+// nutrición y suplementación). Cada bloque trae primero las acciones del día a día (las mismas que
+// el avance de Today, con su porqué y cómo hacerlo) y después lo que dice la última analítica.
 export const ActionPlanScreen = () => {
   const show = useSections();
   const router = useRouter();
   const [latest, setLatest] = useDeepState<PlanVersion | null>(null);
+  const [plan, setPlan] = useDeepState<PlanItem[]>([]);
   useReloadOnFocus(
     useCallback(async () => {
       setLatest(await planVersionRepository.latest().catch(() => null));
-    }, [setLatest]),
+      setPlan(buildPlan(await profileRepository.get().catch(() => null)));
+    }, [setLatest, setPlan]),
   );
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your action plan')} showBack />
+        <ScreenHeader title={t('Your full plan')} showBack />
         <Text style={styles.intro}>
-          Built from your blood test of {longDate(currentReport.test_date)} and your wearable data. Each action shows
-          why it matters for you and where the marker could be at your next test.
+          {t('Built from your answers, your blood test of {date} and your wearable data, in three blocks: habits, physical activity, and nutrition and supplements.', {
+            date: longDate(currentReport.test_date),
+          })}
         </Text>
         <View style={styles.share}>
           <SharePlanButton />
@@ -44,7 +54,7 @@ export const ActionPlanScreen = () => {
         {latest && (
           <View style={styles.updated}>
             <Text style={styles.updatedTitle}>{t('Your plan today')}</Text>
-            <Text style={styles.updatedSub}>Updated {longDate(latest.createdAt.slice(0, 10))} with your latest results</Text>
+            <Text style={styles.updatedSub}>{t('Updated {date} with your latest results', { date: longDate(latest.createdAt.slice(0, 10)) })}</Text>
             {latest.items.map((it, i) => (
               <View key={`${it.title}-${i}`} style={styles.updatedRow}>
                 <View style={[styles.dot, { backgroundColor: statusColor(it.status) }]} />
@@ -52,14 +62,51 @@ export const ActionPlanScreen = () => {
                   <Text style={styles.updatedItem}>{it.title}</Text>
                   {it.note && <Text style={styles.updatedNote}>{it.note}</Text>}
                 </View>
-                <Text style={[styles.updatedStatus, { color: statusColor(it.status) }]}>{STATUS_LABEL[it.status]}</Text>
+                <Text style={[styles.updatedStatus, { color: statusColor(it.status) }]}>{t(STATUS_LABEL[it.status])}</Text>
               </View>
             ))}
           </View>
         )}
 
-        {latest && <Text style={styles.section}>From your {longDate(currentReport.test_date)} report</Text>}
-        <ActionPlanList />
+        {PLAN_CATEGORIES.map((c) => {
+          const items = plan.filter((i) => KIND_CATEGORY[i.kind] === c.id);
+          const fromTest = currentReport.action_plan.some((a) => actionCategory(a.action_id) === c.id);
+          if (!items.length && !fromTest) return null;
+          return (
+            <View key={c.id} style={styles.block}>
+              <View style={styles.blockHeader}>
+                <IconBadge name={c.icon} color={Colors[c.color]} size={36} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.blockTitle}>{t(c.title)}</Text>
+                  <Text style={styles.blockSub}>{t(c.subtitle)}</Text>
+                </View>
+              </View>
+
+              {items.map((item) => (
+                <TouchableOpacity key={item.kind} style={styles.item} onPress={() => router.push(planItemRoute(item.kind) as any)} activeOpacity={0.85}>
+                  <View style={styles.itemHead}>
+                    <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={44} radius={12} iconSize={22} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.itemTitle}>{planItemTitle(item, t)}</Text>
+                      <Text style={styles.itemSub}>{item.kind === 'nutrition' ? t(item.title) : t(item.subtitle)}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                  </View>
+                  <Text style={styles.itemWhy}>{item.why}</Text>
+                  {item.how.map((h) => (
+                    <View key={h} style={styles.howRow}>
+                      <Ionicons name="checkmark" size={14} color={Colors.accent} />
+                      <Text style={styles.howText}>{h}</Text>
+                    </View>
+                  ))}
+                </TouchableOpacity>
+              ))}
+
+              {fromTest && <Text style={styles.fromTest}>{t('From your blood test')}</Text>}
+              <ActionPlanList category={c.id} compact />
+            </View>
+          );
+        })}
 
         <View style={styles.links}>
           {show('wearables') && (
@@ -108,7 +155,27 @@ const styles = StyleSheet.create({
   updatedItem: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   updatedNote: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   updatedStatus: { fontSize: 11, fontWeight: '800' },
-  section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginHorizontal: 20, marginBottom: 10 },
+  block: { marginBottom: 14 },
+  blockHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginBottom: 12, marginTop: 6 },
+  blockTitle: { color: Colors.textPrimary, fontSize: 19, fontWeight: '800' },
+  blockSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 1 },
+  item: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    gap: 6,
+  },
+  itemHead: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
+  itemTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  itemSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  itemWhy: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  howRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  howText: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, flex: 1 },
+  fromTest: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4, marginHorizontal: 20, marginTop: 4, marginBottom: 8 },
   link: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/HealthIcons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
@@ -62,7 +63,7 @@ export const NutrientsScreen = () => {
           return (
             <TouchableOpacity key={it.id} style={[styles.card, on && styles.cardOn]} onPress={() => toggle(it.id)} activeOpacity={0.85}>
               <View style={[styles.icon, { backgroundColor: withAlpha(Colors.gold, 0.14) }]}>
-                <MaterialCommunityIcons name={it.icon as any} size={20} color={Colors.gold} />
+                <AppIcon name={it.icon === 'iron' ? 'iron' : `mci:${it.icon}`} size={20} color={Colors.gold} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.title}>{it.title}</Text>

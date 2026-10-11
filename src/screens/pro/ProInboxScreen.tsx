@@ -48,7 +48,7 @@ export const ProInboxScreen = () => {
             }, {}),
           ).map(([pid, list]) => (
             <View key={pid} style={styles.group}>
-              <TouchableOpacity style={styles.groupHead} onPress={() => router.push({ pathname: '/pro-patient', params: { id: pid } })}>
+              <TouchableOpacity style={styles.groupHead} onPress={() => router.push({ pathname: '/pro-patient', params: { id: pid, from: 'inbox' } })}>
                 <Text style={styles.groupName}>{list[0].patientName}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </TouchableOpacity>

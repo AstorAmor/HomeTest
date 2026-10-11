@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
+import { MetricHero, RangeId, rangeDays, RangeTabs, StatsRow } from '@/components/MetricDetailParts';
 import { Colors } from '@/constants/colors';
 import { DailyPoint, formatSleep, shortDate, useDailyWearables } from '@/wearables/dailySeries';
 import { WearableMetric } from '@/wearables/types';
@@ -101,13 +102,6 @@ const INFO: Partial<Record<WearableMetric, MetricInfo>> = {
   },
 };
 
-const RANGES = [
-  { id: '7D', days: 7 },
-  { id: '14D', days: 14 },
-  { id: '1M', days: 30 },
-  { id: '6M', days: 182 },
-] as const;
-
 // En 6M se agrupa por semanas (media de 7 días, contando desde el último día):
 // 180 puntos diarios no se leen en una gráfica de móvil.
 const weekly = (pts: DailyPoint[]): DailyPoint[] => {
@@ -124,8 +118,8 @@ export const MetricDetailScreen = () => {
   const { kind } = useLocalSearchParams<{ kind: WearableMetric }>();
   const info = INFO[kind as WearableMetric] ?? INFO.steps!;
   const { series, isSample } = useDailyWearables(182);
-  const [range, setRange] = useState<(typeof RANGES)[number]['id']>('14D');
-  const days = RANGES.find((r) => r.id === range)!.days;
+  const [range, setRange] = useState<RangeId>('14D');
+  const days = rangeDays(range);
   const byWeek = days > 31;
 
   const all = series[kind as WearableMetric] ?? [];
@@ -157,13 +151,12 @@ export const MetricDetailScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={tr(info.title)} showBack />
 
-        <View style={styles.hero}>
-          <View style={[styles.icon, { backgroundColor: `${info.color}22` }]}>
-            <Ionicons name={info.icon as any} size={22} color={info.color} />
-          </View>
-          <Text style={styles.value}>{latestValue !== undefined ? info.format(latestValue) : '—'}</Text>
-          <Text style={styles.valueSub}>{tr('Latest')}{isSample ? ` · ${tr('sample data')}` : ''}</Text>
-        </View>
+        <MetricHero
+          icon={info.icon}
+          color={info.color}
+          value={latestValue !== undefined ? info.format(latestValue) : '—'}
+          sub={`${tr('Latest value')}${isSample ? ` · ${tr('sample data')}` : ''}`}
+        />
 
         {kind === 'body_temperature' && (
           <>
@@ -191,13 +184,7 @@ export const MetricDetailScreen = () => {
           </>
         )}
 
-        <View style={styles.tabs}>
-          {RANGES.map((r) => (
-            <TouchableOpacity key={r.id} style={[styles.tab, range === r.id && styles.tabOn]} onPress={() => setRange(r.id)}>
-              <Text style={[styles.tabText, range === r.id && styles.tabTextOn]}>{r.id}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <RangeTabs value={range} onChange={setRange} />
 
         <View style={styles.card}>
           <TrendChart
@@ -213,18 +200,13 @@ export const MetricDetailScreen = () => {
           </Text>
         </View>
 
-        <View style={styles.stats}>
-          {[
+        <StatsRow
+          items={[
             { label: 'Average', value: values.length ? info.format(avg) : '—' },
             { label: 'Lowest', value: values.length ? info.format(Math.min(...values)) : '—' },
             { label: 'Highest', value: values.length ? info.format(Math.max(...values)) : '—' },
-          ].map((s) => (
-            <View key={s.label} style={styles.stat}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{tr(s.label)}</Text>
-            </View>
-          ))}
-        </View>
+          ]}
+        />
 
         {!Number.isNaN(change) && (
           <View style={styles.trend}>
@@ -277,7 +259,6 @@ export const MetricDetailScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 32 },
-  hero: { alignItems: 'center', marginBottom: 14 },
   thermoButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -304,14 +285,6 @@ const styles = StyleSheet.create({
   thermoRow: { flexDirection: 'row', justifyContent: 'space-between' },
   thermoDate: { color: Colors.textSecondary, fontSize: 13 },
   thermoValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  icon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  value: { color: Colors.textPrimary, fontSize: 34, fontWeight: '800' },
-  valueSub: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
-  tabs: { flexDirection: 'row', alignSelf: 'center', backgroundColor: Colors.card, borderRadius: 18, padding: 3, marginBottom: 12 },
-  tab: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 15 },
-  tabOn: { backgroundColor: Colors.accent },
-  tabText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  tabTextOn: { color: Colors.background },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -322,10 +295,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   tapHint: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 8 },
-  stats: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginTop: 12 },
-  stat: { flex: 1, backgroundColor: Colors.card, borderRadius: 12, padding: 12, alignItems: 'center' },
-  statValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  statLabel: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
   trend: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 12 },
   trendText: { color: Colors.textSecondary, fontSize: 13 },
   infoCard: {

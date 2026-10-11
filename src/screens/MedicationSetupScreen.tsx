@@ -116,7 +116,7 @@ export const MedicationSetupScreen = () => {
     const k = findKnownMed(input);
     setText(input);
     setKnown(k);
-    setName(parsed.name ?? k?.label ?? input.trim());
+    setName(parsed.name ?? (k ? tr(k.label) : input.trim()));
     setKind(k?.kind ?? (isShort ? 'medication' : kind));
     if (parsed.dose) setDose(parsed.dose);
     const schedule = parsed.schedule ?? k?.schedule;
@@ -252,7 +252,9 @@ export const MedicationSetupScreen = () => {
             />
             <Text style={styles.label}>{tr('Or pick one or more')}</Text>
             <View style={styles.slots}>
-              {(isShort ? SHORT_SUGGESTIONS : REGULAR_SUGGESTIONS).map((s) => {
+              {(isShort ? SHORT_SUGGESTIONS : REGULAR_SUGGESTIONS).map((en) => {
+                // En el idioma de la app: lo que se elige es también el nombre que se guarda
+                const s = tr(en);
                 const on = picked.includes(s);
                 return (
                   <TouchableOpacity key={s} style={[styles.slot, styles.suggestion, on && styles.slotOn]} onPress={() => togglePicked(s)}>

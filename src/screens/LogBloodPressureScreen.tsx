@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
-  TextInput,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +18,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Colors } from '@/constants/colors';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { WheelPicker } from '@/components/WheelPicker';
 import { postAi } from '@/utils/apiBaseUrl';
 import { prepareImage } from '@/utils/imageUpload';
 import { ExtractedBloodPressure } from '@/types/bloodPressure';
@@ -32,6 +32,15 @@ import {
 type Step = 'select' | 'processing' | 'edit';
 
 const REQUEST_TIMEOUT_MS = 60000;
+
+// Ruedas para la entrada a mano: sistólica 70-250, diastólica 40-150 y pulso 30-200 (o "—" si no se midió)
+const SYS_MIN = 70;
+const DIA_MIN = 40;
+const PULSE_MIN = 30;
+const SYS_ITEMS = Array.from({ length: 181 }, (_, i) => String(i + SYS_MIN));
+const DIA_ITEMS = Array.from({ length: 111 }, (_, i) => String(i + DIA_MIN));
+const PULSE_ITEMS = ['—', ...Array.from({ length: 171 }, (_, i) => String(i + PULSE_MIN))];
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, Math.round(v)));
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
@@ -50,9 +59,16 @@ export const LogBloodPressureScreen = () => {
 
   const [dateTime, setDateTime] = useState(new Date());
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
-  const [systolic, setSystolic] = useState('');
-  const [diastolic, setDiastolic] = useState('');
-  const [pulse, setPulse] = useState('');
+  const [systolic, setSystolic] = useState(120);
+  const [diastolic, setDiastolic] = useState(80);
+  const [pulse, setPulse] = useState<number | null>(null);
+  const [wheelKey, setWheelKey] = useState(0); // vuelve a montar las ruedas cuando llegan valores (foto, edición)
+  const setValues = (sys: number | null, dia: number | null, pul: number | null) => {
+    if (sys != null) setSystolic(clamp(sys, SYS_MIN, 250));
+    if (dia != null) setDiastolic(clamp(dia, DIA_MIN, 150));
+    setPulse(pul != null ? clamp(pul, PULSE_MIN, 200) : null);
+    setWheelKey((k) => k + 1);
+  };
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -60,9 +76,7 @@ export const LogBloodPressureScreen = () => {
     getBloodPressureEntries().then((entries) => {
       const existing = entries.find((e) => e.id === id);
       if (existing) {
-        setSystolic(String(existing.systolic));
-        setDiastolic(String(existing.diastolic));
-        setPulse(existing.pulse !== null ? String(existing.pulse) : '');
+        setValues(existing.systolic, existing.diastolic, existing.pulse);
         setDateTime(new Date(existing.fecha));
         setSource(existing.source);
       }
@@ -90,20 +104,15 @@ export const LogBloodPressureScreen = () => {
 
       if (!response.ok) {
         setProcessingError(data.error ?? t('Error extracting data'));
-        setSystolic('');
-        setDiastolic('');
-        setPulse('');
       } else {
         const parsed = data as ExtractedBloodPressure;
-        setSystolic(parsed.systolic !== null ? String(parsed.systolic) : '');
-        setDiastolic(parsed.diastolic !== null ? String(parsed.diastolic) : '');
-        setPulse(parsed.pulse !== null ? String(parsed.pulse) : '');
+        setValues(parsed.systolic, parsed.diastolic, parsed.pulse);
         if (parsed.systolic === null && parsed.diastolic === null) {
-          setProcessingError('Could not read the values clearly. Please review or correct them manually.');
+          setProcessingError(t('Could not read the values clearly. Please review or correct them manually.'));
         }
       }
     } catch (err) {
-      setProcessingError(err instanceof Error ? err.message : 'Unknown error');
+      setProcessingError(err instanceof Error ? err.message : t('Something went wrong'));
     } finally {
       setSource('photo');
       setStep('edit');
@@ -139,12 +148,12 @@ export const LogBloodPressureScreen = () => {
     await extractFromImage(asset.uri, asset.mimeType ?? 'image/jpeg');
   };
 
-  const startManual = () => {
+  // A mano: las ruedas empiezan en la última toma (o en 120/80)
+  const startManual = async () => {
     setSource('manual');
-    setSystolic('');
-    setDiastolic('');
-    setPulse('');
     setProcessingError('');
+    const last = [...(await getBloodPressureEntries().catch(() => []))].sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
+    setValues(last?.systolic ?? 120, last?.diastolic ?? 80, last?.pulse ?? null);
     setStep('edit');
   };
 
@@ -163,32 +172,25 @@ export const LogBloodPressureScreen = () => {
     });
   };
 
-  const isValid =
-    systolic.trim() !== '' &&
-    diastolic.trim() !== '' &&
-    !Number.isNaN(parseInt(systolic, 10)) &&
-    !Number.isNaN(parseInt(diastolic, 10));
+  const isValid = systolic > diastolic;
 
   const handleSave = async () => {
     if (!isValid) return;
     setSaving(true);
     try {
-      const parsedPulse =
-        pulse.trim() !== '' && !Number.isNaN(parseInt(pulse, 10)) ? parseInt(pulse, 10) : null;
-
       if (isEditing && id) {
         await updateBloodPressureEntry(id, {
-          systolic: parseInt(systolic, 10),
-          diastolic: parseInt(diastolic, 10),
-          pulse: parsedPulse,
+          systolic,
+          diastolic,
+          pulse,
           fecha: dateTime.toISOString(),
         });
       } else {
         await saveBloodPressureEntry({
           id: `${Date.now()}`,
-          systolic: parseInt(systolic, 10),
-          diastolic: parseInt(diastolic, 10),
-          pulse: parsedPulse,
+          systolic,
+          diastolic,
+          pulse,
           fecha: dateTime.toISOString(),
           source,
           createdAt: new Date().toISOString(),
@@ -261,7 +263,7 @@ export const LogBloodPressureScreen = () => {
 
         <View style={styles.header}>
           <View style={styles.iconBadge}>
-            <Ionicons name="heart" size={26} color={Colors.danger} />
+            <Ionicons name="speedometer-outline" size={26} color={Colors.coral} />
           </View>
           <Text style={styles.title}>{t('Blood Pressure')}</Text>
         </View>
@@ -276,49 +278,36 @@ export const LogBloodPressureScreen = () => {
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.row} onPress={() => setPickerMode('time')}>
+          <TouchableOpacity style={[styles.row, styles.rowLast]} onPress={() => setPickerMode('time')}>
             <Text style={styles.rowLabel}>{t('Time')}</Text>
             <View style={styles.rowValuePill}>
               <Text style={styles.rowValueText}>{formatTime(dateTime)}</Text>
             </View>
           </TouchableOpacity>
 
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('Systolic')}</Text>
-            <TextInput
-              style={styles.inlineInput}
-              value={systolic}
-              onChangeText={setSystolic}
-              keyboardType="number-pad"
-              placeholder={t('mmHg')}
-              placeholderTextColor={Colors.textMuted}
-            />
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>{t('Diastolic')}</Text>
-            <TextInput
-              style={styles.inlineInput}
-              value={diastolic}
-              onChangeText={setDiastolic}
-              keyboardType="number-pad"
-              placeholder={t('mmHg')}
-              placeholderTextColor={Colors.textMuted}
-            />
-          </View>
-
-          <View style={[styles.row, styles.rowLast]}>
-            <Text style={styles.rowLabel}>{t('Pulse')}</Text>
-            <TextInput
-              style={styles.inlineInput}
-              value={pulse}
-              onChangeText={setPulse}
-              keyboardType="number-pad"
-              placeholder={t('bpm (optional)')}
-              placeholderTextColor={Colors.textMuted}
-            />
-          </View>
         </View>
+
+        {/* Una rueda por valor: se gira arriba y abajo hasta la cifra */}
+        <View style={styles.wheels} key={wheelKey}>
+          {[
+            { label: t('Systolic'), unit: 'mmHg', items: SYS_ITEMS, index: systolic - SYS_MIN, set: (i: number) => setSystolic(i + SYS_MIN) },
+            { label: t('Diastolic'), unit: 'mmHg', items: DIA_ITEMS, index: diastolic - DIA_MIN, set: (i: number) => setDiastolic(i + DIA_MIN) },
+            {
+              label: t('Pulse'),
+              unit: t('bpm (optional)'),
+              items: PULSE_ITEMS,
+              index: pulse == null ? 0 : pulse - PULSE_MIN + 1,
+              set: (i: number) => setPulse(i === 0 ? null : i - 1 + PULSE_MIN),
+            },
+          ].map((w) => (
+            <View key={w.label} style={styles.wheelCol}>
+              <Text style={styles.wheelLabel}>{w.label}</Text>
+              <WheelPicker items={w.items} selectedIndex={w.index} onChange={w.set} width={86} />
+              <Text style={styles.wheelUnit}>{w.unit}</Text>
+            </View>
+          ))}
+        </View>
+        {!isValid && <Text style={styles.errorText}>{t('The systolic (high) number must be above the diastolic (low) one.')}</Text>}
 
         {isEditing && (
           <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
@@ -454,13 +443,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  inlineInput: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'right',
-    minWidth: 100,
-  },
+  wheels: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginHorizontal: 20, marginBottom: 12 },
+  wheelCol: { alignItems: 'center', flex: 1 },
+  wheelLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', marginBottom: 4 },
+  wheelUnit: { color: Colors.textMuted, fontSize: 11, marginTop: 4, textAlign: 'center' },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',

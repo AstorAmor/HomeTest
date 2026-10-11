@@ -29,7 +29,7 @@ export function DoseRows({ doses, onChange }: { doses: ScheduledDose[]; onChange
           <Text style={styles.doseTime}>{hhmm(d.at)}</Text>
           <MedIcon name={d.name} kind={d.kind ?? 'medication'} size={15} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.doseName}>{d.name}</Text>
+            <Text style={styles.doseName}>{t(d.name)}</Text>
             {d.dose ? <Text style={styles.doseSub}>{d.dose}</Text> : null}
           </View>
           {d.log ? (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/HealthIcons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { AppSection, SECTION_OPTIONS } from '@/data/appPrefs';
@@ -30,7 +30,7 @@ export const SectionToggles = ({
               onPress={() => router.push({ pathname: '/feature-guide', params: { id: o.id } })}
               activeOpacity={0.7}
             >
-              <Ionicons name={o.icon as any} size={20} color={on ? Colors.accent : Colors.textMuted} />
+              <AppIcon name={o.icon} size={20} color={on ? Colors.accent : Colors.textMuted} />
               <View style={{ flex: 1 }}>
                 <View style={styles.titleRow}>
                   <Text style={styles.rowTitle}>{o.title}</Text>

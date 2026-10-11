@@ -49,8 +49,8 @@ const CATEGORY_ORDER: NudgeCategory[] = ['wellbeing', 'cycle', 'digestive', 'uri
 const CATEGORY_LABEL: Record<NudgeCategory, string> = {
   wellbeing: 'Energy and sleep',
   cycle: 'Cycle',
-  digestive: 'Gut',
-  urinary: 'Bladder',
+  digestive: 'Digestion',
+  urinary: 'Hydration',
   medication: 'Medication',
   measurements: 'Blood pressure and glucose',
   engagement: 'Reminders',

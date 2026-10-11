@@ -5,19 +5,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
-import { currentReport } from '@/data/reportRepository';
-import { t } from '@/i18n';
+import { baselineReport, currentReport } from '@/data/reportRepository';
+import { AppIcon } from '@/components/HealthIcons';
+import { kuovaAge, QUALITY_LABEL } from '@/logic/kuovaAge';
+import { num, t } from '@/i18n';
 
-// "Tu edad biológica": cómo se calcula (PhenoAge), no los resultados de la analítica (esos viven en
-// Laboratorio). Ahora es un EJEMPLO: el cálculo real está pendiente de validar con el asesor médico
+// "Edad KUOVA" (tu edad biológica): un único número con su grado de confianza (src/logic/kuovaAge.ts)
+// y cómo se calcula (PhenoAge); los resultados de la analítica viven en Laboratorio. Ahora es un
+// EJEMPLO: el cálculo real está pendiente de validar con el asesor médico
 // (src/logic/rulesEngine/biologicalAge.ts).
 
 // Los 9 valores de una analítica normal que usa PhenoAge, agrupados por lo que reflejan
 const INPUTS: { group: string; icon: string; markers: string[] }[] = [
   { group: 'Inflammation', icon: 'flame-outline', markers: ['C-reactive protein (CRP)'] },
-  { group: 'Sugar metabolism', icon: 'water-outline', markers: ['Glucose'] },
+  { group: 'Sugar metabolism', icon: 'glucose', markers: ['Glucose'] },
   { group: 'Liver and nutrition', icon: 'leaf-outline', markers: ['Albumin', 'Alkaline phosphatase'] },
-  { group: 'Kidneys', icon: 'funnel-outline', markers: ['Creatinine'] },
+  { group: 'Kidneys', icon: 'kidney', markers: ['Creatinine'] },
   { group: 'Blood and defences', icon: 'shield-checkmark-outline', markers: ['White blood cells', 'Lymphocytes (%)', 'Red cell size (MCV)', 'Red cell size variation (RDW)'] },
 ];
 
@@ -29,18 +32,39 @@ const SOURCES = [
 export const BiologicalAgeScreen = () => {
   const router = useRouter();
   const p = currentReport.summary.phenoage;
+  const k = p.available ? kuovaAge(p) : null;
+  const before = baselineReport.summary.phenoage;
+  const change = k && before.available ? Math.round((k.age - kuovaAge(before).age) * 10) / 10 : null;
+  const years = (n: number) => t(Math.abs(n) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(n)) });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your biological age')} showBack />
+        <ScreenHeader title={t('KUOVA age')} showBack />
 
-        {p.available && (
+        {k && (
           <View style={styles.hero}>
-            <Text style={styles.heroValue}>
-              {Math.round(p.low)}–{Math.round(p.high)} <Text style={styles.heroUnit}>{t('years')}</Text>
+            <Text style={styles.heroLabel}>{t('Your KUOVA age')}</Text>
+            <Text style={styles.heroValue}>{num(k.age.toFixed(1))}</Text>
+            <Text style={[styles.heroDiff, { color: k.diff >= 0 ? Colors.ok : Colors.attention }]}>
+              {k.diff >= 0 ? t('{years} younger', { years: years(k.diff) }) : t('{years} older', { years: years(k.diff) })}
             </Text>
             <Text style={styles.heroSub}>{t('Your age: {age}', { age: p.chronological_age })}</Text>
+            {change !== null && change !== 0 && (
+              <View style={styles.changeChip}>
+                <Ionicons name={change < 0 ? 'caret-down' : 'caret-up'} size={13} color={change < 0 ? Colors.ok : Colors.attention} />
+                <Text style={styles.changeText}>{t('{n} since your previous test', { n: `${change > 0 ? '+' : '−'}${num(Math.abs(change).toFixed(1))}` })}</Text>
+              </View>
+            )}
+            <View style={styles.confidence}>
+              <View style={styles.confidenceIcon}>
+                <Ionicons name="checkmark" size={16} color={Colors.background} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.confidenceTitle}>{t('{n}% confidence', { n: k.confidence })}</Text>
+                <Text style={styles.confidenceSub}>{t(QUALITY_LABEL[k.quality])}</Text>
+              </View>
+            </View>
             <View style={styles.sampleTag}>
               <Ionicons name="flask-outline" size={13} color={Colors.warning} />
               <Text style={styles.sampleText}>
@@ -66,7 +90,7 @@ export const BiologicalAgeScreen = () => {
         <View style={styles.card}>
           {INPUTS.map((g, i) => (
             <View key={g.group} style={[styles.group, i > 0 && styles.divider]}>
-              <Ionicons name={g.icon as any} size={18} color={Colors.accent} />
+              <AppIcon name={g.icon} size={18} color={Colors.accent} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.groupTitle}>{t(g.group)}</Text>
                 <Text style={styles.groupMarkers}>{g.markers.map((m) => t(m)).join(' · ')}</Text>
@@ -80,10 +104,10 @@ export const BiologicalAgeScreen = () => {
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
 
-        <Text style={styles.section}>{t('Why a range and not one number')}</Text>
+        <Text style={styles.section}>{t('What the confidence means')}</Text>
         <Text style={styles.body}>
           {t(
-            'The same blood test varies a little from one day to another and from one lab to another. A range is more honest than a single number: what matters is how it moves between your tests.'
+            'The same blood test varies a little from one day to another and from one lab to another. That is why next to your KUOVA age we show how much you can trust it: with high confidence, changes between your tests are real; with low confidence, repeat the test before drawing conclusions.'
           )}
         </Text>
 
@@ -114,8 +138,15 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   hero: { alignItems: 'center', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, padding: 18, marginTop: 8, gap: 4 },
-  heroValue: { color: Colors.accent, fontSize: 40, fontWeight: '800' },
-  heroUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '600' },
+  heroLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
+  heroValue: { color: Colors.textPrimary, fontSize: 64, fontWeight: '800', lineHeight: 72 },
+  heroDiff: { fontSize: 18, fontWeight: '800' },
+  changeChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.background, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, marginTop: 6 },
+  changeText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  confidence: { flexDirection: 'row', alignItems: 'center', gap: 12, alignSelf: 'stretch', backgroundColor: withAlpha(Colors.ok, 0.1), borderRadius: 14, padding: 12, marginTop: 12 },
+  confidenceIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.ok, alignItems: 'center', justifyContent: 'center' },
+  confidenceTitle: { color: Colors.ok, fontSize: 17, fontWeight: '800' },
+  confidenceSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   heroSub: { color: Colors.textSecondary, fontSize: 13 },
   sampleTag: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10, backgroundColor: withAlpha(Colors.warning, 0.1), borderRadius: 10, padding: 10 },
   sampleText: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flex: 1 },

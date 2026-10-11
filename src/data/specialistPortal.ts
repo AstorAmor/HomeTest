@@ -329,6 +329,7 @@ export const portal = {
           nextAppointment: upcoming[0]?.startsAt ?? null,
           appointmentToday: upcoming.some((a) => new Date(a.startsAt).toDateString() === today),
           flaggedMarkers: lab ? lab.markers.filter((m) => m.status !== 'in').length : 0,
+          lastActivity: lab?.date ?? p.shareUntil ?? null,
         };
       });
     }
@@ -344,6 +345,7 @@ export const portal = {
       nextAppointment: r.next_appointment,
       appointmentToday: r.appointment_today,
       flaggedMarkers: 0, // se calcula al abrir su analítica compartida
+      lastActivity: r.next_appointment ?? null,
     }));
   },
 

@@ -123,6 +123,8 @@ export interface PatientSummary {
   // Estado del permiso: compartiendo, aún nada, caducado o retirado (y desde cuándo)
   shareState?: 'active' | 'none' | 'expired' | 'revoked';
   shareUntil?: string | null;
+  // Última novedad (su última analítica compartida o, si no hay, cuándo cambió el permiso): para ordenar por fecha
+  lastActivity?: string | null;
 }
 
 // Un dato que el paciente puede compartir y lo que el especialista ve de él

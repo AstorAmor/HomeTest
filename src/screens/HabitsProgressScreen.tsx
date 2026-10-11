@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { SimpleMetricChart } from '@/components/SimpleMetricChart';
+import { TrendChart } from '@/components/TrendChart';
 import { Colors } from '@/constants/colors';
 import { currentReport, markersBackInRange, userProfile, wearableTimeseries } from '@/data/reportRepository';
 import { getMarkerDisplayNameEn, getMarkerValueTextEn } from '@/data/reportContentEn';
-import { t } from '@/i18n';
+import { dateLocale, num, t } from '@/i18n';
 
 interface HabitStat {
   key: string;
@@ -92,8 +92,9 @@ const HABIT_STATS: HabitStat[] = [
 const formatStat = (value: number, decimals = 0) =>
   decimals > 0 ? value.toFixed(decimals) : Math.round(value).toString();
 
-const toSeriesEntries = (values: number[]) =>
-  values.map((valor, i) => ({ valor, fecha: wearableTimeseries.months[i] }));
+// Etiqueta corta del mes ("may") para el eje de la gráfica
+const monthLabels = () =>
+  wearableTimeseries.months.map((m) => new Date(`${m.slice(0, 7)}-15T12:00:00`).toLocaleDateString(dateLocale(), { month: 'short' }));
 
 // "Your evolution report" (My Data → al final): cómo han cambiado tus hábitos (sueño, pulso en
 // reposo, HRV, pasos…) y qué marcadores han vuelto a su rango entre la analítica anterior y la
@@ -177,11 +178,11 @@ export const HabitsProgressScreen = () => (
       <Text style={styles.sectionTitle}>{t('6-month trend')}</Text>
       <View style={styles.trendCard}>
         <Text style={styles.trendLabel}>{t('Sleep (hours/night)')}</Text>
-        <SimpleMetricChart entries={toSeriesEntries(wearableTimeseries.series.sleep_avg_hours)} color={Colors.accent} />
+        <TrendChart labels={monthLabels()} series={[{ color: Colors.violet, values: wearableTimeseries.series.sleep_avg_hours }]} height={120} formatValue={(v) => `${num(v.toFixed(1))} h`} />
       </View>
       <View style={styles.trendCard}>
         <Text style={styles.trendLabel}>{t('Daily steps')}</Text>
-        <SimpleMetricChart entries={toSeriesEntries(wearableTimeseries.series.steps_avg_daily)} color={Colors.pulseAccent} />
+        <TrendChart labels={monthLabels()} series={[{ color: Colors.sky, values: wearableTimeseries.series.steps_avg_daily }]} height={120} formatY={(v) => `${num((v / 1000).toFixed(1))}k`} formatValue={(v) => Math.round(v).toLocaleString(dateLocale())} />
       </View>
 
       <TouchableOpacity style={styles.share} onPress={share} activeOpacity={0.85}>

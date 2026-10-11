@@ -13,6 +13,8 @@ export default function GlucoseDetail() {
     <SimpleMetricDetailScreen
       title={t('Blood Glucose')}
       color={Colors.accent}
+      icon="glucose"
+      band={{ low: 70, high: 99 }}
       loadEntries={async () => {
         const entries = await getGlucoseEntries();
         return entries.map((e) => ({
