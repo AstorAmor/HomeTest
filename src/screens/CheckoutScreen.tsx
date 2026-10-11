@@ -18,13 +18,17 @@ const findProduct = (id?: string): CatalogTest | undefined => {
   return p && localizeTest(p);
 };
 
-// Pago de un test o plan. Con Revolut configurado abre su página de pago segura (la app
+// Pago de un test o plan (?id=) o de varios tests juntos (?ids=a,b, desde el cuestionario). Con Revolut configurado abre su página de pago segura (la app
 // nunca ve la tarjeta) y espera a que el webhook confirme el cobro. Sin Revolut (o en
 // modo demo) muestra un pago SIMULADO que no cobra nada.
 export const CheckoutScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string; status?: string; order_id?: string }>();
-  const product = findProduct(params.id);
+  const params = useLocalSearchParams<{ id?: string; ids?: string; status?: string; order_id?: string }>();
+  const items = (params.ids ? params.ids.split(',') : params.id ? [params.id] : [])
+    .map(findProduct)
+    .filter((p): p is CatalogTest => !!p && (!params.ids || !p.perYear)); // los planes no van en un pedido conjunto
+  const product = items[0];
+  const totalPrice = items.reduce((sum, p) => sum + p.price, 0);
   const [stage, setStage] = useState<Stage>('review');
   const [message, setMessage] = useState('');
   const [simulated, setSimulated] = useState(false);
@@ -49,7 +53,7 @@ export const CheckoutScreen = () => {
     if (!product) return;
     setStage('starting');
     try {
-      const start = await startCheckout(product.id);
+      const start = await startCheckout(items.map((p) => p.id));
       if (start.kind === 'simulated') {
         setSimulated(true);
         return setStage('simulated');
@@ -83,7 +87,29 @@ export const CheckoutScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Checkout')} showBack />
 
-        {product && !done && (
+        {items.length > 1 && !done && (
+          <View style={styles.card}>
+            {items.map((p) => (
+              <View key={p.id} style={styles.itemRow}>
+                <View style={styles.icon}>
+                  <MaterialCommunityIcons name={testIcon(p) as any} size={20} color={Colors.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name}>{p.name}</Text>
+                  <Text style={styles.small}>{t('Sample: {what}', { what: p.sample })}</Text>
+                </View>
+                <Text style={styles.itemPrice}>{formatPrice(p.price)}</Text>
+              </View>
+            ))}
+            <Text style={styles.small}>{t('One-off payment')}</Text>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>{t('Total')}</Text>
+              <Text style={styles.total}>{formatPrice(totalPrice)}</Text>
+            </View>
+          </View>
+        )}
+
+        {items.length === 1 && product && !done && (
           <View style={styles.card}>
             <View style={styles.row}>
               <View style={styles.icon}>
@@ -181,7 +207,7 @@ export const CheckoutScreen = () => {
           {stage === 'starting' ? (
             <ActivityIndicator color={Colors.background} />
           ) : (
-            <Text style={styles.ctaText}>{t('Pay {price}', { price: formatPrice(product.price) })}</Text>
+            <Text style={styles.ctaText}>{t('Pay {price}', { price: formatPrice(totalPrice) })}</Text>
           )}
         </TouchableOpacity>
       )}
@@ -211,6 +237,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   row: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 8 },
+  itemRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 6 },
+  itemPrice: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
   icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
   name: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
   small: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flexShrink: 1 },

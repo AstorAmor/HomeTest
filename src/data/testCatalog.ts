@@ -7,6 +7,8 @@
 
 import { getLang } from '@/i18n';
 import { CATEGORY_LABEL_ES, DELIVERY_ES, SAMPLE_ES, TEST_COPY_ES } from '@/i18n/testCatalogEs';
+import { TEST_GUIDE_ES } from '@/i18n/testGuideEs';
+import { TEST_GUIDE } from './testGuide';
 
 export type TestCategory = 'membership' | 'blood' | 'hormonal' | 'preventive' | 'digestive' | 'sexual' | 'consultation';
 
@@ -33,6 +35,9 @@ export interface CatalogTest {
   discreet?: boolean;
   icon?: string; // MaterialCommunityIcons; si falta, el de la categoría
   perYear?: boolean; // planes anuales
+  // Para qué puede servir y cada cuánto repetirlo (src/data/testGuide.ts); lo rellena localizeTest
+  useful?: string;
+  repeat?: string;
 }
 
 // Iconos (MaterialCommunityIcons). Hormonas: estructura hexagonal; el símbolo
@@ -98,6 +103,7 @@ export const CATALOG: CatalogTest[] = [
   { id: 'performance', category: 'blood', name: 'Sports performance', price: 99.99, description: 'Recovery, inflammation and hormonal status for people who train.', includes: ['CK', 'hs-CRP', 'Testosterone', 'Cortisol', 'Ferritin'], sample: 'Blood', delivery: BLOOD_DELIVERY, block: 2 },
   { id: 'vitamin_d', category: 'blood', name: 'Vitamin D', price: 39.99, description: 'Vitamin D levels with medical interpretation.', includes: ['25-OH vitamin D'], sample: 'Blood', delivery: BLOOD_DELIVERY, block: 2 },
   { id: 'vitamin_b', category: 'blood', name: 'B vitamins', price: 59.99, description: 'B12 and folate deficiencies.', includes: ['Vitamin B12', 'Folate'], sample: 'Blood', delivery: BLOOD_DELIVERY, block: 2 },
+  { id: 'iron', category: 'blood', name: 'Iron and anaemia', price: 49, description: 'Blood count and iron stores, plus B12 and folate: the usual causes of anaemia.', includes: ['Full blood count', 'Iron', 'Ferritin', 'Transferrin', 'Vitamin B12', 'Folate'], sample: 'Blood', delivery: BLOOD_DELIVERY, block: 2 },
   { id: 'vitamins', category: 'blood', name: 'Essential vitamins', price: 69.99, description: 'Vitamin D, B12 and folate with medical interpretation.', includes: ['Vitamin D', 'Vitamin B12', 'Folate'], sample: 'Blood', delivery: BLOOD_DELIVERY, block: 2 },
   // Hormonal
   { id: 'cycle_hormones', category: 'hormonal', name: 'Hormonal cycle tracking', price: 139.99, description: 'Two kits to measure hormones at the key phases of your cycle.', includes: ['Oestradiol', 'Progesterone', 'LH', 'FSH'], sample: 'Blood · 2 kits', delivery: 'Two kits at home in 24-48 h · results 3-5 working days after each sample', block: 1, icon: FEMALE },
@@ -151,11 +157,12 @@ const deliveryEs = (d: string) =>
 
 // El producto con sus textos en el idioma de la app (los datos de arriba están en inglés).
 export function localizeTest(test: CatalogTest): CatalogTest {
-  if (getLang() !== 'es') return test;
+  if (getLang() !== 'es') return { ...test, ...TEST_GUIDE[test.id] };
   const es = TEST_COPY_ES[test.id];
-  if (!es) return test;
+  if (!es) return { ...test, ...TEST_GUIDE[test.id] };
   return {
     ...test,
+    ...(TEST_GUIDE_ES[test.id] ?? TEST_GUIDE[test.id]),
     name: es.name,
     description: es.description,
     includes: es.includes,

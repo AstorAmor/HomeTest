@@ -88,6 +88,32 @@ export const LabScreen = () => {
           ))}
         </View>
 
+        {/* Entre las analíticas de la suscripción y los resultados: ayuda para elegir qué pedir */}
+        <View style={styles.finderCard}>
+          <View style={styles.finderHead}>
+            <View style={styles.finderIcon}>
+              <Ionicons name="help-buoy-outline" size={20} color={Colors.accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.finderTitle}>{t('Feeling different and not sure which test to order?')}</Text>
+              <Text style={styles.finderSub}>{t('Answer 4 quick questions or ask a doctor.')}</Text>
+            </View>
+          </View>
+          <View style={styles.finderButtons}>
+            <TouchableOpacity
+              style={[styles.finderBtn, styles.finderBtnGhost]}
+              onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}
+            >
+              <Ionicons name="medkit-outline" size={17} color={Colors.accent} />
+              <Text style={[styles.finderBtnText, { color: Colors.accent }]}>{t('Talk to a specialist')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.finderBtn} onPress={() => router.push('/test-finder')}>
+              <Ionicons name="list-outline" size={17} color={Colors.background} />
+              <Text style={styles.finderBtnText}>{t('Take this short quiz')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <Text style={styles.sectionTitle}>{t('Lab Results')}</Text>
         <View style={styles.sectionBlock}>
           {LAB_REPORTS.map(({ id, title, lab, report }) => {
@@ -231,6 +257,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 14,
   },
+  finderCard: {
+    marginHorizontal: 20,
+    marginTop: -8,
+    marginBottom: 28,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    backgroundColor: Colors.card,
+    gap: 14,
+  },
+  finderHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  finderIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
+  finderTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', lineHeight: 21 },
+  finderSub: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
+  finderButtons: { flexDirection: 'row', gap: 10 },
+  finderBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.accent,
+    borderRadius: 22,
+    paddingVertical: 11,
+    paddingHorizontal: 10,
+  },
+  finderBtnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.accent },
+  finderBtnText: { color: Colors.background, fontSize: 13, fontWeight: '800', textAlign: 'center', flexShrink: 1 },
   planCard: {
     flexDirection: 'row',
     alignItems: 'center',

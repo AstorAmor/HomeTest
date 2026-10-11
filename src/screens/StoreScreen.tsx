@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors, withAlpha } from '@/constants/colors';
-import { CATALOG, categoryLabel, CatalogTest, formatPrice, localizeTest, PLANS, TestCategory, testIcon } from '@/data/testCatalog';
+import { Colors } from '@/constants/colors';
+import { CATALOG, categoryLabel, CatalogTest, localizeTest, PLANS, TestCategory } from '@/data/testCatalog';
+import { TestCard } from '@/components/TestCard';
 import { getMySubscription, listMyPaidProducts } from '@/data/orders';
 import { t as tr } from '@/i18n';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -33,80 +33,18 @@ export const StoreScreen = () => {
 
   const list = (filter === 'all' ? CATALOG : CATALOG.filter((t) => t.category === filter)).map(localizeTest);
 
-  const Card = ({ t, featured }: { t: CatalogTest; featured?: boolean }) => {
-    const open = openId === t.id || featured;
-    const isPaid = paid.has(t.id);
-    const isCurrent = t.perYear && currentPlan === t.id;
-    return (
-      <TouchableOpacity
-        style={[styles.card, featured && styles.featured]}
-        activeOpacity={0.9}
-        onPress={() => !featured && setOpenId(openId === t.id ? null : t.id)}
-      >
-        <View style={styles.cardHeader}>
-          <View style={[styles.catIcon, featured && { backgroundColor: withAlpha(Colors.amber, 0.18) }]}>
-            <MaterialCommunityIcons name={testIcon(t) as any} size={18} color={featured ? Colors.amber : Colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{t.name}</Text>
-            <Text style={styles.desc} numberOfLines={open ? undefined : 2}>
-              {t.description}
-            </Text>
-          </View>
-          <View style={styles.priceBox}>
-            <Text style={styles.price}>{formatPrice(t.price)}</Text>
-            {t.perYear && <Text style={styles.priceUnit}>{tr('/year')}</Text>}
-          </View>
-        </View>
-
-        {open && (
-          <View style={styles.details}>
-            <Text style={styles.detailLabel}>{tr("What's included")}</Text>
-            {t.includes.map((i, n) =>
-              // En las suscripciones, la primera línea (las analíticas) lleva a la lista de marcadores
-              t.perYear && n === 0 ? (
-                <TouchableOpacity key={i} style={styles.includeRow} onPress={() => router.push('/panel-markers')}>
-                  <Ionicons name="checkmark" size={14} color={Colors.accent} />
-                  <Text style={[styles.includeText, styles.includeLink]}>{i}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.accent} />
-                </TouchableOpacity>
-              ) : (
-                <View key={i} style={styles.includeRow}>
-                  <Ionicons name="checkmark" size={14} color={Colors.accent} />
-                  <Text style={styles.includeText}>{i}</Text>
-                </View>
-              ),
-            )}
-            <View style={styles.metaRow}>
-              <Ionicons name="flask-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.meta}>{tr('Sample: {what}', { what: t.sample })}</Text>
-            </View>
-            <View style={styles.metaRow}>
-              <Ionicons name="time-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.meta}>{t.delivery}</Text>
-            </View>
-            {t.discreet && (
-              <View style={styles.metaRow}>
-                <Ionicons name="lock-closed-outline" size={14} color={Colors.textSecondary} />
-                <Text style={styles.meta}>{tr('Results only visible to you. Not shared unless you choose to.')}</Text>
-              </View>
-            )}
-            <TouchableOpacity
-              style={[styles.order, (isPaid || isCurrent) && styles.orderDone]}
-              disabled={isCurrent}
-              onPress={() => router.push({ pathname: '/checkout', params: { id: t.id } })}
-            >
-              <Text style={[styles.orderText, (isPaid || isCurrent) && { color: Colors.accent }]}>
-                {isCurrent
-                  ? tr('Your current plan')
-                  : `${t.perYear ? (currentPlan ? tr('Upgrade to Premium') : tr('Subscribe')) : isPaid ? tr('Order again') : tr('Order')} · ${formatPrice(t.price)}`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
+  const Card = ({ t, featured }: { t: CatalogTest; featured?: boolean }) => (
+    <TestCard
+      test={t}
+      featured={featured}
+      open={openId === t.id}
+      onToggle={() => setOpenId(openId === t.id ? null : t.id)}
+      isPaid={paid.has(t.id)}
+      isCurrent={t.perYear && currentPlan === t.id}
+      hasPlan={!!currentPlan}
+      onOrder={() => router.push({ pathname: '/checkout', params: { id: t.id } })}
+    />
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -143,33 +81,6 @@ export const StoreScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 32 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
-    marginHorizontal: 20,
-    marginBottom: 10,
-  },
-  featured: { borderColor: withAlpha(Colors.amber, 0.55), marginBottom: 16 },
-  cardHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  catIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  desc: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  priceBox: { alignItems: 'flex-end' },
-  price: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  priceUnit: { color: Colors.textMuted, fontSize: 11 },
-  details: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.divider, gap: 6 },
-  detailLabel: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
-  includeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  includeText: { color: Colors.textPrimary, fontSize: 13, flexShrink: 1 },
-  includeLink: { color: Colors.accent, fontWeight: '700', textDecorationLine: 'underline' },
-  metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 4 },
-  meta: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flex: 1 },
-  order: { backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11, alignItems: 'center', marginTop: 8 },
-  orderDone: { backgroundColor: Colors.accentSoft },
-  orderText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
   filters: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },
   filter: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   filterOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },

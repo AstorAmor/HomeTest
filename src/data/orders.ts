@@ -10,10 +10,12 @@ export type CheckoutStart =
 
 // Pide al servidor una sesión de pago. Solo se envía el id del producto: el importe
 // lo pone el servidor.
-export async function startCheckout(productId: string): Promise<CheckoutStart> {
+// Uno o varios productos; varios tests van en un solo pago (el servidor suma los importes).
+export async function startCheckout(productIds: string[]): Promise<CheckoutStart> {
   if (!isRemoteActive() || !supabase) return { kind: 'simulated' };
   const returnUrl = Linking.createURL('checkout');
-  const { data, error } = await supabase.functions.invoke('create-checkout', { body: { productId, returnUrl } });
+  const body = productIds.length === 1 ? { productId: productIds[0], returnUrl } : { productIds, returnUrl };
+  const { data, error } = await supabase.functions.invoke('create-checkout', { body });
   if (error) throw new Error(error.message);
   if (!data?.configured || !data.url) return { kind: 'simulated' };
   return { kind: 'hosted', url: data.url, returnUrl };
@@ -31,7 +33,7 @@ export async function listMyPaidProducts(): Promise<string[]> {
   const now = Date.now();
   return data
     .filter((o) => !o.current_period_end || new Date(o.current_period_end).getTime() > now)
-    .map((o) => o.product_id);
+    .flatMap((o) => String(o.product_id).split('+')); // pedido conjunto: 'iron+vitamins'
 }
 
 // Estado de un pedido tras volver del pago (el webhook puede tardar unos segundos).

@@ -8,15 +8,21 @@ import { adminClient, createRevolutOrder, isAppReturnUrl, revolutConfigured } fr
 serve(async (body, userId) => {
   if (!revolutConfigured()) return json({ configured: false });
 
-  const productId = String(body?.productId ?? '');
-  const product = PRODUCTS[productId];
-  if (!product) return json({ error: 'Unknown product' }, 400);
+  // Un producto (productId) o varios tests en un solo pago (productIds, desde el cuestionario).
+  // El pedido conjunto se guarda como una fila con product_id 'a+b' y la suma de importes.
+  const ids: string[] = Array.isArray(body?.productIds) ? body.productIds.map(String) : [String(body?.productId ?? '')];
+  if (!ids.length || ids.length > 10 || new Set(ids).size !== ids.length) return json({ error: 'Invalid products' }, 400);
+  const items = ids.map((id) => PRODUCTS[id]);
+  if (items.some((p) => !p)) return json({ error: 'Unknown product' }, 400);
+  if (items.length > 1 && items.some((p) => p.interval)) return json({ error: 'Plans are paid on their own' }, 400);
+  const productId = ids.join('+');
+  const product = items.length === 1 ? items[0] : { name: items.map((p) => p.name).join(' + '), amountCents: items.reduce((s, p) => s + p.amountCents, 0) };
 
   const returnUrl = String(body?.returnUrl ?? '');
   if (!isAppReturnUrl(returnUrl)) return json({ error: 'Invalid return URL' }, 400);
 
   const db = adminClient();
-  const recurring = !!product.interval;
+  const recurring = items.length === 1 && !!items[0].interval;
   const { data: order, error } = await db
     .from('orders')
     .insert({ user_id: userId, product_id: productId, amount_cents: product.amountCents, recurring, provider: 'revolut' })

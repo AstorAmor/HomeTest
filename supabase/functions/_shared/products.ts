@@ -17,6 +17,7 @@ export const PRODUCTS: Record<string, Product> = {
   performance: { name: 'Sports performance', amountCents: 9999 },
   vitamin_d: { name: 'Vitamin D', amountCents: 3999 },
   vitamin_b: { name: 'B vitamins', amountCents: 5999 },
+  iron: { name: 'Iron and anaemia', amountCents: 4900 },
   vitamins: { name: 'Essential vitamins', amountCents: 6999 },
   cycle_hormones: { name: 'Hormonal cycle tracking', amountCents: 13999 },
   cortisol: { name: 'Cortisol', amountCents: 4999 },

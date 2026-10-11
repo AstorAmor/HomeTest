@@ -82,6 +82,11 @@ export const TEST_COPY_ES: Record<string, TestCopyEs> = {
     description: 'Déficit de vitamina B12 y ácido fólico.',
     includes: ['Vitamina B12', 'Ácido fólico'],
   },
+  iron: {
+    name: 'Hierro y anemia',
+    description: 'Hemograma y reservas de hierro, además de B12 y ácido fólico: las causas habituales de anemia.',
+    includes: ['Hemograma completo', 'Hierro', 'Ferritina', 'Transferrina', 'Vitamina B12', 'Ácido fólico'],
+  },
   vitamins: {
     name: 'Vitaminas esenciales',
     description: 'Vitamina D, B12 y ácido fólico con interpretación médica.',

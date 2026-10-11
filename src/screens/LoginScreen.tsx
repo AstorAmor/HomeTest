@@ -200,7 +200,7 @@ export const LoginScreen = () => {
               <Text style={styles.toggleText}>
                 {isSignUp
                   ? t('Already have an account? Sign in')
-                  : "Don't have an account? Create one"}
+                  : t("Don't have an account? Create one")}
               </Text>
             </TouchableOpacity>
           </View>

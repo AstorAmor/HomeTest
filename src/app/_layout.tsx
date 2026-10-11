@@ -96,6 +96,7 @@ export default function Layout() {
             <Stack.Screen name="exercise" options={{ presentation: 'modal', animation: 'fade' }} />
             <Stack.Screen name="metric" />
             <Stack.Screen name="store" />
+            <Stack.Screen name="test-finder" />
             <Stack.Screen name="schedule" />
             <Stack.Screen name="checkout" />
             <Stack.Screen name="book-lab" />
