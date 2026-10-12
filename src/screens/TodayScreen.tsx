@@ -714,6 +714,7 @@ export const TodayScreen = () => {
           <>
             <Text style={styles.sectionTitle}>{t('Keep learning')}</Text>
             <SpecialistCarousel
+              loop
               items={LEARNING_TOPICS.filter((x) => x.featured)}
               onSelect={(x) => router.push({ pathname: '/learn', params: { topic: x.id } })}
               more={{ label: t('More'), subtitle: t('All topics'), onPress: () => router.push('/learn-all') }}

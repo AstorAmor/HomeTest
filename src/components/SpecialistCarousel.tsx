@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, LayoutChangeEvent, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Image } from 'expo-image';
 import { Colors } from '@/constants/colors';
 import { SPECIALISTS, SpecialistCard } from '@/data/planImages';
 import { BlobArt } from './BlobArt';
+import { useWebShell } from '@/web/webMode';
 
 const CARD = 168; // tamaño de la foto central
 const GAP = 12;
@@ -16,7 +17,8 @@ const useNative = Platform.OS !== 'web';
 // al final una tarjeta "More" (p. ej. todos los temas en cuadrícula).
 // `loop`: carrusel infinito (al llegar al final sigue el primero, y a la izquierda nunca queda un
 // hueco vacío). Solo si caben menos tarjetas que las que hay: así nunca se ve la misma dos veces a la
-// vez (en una pantalla muy ancha se queda como lista normal).
+// vez. En una pantalla tan ancha que eso no se cumple, tampoco quedan huecos: si caben todas, van en
+// una fila centrada; si no, en una fila normal que empieza en el borde izquierdo.
 export const SpecialistCarousel = <T extends SpecialistCard>({
   onSelect,
   items,
@@ -40,7 +42,12 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
     ...(more ? [{ id: '__more', label: more.label, subtitle: more.subtitle, icon: 'view-grid-outline', palette: ['#2A2A2A', '#4A4A44', '#C9A36B'] } as unknown as T] : []),
   ];
   const n = base.length;
-  const looping = !!loop && boxWidth > 0 && boxWidth < (n - 1) * step;
+  // Hasta medirlo, el ancho se estima (la columna de la web de escritorio o la pantalla entera) para
+  // no pintar nunca en blanco ni enseñar un instante el hueco de la izquierda
+  const shell = useWebShell();
+  const box = boxWidth || (shell ? Math.min(760, width - 280) : width);
+  const looping = !!loop && box < (n - 1) * step;
+  const flat = !!loop && box >= (n - 1) * step; // pantalla muy ancha: fila sin huecos
   const list = looping ? [...base, ...base, ...base] : base;
 
   // Margen para que la primera tarjeta quede centrada. En la web, relativo al ancho del propio
@@ -62,6 +69,44 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
     if (i < n) scrollRef.current?.scrollTo?.({ x: x + n * step, animated: false });
     else if (i >= 2 * n) scrollRef.current?.scrollTo?.({ x: x - n * step, animated: false });
   };
+
+  const press = (s: T) => (s.id === '__more' && more ? more.onPress() : onSelect(s));
+  const card = (s: T) => (
+    <TouchableOpacity activeOpacity={0.9} onPress={() => press(s)}>
+      {s.icon && s.palette ? (
+        <BlobArt seed={s.id} palette={s.palette} icon={s.icon} size={CARD} />
+      ) : (
+        <View style={styles.photoWrap}>
+          <Image source={s.image} style={styles.photo} contentFit="cover" />
+        </View>
+      )}
+      <Text style={styles.label} numberOfLines={1}>
+        {s.label}
+      </Text>
+      <Text style={styles.subtitle} numberOfLines={1}>
+        {s.subtitle}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  if (flat) {
+    const fitsAll = box >= n * step - GAP;
+    return (
+      <View onLayout={(e: LayoutChangeEvent) => setBoxWidth(e.nativeEvent.layout.width)}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.flatRow, fitsAll && styles.flatRowCentered]}
+        >
+          {base.map((s) => (
+            <View key={s.id} style={{ width: CARD }}>
+              {card(s)}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View onLayout={(e: LayoutChangeEvent) => setBoxWidth(e.nativeEvent.layout.width)}>
@@ -121,4 +166,6 @@ const styles = StyleSheet.create({
   photo: { width: CARD, height: CARD },
   label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', textAlign: 'center', marginTop: 10 },
   subtitle: { color: Colors.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 2 },
+  flatRow: { gap: GAP, paddingHorizontal: 20 },
+  flatRowCentered: { flexGrow: 1, justifyContent: 'center' },
 });
