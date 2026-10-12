@@ -198,25 +198,21 @@ export const MyDataScreen = () => {
                 <Text style={styles.bioAgeTag}>{t('sample')}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </View>
-              {/* La insignia con el corazón de fondo (en lugar del reloj de arena) */}
+              {/* La insignia (en lugar del reloj de arena): dentro, solo el número */}
               <View style={styles.bioAgeBadge}>
-                <KuovaAgeBadge
-                  size={200}
-                  value={num(k.age.toFixed(1))}
-                  label={t('KUOVA age')}
-                  sub={t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
-                  subColor={k.diff >= 0 ? undefined : Colors.attention}
-                />
+                <KuovaAgeBadge size={190} value={num(k.age.toFixed(1))} />
               </View>
               <View style={styles.bioAgeFooter}>
+                <Text style={[styles.bioAgeDiff, { color: k.diff >= 0 ? Colors.gold : Colors.attention }]}>
+                  {t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
+                </Text>
                 <View style={styles.bioAgeConfidence}>
                   <Ionicons name="checkmark-circle" size={14} color={Colors.ok} />
                   <Text style={styles.bioAgeConfidenceText}>{t('{n}% confidence', { n: k.confidence })}</Text>
                 </View>
-                <Text style={styles.bioAgeSub}>
-                  {t('Your age: {age}', { age: now.chronological_age })}
-                  {change < 0 ? t(' · {n} since your previous test', { n: `−${num(Math.abs(change).toFixed(1))}` }) : ''}
-                </Text>
+                {change < 0 && (
+                  <Text style={styles.bioAgeSub}>{t('{n} since your previous test', { n: `−${num(Math.abs(change).toFixed(1))}` })}</Text>
+                )}
               </View>
             </TouchableOpacity>
           );
@@ -445,6 +441,7 @@ const styles = StyleSheet.create({
   bioAgeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bioAgeBadge: { alignItems: 'center', marginTop: 10 },
   bioAgeFooter: { alignItems: 'center', gap: 4, marginTop: 10 },
+  bioAgeDiff: { fontSize: 16, fontWeight: '800' },
   bioAgeConfidence: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   bioAgeConfidenceText: { color: Colors.ok, fontSize: 12, fontWeight: '800' },
   genetic: {

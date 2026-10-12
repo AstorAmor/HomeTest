@@ -46,14 +46,10 @@ export const BiologicalAgeScreen = () => {
 
         {k && (
           <View style={styles.hero}>
-            <KuovaAgeBadge
-              size={250}
-              value={num(k.age.toFixed(1))}
-              label={t('KUOVA age')}
-              sub={k.diff >= 0 ? t('{years} younger', { years: years(k.diff) }) : t('{years} older', { years: years(k.diff) })}
-              subColor={k.diff >= 0 ? undefined : Colors.attention}
-            />
-            <Text style={styles.heroSub}>{t('Your age: {age}', { age: p.chronological_age })}</Text>
+            <KuovaAgeBadge size={250} value={num(k.age.toFixed(1))} />
+            <Text style={[styles.heroDiff, { color: k.diff >= 0 ? Colors.gold : Colors.attention }]}>
+              {k.diff >= 0 ? t('{years} younger', { years: years(k.diff) }) : t('{years} older', { years: years(k.diff) })}
+            </Text>
             {change !== null && change !== 0 && (
               <View style={styles.changeChip}>
                 <Ionicons name={change < 0 ? 'caret-down' : 'caret-up'} size={13} color={change < 0 ? Colors.ok : Colors.attention} />
@@ -148,7 +144,7 @@ const styles = StyleSheet.create({
   confidenceIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.ok, alignItems: 'center', justifyContent: 'center' },
   confidenceTitle: { color: Colors.ok, fontSize: 17, fontWeight: '800' },
   confidenceSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  heroSub: { color: Colors.textSecondary, fontSize: 13 },
+  heroDiff: { fontSize: 18, fontWeight: '800', marginTop: 10 },
   sampleTag: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10, backgroundColor: withAlpha(Colors.warning, 0.1), borderRadius: 10, padding: 10 },
   sampleText: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flex: 1 },
   section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginTop: 22, marginBottom: 8 },
