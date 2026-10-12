@@ -1,108 +1,58 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
+import { Image } from 'expo-image';
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 
-// Insignia de la Edad KUOVA (en lugar del reloj de arena): un medallón con aro dorado y destellos,
-// con solo el número dentro (el resto va fuera del círculo). El corazón de fondo será una imagen
-// que pasará el fundador (una para el tema oscuro y otra para el claro); mientras, sin corazón.
-// En tema oscuro, fondo verde noche; en claro, fondo como el de la app.
-
-const PALETTE = {
-  dark: {
-    bg0: '#163A31',
-    bg1: '#0A1915',
-    ring: '#C9A36B',
-    ring2: '#2E6B57',
-    dots: ['#E2C27F', '#7FC29B', '#F3E7C9'],
-    num: '#F6F3EC',
-    glow: 0.3,
-  },
-  light: {
-    bg0: '#FFFFFF',
-    bg1: '#EFE9DD',
-    ring: '#B8904F',
-    ring2: '#8DB6A2',
-    dots: ['#C9A36B', '#4F9A7C', '#9CC9B4'],
-    num: '#0E2A24',
-    glow: 0.16,
-  },
+// Insignia de la Edad KUOVA, el "buque insignia" de Mis datos: la foto del corazón con su nebulosa
+// (la que eligió el fundador), recortada en círculo, con el aro dorado y solo el número encima.
+// Hay cuatro versiones de la misma foto (assets/images/kuova-age, hechas con un script a partir del
+// original): dorada o rojiza en tema oscuro y verde o terracota en claro, según si la Edad KUOVA
+// sale por debajo (good) o por encima (watch) de la edad real.
+const ART = {
+  dark: { good: require('../../assets/images/kuova-age/dark_good.jpg'), watch: require('../../assets/images/kuova-age/dark_watch.jpg') },
+  light: { good: require('../../assets/images/kuova-age/light_good.jpg'), watch: require('../../assets/images/kuova-age/light_watch.jpg') },
 };
 
-// Destellos: siempre los mismos (semilla fija), más densos cerca del corazón
-const rng = (seed: number) => {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) % 4294967296;
-    return s / 4294967296;
-  };
-};
-const DOTS = (() => {
-  const r = rng(11);
-  return Array.from({ length: 130 }, () => {
-    const a = r() * Math.PI * 2;
-    const d = Math.pow(r(), 0.5) * 84;
-    const big = r() < 0.16;
-    return {
-      x: 100 + Math.cos(a) * d,
-      y: 100 + Math.sin(a) * d * 0.92,
-      r: big ? 3 + r() * 6 : 0.6 + Math.pow(r(), 2) * 2.4,
-      color: Math.floor(r() * 3),
-      opacity: (big ? 0.3 + r() * 0.35 : 0.5 + r() * 0.5) * Math.max(0, 1 - d / 108),
-    };
-  });
-})();
-
-let instances = 0;
-
-export const KuovaAgeBadge = ({ size = 220, value }: { size?: number; value: string }) => {
-  // Ids propios por insignia: con dos en pantalla, url(#id) apuntaría a la otra
-  const id = `ka${useRef(++instances).current}`;
-  const p = Colors.isLight ? PALETTE.light : PALETTE.dark;
+export const KuovaAgeBadge = ({ size = 220, value, good = true }: { size?: number; value: string; good?: boolean }) => {
+  const light = Colors.isLight;
+  const ring = light ? '#B8904F' : '#C9A36B';
   const k = size / 220;
   return (
     <View style={{ width: size, height: size }}>
-      <Svg width={size} height={size} viewBox="0 0 200 200">
+      <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: light ? '#F6F3EC' : '#0A1915' }}>
+        <Image source={ART[light ? 'light' : 'dark'][good ? 'good' : 'watch']} style={{ width: size, height: size }} contentFit="cover" />
+      </View>
+      <Svg width={size} height={size} viewBox="0 0 200 200" style={StyleSheet.absoluteFill} pointerEvents="none">
         <Defs>
-          <RadialGradient id={`${id}bg`} cx="50%" cy="48%" r="52%">
-            <Stop offset="0" stopColor={p.bg0} />
-            <Stop offset="1" stopColor={p.bg1} />
-          </RadialGradient>
-          <LinearGradient id={`${id}ring`} x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor={p.ring} stopOpacity={1} />
-            <Stop offset="0.5" stopColor={p.ring} stopOpacity={0.4} />
-            <Stop offset="1" stopColor={p.ring} stopOpacity={0.95} />
+          <LinearGradient id="kaRing" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={ring} stopOpacity={1} />
+            <Stop offset="0.5" stopColor={ring} stopOpacity={0.45} />
+            <Stop offset="1" stopColor={ring} stopOpacity={0.95} />
           </LinearGradient>
-          <RadialGradient id={`${id}glow`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={p.ring} stopOpacity={p.glow} />
-            <Stop offset="1" stopColor={p.ring} stopOpacity={0} />
-          </RadialGradient>
-          {p.dots.map((c, i) => (
-            <RadialGradient key={c} id={`${id}d${i}`} cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor={c} stopOpacity={1} />
-              <Stop offset="0.5" stopColor={c} stopOpacity={0.55} />
-              <Stop offset="1" stopColor={c} stopOpacity={0} />
-            </RadialGradient>
-          ))}
         </Defs>
-        <Circle cx={100} cy={100} r={96} fill={`url(#${id}bg)`} />
-        <Circle cx={100} cy={100} r={74} fill={`url(#${id}glow)`} />
-        {DOTS.map((dot, i) => (
-          <Circle key={i} cx={dot.x} cy={dot.y} r={dot.r} fill={`url(#${id}d${dot.color})`} opacity={dot.opacity} />
-        ))}
-        <Circle cx={100} cy={100} r={95} fill="none" stroke={`url(#${id}ring)`} strokeWidth={1.8} />
-        <Circle cx={100} cy={100} r={90} fill="none" stroke={p.ring2} strokeOpacity={0.4} strokeWidth={0.9} />
+        <Circle cx={100} cy={100} r={98.6} fill="none" stroke="url(#kaRing)" strokeWidth={2} />
+        <Circle cx={100} cy={100} r={94.5} fill="none" stroke={ring} strokeOpacity={0.35} strokeWidth={0.8} />
       </Svg>
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <View style={styles.center}>
-          <Text style={[styles.value, { color: p.num, fontSize: 62 * k, lineHeight: 70 * k }]}>{value}</Text>
-        </View>
+      <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
+        <Text
+          style={[
+            styles.value,
+            { fontSize: 60 * k, lineHeight: 68 * k, color: light ? '#0E2A24' : '#FFFFFF' },
+            light ? styles.shadowLight : styles.shadowDark,
+          ]}
+        >
+          {value}
+        </Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  center: { alignItems: 'center', justifyContent: 'center' },
   value: { fontWeight: '800' },
+  // Sombra suave para que el número se lea sobre el brillo del corazón
+  shadowDark: { textShadowColor: 'rgba(0,0,0,0.65)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 10 },
+  shadowLight: { textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 10 },
 });

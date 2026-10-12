@@ -1,11 +1,13 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, getLang, num, t } from '@/i18n';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
+import { AppIcon } from '@/components/HealthIcons';
+import { WheelPicker } from '@/components/WheelPicker';
 import { createMetricRepository } from '@/data/metricRepository';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
 
@@ -18,36 +20,56 @@ const formatTime = (date: Date) =>
 interface LogSimpleMetricScreenProps {
   title: string;
   unit: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string; // nombre de AppIcon
   color: string;
   repo: ReturnType<typeof createMetricRepository<SimpleMetricEntry>>;
+  // Ruedas: parte entera de min a max y, si decimals, una rueda más con el decimal
+  min: number;
+  max: number;
+  decimals?: boolean;
+  initial: number; // valor de partida si aún no hay ninguna medición
 }
 
-export const LogSimpleMetricScreen = ({
-  title,
-  unit,
-  icon,
-  color,
-  repo,
-}: LogSimpleMetricScreenProps) => {
+// Apunte de una medición de un solo valor (colesterol, cortisol, VO2max) con ruedas, como la
+// glucosa y la tensión: una para la parte entera y, si hace falta, otra para el decimal.
+
+export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max, decimals, initial }: LogSimpleMetricScreenProps) => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!id;
 
   const [dateTime, setDateTime] = useState(new Date());
-  const [value, setValue] = useState('');
+  const WHOLE = Array.from({ length: max - min + 1 }, (_, i) => String(min + i));
+  const DEC = Array.from({ length: 10 }, (_, i) => String(i));
+  const split = (v: number) => {
+    const r = Math.round(Math.max(min, Math.min(max, v)) * 10) / 10;
+    return { whole: Math.floor(r) - min, dec: Math.round((r - Math.floor(r)) * 10) };
+  };
+  const [whole, setWhole] = useState(split(initial).whole);
+  const [dec, setDec] = useState(split(initial).dec);
+  const [wheelKey, setWheelKey] = useState(0);
+  const value = min + whole + (decimals ? dec / 10 : 0);
+  const setFrom = (v: number) => {
+    const w = split(v);
+    setWhole(w.whole);
+    setDec(w.dec);
+    setWheelKey((k) => k + 1);
+  };
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Al editar, las ruedas empiezan en ese valor; si no, en la última medición
   useEffect(() => {
-    if (!id) return;
     repo.getAll().then((entries) => {
-      const existing = entries.find((e) => e.id === id);
+      const existing = id ? entries.find((e) => e.id === id) : undefined;
       if (existing) {
-        setValue(String(existing.valor));
+        setFrom(existing.valor);
         setDateTime(new Date(existing.fecha));
+      } else if (!id && entries.length) {
+        setFrom([...entries].sort((a, b) => b.fecha.localeCompare(a.fecha))[0].valor);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const onPickerChange = (_event: unknown, selected?: Date) => {
@@ -65,13 +87,13 @@ export const LogSimpleMetricScreen = ({
     });
   };
 
-  const isValid = value.trim() !== '' && !Number.isNaN(parseFloat(value));
+  const isValid = value >= min;
 
   const handleSave = async () => {
     if (!isValid) return;
     setSaving(true);
     try {
-      const numericValue = parseFloat(value);
+      const numericValue = Math.round(value * 10) / 10;
       if (isEditing && id) {
         await repo.update(id, { valor: numericValue, fecha: dateTime.toISOString() });
       } else {
@@ -111,45 +133,50 @@ export const LogSimpleMetricScreen = ({
       </View>
 
       <View style={styles.header}>
-        <View style={[styles.iconBadge, { backgroundColor: `${color}22` }]}>
-          <Ionicons name={icon} size={26} color={color} />
+        <View style={[styles.iconBadge, { backgroundColor: withAlpha(color, 0.14) }]}>
+          <AppIcon name={icon} size={26} color={color} />
         </View>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>{t(title)}</Text>
       </View>
 
       <View style={styles.list}>
         <TouchableOpacity style={styles.row} onPress={() => setPickerMode('date')}>
-          <Text style={styles.rowLabel}>Date</Text>
+          <Text style={styles.rowLabel}>{t('Date')}</Text>
           <View style={styles.rowValuePill}>
             <Text style={styles.rowValueText}>{formatDate(dateTime)}</Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.row} onPress={() => setPickerMode('time')}>
-          <Text style={styles.rowLabel}>Time</Text>
+          <Text style={styles.rowLabel}>{t('Time')}</Text>
           <View style={styles.rowValuePill}>
             <Text style={styles.rowValueText}>{formatTime(dateTime)}</Text>
           </View>
         </TouchableOpacity>
 
         <View style={[styles.row, styles.rowLast]}>
-          <Text style={styles.rowLabel}>{title}</Text>
-          <TextInput
-            style={styles.inlineInput}
-            value={value}
-            onChangeText={setValue}
-            keyboardType="decimal-pad"
-            placeholder={unit}
-            placeholderTextColor={Colors.textMuted}
-            autoFocus={!isEditing}
-          />
+          <Text style={styles.rowLabel}>{t(title)}</Text>
+          <Text style={styles.rowValuePlain}>
+            {num(decimals ? value.toFixed(1) : String(value))} {unit}
+          </Text>
         </View>
+      </View>
+
+      <View style={styles.wheels} key={wheelKey}>
+        <WheelPicker items={WHOLE} selectedIndex={whole} onChange={setWhole} width={84} />
+        {decimals && (
+          <>
+            <Text style={styles.wheelComma}>{getLang() === 'en' ? '.' : ','}</Text>
+            <WheelPicker items={DEC} selectedIndex={dec} onChange={setDec} width={56} />
+          </>
+        )}
+        <Text style={styles.wheelUnit}>{unit}</Text>
       </View>
 
       {isEditing && (
         <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
           <Ionicons name="trash-outline" size={16} color={Colors.danger} />
-          <Text style={styles.deleteButtonText}>Delete entry</Text>
+          <Text style={styles.deleteButtonText}>{t('Delete entry')}</Text>
         </TouchableOpacity>
       )}
 
@@ -237,13 +264,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  inlineInput: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'right',
-    minWidth: 100,
-  },
+  rowValuePlain: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  wheelComma: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800' },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700', marginLeft: 8 },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',

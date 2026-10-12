@@ -16,6 +16,7 @@ import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
+import { vo2maxRepository } from '@/data/vo2maxRepository';
 import { baselineReport, currentReport } from '@/data/reportRepository';
 import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { cycleRepository } from '@/data/cycleRepository';
@@ -95,6 +96,7 @@ export const MyDataScreen = () => {
   const [glucose, setGlucose] = useDeepState<ChartData | null>(null);
   const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(null);
   const [cortisol, setCortisol] = useDeepState<ChartData | null>(null);
+  const [vo2, setVo2] = useDeepState<ChartData | null>(null);
   const [bp, setBp] = useDeepState<ChartData | null>(null);
   // El ciclo menstrual solo se muestra a perfiles de mujer
   const [sex, setSex] = useState<Sex | undefined>(undefined);
@@ -108,15 +110,23 @@ export const MyDataScreen = () => {
         setCycle(p.sex === 'female' ? currentCyclePhase(await cycleRepository.getAll()) : null);
       })
       .catch(() => undefined);
-    const [g, bpEntries, chol, cort] = await Promise.all([
+    const [g, bpEntries, chol, cort, vo] = await Promise.all([
       getGlucoseEntries(),
       getBloodPressureEntries(),
       cholesterolRepository.getAll(),
       cortisolRepository.getAll(),
+      vo2maxRepository.getAll().catch(() => []),
     ]);
     setGlucose(simpleChart(g, 'sugar', Colors.accent));
     setCholesterol(simpleChart(chol, 'cholesterol', Colors.amber));
     setCortisol(simpleChart(cort, 'cortisol', Colors.violet));
+    // VO2max: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
+    const voAsc = [...vo].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+    setVo2(
+      voAsc.length
+        ? { labels: voAsc.map((e) => shortDate(e.fecha)), series: [{ color: Colors.sky, values: voAsc.map((e) => e.valor) }], latest: num(voAsc[voAsc.length - 1].valor), isSample: false }
+        : { labels: ['', '', '', '', ''], series: [{ color: Colors.sky, values: [37, 38.5, 39, 40.5, 41] }], latest: '—', isSample: true },
+    );
 
     const bpAsc = [...bpEntries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
     if (bpAsc.length >= 2) {
@@ -177,6 +187,7 @@ export const MyDataScreen = () => {
     { key: 'sugar', title: 'Sugar', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
     { key: 'chol', title: 'Total cholesterol', icon: 'analytics-outline', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
     { key: 'cortisol', title: 'Cortisol', icon: 'sunny-outline', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
+    { key: 'vo2max', title: 'VO2max', icon: 'mci:lungs', color: Colors.sky, data: vo2, unit: 'mL/kg/min', to: '/vo2max-detail' },
   ].sort((a, b) => Number(!a.data || a.data.isSample) - Number(!b.data || b.data.isSample));
 
   return (
@@ -192,28 +203,27 @@ export const MyDataScreen = () => {
           const k = kuovaAge(now);
           const change = before.available ? Math.round((k.age - kuovaAge(before).age) * 10) / 10 : 0;
           return (
-            <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.85}>
-              <View style={styles.bioAgeHeader}>
-                <Text style={styles.bioAgeTitle}>{t('Your KUOVA age')}</Text>
-                <Text style={styles.bioAgeTag}>{t('sample')}</Text>
-                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-              </View>
-              {/* La insignia (en lugar del reloj de arena): dentro, solo el número */}
-              <View style={styles.bioAgeBadge}>
-                <KuovaAgeBadge size={190} value={num(k.age.toFixed(1))} />
-              </View>
-              <View style={styles.bioAgeFooter}>
-                <Text style={[styles.bioAgeDiff, { color: k.diff >= 0 ? Colors.gold : Colors.attention }]}>
-                  {t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
-                </Text>
+            // "Buque insignia": la insignia sola, sin bloque, y al tocarla el detalle (como Whoop)
+            <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.9}>
+              <Text style={styles.bioAgeKicker}>
+                {t('Your KUOVA age')} · {t('sample')}
+              </Text>
+              <KuovaAgeBadge size={230} value={num(k.age.toFixed(1))} good={k.diff >= 0} />
+              <Text style={[styles.bioAgeDiff, { color: k.diff >= 0 ? Colors.gold : Colors.attention }]}>
+                {t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
+              </Text>
+              <View style={styles.bioAgeMeta}>
                 <View style={styles.bioAgeConfidence}>
                   <Ionicons name="checkmark-circle" size={14} color={Colors.ok} />
                   <Text style={styles.bioAgeConfidenceText}>{t('{n}% confidence', { n: k.confidence })}</Text>
                 </View>
                 {change < 0 && (
-                  <Text style={styles.bioAgeSub}>{t('{n} since your previous test', { n: `−${num(Math.abs(change).toFixed(1))}` })}</Text>
+                  <Text style={styles.bioAgeSub}>· {t('{n} since your previous test', { n: `−${num(Math.abs(change).toFixed(1))}` })}</Text>
                 )}
               </View>
+              <Text style={styles.bioAgeMore}>
+                {t('See what moves it')} <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
+              </Text>
             </TouchableOpacity>
           );
         })()}
@@ -429,19 +439,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     gap: 2,
   },
-  bioAge: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 16,
-  },
-  bioAgeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bioAgeBadge: { alignItems: 'center', marginTop: 10 },
-  bioAgeFooter: { alignItems: 'center', gap: 4, marginTop: 10 },
-  bioAgeDiff: { fontSize: 16, fontWeight: '800' },
+  bioAge: { alignItems: 'center', marginHorizontal: 20, marginTop: 4, marginBottom: 24 },
+  bioAgeKicker: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  bioAgeMeta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 6 },
+  bioAgeMore: { color: Colors.accent, fontSize: 13, fontWeight: '800', marginTop: 10 },
+  bioAgeDiff: { fontSize: 17, fontWeight: '800', marginTop: 14 },
   bioAgeConfidence: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   bioAgeConfidenceText: { color: Colors.ok, fontSize: 12, fontWeight: '800' },
   genetic: {
@@ -466,10 +468,8 @@ const styles = StyleSheet.create({
   },
   geneticTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   geneticSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  bioAgeTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  bioAgeTag: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
   // "years" pequeño y abajo, como un subíndice
-  bioAgeSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 4, textAlign: 'center' },
+  bioAgeSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 18 },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',

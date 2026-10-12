@@ -7,8 +7,9 @@ export default function LogCholesterol() {
     <LogSimpleMetricScreen
       title="Total Cholesterol"
       unit="mg/dL"
-      icon="water-outline"
-      color={Colors.accent}
+      icon="analytics-outline"
+      color={Colors.amber}
+      min={80} max={400} initial={180}
       repo={cholesterolRepository}
     />
   );

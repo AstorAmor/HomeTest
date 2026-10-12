@@ -32,6 +32,10 @@ interface SimpleMetricDetailScreenProps {
   onEditPress: (id: string) => void;
   // Registros de ejemplo cuando aún no hay ninguno propio (no se pueden editar)
   sample?: GenericMetricEntry[];
+  // Texto que se añade bajo el último valor (p. ej. "Bueno para tu edad" en el VO2max)
+  describe?: (latest: number) => string | null;
+  // Contenido propio de la ficha, debajo de "+ Añadir medición" (p. ej. tablas de referencia)
+  extra?: React.ReactNode;
 }
 
 // Ficha de una medición que se apunta a mano (glucosa, colesterol, cortisol), con el mismo
@@ -46,6 +50,8 @@ export const SimpleMetricDetailScreen = ({
   onAddPress,
   onEditPress,
   sample,
+  describe,
+  extra,
 }: SimpleMetricDetailScreenProps) => {
   const [entries, setEntries] = useDeepState<GenericMetricEntry[]>([]);
   const loadEntriesRef = useRef(loadEntries);
@@ -60,9 +66,7 @@ export const SimpleMetricDetailScreen = ({
   const isSample = entries.length === 0 && !!sample?.length;
   const shown = isSample ? sample! : entries;
   const cutoff = Date.now() - rangeDays(range) * 24 * 60 * 60 * 1000;
-  const filtered = shown
-    .filter((e) => new Date(e.fecha).getTime() >= cutoff)
-    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+  const filtered = shown.filter((e) => new Date(e.fecha).getTime() >= cutoff).sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
   const values = filtered.map((e) => e.valor);
 
   const historyDesc = [...shown].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
@@ -86,30 +90,40 @@ export const SimpleMetricDetailScreen = ({
               : t('No entries yet.')
           }
         />
+        {latest && describe?.(latest.valor) ? <Text style={[styles.describe, { color }]}>{describe(latest.valor)}</Text> : null}
 
-        <RangeTabs value={range} onChange={setRange} />
+        {/* Con menos de dos mediciones no hay curva que enseñar: solo el valor y "+ Añadir medición" */}
+        {shown.length >= 2 && (
+          <>
+            <RangeTabs value={range} onChange={setRange} />
 
-        <View style={styles.card}>
-          <TrendChart
-            height={150}
-            labels={filtered.map((e) => shortDay(e.fecha))}
-            series={[{ color, values }]}
-            band={band}
-            formatValue={fmt}
-          />
-          <Text style={styles.tapHint}>{t('Tap the chart to see each reading')}</Text>
-        </View>
+            <View style={styles.card}>
+              <TrendChart height={150} labels={filtered.map((e) => shortDay(e.fecha))} series={[{ color, values }]} band={band} formatValue={fmt} />
+              <Text style={styles.tapHint}>{t('Tap the chart to see each reading')}</Text>
+            </View>
 
-        <StatsRow
-          unit={unit}
-          items={[
-            { label: 'Average', value: values.length ? num(Math.round(avg * 10) / 10) : '—' },
-            { label: 'Lowest', value: values.length ? num(Math.min(...values)) : '—' },
-            { label: 'Highest', value: values.length ? num(Math.max(...values)) : '—' },
-          ]}
-        />
+            <StatsRow
+              unit={unit}
+              items={[
+                {
+                  label: 'Average',
+                  value: values.length ? num(Math.round(avg * 10) / 10) : '—',
+                },
+                {
+                  label: 'Lowest',
+                  value: values.length ? num(Math.min(...values)) : '—',
+                },
+                {
+                  label: 'Highest',
+                  value: values.length ? num(Math.max(...values)) : '—',
+                },
+              ]}
+            />
+          </>
+        )}
 
         <AddMeasurementButton onPress={onAddPress} />
+        {extra}
 
         {isSample && (
           <View style={styles.sampleNote}>
@@ -157,7 +171,19 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     marginHorizontal: 20,
   },
-  tapHint: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 8 },
+  describe: {
+    fontSize: 14,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginTop: -8,
+    marginBottom: 12,
+  },
+  tapHint: {
+    color: Colors.textMuted,
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 8,
+  },
   sampleNote: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -170,13 +196,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.cardBorder,
   },
-  sampleNoteText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  sampleNoteText: {
+    flex: 1,
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  sectionTitle: {
+    color: Colors.textPrimary,
+    fontSize: 17,
+    fontWeight: '700',
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 10,
+  },
   emptyText: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20 },
-  historyList: { backgroundColor: Colors.card, borderRadius: 16, marginHorizontal: 20, paddingHorizontal: 14 },
-  historyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  historyList: {
+    backgroundColor: Colors.card,
+    borderRadius: 16,
+    marginHorizontal: 20,
+    paddingHorizontal: 14,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+  },
   historyDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   historyDate: { color: Colors.textSecondary, fontSize: 13, width: 44 },
-  historyValue: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  historyValue: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
   historyExtra: { color: Colors.textSecondary, fontWeight: '500' },
 });
