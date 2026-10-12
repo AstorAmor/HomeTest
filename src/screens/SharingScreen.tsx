@@ -9,6 +9,7 @@ import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { DataShare, isShareActive, listMyShares, revokeShare, roleLabel, scopeLabel } from '@/data/sharing';
+import { TAB, tabHref } from '@/constants/tabs';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
@@ -50,7 +51,7 @@ export const SharingScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Sharing & privacy')} showBack />
+        <ScreenHeader title={t('Sharing & privacy')} showBack backFallback={tabHref(TAB.more)} />
 
         <View style={styles.intro}>
           <Ionicons name="shield-checkmark" size={22} color={Colors.accent} />

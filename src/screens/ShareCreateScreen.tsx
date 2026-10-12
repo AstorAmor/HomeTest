@@ -78,7 +78,7 @@ export const ShareCreateScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Share your data')} showBack />
+        <ScreenHeader title={t('Share your data')} showBack backFallback="/sharing" />
 
         <Text style={styles.step}>{t('1 · Who')}</Text>
         {professionals === null && !error ? (

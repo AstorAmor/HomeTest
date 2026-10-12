@@ -12,6 +12,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 import { PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { t } from '@/i18n';
+import { TAB, tabHref } from '@/constants/tabs';
 
 // Se evalúa con el idioma ya cargado (index.js); cambiar de idioma recarga la app.
 const LABELS: Record<string, string> = {
@@ -82,7 +83,7 @@ export const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My Profile')} showBack />
+        <ScreenHeader title={t('My Profile')} showBack backFallback={tabHref(TAB.more)} />
 
         <View style={styles.hero}>
           <UserAvatar size={84} />

@@ -28,12 +28,13 @@ interface LogSimpleMetricScreenProps {
   max: number;
   decimals?: boolean;
   initial: number; // valor de partida si aún no hay ninguna medición
+  withTime?: boolean; // false: solo la fecha (p. ej. el VO2max, que no depende de la hora)
 }
 
 // Apunte de una medición de un solo valor (colesterol, cortisol, VO2max) con ruedas, como la
 // glucosa y la tensión: una para la parte entera y, si hace falta, otra para el decimal.
 
-export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max, decimals, initial }: LogSimpleMetricScreenProps) => {
+export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max, decimals, initial, withTime = true }: LogSimpleMetricScreenProps) => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!id;
@@ -147,12 +148,14 @@ export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.row} onPress={() => setPickerMode('time')}>
-          <Text style={styles.rowLabel}>{t('Time')}</Text>
-          <View style={styles.rowValuePill}>
-            <Text style={styles.rowValueText}>{formatTime(dateTime)}</Text>
-          </View>
-        </TouchableOpacity>
+        {withTime && (
+          <TouchableOpacity style={styles.row} onPress={() => setPickerMode('time')}>
+            <Text style={styles.rowLabel}>{t('Time')}</Text>
+            <View style={styles.rowValuePill}>
+              <Text style={styles.rowValueText}>{formatTime(dateTime)}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
 
         <View style={[styles.row, styles.rowLast]}>
           <Text style={styles.rowLabel}>{t(title)}</Text>

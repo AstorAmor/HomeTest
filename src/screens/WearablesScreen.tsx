@@ -8,6 +8,7 @@ import { Colors } from '@/constants/colors';
 import { DailyWearableRecord, WearableMetric } from '@/wearables/types';
 import { wearableRepository } from '@/wearables/wearableRepository';
 import { generateHuaweiDummy } from '@/wearables/providers/huaweiDummy';
+import { TAB, tabHref } from '@/constants/tabs';
 import {
   connectHealthConnect,
   isHealthConnectAvailable,
@@ -104,7 +105,7 @@ export const WearablesScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Wearables')} showBack />
+        <ScreenHeader title={t('Wearables')} showBack backFallback={tabHref(TAB.more)} />
 
         <View style={styles.card}>
           <View style={styles.cardHeader}>

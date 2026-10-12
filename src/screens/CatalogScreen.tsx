@@ -10,6 +10,7 @@ import { CanonicalBiomarker, MeasurementType } from '@/types/knowledge';
 import { getLang, t } from '@/i18n';
 import { catalogCardEs } from '@/i18n/catalogEs';
 import { BIOMARKER_CATEGORY_LABELS, biomarkerDisplayName } from '@/utils/biomarkerLabels';
+import { TAB, tabHref } from '@/constants/tabs';
 
 // Los datos de knowledge/ tienen nombres en español (canonical_name) e inglés (canonical_name_en);
 // la muestra y alguna unidad vienen en español: aquí se muestran en el idioma de la app.
@@ -80,7 +81,7 @@ export const CatalogScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScreenHeader title={t('Biomarker Catalog')} showBack />
+      <ScreenHeader title={t('Biomarker Catalog')} showBack backFallback={tabHref(TAB.more)} />
 
       <View style={styles.searchWrap}>
         <Ionicons name="search" size={16} color={Colors.textMuted} />

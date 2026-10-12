@@ -18,7 +18,7 @@ export const AppSectionsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Configure my experience')} showBack />
+        <ScreenHeader title={t('Configure my experience')} showBack backFallback="/settings" />
 
         <Text style={styles.sectionTitle}>{t('What do you use Kuova for?')}</Text>
         <View style={styles.list}>

@@ -13,6 +13,7 @@ import { isRemoteActive } from '@/lib/supabase';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { num, t } from '@/i18n';
 import { formatPrice } from '@/data/testCatalog';
+import { TAB, tabHref } from '@/constants/tabs';
 
 const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
 
@@ -51,7 +52,7 @@ export const ProfessionalsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Professionals')} showBack />
+        <ScreenHeader title={t('Professionals')} showBack backFallback={tabHref(TAB.more)} />
         <Text style={styles.intro}>
           {t('Doctors, psychologists, dietitians, trainers, genetic counsellors and more, all with access to your results if you allow it.')}
         </Text>

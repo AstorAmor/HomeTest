@@ -30,9 +30,9 @@ export const bowelRepository = createMetricRepository<BowelEntry>('hometest:bowe
   }),
 });
 
-// El volumen exacto (void_ml) necesita la migración 20261012100000_urine_void_ml.sql. Hasta que se
-// aplique, en las cuentas solo se guarda la cantidad aproximada (void_volume); en la demo, todo.
-const REMOTE_HAS_VOID_ML = false;
+// El volumen exacto (void_ml) va en la columna de la migración 20261012100000_urine_void_ml.sql
+// (aplicada el 2026-10-12 con el OK del fundador). Si hiciera falta volver atrás, poner false.
+const REMOTE_HAS_VOID_ML = true;
 
 export const urineRepository = createMetricRepository<UrineEntry>('hometest:urine_logs', {
   table: 'urine_logs',

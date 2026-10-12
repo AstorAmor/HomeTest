@@ -6,6 +6,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { mockShipments, Shipment, ShipmentStep } from '@/data/servicesMock';
 import { t } from '@/i18n';
+import { TAB, tabHref } from '@/constants/tabs';
 
 const stepColor = (s: ShipmentStep['status']) =>
   s === 'done' ? Colors.accent : s === 'current' ? Colors.amber : Colors.cardBorder;
@@ -74,7 +75,7 @@ const realShipments: Shipment[] = [];
 export const TrackTestsScreen = () => (
   <SafeAreaView style={styles.safeArea} edges={['top']}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title={t('Track your tests')} showBack />
+      <ScreenHeader title={t('Track your tests')} showBack backFallback={tabHref(TAB.more)} />
 
       <Text style={styles.sectionTitle}>{t('In progress')}</Text>
       {realShipments.length ? (

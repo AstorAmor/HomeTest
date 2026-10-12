@@ -30,7 +30,7 @@ export const FeatureGuideScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={one ? t(one.title) : t('How each part works')} showBack />
+        <ScreenHeader title={one ? t(one.title) : t('How each part works')} showBack backFallback="/app-sections" />
         {list.map((o) => {
           const g = FEATURE_GUIDE[o.id as AppSection];
           const on = isSectionVisible(prefs, o.id);

@@ -107,7 +107,7 @@ export const NotificationsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Notifications')} showBack />
+        <ScreenHeader title={t('Notifications')} showBack backFallback="/settings" />
         <View style={styles.introRow}>
           <Text style={styles.intro}>{t('At most two a day, and you can switch off any of them.')}</Text>
           <InfoButton topic="notifications" />

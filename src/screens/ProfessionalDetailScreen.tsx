@@ -88,7 +88,7 @@ export const ProfessionalDetailScreen = () => {
   if (!pro) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title={t('Specialist')} showBack />
+        <ScreenHeader title={t('Specialist')} showBack backFallback="/professionals" />
       </SafeAreaView>
     );
   }

@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { EVIDENCE, EvidenceTopic } from '@/data/evidence';
 import { t as tr } from '@/i18n';
+import { TAB, tabHref } from '@/constants/tabs';
 
 // More → How KUOVA works, o el (i) de cada sitio (?topic=…): cómo calculamos cada cosa y las
 // fuentes. Lo que aún revisa el equipo médico lo dice claramente.
@@ -77,7 +78,7 @@ export const EvidenceScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={first && !showAll ? tr('How we calculate it') : tr('How KUOVA works')} showBack />
+        <ScreenHeader title={first && !showAll ? tr('How we calculate it') : tr('How KUOVA works')} showBack backFallback={tabHref(TAB.more)} />
         {(!first || showAll) && (
           <Text style={styles.intro}>
             {tr('How we calculate what you see, and the studies and guidelines behind it. Look for the (i) next to a number or a suggestion to jump straight to its explanation.')}

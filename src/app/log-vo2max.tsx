@@ -13,6 +13,7 @@ export default function LogVo2max() {
       max={90}
       decimals
       initial={40}
+      withTime={false}
       repo={vo2maxRepository}
     />
   );
