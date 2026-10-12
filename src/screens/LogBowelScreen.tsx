@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { IntestineIcon } from '@/components/IntestineIcon';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
@@ -85,7 +86,7 @@ export const LogBowelScreen = () => {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={styles.iconBadge}>
-            <MaterialCommunityIcons name="stomach" size={26} color={Colors.green} />
+            <IntestineIcon size={26} color={Colors.green} />
           </View>
           <Text style={styles.title}>{tr('Digestion today')}</Text>
           <Text style={styles.subtitle}>{tr('Takes 10 seconds. It helps us spot changes early, and nobody else sees it.')}</Text>

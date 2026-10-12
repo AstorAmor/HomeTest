@@ -30,6 +30,10 @@ export const bowelRepository = createMetricRepository<BowelEntry>('hometest:bowe
   }),
 });
 
+// El volumen exacto (void_ml) necesita la migración 20261012100000_urine_void_ml.sql. Hasta que se
+// aplique, en las cuentas solo se guarda la cantidad aproximada (void_volume); en la demo, todo.
+const REMOTE_HAS_VOID_ML = false;
+
 export const urineRepository = createMetricRepository<UrineEntry>('hometest:urine_logs', {
   table: 'urine_logs',
   dateColumn: 'logged_at',
@@ -41,6 +45,7 @@ export const urineRepository = createMetricRepository<UrineEntry>('hometest:urin
       color: e.color,
       burning: e.burning,
       void_volume: e.voidVolume,
+      void_ml: REMOTE_HAS_VOID_ML ? e.voidMl : undefined,
       volume_usual: e.volumeUsual,
       daily_total_ml: e.dailyTotalMl,
       note: e.note,
@@ -55,6 +60,7 @@ export const urineRepository = createMetricRepository<UrineEntry>('hometest:urin
     color: r.color ?? undefined,
     burning: r.burning ?? undefined,
     voidVolume: r.void_volume ?? undefined,
+    voidMl: r.void_ml ?? undefined,
     volumeUsual: r.volume_usual ?? undefined,
     dailyTotalMl: r.daily_total_ml ?? undefined,
     note: r.note ?? undefined,

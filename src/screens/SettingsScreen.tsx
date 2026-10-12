@@ -8,6 +8,7 @@ import { PreferencesBlock } from '@/components/PreferencesBlock';
 import { Colors } from '@/constants/colors';
 import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
+import { TAB, tabHref } from '@/constants/tabs';
 
 const PERMISSIONS: { icon: string; title: string; why: string }[] = [
   { icon: 'notifications-outline', title: 'Notifications', why: 'Reminders for your medication, check-ins and tests.' },
@@ -25,7 +26,7 @@ export const SettingsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Settings')} showBack backFallback="/(tabs)?tab=4" />
+        <ScreenHeader title={t('Settings')} showBack backFallback={tabHref(TAB.more)} />
 
         <PreferencesBlock returnTo="/settings" />
 

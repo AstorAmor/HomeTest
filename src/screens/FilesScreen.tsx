@@ -10,6 +10,7 @@ import { labUploadRepository } from '@/data/labUploads';
 import { userFlags } from '@/data/userFlags';
 import { LAB_REPORTS } from '@/utils/labReportView';
 import { dateLocale, t } from '@/i18n';
+import { TAB, tabHref } from '@/constants/tabs';
 
 // "Your files": los informes que nos envía el laboratorio y todo lo que sube el usuario (escaneado
 // o PDF), en una lista. Cada archivo puede llevar el nombre que el usuario quiera dentro de la app
@@ -71,7 +72,7 @@ export const FilesScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ScreenHeader title={t('Your files')} showBack backFallback="/(tabs)?tab=1" />
+        <ScreenHeader title={t('Your files')} showBack backFallback={tabHref(TAB.myData)} />
 
         <TouchableOpacity style={styles.add} onPress={() => router.push('/upload-test')} activeOpacity={0.85}>
           <Ionicons name="add-circle-outline" size={20} color={Colors.background} />

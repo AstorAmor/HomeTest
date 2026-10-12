@@ -11,12 +11,13 @@ interface TabConfig {
   activeIcon: keyof typeof Ionicons.glyphMap;
 }
 
-// Orden de las pestañas (también el de MainTabsScreen y el ?tab=N de la URL)
+// Orden de las pestañas (también el de MainTabsScreen y el ?tab=N de la URL; posiciones en
+// src/constants/tabs.ts). Laboratorio en el centro.
 export const TABS: TabConfig[] = [
   { label: 'Today', icon: 'heart-outline', activeIcon: 'heart' },
   { label: 'My Data', icon: 'analytics-outline', activeIcon: 'analytics-outline' },
-  { label: 'Schedule', icon: 'calendar-outline', activeIcon: 'calendar' },
   { label: 'Lab', icon: 'flask-outline', activeIcon: 'flask' },
+  { label: 'Schedule', icon: 'calendar-outline', activeIcon: 'calendar' },
   {
     label: 'More',
     icon: 'ellipsis-horizontal-circle-outline',

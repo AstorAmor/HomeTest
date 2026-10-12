@@ -7,8 +7,8 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { ColorSwatches } from '@/components/BathroomVisuals';
 import { dayKey, entryForDay, noonOf, urineRepository } from '@/data/bathroomRepository';
-import { dailyTotalNote, urineAdvice, UrineAdvice, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
-import { UrineColor, UrineEntry, URINE_COLORS, VOID_VOLUMES, VoidVolume } from '@/types/bathroom';
+import { urineAdvice, UrineAdvice, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
+import { UrineColor, UrineEntry, URINE_COLORS, VOID_VOLUMES } from '@/types/bathroom';
 import { logScreenStyles } from './LogBowelScreen';
 import { t } from '@/i18n';
 
@@ -16,11 +16,11 @@ const RED_CAUSES = ['Beetroot', 'Blackberries', 'Rhubarb', 'A new medicine'];
 const NONE = 'None of these';
 const NIGHTS = [0, 1, 2, 3].map((n) => ({ id: n, label: n === 3 ? '3+' : String(n) }));
 
-// Apunte del día: veces, por la noche, color y escozor. Y, de vez en cuando, la prueba de la
-// botella para tener una idea del volumen (primera vez, cada 3 meses o si algo cambia).
+// Apunte del día: veces, por la noche, color y escozor. La medición rápida de volumen tiene su
+// propia pantalla (/volume-check, con el vaso graduado); desde aquí solo se enlaza.
 export const LogUrineScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ day?: string; volume?: string }>();
+  const params = useLocalSearchParams<{ day?: string }>();
   const day = params.day ?? dayKey(new Date());
   const [existing, setExisting] = useState<UrineEntry | null>(null);
   const [suggestion, setSuggestion] = useState<VolumeCheckSuggestion>(null);
@@ -29,10 +29,6 @@ export const LogUrineScreen = () => {
   const [color, setColor] = useState<UrineColor | undefined>();
   const [cause, setCause] = useState<string | undefined>();
   const [burning, setBurning] = useState<'yes' | 'no' | undefined>();
-  const [showVolume, setShowVolume] = useState(params.volume === '1');
-  const [voidVolume, setVoidVolume] = useState<VoidVolume | undefined>();
-  const [volumeUsual, setVolumeUsual] = useState<UrineEntry['volumeUsual']>();
-  const [total, setTotal] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   // Tras guardar: si el color o las veces dicen algo (p. ej. que le falta agua), se le cuenta
@@ -50,15 +46,9 @@ export const LogUrineScreen = () => {
       setColor(e.color);
       setCause(e.explainedBy);
       setBurning(e.burning == null ? undefined : e.burning ? 'yes' : 'no');
-      setVoidVolume(e.voidVolume);
-      setVolumeUsual(e.volumeUsual);
-      setTotal(e.dailyTotalMl ? String(e.dailyTotalMl) : '');
       setNote(e.note ?? '');
-      if (e.voidVolume || e.dailyTotalMl) setShowVolume(true);
     });
   }, [day]);
-
-  const totalMl = Number(total.replace(/[^\d]/g, '')) || undefined;
 
   const save = async () => {
     setSaving(true);
@@ -68,9 +58,6 @@ export const LogUrineScreen = () => {
       color,
       explainedBy: color === 'red' && cause && cause !== NONE ? cause : undefined,
       burning: burning == null ? undefined : burning === 'yes',
-      voidVolume,
-      volumeUsual: voidVolume ? volumeUsual : undefined,
-      dailyTotalMl: totalMl,
       note: note.trim() || undefined,
     };
     try {
@@ -88,7 +75,7 @@ export const LogUrineScreen = () => {
     suggestion?.kind === 'first'
       ? t('You have not done a volume check yet. It takes one pee and a bottle.')
       : suggestion?.kind === 'periodic'
-        ? `Your last volume check was ${suggestion.daysSince} days ago.`
+        ? t('Your last volume check was {n} days ago.', { n: suggestion.daysSince })
         : suggestion?.kind === 'repeat'
           ? t('Last time the amount did not feel usual. Try it again on a normal day.')
           : suggestion?.kind === 'collect_24h'
@@ -156,7 +143,7 @@ export const LogUrineScreen = () => {
         {color === 'red' && (
           <View style={styles.askCard}>
             <Text style={styles.askTitle}>{t('Could something explain it?')}</Text>
-            <ChoiceChips options={[...RED_CAUSES, NONE].map((c) => ({ id: c, label: c }))} value={cause} onChange={setCause} />
+            <ChoiceChips options={[...RED_CAUSES, NONE].map((c) => ({ id: c, label: t(c) }))} value={cause} onChange={setCause} />
             {cause === NONE && <Text style={styles.askAdvice}>{t('Blood in the urine always needs checking: please see a doctor soon.')}</Text>}
             {cause && cause !== NONE && (
               <Text style={styles.askOk}>
@@ -172,54 +159,27 @@ export const LogUrineScreen = () => {
         )}
 
         <Text style={styles.label}>{t('Any burning or pain?')}</Text>
-        <ChoiceChips options={[{ id: 'no', label: 'No' }, { id: 'yes', label: 'Yes' }]} value={burning} onChange={setBurning} center />
+        <ChoiceChips options={[{ id: 'no', label: t('No') }, { id: 'yes', label: t('Yes') }]} value={burning} onChange={setBurning} center />
 
-        {/* Prueba de volumen */}
-        <TouchableOpacity style={styles.volumeHeader} onPress={() => setShowVolume((v) => !v)} activeOpacity={0.85}>
+        {/* La medición rápida de volumen, en su propia pantalla */}
+        <TouchableOpacity
+          style={styles.volumeHeader}
+          onPress={() => router.push({ pathname: '/volume-check', params: { day } })}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="beaker-outline" size={22} color={Colors.gold} />
           <View style={{ flex: 1 }}>
             <Text style={styles.volumeTitle}>{t('Quick volume check')}</Text>
-            <Text style={styles.volumeSub}>{suggestionText ?? t('Optional, every few months.')}</Text>
+            <Text style={styles.volumeSub}>
+              {existing?.voidMl
+                ? t('Done today: {n} ml', { n: existing.voidMl })
+                : existing?.voidVolume
+                  ? t('Done today: about {n} ml', { n: VOID_VOLUMES.find((v) => v.id === existing.voidVolume)?.ml ?? '—' })
+                  : suggestionText ?? t('Optional, every few months.')}
+            </Text>
           </View>
-          <Ionicons name={showVolume ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
+          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
-        {showVolume && (
-          <View style={styles.askCard}>
-            <Text style={styles.askText}>
-              {t('Next time you go, pee into an empty 500 ml bottle or a measuring jug. How full was it?')}
-            </Text>
-            <ChoiceChips options={VOID_VOLUMES.map((v) => ({ id: v.id, label: v.label }))} value={voidVolume} onChange={setVoidVolume} />
-            {voidVolume && (
-              <>
-                <Text style={styles.askTitle}>{t('Is that about what you usually pass?')}</Text>
-                <ChoiceChips
-                  options={[
-                    { id: 'yes', label: 'Yes' },
-                    { id: 'no', label: 'No' },
-                    { id: 'unsure', label: 'Not sure' },
-                  ]}
-                  value={volumeUsual}
-                  onChange={(v) => setVolumeUsual(v as UrineEntry['volumeUsual'])}
-                />
-                {volumeUsual === 'no' && (
-                  <Text style={styles.askText}>{t('Try again another day. Most adults pass about 200–400 ml each time.')}</Text>
-                )}
-              </>
-            )}
-            <Text style={[styles.askTitle, { marginTop: 6 }]}>{t('Measured a whole day? (optional)')}</Text>
-            <Text style={styles.askText}>
-              {t('Pharmacies sell 24-hour urine containers. Collect everything for a day and write the total.')}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={total}
-              onChangeText={setTotal}
-              keyboardType="number-pad"
-              placeholder={t('Total in ml, e.g. 1500')}
-              placeholderTextColor={Colors.textMuted}
-            />
-            {totalMl ? <Text style={styles.askText}>{dailyTotalNote(totalMl).body}</Text> : null}
-          </View>
-        )}
 
         <Text style={styles.label}>{t('Anything else? (optional)')}</Text>
         <TextInput

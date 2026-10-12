@@ -27,6 +27,7 @@ import { buildSchedule } from '@/data/schedule';
 import { labAppointmentEvents } from '@/data/labAppointments';
 import { buildSummary, SummaryLine } from '@/logic/summary';
 import { computeReadiness, formatSleep, latest, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
+import { TAB } from '@/constants/tabs';
 
 // "Resumen" de la web del paciente en escritorio (estilo Salud de Apple): cabecera con la
 // persona, bloques fijados con el último dato de cada parte y tendencias. Cada bloque abre su
@@ -376,7 +377,7 @@ export const WebSummaryScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.allData} onPress={() => go('/(tabs)', { tab: '1' })} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.allData} onPress={() => go('/(tabs)', { tab: String(TAB.myData) })} activeOpacity={0.85}>
         <Ionicons name="grid-outline" size={18} color={Colors.accent} />
         <Text style={styles.allDataText}>{t('Show all health data')}</Text>
         <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />

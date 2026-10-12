@@ -60,6 +60,7 @@ import {
 } from '@/data/planRepository';
 import { computeReadiness, formatSleep, latest, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { useWebShell } from '@/web/webMode';
+import { TAB } from '@/constants/tabs';
 
 
 const statusColor = (status: Biomarker['status']) => {
@@ -293,7 +294,7 @@ export const TodayScreen = () => {
         <Text style={styles.sectionTitle}>{t('Your summary')}</Text>
         <View style={styles.summaryCard}>
           {summary.length === 0 ? (
-            <TouchableOpacity style={styles.summaryRow} onPress={() => router.push({ pathname: '/(tabs)', params: { tab: '2' } })}>
+            <TouchableOpacity style={styles.summaryRow} onPress={() => router.push({ pathname: '/(tabs)', params: { tab: String(TAB.schedule) } })}>
               <Ionicons name="calendar-clear-outline" size={18} color={Colors.textMuted} />
               <Text style={styles.summaryText}>{t('Nothing planned for the next few weeks. Your schedule is clear.')}</Text>
             </TouchableOpacity>

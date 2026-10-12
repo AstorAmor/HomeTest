@@ -20,6 +20,7 @@ import {
   toggleOption,
   visibleOptions,
 } from '@/logic/testFinder';
+import { TAB, tabHref } from '@/constants/tabs';
 
 const PRICES = Object.fromEntries(CATALOG.filter((p) => p.category !== 'consultation').map((p) => [p.id, p.price]));
 const TOP = 3;
@@ -92,7 +93,7 @@ export const TestFinderScreen = () => {
   if (!done) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScreenHeader title={t('Which test should I take?')} showBack backFallback="/(tabs)?tab=3" />
+        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.lab)} />
         <View style={styles.progressRow}>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${((stepIndex + 1) / FINDER_STEPS.length) * 100}%` }]} />
@@ -164,7 +165,7 @@ export const TestFinderScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView ref={scroll} contentContainerStyle={styles.results} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Which test should I take?')} showBack backFallback="/(tabs)?tab=3" />
+        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.lab)} />
 
         <View style={styles.resultHead}>
           <Text style={styles.title}>{t('These tests could help you')}</Text>

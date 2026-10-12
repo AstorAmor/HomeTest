@@ -220,7 +220,7 @@ export const MyDataScreen = () => {
         {sex === 'female' && cycle && show('cycle') && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('Period')}</Text>
+              <Text style={styles.sectionTitle}>{t('Menstrual cycle')}</Text>
             </View>
             <View style={styles.periodBlock}>
               <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />

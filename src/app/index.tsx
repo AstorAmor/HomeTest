@@ -37,7 +37,7 @@ export default function RootIndex() {
     return <DevModeSelectScreen />;
   }
 
-  // Volver a una pestaña concreta ("/(tabs)?tab=3") o a otra pantalla guardada
+  // Volver a una pestaña concreta ("/(tabs)?tab=2", ver src/constants/tabs.ts) o a otra pantalla guardada
   const tabFromReturn = returnTo?.startsWith('/(tabs)') ? (returnTo.match(/[?&]tab=(\d)/)?.[1] ?? null) : null;
   if (returnTo && !returnTo.startsWith('/(tabs)')) return <Redirect href={returnTo as any} />;
   const tab = tabFromReturn ?? params.tab;

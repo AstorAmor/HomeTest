@@ -34,11 +34,11 @@ export const MainTabsScreen = () => {
         <View key="my-data" style={styles.page}>
           <MyDataScreen />
         </View>
-        <View key="schedule" style={styles.page}>
-          <ScheduleScreen embedded />
-        </View>
         <View key="lab" style={styles.page}>
           <LabScreen />
+        </View>
+        <View key="schedule" style={styles.page}>
+          <ScheduleScreen embedded />
         </View>
         <View key="more" style={styles.page}>
           <MoreScreen />

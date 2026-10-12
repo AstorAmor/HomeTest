@@ -11,6 +11,7 @@ import { AppSection, useSections } from '@/data/appPrefs';
 import { mockPatient } from '@/data/mockData';
 import { t } from '@/i18n';
 import { useWebShell } from '@/web/webMode';
+import { TAB } from '@/constants/tabs';
 
 // Web del paciente en escritorio (estilo Salud de Apple): columna de menú a la izquierda y la
 // pantalla elegida en el centro, en una columna de ancho limitado (bloques, no a lo ancho de
@@ -36,8 +37,8 @@ const TOP: NavItem[] = [
 ];
 
 const CATEGORIES: NavItem[] = [
-  { id: 'lab', label: 'Lab results', icon: 'flask-outline', color: Colors.danger, pathname: '/(tabs)', tab: 3 },
-  { id: 'mydata', label: 'My Data', icon: 'analytics-outline', color: Colors.accent, pathname: '/(tabs)', tab: 1 },
+  { id: 'lab', label: 'Lab results', icon: 'flask-outline', color: Colors.danger, pathname: '/(tabs)', tab: TAB.lab },
+  { id: 'mydata', label: 'My Data', icon: 'analytics-outline', color: Colors.accent, pathname: '/(tabs)', tab: TAB.myData },
   { id: 'activity', label: 'Activity', icon: 'footsteps-outline', color: Colors.sky, pathname: '/metric', params: { kind: 'steps' }, section: 'wearables' },
   { id: 'sleep', label: 'Sleep', icon: 'moon-outline', color: Colors.violet, pathname: '/metric', params: { kind: 'sleep_duration' }, section: 'wearables' },
   { id: 'heart', label: 'Heart', icon: 'heart-outline', color: Colors.coral, pathname: '/metric', params: { kind: 'resting_heart_rate' }, section: 'wearables' },
@@ -53,7 +54,7 @@ const CATEGORIES: NavItem[] = [
 
 const PLAN: NavItem[] = [
   { id: 'plans', label: 'My plan', icon: 'list-outline', color: Colors.accent, pathname: '/plans', section: 'plan' },
-  { id: 'schedule', label: 'Schedule', icon: 'calendar-outline', color: Colors.sky, pathname: '/(tabs)', tab: 2 },
+  { id: 'schedule', label: 'Schedule', icon: 'calendar-outline', color: Colors.sky, pathname: '/(tabs)', tab: TAB.schedule },
   { id: 'tracking', label: 'Track your tests', icon: 'mci:van-utility', color: Colors.amber, pathname: '/track-tests' },
   { id: 'pros', label: 'Professionals', icon: 'medkit-outline', color: Colors.green, pathname: '/professionals' },
   { id: 'learning', label: 'Learning', icon: 'book-outline', color: Colors.violet, pathname: '/learn-all', section: 'learning' },

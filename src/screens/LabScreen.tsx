@@ -65,6 +65,16 @@ export const LabScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Lab')} />
 
+        {/* El plan, arriba del todo (fundador): va fuera del informe, que es objetivo */}
+        <TouchableOpacity style={styles.planCard} onPress={() => router.push('/action-plan')} activeOpacity={0.85}>
+          <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.planCardSub}>{t('Based on your latest results')}</Text>
+            <Text style={styles.planCardTitle}>{t('See my personalized plan')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+        </TouchableOpacity>
+
         <Text style={styles.sectionTitle}>{t('Upcoming Analysis')}</Text>
         <View style={styles.sectionBlock}>
           {mockUpcomingAnalyses.map((item) => (
@@ -205,16 +215,6 @@ export const LabScreen = () => {
           })}
         </View>
 
-        {/* El plan va fuera del informe (que es objetivo): basado en tus últimos resultados */}
-        <TouchableOpacity style={styles.planCard} onPress={() => router.push('/plans')} activeOpacity={0.85}>
-          <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.planCardSub}>{t('Based on your latest results')}</Text>
-            <Text style={styles.planCardTitle}>{t('See my personalized plan')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
-
         {/* Laboratorios cerca: el mapa de tu zona; tocarlo abre la reserva de cita */}
         <Text style={styles.sectionTitle}>{t('Find a lab near you')}</Text>
         <View style={styles.mapCard}>
@@ -291,8 +291,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginHorizontal: 20,
-    marginBottom: 28,
-    marginTop: -12,
+    marginBottom: 24,
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,

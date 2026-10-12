@@ -37,8 +37,8 @@ export const MainTabsScreen = () => {
   const pages = [
     <TodayScreen key="today" />,
     <MyDataScreen key="my-data" />,
-    <ScheduleScreen key="schedule" embedded />,
     <LabScreen key="lab" />,
+    <ScheduleScreen key="schedule" embedded />,
     <MoreScreen key="more" />,
   ];
 

@@ -9,6 +9,7 @@ import { baselineReport, currentReport } from '@/data/reportRepository';
 import { AppIcon } from '@/components/HealthIcons';
 import { kuovaAge, QUALITY_LABEL } from '@/logic/kuovaAge';
 import { num, t } from '@/i18n';
+import { TAB } from '@/constants/tabs';
 
 // "Edad KUOVA" (tu edad biológica): un único número con su grado de confianza (src/logic/kuovaAge.ts)
 // y cómo se calcula (PhenoAge); los resultados de la analítica viven en Laboratorio. Ahora es un
@@ -98,7 +99,7 @@ export const BiologicalAgeScreen = () => {
             </View>
           ))}
         </View>
-        <TouchableOpacity style={styles.labLink} onPress={() => router.navigate({ pathname: '/(tabs)', params: { tab: '3' } } as any)}>
+        <TouchableOpacity style={styles.labLink} onPress={() => router.navigate({ pathname: '/(tabs)', params: { tab: String(TAB.lab) } } as any)}>
           <Ionicons name="flask-outline" size={18} color={Colors.accent} />
           <Text style={styles.labLinkText}>{t('See your values in Lab')}</Text>
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />

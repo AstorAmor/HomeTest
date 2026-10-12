@@ -53,6 +53,7 @@ export interface UrineEntry {
   color?: UrineColor;
   burning?: boolean; // escozor o dolor al orinar
   voidVolume?: VoidVolume; // prueba de la botella
+  voidMl?: number; // volumen exacto de esa micción, si se midió con un vaso graduado
   volumeUsual?: 'yes' | 'no' | 'unsure'; // "¿sueles orinar más o menos eso?"
   dailyTotalMl?: number; // con un bote de orina de 24 h de la farmacia
   note?: string;

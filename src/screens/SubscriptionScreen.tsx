@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { SubscriptionCard } from '@/components/SubscriptionCard';
 import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
+import { TAB, tabHref } from '@/constants/tabs';
 
 // "My subscription" (More): suscripción activa, renovación, próxima analítica y planes.
 export const SubscriptionScreen = () => {
@@ -14,7 +15,7 @@ export const SubscriptionScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My subscription')} showBack backFallback="/(tabs)?tab=4" />
+        <ScreenHeader title={t('My subscription')} showBack backFallback={tabHref(TAB.more)} />
         <View style={{ marginHorizontal: 20 }}>
           <SubscriptionCard />
         </View>

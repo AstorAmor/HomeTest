@@ -1,4 +1,4 @@
-import { dateLocale, t } from '@/i18n';
+import { dateLocale, t, tn } from '@/i18n';
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,11 +7,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
 import { AppIcon } from '@/components/HealthIcons';
-import { AddMeasurementButton } from '@/components/MetricDetailParts';
+import { AddMeasurementButton, MetricHero } from '@/components/MetricDetailParts';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
-import { bowelObservations, Observation, urineObservations, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
+import { bowelObservations, hydrationFromUrine, Observation, urineObservations, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
 import { BowelEntry, STOOL_COLORS, URINE_COLORS, UrineEntry } from '@/types/bathroom';
 
 const LEVEL: Record<Observation['level'], { icon: string; color: string }> = {
@@ -170,6 +170,29 @@ export const DigestiveScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={part === 'gut' ? t('Digestion') : part === 'bladder' ? t('Hydration') : t('Digestion and hydration')} showBack />
+        {/* Como las fichas de VFC o glucosa: título en negrita y, debajo, el icono y lo de hoy */}
+        {part === 'gut' && (() => {
+          const e = entryForDay(bowel, dayKey(new Date()));
+          return (
+            <MetricHero
+              icon="intestine"
+              color={Colors.green}
+              value={e ? tn(e.count, '{n} time', '{n} times') : '—'}
+              sub={e ? t('Today') : t('Nothing logged today yet')}
+            />
+          );
+        })()}
+        {part === 'bladder' && (() => {
+          const e = entryForDay(urine, dayKey(new Date()));
+          return (
+            <MetricHero
+              icon="water-outline"
+              color={Colors.gold}
+              value={e ? t(hydrationFromUrine(e).label) : '—'}
+              sub={e?.count != null ? `${t('Today')} · ${tn(e.count, '{n} time', '{n} times')}` : t('Nothing logged today yet')}
+            />
+          );
+        })()}
         <Text style={styles.intro}>
           {part === 'gut'
             ? t('A quick daily note on your digestion.')
@@ -184,7 +207,7 @@ export const DigestiveScreen = () => {
           <>
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <AppIcon name="intestine" size={20} color={Colors.green} />
+              {!part && <AppIcon name="intestine" size={20} color={Colors.green} />}
               <Text style={styles.cardTitle}>{t('Bowel movements')}</Text>
               <Text style={styles.cardMeta}>{t('Last 7 days')}</Text>
             </View>
@@ -221,7 +244,7 @@ export const DigestiveScreen = () => {
           <>
           <View style={[styles.card, showGut && { marginTop: 22 }]}>
             <View style={styles.cardHeader}>
-              <AppIcon name="water-outline" size={20} color={Colors.gold} />
+              {!part && <AppIcon name="water-outline" size={20} color={Colors.gold} />}
               <Text style={styles.cardTitle}>{t('Urine')}</Text>
               <Text style={styles.cardMeta}>{t('Last 7 days')}</Text>
             </View>
@@ -243,7 +266,7 @@ export const DigestiveScreen = () => {
           {volume && (
             <TouchableOpacity
               style={styles.volumeCard}
-              onPress={() => router.push({ pathname: '/log-urine', params: { volume: '1' } })}
+              onPress={() => router.push('/volume-check')}
               activeOpacity={0.85}
             >
               <Ionicons name="beaker-outline" size={20} color={Colors.gold} />

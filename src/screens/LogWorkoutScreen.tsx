@@ -21,21 +21,32 @@ const INTENSITIES: { id: WorkoutEntry['intensity']; label: string }[] = [
   { id: 'hard', label: 'Hard' },
 ];
 
+// Se pueden marcar varios tipos (p. ej. fuerza + cardio en la misma sesión): se guarda un registro
+// por tipo y los minutos se reparten entre ellos, así no se cuentan dos veces.
 export const LogWorkoutScreen = () => {
   const router = useRouter();
-  const [type, setType] = useState<WorkoutType>('strength');
+  const [types, setTypes] = useState<WorkoutType[]>(['strength']);
   const [minutes, setMinutes] = useState(45);
   const [intensity, setIntensity] = useState<WorkoutEntry['intensity']>('moderate');
   const [savedCount, setSavedCount] = useState<number | null>(null);
 
+  const toggleType = (id: WorkoutType) =>
+    setTypes((prev) => (prev.includes(id) ? (prev.length > 1 ? prev.filter((x) => x !== id) : prev) : [...prev, id]));
+
   const save = async () => {
     const now = new Date().toISOString();
-    await workoutRepository.save({ id: `workout-${Date.now()}`, fecha: now, createdAt: now, type, minutes, intensity });
+    const base = Math.floor(minutes / types.length);
+    for (const [i, type] of types.entries()) {
+      // El resto de la división va al primero: 45 min en 2 tipos = 23 + 22
+      const share = base + (i === 0 ? minutes - base * types.length : 0);
+      await workoutRepository.save({ id: `workout-${Date.now()}-${i}`, fecha: now, createdAt: now, type, minutes: share, intensity });
+    }
     setSavedCount(await strengthSessionsThisWeek());
   };
+  const strength = types.includes('strength');
 
   if (savedCount !== null) {
-    const goalHit = type === 'strength' && savedCount >= 3;
+    const goalHit = strength && savedCount >= 3;
     return (
       <SafeAreaView style={[styles.safeArea, styles.centered]}>
         <Confetti count={goalHit ? 90 : 45} />
@@ -44,9 +55,7 @@ export const LogWorkoutScreen = () => {
         </View>
         <Text style={styles.doneTitle}>{goalHit ? tr('Weekly goal reached!') : tr('Workout logged!')}</Text>
         <Text style={styles.doneText}>
-          {type === 'strength'
-            ? `${savedCount} of 3 strength sessions this week.`
-            : tr('Nice. Every bit of movement counts.')}
+          {strength ? tr('{n} of 3 strength sessions this week.', { n: savedCount }) : tr('Nice. Every bit of movement counts.')}
         </Text>
         <TouchableOpacity style={[styles.cta, { alignSelf: 'stretch' }]} onPress={() => router.back()}>
           <Text style={styles.ctaText}>{tr('Done')}</Text>
@@ -67,15 +76,19 @@ export const LogWorkoutScreen = () => {
 
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.label}>{tr('Type')}</Text>
+        <Text style={styles.hint}>{tr('Choose one or more')}</Text>
         <View style={styles.typeGrid}>
           {TYPES.map((t) => {
-            const selected = type === t.id;
+            const selected = types.includes(t.id);
             return (
               <TouchableOpacity
                 key={t.id}
                 style={[styles.typeItem, selected && styles.selected]}
-                onPress={() => setType(t.id)}
+                onPress={() => toggleType(t.id)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: selected }}
               >
+                {selected && <Ionicons name="checkmark-circle" size={18} color={Colors.coral} style={styles.typeCheck} />}
                 <MaterialCommunityIcons name={t.icon as any} size={26} color={selected ? Colors.coral : Colors.textSecondary} />
                 <Text style={[styles.typeText, selected && { color: Colors.textPrimary }]}>{tr(t.label)}</Text>
               </TouchableOpacity>
@@ -140,6 +153,8 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   typeText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  typeCheck: { position: 'absolute', top: 8, right: 8 },
+  hint: { color: Colors.textMuted, fontSize: 12, marginTop: -6, marginBottom: 10 },
   selected: { borderColor: Colors.coral, backgroundColor: withAlpha(Colors.coral, 0.1) },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {

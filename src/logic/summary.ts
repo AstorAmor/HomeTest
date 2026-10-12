@@ -1,5 +1,6 @@
 import type { ScheduleEvent } from '@/data/schedule';
 import { dateLocale, t } from '@/i18n';
+import { TAB } from '@/constants/tabs';
 
 // "Your summary" en Today: lo próximo de tu calendario, en este orden y sin nombrar categorías:
 // 1. citas (laboratorio y profesionales), 2. logística (entrega y recogida del kit), 3. resultados
@@ -50,7 +51,7 @@ export function buildSummary(input: {
         icon: 'flask-outline',
         text: t('{what}, {day} at {time}', { what: t(e.title), day: dayText(e.date), time: e.start ?? '' }),
         when: `${e.date}T${e.start ?? '00:00'}`,
-        target: { pathname: '/(tabs)', params: { tab: '2' } },
+        target: { pathname: '/(tabs)', params: { tab: String(TAB.schedule) } },
       })),
     ...appointments
       .filter((a) => soon(a.startsAt.slice(0, 10)) && new Date(a.startsAt).getTime() > now.getTime() - 3600000)
@@ -62,7 +63,7 @@ export function buildSummary(input: {
         when: a.startsAt,
         target: (a.canJoin
           ? { pathname: '/video', params: { appt: a.id, title: a.label } }
-          : { pathname: '/(tabs)', params: { tab: '2' } }) as SummaryLine['target'],
+          : { pathname: '/(tabs)', params: { tab: String(TAB.schedule) } }) as SummaryLine['target'],
       })),
   ].sort((a, b) => a.when.localeCompare(b.when));
   lines.push(...appts.slice(0, 2));
@@ -106,7 +107,7 @@ export function buildSummary(input: {
         icon: 'document-text-outline',
         text: t('Results for your {name} expected around {day}', { name: t(next.title.split(':')[0]), day: dayText(next.date) }),
         when: next.date,
-        target: { pathname: '/(tabs)', params: { tab: '3' } },
+        target: { pathname: '/(tabs)', params: { tab: String(TAB.lab) } },
       });
   }
   return lines;
