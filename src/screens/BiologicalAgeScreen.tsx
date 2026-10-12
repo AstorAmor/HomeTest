@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { baselineReport, currentReport } from '@/data/reportRepository';
 import { AppIcon } from '@/components/HealthIcons';
+import { KuovaAgeBadge } from '@/components/KuovaAgeBadge';
 import { kuovaAge, QUALITY_LABEL } from '@/logic/kuovaAge';
 import { num, t } from '@/i18n';
 import { TAB } from '@/constants/tabs';
@@ -45,11 +46,13 @@ export const BiologicalAgeScreen = () => {
 
         {k && (
           <View style={styles.hero}>
-            <Text style={styles.heroLabel}>{t('Your KUOVA age')}</Text>
-            <Text style={styles.heroValue}>{num(k.age.toFixed(1))}</Text>
-            <Text style={[styles.heroDiff, { color: k.diff >= 0 ? Colors.ok : Colors.attention }]}>
-              {k.diff >= 0 ? t('{years} younger', { years: years(k.diff) }) : t('{years} older', { years: years(k.diff) })}
-            </Text>
+            <KuovaAgeBadge
+              size={250}
+              value={num(k.age.toFixed(1))}
+              label={t('KUOVA age')}
+              sub={k.diff >= 0 ? t('{years} younger', { years: years(k.diff) }) : t('{years} older', { years: years(k.diff) })}
+              subColor={k.diff >= 0 ? undefined : Colors.attention}
+            />
             <Text style={styles.heroSub}>{t('Your age: {age}', { age: p.chronological_age })}</Text>
             {change !== null && change !== 0 && (
               <View style={styles.changeChip}>
@@ -139,9 +142,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   hero: { alignItems: 'center', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, padding: 18, marginTop: 8, gap: 4 },
-  heroLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
-  heroValue: { color: Colors.textPrimary, fontSize: 64, fontWeight: '800', lineHeight: 72 },
-  heroDiff: { fontSize: 18, fontWeight: '800' },
   changeChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.background, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5, marginTop: 6 },
   changeText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   confidence: { flexDirection: 'row', alignItems: 'center', gap: 12, alignSelf: 'stretch', backgroundColor: withAlpha(Colors.ok, 0.1), borderRadius: 14, padding: 12, marginTop: 12 },

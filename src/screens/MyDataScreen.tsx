@@ -26,6 +26,7 @@ import { dateLocale, num, t } from '@/i18n';
 import { useWebShell } from '@/web/webMode';
 import { IconBadge } from '@/components/HealthIcons';
 import { kuovaAge } from '@/logic/kuovaAge';
+import { KuovaAgeBadge } from '@/components/KuovaAgeBadge';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -193,26 +194,30 @@ export const MyDataScreen = () => {
           return (
             <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.85}>
               <View style={styles.bioAgeHeader}>
-                <Ionicons name="hourglass-outline" size={18} color={Colors.accent} />
                 <Text style={styles.bioAgeTitle}>{t('Your KUOVA age')}</Text>
                 <Text style={styles.bioAgeTag}>{t('sample')}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </View>
-              <View style={styles.bioAgeValueRow}>
-                <Text style={styles.bioAgeValue}>{num(k.age.toFixed(1))}</Text>
-                <Text style={styles.bioAgeUnit}>{t('years')}</Text>
+              {/* La insignia con el corazón de fondo (en lugar del reloj de arena) */}
+              <View style={styles.bioAgeBadge}>
+                <KuovaAgeBadge
+                  size={200}
+                  value={num(k.age.toFixed(1))}
+                  label={t('KUOVA age')}
+                  sub={t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
+                  subColor={k.diff >= 0 ? undefined : Colors.attention}
+                />
+              </View>
+              <View style={styles.bioAgeFooter}>
                 <View style={styles.bioAgeConfidence}>
                   <Ionicons name="checkmark-circle" size={14} color={Colors.ok} />
                   <Text style={styles.bioAgeConfidenceText}>{t('{n}% confidence', { n: k.confidence })}</Text>
                 </View>
+                <Text style={styles.bioAgeSub}>
+                  {t('Your age: {age}', { age: now.chronological_age })}
+                  {change < 0 ? t(' · {n} since your previous test', { n: `−${num(Math.abs(change).toFixed(1))}` }) : ''}
+                </Text>
               </View>
-              <Text style={styles.bioAgeSub}>
-                {t(k.diff >= 0 ? 'About {n} years younger than your age ({age})' : 'About {n} years older than your age ({age})', {
-                  n: num(Math.abs(k.diff).toFixed(1)),
-                  age: now.chronological_age,
-                })}
-                {change < 0 ? t(' · {n} since your previous test', { n: `−${num(Math.abs(change).toFixed(1))}` }) : ''}
-              </Text>
             </TouchableOpacity>
           );
         })()}
@@ -438,9 +443,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   bioAgeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bioAgeConfidence: { flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 10, marginBottom: 6 },
+  bioAgeBadge: { alignItems: 'center', marginTop: 10 },
+  bioAgeFooter: { alignItems: 'center', gap: 4, marginTop: 10 },
+  bioAgeConfidence: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   bioAgeConfidenceText: { color: Colors.ok, fontSize: 12, fontWeight: '800' },
-  bioAgeValueRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: 4, marginTop: 8 },
   genetic: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -465,9 +471,7 @@ const styles = StyleSheet.create({
   geneticSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   bioAgeTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   bioAgeTag: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
-  bioAgeValue: { color: Colors.accent, fontSize: 38, fontWeight: '800' },
   // "years" pequeño y abajo, como un subíndice
-  bioAgeUnit: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 7 },
   bioAgeSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 4, textAlign: 'center' },
   sectionTitle: {
     fontSize: 20,
