@@ -2836,4 +2836,6 @@ export const es: Record<string, string> = {
   'Tumour markers': 'Marcadores tumorales',
   'Heavy metals': 'Metales pesados',
   'STI screening': 'Cribado de ITS',
+  'Some types have no permission yet. Allow them so Kuova can use them.': 'Algunos tipos aún no tienen permiso. Permítelos para que Kuova pueda usarlos.',
+  'Allow the missing ones': 'Permitir los que faltan',
 };

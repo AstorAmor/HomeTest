@@ -234,7 +234,10 @@ export const WearablesScreen = () => {
                 </Text>
               )}
               {missingPermissions && (
-                <Text style={styles.hint}>{t('Some types have no permission. Tap Permissions and allow them in Health Connect.')}</Text>
+                <>
+                  <Text style={styles.hint}>{t('Some types have no permission yet. Allow them so Kuova can use them.')}</Text>
+                  <Button id="hc-connect" label={t('Allow the missing ones')} onPress={connect} />
+                </>
               )}
             </View>
           </>

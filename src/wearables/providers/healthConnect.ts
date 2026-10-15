@@ -44,8 +44,10 @@ export async function isHealthConnectAvailable(): Promise<boolean> {
 }
 
 // Permisos declarados en la APK de septiembre (app.json). Pedir uno que la APK no declara no
-// sirve, así que los nuevos solo se piden con la APK nueva, que se reconoce porque trae
-// expo-print (añadido a la vez).
+// sirve, así que los nuevos solo se piden con la APK nueva (octubre de 2026), que se reconoce
+// porque trae expo-print (la de septiembre y la del 6 de octubre no lo tienen). Esa APK declara
+// además entrenos, peso, oxígeno, temperatura, VO2max, tensión, glucosa y respiración: para
+// leerlos basta con añadirlos aquí (y leerlos abajo) en una actualización, sin otra APK.
 const BASE_TYPES = ['Steps', 'HeartRate', 'RestingHeartRate', 'HeartRateVariabilityRmssd', 'SleepSession'] as const;
 const NEW_APK_TYPES = ['ActiveCaloriesBurned', 'Distance'] as const;
 const hasNewApk = () => !!requireOptionalNativeModule('ExpoPrint');
