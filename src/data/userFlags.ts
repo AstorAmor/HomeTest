@@ -30,6 +30,10 @@ async function writeLocal(flags: Record<string, FlagValue>) {
   }
 }
 
+// Lo que se acaba de cambiar y aún está subiendo a la nube: al leer, gana esto (si no, volver
+// atrás justo después de abrir algo leía el valor antiguo de la nube y el aviso reaparecía).
+const pending = new Map<string, FlagValue>();
+
 export const userFlags = {
   async getAll(): Promise<Record<string, FlagValue>> {
     const local = await readLocal();
@@ -38,6 +42,7 @@ export const userFlags = {
     if (error || !data) return local;
     const merged = { ...local };
     for (const row of data) merged[row.key] = row.value as FlagValue;
+    for (const [k, v] of pending) merged[k] = v;
     await writeLocal(merged);
     return merged;
   },
@@ -47,12 +52,17 @@ export const userFlags = {
   },
 
   async set(key: string, value: FlagValue = true): Promise<void> {
-    const local = await readLocal();
-    await writeLocal({ ...local, [key]: value });
-    if (isRemoteActive() && supabase) {
-      await supabase
-        .from('user_flags')
-        .upsert({ user_id: getCurrentUserId(), key, value, updated_at: new Date().toISOString() });
+    pending.set(key, value);
+    try {
+      const local = await readLocal();
+      await writeLocal({ ...local, [key]: value });
+      if (isRemoteActive() && supabase) {
+        await supabase
+          .from('user_flags')
+          .upsert({ user_id: getCurrentUserId(), key, value, updated_at: new Date().toISOString() });
+      }
+    } finally {
+      if (pending.get(key) === value) pending.delete(key);
     }
   },
 };

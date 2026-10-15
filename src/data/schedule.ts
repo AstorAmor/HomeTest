@@ -1,6 +1,7 @@
 import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses } from './mockData';
 import { currentReport } from './reportRepository';
+import { showSamples } from './dataMode';
 import { t } from '@/i18n';
 
 // Agenda del paciente: se deriva de los análisis programados (DUMMY hasta que haya
@@ -45,6 +46,8 @@ const addWorkingDays = (iso: string, days: number) => {
 
 export function buildSchedule(): ScheduleEvent[] {
   const events: ScheduleEvent[] = [];
+  // Cuenta real: solo lo que existe de verdad (las citas de laboratorio y consultas van aparte)
+  if (!showSamples()) return events;
   for (const a of mockUpcomingAnalyses) {
     const [start, end] = a.timeSlot.includes('–') ? a.timeSlot.split('–').map((t) => t.trim()) : [undefined, undefined];
     events.push({

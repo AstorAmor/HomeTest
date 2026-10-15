@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -9,6 +9,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 import { t } from '@/i18n';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 const MEAL_TYPES: { id: MealEntry['mealType']; label: string }[] = [
   { id: 'breakfast', label: 'Breakfast' },
@@ -105,7 +106,7 @@ export const LogMealScreen = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <TouchableOpacity style={styles.photoBox} onPress={takePhoto} activeOpacity={0.85}>
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
@@ -166,7 +167,7 @@ export const LogMealScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <TouchableOpacity
         style={[styles.cta, !photoUri && !description.trim() && styles.ctaDisabled]}

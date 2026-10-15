@@ -773,3 +773,40 @@ ya guardan en las carpetas nuevas.
   (Supabase Pro + DPA, staging separado, confirmar email (hoy desactivado) y doble factor para profesionales,
   registro de accesos, DPA y región UE de Daily/Gemini…, EIPD, DPD, descargar/borrar cuenta, contrato con
   profesionales, plan de brechas).
+
+## 2026-10-15 — Cuenta real, Health Connect de verdad y notas del fundador
+
+- **Cuenta real** (`src/data/dataMode.ts`): `user_flags.real_account = true` → la app no rellena NADA con ejemplos
+  (analítica ficticia, wearables de Huawei de mentira, lecturas de muestra, semana de ejemplo de digestión/orina,
+  edad KUOVA, envíos de ejemplo, plan del informe ficticio, botones "dummy data"). Lo no medido sale vacío y dice
+  cómo conseguirlo. Sin selector "developer": entra directo a Hoy. Se cambia en Ajustes → Cuenta → Cuenta real
+  (recarga). Sin marca, las cuentas siguen siendo de prueba (con ejemplos). **Antes del lanzamiento: invertir el
+  valor por defecto** (cuenta nueva = real). Las pantallas preguntan con `showSamples()`; el informe de ejemplo se
+  pide con `labReports()` (no `LAB_REPORTS`). En desarrollo, `EXPO_PUBLIC_FORCE_REAL_ACCOUNT=1` enseña la demo
+  local como cuenta real (`.claude/launch.json` → `expo-web-real-check`, puerto 8084).
+- **Health Connect** (`src/wearables/providers/healthConnect.ts`): pasos con el agregado diario (sin duplicar reloj
+  + móvil), pulso medio, pulso en reposo (el del reloj o, si no lo da, la media horaria más baja del día, marcado
+  "estimado"), VFC y sueño (sin ratos despierto, al día en que te despiertas). Días en hora LOCAL (antes UTC),
+  paginación, 30 días. Nombres legibles de la fuente (`src/wearables/sources.ts`: el paquete
+  `com.android.healthconnect.phone.<hash>` = "este móvil"). Se sincroniza solo al abrir Hoy (cada 10 min como
+  mucho) y sustituye lo guardado del rango (`replaceProviderFrom`). Pantalla Wearables: conectar = permisos +
+  sincronizar, "Qué llega (últimos 30 días)" por tipo con días y app, aviso si solo llega el móvil.
+  Calorías activas y distancia: declarados en app.json, **solo se piden con una APK nueva** (se reconoce porque
+  trae expo-print). Lógica pura con tests en `src/wearables/seriesLogic.ts` + `__tests__`.
+- **Tu estado de hoy**: se calcula con lo que llegue HOY (sueño y/o pulso en reposo; la VFC si está) y dice qué
+  falta; si solo hay pasos, lo explica en vez de "conecta un wearable". Fuente real ("De Fitbit y este móvil").
+- **Tus últimos días** (`/your-days`, `DaysScreen`): tocar la tendencia de 7 días del check-in → cada día con
+  check-ins y notas, sueño/pasos/pulso, medicación, digestión, orina, entrenos, comidas, tensión y glucosa; los días
+  que se salen de lo tuyo van marcados (ánimo/energía bajos, <6 h de sueño, pulso ≥ tu media + 5, toma saltada).
+- **Informe de evolución** (`/habits`): marcadores "De vuelta en su rango", "Ha mejorado" y "Ha empeorado"
+  (`classifyChange` en `utils/progress.ts`, ruido <5 %) con aviso de que dos analíticas no son tendencia. En cuenta
+  real: hábitos de los últimos 14 días frente a los 14 anteriores y marcadores de sus dos últimas analíticas subidas.
+- **Orina y heces sobre la marcha**: "Añadir medición (ahora)" (`?quick=1`: suma una vez a hoy, color/forma
+  opcionales, sin el aviso de "pocas veces") y debajo "Añadir un día completo".
+- Teclado: `components/KeyboardAwareScrollView.tsx` en check-in, heces, orina, comidas, medicación, consulta y
+  onboarding (Android de borde a borde ya no encoge la ventana).
+- "Tu informe está aquí" y el aviso de nuevos resultados ya no vuelven al dar atrás (replace + `userFlags` da
+  prioridad a lo recién cambiado mientras sube a la nube).
+- Español: estados de marcadores (Bajo, Límite alto…), "X para revisar", categorías, horario de extracciones.
+- Pendiente: cuentas de prueba con casuísticas cargadas en la nube (hoy los usuarios simulados solo van en la demo);
+  ciclo de una mujer con cuenta real sin registros (sigue saliendo el ejemplo); APK nueva para calorías/distancia.

@@ -1,4 +1,5 @@
 import { currentReport } from '@/data/reportRepository';
+import { showSamples } from '@/data/dataMode';
 import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
 import { markerIdForExtractedName, sameUnit } from '@/data/markerMatching';
 import { LabUpload } from '@/data/labUploads';
@@ -56,7 +57,8 @@ interface Known {
 // Último valor conocido de cada marcador ANTES de la subida: informe actual y subidas anteriores.
 function knownValues(previousUploads: LabUpload[]): Record<string, Known> {
   const known: Record<string, Known> = {};
-  for (const s of currentReport.sections) {
+  // El informe de ejemplo solo cuenta en las cuentas de prueba; en una real, solo sus analíticas
+  for (const s of showSamples() ? currentReport.sections : []) {
     for (const m of s.markers) {
       if (typeof m.value === 'number') {
         known[m.marker_id] = {
@@ -84,6 +86,19 @@ function knownValues(previousUploads: LabUpload[]): Record<string, Known> {
     }
   }
   return known;
+}
+
+// Veredicto de un marcador entre dos analíticas, con el rango de referencia (conservador: los
+// cambios de menos del 5 % del valor fuera de rango se consideran ruido de laboratorio).
+export function classifyChange(before: number, after: number, low: number | null, high: number | null): ChangeVerdict {
+  const b = status(before, low, high);
+  const a = status(after, low, high);
+  if (b === 'in' && a === 'in') return 'still_in_range';
+  if (b !== 'in' && a === 'in') return 'back_in_range';
+  if (b === 'in') return 'newly_out';
+  const small = Math.abs(after - before) < Math.abs(before) * 0.05;
+  if (small) return 'stable_out';
+  return distance(after, low, high) < distance(before, low, high) ? 'improving' : 'worsening';
 }
 
 export function compareUpload(upload: LabUpload, previousUploads: LabUpload[]): ProgressResult {
@@ -116,17 +131,7 @@ export function compareUpload(upload: LabUpload, previousUploads: LabUpload[]): 
       }
       const beforeStatus = status(prev.value, low, high);
       const afterStatus = status(p.valor, low, high);
-      let verdict: ChangeVerdict;
-      if (beforeStatus === 'in' && afterStatus === 'in') verdict = 'still_in_range';
-      else if (beforeStatus !== 'in' && afterStatus === 'in') verdict = 'back_in_range';
-      else if (beforeStatus === 'in') verdict = 'newly_out';
-      else {
-        const d0 = distance(prev.value, low, high);
-        const d1 = distance(p.valor, low, high);
-        // Cambios de menos del 5% del valor se consideran ruido de laboratorio.
-        const small = Math.abs(p.valor - prev.value) < Math.abs(prev.value) * 0.05;
-        verdict = small ? 'stable_out' : d1 < d0 ? 'improving' : 'worsening';
-      }
+      const verdict = classifyChange(prev.value, p.valor, low, high);
       result.changes.push({
         markerId: id,
         name,

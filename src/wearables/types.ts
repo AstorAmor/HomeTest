@@ -17,6 +17,7 @@ export type WearableMetric =
   | 'sleep_duration'
   | 'active_energy'
   | 'body_temperature'
+  | 'distance'
   | 'other';
 
 export interface DailyWearableRecord {

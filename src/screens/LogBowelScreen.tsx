@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { IntestineIcon } from '@/components/IntestineIcon';
@@ -10,6 +10,7 @@ import { BristolShape, ColorSwatches } from '@/components/BathroomVisuals';
 import { bowelRepository, dayKey, entryForDay, noonOf } from '@/data/bathroomRepository';
 import { BowelEntry, BRISTOL_TYPES, BristolType, STOOL_COLORS, StoolColor } from '@/types/bathroom';
 import { t as tr } from '@/i18n';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 // Lo que suele explicar un color llamativo: se pregunta antes de recomendar el médico
 const CAUSES: Partial<Record<StoolColor, string[]>> = {
@@ -21,10 +22,12 @@ const NONE = 'None of these';
 const COUNTS = [0, 1, 2, 3, 4].map((n) => ({ id: n, label: n === 4 ? '4+' : String(n) }));
 
 // Apunte del día: cuántas veces, color, consistencia y notas. Si ya existe, se edita.
+// Con ?quick=1, "una vez, ahora": solo color y consistencia, y se suma una vez al día de hoy.
 export const LogBowelScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ day?: string }>();
-  const day = params.day ?? dayKey(new Date());
+  const params = useLocalSearchParams<{ day?: string; quick?: string }>();
+  const quick = params.quick === '1';
+  const day = quick ? dayKey(new Date()) : (params.day ?? dayKey(new Date()));
   const [existing, setExisting] = useState<BowelEntry | null>(null);
   const [count, setCount] = useState<number | null>(null);
   const [color, setColor] = useState<StoolColor | undefined>();
@@ -38,30 +41,40 @@ export const LogBowelScreen = () => {
       const e = entryForDay(all, day);
       if (!e) return;
       setExisting(e);
+      if (quick) return; // una vez más: lo de esta vez empieza en blanco
       setCount(e.count);
       setColor(e.color);
       setConsistency(e.consistency);
       setCause(e.explainedBy);
       setNote(e.note ?? '');
     });
-  }, [day]);
+  }, [day, quick]);
+  // En "una vez, ahora" las veces son las que ya había hoy + esta
+  const total = quick ? (existing?.count ?? 0) + 1 : count;
 
   const flag = STOOL_COLORS.find((c) => c.id === color)?.flag;
   const causes = color ? CAUSES[color] : undefined;
 
   const save = async () => {
-    if (count == null) return;
+    if (total == null) return;
     setSaving(true);
-    const values: Partial<BowelEntry> = {
-      count,
-      color: count > 0 ? color : undefined,
-      consistency: count > 0 ? consistency : undefined,
-      explainedBy: count > 0 && cause && cause !== NONE ? cause : undefined,
-      note: note.trim() || undefined,
-    };
+    const values: Partial<BowelEntry> = quick
+      ? {
+          count: total,
+          // El color y la forma de esta vez pasan a ser los del día (los últimos)
+          ...(color ? { color, explainedBy: cause && cause !== NONE ? cause : undefined } : {}),
+          ...(consistency ? { consistency } : {}),
+        }
+      : {
+          count: total,
+          color: total > 0 ? color : undefined,
+          consistency: total > 0 ? consistency : undefined,
+          explainedBy: total > 0 && cause && cause !== NONE ? cause : undefined,
+          note: note.trim() || undefined,
+        };
     try {
       if (existing) await bowelRepository.update(existing.id, values);
-      else await bowelRepository.save({ id: `${Date.now()}`, fecha: noonOf(day), createdAt: new Date().toISOString(), count, ...values });
+      else await bowelRepository.save({ id: `${Date.now()}`, fecha: noonOf(day), createdAt: new Date().toISOString(), count: total, ...values });
       router.back();
     } finally {
       setSaving(false);
@@ -75,27 +88,35 @@ export const LogBowelScreen = () => {
           <Ionicons name="close" size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.circleButton, count != null && styles.circleButtonActive]}
+          style={[styles.circleButton, total != null && styles.circleButtonActive]}
           onPress={save}
-          disabled={saving || count == null}
+          disabled={saving || total == null}
         >
-          <Ionicons name="checkmark" size={22} color={count != null ? Colors.background : Colors.textMuted} />
+          <Ionicons name="checkmark" size={22} color={total != null ? Colors.background : Colors.textMuted} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={styles.iconBadge}>
             <IntestineIcon size={26} color={Colors.green} />
           </View>
-          <Text style={styles.title}>{tr('Digestion today')}</Text>
-          <Text style={styles.subtitle}>{tr('Takes 10 seconds. It helps us spot changes early, and nobody else sees it.')}</Text>
+          <Text style={styles.title}>{quick ? tr('Just now') : tr('Digestion today')}</Text>
+          <Text style={styles.subtitle}>
+            {quick
+              ? tr('It adds one time to today ({n} so far). Colour and shape are optional.', { n: existing?.count ?? 0 })
+              : tr('Takes 10 seconds. It helps us spot changes early, and nobody else sees it.')}
+          </Text>
         </View>
 
-        <Text style={styles.label}>{tr('How many times did you go today?')}</Text>
-        <ChoiceChips options={COUNTS} value={count} onChange={setCount} center />
+        {!quick && (
+          <>
+            <Text style={styles.label}>{tr('How many times did you go today?')}</Text>
+            <ChoiceChips options={COUNTS} value={count} onChange={setCount} center />
+          </>
+        )}
 
-        {count != null && count > 0 && (
+        {total != null && total > 0 && (
           <>
             <Text style={styles.label}>{tr('Colour')}</Text>
             <ColorSwatches options={STOOL_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
@@ -141,7 +162,7 @@ export const LogBowelScreen = () => {
                     <BristolShape type={t.id} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.typeTitle}>{tr(t.label)}</Text>
-                      <Text style={styles.typeHint}>{t.hint}</Text>
+                      <Text style={styles.typeHint}>{tr(t.hint)}</Text>
                     </View>
                     <Ionicons
                       name={selected ? 'radio-button-on' : 'radio-button-off'}
@@ -155,16 +176,20 @@ export const LogBowelScreen = () => {
           </>
         )}
 
-        <Text style={styles.label}>{tr('Anything else? (optional)')}</Text>
-        <TextInput
-          style={styles.note}
-          value={note}
-          onChangeText={setNote}
-          placeholder={tr('Travelling, new food, tummy ache…')}
-          placeholderTextColor={Colors.textMuted}
-          multiline
-        />
-      </ScrollView>
+        {!quick && (
+          <>
+            <Text style={styles.label}>{tr('Anything else? (optional)')}</Text>
+            <TextInput
+              style={styles.note}
+              value={note}
+              onChangeText={setNote}
+              placeholder={tr('Travelling, new food, tummy ache…')}
+              placeholderTextColor={Colors.textMuted}
+              multiline
+            />
+          </>
+        )}
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

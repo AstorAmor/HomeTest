@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -9,6 +9,9 @@ import { Colors } from '@/constants/colors';
 import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { useAuth } from '@/context/AuthContext';
+import { isRealAccount, setRealAccount } from '@/data/dataMode';
+import { reloadKeepingPlace } from '@/theme/appearance';
 
 const PERMISSIONS: { icon: string; title: string; why: string }[] = [
   { icon: 'notifications-outline', title: 'Notifications', why: 'Reminders for your medication, check-ins and tests.' },
@@ -23,6 +26,14 @@ const PERMISSIONS: { icon: string; title: string; why: string }[] = [
 export const SettingsScreen = () => {
   const router = useRouter();
   const exit = useLogout();
+  const { authMode } = useAuth();
+  const [real, setReal] = useState(isRealAccount());
+  // Cuenta real ↔ de prueba: cambia lo que se enseña en toda la app, así que recarga (vuelve aquí)
+  const toggleReal = async (v: boolean) => {
+    setReal(v);
+    await setRealAccount(v);
+    await reloadKeepingPlace(Colors.background, '/settings');
+  };
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -66,6 +77,26 @@ export const SettingsScreen = () => {
             </TouchableOpacity>
           )}
         </View>
+
+        {authMode === 'supabase' && (
+          <>
+            <Text style={styles.section}>{t('Account')}</Text>
+            <View style={styles.card}>
+              <View style={styles.row}>
+                <Ionicons name="shield-checkmark-outline" size={22} color={Colors.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle}>{t('Real account')}</Text>
+                  <Text style={styles.rowSub}>
+                    {real
+                      ? t('Only your own data. Nothing is filled in with examples.')
+                      : t('Test account: where you have no data yet, Kuova shows examples.')}
+                  </Text>
+                </View>
+                <Switch value={real} onValueChange={toggleReal} trackColor={{ true: Colors.accent, false: Colors.cardBorder }} />
+              </View>
+            </View>
+          </>
+        )}
 
         <TouchableOpacity style={styles.logout} onPress={exit}>
           <Ionicons name="log-out-outline" size={20} color={Colors.danger} />

@@ -68,16 +68,16 @@ export const ReportSummaryScreen = () => {
               { value: counts.needsReview, color: Colors.attention },
             ]}
             centerLabel={`${counts.enRango}`}
-            centerSubLabel={`of ${counts.total} in range`}
+            centerSubLabel={t('of {n} in range', { n: counts.total })}
           />
           <View style={styles.legend}>
             <View style={styles.legendRow}>
               <View style={[styles.legendDot, { backgroundColor: Colors.ok }]} />
-              <Text style={styles.legendText}>{counts.enRango} in range</Text>
+              <Text style={styles.legendText}>{t('{n} in range', { n: counts.enRango })}</Text>
             </View>
             <View style={styles.legendRow}>
               <View style={[styles.legendDot, { backgroundColor: Colors.attention }]} />
-              <Text style={styles.legendText}>{counts.needsReview} need a look</Text>
+              <Text style={styles.legendText}>{t('{n} need a look', { n: counts.needsReview })}</Text>
             </View>
           </View>
         </View>
@@ -140,7 +140,7 @@ export const ReportSummaryScreen = () => {
                 </View>
                 <View style={[styles.markerBadge, { backgroundColor: `${color}22` }]}>
                   <Text style={[styles.markerBadgeText, { color }]}>
-                    {FLAG_LABEL[marker.flag]}
+                    {t(FLAG_LABEL[marker.flag])}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />

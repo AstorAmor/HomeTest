@@ -27,7 +27,8 @@ export function generateHuaweiDummy(days = 14, today = new Date()): DailyWearabl
 
   for (let i = 0; i < days; i++) {
     const d = new Date(today.getTime() - i * 24 * 3600 * 1000);
-    const date = d.toISOString().slice(0, 10);
+    // Día en hora local (como los datos reales de Health Connect)
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const weekend = d.getDay() === 0 || d.getDay() === 6;
     // Los últimos 3 días simulan una mala racha (menos sueño, pulso más alto, VFC más baja)
     // para poder probar las reglas de la sección 5.2 del documento de diseño.

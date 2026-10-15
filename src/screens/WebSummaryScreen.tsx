@@ -10,7 +10,7 @@ import { TrendChart } from '@/components/TrendChart';
 import { useSections } from '@/data/appPrefs';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, t, tn } from '@/i18n';
-import { LAB_REPORTS, formatReportDate, flaggedMarkers, markerNameEn, reportCounts } from '@/utils/labReportView';
+import { labReports, formatReportDate, flaggedMarkers, markerNameEn, reportCounts } from '@/utils/labReportView';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import { checkInRepository } from '@/data/checkInRepository';
 import { CheckInEntry, MOOD_OPTIONS } from '@/types/checkIn';
@@ -141,9 +141,10 @@ export const WebSummaryScreen = () => {
   const cols = width >= 980 ? 3 : width >= 620 ? 2 : 1;
   const cardW = width ? (width - GAP * (cols - 1)) / cols : 300;
 
-  const lab = LAB_REPORTS[0];
-  const counts = reportCounts(lab.report);
-  const flagged = flaggedMarkers(lab.report, 3);
+  // Cuenta real sin analíticas: no hay tarjeta de laboratorio (nada de ejemplo)
+  const lab = labReports()[0] as ReturnType<typeof labReports>[number] | undefined;
+  const counts = lab ? reportCounts(lab.report) : { inRange: 0, needsReview: 0, total: 0 };
+  const flagged = lab ? flaggedMarkers(lab.report, 3) : [];
   const sleep = latest(series.sleep_duration);
   const steps = latest(series.steps);
   const rhr = latest(series.resting_heart_rate);
@@ -169,7 +170,7 @@ export const WebSummaryScreen = () => {
       icon: 'flask-outline',
       color: Colors.danger,
       text: tn(counts.needsReview, '{n} marker to review in your latest lab report', '{n} markers to review in your latest lab report'),
-      onPress: () => go('/lab-report', { id: lab.id }),
+      onPress: () => go('/lab-report', { id: lab!.id }),
     });
   if (show('medication') && pendingDoses)
     todo.push({ key: 'meds', icon: 'medical-outline', color: Colors.gold, text: tn(pendingDoses, '{n} dose to mark', '{n} doses to mark'), onPress: () => go('/medications') });
@@ -181,8 +182,9 @@ export const WebSummaryScreen = () => {
   // Lo que ya sale en "Para hoy" no se repite en "Próximamente"
   const comingUp = todo.slice(0, 3).some((x) => x.key === 'next') ? upcoming.slice(1) : upcoming;
 
-  const cards: (Omit<CardProps, 'width'> & { key: string })[] = [
-    {
+  const cards: (Omit<CardProps, 'width'> & { key: string })[] = [];
+  if (lab)
+    cards.push({
       key: 'lab',
       title: t('Lab results'),
       color: Colors.danger,
@@ -192,8 +194,7 @@ export const WebSummaryScreen = () => {
       value: t('{n} in range', { n: counts.inRange }),
       unit: `· ${t('{n} need a look', { n: counts.needsReview })}`,
       onPress: () => go('/lab-report', { id: lab.id }),
-    },
-  ];
+    });
   if (show('checkin'))
     cards.push({
       key: 'mood',
@@ -361,6 +362,7 @@ export const WebSummaryScreen = () => {
             />
           </TouchableOpacity>
         )}
+        {lab && (
         <TouchableOpacity style={[styles.card, { width: cols > 1 ? (width - GAP) / 2 : cardW }]} onPress={() => go('/lab-report', { id: lab.id })} activeOpacity={0.85}>
           <View style={styles.cardHead}>
             <View style={[styles.cardIcon, { backgroundColor: withAlpha(Colors.attention, 0.14) }]}>{icon('alert-circle-outline', Colors.attention)}</View>
@@ -375,6 +377,7 @@ export const WebSummaryScreen = () => {
             </View>
           ))}
         </TouchableOpacity>
+        )}
       </View>
 
       <TouchableOpacity style={styles.allData} onPress={() => go('/(tabs)', { tab: String(TAB.myData) })} activeOpacity={0.85}>

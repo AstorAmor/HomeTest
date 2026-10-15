@@ -13,6 +13,7 @@ import { buildPlan } from '@/data/planRepository';
 import { userFlags } from '@/data/userFlags';
 import { NutrientFocus, nutrientFocus } from '@/logic/nutrients';
 import { t } from '@/i18n';
+import { showSamples } from '@/data/dataMode';
 
 // Lo marcado hoy (user_flags "nutrients:YYYY-MM-DD")
 export const nutrientsKey = (d = new Date()) => `nutrients:${d.toISOString().slice(0, 10)}`;
@@ -20,7 +21,8 @@ export const nutrientsKey = (d = new Date()) => `nutrients:${d.toISOString().sli
 export async function loadNutrientFocus(): Promise<NutrientFocus[]> {
   const profile = await profileRepository.get().catch(() => null);
   const planTips = buildPlan(profile).find((p) => p.kind === 'nutrition')?.how ?? [];
-  const markers = currentReport.sections.flatMap((s) => s.markers).map((m) => ({ marker_id: m.marker_id, flag: m.flag }));
+  // Marcadores de la analítica de ejemplo solo en cuentas de prueba (en una real, de momento, el plan)
+  const markers = (showSamples() ? currentReport.sections : []).flatMap((s) => s.markers).map((m) => ({ marker_id: m.marker_id, flag: m.flag }));
   return nutrientFocus(markers, planTips);
 }
 

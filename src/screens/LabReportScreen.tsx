@@ -10,6 +10,7 @@ import { Colors } from '@/constants/colors';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import { FLAG_LABEL, categoryLabel } from '@/utils/reportDisplay';
 import { findLabReport, flagColor, formatReportDate, markerNameEn, rangePosition, reportCounts } from '@/utils/labReportView';
+import { t } from '@/i18n';
 
 // Resultados de un informe por secciones (se usa para informes anteriores;
 // el último abre el recorrido completo de report-summary).
@@ -45,7 +46,7 @@ export const LabReportScreen = () => {
               { value: counts.needsReview, color: Colors.attention },
             ]}
             centerLabel={`${counts.inRange}`}
-            centerSubLabel={`of ${counts.total}`}
+            centerSubLabel={t('of {n}', { n: counts.total })}
           />
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>{title}</Text>
@@ -53,9 +54,9 @@ export const LabReportScreen = () => {
               {formatReportDate(report.test_date)} · {entry.lab}
             </Text>
             <Text style={styles.counts}>
-              <Text style={{ color: Colors.ok }}>{counts.inRange} in range</Text>
+              <Text style={{ color: Colors.ok }}>{t('{n} in range', { n: counts.inRange })}</Text>
               {'  ·  '}
-              <Text style={{ color: Colors.attention }}>{counts.needsReview} need a look</Text>
+              <Text style={{ color: Colors.attention }}>{t('{n} need a look', { n: counts.needsReview })}</Text>
             </Text>
           </View>
         </View>
@@ -68,7 +69,7 @@ export const LabReportScreen = () => {
               <TouchableOpacity style={styles.sectionHeader} onPress={() => toggle(section.category_id)}>
                 <Text style={styles.sectionTitle}>{categoryLabel(section.category_id)}</Text>
                 <Text style={[styles.sectionCount, flagged > 0 && { color: Colors.attention }]}>
-                  {flagged > 0 ? `${flagged} to review` : `${section.markers.length} in range`}
+                  {flagged > 0 ? t('{n} to review', { n: flagged }) : t('{n} in range', { n: section.markers.length })}
                 </Text>
                 <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
               </TouchableOpacity>
@@ -79,7 +80,7 @@ export const LabReportScreen = () => {
                     <>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.markerName}>{markerNameEn(m)}</Text>
-                        <Text style={[styles.markerFlag, { color: flagColor(m) }]}>{FLAG_LABEL[m.flag]}</Text>
+                        <Text style={[styles.markerFlag, { color: flagColor(m) }]}>{t(FLAG_LABEL[m.flag])}</Text>
                       </View>
                       <View style={styles.markerRight}>
                         <Text style={styles.markerValue}>{getMarkerValueTextEn(m.value, m.unit)}</Text>

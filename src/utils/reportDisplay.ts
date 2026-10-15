@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { EscalationTier, MarkerFlag } from '@/types/report';
+import { t } from '@/i18n';
 
 export const TIER_COLOR: Record<EscalationTier, string> = {
   verde: Colors.ok,
@@ -43,5 +44,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export const categoryLabel = (categoryId: string) =>
-  CATEGORY_LABELS[categoryId] ??
-  categoryId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  CATEGORY_LABELS[categoryId]
+    ? t(CATEGORY_LABELS[categoryId])
+    : categoryId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+// Etiqueta del estado de un marcador ("Bajo", "Límite alto", "En rango"…) en el idioma de la app
+export const flagLabel = (flag: MarkerFlag) => t(FLAG_LABEL[flag]);

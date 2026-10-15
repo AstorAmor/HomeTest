@@ -13,6 +13,7 @@ import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { sampleBloodPressure } from '@/data/sampleReadings';
 import { bpLabel, bpLevel, BpLevel } from '@/logic/bloodPressure';
 import { dateLocale, t } from '@/i18n';
+import { showSamples } from '@/data/dataMode';
 
 const shortDay = (iso: string) => {
   const d = new Date(iso);
@@ -40,7 +41,7 @@ export const BloodPressureDetailScreen = () => {
   useReloadOnFocus(load);
 
   // Sin registros propios: los de ejemplo (los mismos que enseña Mis datos), sin poder editarlos
-  const isSample = entries.length === 0;
+  const isSample = entries.length === 0 && showSamples();
   const shown = isSample ? sampleBloodPressure() : entries;
   const cutoff = Date.now() - rangeDays(range) * 24 * 60 * 60 * 1000;
   const filtered = shown

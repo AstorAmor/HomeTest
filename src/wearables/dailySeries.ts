@@ -3,30 +3,18 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { DailyWearableRecord, WearableMetric } from './types';
 import { wearableRepository } from './wearableRepository';
 import { generateHuaweiDummy } from './providers/huaweiDummy';
+import {
+  grantedTypes,
+  healthConnectSyncDue,
+  isHealthConnectAvailable,
+  markHealthConnectSynced,
+  readHealthConnectDaily,
+} from './providers/healthConnect';
+import { PHONE_SOURCE } from './sources';
+import { showSamples } from '@/data/dataMode';
+import { DailyPoint, DailySeries, localDayKey, pickPerDay, toDailySeries } from './seriesLogic';
 
-export interface DailyPoint {
-  date: string; // YYYY-MM-DD
-  value: number;
-}
-
-export type DailySeries = Partial<Record<WearableMetric, DailyPoint[]>>;
-
-// Agrupa los registros por métrica (una fuente por día: si hay varias, se queda
-// con la primera) y los ordena ascendente para las gráficas.
-export function toDailySeries(records: DailyWearableRecord[]): DailySeries {
-  const out: DailySeries = {};
-  const seen = new Set<string>();
-  for (const r of records) {
-    const key = `${r.metric}|${r.date}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    (out[r.metric] ??= []).push({ date: r.date, value: r.value });
-  }
-  for (const metric of Object.keys(out) as WearableMetric[]) {
-    out[metric]!.sort((a, b) => a.date.localeCompare(b.date));
-  }
-  return out;
-}
+export * from './seriesLogic';
 
 // Deja solo los últimos `days` días de cada métrica.
 const lastDays = (series: DailySeries, days: number): DailySeries => {
@@ -38,65 +26,78 @@ const lastDays = (series: DailySeries, days: number): DailySeries => {
 // Días de ejemplo generados cuando aún no hay datos: 6 meses, para las vistas 1M/6M.
 const SAMPLE_DAYS = 183;
 
-// Hook para Today, My Data y el detalle de métrica: lee lo sincronizado y, si todavía
-// no hay nada, usa el dummy de Huawei EN MEMORIA (sin guardarlo) para que la demo no
-// salga vacía. `days` recorta al periodo que enseña cada pantalla.
-export function useDailyWearables(days = 14) {
+// De qué apps vienen los datos de los últimos días ("Fitbit", "This phone"…), el reloj primero
+const recentSources = (records: DailyWearableRecord[]) => {
+  const since = localDayKey(new Date(Date.now() - 7 * 86400000));
+  const names = new Set<string>();
+  for (const r of pickPerDay(records)) if (r.date >= since) r.sourceName.split(' + ').forEach((n) => names.add(n));
+  return [...names].sort((a, b) => Number(a === PHONE_SOURCE) - Number(b === PHONE_SOURCE));
+};
+
+// Hook para Today, My Data y el detalle de métrica: lee lo sincronizado y, si todavía no hay nada,
+// usa el dummy de Huawei EN MEMORIA (sin guardarlo) para que la demo no salga vacía; en una cuenta
+// real, no (sale vacío). `days` recorta al periodo que enseña cada pantalla. Con `autoSync`, además,
+// trae lo nuevo de Health Connect en segundo plano (como mucho cada 10 minutos) y repinta.
+export function useDailyWearables(days = 14, opts?: { autoSync?: boolean }) {
   const [series, setSeries] = useDeepState<DailySeries>({});
   const [isSample, setIsSample] = useDeepState(false);
+  const [sources, setSources] = useDeepState<string[]>([]);
+  const [hasAny, setHasAny] = useDeepState(false);
+  const autoSync = !!opts?.autoSync;
+
+  const apply = useCallback(
+    (stored: DailyWearableRecord[]) => {
+      if (stored.length > 0) {
+        setSeries(lastDays(toDailySeries(stored), days));
+        setSources(recentSources(stored));
+        setIsSample(false);
+        setHasAny(true);
+      } else if (showSamples()) {
+        setSeries(lastDays(toDailySeries(generateHuaweiDummy(SAMPLE_DAYS)), days));
+        setSources(['Huawei Health']);
+        setIsSample(true);
+        setHasAny(true);
+      } else {
+        setSeries({});
+        setSources([]);
+        setIsSample(false);
+        setHasAny(false);
+      }
+    },
+    [setSeries, setIsSample, setSources, setHasAny, days],
+  );
 
   const load = useCallback(async () => {
-    const stored = await wearableRepository.getRecords();
-    if (stored.length > 0) {
-      setSeries(lastDays(toDailySeries(stored), days));
-      setIsSample(false);
-    } else {
-      setSeries(lastDays(toDailySeries(generateHuaweiDummy(SAMPLE_DAYS)), days));
-      setIsSample(true);
+    apply(await wearableRepository.getRecords().catch(() => []));
+    if (autoSync) {
+      syncHealthConnectIfDue()
+        .then(async (changed) => {
+          if (changed) apply(await wearableRepository.getRecords());
+        })
+        .catch((e) => console.warn('Health Connect sync failed', e));
     }
-  }, [setSeries, setIsSample, days]);
+  }, [apply, autoSync]);
 
   useReloadOnFocus(load);
 
-  return { series, isSample };
+  return { series, isSample, sources, hasAny };
 }
+
+// Trae de Health Connect los últimos 30 días y sustituye lo guardado de ese rango. Solo si está
+// conectado (algún permiso concedido) y han pasado 10 minutos desde la última vez.
+export async function syncHealthConnectIfDue(force = false): Promise<boolean> {
+  if (!force && !(await healthConnectSyncDue())) return false;
+  if (!(await isHealthConnectAvailable())) return false;
+  if (!(await grantedTypes()).length) return false;
+  const read = await readHealthConnectDaily(30);
+  await markHealthConnectSynced();
+  if (!read.records.length) return false;
+  await wearableRepository.replaceProviderFrom('health_connect', read.from, read.records);
+  return true;
+}
+
 
 export const latest = (points?: DailyPoint[]) => (points?.length ? points[points.length - 1].value : null);
-
-const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / (xs.length || 1);
-const clamp = (v: number) => Math.max(0, Math.min(100, v));
-
-export interface Readiness {
-  score: number;
-  label: string;
-  sleep: number;
-  hrv: number;
-  restingHr: number;
-}
-
-// Daily readiness (0-100), versión simple y explicable:
-// sueño de anoche frente a 8 h, VFC y pulso en reposo de hoy frente a su media
-// de los días anteriores. Pesos 40/35/25. Pendiente de validar con el médico.
-export function computeReadiness(series: DailySeries): Readiness | null {
-  const sleep = series.sleep_duration;
-  const hrv = series.hrv;
-  const rhr = series.resting_heart_rate;
-  if (!sleep?.length || !hrv?.length || !rhr?.length) return null;
-
-  const lastSleep = sleep[sleep.length - 1].value;
-  const hrvToday = hrv[hrv.length - 1].value;
-  const hrvBase = mean(hrv.slice(0, -1).map((p) => p.value)) || hrvToday;
-  const rhrToday = rhr[rhr.length - 1].value;
-  const rhrBase = mean(rhr.slice(0, -1).map((p) => p.value)) || rhrToday;
-
-  const sleepScore = clamp((lastSleep / 480) * 100);
-  const hrvScore = clamp(70 + ((hrvToday - hrvBase) / hrvBase) * 200);
-  const rhrScore = clamp(70 - ((rhrToday - rhrBase) / rhrBase) * 300);
-  const score = Math.round(0.4 * sleepScore + 0.35 * hrvScore + 0.25 * rhrScore);
-
-  const label = score >= 80 ? 'Ready to go' : score >= 60 ? 'Take it steady' : 'Prioritise recovery';
-  return { score, label, sleep: sleepScore, hrv: hrvScore, restingHr: rhrScore };
-}
 
 export const formatSleep = (minutes: number) =>
   `${Math.floor(minutes / 60)}h ${String(Math.round(minutes % 60)).padStart(2, '0')}m`;

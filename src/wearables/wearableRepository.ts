@@ -88,6 +88,28 @@ export const wearableRepository = {
     return merged;
   },
 
+  // Sustituye lo de un proveedor desde `fromDate` por lo recién leído. Así un día que el proveedor ha
+  // corregido (o una fuente que ya no aparece) no se queda duplicado con el valor antiguo.
+  async replaceProviderFrom(
+    provider: WearableProviderId,
+    fromDate: string,
+    incoming: DailyWearableRecord[],
+  ): Promise<DailyWearableRecord[]> {
+    if (isRemoteActive()) {
+      const { error } = await supabase!
+        .from('wearable_daily')
+        .delete()
+        .eq('user_id', getCurrentUserId()!)
+        .eq('provider', provider)
+        .gte('date', fromDate);
+      fail(error);
+      return this.upsertRecords(incoming);
+    }
+    const kept = (await getLocalRecords()).filter((r) => !(r.provider === provider && r.date >= fromDate));
+    await AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(kept));
+    return this.upsertRecords(incoming);
+  },
+
   async clearRecords(): Promise<void> {
     if (isRemoteActive()) {
       const { error } = await supabase!.from('wearable_daily').delete().eq('user_id', getCurrentUserId()!);

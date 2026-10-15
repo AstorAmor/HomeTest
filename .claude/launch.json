@@ -4,14 +4,39 @@
     {
       "name": "expo-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "web"],
+      "runtimeArgs": [
+        "run",
+        "web"
+      ],
       "port": 8081
     },
     {
       "name": "expo-web-demo",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "set EXPO_PUBLIC_PUBLIC_DEMO=1&& npx expo start --web --port 8082"],
+      "runtimeArgs": [
+        "/c",
+        "set EXPO_PUBLIC_PUBLIC_DEMO=1&& npx expo start --web --port 8082"
+      ],
       "port": 8082
+    },
+    {
+      "name": "expo-web-real-check",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "web",
+        "--",
+        "--port",
+        "8084"
+      ],
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "",
+        "EXPO_PUBLIC_FORCE_REAL_ACCOUNT": "1",
+        "WEB_OUTPUT": "single",
+        "NODE_OPTIONS": "--max-old-space-size=6144"
+      },
+      "port": 8084
     }
   ]
 }

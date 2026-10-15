@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 // Centros de extracción para "Book an appointment" (Lab). De momento, los 8 centros
 // propios de Eurofins Megalab en la ciudad de Madrid, con coordenadas y horario de
 // EXTRACCIONES del buscador oficial (eurofins-megalab.com/horarios-y-centros,
@@ -121,8 +122,8 @@ export const LAB_CENTERS: LabCenter[] = [
 ];
 
 export const hoursLabel = (c: LabCenter) =>
-  `Mon–Fri ${c.weekdays.open}–${c.weekdays.close}` +
-  (c.saturday ? ` · Sat ${c.saturday.open}–${c.saturday.close}` : ' · Sat closed');
+  t('Mon–Fri {from}–{to}', { from: c.weekdays.open, to: c.weekdays.close }) +
+  (c.saturday ? ` · ${t('Sat {from}–{to}', { from: c.saturday.open, to: c.saturday.close })}` : ` · ${t('Sat closed')}`);
 
 // Ventana de extracciones de un día (YYYY-MM-DD), o null si está cerrado.
 export function windowFor(c: LabCenter, day: string): OpeningWindow | null {

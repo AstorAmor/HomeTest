@@ -3,6 +3,7 @@ import { baselineReport, currentReport } from '@/data/reportRepository';
 import { HomeTestReport, ReportMarker } from '@/types/report';
 import { Colors } from '@/constants/colors';
 import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
+import { showSamples } from '@/data/dataMode';
 
 // Informes disponibles en Lab → Lab Results (dummy: los dos del prototipo).
 // `lab` = quién hizo la analítica (laboratorio socio o "User upload" si la subió el usuario).
@@ -10,6 +11,10 @@ export const LAB_REPORTS: { id: 'current' | 'baseline'; title: string; lab: stri
   { id: 'current', title: t('Follow-up blood analysis'), lab: 'Eurofins Megalab', report: currentReport },
   { id: 'baseline', title: t('Baseline blood analysis'), lab: 'Synlab', report: baselineReport },
 ];
+
+// Las analíticas de ejemplo (seguimiento y basal). En una cuenta real no hay ninguna: sus analíticas
+// son las que sube (labUploads) o las que le lleguen del laboratorio.
+export const labReports = () => (showSamples() ? LAB_REPORTS : []);
 
 export const findLabReport = (id?: string) => LAB_REPORTS.find((r) => r.id === id) ?? LAB_REPORTS[0];
 

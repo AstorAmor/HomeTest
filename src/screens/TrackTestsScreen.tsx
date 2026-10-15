@@ -7,6 +7,7 @@ import { Colors } from '@/constants/colors';
 import { mockShipments, Shipment, ShipmentStep } from '@/data/servicesMock';
 import { t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { showSamples } from '@/data/dataMode';
 
 const stepColor = (s: ShipmentStep['status']) =>
   s === 'done' ? Colors.accent : s === 'current' ? Colors.amber : Colors.cardBorder;
@@ -87,6 +88,8 @@ export const TrackTestsScreen = () => (
         </View>
       )}
 
+      {showSamples() && (
+      <>
       <View style={styles.demoHeader}>
         <Text style={styles.sectionTitleInline}>{t('What it will look like')}</Text>
         <View style={styles.demoTag}>
@@ -97,6 +100,8 @@ export const TrackTestsScreen = () => (
       {mockShipments.map((s) => (
         <ShipmentCard key={s.id} shipment={s} demo />
       ))}
+      </>
+      )}
     </ScrollView>
   </SafeAreaView>
 );

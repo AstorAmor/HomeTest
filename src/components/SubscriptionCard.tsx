@@ -64,7 +64,8 @@ export const SubscriptionCard = () => {
       <View style={styles.rows}>
         {sub.since && <Row icon="calendar-outline" label={t('Member since')} value={longDate(sub.since)} />}
         {sub.renewsOn && <Row icon="refresh-outline" label={t('Renews on')} value={longDate(sub.renewsOn)} />}
-        <Row icon="flask-outline" label={t('Next blood test')} value={longDate(mockNextTestDate)} />
+        {/* La fecha de la próxima analítica de ejemplo solo en la demo */}
+        {sub.sample && <Row icon="flask-outline" label={t('Next blood test')} value={longDate(mockNextTestDate)} />}
       </View>
 
       <View style={styles.actions}>

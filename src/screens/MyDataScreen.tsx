@@ -28,6 +28,7 @@ import { useWebShell } from '@/web/webMode';
 import { IconBadge } from '@/components/HealthIcons';
 import { kuovaAge } from '@/logic/kuovaAge';
 import { KuovaAgeBadge } from '@/components/KuovaAgeBadge';
+import { showSamples } from '@/data/dataMode';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -55,10 +56,11 @@ interface ChartData {
 const RECENT = 10; // puntos que se muestran en las gráficas de análisis
 
 // Últimas mediciones guardadas; si no hay, el histórico mock (con fechas mensuales
-// inventadas) para que la pantalla no salga vacía en la demo.
-function simpleChart(entries: DatedValue[], mockId: string, color: string): ChartData {
+// inventadas) para que la pantalla no salga vacía en la demo. En una cuenta real, sin
+// mediciones no hay gráfica (null) y con una sola se enseña esa.
+function simpleChart(entries: DatedValue[], mockId: string, color: string): ChartData | null {
   const asc = [...entries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
-  if (asc.length >= 2) {
+  if (asc.length >= 2 || (asc.length === 1 && !showSamples())) {
     return {
       labels: asc.map((e) => shortDate(e.fecha)),
       series: [{ color, values: asc.map((e) => e.valor) }],
@@ -66,6 +68,7 @@ function simpleChart(entries: DatedValue[], mockId: string, color: string): Char
       isSample: false,
     };
   }
+  if (!showSamples()) return null;
   const mock = mockBiomarkers.find((b) => b.id === mockId)!;
   const now = new Date();
   const labels = mock.history.map((_, i) => {
@@ -125,11 +128,13 @@ export const MyDataScreen = () => {
     setVo2(
       voAsc.length
         ? { labels: voAsc.map((e) => shortDate(e.fecha)), series: [{ color: Colors.sky, values: voAsc.map((e) => e.valor) }], latest: num(voAsc[voAsc.length - 1].valor), isSample: false }
-        : { labels: ['', '', '', '', ''], series: [{ color: Colors.sky, values: [37, 38.5, 39, 40.5, 41] }], latest: '—', isSample: true },
+        : showSamples()
+          ? { labels: ['', '', '', '', ''], series: [{ color: Colors.sky, values: [37, 38.5, 39, 40.5, 41] }], latest: '—', isSample: true }
+          : null,
     );
 
     const bpAsc = [...bpEntries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
-    if (bpAsc.length >= 2) {
+    if (bpAsc.length >= 2 || (bpAsc.length === 1 && !showSamples())) {
       setBp({
         labels: bpAsc.map((e) => shortDate(e.fecha)),
         series: [
@@ -139,6 +144,9 @@ export const MyDataScreen = () => {
         latest: `${bpAsc[bpAsc.length - 1].systolic}/${bpAsc[bpAsc.length - 1].diastolic}`,
         isSample: false,
       });
+    } else if (!showSamples()) {
+      // Cuenta real sin tomas: la tarjeta, vacía, invita a registrar la primera
+      setBp({ labels: [], series: [], latest: '—', isSample: false });
     } else {
       const sys = [118, 122, 119, 125, 121, 120];
       const dia = [78, 81, 77, 83, 80, 80];
@@ -196,10 +204,23 @@ export const MyDataScreen = () => {
         <ScreenHeader title={t('My Data')} />
 
         {/* Edad biológica (PhenoAge) de la última analítica: lo primero que se ve */}
+        {!showSamples() && (
+          // Cuenta real: aún no hay edad KUOVA (se calcula con una analítica); nada inventado
+          <TouchableOpacity style={styles.genetic} onPress={() => router.push('/biological-age')} activeOpacity={0.85}>
+            <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.gold, 0.14) }]}>
+              <Ionicons name="hourglass-outline" size={20} color={Colors.gold} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.geneticTitle}>{t('Your KUOVA age')}</Text>
+              <Text style={styles.geneticSub}>{t('Not yet: it is worked out from 9 values of a blood test.')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+        )}
         {(() => {
           const now = currentReport.summary.phenoage;
           const before = baselineReport.summary.phenoage;
-          if (!now.available) return null;
+          if (!now.available || !showSamples()) return null;
           const k = kuovaAge(now);
           const change = before.available ? Math.round((k.age - kuovaAge(before).age) * 10) / 10 : 0;
           return (
@@ -272,7 +293,7 @@ export const MyDataScreen = () => {
             iconColor={Colors.coral}
             value={bp.latest}
             unit="mmHg"
-            avg={bp.isSample ? t('sample') : t('tap to log')}
+            avg={bp.isSample ? t('sample') : bp.latest === '—' ? t('Not measured yet') : t('tap to log')}
             onPress={() => router.push('/blood-pressure-detail')}
           >
             <TrendChart labels={bp.labels} series={bp.series} height={110} />
@@ -320,9 +341,9 @@ export const MyDataScreen = () => {
         })}
         </View>
 
-        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>{t('Tests')}</Text>
-        {/* Una debajo de otra: no sabemos cuántas pruebas habrá en camino */}
-        <View style={styles.testList}>
+        {showSamples() && <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>{t('Tests')}</Text>}
+        {/* Una debajo de otra: no sabemos cuántas pruebas habrá en camino (de ejemplo: no en cuentas reales) */}
+        {showSamples() && <View style={styles.testList}>
           {mockDiagnosticTests.map((test, i) => {
             const icon = diagnosticIcon(test.status);
             return (
@@ -337,7 +358,7 @@ export const MyDataScreen = () => {
               </View>
             );
           })}
-        </View>
+        </View>}
 
         {/* Perfil genético: antecedentes familiares ("Know your roots") y, más adelante, resultados */}
         <TouchableOpacity style={styles.genetic} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
@@ -374,11 +395,14 @@ export const MyDataScreen = () => {
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
 
+        {/* Botones de desarrollo: nunca en una cuenta real (meterían datos inventados en ella) */}
+        {showSamples() && (
         <TouchableOpacity style={styles.seedButton} onPress={handleLoadSeed}>
           <Ionicons name="flask-outline" size={18} color={Colors.textMuted} />
           <Text style={styles.seedButtonText}>Load dummy data (dev)</Text>
         </TouchableOpacity>
-        {authMode === 'supabase' && (
+        )}
+        {authMode === 'supabase' && showSamples() && (
           <TouchableOpacity style={styles.seedButton} onPress={handleImportLocal}>
             <Ionicons name="cloud-upload-outline" size={18} color={Colors.textMuted} />
             <Text style={styles.seedButtonText}>Upload this phone's data to my account (dev)</Text>

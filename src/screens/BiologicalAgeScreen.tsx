@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { baselineReport, currentReport } from '@/data/reportRepository';
+import { showSamples } from '@/data/dataMode';
 import { AppIcon } from '@/components/HealthIcons';
 import { KuovaAgeBadge } from '@/components/KuovaAgeBadge';
 import { kuovaAge, QUALITY_LABEL } from '@/logic/kuovaAge';
@@ -89,7 +90,8 @@ const SOURCES = [
 export const BiologicalAgeScreen = () => {
   const router = useRouter();
   const p = currentReport.summary.phenoage;
-  const k = p.available ? kuovaAge(p) : null;
+  // Cuenta real: la de ejemplo no se enseña (aún no hay cálculo real)
+  const k = p.available && showSamples() ? kuovaAge(p) : null;
   const before = baselineReport.summary.phenoage;
   const change = k && before.available ? Math.round((k.age - kuovaAge(before).age) * 10) / 10 : null;
   const years = (n: number) => t(Math.abs(n) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(n)) });
@@ -99,6 +101,14 @@ export const BiologicalAgeScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('KUOVA age')} showBack />
 
+        {!k && (
+          <View style={styles.sampleTag}>
+            <Ionicons name="flask-outline" size={13} color={Colors.warning} />
+            <Text style={styles.sampleText}>
+              {t('You do not have your KUOVA age yet. We will work it out from 9 values of your blood test once our medical team has validated the method.')}
+            </Text>
+          </View>
+        )}
         {k && (
           <>
             <View style={styles.top}>

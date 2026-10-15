@@ -8,7 +8,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { labUploadRepository } from '@/data/labUploads';
 import { userFlags } from '@/data/userFlags';
-import { LAB_REPORTS } from '@/utils/labReportView';
+import { labReports } from '@/utils/labReportView';
 import { dateLocale, t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
 
@@ -39,7 +39,7 @@ export const FilesScreen = () => {
 
   const load = useCallback(async () => {
     const [uploads, saved] = await Promise.all([labUploadRepository.getAll().catch(() => []), userFlags.get(NAMES_KEY)]);
-    const fromLab: FileItem[] = LAB_REPORTS.map((r) => ({
+    const fromLab: FileItem[] = labReports().map((r) => ({
       id: `lab:${r.id}`,
       defaultName: t(r.title),
       source: 'lab',

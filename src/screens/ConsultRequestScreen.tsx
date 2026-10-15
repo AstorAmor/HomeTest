@@ -1,6 +1,6 @@
 import { dateLocale, t as tr } from '@/i18n';
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
@@ -12,6 +12,7 @@ import { ConsultRequest, REQUEST_KIND_LABEL, RequestKind } from '@/data/speciali
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { StoredAudio, VoiceRecorder } from '@/components/VoiceNote';
 import { createShare, DataShare, isShareActive, listMyShares, scopeLabel, SHARE_SCOPES, ShareScope } from '@/data/sharing';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 const KINDS: { id: RequestKind; icon: string; hint: string }[] = [
   { id: 'question', icon: 'help-circle-outline', hint: 'A quick question about your health or plan' },
@@ -83,7 +84,7 @@ export const ConsultRequestScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ScreenHeader title={tr('Send a request')} showBack />
         <Text style={styles.intro}>to {proName}. They'll answer in the app, usually within 48 h.</Text>
 
@@ -176,7 +177,7 @@ export const ConsultRequestScreen = () => {
             ))}
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
       <TouchableOpacity style={[styles.cta, !message.trim() && !audioUri && { opacity: 0.5 }]} disabled={(!message.trim() && !audioUri) || state === 'sending'} onPress={send}>
         {state === 'sending' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{tr('Send request')}</Text>}
       </TouchableOpacity>

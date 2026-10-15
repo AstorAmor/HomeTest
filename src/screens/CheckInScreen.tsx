@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,6 +7,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_OPTIONS, Mood } from '@/types/checkIn';
 import { checkInRepository, checkInSuggestions, suggestMoment, Suggestion } from '@/data/checkInRepository';
 import { t } from '@/i18n';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
 type ScaleId = Exclude<QuestionId, 'mood'>;
@@ -99,7 +100,7 @@ export const CheckInScreen = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {!done && (
           <>
             <Text style={styles.question}>{t('What does your day look like?')}</Text>
@@ -207,7 +208,7 @@ export const CheckInScreen = () => {
             </View>
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {!done ? (
         <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>

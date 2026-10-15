@@ -1,6 +1,7 @@
 import type { GenericMetricEntry } from '@/screens/SimpleMetricDetailScreen';
 import type { BloodPressureEntry } from '@/types/bloodPressure';
 import { mockBiomarkers } from './mockData';
+import { showSamples } from './dataMode';
 
 // Registros de ejemplo para las fichas de detalle cuando aún no hay ninguno propio (las mismas
 // cifras que enseña Mis datos como "ejemplo"), para que la pantalla no se vea vacía. Una medición
@@ -15,12 +16,14 @@ const weekly = (n: number) =>
   });
 
 export function sampleSimpleEntries(mockId: 'sugar' | 'cholesterol' | 'cortisol', unit: string): GenericMetricEntry[] {
+  if (!showSamples()) return [];
   const history = mockBiomarkers.find((b) => b.id === mockId)?.history ?? [];
   const dates = weekly(history.length);
   return history.map((valor, i) => ({ id: `sample-${mockId}-${i}`, valor, unidad: unit, fecha: dates[i] }));
 }
 
 export function sampleBloodPressure(): BloodPressureEntry[] {
+  if (!showSamples()) return [];
   const sys = [118, 122, 119, 134, 121, 120]; // una toma normal-alta para que se vea el check amarillo
   const dia = [78, 81, 77, 86, 80, 80];
   const pulse = [64, 66, 63, 68, 65, 64];

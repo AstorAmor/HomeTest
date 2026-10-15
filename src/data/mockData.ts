@@ -10,7 +10,7 @@ export const mockPatient: Patient = {
   created_at: '2026-01-15T10:30:00Z',
 };
 
-export type BiomarkerStatus = 'excellent' | 'good' | 'attention' | 'high';
+export type BiomarkerStatus = 'excellent' | 'good' | 'attention' | 'high' | 'none';
 
 export interface Biomarker {
   id: string;

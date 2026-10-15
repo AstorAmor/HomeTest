@@ -1,25 +1,25 @@
 import { Platform } from 'react-native';
-import { ConnectedSource, DailyWearableRecord, WearableMetric } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { requireOptionalNativeModule } from 'expo';
+import { DailyWearableRecord, WearableMetric } from '../types';
 
 // Adaptador de Health Connect (Android). Traduce los registros de Health Connect
-// al formato propio de HomeTest (DailyWearableRecord), resumidos por día.
+// al formato propio de Kuova (DailyWearableRecord), resumidos por día EN HORA LOCAL.
 //
-// IMPORTANTE: Health Connect es código nativo y NO funciona en Expo Go.
-// Necesita un development build (eas build --profile development). En Expo Go,
-// isHealthConnectAvailable() devuelve false y la pantalla lo explica.
+// IMPORTANTE: Health Connect es código nativo y NO funciona en Expo Go ni en la web.
+// En la APK sí. isHealthConnectAvailable() devuelve false donde no está.
+//
+// Cómo se resume cada cosa:
+// - Pasos: el agregado diario de Health Connect, que ya quita duplicados entre fuentes
+//   (si el reloj y el teléfono cuentan los mismos pasos, no se suman dos veces).
+// - Pulso en reposo: el que escribe el reloj (RestingHeartRate); si no lo escribe, se estima
+//   con la media horaria más baja del día a partir del pulso (HeartRate).
+// - Pulso medio, VFC (RMSSD) y sueño (tiempo dormido sin los ratos despierto; cuenta para el
+//   día en que te despiertas).
 
-// Paquete (dataOrigin) → nombre visible de la marca.
-const ORIGIN_NAMES: Record<string, string> = {
-  'com.mi.health': 'Xiaomi (Mi Fitness)',
-  'com.xiaomi.wearable': 'Xiaomi (Mi Fitness)',
-  'com.garmin.android.apps.connectmobile': 'Garmin Connect',
-  'com.ouraring.oura': 'Oura',
-  'com.sec.android.app.shealth': 'Samsung Health',
-  'com.google.android.apps.fitness': 'Google Fit',
-  'com.fitbit.FitbitMobile': 'Fitbit',
-  'com.google.android.apps.healthdata': 'Health Connect',
-};
-const originName = (pkg?: string) => (pkg ? ORIGIN_NAMES[pkg] ?? pkg : 'Desconocido');
+import { joinSources, originName, PHONE_SOURCE } from '../sources';
+
+export { originName, PHONE_SOURCE };
 
 // Carga perezosa: si el módulo nativo no existe (Expo Go, iOS, web), devolvemos null.
 function loadLib(): any | null {
@@ -43,73 +43,227 @@ export async function isHealthConnectAvailable(): Promise<boolean> {
   }
 }
 
-const READ_TYPES = ['Steps', 'RestingHeartRate', 'HeartRateVariabilityRmssd', 'SleepSession'] as const;
+// Permisos declarados en la APK de septiembre (app.json). Pedir uno que la APK no declara no
+// sirve, así que los nuevos solo se piden con la APK nueva, que se reconoce porque trae
+// expo-print (añadido a la vez).
+const BASE_TYPES = ['Steps', 'HeartRate', 'RestingHeartRate', 'HeartRateVariabilityRmssd', 'SleepSession'] as const;
+const NEW_APK_TYPES = ['ActiveCaloriesBurned', 'Distance'] as const;
+const hasNewApk = () => !!requireOptionalNativeModule('ExpoPrint');
+export const readTypes = (): string[] => [...BASE_TYPES, ...(hasNewApk() ? NEW_APK_TYPES : [])];
 
-export async function connectHealthConnect(): Promise<boolean> {
+// Qué se ve en pantalla de cada tipo
+export const TYPE_LABEL: Record<string, string> = {
+  Steps: 'Steps',
+  HeartRate: 'Heart rate',
+  RestingHeartRate: 'Resting heart rate',
+  HeartRateVariabilityRmssd: 'HRV',
+  SleepSession: 'Sleep',
+  ActiveCaloriesBurned: 'Active energy',
+  Distance: 'Distance',
+};
+
+export async function connectHealthConnect(): Promise<string[]> {
   const lib = loadLib();
-  if (!lib) throw new Error('Health Connect no está disponible (¿Expo Go? Necesitas un development build).');
+  if (!lib) throw new Error('Health Connect is not available on this device.');
   await lib.initialize();
-  const granted = await lib.requestPermission(
-    READ_TYPES.map((recordType) => ({ accessType: 'read', recordType }))
-  );
-  return Array.isArray(granted) && granted.length > 0;
+  await lib.requestPermission(readTypes().map((recordType) => ({ accessType: 'read', recordType })));
+  return grantedTypes();
 }
 
-type Acc = Map<string, { metric: WearableMetric; sum: number; n: number; source: string; typeName: string }>;
-
-function add(acc: Acc, date: string, metric: WearableMetric, source: string, typeName: string, value: number, mode: 'sum' | 'avg') {
-  const key = `${date}|${metric}|${source}`;
-  const cur = acc.get(key) ?? { metric, sum: 0, n: 0, source, typeName };
-  cur.sum += value;
-  cur.n += mode === 'avg' ? 1 : 0;
-  acc.set(key, cur);
+// Tipos con permiso de lectura concedido (vacío = no conectado)
+export async function grantedTypes(): Promise<string[]> {
+  const lib = loadLib();
+  if (!lib) return [];
+  try {
+    await lib.initialize();
+    const granted = (await lib.getGrantedPermissions()) as { accessType: string; recordType: string }[];
+    return [...new Set(granted.filter((p) => p.accessType === 'read').map((p) => p.recordType))];
+  } catch {
+    return [];
+  }
 }
 
-// Lee los últimos `days` días y los resume por día, métrica y marca de origen.
-export async function readHealthConnectDaily(days = 7): Promise<DailyWearableRecord[]> {
-  const lib = loadLib();
-  if (!lib) throw new Error('Health Connect no está disponible en este dispositivo o build.');
-  await lib.initialize();
-  const end = new Date();
-  const start = new Date(end.getTime() - days * 24 * 3600 * 1000);
-  const timeRangeFilter = { operator: 'between', startTime: start.toISOString(), endTime: end.toISOString() };
-  const day = (iso: string) => iso.slice(0, 10);
-  const acc: Acc = new Map();
+export function openHealthConnectSettings() {
+  try {
+    loadLib()?.openHealthConnectSettings();
+  } catch {
+    // sin Health Connect no hay ajustes que abrir
+  }
+}
 
-  const read = async (type: string) => {
+const pad = (n: number) => String(n).padStart(2, '0');
+const localDay = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+// Los instantes (con Z u offset) se pasan a la hora del teléfono; las horas locales ("2026-10-14T00:00",
+// lo que devuelve el agregado por días) ya son del día que dicen.
+const dayOf = (s: string) => (/Z$|[+-]\d\d:?\d\d$/.test(s) ? localDay(new Date(s)) : s.slice(0, 10));
+
+const rec = (date: string, metric: WearableMetric, value: number, sourceName: string, rawTypeId: string): DailyWearableRecord => ({
+  date,
+  metric,
+  value: Math.round(value),
+  sourceName,
+  provider: 'health_connect',
+  rawTypeId,
+  rawTypeName: rawTypeId,
+});
+
+// Primer día que se lee: medianoche local de hace `days` días
+const windowStart = (days: number) => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - (days - 1));
+  return d;
+};
+
+export interface HealthConnectRead {
+  records: DailyWearableRecord[];
+  from: string; // primer día leído (YYYY-MM-DD)
+  granted: string[];
+  // Por tipo: cuántos días traen datos y de qué apps (para explicar qué llega y qué no)
+  found: Record<string, { days: number; sources: string[] }>;
+}
+
+// Lee los últimos `days` días (Health Connect deja leer hasta 30 días antes del permiso).
+export async function readHealthConnectDaily(days = 30): Promise<HealthConnectRead> {
+  const lib = loadLib();
+  if (!lib) throw new Error('Health Connect is not available on this device.');
+  await lib.initialize();
+  const granted = await grantedTypes();
+  const start = windowStart(days);
+  const timeRangeFilter = { operator: 'between', startTime: start.toISOString(), endTime: new Date().toISOString() };
+  const out: DailyWearableRecord[] = [];
+  const found: HealthConnectRead['found'] = {};
+  const note = (type: string, rows: DailyWearableRecord[]) => {
+    if (!rows.length) return;
+    const srcs = new Set<string>();
+    for (const r of rows) r.sourceName.split(' + ').forEach((s) => srcs.add(s));
+    found[type] = { days: new Set(rows.map((r) => r.date)).size, sources: [...srcs] };
+    out.push(...rows);
+  };
+
+  // Registros sueltos, con paginación (un mes de pasos del teléfono puede pasar de mil)
+  const readAll = async (type: string): Promise<any[]> => {
+    if (!granted.includes(type)) return [];
+    const all: any[] = [];
+    let pageToken: string | undefined;
     try {
-      const res = await lib.readRecords(type, { timeRangeFilter });
-      return (res?.records ?? res ?? []) as any[];
-    } catch {
-      return []; // permiso denegado o tipo no disponible: seguimos con el resto
+      for (let page = 0; page < 30; page++) {
+        const res = await lib.readRecords(type, { timeRangeFilter, pageSize: 1000, ...(pageToken ? { pageToken } : {}) });
+        all.push(...((res?.records ?? res ?? []) as any[]));
+        pageToken = res?.pageToken || undefined;
+        if (!pageToken) break;
+      }
+    } catch (e) {
+      console.warn(`Health Connect: could not read ${type}`, e);
+    }
+    return all;
+  };
+  const byDay = async (type: string) => {
+    if (!granted.includes(type)) return [];
+    try {
+      return (await lib.aggregateGroupByPeriod({ recordType: type, timeRangeFilter, timeRangeSlicer: { period: 'DAYS', length: 1 } })) as any[];
+    } catch (e) {
+      console.warn(`Health Connect: could not aggregate ${type}`, e);
+      return [];
     }
   };
 
-  for (const r of await read('Steps'))
-    add(acc, day(r.startTime), 'steps', originName(r.metadata?.dataOrigin), 'Steps', r.count ?? 0, 'sum');
-  for (const r of await read('RestingHeartRate'))
-    add(acc, day(r.time), 'resting_heart_rate', originName(r.metadata?.dataOrigin), 'RestingHeartRate', r.beatsPerMinute, 'avg');
-  for (const r of await read('HeartRateVariabilityRmssd'))
-    add(acc, day(r.time), 'hrv', originName(r.metadata?.dataOrigin), 'HeartRateVariabilityRmssd', r.heartRateVariabilityMillis, 'avg');
-  for (const r of await read('SleepSession')) {
-    const minutes = (new Date(r.endTime).getTime() - new Date(r.startTime).getTime()) / 60000;
-    // El sueño se asigna al día en que te despiertas.
-    add(acc, day(r.endTime), 'sleep_duration', originName(r.metadata?.dataOrigin), 'SleepSession', minutes, 'sum');
-  }
+  // Pasos (sin duplicar entre fuentes)
+  note(
+    'Steps',
+    (await byDay('Steps'))
+      .filter((g) => (g.result?.COUNT_TOTAL ?? 0) > 0)
+      .map((g) => rec(dayOf(g.startTime), 'steps', g.result.COUNT_TOTAL, joinSources(g.result.dataOrigins ?? []), 'Steps')),
+  );
 
-  return [...acc.entries()].map(([key, v]) => ({
-    date: key.split('|')[0],
-    metric: v.metric,
-    value: Math.round(v.n > 0 ? v.sum / v.n : v.sum),
-    sourceName: v.source,
-    provider: 'health_connect' as const,
-    rawTypeId: v.typeName,
-    rawTypeName: v.typeName,
-  }));
+  // Calorías activas y distancia (solo con la APK nueva)
+  note(
+    'ActiveCaloriesBurned',
+    (await byDay('ActiveCaloriesBurned'))
+      .filter((g) => (g.result?.ACTIVE_CALORIES_TOTAL?.inKilocalories ?? 0) > 0)
+      .map((g) => rec(dayOf(g.startTime), 'active_energy', g.result.ACTIVE_CALORIES_TOTAL.inKilocalories, joinSources(g.result.dataOrigins ?? []), 'ActiveCaloriesBurned')),
+  );
+  note(
+    'Distance',
+    (await byDay('Distance'))
+      .filter((g) => (g.result?.DISTANCE?.inMeters ?? 0) > 0)
+      .map((g) => rec(dayOf(g.startTime), 'distance', g.result.DISTANCE.inMeters, joinSources(g.result.dataOrigins ?? []), 'Distance')),
+  );
+
+  // Pulso medio del día y estimación del pulso en reposo (media horaria más baja)
+  const hrDays = (await byDay('HeartRate')).filter((g) => (g.result?.BPM_AVG ?? 0) > 0);
+  note('HeartRate', hrDays.map((g) => rec(dayOf(g.startTime), 'heart_rate_avg', g.result.BPM_AVG, joinSources(g.result.dataOrigins ?? []), 'HeartRate')));
+
+  const restingByDay = new Map<string, { sum: number; n: number; src: Set<string> }>();
+  for (const r of await readAll('RestingHeartRate')) {
+    const d = dayOf(r.time);
+    const cur = restingByDay.get(d) ?? { sum: 0, n: 0, src: new Set<string>() };
+    cur.sum += r.beatsPerMinute;
+    cur.n++;
+    cur.src.add(r.metadata?.dataOrigin);
+    restingByDay.set(d, cur);
+  }
+  const resting = [...restingByDay.entries()].map(([d, v]) => rec(d, 'resting_heart_rate', v.sum / v.n, joinSources([...v.src]), 'RestingHeartRate'));
+  if (hrDays.length) {
+    try {
+      const hours = (await lib.aggregateGroupByDuration({
+        recordType: 'HeartRate',
+        timeRangeFilter,
+        timeRangeSlicer: { duration: 'HOURS', length: 1 },
+      })) as any[];
+      const lowest = new Map<string, { bpm: number; src: string[] }>();
+      for (const h of hours) {
+        const bpm = h.result?.BPM_AVG ?? 0;
+        if (!bpm) continue;
+        const d = dayOf(h.startTime);
+        if (!lowest.has(d) || bpm < lowest.get(d)!.bpm) lowest.set(d, { bpm, src: h.result.dataOrigins ?? [] });
+      }
+      for (const [d, v] of lowest)
+        if (!restingByDay.has(d)) resting.push(rec(d, 'resting_heart_rate', v.bpm, joinSources(v.src), 'HeartRate:lowest-hour'));
+    } catch (e) {
+      console.warn('Health Connect: could not estimate resting heart rate', e);
+    }
+  }
+  note('RestingHeartRate', resting);
+
+  // VFC: media del día por fuente
+  const hrv = new Map<string, { sum: number; n: number }>();
+  for (const r of await readAll('HeartRateVariabilityRmssd')) {
+    const key = `${dayOf(r.time)}|${originName(r.metadata?.dataOrigin)}`;
+    const cur = hrv.get(key) ?? { sum: 0, n: 0 };
+    cur.sum += r.heartRateVariabilityMillis;
+    cur.n++;
+    hrv.set(key, cur);
+  }
+  note('HeartRateVariabilityRmssd', [...hrv.entries()].map(([k, v]) => rec(k.split('|')[0], 'hrv', v.sum / v.n, k.split('|')[1], 'HeartRateVariabilityRmssd')));
+
+  // Sueño: tiempo dormido (sin despierto ni fuera de la cama), al día en que te despiertas
+  const sleep = new Map<string, number>();
+  for (const r of await readAll('SleepSession')) {
+    const stages = (r.stages ?? []) as { startTime: string; endTime: string; stage: number }[];
+    const ms = (a: string, b: string) => new Date(b).getTime() - new Date(a).getTime();
+    const asleep = stages.length
+      ? stages.filter((s) => s.stage !== 1 && s.stage !== 3).reduce((a, s) => a + ms(s.startTime, s.endTime), 0)
+      : ms(r.startTime, r.endTime);
+    const key = `${dayOf(r.endTime)}|${originName(r.metadata?.dataOrigin)}`;
+    sleep.set(key, (sleep.get(key) ?? 0) + asleep / 60000);
+  }
+  note('SleepSession', [...sleep.entries()].filter(([, m]) => m >= 30).map(([k, m]) => rec(k.split('|')[0], 'sleep_duration', m, k.split('|')[1], 'SleepSession')));
+
+  return { records: out, from: localDay(start), granted, found };
 }
 
-// Marcas que han escrito datos recientemente (a partir de lo leído).
-export function sourcesFromRecords(records: DailyWearableRecord[]): ConnectedSource[] {
-  const names = [...new Set(records.filter((r) => r.provider === 'health_connect').map((r) => r.sourceName))];
-  return names.map((sourceName) => ({ sourceName, connectedAt: null }));
+// Sincronización en segundo plano al abrir Today: como mucho cada 10 minutos y solo si
+// Health Connect está conectado. Devuelve true si ha guardado algo nuevo.
+const LAST_SYNC_KEY = 'wearables.health_connect.lastSync';
+export async function lastHealthConnectSync(): Promise<string | null> {
+  return AsyncStorage.getItem(LAST_SYNC_KEY).catch(() => null);
+}
+export async function markHealthConnectSynced() {
+  await AsyncStorage.setItem(LAST_SYNC_KEY, new Date().toISOString()).catch(() => undefined);
+}
+export async function healthConnectSyncDue(minutes = 10): Promise<boolean> {
+  if (!loadLib()) return false;
+  const last = await lastHealthConnectSync();
+  return !last || Date.now() - new Date(last).getTime() > minutes * 60000;
 }

@@ -42,7 +42,9 @@ import { DoseRows } from '@/components/DoseRows';
 import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
 import { ScheduledDose } from '@/types/medication';
 import { mockBiomarkers, Biomarker } from '@/data/mockData';
-import { getLiveBiomarkers } from '@/utils/liveBiomarkers';
+import { getLiveBiomarkers, initialBiomarkers } from '@/utils/liveBiomarkers';
+import { showSamples } from '@/data/dataMode';
+import { sourceLabel } from '@/wearables/sourceLabel';
 import { profileRepository, UserProfile } from '@/data/profileRepository';
 import { checkInRepository, dailyCheckInSeries, sampleCheckInSeries, DailyCheckInPoint } from '@/data/checkInRepository';
 import { CheckInEntry, MOOD_OPTIONS, MOMENT_OPTIONS } from '@/types/checkIn';
@@ -58,7 +60,7 @@ import {
   mealsLoggedToday,
   strengthSessionsThisWeek,
 } from '@/data/planRepository';
-import { computeReadiness, formatSleep, latest, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
+import { computeReadiness, formatSleep, latest, shortDate, todayValue, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { useWebShell } from '@/web/webMode';
 import { TAB } from '@/constants/tabs';
 
@@ -115,6 +117,11 @@ const PLAN_COLOR: Record<PlanItemKind, string> = {
 
 const MED_OPEN_KEY = 'today.medOpen.v1';
 
+const localToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 export const TodayScreen = () => {
   const router = useRouter();
   const { demoMode } = useAuth();
@@ -122,8 +129,9 @@ export const TodayScreen = () => {
   const show = useSections();
   // Web del paciente en escritorio: Hoy se queda con lo del día; agenda, estado y biomarcadores ya están en el resumen
   const web = useWebShell();
-  const { series, isSample } = useDailyWearables();
-  const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(mockBiomarkers);
+  // Today trae lo nuevo de Health Connect al abrirse (como mucho cada 10 minutos)
+  const { series, isSample, sources, hasAny } = useDailyWearables(14, { autoSync: true });
+  const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(initialBiomarkers());
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
   const [achievementData, setAchievementData] = useDeepState<{
     workouts: { fecha: string; type: string }[];
@@ -190,7 +198,7 @@ export const TodayScreen = () => {
               label: `${t(KIND_LABEL[a.kind])}${a.professionalName ? ` ${t('with')} ${a.professionalName}` : ''}`,
               canJoin: /^[0-9a-f-]{36}$/i.test(a.id) && a.status === 'confirmed',
             })),
-          newResults: demoMode === 'results' && !seen,
+          newResults: showSamples() && demoMode === 'results' && !seen,
           now: new Date(),
         })
       );
@@ -239,7 +247,14 @@ export const TodayScreen = () => {
     setProfile(p);
     setLastCheckIn(checkIns.length ? checkIns[0] : null);
     const real = dailyCheckInSeries(checkIns);
-    setCheckInSeries(real.length >= 2 ? { points: real, sample: false } : { points: sampleCheckInSeries(), sample: true });
+    // Cuenta real: solo sus días (aunque sea uno); la demo rellena con un ejemplo
+    setCheckInSeries(
+      real.length >= 2 || (!showSamples() && real.length > 0)
+        ? { points: real, sample: false }
+        : showSamples()
+          ? { points: sampleCheckInSeries(), sample: true }
+          : { points: [], sample: false },
+    );
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
@@ -248,9 +263,18 @@ export const TodayScreen = () => {
   useReloadOnFocus(load);
 
   const readiness = computeReadiness(series);
-  const steps = latest(series.steps) ?? 0;
-  const calories = latest(series.active_energy) ?? 0;
-  const sleep = latest(series.sleep_duration) ?? 0;
+  // Lo de HOY (si el último dato es de ayer, hoy aún no hay: 0). En la demo, el último día de ejemplo.
+  const ofToday = (p?: DailyPoint[]) => (isSample ? latest(p) : todayValue(p));
+  const steps = ofToday(series.steps) ?? 0;
+  const calories = ofToday(series.active_energy);
+  const sleep = ofToday(series.sleep_duration) ?? 0;
+  const distanceKm = ofToday(series.distance);
+  // Por qué no hay estado de hoy: sin datos, solo pasos, o sin datos de hoy todavía
+  const hasHeartOrSleep = !!(series.sleep_duration?.length || series.resting_heart_rate?.length || series.hrv?.length);
+  const lastWearableDay = Object.values(series)
+    .map((p) => p?.[p.length - 1]?.date ?? '')
+    .sort()
+    .pop();
 
   const sugar = biomarkers.find((b) => b.id === 'sugar');
   const bp = biomarkers.find((b) => b.id === 'blood_pressure');
@@ -305,7 +329,9 @@ export const TodayScreen = () => {
                 style={[styles.summaryRow, i > 0 && styles.summaryDivider]}
                 onPress={() => {
                   if (l.id === 'results-new') {
+                    // Visto: el aviso desaparece ya (al volver atrás no reaparece)
                     setReportSeen(true);
+                    setSummary(summary.filter((x) => x.id !== 'results-new'));
                     userFlags.set(reportSeenKey(currentReport.report_id));
                   }
                   router.push(l.target as any);
@@ -370,8 +396,15 @@ export const TodayScreen = () => {
                 <Ionicons name={weekOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
               </TouchableOpacity>
               {weekOpen && (
-                <View style={{ marginTop: 6 }}>
+                // Tocar la tendencia abre "Tus últimos días": qué pasó cada día (check-ins, sueño, medicación…)
+                <TouchableOpacity
+                  style={{ marginTop: 6 }}
+                  activeOpacity={0.85}
+                  disabled={checkInSeries.sample}
+                  onPress={() => router.push('/your-days' as any)}
+                >
                   <TrendChart
+                    interactive={false}
                     height={96}
                     labels={checkInSeries.points.map((p) => shortDate(p.date))}
                     series={[
@@ -383,7 +416,12 @@ export const TodayScreen = () => {
                   {lastMoment && !checkInSeries.sample && (
                     <Text style={styles.cardFootnote}>{t('Last: {moment}', { moment: t(lastMoment.label).toLowerCase() })}</Text>
                   )}
-                </View>
+                  {!checkInSeries.sample && (
+                    <Text style={styles.daysLink}>
+                      {t('What happened each day')} <Ionicons name="chevron-forward" size={12} color={Colors.accent} />
+                    </Text>
+                  )}
+                </TouchableOpacity>
               )}
             </View>
           </>
@@ -453,47 +491,77 @@ export const TodayScreen = () => {
             </View>
             <View style={[styles.card, styles.readinessCard]}>
               {readiness ? (
-                <>
-                  <ProgressRing
-                    size={156}
-                    strokeWidth={14}
-                    progress={readiness.score / 100}
-                    color={Colors.green}
-                    gradient={[Colors.coral, Colors.gold, Colors.green]}
-                  >
-                    <Text style={styles.readinessScore}>{readiness.score}</Text>
-                    <Text style={styles.readinessLabel}>{t(readiness.label)}</Text>
-                  </ProgressRing>
-                  <View style={styles.smallRings}>
-                    <SmallRing
-                      icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
-                      color={Colors.sky}
-                      progress={steps / 8000}
-                      value={steps.toLocaleString(dateLocale())}
-                      label={t('Steps')}
-                    />
+                <ProgressRing
+                  size={156}
+                  strokeWidth={14}
+                  progress={readiness.score / 100}
+                  color={Colors.green}
+                  gradient={[Colors.coral, Colors.gold, Colors.green]}
+                >
+                  <Text style={styles.readinessScore}>{readiness.score}</Text>
+                  <Text style={styles.readinessLabel}>{t(readiness.label)}</Text>
+                </ProgressRing>
+              ) : (
+                <Text style={styles.readinessEmpty}>
+                  {!hasAny
+                    ? t('Connect a wearable to see your readiness.')
+                    : !hasHeartOrSleep
+                      ? t('Your wearable is only sharing steps. To see how you are today we need your sleep or heart rate.')
+                      : t('No sleep or heart rate from today yet. Open your watch app so it syncs.')}
+                </Text>
+              )}
+              {readiness && readiness.missing.length > 0 && (
+                <Text style={styles.cardFootnote}>
+                  {t('Worked out without: {parts}', {
+                    parts: readiness.missing.map((m) => t(m === 'sleep' ? 'sleep' : m === 'hrv' ? 'HRV' : 'resting heart rate')).join(', '),
+                  })}
+                </Text>
+              )}
+              {hasAny && (
+                <View style={styles.smallRings}>
+                  <SmallRing
+                    icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
+                    color={Colors.sky}
+                    progress={steps / 8000}
+                    value={steps.toLocaleString(dateLocale())}
+                    label={t('Steps')}
+                  />
+                  {calories != null || distanceKm == null ? (
                     <SmallRing
                       icon={<Ionicons name="flame" size={16} color={Colors.coral} />}
                       color={Colors.coral}
-                      progress={calories / 500}
-                      value={`${calories}`}
+                      progress={(calories ?? 0) / 500}
+                      value={calories != null ? `${calories}` : '—'}
                       label={t('Active kcal')}
                     />
+                  ) : (
                     <SmallRing
-                      icon={<Ionicons name="moon" size={15} color={Colors.violet} />}
-                      color={Colors.violet}
-                      progress={sleep / 480}
-                      value={formatSleep(sleep)}
-                      label={t('Sleep')}
+                      icon={<Ionicons name="navigate-outline" size={16} color={Colors.coral} />}
+                      color={Colors.coral}
+                      progress={distanceKm / 6000}
+                      value={(distanceKm / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 })}
+                      label={t('km')}
                     />
-                  </View>
-                  <Text style={styles.sourceText}>
-                    {t('From Huawei Health')}{isSample ? ` (${t('sample data')})` : ''} · <Text style={styles.link} onPress={() => router.push('/wearables')}>{t('manage')}</Text>
-                  </Text>
-                </>
-              ) : (
-                <Text style={styles.cardFootnote}>{t('Connect a wearable to see your readiness.')}</Text>
+                  )}
+                  <SmallRing
+                    icon={<Ionicons name="moon" size={15} color={Colors.violet} />}
+                    color={Colors.violet}
+                    progress={sleep / 480}
+                    value={sleep ? formatSleep(sleep) : '—'}
+                    label={t('Sleep')}
+                  />
+                </View>
               )}
+              <Text style={styles.sourceText}>
+                {hasAny
+                  ? `${t('From {source}', { source: sourceLabel(sources, false) })}${isSample ? ` (${t('sample data')})` : ''}${
+                      !isSample && lastWearableDay && lastWearableDay < localToday() ? ` · ${t('last data {date}', { date: shortDate(lastWearableDay) })}` : ''
+                    } · `
+                  : ''}
+                <Text style={styles.link} onPress={() => router.push('/wearables')}>
+                  {hasAny ? t('manage') : t('Connect')}
+                </Text>
+              </Text>
             </View>
           </>
         )}
@@ -553,8 +621,8 @@ export const TodayScreen = () => {
                 iconColor={Colors.pinkSoft}
                 value={temp != null ? temp.toFixed(1) : '—'}
                 unit="°C"
-                status={temp != null && temp >= 36.1 && temp <= 37.2 ? t('Normal') : t('Check')}
-                color={temp != null && temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
+                status={temp == null ? '—' : temp >= 36.1 && temp <= 37.2 ? t('Normal') : t('Check')}
+                color={temp == null ? Colors.textMuted : temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
                 onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}
                 wide
               >
@@ -1044,6 +1112,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 22,
   },
+  daysLink: {
+    color: Colors.accent,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  readinessEmpty: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    paddingHorizontal: 18,
+  },
   readinessScore: {
     color: Colors.textPrimary,
     fontSize: 44,
@@ -1079,6 +1160,8 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 11,
     marginTop: 16,
+    textAlign: 'center',
+    paddingHorizontal: 16,
   },
   grid: {
     flexDirection: 'row',

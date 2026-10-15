@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,6 +11,7 @@ import { urineAdvice, UrineAdvice, volumeCheckSuggestion, VolumeCheckSuggestion 
 import { UrineColor, UrineEntry, URINE_COLORS, VOID_VOLUMES } from '@/types/bathroom';
 import { logScreenStyles } from './LogBowelScreen';
 import { t } from '@/i18n';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 const RED_CAUSES = ['Beetroot', 'Blackberries', 'Rhubarb', 'A new medicine'];
 const NONE = 'None of these';
@@ -18,10 +19,12 @@ const NIGHTS = [0, 1, 2, 3].map((n) => ({ id: n, label: n === 3 ? '3+' : String(
 
 // Apunte del día: veces, por la noche, color y escozor. La medición rápida de volumen tiene su
 // propia pantalla (/volume-check, con el vaso graduado); desde aquí solo se enlaza.
+// Con ?quick=1, "una vez, ahora": color y escozor de esta vez, y se suma una vez al día de hoy.
 export const LogUrineScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ day?: string }>();
-  const day = params.day ?? dayKey(new Date());
+  const params = useLocalSearchParams<{ day?: string; quick?: string }>();
+  const quick = params.quick === '1';
+  const day = quick ? dayKey(new Date()) : (params.day ?? dayKey(new Date()));
   const [existing, setExisting] = useState<UrineEntry | null>(null);
   const [suggestion, setSuggestion] = useState<VolumeCheckSuggestion>(null);
   const [count, setCount] = useState(6);
@@ -41,6 +44,7 @@ export const LogUrineScreen = () => {
       const e = entryForDay(all, day);
       if (!e) return;
       setExisting(e);
+      if (quick) return; // una vez más: lo de esta vez empieza en blanco
       if (e.count != null) setCount(e.count);
       setNightCount(e.nightCount);
       setColor(e.color);
@@ -48,11 +52,18 @@ export const LogUrineScreen = () => {
       setBurning(e.burning == null ? undefined : e.burning ? 'yes' : 'no');
       setNote(e.note ?? '');
     });
-  }, [day]);
+  }, [day, quick]);
 
   const save = async () => {
     setSaving(true);
-    const values: Partial<UrineEntry> = {
+    const values: Partial<UrineEntry> = quick
+      ? {
+          count: (existing?.count ?? 0) + 1,
+          // El color de esta vez pasa a ser el del día (el último); el escozor, si lo hay, se queda
+          ...(color ? { color, explainedBy: color === 'red' && cause && cause !== NONE ? cause : undefined } : {}),
+          ...(burning === 'yes' ? { burning: true } : burning === 'no' && existing?.burning == null ? { burning: false } : {}),
+        }
+      : {
       count,
       nightCount,
       color,
@@ -63,7 +74,8 @@ export const LogUrineScreen = () => {
     try {
       if (existing) await urineRepository.update(existing.id, values);
       else await urineRepository.save({ id: `${Date.now()}`, fecha: noonOf(day), createdAt: new Date().toISOString(), ...values });
-      const a = urineAdvice(values);
+      // Sobre la marcha, el día no ha terminado: el aviso de "pocas veces" no aplica (el color y el escozor, sí)
+      const a = urineAdvice(quick ? { ...values, count: undefined } : values);
       if (a) setAdvice(a);
       else router.back();
     } finally {
@@ -115,15 +127,21 @@ export const LogUrineScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={styles.iconBadge}>
             <Ionicons name="water-outline" size={26} color={Colors.green} />
           </View>
-          <Text style={styles.title}>{t('Urine today')}</Text>
-          <Text style={styles.subtitle}>{t('Colour and how often say a lot about how hydrated you are.')}</Text>
+          <Text style={styles.title}>{quick ? t('Just now') : t('Urine today')}</Text>
+          <Text style={styles.subtitle}>
+            {quick
+              ? t('It adds one time to today ({n} so far). The colour is optional.', { n: existing?.count ?? 0 })
+              : t('Colour and how often say a lot about how hydrated you are.')}
+          </Text>
         </View>
 
+        {!quick && (
+        <>
         <Text style={styles.label}>{t('How many times today?')}</Text>
         <View style={[styles.stepper, styles.centered]}>
           <TouchableOpacity style={styles.stepButton} onPress={() => setCount((c) => Math.max(0, c - 1))}>
@@ -137,6 +155,8 @@ export const LogUrineScreen = () => {
 
         <Text style={styles.label}>{t('Times you woke up at night to go')}</Text>
         <ChoiceChips options={NIGHTS} value={nightCount} onChange={setNightCount} center />
+        </>
+        )}
 
         <Text style={styles.label}>{t('Colour')}</Text>
         <ColorSwatches options={URINE_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
@@ -162,6 +182,8 @@ export const LogUrineScreen = () => {
         <ChoiceChips options={[{ id: 'no', label: t('No') }, { id: 'yes', label: t('Yes') }]} value={burning} onChange={setBurning} center />
 
         {/* La medición rápida de volumen, en su propia pantalla */}
+        {!quick && (
+        <>
         <TouchableOpacity
           style={styles.volumeHeader}
           onPress={() => router.push({ pathname: '/volume-check', params: { day } })}
@@ -190,7 +212,9 @@ export const LogUrineScreen = () => {
           placeholderTextColor={Colors.textMuted}
           multiline
         />
-      </ScrollView>
+        </>
+        )}
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 };

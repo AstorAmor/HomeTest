@@ -32,7 +32,7 @@ export const checkInRepository = createMetricRepository<CheckInEntry>('hometest:
 });
 
 // Puntuación de ánimo 1..5 a partir del estado elegido, para poder dibujarlo.
-const MOOD_SCORE: Record<Mood, number> = {
+export const MOOD_SCORE: Record<Mood, number> = {
   excited: 5,
   happy: 5,
   calm: 4.5,
@@ -54,7 +54,8 @@ export interface DailyCheckInPoint {
 export function dailyCheckInSeries(entries: CheckInEntry[], days = 7): DailyCheckInPoint[] {
   const byDay = new Map<string, { energy: number[]; mood: number[] }>();
   for (const e of entries) {
-    const day = e.fecha.slice(0, 10);
+    const d = new Date(e.fecha);
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const bucket = byDay.get(day) ?? { energy: [], mood: [] };
     if (e.energy) bucket.energy.push(e.energy);
     if (e.mood) bucket.mood.push(MOOD_SCORE[e.mood]);

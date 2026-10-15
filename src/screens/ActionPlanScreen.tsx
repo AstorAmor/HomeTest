@@ -19,6 +19,7 @@ import { STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
+import { showSamples } from '@/data/dataMode';
 
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
@@ -43,9 +44,11 @@ export const ActionPlanScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your full plan')} showBack />
         <Text style={styles.intro}>
-          {t('Built from your answers, your blood test of {date} and your wearable data, in three blocks: habits, physical activity, and nutrition and supplements.', {
-            date: longDate(currentReport.test_date),
-          })}
+          {showSamples()
+            ? t('Built from your answers, your blood test of {date} and your wearable data, in three blocks: habits, physical activity, and nutrition and supplements.', {
+                date: longDate(currentReport.test_date),
+              })
+            : t('Built from your answers and your wearable data, in three blocks: habits, physical activity, and nutrition and supplements. Your first blood test will make it more precise.')}
         </Text>
         <View style={styles.share}>
           <SharePlanButton />
@@ -70,7 +73,7 @@ export const ActionPlanScreen = () => {
 
         {PLAN_CATEGORIES.map((c) => {
           const items = plan.filter((i) => KIND_CATEGORY[i.kind] === c.id);
-          const fromTest = currentReport.action_plan.some((a) => actionCategory(a.action_id) === c.id);
+          const fromTest = showSamples() && currentReport.action_plan.some((a) => actionCategory(a.action_id) === c.id);
           if (!items.length && !fromTest) return null;
           return (
             <View key={c.id} style={styles.block}>

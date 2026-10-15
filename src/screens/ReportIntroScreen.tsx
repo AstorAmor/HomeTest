@@ -32,7 +32,7 @@ export const ReportIntroScreen = () => {
 
         <TouchableOpacity
           style={styles.cta}
-          onPress={() => router.push('/report-summary')}
+          onPress={() => router.replace('/report-summary')}
           activeOpacity={0.85}
         >
           <Text style={styles.ctaText}>{t('View my report')}</Text>

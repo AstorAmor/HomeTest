@@ -9,7 +9,7 @@ import { Colors } from '@/constants/colors';
 import { useWebShell } from '@/web/webMode';
 
 export default function RootIndex() {
-  const { isLoggedIn, demoMode, initializing, professional } = useAuth();
+  const { isLoggedIn, demoMode, initializing, professional, realAccount } = useAuth();
   const params = useLocalSearchParams<{ tab?: string }>();
   const webShell = useWebShell();
   // Tras cambiar el tema la app se recarga: volver a donde estabas (undefined = leyendo)
@@ -32,8 +32,9 @@ export default function RootIndex() {
     return <Redirect href="/pro" />;
   }
 
-  // Selector "developer" tras el login: nuevo usuario / resultados / habitual
-  if (!demoMode) {
+  // Selector "developer" tras el login: nuevo usuario / resultados / habitual. Una cuenta real no
+  // tiene "momentos" de demo: entra como un día normal.
+  if (!demoMode && !realAccount) {
     return <DevModeSelectScreen />;
   }
 

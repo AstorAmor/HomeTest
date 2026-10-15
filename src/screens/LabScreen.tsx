@@ -10,12 +10,16 @@ import { TileMap } from '@/components/TileMap';
 import { LAB_CENTERS } from '@/data/labCenters';
 import { t } from '@/i18n';
 import { Colors } from '@/constants/colors';
+import { TAB } from '@/constants/tabs';
 import { mockUpcomingAnalyses } from '@/data/mockData';
+import { showSamples } from '@/data/dataMode';
+import { labAppointmentEvents } from '@/data/labAppointments';
+import type { ScheduleEvent } from '@/data/schedule';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import {
-  LAB_REPORTS,
+  labReports,
   flagColor,
   flaggedMarkers,
   formatReportDate,
@@ -47,10 +51,16 @@ const uploadCounts = (u: LabUpload) => {
 export const LabScreen = () => {
   const router = useRouter();
   const [uploads, setUploads] = useDeepState<LabUpload[]>([]);
+  // Citas de extracción reservadas (las de verdad; en las cuentas de prueba, además, las de ejemplo)
+  const [draws, setDraws] = useDeepState<ScheduleEvent[]>([]);
+  const samples = showSamples();
+  const reports = labReports();
   useReloadOnFocus(
     useCallback(async () => {
       setUploads(await labUploadRepository.getAll().catch(() => []));
-    }, [setUploads]),
+      const today = new Date().toISOString().slice(0, 10);
+      setDraws((await labAppointmentEvents().catch(() => [])).filter((e) => e.date >= today));
+    }, [setUploads, setDraws]),
   );
 
   const openReport = (id: 'current' | 'baseline') => {
@@ -69,7 +79,7 @@ export const LabScreen = () => {
         <TouchableOpacity style={styles.planCard} onPress={() => router.push('/action-plan')} activeOpacity={0.85}>
           <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.planCardSub}>{t('Based on your latest results')}</Text>
+            <Text style={styles.planCardSub}>{reports.length || uploads.length ? t('Based on your latest results') : t('Based on your goals for now')}</Text>
             <Text style={styles.planCardTitle}>{t('See my personalized plan')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
@@ -77,7 +87,29 @@ export const LabScreen = () => {
 
         <Text style={styles.sectionTitle}>{t('Upcoming Analysis')}</Text>
         <View style={styles.sectionBlock}>
-          {mockUpcomingAnalyses.map((item) => (
+          {draws.map((e) => (
+            <TouchableOpacity
+              key={e.id}
+              style={styles.upcomingCard}
+              onPress={() => router.push({ pathname: '/(tabs)', params: { tab: String(TAB.schedule) } })}
+              activeOpacity={0.85}
+            >
+              <View style={styles.upcomingLeft}>
+                <Text style={styles.upcomingName}>{e.title}</Text>
+                <Text style={styles.upcomingDesc} numberOfLines={2}>{e.start ? `${e.start} · ` : ''}{e.detail}</Text>
+              </View>
+              <View style={styles.upcomingRight}>
+                <View style={styles.dateBadge}>
+                  <Text style={styles.dateBadgeText}>{formatShortDate(e.date)}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              </View>
+            </TouchableOpacity>
+          ))}
+          {!samples && draws.length === 0 && (
+            <Text style={styles.emptyText}>{t('Nothing on the way. When you order a test or book a blood draw, you will see it here.')}</Text>
+          )}
+          {samples && mockUpcomingAnalyses.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.upcomingCard}
@@ -126,7 +158,10 @@ export const LabScreen = () => {
 
         <Text style={styles.sectionTitle}>{t('Lab Results')}</Text>
         <View style={styles.sectionBlock}>
-          {LAB_REPORTS.map(({ id, title, lab, report }) => {
+          {reports.length === 0 && uploads.length === 0 && (
+            <Text style={styles.emptyText}>{t('No lab results yet. Upload one you already have (PDF or photo) and Kuova will read it for you.')}</Text>
+          )}
+          {reports.map(({ id, title, lab, report }) => {
             const counts = reportCounts(report);
             const flagged = flaggedMarkers(report);
             return (
@@ -200,7 +235,7 @@ export const LabScreen = () => {
                     <Text style={styles.resultName}>{t('Uploaded analysis')}</Text>
                     <Text style={styles.resultDate}>
                       {u.testDate ? formatReportDate(u.testDate) : formatReportDate(u.createdAt.slice(0, 10))}
-                      <Text style={styles.resultLab}> · User upload{u.labName ? ` · ${u.labName}` : ''}</Text>
+                      <Text style={styles.resultLab}> · {t('User upload')}{u.labName ? ` · ${u.labName}` : ''}</Text>
                     </Text>
                     <Text style={styles.resultCounts}>
                       <Text style={{ color: Colors.ok }}>{t('{n} in range', { n: c.inRange })}</Text>
@@ -235,7 +270,7 @@ export const LabScreen = () => {
 
         <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
           <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
-          <Text style={styles.uploadButtonText}>{t('Upload lab report (test)')}</Text>
+          <Text style={styles.uploadButtonText}>{samples ? t('Upload lab report (test)') : t('Upload a lab report you already have')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -316,6 +351,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 12,
     marginBottom: 28,
+  },
+  emptyText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   upcomingCard: {
     backgroundColor: Colors.card,

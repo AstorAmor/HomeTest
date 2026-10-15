@@ -7,6 +7,7 @@ import { Colors } from "@/constants/colors";
 import { currentReport } from "@/data/reportRepository";
 import { actionCategory, PlanCategory } from "@/data/planCategories";
 import { t } from "@/i18n";
+import { showSamples } from '@/data/dataMode';
 import {
   getActionPlanContentEn,
   getMarkerDisplayNameEn,
@@ -35,7 +36,8 @@ const PROVENANCE_LABEL: Record<string, string> = {
 // avisos y la proyección del marcador a 6 meses. Se usa en el informe (/report-plan)
 // y, por bloques (hábitos, actividad, nutrición), en el "Plan completo" (/action-plan).
 export const ActionPlanList = ({ category, compact }: { category?: PlanCategory; compact?: boolean } = {}) => {
-  const actionPlan = [...currentReport.action_plan]
+  // Acciones del informe de ejemplo: en una cuenta real aún no hay informe (sale de sus analíticas)
+  const actionPlan = [...(showSamples() ? currentReport.action_plan : [])]
     .filter((a) => !category || actionCategory(a.action_id) === category)
     .sort((a, b) => Number(b.pinned) - Number(a.pinned));
   if (!actionPlan.length) return null;

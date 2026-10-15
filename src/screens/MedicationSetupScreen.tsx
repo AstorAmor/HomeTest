@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -11,6 +11,7 @@ import { dayKey } from '@/data/bathroomRepository';
 import { defaultTimes, findKnownMed, KnownMed, medIcon, parseMedicationText, scheduleText } from '@/logic/medication';
 import { MedicationItem, MedKind, MedSchedule } from '@/types/medication';
 import { t as tr } from '@/i18n';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 type Step = 'what' | 'dose' | 'when' | 'duration' | 'reminders' | 'summary';
 type Frequency = 'once' | 'twice' | 'three' | 'every_hours' | 'weekdays' | 'as_needed';
@@ -232,7 +233,7 @@ export const MedicationSetupScreen = () => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {currentBar}
         {step === 'what' && (
           <>
@@ -501,7 +502,7 @@ export const MedicationSetupScreen = () => {
             <Text style={styles.disclaimer}>{tr('Always follow your prescription and the leaflet. Kuova does not change your treatment.')}</Text>
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <TouchableOpacity
         style={[styles.cta, !canContinue && styles.ctaDisabled]}

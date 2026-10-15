@@ -3,6 +3,7 @@ import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
+import { showSamples } from '@/data/dataMode';
 
 function sortedAsc<T extends { fecha: string }>(entries: T[]): T[] {
   return [...entries].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
@@ -11,7 +12,11 @@ function sortedAsc<T extends { fecha: string }>(entries: T[]): T[] {
 // Sustituye cada biomarcador mock por datos reales del dispositivo cuando
 // existen (última medición + histórico para la mini-gráfica). Si un
 // marcador todavía no tiene ningún registro guardado, mantiene el mock
-// como demo para no dejar la pantalla vacía.
+// como demo para no dejar la pantalla vacía (en una cuenta real, no: sale vacío, "—").
+const unmeasured = (mock: Biomarker): Biomarker => ({ ...mock, valor: '—', status: 'none', statusLabel: 'Tap to log', history: [] });
+
+export const initialBiomarkers = (): Biomarker[] => (showSamples() ? mockBiomarkers : mockBiomarkers.map(unmeasured));
+
 export async function getLiveBiomarkers(): Promise<Biomarker[]> {
   const [glucose, bloodPressure, cholesterol, cortisol] = await Promise.all([
     getGlucoseEntries(),
@@ -65,6 +70,6 @@ export async function getLiveBiomarkers(): Promise<Biomarker[]> {
       };
     }
 
-    return mock;
+    return showSamples() ? mock : unmeasured(mock);
   });
 }

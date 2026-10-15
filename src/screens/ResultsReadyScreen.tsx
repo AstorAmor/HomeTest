@@ -7,6 +7,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { currentReport, markersBackInRange } from '@/data/reportRepository';
+import { t } from '@/i18n';
 
 // Llegan los resultados. Solo se celebra (rayo + GREAT JOB!! + confeti) si hay logros de verdad:
 // marcadores que estaban fuera de rango y han vuelto a él. Si no, un aviso tranquilo.
@@ -59,19 +60,19 @@ export const ResultsReadyScreen = () => {
             GREAT JOB!!
           </Animated.Text>
         )}
-        <Text style={styles.title}>Your results are in</Text>
+        <Text style={styles.title}>{t('Your results are in')}</Text>
         <Text style={styles.teaser}>
           {celebrate
-            ? `${improved.length} marker${improved.length === 1 ? ' is' : 's are'} back in range since your last test, right in step with better sleep and more movement.`
-            : 'Take a look at your report and your updated plan.'}
+            ? t(improved.length === 1 ? '{n} marker is back in range since your last test, right in step with better sleep and more movement.' : '{n} markers are back in range since your last test, right in step with better sleep and more movement.', { n: improved.length })
+            : t('Take a look at your report and your updated plan.')}
         </Text>
 
         <TouchableOpacity style={styles.cta} onPress={openReport} activeOpacity={0.85}>
-          <Text style={styles.ctaText}>View my report</Text>
+          <Text style={styles.ctaText}>{t('View my report')}</Text>
           <Ionicons name="arrow-forward" size={18} color={Colors.background} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.secondary}>
-          <Text style={styles.secondaryText}>Later</Text>
+          <Text style={styles.secondaryText}>{t('Later')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

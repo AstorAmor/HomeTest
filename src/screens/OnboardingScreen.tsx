@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -21,6 +21,7 @@ import {
 import { AppPurpose, appPrefs, PURPOSE_OPTIONS, wantsPlan } from '@/data/appPrefs';
 import { answersPreview, sectionsFromAnswers } from '@/data/goalEffects';
 import { t as tr } from '@/i18n';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -235,7 +236,7 @@ export const OnboardingScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         {step === 'purpose' && (
           <>
             <Text style={styles.title}>{tr('What do you want Kuova for?')}</Text>
@@ -469,7 +470,7 @@ export const OnboardingScreen = () => {
             )}
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <TouchableOpacity style={styles.cta} onPress={next} activeOpacity={0.85}>
         <Text style={styles.ctaText}>

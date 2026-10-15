@@ -5,6 +5,7 @@ import type { Session } from '@supabase/supabase-js';
 import { AuthUser } from '@/types';
 import { mockPatient } from '@/data/mockData';
 import { isSupabaseConfigured, setCurrentUserId, supabase } from '@/lib/supabase';
+import { loadDataMode, resetDataMode } from '@/data/dataMode';
 import {
   amIAdmin,
   getMyProfessionalAccount,
@@ -39,6 +40,8 @@ interface AuthContextType {
   refreshProfessional: () => Promise<void>;
   // Administrador de HomeTest (verifica profesionales y aprueba tarifas)
   isAdmin: boolean;
+  // Cuenta real: sin datos de ejemplo ni selector "developer" (src/data/dataMode.ts)
+  realAccount: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, nombre: string, professional?: ProfessionalSignup) => Promise<void>;
   logout: () => void;
@@ -93,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   const [professional, setProfessional] = useState<ProfessionalAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [realAccount, setRealAccount] = useState(false);
   // Durante el alta de un profesional, la ficha aún no existe: no consultarla en paralelo
   const creatingProfessional = useRef(false);
 
@@ -112,9 +116,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!session) {
         setProfessional(null);
         setIsAdmin(false);
+        resetDataMode();
       } else {
         if (!creatingProfessional.current) await refreshProfessional();
         setIsAdmin(await amIAdmin());
+        // Cuenta real (sin datos de ejemplo) o de prueba: antes de pintar ninguna pantalla
+        setRealAccount(await loadDataMode());
       }
       setUser(userFromSession(session));
     };
@@ -191,6 +198,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         professional,
         refreshProfessional,
         isAdmin,
+        realAccount,
         login,
         signup,
         logout,

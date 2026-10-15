@@ -13,6 +13,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { bowelObservations, hydrationFromUrine, Observation, urineObservations, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
 import { BowelEntry, STOOL_COLORS, URINE_COLORS, UrineEntry } from '@/types/bathroom';
+import { showSamples } from '@/data/dataMode';
 
 const LEVEL: Record<Observation['level'], { icon: string; color: string }> = {
   good: { icon: 'checkmark-circle', color: Colors.ok },
@@ -86,6 +87,14 @@ const lastSevenDays = () =>
 // Gut y Bladder (?part=gut|bladder desde su tarjeta de Today; sin part, las dos): los últimos 7
 // días y lo que notamos esta semana. Las observaciones se calculan al momento (también desde el
 // aviso semanal); las preguntas de contexto van antes de recomendar el médico.
+// Debajo de "Añadir medición": el resumen de un día entero (veces, noche, color…)
+const WholeDayButton = ({ onPress }: { onPress: () => void }) => (
+  <TouchableOpacity style={styles.wholeDay} onPress={onPress} activeOpacity={0.85}>
+    <Ionicons name="calendar-outline" size={18} color={Colors.textSecondary} />
+    <Text style={styles.wholeDayText}>{t('Add a whole day')}</Text>
+  </TouchableOpacity>
+);
+
 export const DigestiveScreen = () => {
   const router = useRouter();
   const { part } = useLocalSearchParams<{ part?: 'gut' | 'bladder' }>();
@@ -107,8 +116,9 @@ export const DigestiveScreen = () => {
   useReloadOnFocus(load);
 
   const days = lastSevenDays();
-  const bowelSample = !days.some((d) => entryForDay(bowel, dayKey(d)));
-  const urineSample = !days.some((d) => entryForDay(urine, dayKey(d)));
+  // Semana de ejemplo solo en cuentas de prueba (en una real, vacía hasta el primer apunte)
+  const bowelSample = showSamples() && !days.some((d) => entryForDay(bowel, dayKey(d)));
+  const urineSample = showSamples() && !days.some((d) => entryForDay(urine, dayKey(d)));
 
   // "Sí, lo explica algo que comí": se apunta en los registros recientes para no volver a preguntar
   const answer = async (o: Observation, value: 'yes' | 'no') => {
@@ -225,7 +235,8 @@ export const DigestiveScreen = () => {
             />
             {bowelSample && <Text style={styles.sampleText}>{t('Sample week: log your first day to see your own.')}</Text>}
           </View>
-          <AddMeasurementButton onPress={() => router.push('/log-bowel')} />
+          <AddMeasurementButton onPress={() => router.push({ pathname: '/log-bowel', params: { quick: '1' } })} label={t('Add measurement (just now)')} />
+          <WholeDayButton onPress={() => router.push('/log-bowel')} />
           <View style={styles.sectionRow}>
             <View style={styles.titleWithInfo}>
               <Text style={styles.sectionTitle}>{t('This week')}</Text>
@@ -262,7 +273,8 @@ export const DigestiveScreen = () => {
             />
             {urineSample && <Text style={styles.sampleText}>{t('Sample week: log your first day to see your own.')}</Text>}
           </View>
-          <AddMeasurementButton onPress={() => router.push('/log-urine')} />
+          <AddMeasurementButton onPress={() => router.push({ pathname: '/log-urine', params: { quick: '1' } })} label={t('Add measurement (just now)')} />
+          <WholeDayButton onPress={() => router.push('/log-urine')} />
           {volume && (
             <TouchableOpacity
               style={styles.volumeCard}
@@ -301,6 +313,20 @@ export const DigestiveScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  wholeDay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 10,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+  },
+  wholeDayText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 40 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 16 },

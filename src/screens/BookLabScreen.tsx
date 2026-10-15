@@ -149,7 +149,7 @@ export const BookLabScreen = () => {
               </Text>
             </View>
             <Text style={styles.cardText}>{c.address}</Text>
-            <Text style={styles.cardText}>Blood draws: {hoursLabel(c)}</Text>
+            <Text style={styles.cardText}>{t('Blood draws: {hours}', { hours: hoursLabel(c) })}</Text>
             {c.notes && <Text style={styles.muted}>{c.notes}</Text>}
           </TouchableOpacity>
         ))}

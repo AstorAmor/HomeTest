@@ -48,7 +48,7 @@ export const ReportMarkerDetailScreen = () => {
           )}
           <View style={[styles.badge, { backgroundColor: `${color}22` }]}>
             <Ionicons name="information-circle-outline" size={14} color={color} />
-            <Text style={[styles.badgeText, { color }]}>{FLAG_LABEL[marker.flag]}</Text>
+            <Text style={[styles.badgeText, { color }]}>{t(FLAG_LABEL[marker.flag])}</Text>
           </View>
         </View>
 

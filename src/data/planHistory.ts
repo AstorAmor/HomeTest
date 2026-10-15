@@ -2,6 +2,7 @@ import { baselineReport, currentReport } from './reportRepository';
 import { getActionPlanContentEn } from './reportContentEn';
 import { HomeTestReport, ReportMarker } from '@/types/report';
 import { t } from '@/i18n';
+import { showSamples } from './dataMode';
 
 // Historial de planes tras cada analítica. El último es el action_plan del informe
 // actual (pantalla /report-plan). El anterior (marzo, tras la primera analítica) es
@@ -61,6 +62,8 @@ export function markerIn(report: HomeTestReport, markerId: string): ReportMarker
 export const reportsForProgress = { before: baselineReport, after: currentReport };
 
 export function planHistory(): PlanEntry[] {
+  // Los planes de las analíticas de ejemplo solo en cuentas de prueba
+  if (!showSamples()) return [];
   return [
     {
       id: currentReport.report_id,
