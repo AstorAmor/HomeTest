@@ -2803,6 +2803,8 @@ export const es: Record<string, string> = {
   'Real account': 'Cuenta real',
   'Only your own data. Nothing is filled in with examples.': 'Solo tus datos. No se rellena nada con ejemplos.',
   'Test account: where you have no data yet, Kuova shows examples.': 'Cuenta de prueba: donde aún no tienes datos, Kuova enseña ejemplos.',
+  'Test scenarios': 'Casos de prueba',
+  'Load a case into this test account (high blood pressure, low energy, skipped medication…) or clear it.': 'Carga un caso en esta cuenta de prueba (tensión alta, energía baja, medicación saltada…) o vacíala.',
   'Just now': 'Ahora mismo',
   'It adds one time to today ({n} so far). Colour and shape are optional.': 'Se suma una vez a hoy (llevas {n}). El color y la forma son opcionales.',
   'It adds one time to today ({n} so far). The colour is optional.': 'Se suma una vez a hoy (llevas {n}). El color es opcional.',

@@ -5,16 +5,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useRouter } from 'expo-router';
-import { loadPersona, localMidnight, Persona, PERSONAS } from '@/data/simulation';
+import { CLEARED_LOGS, clearTestAccount, loadPersona, localMidnight, Persona, PERSONAS, scenarioTarget } from '@/data/simulation';
 import { simulatePersona } from '@/logic/nudges';
+import { REAL_ACCOUNT_REFUSAL } from '@/logic/scenarioAccount';
 import { NudgeTimeline, STATUS_LABEL } from '@/components/dev/NudgeTimeline';
+import { confirmAsk } from '@/components/dev/confirmAsk';
+import { useAuth } from '@/context/AuthContext';
 
-// Developer mode → Simulated users. Los usuarios de simulation/personas: qué prueba cada uno,
-// si se cumplen sus comprobaciones y qué aviso recibe cada día (y por qué). "Open the app as…"
-// carga sus datos en el modo demo para ver la app tal como la vería.
+// Developer mode → Simulated users (demo) y Ajustes → Test scenarios (cuenta de prueba). Los
+// usuarios de simulation/personas: qué prueba cada uno, si se cumplen sus comprobaciones y qué
+// aviso recibe cada día (y por qué). En la demo, "Open the app as…" carga sus datos en el móvil;
+// en una cuenta de prueba, "Load … into this account" los escribe en Supabase (y vaciarla borra
+// lo registrado). En una cuenta real no se carga nada.
 export const SimulationScreen = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const start = useMemo(localMidnight, []);
+  const target = useMemo(scenarioTarget, []);
+  const inAccount = target === 'test_account';
+  const who = user?.email || 'this account';
   const [openId, setOpenId] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -26,6 +35,15 @@ export const SimulationScreen = () => {
 
   const open = async (p: Persona) => {
     setError('');
+    if (
+      inAccount &&
+      !(await confirmAsk(
+        `Load ${p.name} into ${who}?`,
+        `Deletes this account's ${CLEARED_LOGS}, and writes ${p.name}'s instead, up to today. Lab results, files, orders and shares stay.`,
+        'Load'
+      ))
+    )
+      return;
     setLoading(p.id);
     try {
       await loadPersona(p);
@@ -35,24 +53,65 @@ export const SimulationScreen = () => {
     }
   };
 
+  const clear = async () => {
+    setError('');
+    if (
+      !(await confirmAsk(
+        `Clear ${who}?`,
+        `Deletes this account's ${CLEARED_LOGS}. Lab results, files, orders, shares and the profile stay.`,
+        'Clear'
+      ))
+    )
+      return;
+    setLoading('clear');
+    try {
+      await clearTestAccount();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not clear this account');
+      setLoading(null);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Simulated users" showBack />
+        <ScreenHeader
+          title={target === 'demo' ? 'Simulated users' : 'Test scenarios'}
+          showBack
+          backFallback={target === 'demo' ? undefined : '/settings'}
+        />
         <Text style={styles.intro}>
-          Test users with different habits and moments, defined in simulation/personas (one JSON each). Day 0 is
-          today. The same checks run with npm run simulate and npm test.
+          {inAccount
+            ? `Load a case into this test account (${who}) to see its screens and notifications on any device where you sign in with it. Day 0 is today.`
+            : 'Test users with different habits and moments, defined in simulation/personas (one JSON each). Day 0 is today. The same checks run with npm run simulate and npm test.'}
         </Text>
+        {target === 'real_account' ? <Text style={styles.error}>{REAL_ACCOUNT_REFUSAL}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity style={[styles.card, styles.builder]} onPress={() => router.push('/case-builder')} activeOpacity={0.85}>
-          <Ionicons name="construct-outline" size={22} color={Colors.accent} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>Build a case</Text>
-            <Text style={styles.summary}>Pick sex, age, what goes wrong and for how long: see the notifications it gets.</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-        </TouchableOpacity>
+        {inAccount && (
+          <TouchableOpacity style={[styles.card, styles.builder, styles.clear]} onPress={clear} disabled={!!loading} activeOpacity={0.85}>
+            {loading === 'clear' ? (
+              <ActivityIndicator color={Colors.danger} />
+            ) : (
+              <Ionicons name="trash-outline" size={22} color={Colors.danger} />
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>Clear this test account</Text>
+              <Text style={styles.summary}>Deletes only this account's logs, so it starts empty.</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {target !== 'real_account' && (
+          <TouchableOpacity style={[styles.card, styles.builder]} onPress={() => router.push('/case-builder')} activeOpacity={0.85}>
+            <Ionicons name="construct-outline" size={22} color={Colors.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>Build a case</Text>
+              <Text style={styles.summary}>Pick sex, age, what goes wrong and for how long: see the notifications it gets.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+          </TouchableOpacity>
+        )}
 
         {results.map(({ persona, days, expectations }) => {
           const failed = expectations.filter((e) => !e.pass).length;
@@ -99,14 +158,24 @@ export const SimulationScreen = () => {
                   <Text style={styles.timelineTitle}>Timeline</Text>
                   <NudgeTimeline days={days} />
 
-                  <TouchableOpacity style={styles.cta} onPress={() => open(persona)} disabled={!!loading}>
-                    {loading === persona.id ? (
-                      <ActivityIndicator color={Colors.background} />
-                    ) : (
-                      <Text style={styles.ctaText}>Open the app as {persona.name}</Text>
-                    )}
-                  </TouchableOpacity>
-                  <Text style={styles.ctaNote}>Replaces the demo data on this device with {persona.name}'s, up to today.</Text>
+                  {target !== 'real_account' && (
+                    <>
+                      <TouchableOpacity style={styles.cta} onPress={() => open(persona)} disabled={!!loading}>
+                        {loading === persona.id ? (
+                          <ActivityIndicator color={Colors.background} />
+                        ) : (
+                          <Text style={styles.ctaText}>
+                            {inAccount ? `Load ${persona.name} into this account` : `Open the app as ${persona.name}`}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                      <Text style={styles.ctaNote}>
+                        {inAccount
+                          ? `Replaces this test account's logs with ${persona.name}'s, up to today.`
+                          : `Replaces the demo data on this device with ${persona.name}'s, up to today.`}
+                      </Text>
+                    </>
+                  )}
                 </View>
               )}
             </View>
@@ -132,6 +201,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   builder: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderColor: Colors.accent },
+  clear: { borderColor: withAlpha(Colors.danger, 0.5) },
   avatar: {
     width: 40,
     height: 40,

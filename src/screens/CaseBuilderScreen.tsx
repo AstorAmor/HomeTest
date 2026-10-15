@@ -4,7 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { NudgeTimeline, STATUS_LABEL, statusColor } from '@/components/dev/NudgeTimeline';
 import { Colors } from '@/constants/colors';
-import { loadPersona, localMidnight } from '@/data/simulation';
+import { CLEARED_LOGS, loadPersona, localMidnight, scenarioTarget } from '@/data/simulation';
+import { confirmAsk } from '@/components/dev/confirmAsk';
+import { useAuth } from '@/context/AuthContext';
 import {
   buildCase,
   CASE_DURATIONS,
@@ -19,7 +21,8 @@ import {
 
 // Developer mode → Simulated users → Build a case. Un usuario simulado hecho al momento: quién
 // es, qué le va mal, con qué intensidad y desde cuándo. El mismo motor de avisos que la app dice
-// qué recibe cada día; "Open the app as…" lo carga en el modo demo para verlo en las pantallas.
+// qué recibe cada día; "Open the app as…" lo carga en el modo demo para verlo en las pantallas (en
+// una cuenta de prueba, "Load … into this account" lo escribe en Supabase; en una real, nada).
 // Para guardarlo como caso fijo (y que los tests lo comprueben): Copy JSON → simulation/personas.
 
 const SEX = [
@@ -59,6 +62,10 @@ function Field({ title, hint, children }: { title: string; hint?: string; childr
 
 export const CaseBuilderScreen = () => {
   const start = useMemo(localMidnight, []);
+  const target = useMemo(scenarioTarget, []);
+  const inAccount = target === 'test_account';
+  const { user } = useAuth();
+  const who = user?.email || 'this account';
   const [input, setInput] = useState<CaseInput>({
     sex: 'female',
     age: 52,
@@ -90,6 +97,16 @@ export const CaseBuilderScreen = () => {
   const today = days.find((d) => d.day === 0);
 
   const open = async () => {
+    setMessage('');
+    if (
+      inAccount &&
+      !(await confirmAsk(
+        `Load ${persona.name} into ${who}?`,
+        `Deletes this account's ${CLEARED_LOGS}, and writes this case instead, up to today. Lab results, files, orders and shares stay.`,
+        'Load'
+      ))
+    )
+      return;
     setLoading(true);
     try {
       await loadPersona(persona);
@@ -224,10 +241,24 @@ export const CaseBuilderScreen = () => {
             ))}
 
           {message ? <Text style={styles.message}>{message}</Text> : null}
-          <TouchableOpacity style={styles.cta} onPress={open} disabled={loading} activeOpacity={0.85}>
-            {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>Open the app as {persona.name}</Text>}
-          </TouchableOpacity>
-          <Text style={styles.ctaNote}>Replaces the demo data on this device with this case, up to today.</Text>
+          {target !== 'real_account' && (
+            <>
+              <TouchableOpacity style={styles.cta} onPress={open} disabled={loading} activeOpacity={0.85}>
+                {loading ? (
+                  <ActivityIndicator color={Colors.background} />
+                ) : (
+                  <Text style={styles.ctaText}>
+                    {inAccount ? `Load ${persona.name} into this account` : `Open the app as ${persona.name}`}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              <Text style={styles.ctaNote}>
+                {inAccount
+                  ? "Replaces this test account's logs with this case, up to today."
+                  : 'Replaces the demo data on this device with this case, up to today.'}
+              </Text>
+            </>
+          )}
           <TouchableOpacity style={styles.secondary} onPress={copy} activeOpacity={0.85}>
             <Text style={styles.secondaryText}>Copy JSON</Text>
           </TouchableOpacity>
