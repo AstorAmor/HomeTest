@@ -94,6 +94,19 @@ export const SettingsScreen = () => {
                 </View>
                 <Switch value={real} onValueChange={toggleReal} trackColor={{ true: Colors.accent, false: Colors.cardBorder }} />
               </View>
+              {/* Solo cuentas de prueba: cargar un caso (tensión alta, energía baja…) o vaciarla */}
+              {!real && (
+                <TouchableOpacity style={[styles.row, styles.divider]} onPress={() => router.push('/simulation')}>
+                  <Ionicons name="flask-outline" size={22} color={Colors.gold} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowTitle}>{t('Test scenarios')}</Text>
+                    <Text style={styles.rowSub}>
+                      {t('Load a case into this test account (high blood pressure, low energy, skipped medication…) or clear it.')}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                </TouchableOpacity>
+              )}
             </View>
           </>
         )}

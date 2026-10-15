@@ -810,3 +810,26 @@ ya guardan en las carpetas nuevas.
 - Español: estados de marcadores (Bajo, Límite alto…), "X para revisar", categorías, horario de extracciones.
 - Pendiente: cuentas de prueba con casuísticas cargadas en la nube (hoy los usuarios simulados solo van en la demo);
   ciclo de una mujer con cuenta real sin registros (sigue saliendo el ejemplo); APK nueva para calorías/distancia.
+
+## 2026-10-15 (tarde) — Casos de prueba en cuentas de Supabase (rama `test-account-scenarios`)
+
+- **Ajustes → Cuenta → Casos de prueba** (`/simulation`), solo en cuentas de prueba (sin `real_account`): los
+  mismos usuarios simulados de `simulation/personas` y "Build a case", pero "Load X into this account" escribe el
+  caso en las tablas de verdad de esa cuenta (check_ins, workouts, meals, cycle_starts, bowel_logs, urine_logs,
+  medications, medication_doses, blood_pressure_readings, glucose_readings, metric_readings, wearable_daily) a
+  través de los repositorios, más perfil (sexo, edad, condiciones), objetivo del ciclo, silencios, historial de
+  avisos y secciones opcionales. Así se ve el caso en el móvil (APK) entrando con esa cuenta. Antes de escribir se
+  vacía lo registrado; "Clear this test account" vacía sin cargar nada. Se quedan analíticas, archivos, pedidos,
+  permisos a profesionales, chats y el perfil. Pide confirmación con el email de la cuenta.
+- **Guardia** (`src/logic/scenarioAccount.ts`, tests en `logic/__tests__/scenarioAccount.test.ts`): antes de
+  escribir o borrar se vuelve a leer `user_flags.real_account` directamente de Supabase; si es real, si no se
+  puede leer o si la cuenta fue real alguna vez (fila `real_account` = false sin `scenario_account` = true), se
+  niega y no toca nada. La primera carga marca la cuenta con `scenario_account`. En una cuenta real la fila de
+  Ajustes no sale y `/simulation` solo enseña el motivo.
+- Los borrados van siempre filtrados por `user_id` (y RLS solo deja borrar lo propio): `clearAll()` y
+  `saveMany()` nuevos en `createMetricRepository`.
+- Con un caso cargado, Health Connect no se sincroniza solo (no mezcla el sueño/pulso del móvil con el del caso);
+  "Sincronizar" a mano en Wearables sí. Al vaciar la cuenta vuelve a sincronizar solo.
+- El modo demo sigue igual (Developer mode → Simulated users → "Open the app as…").
+- Cómo probar: crear en la app una cuenta por caso (p. ej. tensión alta, energía baja, medicación), entrar,
+  Ajustes → Casos de prueba → elegir el caso → Load. La app recarga en Today con el caso y su bandeja de avisos.

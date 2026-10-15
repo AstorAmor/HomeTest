@@ -12,6 +12,7 @@ import {
 } from './providers/healthConnect';
 import { PHONE_SOURCE } from './sources';
 import { showSamples } from '@/data/dataMode';
+import { userFlags } from '@/data/userFlags';
 import { DailyPoint, DailySeries, localDayKey, pickPerDay, toDailySeries } from './seriesLogic';
 
 export * from './seriesLogic';
@@ -83,10 +84,18 @@ export function useDailyWearables(days = 14, opts?: { autoSync?: boolean }) {
   return { series, isSample, sources, hasAny };
 }
 
+// Con un usuario simulado cargado (Test scenarios en una cuenta de prueba) no se mezcla el sueño y
+// el pulso de este móvil con los del caso. Sincronizar a mano en Wearables sí trae los datos.
+const scenarioLoaded = async () => {
+  const sim = await userFlags.get('simulation').catch(() => undefined);
+  return !!sim && typeof sim === 'object' && 'personaId' in sim;
+};
+
 // Trae de Health Connect los últimos 30 días y sustituye lo guardado de ese rango. Solo si está
 // conectado (algún permiso concedido) y han pasado 10 minutos desde la última vez.
 export async function syncHealthConnectIfDue(force = false): Promise<boolean> {
   if (!force && !(await healthConnectSyncDue())) return false;
+  if (!force && (await scenarioLoaded())) return false;
   if (!(await isHealthConnectAvailable())) return false;
   if (!(await grantedTypes()).length) return false;
   const read = await readHealthConnectDaily(30);
