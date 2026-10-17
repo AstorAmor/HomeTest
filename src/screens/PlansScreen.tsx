@@ -8,11 +8,14 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
 import { markerIn, planHistory, reportsForProgress } from '@/data/planHistory';
-import { flagColor } from '@/utils/labReportView';
+import { flagColor, labReports } from '@/utils/labReportView';
 import { PlanVersion, planVersionRepository } from '@/data/planVersions';
 import { STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { buildPlan, PlanItem } from '@/data/planRepository';
+import { profileRepository } from '@/data/profileRepository';
+import { labUploadRepository } from '@/data/labUploads';
 
 const dayMonthYear = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
@@ -66,20 +69,60 @@ export const PlansScreen = () => {
   const plans = planHistory();
   const [openId, setOpenId] = useState<string | null>(null);
   const [versions, setVersions] = useDeepState<PlanVersion[]>([]);
+  // El plan de "Tu plan personalizado" (el de Hoy): sale aquí como plan actual mientras no haya
+  // uno más reciente de un análisis o de un profesional.
+  const [goalsPlan, setGoalsPlan] = useDeepState<PlanItem[]>([]);
+  const [hasResults, setHasResults] = useState(labReports().length > 0);
   useReloadOnFocus(
     useCallback(async () => {
       const v = await planVersionRepository.getAll().catch(() => []);
       setVersions(v);
       if (v.length) setOpenId((cur) => cur ?? v[0].id);
-    }, [setVersions]),
+      setGoalsPlan(buildPlan(await profileRepository.get().catch(() => null)));
+      labUploadRepository
+        .getAll()
+        .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
+        .catch(() => undefined);
+    }, [setVersions, setGoalsPlan]),
   );
   const hasVersions = versions.length > 0;
+  const showGoalsPlan = !hasVersions && !plans.some((p) => p.latest) && goalsPlan.length > 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your plans')} showBack />
         <Text style={styles.intro}>{t("A new plan comes with every blood test. Earlier plans stay here so you can see how far you've come.")}</Text>
+
+        {showGoalsPlan && (
+          <View style={[styles.card, styles.cardLatest]}>
+            <TouchableOpacity style={styles.head} activeOpacity={0.85} onPress={() => router.push('/action-plan')}>
+              <View style={[styles.icon, { backgroundColor: Colors.accent }]}>
+                <Ionicons name="sparkles" size={20} color={Colors.background} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.badge}>{t('Current plan')}</Text>
+                <Text style={styles.title}>{t('Your personalised plan')}</Text>
+                <Text style={styles.sub}>
+                  {hasResults ? t('Based on your latest results') : t('Based on your goals for now')} ·{' '}
+                  {t(goalsPlan.length === 1 ? '{n} action' : '{n} actions', { n: goalsPlan.length })}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+            <View style={styles.items}>
+              {goalsPlan.map((it) => (
+                <View key={it.kind} style={styles.item}>
+                  <Text style={styles.itemTitle}>{it.title}</Text>
+                  <Text style={styles.itemWhy}>{it.why}</Text>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.cta} onPress={() => router.push('/action-plan')}>
+              <Text style={styles.ctaText}>{t('See full plan')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {versions.map((v, i) => (
           <VersionCard key={v.id} v={v} current={i === 0} open={openId === v.id} onToggle={() => setOpenId(openId === v.id ? null : v.id)} />

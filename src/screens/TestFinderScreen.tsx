@@ -188,6 +188,20 @@ export const TestFinderScreen = () => {
           </View>
         )}
 
+        {flags.includes('weight_loss') && (
+          <View style={styles.note}>
+            <Ionicons name="medkit-outline" size={18} color={Colors.attention} />
+            <View style={{ flex: 1, gap: 6 }}>
+              <Text style={styles.noteText}>
+                {t('Losing weight without trying (around 5% of your weight in 6 to 12 months) is worth telling a doctor about too, even if you feel well.')}
+              </Text>
+              <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
+                <Text style={styles.noteLink}>{t('Talk to a doctor')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {top.map((p) => card(p.id, p.reasons))}
 
         {rest.length > 0 && (

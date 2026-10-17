@@ -3,6 +3,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TileMap } from '@/components/TileMap';
 import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
@@ -17,8 +18,15 @@ const longDate = (day: string) =>
 
 // "Book an appointment": elegir centro en el mapa o en la lista, día y hora.
 // PROTOTIPO: la cita se guarda en el móvil; aún no se reserva en el laboratorio.
+// ?center=<id> llega con ese centro elegido; ?reschedule=<id de cita> cambia esa cita en vez de
+// crear otra (desde la ficha de la cita, "Cambiar día u hora").
 export const BookLabScreen = () => {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const router = useRouter();
+  const params = useLocalSearchParams<{ center?: string; reschedule?: string }>();
+  const rescheduleId = params.reschedule ? String(params.reschedule) : null;
+  const [selectedId, setSelectedId] = useState<string | null>(
+    params.center && LAB_CENTERS.some((c) => c.id === params.center) ? String(params.center) : null,
+  );
   const [month, setMonth] = useState(new Date());
   const [day, setDay] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -42,7 +50,17 @@ export const BookLabScreen = () => {
 
   const confirm = async () => {
     if (!center || !day || !time) return;
-    const appt = await labAppointmentRepository.save({ centerId: center.id, date: day, time });
+    const change = { centerId: center.id, date: day, time };
+    const appt = rescheduleId
+      ? await labAppointmentRepository.reschedule(rescheduleId, change)
+      : await labAppointmentRepository.save(change);
+    if (!appt) return;
+    if (rescheduleId) {
+      // Vuelve a la ficha de la cita, ya con el nuevo día y hora
+      if (router.canGoBack()) router.back();
+      else router.replace({ pathname: '/lab-appointment', params: { id: appt.id } });
+      return;
+    }
     setBooked(appt);
     load();
   };
@@ -64,7 +82,7 @@ export const BookLabScreen = () => {
             </View>
             <Text style={styles.doneTitle}>{t('Appointment requested')}</Text>
             <Text style={styles.doneText}>
-              {longDate(booked.date)} at {booked.time}
+              {t('{day} at {time}', { day: longDate(booked.date), time: booked.time })}
               {'\n'}
               {center.network} · {center.name}
               {'\n'}
@@ -87,6 +105,10 @@ export const BookLabScreen = () => {
             <Ionicons name="navigate-outline" size={18} color={Colors.accent} />
             <Text style={styles.link}>{t('Get directions')}</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.linkRow} onPress={() => router.push({ pathname: '/lab-appointment', params: { id: booked.id } })}>
+            <Ionicons name="document-text-outline" size={18} color={Colors.accent} />
+            <Text style={styles.link}>{t('See your appointment')}</Text>
+          </TouchableOpacity>
         </ScrollView>
         <TouchableOpacity
           style={styles.cta}
@@ -105,16 +127,21 @@ export const BookLabScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Book an appointment')} showBack />
+        <ScreenHeader title={rescheduleId ? t('Change day or time') : t('Book an appointment')} showBack />
         <Text style={styles.intro}>{t('Blood draw at a partner lab near you. Madrid · Eurofins Megalab.')}</Text>
 
-        {upcoming.length > 0 && (
+        {upcoming.length > 0 && !rescheduleId && (
           <View style={styles.upcoming}>
             <Text style={styles.section}>{t('Your appointments')}</Text>
             {upcoming.map((a) => {
               const c = LAB_CENTERS.find((x) => x.id === a.centerId);
               return (
-                <View key={a.id} style={styles.apptRow}>
+                <TouchableOpacity
+                  key={a.id}
+                  style={styles.apptRow}
+                  activeOpacity={0.85}
+                  onPress={() => router.push({ pathname: '/lab-appointment', params: { id: a.id } })}
+                >
                   <Ionicons name="calendar-outline" size={18} color={Colors.accent} />
                   <Text style={styles.apptText}>
                     {longDate(a.date)} · {a.time}
@@ -124,7 +151,8 @@ export const BookLabScreen = () => {
                   <TouchableOpacity onPress={() => cancel(a.id)}>
                     <Text style={styles.cancel}>{t('Cancel')}</Text>
                   </TouchableOpacity>
-                </View>
+                  <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -134,7 +162,7 @@ export const BookLabScreen = () => {
           <TileMap points={LAB_CENTERS} selectedId={selectedId} onSelect={selectCenter} height={320} />
         </View>
 
-        <Text style={styles.section}>{center ? t('Your lab') : `${LAB_CENTERS.length} labs in Madrid`}</Text>
+        <Text style={styles.section}>{center ? t('Your lab') : t('{n} labs within your reach', { n: LAB_CENTERS.length })}</Text>
         {(center ? [center] : LAB_CENTERS).map((c) => (
           <TouchableOpacity
             key={c.id}
@@ -150,7 +178,7 @@ export const BookLabScreen = () => {
             </View>
             <Text style={styles.cardText}>{c.address}</Text>
             <Text style={styles.cardText}>{t('Blood draws: {hours}', { hours: hoursLabel(c) })}</Text>
-            {c.notes && <Text style={styles.muted}>{c.notes}</Text>}
+            {c.notes && <Text style={styles.muted}>{t(c.notes)}</Text>}
           </TouchableOpacity>
         ))}
         {center && (
@@ -206,7 +234,10 @@ export const BookLabScreen = () => {
       {center && day && time && (
         <TouchableOpacity style={styles.cta} onPress={confirm}>
           <Text style={styles.ctaText}>
-            Confirm · {new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}, {time}
+            {t(rescheduleId ? 'Move to {date}, {time}' : 'Confirm · {date}, {time}', {
+              date: new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }),
+              time,
+            })}
           </Text>
         </TouchableOpacity>
       )}

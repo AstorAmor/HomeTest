@@ -38,7 +38,7 @@ const NUDGE_INFO: Record<NudgeId, { description: string; needs?: AppSection[] }>
   bowel_none_3d: { description: 'Three days without a bowel movement.', needs: ['gut'] },
   stool_colour: { description: 'A stool colour you logged that nothing explains.', needs: ['gut'] },
   urine_dark: { description: 'Dark urine on several of the last few days.', needs: ['bladder'] },
-  bathroom_weekly: { description: 'Once a week, what we noticed in your gut and bladder notes.', needs: ['gut', 'bladder'] },
+  bathroom_weekly: { description: 'Once a week, a summary of what you logged and anything worth a look.' },
   medication_missed: { description: 'A dose you have not marked as taken.', needs: ['medication'] },
   bp_very_high: { description: 'A very high reading from your home blood pressure monitor.' },
   bp_high_weeks: { description: 'Blood pressure running high for several weeks.' },

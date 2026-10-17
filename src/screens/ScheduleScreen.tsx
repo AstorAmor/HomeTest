@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
 import { Colors } from '@/constants/colors';
@@ -107,19 +108,33 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
 };
 
 const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolean }) => {
+  const router = useRouter();
   const links = calendarLinks(event);
   const color = SCHEDULE_COLORS[event.type];
+  // Las citas de laboratorio abren su ficha (mapa, llamar, cambiar o cancelar)
+  const isLab = event.type === 'lab';
   return (
     <View style={[styles.event, { borderLeftColor: color }]}>
+      <TouchableOpacity
+        disabled={!isLab}
+        activeOpacity={0.85}
+        onPress={() => router.push({ pathname: '/lab-appointment', params: { id: event.id } })}
+      >
       <View style={styles.eventHeader}>
         <Text style={[styles.eventType, { color }]}>{t(TYPE_LABEL[event.type])}</Text>
         <Text style={styles.eventTime}>
           {showDate ? `${new Date(`${event.date}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })} · ` : ''}
-          {event.start ? `${event.start}${event.end ? `–${event.end}` : ''}` : 'All day'}
+          {event.start ? `${event.start}${event.end ? `–${event.end}` : ''}` : t('All day')}
         </Text>
       </View>
       <Text style={styles.eventTitle}>{event.title}</Text>
       <Text style={styles.eventDetail}>{event.detail}</Text>
+      {isLab && (
+        <Text style={styles.eventLink}>
+          {t('See appointment: map, call, change or cancel')} <Ionicons name="chevron-forward" size={12} color={Colors.accent} />
+        </Text>
+      )}
+      </TouchableOpacity>
       <View style={styles.addRow}>
         <Text style={styles.addLabel}>{t('Add to')}</Text>
         {(
@@ -140,6 +155,7 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
 };
 
 const styles = StyleSheet.create({
+  eventLink: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 8 },
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 32 },
   card: {

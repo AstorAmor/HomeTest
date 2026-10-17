@@ -10,6 +10,21 @@ const PRICES: Record<string, number> = {
 };
 
 describe('Cuestionario: qué analítica pedir', () => {
+  it('perder peso sin buscarlo: tiroides primero y aviso de comentarlo con un médico', () => {
+    const r = recommend({ concerns: ['weight_loss'] }, 'male', PRICES);
+    expect(r.picks[0].id).toBe('thyroid');
+    expect(r.flags).toContain('weight_loss');
+    expect(r.picks.map((p) => p.id)).toEqual(expect.arrayContaining(['diabetes', 'essential', 'coeliac']));
+  });
+
+  it('ganar peso: tiroides y control de peso; en mujeres también hormonas del ciclo', () => {
+    const m = recommend({ concerns: ['weight_gain'] }, 'male', PRICES);
+    expect(m.picks.slice(0, 2).map((p) => p.id).sort()).toEqual(['thyroid', 'weight']);
+    expect(m.flags).not.toContain('weight_loss');
+    const f = recommend({ concerns: ['weight_gain'] }, 'female', PRICES);
+    expect(f.picks.map((p) => p.id)).toContain('cycle_hormones');
+  });
+
   it('cansancio + poco sol: hierro y vitaminas primero, con sus motivos', () => {
     const r = recommend({ concerns: ['tired'], surroundings: ['less_sun'] }, 'female', PRICES);
     const ids = r.picks.map((p) => p.id);

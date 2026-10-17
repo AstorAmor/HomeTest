@@ -28,6 +28,7 @@ import { labAppointmentEvents } from '@/data/labAppointments';
 import { buildSummary, SummaryLine } from '@/logic/summary';
 import { computeReadiness, formatSleep, latest, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { TAB } from '@/constants/tabs';
+import { WelcomePrompts } from '@/components/WelcomePrompts';
 
 // "Resumen" de la web del paciente en escritorio (estilo Salud de Apple): cabecera con la
 // persona, bloques fijados con el último dato de cada parte y tendencias. Cada bloque abre su
@@ -301,6 +302,7 @@ export const WebSummaryScreen = () => {
     });
 
   return (
+    <>
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <Text style={styles.date}>{today.charAt(0).toUpperCase() + today.slice(1)}</Text>
       <Text style={styles.greeting}>{t('Hi {name}!', { name: firstName })}</Text>
@@ -386,6 +388,9 @@ export const WebSummaryScreen = () => {
         <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
       </TouchableOpacity>
     </ScrollView>
+    {/* Perfil genético y, a las mujeres, cuestionario de la regla: las primeras veces que entra */}
+    <WelcomePrompts />
+    </>
   );
 };
 

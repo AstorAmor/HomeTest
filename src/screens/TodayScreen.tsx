@@ -31,6 +31,7 @@ import { BlobArt } from '@/components/BlobArt';
 import { KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
+import { WelcomePrompts } from '@/components/WelcomePrompts';
 import { InboxItem, nudgeStore } from '@/data/nudgeStore';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { hydrationFromUrine, HYDRATION_SCALE } from '@/logic/bathroom';
@@ -177,8 +178,9 @@ export const TodayScreen = () => {
   const [thermo, setThermo] = useDeepState<number | null>(null);
   // "Your summary": lo próximo del calendario (citas, logística, resultados)
   const [summary, setSummary] = useDeepState<SummaryLine[]>([]);
-  // Los últimos 7 días cuelgan del check-in y se despliegan con la flecha
-  const [weekOpen, setWeekOpen] = useState(false);
+  // Los últimos 7 días cuelgan del check-in: desplegados por defecto, la flecha los pliega y se
+  // recuerda (clave v2: antes empezaban plegados y la elección guardada era la contraria)
+  const [weekOpen, setWeekOpen] = useState(true);
   const [nutrients, setNutrients] = useDeepState<{ done: number; total: number }>({ done: 0, total: 0 });
 
   const load = useCallback(async () => {
@@ -187,7 +189,7 @@ export const TodayScreen = () => {
       .getAll()
       .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
       .catch(() => undefined);
-    userFlags.get('today_week_open').then((v) => setWeekOpen(v === true));
+    userFlags.get('today_week_open.v2').then((v) => setWeekOpen(v !== false));
     Promise.all([loadNutrientFocus(), nutrientsDoneToday()])
       .then(([items, done]) => setNutrients({ done: done.filter((d) => items.some((i) => i.id === d)).length, total: items.length }))
       .catch(() => undefined);
@@ -402,7 +404,7 @@ export const TodayScreen = () => {
                 style={styles.weekToggle}
                 onPress={() => {
                   setWeekOpen(!weekOpen);
-                  userFlags.set('today_week_open', !weekOpen);
+                  userFlags.set('today_week_open.v2', !weekOpen);
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ expanded: weekOpen }}
@@ -813,6 +815,8 @@ export const TodayScreen = () => {
           </>
         )}
       </ScrollView>
+      {/* Perfil genético y, a las mujeres, cuestionario de la regla: las primeras veces que entra */}
+      <WelcomePrompts />
     </SafeAreaView>
   );
 };

@@ -9,7 +9,7 @@ import type { Sex } from '@/data/profileRepository';
 
 export type StepId = 'concerns' | 'changes' | 'taking' | 'surroundings';
 export type Gender = 'f' | 'm' | 'n';
-export type FinderFlag = 'mood' | 'allergy';
+export type FinderFlag = 'mood' | 'allergy' | 'weight_loss';
 
 export interface FinderOption {
   id: string;
@@ -42,7 +42,9 @@ export const FINDER_STEPS: FinderStep[] = [
       { id: 'stress', label: 'I feel stressed', es: { m: 'Me siento estresado', f: 'Me siento estresada', n: 'Tengo mucho estrés' }, icon: 'thunderstorm-outline', why: 'stress', tests: { stress: 3, cortisol: 2 } },
       { id: 'low', label: "I'm sadder or feeling down", icon: 'rainy-outline', why: 'low mood', tests: { vitamin_d: 2, thyroid: 2, vitamins: 1, stress: 1 }, flag: 'mood' },
       { id: 'sleep', label: 'I sleep badly', icon: 'moon-outline', why: 'poor sleep', tests: { stress: 2, cortisol: 2, iron: 1 } },
-      { id: 'weight', label: "My weight has changed and I don't know why", icon: 'scale-outline', why: 'weight changes', tests: { weight: 3, thyroid: 2, diabetes: 1 } },
+      // Subir o bajar de peso apuntan a cosas distintas (tiroides lento o rápido, azúcar, celiaquía…)
+      { id: 'weight_gain', label: "I'm gaining weight and I don't know why", icon: 'trending-up-outline', why: 'weight gain', tests: { thyroid: 3, weight: 3, diabetes: 2, cortisol: 1 }, female: { thyroid: 3, weight: 3, diabetes: 2, cycle_hormones: 2 } },
+      { id: 'weight_loss', label: "I'm losing weight without trying", icon: 'trending-down-outline', why: 'weight loss', tests: { thyroid: 3, diabetes: 2, essential: 2, coeliac: 2 }, flag: 'weight_loss' },
       { id: 'hair', label: "I'm losing more hair or my nails break", icon: 'cut-outline', why: 'hair and nails', tests: { iron: 3, thyroid: 2, vitamin_d: 1 } },
       { id: 'cold', label: 'I feel the cold more than others', icon: 'snow-outline', why: 'feeling cold', tests: { thyroid: 3, iron: 2 } },
       { id: 'thirst', label: "I'm thirstier or go to the toilet more", icon: 'water-outline', why: 'thirst', tests: { diabetes: 3, essential: 1 } },

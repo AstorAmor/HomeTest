@@ -39,6 +39,16 @@ export const LearnTopicScreen = () => {
             <Ionicons name="arrow-forward" size={18} color={Colors.background} />
           </TouchableOpacity>
         )}
+        {topic.moreActions?.map((a) => (
+          <TouchableOpacity
+            key={a.label}
+            style={styles.secondary}
+            onPress={() => router.push({ pathname: a.href as any, params: a.params })}
+          >
+            <Text style={styles.secondaryText}>{t(a.label)}</Text>
+            <Ionicons name="arrow-forward" size={18} color={Colors.accent} />
+          </TouchableOpacity>
+        ))}
         {topic.sources?.length ? (
           <View style={styles.sources}>
             <Text style={styles.sourcesTitle}>{t('Sources')}</Text>
@@ -66,6 +76,8 @@ const styles = StyleSheet.create({
   body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
   cta: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.accent, borderRadius: 26, paddingVertical: 14, marginHorizontal: 20, marginTop: 8 },
   ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  secondary: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: Colors.accent, borderRadius: 26, paddingVertical: 13, marginHorizontal: 20, marginTop: 10 },
+  secondaryText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
   sources: { marginHorizontal: 20, marginTop: 18 },
   sourcesTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', marginBottom: 6 },
   source: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginBottom: 6, textDecorationLine: 'underline' },

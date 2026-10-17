@@ -51,7 +51,7 @@ export function buildSummary(input: {
         icon: 'flask-outline',
         text: t('{what}, {day} at {time}', { what: t(e.title), day: dayText(e.date), time: e.start ?? '' }),
         when: `${e.date}T${e.start ?? '00:00'}`,
-        target: { pathname: '/(tabs)', params: { tab: String(TAB.schedule) } },
+        target: { pathname: '/lab-appointment', params: { id: e.id } },
       })),
     ...appointments
       .filter((a) => soon(a.startsAt.slice(0, 10)) && new Date(a.startsAt).getTime() > now.getTime() - 3600000)

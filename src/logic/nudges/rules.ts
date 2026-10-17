@@ -135,6 +135,8 @@ export function shortSleepStreak(ctx: NudgeContext) {
   return { weeks, avg: r.length ? Math.round(mean(r.map((n) => n.minutes))) : 0 };
 }
 
+// "3 check-ins" / "1 check-in"; vacío si es 0
+const count = (n: number, one: string, many: string) => (n === 0 ? '' : n === 1 ? t(one) : t(many, { n }));
 const weeksText = (w: number) => (w === 1 ? t('this week') : t('for {n} weeks', { n: w }));
 const hm = (min: number) => `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')} min`;
 
@@ -447,25 +449,49 @@ export const NUDGE_RULES: NudgeRule[] = [
     },
   },
   {
+    // Resumen general de la semana (antes solo de intestino y vejiga; el id se mantiene para no
+    // perder silencios ni historial). Cuenta lo registrado en todas las secciones y, si en el baño
+    // hay algo que mirar, lo menciona sin entrar en detalle.
     id: 'bathroom_weekly',
-    category: 'digestive',
-    label: 'Weekly gut and bladder summary',
+    category: 'engagement',
+    label: 'Weekly summary',
     cooldownDays: 7,
     evaluate: (ctx) => {
+      const thisWeek = <T extends { fecha: string }>(list: T[]) =>
+        upToNow(list, ctx.now).filter((e) => daysSince(e.fecha, ctx.now) < 7);
       const bowel = upToNow(ctx.bowel, ctx.now);
       const urine = upToNow(ctx.urine, ctx.now);
-      const weekBowel = bowel.filter((e) => daysSince(e.fecha, ctx.now) < 7).length;
-      const weekUrine = urine.filter((e) => daysSince(e.fecha, ctx.now) < 7).length;
-      if (weekBowel < 3 && weekUrine < 3) return no(`Only ${Math.max(weekBowel, weekUrine)} day(s) logged this week`);
-      const first = [...bowelObservations(bowel, ctx.now), ...urineObservations(urine, ctx.now)].find(
+      const weekCheckIns = thisWeek(ctx.checkIns);
+      const weekWorkouts = thisWeek(ctx.workouts);
+      const weekMeals = thisWeek(ctx.meals);
+      const weekBathroom = [...thisWeek(bowel), ...thisWeek(urine)];
+      const weekSleep = ctx.sleepNights.filter((n) => {
+        const d = daysSince(`${n.date}T12:00:00`, ctx.now);
+        return d >= 0 && d < 7;
+      });
+      const activeDays = new Set(
+        [...weekCheckIns, ...weekWorkouts, ...weekMeals, ...weekBathroom].map((e) => localDay(e.fecha))
+      );
+      for (const n of weekSleep) activeDays.add(n.date);
+      if (activeDays.size < 3) return no(`Only ${activeDays.size} day(s) with something logged this week`);
+      const parts = [
+        count(weekCheckIns.length, '1 check-in', '{n} check-ins'),
+        count(weekWorkouts.length, '1 workout', '{n} workouts'),
+        count(weekSleep.length, '1 night of sleep', '{n} nights of sleep'),
+        count(weekMeals.length, '1 meal', '{n} meals'),
+        count(weekBathroom.length, '1 digestion or hydration note', '{n} digestion and hydration notes'),
+      ].filter(Boolean);
+      const worthALook = [...bowelObservations(bowel, ctx.now), ...urineObservations(urine, ctx.now)].some(
         (o) => o.level !== 'good' && !o.id.endsWith('need_more')
       );
       return {
         due: true,
-        reason: `${weekBowel} gut and ${weekUrine} bladder day(s) logged this week`,
-        title: t('Your weekly gut and bladder summary'),
-        body: first ? t('{what}. Tap to see what we noticed.', { what: first.title }) : t('Everything looks regular this week.'),
-        route: '/digestive',
+        reason: `${activeDays.size} day(s) with something logged this week`,
+        title: t('Your week in Kuova'),
+        body: worthALook
+          ? t('{what}. There is something worth a look: tap to see your week.', { what: parts.join(', ') })
+          : t('{what}. Tap to see your week.', { what: parts.join(', ') }),
+        route: '/your-days',
       };
     },
   },

@@ -1,18 +1,28 @@
 import { dateLocale, t } from '@/i18n';
-// Logros (gamificación). Cada logro es UNA insignia con niveles (bronce → platino),
+// Logros (gamificación). Cada logro es UNA insignia con niveles (bronce → diamante),
 // no una insignia nueva por cada hito, para no repetirlas. Se calculan a partir de
 // los datos del usuario cada vez; no hace falta guardarlos.
 
-export type TierName = 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
+export type TierName = 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Diamond';
 
 export const TIER_COLORS: Record<TierName, string> = {
   Bronze: '#CD7F32',
   Silver: '#C9CED6',
   Gold: '#F0B84D',
-  Platinum: '#9B8CFF',
+  Platinum: '#7FD6CF',
+  Diamond: '#A5C8FF',
 };
 
-const TIER_NAMES: TierName[] = ['Bronze', 'Silver', 'Gold', 'Platinum'];
+// Degradado de la medalla a pantalla completa: sombra → color → brillo
+export const TIER_GRADIENTS: Record<TierName, [string, string, string]> = {
+  Bronze: ['#7A3E16', '#CD7F32', '#F5BE8A'],
+  Silver: ['#7D858F', '#C9CED6', '#F7F9FB'],
+  Gold: ['#9C6A12', '#F0B84D', '#FFEAB0'],
+  Platinum: ['#2F8C86', '#7FD6CF', '#E3FBF8'],
+  Diamond: ['#4C63E8', '#A5C8FF', '#F3F8FF'],
+};
+
+export const TIER_NAMES: TierName[] = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond'];
 
 export interface Achievement {
   id: string;
@@ -101,7 +111,7 @@ function build(
     unit,
     thresholds,
     level,
-    tier: level > 0 ? TIER_NAMES[Math.min(level, 4) - 1] : null,
+    tier: level > 0 ? TIER_NAMES[Math.min(level, TIER_NAMES.length) - 1] : null,
     nextThreshold: next,
     progressToNext: next ? Math.max(0, Math.min(1, (value - prev) / (next - prev))) : 1,
   };
@@ -122,13 +132,13 @@ export function computeAchievements(input: AchievementInput): Achievement[] {
   const planDays = new Set([...stepDays].filter((d) => actionDays.has(d)));
 
   const list = [
-    build('step_collector', t('Step collector'), t('Total steps walked'), 'footsteps', totalSteps, 'steps', [100000, 250000, 500000, 1000000]),
-    build('daily_mover', t('Daily mover'), t('Days in a row with {n}+ steps', { n: goal.toLocaleString(dateLocale()) }), 'walk', dayStreak(stepDays), 'days', [3, 7, 14, 30]),
-    build('plan_champion', t('Plan champion'), t('Days in a row meeting your daily plan'), 'trophy', dayStreak(planDays), 'days', [3, 7, 14, 30]),
-    build('strength_streak', t('Strength streak'), t('Weeks in a row with 3 strength sessions'), 'barbell', strengthWeekStreak(input.workouts), 'weeks', [1, 4, 8, 12]),
-    build('self_aware', t('Self-aware'), t('Days in a row with a check-in'), 'happy', dayStreak(new Set(input.checkIns.map((c) => localDay(c.fecha)))), 'days', [3, 7, 14, 30]),
-    build('food_logger', t('Food logger'), t('Meals logged'), 'restaurant', input.meals.length, 'meals', [5, 20, 50, 100]),
-    build('calm_mind', t('Calm mind'), t('Breathing and relaxation sessions'), 'leaf', input.mindful.length, 'sessions', [1, 5, 15, 30]),
+    build('step_collector', t('Step collector'), t('Total steps walked'), 'footsteps', totalSteps, 'steps', [100000, 250000, 500000, 1000000, 2500000]),
+    build('daily_mover', t('Daily mover'), t('Days in a row with {n}+ steps', { n: goal.toLocaleString(dateLocale()) }), 'walk', dayStreak(stepDays), 'days', [3, 7, 14, 30, 100]),
+    build('plan_champion', t('Plan champion'), t('Days in a row meeting your daily plan'), 'trophy', dayStreak(planDays), 'days', [3, 7, 14, 30, 100]),
+    build('strength_streak', t('Strength streak'), t('Weeks in a row with 3 strength sessions'), 'barbell', strengthWeekStreak(input.workouts), 'weeks', [1, 4, 8, 12, 26]),
+    build('self_aware', t('Self-aware'), t('Days in a row with a check-in'), 'happy', dayStreak(new Set(input.checkIns.map((c) => localDay(c.fecha)))), 'days', [3, 7, 14, 30, 100]),
+    build('food_logger', t('Food logger'), t('Meals logged'), 'restaurant', input.meals.length, 'meals', [5, 20, 50, 100, 250]),
+    build('calm_mind', t('Calm mind'), t('Breathing and relaxation sessions'), 'leaf', input.mindful.length, 'sessions', [1, 5, 15, 30, 60]),
   ];
 
   // Conseguidos primero (mayor nivel antes), luego los más cerca de conseguirse

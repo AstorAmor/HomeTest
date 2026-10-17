@@ -15,6 +15,7 @@ export interface LearningTopic extends SpecialistCard {
   intro: string;
   lessons: { title: string; body: string }[];
   action?: { label: string; href: string; params?: Record<string, string> };
+  moreActions?: { label: string; href: string; params?: Record<string, string> }[]; // botones secundarios
   sources?: { label: string; url: string }[];
 }
 
@@ -25,15 +26,21 @@ export const LEARNING_TOPICS: LearningTopic[] = [
     palette: [...ART_PALETTES.rose],
     featured: true,
     label: t('Reproductive health'),
-    subtitle: t('Cycle, fertility, hormones'),
+    subtitle: t('Cycle, fertility, pelvic floor'),
     image: require('../../assets/images/learning/reproductive_health.jpg'),
     intro: 'Your cycle is a monthly report on your health. Knowing its phases helps you plan training, food and rest.',
     lessons: [
       { title: 'The four phases', body: 'Menstrual, follicular, ovulation and luteal. Energy tends to rise in the first half of the cycle and dip before your period.' },
       { title: 'What counts as regular', body: 'Cycles between 21 and 35 days are usually considered normal. Big changes are worth discussing with a professional.' },
       { title: 'Markers that matter', body: 'Iron (ferritin), vitamin D and thyroid (TSH) often explain tiredness around your period.' },
+      { title: 'Your pelvic floor', body: 'Kegel exercises strengthen the muscles under your bladder and womb. A few minutes a day help with small leaks, after pregnancy and with sexual health. Do not practise by stopping your wee.' },
     ],
     action: { label: t('Log your period'), href: '/log-cycle' },
+    moreActions: [{ label: 'Pelvic floor (Kegel) exercises', href: '/exercise', params: { id: 'kegel' } }],
+    sources: [
+      { label: 'NHS: pelvic floor exercises', url: 'https://www.nhs.uk/common-health-questions/womens-health/what-are-pelvic-floor-exercises/' },
+      { label: 'NICE NG210: pelvic floor dysfunction (2021)', url: 'https://www.nice.org.uk/guidance/ng210' },
+    ],
   },
   {
     id: 'training',

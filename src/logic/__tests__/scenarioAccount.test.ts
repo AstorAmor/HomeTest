@@ -129,7 +129,7 @@ describe('los 13 usuarios simulados caben en las tablas de Supabase', () => {
       }
       for (const b of r.bowel) {
         expect(inRange(b.count, 0, 20)).toBe(true);
-        expect(oneOf(b.color, ['brown', 'light_brown', 'yellow', 'green', 'black', 'red', 'pale'])).toBe(true);
+        expect(oneOf(b.color, ['brown', 'light_brown', 'dark_brown', 'yellow', 'green', 'black', 'red', 'pale'])).toBe(true);
         expect(inRange(b.consistency, 1, 7)).toBe(true);
       }
       for (const u of r.urine) {

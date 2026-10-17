@@ -82,7 +82,7 @@ export const LabScreen = () => {
             <TouchableOpacity
               key={e.id}
               style={styles.upcomingCard}
-              onPress={() => router.push({ pathname: '/(tabs)', params: { tab: String(TAB.schedule) } })}
+              onPress={() => router.push({ pathname: '/lab-appointment', params: { id: e.id } })}
               activeOpacity={0.85}
             >
               <View style={styles.upcomingLeft}>

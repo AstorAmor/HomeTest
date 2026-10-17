@@ -104,6 +104,7 @@ export default function Layout() {
             <Stack.Screen name="schedule" />
             <Stack.Screen name="checkout" />
             <Stack.Screen name="book-lab" />
+            <Stack.Screen name="lab-appointment" />
             <Stack.Screen name="plans" />
             <Stack.Screen name="action-plan" />
             <Stack.Screen name="progress" />

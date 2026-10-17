@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateNudges, muteUntil, simulatePersona } from '@/logic/nudges';
+import { evaluateNudges, muteUntil, NUDGE_RULES, simulatePersona } from '@/logic/nudges';
 import { PERSONAS } from '../../../simulation/personas';
 import { NudgeContext } from '@/logic/nudges/types';
 
@@ -23,6 +23,31 @@ describe('muteUntil', () => {
     expect(new Date(muteUntil('1m', from)!).getMonth()).toBe(10);
     expect(new Date(muteUntil('3m', from)!).getMonth()).toBe(0);
     expect(muteUntil('forever', from)).toBeNull();
+  });
+});
+
+describe('resumen semanal', () => {
+  const weekly = NUDGE_RULES.find((r) => r.id === 'bathroom_weekly')!;
+  const daysAgo = (now: Date, n: number) => new Date(now.getTime() - n * 86400000 - 3600000).toISOString();
+
+  it('es general: cuenta check-ins y entrenos aunque no haya notas de baño', () => {
+    const now = new Date('2026-10-17T19:00:00');
+    const ctx = empty(now);
+    ctx.checkIns = [0, 1, 2, 3].map((n) => ({ fecha: daysAgo(now, n), energy: 4 }));
+    ctx.workouts = [{ fecha: daysAgo(now, 1) }];
+    const r = weekly.evaluate(ctx);
+    expect(r.due).toBe(true);
+    expect(r.route).toBe('/your-days');
+    expect(r.body).toContain('4 check-ins');
+    expect(r.body).toContain('1 workout');
+    expect(r.body).not.toMatch(/gut|bladder/i);
+  });
+
+  it('no sale con menos de 3 días con algo registrado', () => {
+    const now = new Date('2026-10-17T19:00:00');
+    const ctx = empty(now);
+    ctx.checkIns = [0, 1].map((n) => ({ fecha: daysAgo(now, n) }));
+    expect(weekly.evaluate(ctx).due).toBe(false);
   });
 });
 

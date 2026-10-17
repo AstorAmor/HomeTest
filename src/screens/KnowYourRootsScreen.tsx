@@ -32,26 +32,26 @@ import {
 
 type TriageStep = TriageId | 'ashkenazi';
 
-const TRIAGE: { id: TriageStep; title: string; hint?: string; icon: string }[] = [
-  {
-    id: 'breast',
-    title: 'Has anyone in your family had breast cancer?',
-    hint: 'Blood relatives on both sides, women and men: parents, brothers and sisters, children, grandparents, aunts, uncles, cousins.',
-    icon: 'ribbon',
-  },
-  { id: 'ovarian', title: 'Has anyone in your family had ovarian cancer?', hint: 'Including cancer of the fallopian tubes or the peritoneum.', icon: 'flower-outline' },
+// `who`: la pregunta va de familiares, así que se aclara quién cuenta. Son los mismos que se pueden
+// elegir después en "¿Quién tuvo cáncer?" (RELATION_GROUPS): el PAT, el FHAT y el Manchester piden
+// el parentesco y el lado de la familia, por eso aquí basta con un sí/no y el quién va después.
+const TRIAGE: { id: TriageStep; title: string; hint?: string; icon: string; who?: boolean }[] = [
+  { id: 'breast', title: 'Has anyone in your family had breast cancer?', hint: 'Women and men.', icon: 'ribbon', who: true },
+  { id: 'ovarian', title: 'Has anyone in your family had ovarian cancer?', hint: 'Including cancer of the fallopian tubes or the peritoneum.', icon: 'flower-outline', who: true },
   {
     id: 'bowel',
     title: 'Has anyone in your family had bowel or womb cancer?',
     hint: 'Colorectal or endometrial cancer. Also cancer of the small intestine, the stomach, or the kidney pelvis or ureter.',
     icon: 'stomach',
+    who: true,
   },
-  { id: 'pancreas_prostate', title: 'Has anyone in your family had pancreatic or prostate cancer?', icon: 'account-group-outline' },
+  { id: 'pancreas_prostate', title: 'Has anyone in your family had pancreatic or prostate cancer?', icon: 'account-group-outline', who: true },
   {
     id: 'variant',
     title: 'Has a relative had a genetic test that found a change linked to cancer?',
     hint: 'For example in BRCA1, BRCA2 or a Lynch syndrome gene.',
     icon: 'dna',
+    who: true,
   },
   { id: 'ashkenazi', title: 'Is any of your family of Ashkenazi Jewish origin?', hint: 'Some inherited changes are more common in this ancestry.', icon: 'earth' },
   { id: 'self_cancer', title: 'Have you yourself ever had cancer?', hint: 'Any cancer, even if it was a long time ago.', icon: 'account-outline' },
@@ -63,11 +63,17 @@ const TRIAGE: { id: TriageStep; title: string; hint?: string; icon: string }[] =
   },
   {
     id: 'cholesterol',
-    title: 'Does very high cholesterol run in your close family?',
-    hint: 'For example, someone told they have familial hypercholesterolaemia.',
+    title: 'Does very high cholesterol run in your family?',
+    hint: 'Your parents, brothers, sisters or children, or your grandparents, aunts or uncles. For example, someone told they have familial hypercholesterolaemia.',
     icon: 'water-outline',
   },
-  { id: 'sudden_death', title: 'Did a relative die suddenly at a young age, without a clear cause?', icon: 'heart-flash' },
+  {
+    // "Antes de los 50": el antecedente familiar de la AHA (muerte súbita prematura por el corazón)
+    id: 'sudden_death',
+    title: 'Did a relative die suddenly at a young age, without a clear cause?',
+    hint: 'Before 50, for example while sleeping or doing sport. Parents, brothers and sisters, children, grandparents, aunts, uncles or first cousins.',
+    icon: 'heart-flash',
+  },
 ];
 
 const YES_NO: { id: YesNo; label: string }[] = [
@@ -373,6 +379,9 @@ export const KnowYourRootsScreen = () => {
                   </View>
                 </View>
               ))}
+              <Text style={styles.small}>
+                {tr('When we ask about your family we mean blood relatives on both sides, up to first cousins, nieces and nephews.')}
+              </Text>
               <Text style={styles.small}>{tr('Every answer is saved as you go. You can close the app and continue at the same question.')}</Text>
             </View>
             <View style={styles.note}>
@@ -393,6 +402,18 @@ export const KnowYourRootsScreen = () => {
             <MaterialCommunityIcons name={triage.icon as any} size={34} color={Colors.gold} style={styles.icon} />
             <Text style={styles.title}>{tr(triage.title)}</Text>
             {triage.hint ? <Text style={styles.subtitle}>{tr(triage.hint)}</Text> : <View style={{ height: 12 }} />}
+            {triage.who && (
+              <View style={styles.whoBox}>
+                <Ionicons name="people-outline" size={18} color={Colors.gold} />
+                <View style={{ flex: 1, gap: 4 }}>
+                  <Text style={styles.whoTitle}>{tr('Who counts')}</Text>
+                  <Text style={styles.whoText}>
+                    {tr('Blood relatives on both sides (your mother’s and your father’s): parents, brothers and sisters, children, grandparents, aunts and uncles, first cousins, nieces and nephews. Partners and in-laws do not count.')}
+                  </Text>
+                  <Text style={styles.whoText}>{tr('If you answer yes, next we ask who it was and at what age.')}</Text>
+                </View>
+              </View>
+            )}
             {(triage.id === 'ashkenazi' ? ASHKENAZI : YES_NO).map((o) => {
               const value = triage.id === 'ashkenazi' ? answers.ashkenazi : answers.triage[triage.id as TriageId];
               const on = value === o.id;
@@ -442,7 +463,7 @@ export const KnowYourRootsScreen = () => {
           <>
             <Text style={styles.title}>{tr('Who had cancer?')}</Text>
             <Text style={styles.subtitle}>
-              {tr('Tap everyone you know of. If there were two aunts, add two. Only blood relatives.')}
+              {tr('Tap everyone you know of. If there were two aunts, add two. Only blood relatives; great-grandparents and second cousins are not needed.')}
             </Text>
             {RELATION_GROUPS.map((g) => (
               <View key={g.title} style={{ marginBottom: 14 }}>
@@ -733,6 +754,18 @@ export const KnowYourRootsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  whoBox: {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: withAlpha(Colors.gold, 0.08),
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.gold, 0.3),
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 14,
+  },
+  whoTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
+  whoText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
   safeArea: { flex: 1, backgroundColor: Colors.background },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 8 },
   circleButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.card, justifyContent: 'center', alignItems: 'center' },

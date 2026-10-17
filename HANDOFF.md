@@ -872,9 +872,46 @@ ya guardan en las carpetas nuevas.
   Se guarda en `user_metadata.display_name` y `profiles.display_name` (`updateDisplayName` en AuthContext).
 - **Heces y orina en español**: `ColorSwatches` traduce los nombres de color; causas de color de heces y orina y
   "{n} horas" de la medicación, traducidas.
-- **Migración `20261017100000_plan_access.sql` SIN APLICAR**: app_config, access_codes, access_grants,
+- **Migración `20261017100000_plan_access.sql`** (aplicada el 2026-10-17 tras publicar 80dd028, EAS bc0bcab8): app_config, access_codes, access_grants,
   my_access(), has_feature(), redeem_access_code(), admin_grant_access(), admin_list_access_grants() y el bucket
   avatars. Mientras no esté aplicada, la app no bloquea nada (fuente 'legacy'), el panel de admin lo avisa y la
   foto da "aún no disponible". Al aplicarla, las cuentas gratis dejan de poder escanear (salvo admin o código).
 - Pendiente de decidir: precios editables desde el admin (hoy en `testCatalog.ts` y `_shared/products.ts`);
   el business case aún menciona la revisión médica en la suscripción.
+
+## 2026-10-17 (tarde) — Segunda tanda de notas del fundador
+
+- **Subir informe**: el error "UnknownHostException … supabase.co" era el móvil sin poder resolver el nombre (sin
+  red o DNS); el servidor responde bien. `postAi` reintenta dos veces los fallos de red (`isNetworkError` en
+  `utils/apiBaseUrl.ts`) y `/upload-test` explica en español qué pasa y conserva las fotos.
+- **Resumen semanal general**: el aviso `bathroom_weekly` (mismo id para no perder silencios) es ahora "Tu semana
+  en Kuova": cuenta check-ins, entrenos, noches de sueño, comidas y notas de digestión/hidratación, menciona si
+  hay algo que mirar y abre `/your-days`. Categoría "Recordatorios", ya no depende de las secciones de baño.
+- **Cómo funciona KUOVA**: las 18 fichas (`data/evidence.ts`) se traducen en pantalla con `t()`.
+- **Check-in en Hoy desplegado por defecto** (clave `today_week_open.v2`); "Qué pasó cada día" → "Detalle por día".
+- **Tus planes**: sin planes de análisis ni versiones, sale "Tu plan personalizado" como plan actual.
+- **Test "¿qué análisis pedir?"**: "Mi peso ha cambiado" se divide en "Estoy ganando peso" (tiroides, control de
+  peso, azúcar; en mujeres hormonas del ciclo) y "Estoy perdiendo peso sin buscarlo" (tiroides, azúcar,
+  perfil general, celiaquía + aviso de comentarlo con un médico). Pesos pendientes de revisión clínica.
+- **Heces: "Marrón oscuro"** entre marrón y muy oscuro/negro; los marrones van de claro a oscuro con saltos de
+  luminosidad parecidos. Migración `20261017120000_stool_dark_brown.sql` (amplía el CHECK de `bowel_logs.color`),
+  aplicada el 2026-10-17 con el OK del fundador.
+- **Ficha de la cita en laboratorio** (`/lab-appointment?id=`, `LabAppointmentScreen`): mapa del centro, Llamar
+  (tel:), Cómo llegar, Calendario, "Cambiar día u hora" (`/book-lab?center=&reschedule=` mueve la misma cita) y
+  Cancelar. Se abre desde Hoy (resumen), Lab (próximos análisis), Agenda y "Pedir cita". "8 laboratorios a tu
+  alcance"; notas de los centros en español.
+- **Kegel**: ejercicio guiado `kegel` (3 min, 8 contracciones de 5 s + rápidas) enlazado desde Salud
+  reproductiva (lección "Tu suelo pélvico", fuentes NHS y NICE NG210). Pendiente de revisión clínica.
+- **Avisos de bienvenida** (`components/WelcomePrompts.tsx`, en Hoy y en el resumen web): perfil genético y, a
+  mujeres con la sección de ciclo, el cuestionario de la regla (`/cycle-goal`). Empezar · Más tarde (3 días) ·
+  Saltar · Silenciar estas sugerencias; estado en user_flags `welcome_prompt:<id>` y `welcome_prompts_muted`.
+- **Insignias a pantalla completa** (`components/badges/`): niveles bronce → plata → oro → platino → diamante
+  (quinto umbral nuevo en cada logro), medalla SVG con confeti (Animated) y "Compartir" como imagen 1080×1350
+  (`utils/shareBadge.ts`: toDataURL de react-native-svg + expo-sharing; sin expo-sharing en la APK, texto;
+  `shareBadge.web.ts`: canvas → Web Share con archivo o descarga).
+- **Conoce tus raíces, quién cuenta como familia**: las preguntas de sí/no sobre cáncer en la familia llevan un
+  recuadro "Quién cuenta" (familia de sangre de los dos lados hasta primos hermanos y sobrinos; ni pareja ni
+  familia política; "después te preguntamos quién fue y a qué edad"). Los mismos parentescos que se eligen en
+  "¿Quién tuvo cáncer?" (PAT, FHAT y Manchester piden parentesco y lado, que ya se preguntaba). Colesterol y
+  muerte súbita dicen quién cuenta; muerte súbita, "antes de los 50" (antecedente de la AHA). Sin cambios en
+  la puntuación.

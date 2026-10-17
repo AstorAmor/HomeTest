@@ -32,9 +32,21 @@ export const labAppointmentRepository = {
     await AsyncStorage.setItem(KEY, JSON.stringify([...all, appt]));
     return appt;
   },
+  async get(id: string): Promise<LabAppointment | null> {
+    return (await this.getAll()).find((a) => a.id === id) ?? null;
+  },
   async cancel(id: string): Promise<void> {
     const all = await this.getAll();
     await AsyncStorage.setItem(KEY, JSON.stringify(all.filter((a) => a.id !== id)));
+  },
+  // Cambiar día, hora o centro de una cita (mismo id: sigue siendo la misma cita)
+  async reschedule(id: string, change: Pick<LabAppointment, 'centerId' | 'date' | 'time'>): Promise<LabAppointment | null> {
+    const all = await this.getAll();
+    const i = all.findIndex((a) => a.id === id);
+    if (i < 0) return null;
+    all[i] = { ...all[i], ...change };
+    await AsyncStorage.setItem(KEY, JSON.stringify(all));
+    return all[i];
   },
 };
 

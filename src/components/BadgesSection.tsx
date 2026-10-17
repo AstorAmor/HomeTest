@@ -3,13 +3,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
-import { Achievement, formatAchievementValue, TIER_COLORS } from '@/data/achievements';
+import { Achievement, TIER_COLORS } from '@/data/achievements';
 import { t } from '@/i18n';
+import { BadgeModal } from './badges/BadgeModal';
 
 const SIZE = 64;
 
-// "Your badges": una medalla por logro, con su nivel (bronce → platino) y el progreso
-// hacia el siguiente. Tocar una medalla muestra el detalle debajo.
+// "Your badges": una medalla por logro, con su nivel (bronce → diamante) y el progreso
+// hacia el siguiente. Tocar una medalla la abre a pantalla completa (confeti y compartir).
 export const BadgesSection = ({ achievements }: { achievements: Achievement[] }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = achievements.find((a) => a.id === selectedId) ?? null;
@@ -18,7 +19,7 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
   return (
     <View>
       <Text style={styles.summary}>
-        {t('{n} of {total} unlocked · tap a badge to see how to level it up', { n: earned, total: achievements.length })}
+        {t('{n} of {total} unlocked · tap a badge to see it full screen and share it', { n: earned, total: achievements.length })}
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {achievements.map((a) => {
@@ -29,7 +30,7 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
             <TouchableOpacity
               key={a.id}
               style={styles.badge}
-              onPress={() => setSelectedId(selectedId === a.id ? null : a.id)}
+              onPress={() => setSelectedId(a.id)}
               activeOpacity={0.8}
             >
               <View style={{ width: SIZE, height: SIZE }}>
@@ -67,21 +68,7 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
         })}
       </ScrollView>
 
-      {selected && (
-        <View style={styles.detail}>
-          <Text style={styles.detailTitle}>
-            {selected.title}
-            {selected.tier ? ` · ${t(selected.tier)}` : ''}
-          </Text>
-          <Text style={styles.detailText}>{selected.description}</Text>
-          <Text style={styles.detailText}>
-            {t('Now:')} <Text style={styles.detailStrong}>{formatAchievementValue(selected, selected.value)}</Text>
-            {selected.nextThreshold !== null
-              ? `  ·  ${t('Next level at {value}', { value: formatAchievementValue(selected, selected.nextThreshold) })}`
-              : `  ·  ${t('Top level reached')}`}
-          </Text>
-        </View>
-      )}
+      <BadgeModal achievement={selected} onClose={() => setSelectedId(null)} />
     </View>
   );
 };
@@ -102,17 +89,4 @@ const styles = StyleSheet.create({
   },
   badgeTitle: { color: Colors.textPrimary, fontSize: 11, fontWeight: '700', marginTop: 6, textAlign: 'center' },
   badgeTier: { fontSize: 10, fontWeight: '700', marginTop: 1 },
-  detail: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 12,
-    marginHorizontal: 20,
-    marginTop: 12,
-    gap: 4,
-  },
-  detailTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  detailText: { color: Colors.textSecondary, fontSize: 13 },
-  detailStrong: { color: Colors.textPrimary, fontWeight: '700' },
 });

@@ -2,7 +2,7 @@
 // No pide la hora (no aporta casi nada) y evita lo desagradable: colores en una escala suave y
 // formas abstractas para la consistencia (escala de Bristol simplificada), sin emojis.
 
-export type StoolColor = 'brown' | 'light_brown' | 'yellow' | 'green' | 'black' | 'red' | 'pale';
+export type StoolColor = 'brown' | 'light_brown' | 'dark_brown' | 'yellow' | 'green' | 'black' | 'red' | 'pale';
 
 // Escala de Bristol: 1 bolitas duras … 4 suave y con forma … 7 líquida
 export type BristolType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -19,12 +19,15 @@ export interface BowelEntry {
   explainedBy?: string;
 }
 
+// Los marrones van de claro a muy oscuro con saltos de luminosidad parecidos (claro → marrón →
+// marrón oscuro → casi negro); el marrón oscuro es normal, el muy oscuro/negro pregunta antes.
 export const STOOL_COLORS: { id: StoolColor; label: string; swatch: string; flag?: 'ask' | 'doctor' }[] = [
-  { id: 'brown', label: 'Brown', swatch: '#7A5134' },
   { id: 'light_brown', label: 'Light brown', swatch: '#A9784F' },
+  { id: 'brown', label: 'Brown', swatch: '#835A3A' },
+  { id: 'dark_brown', label: 'Dark brown', swatch: '#5C3D27' },
+  { id: 'black', label: 'Very dark / black', swatch: '#272220', flag: 'ask' },
   { id: 'yellow', label: 'Yellowish', swatch: '#C9A43E' },
   { id: 'green', label: 'Greenish', swatch: '#6E7F3A' },
-  { id: 'black', label: 'Very dark / black', swatch: '#2B2622', flag: 'ask' },
   { id: 'red', label: 'Reddish', swatch: '#9E3B32', flag: 'ask' },
   { id: 'pale', label: 'Pale / clay', swatch: '#CFC6B3', flag: 'doctor' },
 ];

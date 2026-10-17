@@ -16,7 +16,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { LabReportTable } from '@/components/LabReportTable';
 import { Colors } from '@/constants/colors';
-import { postAi } from '@/utils/apiBaseUrl';
+import { isNetworkError, postAi } from '@/utils/apiBaseUrl';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
 import { prepareImage, chunk } from '@/utils/imageUpload';
@@ -111,7 +111,13 @@ export const UploadTestScreen = () => {
 
         if (!response.ok) {
           setStatus('error');
-          setErrorText(JSON.stringify(data, null, 2));
+          setErrorText(
+            data?.code === 'needs_subscription'
+              ? t('Scanning your reports comes with a subscription or an invitation.')
+              : typeof data?.error === 'string'
+                ? data.error
+                : JSON.stringify(data, null, 2)
+          );
           setProgress(null);
           return;
         }
@@ -130,7 +136,9 @@ export const UploadTestScreen = () => {
       setErrorText(
         isAbort
           ? `A batch took longer than ${REQUEST_TIMEOUT_MS / 1000}s and was canceled. Try fewer pages per batch or lighter photos.`
-          : err instanceof Error
+          : isNetworkError(err)
+            ? t('Could not connect to Kuova. Check that you have internet (Wi-Fi or mobile data) and tap Analyse again: your photos are still here.')
+            : err instanceof Error
             ? err.message
             : t('Unknown error')
       );
@@ -311,7 +319,7 @@ export const UploadTestScreen = () => {
             >
               <Ionicons name="checkmark-circle" size={18} color={Colors.background} />
               <Text style={styles.analyzeButtonText}>
-                Analyze {pages.length} page{pages.length > 1 ? 's' : ''}
+                {pages.length > 1 ? t('Analyse {n} pages', { n: pages.length }) : t('Analyse 1 page')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -324,7 +332,7 @@ export const UploadTestScreen = () => {
               {status === 'reading'
                 ? t('Reading files…')
                 : progress
-                  ? `Extracting batch ${progress.done + 1} of ${progress.total}…`
+                  ? t('Extracting batch {n} of {total}…', { n: progress.done + 1, total: progress.total })
                   : t('Extracting data with AI…')}
             </Text>
           </View>

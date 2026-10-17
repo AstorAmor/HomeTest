@@ -162,7 +162,7 @@ const NORMAL: Record<string, Record<string, unknown>> = {
   check_in: { energy: [3, 5] as Range, mood: ['happy', 'calm', 'neutral'] },
   sleep: { minutes: [410, 490] as Range },
   urine: { color: ['pale', 'yellow'], count: [5, 7] as Range },
-  bowel: { count: 1, color: ['brown', 'light_brown'], consistency: [3, 4] as Range },
+  bowel: { count: 1, color: ['brown', 'light_brown', 'dark_brown'], consistency: [3, 4] as Range },
 };
 
 const SEX_EN = { female: 'Woman', male: 'Man', other: 'Person' };

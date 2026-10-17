@@ -38,6 +38,13 @@ const RESONANT: BreathPhase[] = [
   { label: 'Breathe out', seconds: 6, to: 'out' },
 ];
 
+// Kegel (suelo pélvico): 8 contracciones lentas de 5 s con 5 s de descanso y luego rápidas.
+// Pauta de inicio del NHS / NICE NG210; pendiente de revisión clínica como el resto.
+const KEGEL_SLOW: GuidedStep[] = Array.from({ length: 8 }, () => [
+  { text: 'Squeeze and lift… hold', seconds: 5 },
+  { text: 'Let go and relax completely', seconds: 5 },
+]).flat();
+
 export const EXERCISES: Record<string, Exercise> = {
   box_breathing: {
     id: 'box_breathing',
@@ -151,6 +158,22 @@ export const EXERCISES: Record<string, Exercise> = {
       { text: 'Head out at an easy pace. Leave your phone in your pocket.', seconds: 180 },
       { text: 'Pick up the pace a little. Swing your arms.', seconds: 240 },
       { text: 'Slow down again and breathe deeply on the way back.', seconds: 180 },
+    ],
+    countsAsCalm: false,
+  },
+  kegel: {
+    id: 'kegel',
+    title: 'Pelvic floor (Kegel) exercises',
+    intro: 'Strengthen the muscles that support your bladder, bowel and, in women, the womb. Useful for everyone, especially after pregnancy, with age or if you leak a little when you cough or jump.',
+    minutes: 3,
+    color: '#F7B6D2',
+    type: 'guided',
+    steps: [
+      { text: 'Sit or lie down comfortably. Squeeze as if stopping a wee and holding in wind at the same time: those are your pelvic floor muscles.', seconds: 30 },
+      { text: 'Keep breathing normally. Your belly, buttocks and thighs stay relaxed.', seconds: 15 },
+      ...KEGEL_SLOW,
+      { text: 'Now quick squeezes: squeeze and let go, about one per second.', seconds: 20 },
+      { text: 'Relax. Three times a day is ideal; most people notice a change after 3 to 6 months.', seconds: 15 },
     ],
     countsAsCalm: false,
   },

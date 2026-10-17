@@ -33,8 +33,8 @@ export const EvidenceScreen = () => {
       <View key={t.id} style={styles.card}>
         <TouchableOpacity style={styles.header} onPress={() => toggle(t.id)} activeOpacity={0.85}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{t.title}</Text>
-            <Text style={styles.summary}>{t.summary}</Text>
+            <Text style={styles.title}>{tr(t.title)}</Text>
+            <Text style={styles.summary}>{tr(t.summary)}</Text>
           </View>
           <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
         </TouchableOpacity>
@@ -42,7 +42,7 @@ export const EvidenceScreen = () => {
           <View style={styles.body}>
             {t.body.map((p) => (
               <Text key={p} style={styles.paragraph}>
-                {p}
+                {tr(p)}
               </Text>
             ))}
             {t.status === 'pending' && (
