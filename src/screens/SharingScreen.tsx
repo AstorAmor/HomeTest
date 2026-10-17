@@ -45,7 +45,8 @@ export const SharingScreen = () => {
     }
   };
 
-  const active = (shares ?? []).filter(isShareActive);
+  const active = (shares ?? []).filter((s) => isShareActive(s) && s.grantee === 'professional');
+  const supportActive = (shares ?? []).filter((s) => isShareActive(s) && s.grantee === 'support');
   const history = (shares ?? []).filter((s) => !isShareActive(s));
 
   return (
@@ -103,6 +104,59 @@ export const SharingScreen = () => {
                       <Text style={styles.confirmText}>{t('Stop sharing with {name}?', { name: s.professionalName })}</Text>
                       <TouchableOpacity style={styles.revokeConfirm} onPress={() => revoke(s.id)}>
                         <Text style={styles.revokeConfirmText}>{t('Stop sharing')}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => setConfirmingId(null)}>
+                        <Text style={styles.cancelText}>{t('Cancel')}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity style={styles.revoke} onPress={() => setConfirmingId(s.id)}>
+                      <Text style={styles.revokeText}>{t('Revoke access')}</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))
+            )}
+
+            <Text style={styles.sectionTitle}>{t('KUOVA Support')}</Text>
+            {supportActive.length === 0 ? (
+              <View style={styles.card}>
+                <Text style={styles.supportText}>
+                  {t('If you write to us about a problem, you can let our support team see only what they need, for a limited time. They can only read it, and every time they look it is recorded with the reason.')}
+                </Text>
+                <TouchableOpacity style={styles.supportCta} onPress={() => router.push('/share-new?to=support')}>
+                  <Ionicons name="help-buoy-outline" size={18} color={Colors.accent} />
+                  <Text style={styles.supportCtaText}>{t('Give support access')}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              supportActive.map((s) => (
+                <View key={s.id} style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.avatar}>
+                      <Ionicons name="help-buoy-outline" size={20} color={Colors.accent} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.name}>{t('KUOVA Support')}</Text>
+                      <Text style={styles.meta}>
+                        {t('since {date}', { date: formatDate(s.createdAt) })}
+                        {' · '}{t('until {date}', { date: formatDate(s.expiresAt!) })}
+                      </Text>
+                    </View>
+                  </View>
+                  {s.note ? <Text style={styles.note}>“{s.note}”</Text> : null}
+                  <View style={styles.chips}>
+                    {s.scopes.map((sc) => (
+                      <View key={sc} style={styles.chip}>
+                        <Text style={styles.chipText}>{scopeLabel(sc)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  {confirmingId === s.id ? (
+                    <View style={styles.confirmRow}>
+                      <Text style={styles.confirmText}>{t('Remove support access?')}</Text>
+                      <TouchableOpacity style={styles.revokeConfirm} onPress={() => revoke(s.id)}>
+                        <Text style={styles.revokeConfirmText}>{t('Remove access')}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => setConfirmingId(null)}>
                         <Text style={styles.cancelText}>{t('Cancel')}</Text>
@@ -183,6 +237,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardMuted: { opacity: 0.7 },
+  supportText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  supportCta: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 12 },
+  supportCtaText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  note: { color: Colors.textSecondary, fontSize: 13, fontStyle: 'italic', marginTop: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: {
     width: 40,

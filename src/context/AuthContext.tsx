@@ -13,6 +13,7 @@ import {
   ProfessionalRole,
   registerAsProfessional,
 } from '@/data/sharing';
+import { amISupportAgent } from '@/data/support';
 
 export interface ProfessionalSignup {
   role: ProfessionalRole;
@@ -40,6 +41,8 @@ interface AuthContextType {
   refreshProfessional: () => Promise<void>;
   // Administrador de HomeTest (verifica profesionales y aprueba tarifas)
   isAdmin: boolean;
+  // Cuenta de Soporte KUOVA (lee datos de quien le da permiso, con motivo y registro)
+  isSupportAgent: boolean;
   // Cuenta real: sin datos de ejemplo ni selector "developer" (src/data/dataMode.ts)
   realAccount: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -98,6 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   const [professional, setProfessional] = useState<ProfessionalAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSupportAgent, setIsSupportAgent] = useState(false);
   const [realAccount, setRealAccount] = useState(false);
   // Durante el alta de un profesional, la ficha aún no existe: no consultarla en paralelo
   const creatingProfessional = useRef(false);
@@ -118,10 +122,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!session) {
         setProfessional(null);
         setIsAdmin(false);
+        setIsSupportAgent(false);
         resetDataMode();
       } else {
         if (!creatingProfessional.current) await refreshProfessional();
         setIsAdmin(await amIAdmin());
+        setIsSupportAgent(await amISupportAgent());
         // Cuenta real (sin datos de ejemplo) o de prueba: antes de pintar ninguna pantalla
         setRealAccount(await loadDataMode());
       }
@@ -214,6 +220,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         professional,
         refreshProfessional,
         isAdmin,
+        isSupportAgent,
         realAccount,
         login,
         signup,

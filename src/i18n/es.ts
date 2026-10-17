@@ -1157,6 +1157,42 @@ export const es: Record<string, string> = {
   History: 'Historial',
   'revoked {date}': 'retirado el {date}',
   'expired {date}': 'caducado el {date}',
+
+  // ── Soporte KUOVA (permiso del usuario + registro de accesos) ──
+  'KUOVA Support': 'Soporte KUOVA',
+  'If you write to us about a problem, you can let our support team see only what they need, for a limited time. They can only read it, and every time they look it is recorded with the reason.':
+    'Si nos escribes por un problema, puedes dejar que nuestro equipo de soporte vea solo lo necesario durante un tiempo limitado. Solo puede leerlo, y cada vez que lo mira queda registrado con el motivo.',
+  'Give support access': 'Dar acceso a soporte',
+  'Remove support access?': '¿Quitar el acceso a soporte?',
+  'Remove access': 'Quitar el acceso',
+  'Support access': 'Acceso de soporte',
+  'Our team, only to solve your issue. They will see your name and email so they know who you are.':
+    'Nuestro equipo, solo para resolver tu incidencia. Verá tu nombre y tu email para saber quién eres.',
+  'What is the problem? (optional)': '¿Qué problema tienes? (opcional)',
+  'Choose what support can see.': 'Elige qué puede ver soporte.',
+  'KUOVA Support will be able to read {what} until {date}. Every access is recorded. You can revoke it anytime.':
+    'Soporte KUOVA podrá leer {what} hasta el {date}. Cada acceso queda registrado. Puedes retirarlo cuando quieras.',
+  '{n} category': '{n} categoría',
+  '{n} categories': '{n} categorías',
+  '24 hours': '24 horas',
+  'Users who gave support permission. Every access is recorded with its reason':
+    'Usuarios que han dado permiso a soporte. Cada acceso queda registrado con su motivo',
+  'Could not load support permissions': 'No se han podido cargar los permisos de soporte',
+  'Could not read the data': 'No se han podido leer los datos',
+  'Could not open the file': 'No se ha podido abrir el archivo',
+  'Only users who gave permission appear here, with the categories and until the date they chose. Every read and every file you open is recorded with your reason. Do not open health tables in the Supabase dashboard.':
+    'Aquí solo aparecen los usuarios que han dado permiso, con las categorías y hasta la fecha que eligieron. Cada lectura y cada archivo que abras quedan registrados con tu motivo. No abras tablas de salud en el panel de Supabase.',
+  'This screen is only for KUOVA support accounts.': 'Esta pantalla es solo para cuentas de Soporte KUOVA.',
+  'Nobody has given support access right now.': 'Ahora mismo nadie ha dado acceso a soporte.',
+  'All users': 'Todos los usuarios',
+  Reason: 'Motivo',
+  'Ticket or issue, e.g. "Email 12/10: PDF not read correctly"': 'Incidencia, p. ej. «Email 12/10: el PDF no se leyó bien»',
+  'At least {n} characters. It is saved with every access.': 'Mínimo {n} caracteres. Se guarda con cada acceso.',
+  'What to look at': 'Qué mirar',
+  'No records.': 'Sin registros.',
+  Files: 'Archivos',
+  Open: 'Abrir',
+  'Latest 60 records per table. This read has been recorded.': 'Últimos 60 registros por tabla. Esta lectura ha quedado registrada.',
   'Delivery {time}': 'Entrega {time}',
   "What we'll measure": 'Qué vamos a medir',
   '{n} markers': '{n} marcadores',

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,14 +7,16 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import {
   createShare,
+  createSupportGrant,
   listVerifiedProfessionals,
   ProfessionalAccount,
   roleLabel,
   SHARE_SCOPES,
   ShareScope,
+  SUPPORT_EXPIRY_OPTIONS,
 } from '@/data/sharing';
 import { profileRepository } from '@/data/profileRepository';
-import { t } from '@/i18n';
+import { dateLocale, t, tn } from '@/i18n';
 
 const EXPIRY_OPTIONS: { id: string; label: string; days: number | null }[] = [
   { id: '30', label: '30 days', days: 30 },
@@ -25,14 +27,19 @@ const EXPIRY_OPTIONS: { id: string; label: string; days: number | null }[] = [
 
 // Paciente: elegir profesional (verificado) → qué categorías → hasta cuándo.
 // `?scope=plan` (desde "Share or print" del plan) llega con esa categoría ya marcada.
+// `?to=support`: acceso temporal a Soporte KUOVA (sin elegir a nadie, nada marcado de entrada,
+// caduca como mucho a los 30 días y el usuario puede contar el problema).
 export const ShareCreateScreen = () => {
   const router = useRouter();
-  const params = useLocalSearchParams<{ scope?: string }>();
-  const preselected = SHARE_SCOPES.find((s) => s.id === params.scope)?.id ?? 'lab_reports';
+  const params = useLocalSearchParams<{ scope?: string; to?: string }>();
+  const forSupport = params.to === 'support';
+  const preselected = SHARE_SCOPES.find((s) => s.id === params.scope)?.id ?? (forSupport ? null : 'lab_reports');
   const [professionals, setProfessionals] = useState<ProfessionalAccount[] | null>(null);
   const [selectedPro, setSelectedPro] = useState<string | null>(null);
-  const [scopes, setScopes] = useState<Set<ShareScope>>(new Set([preselected]));
-  const [expiry, setExpiry] = useState('90');
+  const [scopes, setScopes] = useState<Set<ShareScope>>(new Set(preselected ? [preselected] : []));
+  const expiryOptions = forSupport ? SUPPORT_EXPIRY_OPTIONS : EXPIRY_OPTIONS;
+  const [expiry, setExpiry] = useState(forSupport ? '7' : '90');
+  const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,10 +51,11 @@ export const ShareCreateScreen = () => {
   const scopeOptions = SHARE_SCOPES.filter((s) => s.id !== 'cycle' || isFemale);
 
   useEffect(() => {
+    if (forSupport) return;
     listVerifiedProfessionals()
       .then(setProfessionals)
       .catch((err) => setError(err instanceof Error ? err.message : 'Could not load professionals'));
-  }, []);
+  }, [forSupport]);
 
   const toggleScope = (id: ShareScope) =>
     setScopes((prev) => {
@@ -59,15 +67,20 @@ export const ShareCreateScreen = () => {
 
   const allSelected = scopes.size === scopeOptions.length;
   const pro = professionals?.find((p) => p.id === selectedPro);
+  const days = expiryOptions.find((o) => o.id === expiry)?.days ?? null;
+  const canSubmit = (forSupport || !!selectedPro) && scopes.size > 0 && !saving;
 
   const submit = async () => {
-    if (!selectedPro || scopes.size === 0) return;
+    if (!canSubmit) return;
     setSaving(true);
     setError('');
     try {
-      const days = EXPIRY_OPTIONS.find((o) => o.id === expiry)?.days ?? null;
-      const expiresAt = days ? new Date(Date.now() + days * 24 * 3600 * 1000).toISOString() : null;
-      await createShare(selectedPro, [...scopes], expiresAt);
+      if (forSupport) {
+        await createSupportGrant([...scopes], days ?? 7, note);
+      } else {
+        const expiresAt = days ? new Date(Date.now() + days * 24 * 3600 * 1000).toISOString() : null;
+        await createShare(selectedPro!, [...scopes], expiresAt);
+      }
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not share');
@@ -78,10 +91,33 @@ export const ShareCreateScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Share your data')} showBack backFallback="/sharing" />
+        <ScreenHeader title={forSupport ? t('Support access') : t('Share your data')} showBack backFallback="/sharing" />
 
         <Text style={styles.step}>{t('1 · Who')}</Text>
-        {professionals === null && !error ? (
+        {forSupport ? (
+          <>
+            <View style={[styles.option, styles.optionSelected]}>
+              <View style={styles.proIcon}>
+                <Ionicons name="help-buoy-outline" size={20} color={Colors.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optionTitle}>{t('KUOVA Support')}</Text>
+                <Text style={styles.optionSubtitle}>
+                  {t('Our team, only to solve your issue. They will see your name and email so they know who you are.')}
+                </Text>
+              </View>
+            </View>
+            <TextInput
+              style={styles.noteInput}
+              value={note}
+              onChangeText={setNote}
+              placeholder={t('What is the problem? (optional)')}
+              placeholderTextColor={Colors.textMuted}
+              multiline
+              maxLength={1000}
+            />
+          </>
+        ) : professionals === null && !error ? (
           <ActivityIndicator color={Colors.accent} />
         ) : professionals && professionals.length === 0 ? (
           <Text style={styles.muted}>{t('There are no verified professionals yet.')}</Text>
@@ -116,11 +152,14 @@ export const ShareCreateScreen = () => {
 
         <View style={styles.stepRow}>
           <Text style={styles.step}>{t('2 · What')}</Text>
-          <TouchableOpacity
-            onPress={() => setScopes(allSelected ? new Set() : new Set(scopeOptions.map((s) => s.id)))}
-          >
-            <Text style={styles.link}>{allSelected ? t('Clear all') : t('Select all')}</Text>
-          </TouchableOpacity>
+          {/* A soporte, solo lo que tenga que ver con el problema: sin "marcar todo" */}
+          {!forSupport && (
+            <TouchableOpacity
+              onPress={() => setScopes(allSelected ? new Set() : new Set(scopeOptions.map((s) => s.id)))}
+            >
+              <Text style={styles.link}>{allSelected ? t('Clear all') : t('Select all')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
         {scopeOptions.map((s) => {
           const selected = scopes.has(s.id);
@@ -146,7 +185,7 @@ export const ShareCreateScreen = () => {
 
         <Text style={styles.step}>{t('3 · For how long')}</Text>
         <View style={styles.expiryRow}>
-          {EXPIRY_OPTIONS.map((o) => (
+          {expiryOptions.map((o) => (
             <TouchableOpacity
               key={o.id}
               style={[styles.expiryChip, expiry === o.id && styles.expiryChipSelected]}
@@ -162,16 +201,23 @@ export const ShareCreateScreen = () => {
 
       <View style={styles.footer}>
         <Text style={styles.summary}>
-          {pro
-            ? `${pro.displayName} will be able to read ${scopes.size} categor${scopes.size === 1 ? 'y' : 'ies'}. You can revoke it anytime.`
-            : t('Choose a professional to continue.')}
+          {forSupport
+            ? scopes.size === 0
+              ? t('Choose what support can see.')
+              : t('KUOVA Support will be able to read {what} until {date}. Every access is recorded. You can revoke it anytime.', {
+                  what: tn(scopes.size, '{n} category', '{n} categories'),
+                  date: new Date(Date.now() + (days ?? 7) * 24 * 3600 * 1000).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }),
+                })
+            : pro
+              ? `${pro.displayName} will be able to read ${scopes.size} categor${scopes.size === 1 ? 'y' : 'ies'}. You can revoke it anytime.`
+              : t('Choose a professional to continue.')}
         </Text>
-        <TouchableOpacity
-          style={[styles.cta, (!selectedPro || scopes.size === 0 || saving) && styles.ctaDisabled]}
-          disabled={!selectedPro || scopes.size === 0 || saving}
-          onPress={submit}
-        >
-          {saving ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{t('Share')}</Text>}
+        <TouchableOpacity style={[styles.cta, !canSubmit && styles.ctaDisabled]} disabled={!canSubmit} onPress={submit}>
+          {saving ? (
+            <ActivityIndicator color={Colors.background} />
+          ) : (
+            <Text style={styles.ctaText}>{forSupport ? t('Give support access') : t('Share')}</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -208,6 +254,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  noteInput: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 14,
+    padding: 13,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    minHeight: 70,
+    color: Colors.textPrimary,
+    fontSize: 14,
+    textAlignVertical: 'top',
+  },
   optionSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   expiryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   expiryChip: {

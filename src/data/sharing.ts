@@ -116,12 +116,17 @@ export interface ProfessionalProfileInput {
 const PUBLIC_COLUMNS =
   'id, display_name, role, specialty, license_number, license_college, bio, city, languages, modalities, years_experience, photo_path, hourly_rate_eur, verified_at, updated_at, first_name, last_name, work_phone, work_email, chat_enabled, video_enabled, requests_enabled';
 
+// 'support' = permiso temporal a Soporte KUOVA (sin profesional; ver ..._support_access.sql)
+export type ShareGrantee = 'professional' | 'support';
+
 export interface DataShare {
   id: string;
-  professionalId: string;
+  grantee: ShareGrantee;
+  professionalId: string | null;
   professionalName: string;
   professionalRole: string;
   scopes: ShareScope[];
+  note: string | null;
   expiresAt: string | null;
   revokedAt: string | null;
   createdAt: string;
@@ -302,10 +307,13 @@ export async function listMyShares(): Promise<DataShare[]> {
   fail(error);
   return (data ?? []).map((r: any) => ({
     id: r.id,
+    grantee: r.grantee === 'support' ? 'support' : 'professional',
     professionalId: r.professional_id,
-    professionalName: r.professionals?.display_name ?? 'Professional',
+    professionalName:
+      r.grantee === 'support' ? t('KUOVA Support') : r.professionals?.display_name ?? 'Professional',
     professionalRole: r.professionals?.role ?? '',
     scopes: r.scopes,
+    note: r.note ?? null,
     expiresAt: r.expires_at,
     revokedAt: r.revoked_at,
     createdAt: r.created_at,
@@ -320,6 +328,24 @@ export async function createShare(professionalId: string, scopes: ShareScope[], 
     professional_id: professionalId,
     scopes,
     expires_at: expiresAt,
+  });
+  fail(error);
+}
+
+// Duraciones del acceso de soporte: siempre caduca (la base de datos no admite más de 30 días).
+export const SUPPORT_EXPIRY_OPTIONS: { id: string; label: string; days: number }[] = [
+  { id: '1', label: '24 hours', days: 1 },
+  { id: '7', label: '7 days', days: 7 },
+  { id: '30', label: '30 days', days: 30 },
+];
+
+// Permiso temporal a Soporte KUOVA: solo lo lee una cuenta de soporte con motivo, y cada lectura queda registrada.
+export async function createSupportGrant(scopes: ShareScope[], days: number, note: string | null) {
+  const { error } = await supabase!.from('data_shares').insert({
+    grantee: 'support',
+    scopes,
+    expires_at: new Date(Date.now() + days * 24 * 3600 * 1000).toISOString(),
+    note: note?.trim() || null,
   });
   fail(error);
 }
