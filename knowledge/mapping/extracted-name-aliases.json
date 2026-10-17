@@ -22,6 +22,27 @@
     "sodio": "SODIUM",
     "potasio": "POTASSIUM",
     "cloro": "CHLORIDE",
-    "hematies": "RBC"
+    "hematies": "RBC",
+    "glucosa_basal": "GLUCOSE",
+    "glucosa_en_ayunas": "GLUCOSE",
+    "glucosa_en_suero": "GLUCOSE",
+    "glucosa_suero": "GLUCOSE",
+    "glucemia": "GLUCOSE",
+    "glucemia_basal": "GLUCOSE",
+    "colesterol_total_suero": "TOTAL_CHOLESTEROL",
+    "colesterol_total_en_suero": "TOTAL_CHOLESTEROL",
+    "hdl_colesterol": "HDL_C",
+    "hdl_c": "HDL_C",
+    "colesterol_hdl_c": "HDL_C",
+    "colesterol_unido_a_hdl": "HDL_C",
+    "ldl_colesterol": "LDL_C",
+    "ldl_c": "LDL_C",
+    "colesterol_ldl_c": "LDL_C",
+    "colesterol_ldl_calculado": "LDL_C",
+    "ldl_colesterol_calculado": "LDL_C",
+    "colesterol_unido_a_ldl": "LDL_C",
+    "cortisol_basal": "CORTISOL",
+    "cortisol_en_suero": "CORTISOL",
+    "cortisol_matinal": "CORTISOL"
   }
 }

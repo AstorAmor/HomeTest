@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { ExtractedParametro } from '@/types/labReport';
 import { Colors } from '@/constants/colors';
 import { getAlternateUnit, convertValue } from '@/utils/unitConversion';
-import { getRangeStatus, RANGE_STATUS_LABEL } from '@/utils/rangeStatus';
+import { getRangeStatus, rangeStatusLabel, rangeText } from '@/utils/rangeStatus';
+import { t } from '@/i18n';
 import { getParameterInfo } from '@/utils/parameterInfo';
 import { UnitLabel } from './UnitLabel';
 
@@ -49,10 +50,8 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
   const unidadMostrada = useAlternate && alternate ? alternate.unit : parametro.unidad;
   const unidadAlternativa = useAlternate ? parametro.unidad : alternate?.unit;
   const valorMostrado = convertValue(parametro.valor, factor);
-  const rangoMinMostrado =
-    parametro.rango_min !== null ? convertValue(parametro.rango_min, factor) : null;
-  const rangoMaxMostrado =
-    parametro.rango_max !== null ? convertValue(parametro.rango_max, factor) : null;
+  // "70 – 110", "< 200" (solo límite superior) o "> 40" (solo inferior), en la unidad que se ve
+  const rangoMostrado = rangeText(parametro.rango_min, parametro.rango_max, (n) => formatNumber(convertValue(n, factor)));
 
   const status = getRangeStatus(parametro.valor, parametro.rango_min, parametro.rango_max);
   const color = statusColor(status);
@@ -90,7 +89,7 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
   if (isEditing) {
     return (
       <View style={styles.card}>
-        <Text style={styles.editLabel}>Name</Text>
+        <Text style={styles.editLabel}>{t('Name')}</Text>
         <TextInput
           style={styles.input}
           value={draft.nombre}
@@ -100,7 +99,7 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
 
         <View style={styles.editRow}>
           <View style={styles.editCol}>
-            <Text style={styles.editLabel}>Value</Text>
+            <Text style={styles.editLabel}>{t('Value')}</Text>
             <TextInput
               style={styles.input}
               value={draft.valor}
@@ -110,7 +109,7 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
             />
           </View>
           <View style={styles.editCol}>
-            <Text style={styles.editLabel}>Unit</Text>
+            <Text style={styles.editLabel}>{t('Unit')}</Text>
             <TextInput
               style={styles.input}
               value={draft.unidad}
@@ -122,7 +121,7 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
 
         <View style={styles.editRow}>
           <View style={styles.editCol}>
-            <Text style={styles.editLabel}>Min range</Text>
+            <Text style={styles.editLabel}>{t('Range minimum')}</Text>
             <TextInput
               style={styles.input}
               value={draft.rango_min}
@@ -132,7 +131,7 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
             />
           </View>
           <View style={styles.editCol}>
-            <Text style={styles.editLabel}>Max range</Text>
+            <Text style={styles.editLabel}>{t('Range maximum')}</Text>
             <TextInput
               style={styles.input}
               value={draft.rango_max}
@@ -145,11 +144,11 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
 
         <View style={styles.editActions}>
           <TouchableOpacity style={styles.editCancelButton} onPress={cancelEditing}>
-            <Text style={styles.editCancelText}>Cancel</Text>
+            <Text style={styles.editCancelText}>{t('Cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.editSaveButton} onPress={saveEditing}>
             <Ionicons name="checkmark" size={16} color={Colors.background} />
-            <Text style={styles.editSaveText}>Save</Text>
+            <Text style={styles.editSaveText}>{t('Save')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -161,7 +160,7 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
       <View style={styles.topRow}>
         <Text style={styles.name}>{parametro.nombre}</Text>
         <View style={[styles.badge, { backgroundColor: `${color}22` }]}>
-          <Text style={[styles.badgeText, { color }]}>{RANGE_STATUS_LABEL[status]}</Text>
+          <Text style={[styles.badgeText, { color }]}>{rangeStatusLabel(status)}</Text>
         </View>
       </View>
 
@@ -183,10 +182,10 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
         </View>
       </View>
 
-      {rangoMinMostrado !== null && rangoMaxMostrado !== null && (
+      {rangoMostrado !== null && (
         <View style={styles.rangeRow}>
           <Text style={styles.range}>
-            Range: {formatNumber(rangoMinMostrado)} – {formatNumber(rangoMaxMostrado)}{' '}
+            {t('Range: {range}', { range: rangoMostrado })}{' '}
           </Text>
           <UnitLabel unit={unidadMostrada} style={styles.range} />
         </View>
@@ -195,9 +194,14 @@ export const LabReportRow = ({ parametro, onUpdate }: LabReportRowProps) => {
       {showInfo && <Text style={styles.infoText}>{getParameterInfo(parametro.nombre)}</Text>}
 
       <View style={styles.cornerActions}>
-        <TouchableOpacity style={styles.cornerButton} onPress={startEditing} hitSlop={8}>
-          <Ionicons name="pencil-outline" size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
+        {/* Sin onUpdate (resultados ya guardados) no se edita */}
+        {onUpdate ? (
+          <TouchableOpacity style={styles.cornerButton} onPress={startEditing} hitSlop={8}>
+            <Ionicons name="pencil-outline" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+        ) : (
+          <View />
+        )}
 
         <TouchableOpacity
           style={styles.cornerButton}

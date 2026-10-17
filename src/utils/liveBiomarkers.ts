@@ -4,6 +4,8 @@ import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
 import { showSamples } from '@/data/dataMode';
+import { labUploadRepository } from '@/data/labUploads';
+import { labValuesFrom } from '@/data/labUploadValues';
 
 function sortedAsc<T extends { fecha: string }>(entries: T[]): T[] {
   return [...entries].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
@@ -18,12 +20,17 @@ const unmeasured = (mock: Biomarker): Biomarker => ({ ...mock, valor: '—', sta
 export const initialBiomarkers = (): Biomarker[] => (showSamples() ? mockBiomarkers : mockBiomarkers.map(unmeasured));
 
 export async function getLiveBiomarkers(): Promise<Biomarker[]> {
-  const [glucose, bloodPressure, cholesterol, cortisol] = await Promise.all([
+  const [glucoseLogs, bloodPressure, cholesterolLogs, cortisolLogs, uploads] = await Promise.all([
     getGlucoseEntries(),
     getBloodPressureEntries(),
     cholesterolRepository.getAll(),
     cortisolRepository.getAll(),
+    labUploadRepository.getAll().catch(() => []),
   ]);
+  // Lo apuntado a mano más lo que traen las analíticas subidas
+  const glucose = [...glucoseLogs, ...labValuesFrom(uploads, 'glucose')];
+  const cholesterol = [...cholesterolLogs, ...labValuesFrom(uploads, 'total_cholesterol')];
+  const cortisol = [...cortisolLogs, ...labValuesFrom(uploads, 'cortisol_am')];
 
   return mockBiomarkers.map((mock) => {
     if (mock.id === 'sugar' && glucose.length > 0) {

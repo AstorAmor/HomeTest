@@ -14,9 +14,12 @@ describe('computeFlag', () => {
     expect(computeFlag(50, 70, 100)).toBe('por_debajo');
   });
 
-  it('marca sin_rango cuando falta min o max', () => {
-    expect(computeFlag(90, null, 100)).toBe('sin_rango');
-    expect(computeFlag(90, 70, null)).toBe('sin_rango');
+  it('con un solo límite ("< 100", "> 70") decide con ese; sin ninguno, sin_rango', () => {
+    expect(computeFlag(90, null, 100)).toBe('en_rango');
+    expect(computeFlag(120, null, 100)).toBe('por_encima');
+    expect(computeFlag(90, 70, null)).toBe('en_rango');
+    expect(computeFlag(60, 70, null)).toBe('por_debajo');
+    expect(computeFlag(90, null, null)).toBe('sin_rango');
   });
 });
 

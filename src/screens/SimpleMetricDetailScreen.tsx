@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
 import { AddMeasurementButton, MetricHero, RangeId, rangeDays, RangeTabs, StatsRow } from '@/components/MetricDetailParts';
@@ -15,6 +16,7 @@ export interface GenericMetricEntry {
   unidad: string;
   fecha: string;
   extra?: string; // ej. "Desayuno" para glucosa
+  uploadId?: string; // valor de una analítica subida: no se edita aquí, se abre la analítica
 }
 
 const shortDay = (iso: string) => {
@@ -53,6 +55,7 @@ export const SimpleMetricDetailScreen = ({
   describe,
   extra,
 }: SimpleMetricDetailScreenProps) => {
+  const router = useRouter();
   const [entries, setEntries] = useDeepState<GenericMetricEntry[]>([]);
   const loadEntriesRef = useRef(loadEntries);
   const [range, setRange] = useState<RangeId>('1M');
@@ -142,14 +145,16 @@ export const SimpleMetricDetailScreen = ({
                 key={entry.id}
                 style={[styles.historyRow, i > 0 && styles.historyDivider]}
                 disabled={isSample}
-                onPress={() => onEditPress(entry.id)}
+                onPress={() =>
+                  entry.uploadId ? router.push({ pathname: '/progress', params: { upload: entry.uploadId } }) : onEditPress(entry.id)
+                }
               >
                 <Text style={styles.historyDate}>{shortDay(entry.fecha)}</Text>
                 <Text style={styles.historyValue}>
                   {num(entry.valor)} {entry.unidad}
                   {entry.extra ? <Text style={styles.historyExtra}>{`  ·  ${entry.extra}`}</Text> : null}
                 </Text>
-                {!isSample && <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />}
+                {!isSample && <Ionicons name={entry.uploadId ? 'flask-outline' : 'pencil-outline'} size={16} color={Colors.textMuted} />}
               </TouchableOpacity>
             ))}
           </View>

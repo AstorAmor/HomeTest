@@ -4,6 +4,7 @@ import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
 import { markerIdForExtractedName, sameUnit } from '@/data/markerMatching';
 import { LabUpload } from '@/data/labUploads';
 import { markerIn } from '@/data/planHistory';
+import { t } from '@/i18n';
 
 // Compara una analítica subida con el último valor conocido de cada marcador.
 // Reglas (conservadoras a propósito):
@@ -65,7 +66,7 @@ function knownValues(previousUploads: LabUpload[]): Record<string, Known> {
           value: m.value,
           unit: m.unit ?? '',
           date: currentReport.test_date,
-          source: 'your Kuova report',
+          source: t('your Kuova report'),
           low: m.range.low,
           high: m.range.high,
         };
@@ -80,7 +81,7 @@ function knownValues(previousUploads: LabUpload[]): Record<string, Known> {
         const id = markerIdForExtractedName(p.nombre);
         if (!id || typeof p.valor !== 'number') continue;
         if (!known[id] || known[id].date <= date) {
-          known[id] = { value: p.valor, unit: p.unidad, date, source: u.labName ?? 'an uploaded test', low: p.rango_min, high: p.rango_max };
+          known[id] = { value: p.valor, unit: p.unidad, date, source: u.labName ?? t('an uploaded test'), low: p.rango_min, high: p.rango_max };
         }
       }
     }
@@ -111,7 +112,7 @@ export function compareUpload(upload: LabUpload, previousUploads: LabUpload[]): 
       if (typeof p.valor !== 'number' || Number.isNaN(p.valor)) continue;
       const id = markerIdForExtractedName(p.nombre);
       if (!id) {
-        result.notCompared.push({ name: p.nombre, reason: 'Not recognised yet' });
+        result.notCompared.push({ name: p.nombre, reason: t('not recognised yet') });
         continue;
       }
       if (seen.has(id)) continue;
@@ -119,14 +120,16 @@ export function compareUpload(upload: LabUpload, previousUploads: LabUpload[]): 
       const prev = known[id];
       const reportMarker = markerIn(currentReport, id);
       const name = getMarkerDisplayNameEn(id, reportMarker?.display_name ?? p.nombre);
-      const low = p.rango_min ?? prev?.low ?? reportMarker?.range.low ?? null;
-      const high = p.rango_max ?? prev?.high ?? reportMarker?.range.high ?? null;
+      // Si la analítica nueva trae su rango (aunque sea de un solo límite, "< 200"), solo ese
+      const own = p.rango_min !== null || p.rango_max !== null;
+      const low = own ? p.rango_min : prev?.low ?? reportMarker?.range.low ?? null;
+      const high = own ? p.rango_max : prev?.high ?? reportMarker?.range.high ?? null;
       if (!prev) {
         result.firstTime.push({ name, value: p.valor, unit: p.unidad, status: status(p.valor, low, high) });
         continue;
       }
       if (!sameUnit(prev.unit, p.unidad)) {
-        result.notCompared.push({ name, reason: `Different unit (${prev.unit} before, ${p.unidad} now)` });
+        result.notCompared.push({ name, reason: t('different unit ({before} before, {now} now)', { before: prev.unit, now: p.unidad }) });
         continue;
       }
       const beforeStatus = status(prev.value, low, high);

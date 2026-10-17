@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { confirmAsk } from '@/components/dev/confirmAsk';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
@@ -27,7 +28,20 @@ const SOURCE_LABEL: Record<PlanVersion['source'], string> = {
 };
 
 // Versión del plan actualizada (subida de analítica o profesional): acciones con su estado.
-const VersionCard = ({ v, current, open, onToggle }: { v: PlanVersion; current: boolean; open: boolean; onToggle: () => void }) => (
+// Abierta, se puede borrar (también la vigente: entonces pasa a serlo la anterior).
+const VersionCard = ({
+  v,
+  current,
+  open,
+  onToggle,
+  onDelete,
+}: {
+  v: PlanVersion;
+  current: boolean;
+  open: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+}) => (
   <View style={[styles.card, current && styles.cardLatest]}>
     <TouchableOpacity style={styles.head} activeOpacity={0.85} onPress={onToggle}>
       <View style={[styles.icon, current && { backgroundColor: Colors.accent }]}>
@@ -37,7 +51,7 @@ const VersionCard = ({ v, current, open, onToggle }: { v: PlanVersion; current: 
         {current && <Text style={styles.badge}>{t('Current plan')}</Text>}
         <Text style={styles.title}>{dayMonthYear(v.createdAt)}</Text>
         <Text style={styles.sub}>
-          {SOURCE_LABEL[v.source]} · {v.items.length} actions
+          {t(SOURCE_LABEL[v.source])} · {t(v.items.length === 1 ? '{n} action' : '{n} actions', { n: v.items.length })}
         </Text>
       </View>
       <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
@@ -54,6 +68,10 @@ const VersionCard = ({ v, current, open, onToggle }: { v: PlanVersion; current: 
             {it.note && <Text style={styles.itemNote}>{it.note}</Text>}
           </View>
         ))}
+        <TouchableOpacity style={styles.deleteRow} onPress={onDelete} hitSlop={8}>
+          <Ionicons name="trash-outline" size={16} color={Colors.danger} />
+          <Text style={styles.deleteText}>{t('Delete this plan')}</Text>
+        </TouchableOpacity>
       </View>
     )}
   </View>
@@ -86,12 +104,24 @@ export const PlansScreen = () => {
     }, [setVersions, setGoalsPlan]),
   );
   const hasVersions = versions.length > 0;
+  const [deleteError, setDeleteError] = useState('');
+  const deleteVersion = async (v: PlanVersion) => {
+    const ok = await confirmAsk(t('Delete this plan?'), `${dayMonthYear(v.createdAt)} · ${t(SOURCE_LABEL[v.source])}`, t('Delete'));
+    if (!ok) return;
+    setDeleteError('');
+    try {
+      await planVersionRepository.remove(v.id);
+      setVersions(await planVersionRepository.getAll().catch(() => []));
+    } catch {
+      setDeleteError(t('This plan could not be deleted yet. Try again in a while.'));
+    }
+  };
   const showGoalsPlan = !hasVersions && !plans.some((p) => p.latest) && goalsPlan.length > 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your plans')} showBack />
+        <ScreenHeader title={t('Your plans')} showBack showHome />
         <Text style={styles.intro}>{t("A new plan comes with every blood test. Earlier plans stay here so you can see how far you've come.")}</Text>
 
         {showGoalsPlan && (
@@ -124,8 +154,16 @@ export const PlansScreen = () => {
           </View>
         )}
 
+        {deleteError ? <Text style={styles.deleteError}>{deleteError}</Text> : null}
         {versions.map((v, i) => (
-          <VersionCard key={v.id} v={v} current={i === 0} open={openId === v.id} onToggle={() => setOpenId(openId === v.id ? null : v.id)} />
+          <VersionCard
+            key={v.id}
+            v={v}
+            current={i === 0}
+            open={openId === v.id}
+            onToggle={() => setOpenId(openId === v.id ? null : v.id)}
+            onDelete={() => deleteVersion(v)}
+          />
         ))}
 
         {plans.map((raw) => {
@@ -225,4 +263,7 @@ const styles = StyleSheet.create({
   note: { color: Colors.textMuted, fontSize: 11, marginTop: 4 },
   status: { fontSize: 11, fontWeight: '800' },
   itemNote: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
+  deleteRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingTop: 4 },
+  deleteText: { color: Colors.danger, fontSize: 13, fontWeight: '700' },
+  deleteError: { color: Colors.danger, fontSize: 13, marginHorizontal: 20, marginBottom: 10 },
 });

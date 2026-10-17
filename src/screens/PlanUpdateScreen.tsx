@@ -65,7 +65,7 @@ export const PlanUpdateScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={tr('Update your plan')} showBack />
+        <ScreenHeader title={tr('Update your plan')} showBack showHome />
         <Text style={styles.intro}>
           {tr("Here's how your plan changes with these results. Actions whose markers weren't in this test stay as they are.")}
         </Text>

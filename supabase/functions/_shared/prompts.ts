@@ -34,6 +34,7 @@ Devuelve ÚNICAMENTE un JSON con esta forma exacta, sin texto adicional ni markd
 Reglas:
 - Agrupa los parámetros exactamente en las secciones en las que aparecen en el documento original, en el mismo orden.
 - Para cada parámetro, usa ÚNICAMENTE el rango de referencia principal que aparece junto al valor en la misma línea (normalmente entre corchetes, ej. "[ 4,1 - 5,75 ]"). Si un límite no está disponible, usa null.
+- Si el rango solo tiene un límite, rellena ese y deja el otro en null: "< 200", "<200", "Menor de 200", "Hasta 200" o "≤ 200" → rango_min null y rango_max 200; "> 40", "Mayor de 40" o "≥ 40" → rango_min 40 y rango_max null. No lo dejes sin rango por tener un solo límite.
 - IGNORA POR COMPLETO cualquier tabla o nota adicional de valores de referencia desglosados por edad, sexo, fase del ciclo menstrual, trimestre de embarazo, estadio puberal, franja horaria, etc. También ignora notas clínicas explicativas, criterios diagnósticos, y cualquier texto interpretativo largo. Esto es ruido para esta extracción, no lo proceses ni lo incluyas.
 - El campo "valor" debe ser siempre numérico (sin unidades, asteriscos, ni texto ni comas de miles).
 - No inventes datos que no aparezcan en el documento. Si un dato del paciente no aparece, usa null.

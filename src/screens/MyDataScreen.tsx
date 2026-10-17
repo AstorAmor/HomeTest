@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { labUploadRepository } from '@/data/labUploads';
+import { labValuesFrom } from '@/data/labUploadValues';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart, TrendSeries } from '@/components/TrendChart';
 import { Colors, withAlpha } from '@/constants/colors';
@@ -113,16 +115,18 @@ export const MyDataScreen = () => {
         setCycle(p.sex === 'female' ? currentCyclePhase(await cycleRepository.getAll()) : null);
       })
       .catch(() => undefined);
-    const [g, bpEntries, chol, cort, vo] = await Promise.all([
+    const [g, bpEntries, chol, cort, vo, uploads] = await Promise.all([
       getGlucoseEntries(),
       getBloodPressureEntries(),
       cholesterolRepository.getAll(),
       cortisolRepository.getAll(),
       vo2maxRepository.getAll().catch(() => []),
+      labUploadRepository.getAll().catch(() => []),
     ]);
-    setGlucose(simpleChart(g, 'sugar', Colors.accent));
-    setCholesterol(simpleChart(chol, 'cholesterol', Colors.amber));
-    setCortisol(simpleChart(cort, 'cortisol', Colors.violet));
+    // Lo apuntado a mano más lo que traen las analíticas subidas (glucosa, colesterol total, cortisol)
+    setGlucose(simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent));
+    setCholesterol(simpleChart([...chol, ...labValuesFrom(uploads, 'total_cholesterol')], 'cholesterol', Colors.amber));
+    setCortisol(simpleChart([...cort, ...labValuesFrom(uploads, 'cortisol_am')], 'cortisol', Colors.violet));
     // VO2max: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
     const voAsc = [...vo].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
     setVo2(
@@ -138,8 +142,8 @@ export const MyDataScreen = () => {
       setBp({
         labels: bpAsc.map((e) => shortDate(e.fecha)),
         series: [
-          { label: 'Systolic (high)', color: Colors.coral, values: bpAsc.map((e) => e.systolic) },
-          { label: 'Diastolic (low)', color: Colors.sky, values: bpAsc.map((e) => e.diastolic) },
+          { label: t('Systolic (high)'), color: Colors.coral, values: bpAsc.map((e) => e.systolic) },
+          { label: t('Diastolic (low)'), color: Colors.sky, values: bpAsc.map((e) => e.diastolic) },
         ],
         latest: `${bpAsc[bpAsc.length - 1].systolic}/${bpAsc[bpAsc.length - 1].diastolic}`,
         isSample: false,
@@ -153,8 +157,8 @@ export const MyDataScreen = () => {
       setBp({
         labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
         series: [
-          { label: 'Systolic (high)', color: Colors.coral, values: sys },
-          { label: 'Diastolic (low)', color: Colors.sky, values: dia },
+          { label: t('Systolic (high)'), color: Colors.coral, values: sys },
+          { label: t('Diastolic (low)'), color: Colors.sky, values: dia },
         ],
         latest: '120/80',
         isSample: true,

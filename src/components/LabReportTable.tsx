@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { Colors } from '@/constants/colors';
 import { LabReportRow } from './LabReportRow';
+import { t } from '@/i18n';
 
 interface LabReportTableProps {
   report: ExtractedLabReport;
@@ -32,7 +33,7 @@ export const LabReportTable = ({ report, onUpdateParametro }: LabReportTableProp
             (f) =>
               report.paciente?.[f.key] && (
                 <View key={f.key} style={styles.patientRow}>
-                  <Text style={styles.patientLabel}>{f.label}</Text>
+                  <Text style={styles.patientLabel}>{t(f.label)}</Text>
                   <Text style={styles.patientValue}>{report.paciente[f.key]}</Text>
                 </View>
               )

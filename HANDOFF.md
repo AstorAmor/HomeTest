@@ -915,3 +915,26 @@ ya guardan en las carpetas nuevas.
   "¿Quién tuvo cáncer?" (PAT, FHAT y Manchester piden parentesco y lado, que ya se preguntaba). Colesterol y
   muerte súbita dicen quién cuenta; muerte súbita, "antes de los 50" (antecedente de la AHA). Sin cambios en
   la puntuación.
+
+## 2026-10-17 (noche) — Informes subidos, Mis datos, planes e insignias con logo
+
+- **Rangos de un solo límite** (`utils/rangeStatus.ts`): "< 200" o "> 40" ya deciden en rango / por encima /
+  por debajo (antes salía "Sin referencia"); `rangeText` los escribe así. El prompt de extracción
+  (`_shared/prompts.ts`) lo pide explícitamente — **hay que desplegar la Edge Function `extract`** para que el
+  escáner del móvil use el prompt nuevo. En el progreso, si la analítica nueva trae rango, solo se usa ese.
+- **Informe escaneado en español**: tarjetas de cada valor (estado, "Rango", edición), datos del paciente,
+  "N páginas añadidas", permisos. **Tu progreso** traducido (veredictos, "Antes", motivos de no comparar).
+- **Analítica subida** (`/progress?upload=`): pestañas **Resultados** (cada marcador con su estado y el
+  recuento en rango / para revisar / sin referencia; se abre así desde Lab) y **Progreso** (`?view=progress`,
+  así se abre tras escanear).
+- **Mis datos y Hoy con la analítica**: glucosa, colesterol total y cortisol de las analíticas subidas se suman a
+  lo apuntado a mano (`logic/labUploadValues.ts`, sin copiar filas; mmol/L y nmol/L convertidos). En las fichas
+  salen como "Analítica" y abren la analítica. Más alias de nombres españoles ("Glucosa basal", "HDL Colesterol",
+  "Cortisol basal"…) en `knowledge/mapping/extracted-name-aliases.json`.
+- **Tus planes**: "Borrar este plan" en cada versión (`planVersionRepository.remove`). En Supabase necesita la
+  migración `20261017140000_action_plans_delete.sql` (permiso de borrar al paciente). Casita "Ir a Hoy"
+  (`ScreenHeader showHome`) en planes, plan completo, actualizar plan y analítica subida.
+- **Insignias**: la medalla lleva el icono de la insignia (contornos sacados de Ionicons con
+  `scripts/badge-icons.py` → `components/badges/badgeIconPaths.ts`) y abajo el logotipo KUOVA (trazos de
+  `KuovaLogo.tsx`), también en la imagen que se comparte.
+

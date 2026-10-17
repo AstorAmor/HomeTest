@@ -74,4 +74,15 @@ export const planVersionRepository = {
     await AsyncStorage.setItem(KEY, JSON.stringify([saved, ...(await localAll())]));
     return saved;
   },
+
+  // Borrar un plan (Tus planes). En Supabase necesita la migración 20261017140000_action_plans_delete.sql.
+  async remove(id: string): Promise<void> {
+    if (isRemoteActive() && supabase) {
+      const { error, count } = await supabase.from('action_plans').delete({ count: 'exact' }).eq('id', id);
+      if (error) throw new Error(error.message);
+      if (!count) throw new Error('not_deleted');
+      return;
+    }
+    await AsyncStorage.setItem(KEY, JSON.stringify((await localAll()).filter((v) => v.id !== id)));
+  },
 };

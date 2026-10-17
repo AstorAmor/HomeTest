@@ -10,6 +10,9 @@ import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { compareUpload, ChangeVerdict, ProgressResult, VERDICT_LABEL } from '@/utils/progress';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
+import { LabReportTable } from '@/components/LabReportTable';
+import { getRangeStatus, rangeText } from '@/utils/rangeStatus';
+import { TAB, tabHref } from '@/constants/tabs';
 
 const VERDICT_COLOR = (): Record<ChangeVerdict, string> => ({
   back_in_range: Colors.ok,
@@ -32,15 +35,33 @@ const VERDICT_ICON: Record<ChangeVerdict, string> = {
 const shortDate = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
-// "See my progress": qué ha cambiado en una analítica subida respecto al último valor
-// conocido de cada marcador. Solo los marcadores que se han vuelto a medir.
+// Una analítica subida, en dos pestañas:
+// - Resultados: cada marcador con su valor y si está en rango según el propio laboratorio (lo
+//   mismo que se vio al escanearla). Es la que se abre desde Lab → Resultados.
+// - Progreso ("Ver mi progreso"): qué ha cambiado respecto al último valor conocido de cada
+//   marcador. Solo los que se han vuelto a medir. Se abre así después de escanear (?view=progress).
+// Recuento como en Lab: en rango, para revisar (fuera) y sin referencia
+const countUpload = (u: LabUpload) => {
+  const c = { in: 0, out: 0, none: 0 };
+  for (const sec of u.data.secciones)
+    for (const p of sec.parametros) {
+      if (typeof p.valor !== 'number') continue;
+      const st = getRangeStatus(p.valor, p.rango_min, p.rango_max);
+      if (st === 'en_rango') c.in++;
+      else if (st === 'sin_rango') c.none++;
+      else c.out++;
+    }
+  return c;
+};
+
 export const ProgressScreen = () => {
   const show = useSections();
   const router = useRouter();
-  const { upload: uploadId } = useLocalSearchParams<{ upload: string }>();
+  const { upload: uploadId, view } = useLocalSearchParams<{ upload: string; view?: string }>();
   const [upload, setUpload] = useState<LabUpload | null>(null);
   const [result, setResult] = useState<ProgressResult | null>(null);
   const [showOthers, setShowOthers] = useState(false);
+  const [tab, setTab] = useState<'results' | 'progress'>(view === 'progress' ? 'progress' : 'results');
 
   useReloadOnFocus(
     useCallback(async () => {
@@ -54,7 +75,7 @@ export const ProgressScreen = () => {
   if (!upload || !result) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title={t('Your progress')} showBack />
+        <ScreenHeader title={t('Uploaded analysis')} showBack showHome backFallback={tabHref(TAB.lab)} />
       </SafeAreaView>
     );
   }
@@ -63,14 +84,46 @@ export const ProgressScreen = () => {
   const better = result.changes.filter((c) => c.verdict === 'back_in_range' || c.verdict === 'improving').length;
   const worse = result.changes.filter((c) => c.verdict === 'worsening' || c.verdict === 'newly_out').length;
   const same = result.changes.length - better - worse;
+  const counts = countUpload(upload);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your progress')} showBack />
+        <ScreenHeader title={t('Uploaded analysis')} showBack showHome backFallback={tabHref(TAB.lab)} />
+        <Text style={styles.subhead}>
+          {upload.testDate ? shortDate(upload.testDate) : t('Uploaded test')} · {upload.labName ?? t('User upload')}
+        </Text>
+
+        <View style={styles.segment}>
+          {(
+            [
+              ['results', 'Results'],
+              ['progress', 'Progress'],
+            ] as const
+          ).map(([id, label]) => (
+            <TouchableOpacity key={id} style={[styles.segItem, tab === id && styles.segItemOn]} onPress={() => setTab(id)} activeOpacity={0.85}>
+              <Text style={[styles.segText, tab === id && styles.segTextOn]}>{t(label)}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {tab === 'results' && (
+          <>
+            <View style={styles.summary}>
+              <Stat value={counts.in} label={t('In range')} color={Colors.ok} />
+              <Stat value={counts.out} label={t('To review')} color={counts.out ? Colors.attention : Colors.textSecondary} />
+              {counts.none > 0 && <Stat value={counts.none} label={t('No reference')} color={Colors.textSecondary} />}
+            </View>
+            <View style={styles.table}>
+              <LabReportTable report={upload.data} />
+            </View>
+          </>
+        )}
+
+        {tab === 'progress' && (
+        <>
         <Text style={styles.intro}>
-          {upload.testDate ? shortDate(upload.testDate) : t('Uploaded test')} · {upload.labName ?? t('User upload')}. Compared with the last value
-          we had for each marker. Markers that weren't in this test stay as they were.
+          {t("Compared with the last value we had for each marker. Markers that weren't in this test stay as they were.")}
         </Text>
 
         <View style={styles.summary}>
@@ -88,7 +141,7 @@ export const ProgressScreen = () => {
             <View style={styles.row}>
               <Ionicons name={VERDICT_ICON[c.verdict] as any} size={18} color={colors[c.verdict]} />
               <Text style={styles.name}>{c.name}</Text>
-              <Text style={[styles.verdict, { color: colors[c.verdict] }]}>{VERDICT_LABEL[c.verdict]}</Text>
+              <Text style={[styles.verdict, { color: colors[c.verdict] }]}>{t(VERDICT_LABEL[c.verdict])}</Text>
             </View>
             <View style={styles.values}>
               <Text style={styles.before}>
@@ -100,8 +153,8 @@ export const ProgressScreen = () => {
               </Text>
             </View>
             <Text style={styles.meta}>
-              Before: {shortDate(c.beforeDate)} ({c.beforeSource})
-              {c.low !== null || c.high !== null ? ` · Range ${c.low ?? '–'}–${c.high ?? '–'}` : ''}
+              {t('Before: {date} ({source})', { date: shortDate(c.beforeDate), source: c.beforeSource })}
+              {rangeText(c.low, c.high) ? ` · ${t('Range: {range}', { range: rangeText(c.low, c.high)! })}` : ''}
             </Text>
           </View>
         ))}
@@ -109,7 +162,9 @@ export const ProgressScreen = () => {
         {(result.firstTime.length > 0 || result.notCompared.length > 0) && (
           <TouchableOpacity style={styles.othersToggle} onPress={() => setShowOthers((v) => !v)}>
             <Text style={styles.othersText}>
-              {result.firstTime.length + result.notCompared.length} other values not compared
+              {result.firstTime.length + result.notCompared.length === 1
+                ? t('1 other value not compared')
+                : t('{n} other values not compared', { n: result.firstTime.length + result.notCompared.length })}
             </Text>
             <Ionicons name={showOthers ? 'chevron-up' : 'chevron-down'} size={16} color={Colors.textSecondary} />
           </TouchableOpacity>
@@ -118,7 +173,7 @@ export const ProgressScreen = () => {
           <View style={styles.others}>
             {result.firstTime.map((f) => (
               <Text key={`f-${f.name}`} style={styles.otherLine}>
-                {f.name}: {f.value} {f.unit} · first time measured
+                {f.name}: {f.value} {f.unit} · {t('first time measured')}
               </Text>
             ))}
             {result.notCompared.map((n, i) => (
@@ -127,6 +182,8 @@ export const ProgressScreen = () => {
               </Text>
             ))}
           </View>
+        )}
+        </>
         )}
       </ScrollView>
 
@@ -151,6 +208,13 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 24 },
   intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginBottom: 14 },
+  subhead: { color: Colors.textSecondary, fontSize: 13, marginHorizontal: 20, marginBottom: 12 },
+  segment: { flexDirection: 'row', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 4, marginHorizontal: 20, marginBottom: 14 },
+  segItem: { flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center' },
+  segItemOn: { backgroundColor: Colors.accent },
+  segText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
+  segTextOn: { color: Colors.background },
+  table: { marginHorizontal: 20 },
   summary: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 16 },
   stat: { flex: 1, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingVertical: 12, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '900' },

@@ -1,12 +1,15 @@
 import React, { forwardRef } from 'react';
-import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { Achievement, formatAchievementValue, TIER_GRADIENTS } from '@/data/achievements';
 import { t } from '@/i18n';
+import { BADGE_ICON_PATHS } from './badgeIconPaths';
 
 // Tarjeta de una insignia para verla a pantalla completa y compartirla (Instagram, WhatsApp,
 // TikTok…). Todo en SVG para poder convertirla en imagen tal cual se ve: en el móvil con
 // toDataURL de react-native-svg y en la web pasando el <svg> a un canvas (utils/shareBadge).
-// Formato 4:5 (1080 × 1350), el vertical de Instagram. Sin iconos de fuente: no salen en la imagen.
+// Formato 4:5 (1080 × 1350), el vertical de Instagram. El icono de la insignia va como trazo (sacado de
+// Ionicons con scripts/badge-icons.py) y la marca es el logotipo de KUOVA (los trazos de KuovaLogo.tsx):
+// una fuente de iconos o de letra no saldría igual en la imagen.
 
 export const CARD_W = 1080;
 export const CARD_H = 1350;
@@ -29,10 +32,32 @@ const star = (cx: number, cy: number, outer: number, inner: number) => {
 const sparkle = (cx: number, cy: number, r: number) =>
   `M${cx},${cy - r} Q${cx + r * 0.18},${cy - r * 0.18} ${cx + r},${cy} Q${cx + r * 0.18},${cy + r * 0.18} ${cx},${cy + r} Q${cx - r * 0.18},${cy + r * 0.18} ${cx - r},${cy} Q${cx - r * 0.18},${cy - r * 0.18} ${cx},${cy - r}Z`;
 
-// Gema (nivel diamante)
-const gem = (cx: number, cy: number, w: number) => {
-  const h = w * 0.9;
-  return `M${cx - w / 2},${cy - h * 0.18} L${cx - w * 0.28},${cy - h / 2} L${cx + w * 0.28},${cy - h / 2} L${cx + w / 2},${cy - h * 0.18} L${cx},${cy + h / 2} Z`;
+
+// Logotipo KUOVA (mismos trazos que KuovaWordmark): viewBox 226 189 1556 276
+const KuovaMark = ({ cx, top, width, color }: { cx: number; top: number; width: number; color: string }) => {
+  const k = width / 1556;
+  return (
+    <G transform={`translate(${cx - width / 2} ${top}) scale(${k}) translate(-226 -189)`}>
+      <Path d="M230 200H268V327L427 200H490L333.67 315.49L480 457H424L302.58 338.45L268 364V402C267 430 250 450 230 457Z" fill={color} />
+      <Path d="M561.5 198v141a103.5 103.5 0 0 0 207 0V198" fill="none" stroke={color} strokeWidth={37} />
+      <Ellipse cx={990.5} cy={326.5} rx={126.5} ry={116.5} fill="none" stroke={color} strokeWidth={38} />
+      <Path d="M1167 196h41l109 214 116-214h42l-142 260h-32Z" fill={color} />
+      <Path d="M1593 196h39l146 261h-43l-123-214-128 214h-43Z" fill={color} />
+    </G>
+  );
+};
+
+// Icono de la insignia centrado en (cx, cy) y de `size` de ancho/alto máximo (la fuente tiene el eje Y hacia arriba)
+const BadgeIcon = ({ name, cx, cy, size, fill, stroke }: { name: string; cx: number; cy: number; size: number; fill: string; stroke: string }) => {
+  const icon = BADGE_ICON_PATHS[name];
+  if (!icon) return <Path d={star(cx, cy, size / 2, size / 4.6)} fill={fill} stroke={stroke} strokeWidth={6} strokeLinejoin="round" />;
+  const [x0, y0, x1, y1] = icon.box;
+  const k = size / Math.max(x1 - x0, y1 - y0);
+  return (
+    <G transform={`translate(${cx} ${cy}) scale(${k} ${-k}) translate(${-(x0 + x1) / 2} ${-(y0 + y1) / 2})`}>
+      <Path d={icon.d} fill={fill} stroke={stroke} strokeWidth={10 / k} strokeLinejoin="round" />
+    </G>
+  );
 };
 
 const SPARKLES = [
@@ -100,19 +125,11 @@ export const BadgeShareCard = forwardRef<any, { achievement: Achievement; width:
           <Circle key={i} cx={cx + 228 * Math.cos(ang)} cy={cy + 228 * Math.sin(ang)} r={6} fill={light} opacity={0.9} />
         ))}
       </G>
-      {a.tier === 'Diamond' ? (
-        <>
-          <Path d={gem(cx, cy + 6, 220)} fill={light} opacity={0.95} />
-          <Path d={`M${cx - 110},${cy - 34} L${cx + 110},${cy - 34} M${cx - 62},${cy - 93} L${cx - 30},${cy - 34} L${cx},${cy + 105} L${cx + 30},${cy - 34} L${cx + 62},${cy - 93}`} stroke={shade} strokeWidth={6} fill="none" strokeLinejoin="round" />
-        </>
-      ) : (
-        <Path d={star(cx, cy + 8, 118, 50)} fill={a.tier ? light : '#C4CEC9'} opacity={a.tier ? 0.95 : 0.5} stroke={shade} strokeWidth={6} strokeLinejoin="round" />
-      )}
-      {a.level > 0 && (
-        <SvgText x={cx} y={cy + 178} textAnchor="middle" fontFamily={FONT} fontSize={34} fontWeight="700" fill={shade} letterSpacing={6}>
-          {'★'.repeat(a.level)}
-        </SvgText>
-      )}
+      <BadgeIcon name={a.icon} cx={cx} cy={cy - 14} size={235} fill={a.tier ? light : '#C4CEC9'} stroke={shade} />
+      {/* Una estrellita por nivel conseguido, bajo el icono */}
+      {Array.from({ length: a.level }, (_, i) => (
+        <Path key={i} d={star(cx + (i - (a.level - 1) / 2) * 40, cy + 150, 15, 6.5)} fill={shade} />
+      ))}
 
       {/* Textos */}
       <SvgText x={cx} y={925} textAnchor="middle" fontFamily={FONT} fontSize={40} fontWeight="700" fill={mid} letterSpacing={10}>
@@ -130,9 +147,7 @@ export const BadgeShareCard = forwardRef<any, { achievement: Achievement; width:
 
       {/* Marca */}
       <Rect x={cx - 60} y={1180} width={120} height={3} fill="#F0B84D" opacity={0.7} />
-      <SvgText x={cx} y={1250} textAnchor="middle" fontFamily={FONT} fontSize={48} fontWeight="800" fill="#FFFFFF" letterSpacing={18}>
-        KUOVA
-      </SvgText>
+      <KuovaMark cx={cx} top={1208} width={250} color="#FFFFFF" />
       <SvgText x={cx} y={1298} textAnchor="middle" fontFamily={FONT} fontSize={26} fill="#A9C4BB" letterSpacing={4}>
         kuovahealth.com
       </SvgText>

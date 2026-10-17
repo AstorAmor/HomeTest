@@ -63,9 +63,9 @@ export const UploadTestScreen = () => {
         id = (await labUploadRepository.save(report)).id;
         setSavedId(id);
       }
-      router.push({ pathname, params: { upload: id } });
+      router.push({ pathname, params: pathname === '/progress' ? { upload: id, view: 'progress' } : { upload: id } });
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : 'Could not save your results');
+      setSaveError(e instanceof Error ? e.message : t('Could not save your results'));
     }
   };
 
@@ -178,7 +178,7 @@ export const UploadTestScreen = () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
-      setErrorText('Gallery permission denied');
+      setErrorText(t('Kuova needs permission to open your gallery. You can allow it in your phone settings.'));
       return;
     }
 
@@ -205,7 +205,7 @@ export const UploadTestScreen = () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
-      setErrorText('Camera permission denied');
+      setErrorText(t('Kuova needs permission to use the camera. You can allow it in your phone settings.'));
       return;
     }
 
@@ -294,7 +294,7 @@ export const UploadTestScreen = () => {
         {pages.length > 0 && (
           <View style={styles.pagesSection}>
             <Text style={styles.pagesTitle}>
-              {pages.length} page{pages.length > 1 ? 's' : ''} added
+              {pages.length === 1 ? t('1 page added') : t('{n} pages added', { n: pages.length })}
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pagesRow}>
               {pages.map((page, index) => (

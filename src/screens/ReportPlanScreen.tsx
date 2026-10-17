@@ -16,7 +16,7 @@ export const ReportPlanScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My Plan')} showBack />
+        <ScreenHeader title={t('My Plan')} showBack showHome />
 
         <View style={styles.introBlock}>
           <Text style={styles.intro}>

@@ -42,7 +42,7 @@ export const ActionPlanScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your full plan')} showBack />
+        <ScreenHeader title={t('Your full plan')} showBack showHome />
         <Text style={styles.intro}>
           {showSamples()
             ? t('Built from your answers, your blood test of {date} and your wearable data, in three blocks: habits, physical activity, and nutrition and supplements.', {

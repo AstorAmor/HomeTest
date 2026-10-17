@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { getRangeStatus } from '@/utils/rangeStatus';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { DonutChart } from '@/components/DonutChart';
 import { MarkerRangeBar } from '@/components/MarkerRangeBar';
@@ -33,17 +34,17 @@ const formatShortDate = (dateString: string) => {
   return `${date.getDate()}/${date.getMonth() + 1}`;
 };
 
-// Recuento en rango / fuera de rango de una analítica subida (con los rangos del propio laboratorio).
+// Recuento en rango / fuera de rango de una analítica subida (con los rangos del propio laboratorio;
+// "< 200" cuenta como rango). Lo que no trae ninguna referencia no suma en ninguno de los dos.
 const uploadCounts = (u: LabUpload) => {
   let inRange = 0;
   let out = 0;
   for (const sec of u.data.secciones)
     for (const p of sec.parametros) {
       if (typeof p.valor !== 'number') continue;
-      const low = p.rango_min;
-      const high = p.rango_max;
-      if ((low !== null && p.valor < low) || (high !== null && p.valor > high)) out++;
-      else inRange++;
+      const st = getRangeStatus(p.valor, p.rango_min, p.rango_max);
+      if (st === 'en_rango') inRange++;
+      else if (st !== 'sin_rango') out++;
     }
   return { inRange, out };
 };
