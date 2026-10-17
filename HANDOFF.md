@@ -811,6 +811,27 @@ ya guardan en las carpetas nuevas.
 - Pendiente: cuentas de prueba con casuísticas cargadas en la nube (hoy los usuarios simulados solo van en la demo);
   ciclo de una mujer con cuenta real sin registros (sigue saliendo el ejemplo); APK nueva para calorías/distancia.
 
+## 2026-10-17 — Fases y horas del sueño desde Health Connect (rama `sleep-stages`, sin publicar)
+
+- Health Connect ya da las fases de cada noche en `SleepSessionRecord.stages` (profundo, ligero, REM, despierto,
+  fuera de la cama) y la hora de inicio y fin. `summarizeSleepSessions` (`src/wearables/seriesLogic.ts`, con tests)
+  las resume por día en que te despiertas y por fuente: minutos de cada fase y hora de dormirte/despertarte del
+  bloque con más sueño (una siesta no las cambia; dos sesiones con menos de 1 h entre medias son la misma noche).
+  "Despierto en la cama" (fase 7) ya no cuenta como dormido.
+- Se guardan en `wearable_daily` como métricas nuevas del mismo día y fuente que `sleep_duration`: `sleep_deep`,
+  `sleep_light`, `sleep_rem`, `sleep_awake`, `sleep_out_of_bed` (minutos; solo si la fuente da fases) y
+  `sleep_start` / `sleep_end` (minutos desde la medianoche del día en que te despiertas; negativo = la víspera,
+  -45 = 23:15). La columna `metric` no tiene CHECK: **no hace falta migración**. `pickPerDay` coge las fases y
+  horas de la misma fuente que la duración elegida (nunca mezcla apps).
+- Solo JS: el permiso READ_SLEEP ya está en las APK de septiembre/octubre. Lo ya guardado se completa en la próxima
+  sincronización (sustituye los últimos 30 días).
+- Detalle del sueño (`/metric?kind=sleep_duration`, `components/SleepNightsCard.tsx`): en 7D/14D/1M una barra por
+  noche con sus fases (tocarla la elige); de la noche elegida, minutos por fase, "Te dormiste"/"Te despertaste" y
+  media de esas horas en el periodo. En 6M, sin barras (última noche y medias). Una noche sin fases enseña solo
+  duración y horas. La lista de valores diarios añade la hora de dormirte y despertarte. En Wearables → "Tus
+  últimos días" las fases no salen (solo la duración). Los datos de ejemplo (Huawei dummy) traen fases y horas.
+- El "Daily Readiness" de Fitbit es propio de Fitbit y no pasa por Health Connect; Kuova usa su "Tu estado de hoy".
+
 ## 2026-10-15 (tarde) — Casos de prueba en cuentas de Supabase (rama `test-account-scenarios`)
 
 - **Ajustes → Cuenta → Casos de prueba** (`/simulation`), solo en cuentas de prueba (sin `real_account`): los

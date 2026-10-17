@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeReadiness, localDayKey, pickPerDay, toDailySeries } from '../seriesLogic';
+import { computeReadiness, formatClock, localDayKey, pickPerDay, sleepNights, SLEEP_STAGE, summarizeSleepSessions, toDailySeries } from '../seriesLogic';
 import { joinSources, originName, PHONE_SOURCE } from '../sources';
 import { DailyWearableRecord } from '../types';
 
@@ -73,5 +73,116 @@ describe('computeReadiness', () => {
   });
   it('ignores yesterday when today has no data yet', () => {
     expect(computeReadiness({ sleep_duration: [{ date: day(-1), value: 480 }] }, now)).toBeNull();
+  });
+});
+
+describe('sleep detail', () => {
+  // Instantes en hora local del teléfono (sin Z), como los convierte Health Connect al leerlos
+  const at = (s: string) => new Date(s).toISOString();
+  const stage = (from: string, to: string, kind: number) => ({ startTime: at(from), endTime: at(to), stage: kind });
+  const { AWAKE, AWAKE_IN_BED, LIGHT, DEEP, REM, OUT_OF_BED, SLEEPING } = SLEEP_STAGE;
+
+  it('adds up each stage and counts the night for the day you wake up', () => {
+    const [n] = summarizeSleepSessions([
+      {
+        startTime: at('2026-10-15T23:10:00'),
+        endTime: at('2026-10-16T07:05:00'),
+        source: 'Fitbit',
+        stages: [
+          stage('2026-10-15T23:10:00', '2026-10-15T23:25:00', AWAKE),
+          stage('2026-10-15T23:25:00', '2026-10-16T01:00:00', LIGHT),
+          stage('2026-10-16T01:00:00', '2026-10-16T02:30:00', DEEP),
+          stage('2026-10-16T02:30:00', '2026-10-16T02:40:00', OUT_OF_BED),
+          stage('2026-10-16T02:40:00', '2026-10-16T04:00:00', REM),
+          stage('2026-10-16T04:00:00', '2026-10-16T04:20:00', AWAKE_IN_BED),
+          stage('2026-10-16T04:20:00', '2026-10-16T07:05:00', LIGHT),
+        ],
+      },
+    ]);
+    expect(n.date).toBe('2026-10-16');
+    expect(n.stages).toEqual({ deep: 90, light: 95 + 165, rem: 80, awake: 15 + 20, outOfBed: 10 });
+    // Despierto en la cama (7) tampoco cuenta como dormido
+    expect(n.asleep).toBe(90 + 260 + 80);
+    expect(n.start).toBe(-50); // 23:10 de la víspera
+    expect(n.end).toBe(425); // 07:05
+    expect(formatClock(n.start)).toBe('23:10');
+    expect(formatClock(n.end)).toBe('07:05');
+  });
+
+  it('gives only duration and times when the source sends no stages', () => {
+    const [plain, onlyAsleep] = summarizeSleepSessions([
+      { startTime: at('2026-10-15T23:30:00'), endTime: at('2026-10-16T06:30:00'), source: 'Fitbit' },
+      {
+        startTime: at('2026-10-15T23:00:00'),
+        endTime: at('2026-10-16T06:00:00'),
+        source: 'Zepp',
+        stages: [stage('2026-10-15T23:00:00', '2026-10-16T05:30:00', SLEEPING), stage('2026-10-16T05:30:00', '2026-10-16T06:00:00', AWAKE)],
+      },
+    ]);
+    expect(plain).toMatchObject({ asleep: 420, start: -30, end: 390, stages: null });
+    expect(onlyAsleep).toMatchObject({ source: 'Zepp', asleep: 390, stages: null });
+  });
+
+  it('takes bed and wake times from the main sleep, not from a nap, and joins a night split in two', () => {
+    const [n] = summarizeSleepSessions([
+      { startTime: at('2026-10-15T23:00:00'), endTime: at('2026-10-16T03:00:00'), source: 'Fitbit' },
+      { startTime: at('2026-10-16T03:30:00'), endTime: at('2026-10-16T07:00:00'), source: 'Fitbit' },
+      { startTime: at('2026-10-16T15:00:00'), endTime: at('2026-10-16T15:40:00'), source: 'Fitbit' },
+    ]);
+    expect(n.asleep).toBe(240 + 210 + 40);
+    expect(n.start).toBe(-60);
+    expect(n.end).toBe(420);
+  });
+
+  it('keeps stages and times from the same app as the chosen night', () => {
+    const picked = toDailySeries([
+      rec('2026-10-16', 'sleep_duration', 400, PHONE_SOURCE, 'SleepSession'),
+      rec('2026-10-16', 'sleep_deep', 30, PHONE_SOURCE, 'SleepSession'),
+      rec('2026-10-16', 'sleep_start', 10, PHONE_SOURCE, 'SleepSession'),
+      rec('2026-10-16', 'sleep_duration', 420, 'Fitbit', 'SleepSession'),
+      rec('2026-10-16', 'sleep_start', -40, 'Fitbit', 'SleepSession'),
+      // Fases sueltas de un día sin duración: no se enseñan
+      rec('2026-10-15', 'sleep_deep', 50, 'Fitbit', 'SleepSession'),
+    ]);
+    expect(picked.sleep_duration).toEqual([{ date: '2026-10-16', value: 420 }]);
+    expect(picked.sleep_start).toEqual([{ date: '2026-10-16', value: -40 }]);
+    // El reloj no dio fases esa noche: no se cogen las del teléfono
+    expect(picked.sleep_deep).toBeUndefined();
+  });
+
+  it('builds each night for the screen, with no stages when there are none', () => {
+    const nights = sleepNights({
+      sleep_duration: [
+        { date: '2026-10-15', value: 400 },
+        { date: '2026-10-16', value: 450 },
+      ],
+      sleep_start: [
+        { date: '2026-10-15', value: -30 },
+        { date: '2026-10-16', value: -50 },
+      ],
+      sleep_end: [
+        { date: '2026-10-15', value: 400 },
+        { date: '2026-10-16', value: 425 },
+      ],
+      sleep_deep: [{ date: '2026-10-16', value: 90 }],
+      sleep_light: [{ date: '2026-10-16', value: 259 }],
+      sleep_rem: [{ date: '2026-10-16', value: 80 }],
+      sleep_awake: [{ date: '2026-10-16', value: 35 }],
+    });
+    expect(nights[0]).toEqual({ date: '2026-10-15', asleep: 400, start: -30, end: 400, stages: null });
+    // 450 - 429 = 21 min dormido sin fase (p. ej. una siesta); el sueño fuera de la cama no llegó: 0
+    expect(nights[1].stages).toEqual({ deep: 90, light: 259, rem: 80, awake: 35, outOfBed: 0, other: 21 });
+  });
+
+  it('keeps clock times on the night the clocks change', () => {
+    // En España el 25/10/2026 a las 3:00 vuelven a ser las 2:00: esa noche dura una hora más
+    const [n] = summarizeSleepSessions([{ startTime: at('2026-10-24T23:00:00'), endTime: at('2026-10-25T07:00:00'), source: 'Fitbit' }]);
+    expect([n.start, n.end]).toEqual([-60, 420]);
+  });
+
+  it('formats times after midnight and the day before', () => {
+    expect(formatClock(-1)).toBe('23:59');
+    expect(formatClock(0)).toBe('00:00');
+    expect(formatClock(75)).toBe('01:15');
   });
 });

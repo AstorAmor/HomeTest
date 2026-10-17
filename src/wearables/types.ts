@@ -8,6 +8,18 @@
 // health_connect: Android (Xiaomi, Garmin, Oura, Samsung, Google...).
 export type WearableProviderId = 'huawei_dummy' | 'huawei' | 'health_connect';
 
+// Detalle de cada noche, del mismo día y fuente que sleep_duration: minutos en cada fase (solo si la
+// fuente manda fases) y la hora de dormirte y de despertarte, en minutos desde la medianoche del día
+// en que te despiertas (negativo = la víspera: -45 son las 23:15).
+export type SleepDetailMetric =
+  | 'sleep_deep'
+  | 'sleep_light'
+  | 'sleep_rem'
+  | 'sleep_awake'
+  | 'sleep_out_of_bed'
+  | 'sleep_start'
+  | 'sleep_end';
+
 // Métricas canónicas que usa HomeTest. 'other' conserva lo que aún no mapeamos.
 export type WearableMetric =
   | 'steps'
@@ -15,6 +27,7 @@ export type WearableMetric =
   | 'heart_rate_avg'
   | 'hrv'
   | 'sleep_duration'
+  | SleepDetailMetric
   | 'active_energy'
   | 'body_temperature'
   | 'distance'

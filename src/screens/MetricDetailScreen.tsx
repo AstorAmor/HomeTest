@@ -8,7 +8,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
 import { MetricHero, RangeId, rangeDays, RangeTabs, StatsRow } from '@/components/MetricDetailParts';
 import { Colors } from '@/constants/colors';
-import { DailyPoint, formatSleep, shortDate, useDailyWearables } from '@/wearables/dailySeries';
+import { DailyPoint, formatClock, formatSleep, shortDate, sleepNights, useDailyWearables } from '@/wearables/dailySeries';
+import { SleepNightsCard } from '@/components/SleepNightsCard';
 import { WearableMetric } from '@/wearables/types';
 import { thermometerRepository } from '@/data/temperatureRepository';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -134,6 +135,10 @@ export const MetricDetailScreen = () => {
   const change = previous.length ? (mean(recent) - mean(previous)) / mean(previous) : NaN;
   const trendGood = info.higherIsBetter === null ? null : info.higherIsBetter ? change > 0 : change < 0;
 
+  // Sueño: fases y horas de cada noche del periodo
+  const nights = kind === 'sleep_duration' ? sleepNights(series).slice(-days) : [];
+  const nightOf = new Map(nights.map((n) => [n.date, n]));
+
   // Lecturas con termómetro (solo en la temperatura)
   const [thermo, setThermo] = useState<SimpleMetricEntry[]>([]);
   useReloadOnFocus(
@@ -221,6 +226,8 @@ export const MetricDetailScreen = () => {
           </View>
         )}
 
+        {kind === 'sleep_duration' && <SleepNightsCard nights={nights} showBars={!byWeek} />}
+
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>{tr('What it is')}</Text>
           <Text style={styles.infoText}>{tr(info.what)}</Text>
@@ -233,18 +240,26 @@ export const MetricDetailScreen = () => {
 
         <Text style={styles.sectionTitle}>{byWeek ? tr('Weekly averages') : tr('Daily values')}</Text>
         <View style={styles.list}>
-          {[...points].reverse().map((p, i) => (
-            <View key={p.date} style={[styles.listRow, i > 0 && styles.listDivider]}>
-              <Text style={styles.listDate}>
-                {byWeek ? tr('Week of ') : ''}
-                {new Date(`${p.date}T12:00:00`).toLocaleDateString(
-                  dateLocale(),
-                  byWeek ? { day: 'numeric', month: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' },
-                )}
-              </Text>
-              <Text style={styles.listValue}>{info.format(p.value)}</Text>
-            </View>
-          ))}
+          {[...points].reverse().map((p, i) => {
+            const night = byWeek ? undefined : nightOf.get(p.date);
+            return (
+              <View key={p.date} style={[styles.listRow, i > 0 && styles.listDivider]}>
+                <Text style={styles.listDate}>
+                  {byWeek ? tr('Week of ') : ''}
+                  {new Date(`${p.date}T12:00:00`).toLocaleDateString(
+                    dateLocale(),
+                    byWeek ? { day: 'numeric', month: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' },
+                  )}
+                </Text>
+                <Text style={styles.listValue}>
+                  {night?.start != null && night.end != null && (
+                    <Text style={styles.listTimes}>{`${formatClock(night.start)}–${formatClock(night.end)}  `}</Text>
+                  )}
+                  {info.format(p.value)}
+                </Text>
+              </View>
+            );
+          })}
         </View>
 
         <TouchableOpacity style={styles.manage} onPress={() => router.push('/wearables')}>
@@ -315,6 +330,7 @@ const styles = StyleSheet.create({
   listDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   listDate: { color: Colors.textSecondary, fontSize: 13 },
   listValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  listTimes: { color: Colors.textMuted, fontWeight: '400' },
   manage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18 },
   manageText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
 });

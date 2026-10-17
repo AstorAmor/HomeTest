@@ -2200,6 +2200,22 @@ export const es: Record<string, string> = {
     'Los adultos necesitan de 7 a 9 horas. Acostarse y levantarse a horas regulares importa tanto como el total.',
   'Screens late at night, caffeine after lunch, alcohol and irregular schedules shorten and fragment sleep.':
     'Las pantallas por la noche, la cafeína después de comer, el alcohol y los horarios irregulares acortan y fragmentan el sueño.',
+  // Fases y horas de cada noche (detalle del sueño)
+  'Sleep stages': 'Fases del sueño',
+  'Bed and wake times': 'Horas de dormir y despertar',
+  'Deep sleep': 'Sueño profundo',
+  'Light sleep': 'Sueño ligero',
+  'REM sleep': 'Sueño REM',
+  'Asleep, no stage': 'Sueño sin fase',
+  Awake: 'Tiempo despierto',
+  'Out of bed': 'Fuera de la cama',
+  'Fell asleep': 'Te dormiste',
+  'Woke up': 'Te despertaste',
+  'Night of {from}–{to}': 'Noche del {from} al {to}',
+  'Tap a night to see its stages': 'Toca una noche para ver sus fases',
+  'No sleep stages for this night.': 'Tu wearable no ha enviado fases de esta noche.',
+  'Bedtime (average)': 'Hora de dormir (media)',
+  'Wake-up (average)': 'Hora de despertar (media)',
   'Total steps per day counted by your phone or wearable.': 'Pasos totales al día que cuenta tu móvil o tu wearable.',
   'Health benefits grow up to around 8,000-10,000 steps a day. Any increase from your baseline helps.':
     'Los beneficios para la salud crecen hasta unos 8.000-10.000 pasos al día. Cualquier aumento respecto a lo tuyo ayuda.',
