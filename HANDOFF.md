@@ -932,9 +932,20 @@ ya guardan en las carpetas nuevas.
   salen como "Analítica" y abren la analítica. Más alias de nombres españoles ("Glucosa basal", "HDL Colesterol",
   "Cortisol basal"…) en `knowledge/mapping/extracted-name-aliases.json`.
 - **Tus planes**: "Borrar este plan" en cada versión (`planVersionRepository.remove`). En Supabase necesita la
-  migración `20261017140000_action_plans_delete.sql` (permiso de borrar al paciente). Casita "Ir a Hoy"
-  (`ScreenHeader showHome`) en planes, plan completo, actualizar plan y analítica subida.
+  migración `20261017140000_action_plans_delete.sql` (permiso de borrar al paciente). La casita "Ir a Hoy" se
+  quitó después a petición del fundador.
 - **Insignias**: la medalla lleva el icono de la insignia (contornos sacados de Ionicons con
   `scripts/badge-icons.py` → `components/badges/badgeIconPaths.ts`) y abajo el logotipo KUOVA (trazos de
   `KuovaLogo.tsx`), también en la imagen que se comparte.
+- **Para revisar** (`components/OutOfRangeSummary.tsx`, pestaña Resultados de la analítica subida): los valores
+  fuera de rango arriba; al tocar uno, qué es, para qué se mide, qué puede moverlo (fichas de
+  `knowledge/biomarcadores`, en español con `i18n/catalogEs.ts` vía `getParameterCard`) y qué ayuda (la acción
+  del plan, `planRuleForMarker`), con enlaces al plan completo y a un médico.
+- **Actualizar el plan cierra el recorrido**: tras "Aplicar a mi plan" se cierran subir → progreso → actualizar
+  (`router.dismissAll()`) y queda "Tus planes" encima de la pestaña de origen.
+- **Plan completo, "Cómo podrían cambiar tus marcadores"** (`logic/markerProjection.ts`): con la última analítica
+  subida, cada marcador fuera de rango que el plan trabaja tiene su gráfica a 6 meses (`ProjectionChart`, forma
+  de `logic/projection.ts`). Efectos típicos de los cambios de estilo de vida (LDL −12 %, triglicéridos −25 %,
+  HDL +3 mg/dL…), nunca más allá de volver al rango: SUPUESTO pendiente de revisión clínica. En cuentas de
+  prueba solo si la analítica es más reciente que el informe de ejemplo.
 

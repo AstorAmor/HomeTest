@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getRangeStatus, rangeText } from '@/utils/rangeStatus';
 import { labValuesFrom } from '@/logic/labUploadValues';
+import { latestUpload, projectMarkers } from '@/logic/markerProjection';
 import type { LabUpload } from '@/data/labUploads';
 
 const upload = (id: string, testDate: string, parametros: { nombre: string; unidad: string; valor: number }[]): LabUpload => ({
@@ -45,5 +46,33 @@ describe('valores de las analíticas subidas para Mis datos', () => {
     ]);
     expect(labValuesFrom(uploads, 'total_cholesterol')[0].valor).toBe(193.4);
     expect(labValuesFrom(uploads, 'cortisol_am')).toEqual([]);
+  });
+});
+
+describe('cómo podrían cambiar tus marcadores (plan completo)', () => {
+  const withRanges = (): LabUpload => {
+    const u = upload('b', '2026-10-15', []);
+    u.data.secciones[0].parametros = [
+      { nombre: 'Colesterol total', unidad: 'mg/dL', valor: 231, rango_min: null, rango_max: 200 },
+      { nombre: 'HDL Colesterol', unidad: 'mg/dL', valor: 38, rango_min: 40, rango_max: null },
+      { nombre: 'Glucosa', unidad: 'mg/dL', valor: 92, rango_min: 70, rango_max: 110 },
+    ];
+    return u;
+  };
+
+  it('solo proyecta lo que está fuera de rango y en la dirección que corrige', () => {
+    const p = projectMarkers(withRanges());
+    expect(p.map((x) => x.markerId)).toEqual(['total_cholesterol', 'hdl']);
+    const chol = p[0];
+    expect(chol.expected).toBeLessThan(231);
+    expect(chol.expected).toBeGreaterThanOrEqual(200); // nunca más allá del rango
+    expect(chol.bandLow).toBeLessThanOrEqual(chol.expected);
+    expect(chol.bandHigh).toBeGreaterThanOrEqual(chol.expected);
+    expect(p[1].expected).toBeGreaterThan(38);
+    expect(p[1].expected).toBeLessThanOrEqual(40);
+  });
+
+  it('la analítica más reciente es la de fecha más nueva', () => {
+    expect(latestUpload([upload('x', '2026-06-01', []), upload('y', '2026-10-15', [])])!.id).toBe('y');
   });
 });

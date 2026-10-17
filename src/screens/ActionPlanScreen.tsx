@@ -1,4 +1,4 @@
-import { dateLocale, t } from '@/i18n';
+import { dateLocale, num, t } from '@/i18n';
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,13 @@ import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
 import { showSamples } from '@/data/dataMode';
+import { ProjectionChart } from '@/components/ProjectionChart';
+import { InfoButton } from '@/components/InfoButton';
+import { labUploadRepository } from '@/data/labUploads';
+import { latestUpload, MarkerProjection, projectMarkers } from '@/logic/markerProjection';
+import { planRuleForMarker } from '@/utils/planUpdate';
+import { rangeText } from '@/utils/rangeStatus';
+import { PROJECTION_UNCERTAINTY_NOTE_EN } from '@/data/reportContentEn';
 
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
@@ -32,17 +39,23 @@ export const ActionPlanScreen = () => {
   const router = useRouter();
   const [latest, setLatest] = useDeepState<PlanVersion | null>(null);
   const [plan, setPlan] = useDeepState<PlanItem[]>([]);
+  // Gráficas "cómo podrían cambiar" a partir de la última analítica subida (en las cuentas de prueba,
+  // solo si es más reciente que el informe de ejemplo, que ya trae las suyas en cada bloque)
+  const [projections, setProjections] = useDeepState<MarkerProjection[]>([]);
   useReloadOnFocus(
     useCallback(async () => {
       setLatest(await planVersionRepository.latest().catch(() => null));
       setPlan(buildPlan(await profileRepository.get().catch(() => null)));
-    }, [setLatest, setPlan]),
+      const last = latestUpload(await labUploadRepository.getAll().catch(() => []));
+      const newer = last && (!showSamples() || (last.testDate ?? last.createdAt) > currentReport.test_date);
+      setProjections(newer ? projectMarkers(last) : []);
+    }, [setLatest, setPlan, setProjections]),
   );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your full plan')} showBack showHome />
+        <ScreenHeader title={t('Your full plan')} showBack />
         <Text style={styles.intro}>
           {showSamples()
             ? t('Built from your answers, your blood test of {date} and your wearable data, in three blocks: habits, physical activity, and nutrition and supplements.', {
@@ -68,6 +81,41 @@ export const ActionPlanScreen = () => {
                 <Text style={[styles.updatedStatus, { color: statusColor(it.status) }]}>{t(STATUS_LABEL[it.status])}</Text>
               </View>
             ))}
+          </View>
+        )}
+
+        {projections.length > 0 && (
+          <View style={styles.projections}>
+            <View style={styles.projHeader}>
+              <Text style={styles.projTitle}>{t('How your markers could change')}</Text>
+              <InfoButton topic="projections" size={18} />
+            </View>
+            <Text style={styles.projSub}>
+              {t('If you keep up the changes in your plan, starting from your analysis of {date}.', { date: longDate(projections[0].testDate) })}
+            </Text>
+            {projections.map((p) => {
+              const rule = planRuleForMarker(p.markerId);
+              const range = rangeText(p.rangeLow, p.rangeHigh);
+              return (
+                <View key={p.markerId} style={styles.projCard}>
+                  <Text style={styles.projName}>{p.name}</Text>
+                  <Text style={styles.projValues}>
+                    {num(p.current)} → ~{num(p.expected)} {p.unit}
+                    {range ? <Text style={styles.projRange}>{`  ·  ${t('Range: {range}', { range })}`}</Text> : null}
+                  </Text>
+                  {rule && <Text style={styles.projWith}>{t('With: {action}', { action: rule.title })}</Text>}
+                  <ProjectionChart
+                    markerId={p.markerId}
+                    currentValue={p.current}
+                    expectedValueIn6Months={p.expected}
+                    expectedRangeLow={p.bandLow}
+                    expectedRangeHigh={p.bandHigh}
+                    unit={p.unit}
+                  />
+                </View>
+              );
+            })}
+            <Text style={styles.projNote}>{t(PROJECTION_UNCERTAINTY_NOTE_EN)}</Text>
           </View>
         )}
 
@@ -140,6 +188,16 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 32 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 12 },
   share: { marginHorizontal: 20, marginBottom: 16 },
+  projections: { marginHorizontal: 20, marginBottom: 18 },
+  projHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  projTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
+  projSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 4, marginBottom: 10 },
+  projCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 16, marginBottom: 10 },
+  projName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  projValues: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 2 },
+  projRange: { color: Colors.textMuted, fontSize: 12, fontWeight: '400' },
+  projWith: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 4, marginBottom: 6 },
+  projNote: { color: Colors.textMuted, fontSize: 11 },
   links: { marginHorizontal: 20, marginTop: 8, gap: 8 },
   updated: {
     backgroundColor: Colors.card,

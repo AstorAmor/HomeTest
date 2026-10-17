@@ -49,6 +49,13 @@ const DOCTOR_RULE: Omit<Rule, 'markers'> = {
   why: 'This marker is out of range and needs a professional look before changing anything.',
 };
 
+// Qué acción del plan trabaja un marcador ("Cuida tu colesterol" + qué hacer), traducida; null si
+// ninguna (entonces lo que toca es revisarlo con un médico)
+export function planRuleForMarker(markerId: string): { title: string; why: string } | null {
+  const rule = RULES.find((r) => r.markers.includes(markerId));
+  return rule ? { title: t(rule.title), why: t(rule.why) } : null;
+}
+
 export interface PlanProposal {
   items: PlanVersionItem[];
   counts: Record<PlanVersionItem['status'], number>;

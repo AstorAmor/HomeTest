@@ -3220,7 +3220,6 @@ export const es: Record<string, string> = {
   'first time measured': 'primera vez que se mide',
   // ── Planes: borrar y volver a Hoy (2026-10-17) ──
   'Lab test': 'Analítica',
-  'Go to Today': 'Ir a Hoy',
   'Delete this plan': 'Borrar este plan',
   'Delete this plan?': '¿Borrar este plan?',
   'This plan could not be deleted yet. Try again in a while.': 'Este plan aún no se ha podido borrar. Inténtalo de nuevo en un rato.',
@@ -3232,4 +3231,17 @@ export const es: Record<string, string> = {
   // ── Mis datos: tensión ──
   'Systolic (high)': 'Sistólica (alta)',
   'Diastolic (low)': 'Diastólica (baja)',
+  // ── Para revisar y cómo podrían cambiar tus marcadores (2026-10-17) ──
+  'If you keep up the changes in your plan, starting from your analysis of {date}.': 'Si mantienes los cambios de tu plan, a partir de tu analítica del {date}.',
+  'With: {action}': 'Con: {action}',
+  'Tap a value to see what it is and what helps.': 'Toca un valor para ver qué es y qué ayuda.',
+  'Everything with a reference is within range.': 'Todo lo que tiene referencia está dentro del rango.',
+  'Why it is measured': 'Para qué se mide',
+  'What can move it': 'Qué puede moverlo',
+  'What helps': 'Qué ayuda',
+  'Talk to a doctor about this result before changing anything.': 'Habla con un médico sobre este resultado antes de cambiar nada.',
+  'How it could change with your plan': 'Cómo podría cambiar con tu plan',
+  'A value out of range is not a diagnosis. Your doctor puts it in context.': 'Un valor fuera de rango no es un diagnóstico. Tu médico lo pone en contexto.',
+  'All your values': 'Todos tus valores',
+  '{name} is one of the values measured in your lab report. A value outside the reference range doesn\'t necessarily mean a health problem, but it\'s worth discussing with your doctor.': '{name} es uno de los valores medidos en tu analítica. Un valor fuera del rango de referencia no significa necesariamente un problema de salud, pero conviene comentarlo con tu médico.',
 };

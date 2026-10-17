@@ -99,12 +99,12 @@ export const ProjectionChart = ({
         <View style={[styles.xAxisLabels, { width: chartWidth }]}>
           <Text style={styles.axisLabel}>
             {t('Now')} · {num(currentValue)}
-            {unit}
+            {unit ? ` ${unit}` : ''}
           </Text>
           <Text style={[styles.axisLabel, styles.midLabel, { left: midX - MID_LABEL_WIDTH / 2 }]}>{t('3 mo')}</Text>
           <Text style={styles.axisLabel}>
             {t('6 mo')} · ~{num(expectedValueIn6Months)}
-            {unit}
+            {unit ? ` ${unit}` : ''}
           </Text>
         </View>
       </View>

@@ -53,9 +53,12 @@ export const PlanUpdateScreen = () => {
         items: proposal.items,
         note: 'Updated from your uploaded test',
       });
-      router.replace('/plans');
+      // Cierra el recorrido (subir analítica → progreso → actualizar) y deja "Tus planes" encima de la
+      // pestaña de la que se partió: un solo "atrás" vuelve a ella
+      if (router.canDismiss()) router.dismissAll();
+      router.push('/plans');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save');
+      setError(e instanceof Error ? e.message : tr('Could not save'));
       setSaving(false);
     }
   };
@@ -65,7 +68,7 @@ export const PlanUpdateScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={tr('Update your plan')} showBack showHome />
+        <ScreenHeader title={tr('Update your plan')} showBack />
         <Text style={styles.intro}>
           {tr("Here's how your plan changes with these results. Actions whose markers weren't in this test stay as they are.")}
         </Text>

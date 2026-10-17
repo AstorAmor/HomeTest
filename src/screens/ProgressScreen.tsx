@@ -11,6 +11,7 @@ import { compareUpload, ChangeVerdict, ProgressResult, VERDICT_LABEL } from '@/u
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
 import { LabReportTable } from '@/components/LabReportTable';
+import { OutOfRangeSummary } from '@/components/OutOfRangeSummary';
 import { getRangeStatus, rangeText } from '@/utils/rangeStatus';
 import { TAB, tabHref } from '@/constants/tabs';
 
@@ -75,7 +76,7 @@ export const ProgressScreen = () => {
   if (!upload || !result) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title={t('Uploaded analysis')} showBack showHome backFallback={tabHref(TAB.lab)} />
+        <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.lab)} />
       </SafeAreaView>
     );
   }
@@ -89,7 +90,7 @@ export const ProgressScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Uploaded analysis')} showBack showHome backFallback={tabHref(TAB.lab)} />
+        <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.lab)} />
         <Text style={styles.subhead}>
           {upload.testDate ? shortDate(upload.testDate) : t('Uploaded test')} · {upload.labName ?? t('User upload')}
         </Text>
@@ -114,6 +115,8 @@ export const ProgressScreen = () => {
               <Stat value={counts.out} label={t('To review')} color={counts.out ? Colors.attention : Colors.textSecondary} />
               {counts.none > 0 && <Stat value={counts.none} label={t('No reference')} color={Colors.textSecondary} />}
             </View>
+            <OutOfRangeSummary report={upload.data} />
+            <Text style={styles.allTitle}>{t('All your values')}</Text>
             <View style={styles.table}>
               <LabReportTable report={upload.data} />
             </View>
@@ -215,6 +218,7 @@ const styles = StyleSheet.create({
   segText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
   segTextOn: { color: Colors.background },
   table: { marginHorizontal: 20 },
+  allTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginHorizontal: 20, marginBottom: 10 },
   summary: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 16 },
   stat: { flex: 1, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingVertical: 12, alignItems: 'center' },
   statValue: { fontSize: 24, fontWeight: '900' },

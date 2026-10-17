@@ -121,7 +121,7 @@ export const PlansScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your plans')} showBack showHome />
+        <ScreenHeader title={t('Your plans')} showBack />
         <Text style={styles.intro}>{t("A new plan comes with every blood test. Earlier plans stay here so you can see how far you've come.")}</Text>
 
         {showGoalsPlan && (
