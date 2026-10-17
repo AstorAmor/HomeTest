@@ -2753,7 +2753,7 @@
     {
       "action_id": "act.sueno.mantener_horario",
       "pinned": true,
-      "title": "Mantén tu horario de sueño regular",
+      "title": "Acuéstate y levántate a la misma hora",
       "why": [
         "Tu regularidad de sueño ha mejorado un 35% en 6 meses y coincide con la bajada de tu HbA1c y tu PCR."
       ],
@@ -2780,7 +2780,7 @@
     {
       "action_id": "act.actividad.fuerza_2x_semana",
       "pinned": false,
-      "title": "Añade 2 sesiones de fuerza por semana",
+      "title": "Haz 2 sesiones de fuerza a la semana",
       "why": [
         "Tus pasos diarios subieron de ~5.100 a ~8.600, pero aún no entrenas fuerza — clave para tu sensibilidad a la insulina y tu composición corporal."
       ],
@@ -2808,7 +2808,7 @@
     {
       "action_id": "act.dieta.mas_omega3_pescado_azul",
       "pinned": false,
-      "title": "Sube tu ingesta de omega-3 (pescado azul 2-3x/semana)",
+      "title": "Toma pescado azul 2-3 veces por semana (omega-3)",
       "why": [
         "Tu índice de omega-3 sigue bajo (6,8%, objetivo >8%) y tus triglicéridos, aunque mejor, aún pueden bajar más."
       ],
@@ -2834,7 +2834,7 @@
     {
       "action_id": "act.suplemento.vitamina_d",
       "pinned": false,
-      "title": "Suplementa vitamina D y toma sol con regularidad",
+      "title": "Toma vitamina D y 15-20 min de sol, 3-4 veces por semana",
       "why": [
         "Tu vitamina D sigue insuficiente (26 ng/mL) aunque ha mejorado desde el primer test (18 ng/mL)."
       ],
@@ -2861,7 +2861,7 @@
     {
       "action_id": "act.dieta.hierro_hemo",
       "pinned": false,
-      "title": "Incluye más hierro de fácil absorción",
+      "title": "Come hierro de fácil absorción 2-3 veces por semana",
       "why": [
         "Tu ferritina sigue en el límite bajo (34 ng/mL); mejorar tu reserva de hierro ayuda a tu energía y rendimiento."
       ],

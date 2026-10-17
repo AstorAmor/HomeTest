@@ -76,9 +76,11 @@ export const ActionPlanScreen = () => {
                 <View style={[styles.dot, { backgroundColor: statusColor(it.status) }]} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.updatedItem}>{it.title}</Text>
-                  {it.note && <Text style={styles.updatedNote}>{it.note}</Text>}
                 </View>
-                <Text style={[styles.updatedStatus, { color: statusColor(it.status) }]}>{t(STATUS_LABEL[it.status])}</Text>
+                {/* "Sin volver a medir" no aporta nada aquí (fundador): solo los estados con algo que decir */}
+                {it.status !== 'not_retested' && (
+                  <Text style={[styles.updatedStatus, { color: statusColor(it.status) }]}>{t(STATUS_LABEL[it.status])}</Text>
+                )}
               </View>
             ))}
           </View>
@@ -103,7 +105,12 @@ export const ActionPlanScreen = () => {
                     {num(p.current)} → ~{num(p.expected)} {p.unit}
                     {range ? <Text style={styles.projRange}>{`  ·  ${t('Range: {range}', { range })}`}</Text> : null}
                   </Text>
-                  {rule && <Text style={styles.projWith}>{t('With: {action}', { action: rule.title })}</Text>}
+                  {rule && (
+                    <>
+                      <Text style={styles.projWith}>{t('With: {action}', { action: rule.title })}</Text>
+                      <Text style={styles.projWhy}>{rule.why}</Text>
+                    </>
+                  )}
                   <ProjectionChart
                     markerId={p.markerId}
                     currentValue={p.current}
@@ -196,7 +203,8 @@ const styles = StyleSheet.create({
   projName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
   projValues: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 2 },
   projRange: { color: Colors.textMuted, fontSize: 12, fontWeight: '400' },
-  projWith: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 4, marginBottom: 6 },
+  projWith: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 4 },
+  projWhy: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2, marginBottom: 6 },
   projNote: { color: Colors.textMuted, fontSize: 11 },
   links: { marginHorizontal: 20, marginTop: 8, gap: 8 },
   updated: {

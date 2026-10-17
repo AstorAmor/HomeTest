@@ -25,7 +25,7 @@ describe('plan de partida', () => {
 
   it('tensión alta: la acción de comida es reducir la sal', () => {
     const plan = buildPlan({ conditions: ['hypertension'] });
-    expect(plan.find((p) => p.kind === 'nutrition')?.title).toBe('Cut down on salt');
+    expect(plan.find((p) => p.kind === 'nutrition')?.title).toBe('Keep salt under 5 g a day');
   });
 
   it('muy activo con objetivo de rendimiento: fuerza y proteína, sin pasos', () => {

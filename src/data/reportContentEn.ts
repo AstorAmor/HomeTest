@@ -90,7 +90,7 @@ interface ActionPlanContentEn {
 
 export const ACTION_PLAN_CONTENT_EN: Record<string, ActionPlanContentEn> = {
   'act.sueno.mantener_horario': {
-    title: 'Keep your sleep schedule consistent',
+    title: 'Go to bed and wake up at the same time',
     why: [
       "Your sleep regularity improved 35% in 6 months, tracking right alongside your drop in HbA1c and CRP.",
     ],
@@ -98,7 +98,7 @@ export const ACTION_PLAN_CONTENT_EN: Record<string, ActionPlanContentEn> = {
     caveats: [],
   },
   'act.actividad.fuerza_2x_semana': {
-    title: 'Add 2 strength sessions per week',
+    title: 'Do 2 strength sessions a week',
     why: [
       "Your daily steps climbed from ~5,100 to ~8,600, but you're still not strength training — key for insulin sensitivity and body composition.",
     ],
@@ -106,7 +106,7 @@ export const ACTION_PLAN_CONTENT_EN: Record<string, ActionPlanContentEn> = {
     caveats: ['If you have joint discomfort, start with bodyweight before adding external load.'],
   },
   'act.dieta.mas_omega3_pescado_azul': {
-    title: 'Increase your omega-3 intake (oily fish 2-3x/week)',
+    title: 'Eat oily fish 2–3 times a week (omega-3)',
     why: [
       "Your omega-3 index is still low (6.8%, target >8%), and your triglycerides — while improved — can still come down further.",
     ],
@@ -116,7 +116,7 @@ export const ACTION_PLAN_CONTENT_EN: Record<string, ActionPlanContentEn> = {
     caveats: [],
   },
   'act.suplemento.vitamina_d': {
-    title: 'Supplement vitamin D and get regular sun exposure',
+    title: 'Take vitamin D and get 15–20 minutes of sun, 3–4 times a week',
     why: [
       'Your vitamin D is still insufficient (26 ng/mL), though it has improved since your first test (18 ng/mL).',
     ],
@@ -124,7 +124,7 @@ export const ACTION_PLAN_CONTENT_EN: Record<string, ActionPlanContentEn> = {
     caveats: ['Check with your doctor if you take anticoagulants or have hypercalcemia.'],
   },
   'act.dieta.hierro_hemo': {
-    title: 'Add more easily-absorbed iron to your diet',
+    title: 'Eat easily absorbed iron 2–3 times a week',
     why: [
       'Your ferritin is still borderline low (34 ng/mL); rebuilding your iron reserves supports energy and performance.',
     ],

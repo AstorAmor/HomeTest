@@ -147,7 +147,7 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
       score: score + 3,
       item: {
         ...base,
-        title: t('Cut down on added sugar'),
+        title: t('Keep added sugar under 25 g a day'),
         why: t(cond('diabetes') ? 'You told us about diabetes. Added sugar and refined flour drive glucose spikes; meals built on protein, fibre and vegetables keep it steady.' : 'You told us about prediabetes. Added sugar and refined flour drive glucose spikes; meals built on protein, fibre and vegetables keep it steady.'),
         how: [t('Half the plate vegetables, a quarter protein'), t('Swap sugary drinks for water or sparkling water'), ...alcoholTip, t('Snap your meals: we track added sugar for you')].slice(0, 3),
       },
@@ -157,9 +157,9 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
       score: score + 3,
       item: {
         ...base,
-        title: t('Cut down on salt'),
+        title: t('Keep salt under 5 g a day'),
         why: t('You told us about high blood pressure. Less salt lowers it within weeks; the WHO advises under 5 g a day, about a teaspoon.'),
-        how: [t('Cook from scratch more often'), t('Check labels: bread, cured meats and ready meals hide most salt'), ...alcoholTip, t('Season with herbs, lemon or spices')].slice(0, 3),
+        how: [t('Cook from scratch most days'), t('Check labels: bread, cured meats and ready meals hide most salt'), ...alcoholTip, t('Season with herbs, lemon or spices')].slice(0, 3),
       },
     };
   if (cond('high_cholesterol') || cond('heart_disease'))
@@ -169,7 +169,7 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
         ...base,
         title: t('Eat the Mediterranean way'),
         why: t(cond('heart_disease') ? 'You told us about heart disease. Olive oil, nuts, legumes and fish instead of processed meat and butter lower LDL cholesterol and heart risk.' : 'You told us about high cholesterol. Olive oil, nuts, legumes and fish instead of processed meat and butter lower LDL cholesterol and heart risk.'),
-        how: [t('Olive oil as your main fat'), t('Legumes 3 times a week, oily fish twice'), ...alcoholTip, t('Fewer processed meats and pastries')].slice(0, 3),
+        how: [t('Olive oil as your main fat'), t('Legumes 3 times a week, oily fish twice'), ...alcoholTip, t('Processed meat and pastries only occasionally')].slice(0, 3),
       },
     };
   if (has('performance') && !has('lose_weight'))

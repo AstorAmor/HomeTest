@@ -948,4 +948,13 @@ ya guardan en las carpetas nuevas.
   de `logic/projection.ts`). Efectos típicos de los cambios de estilo de vida (LDL −12 %, triglicéridos −25 %,
   HDL +3 mg/dL…), nunca más allá de volver al rango: SUPUESTO pendiente de revisión clínica. En cuentas de
   prueba solo si la analítica es más reciente que el informe de ejemplo.
+- **Actualizar el plan en una cuenta real** partía del action plan del informe de EJEMPLO cuando no había versión
+  guardada (salían "Mantén tu horario de sueño", "Añade 2 sesiones de fuerza"… con "no se midió"). Ahora
+  `basePlanItems(latest, buildPlan(profile))` parte del plan personalizado (hábitos sin marcadores) y lo que la
+  analítica saca fuera de rango, también lo medido por primera vez (`progress.firstTime` lleva `markerId`), llega
+  como acción nueva. Las versiones guardadas antes siguen como estaban: borrarlas y volver a actualizar.
+- **Acciones concretas** (lo que hay que hacer, con cifras): reglas de `planUpdate.ts` ("Aceite de oliva, frutos
+  secos y pescado azul 2-3 veces por semana"…), nutrición del plan personalizado ("Sal: menos de 5 g al día") y
+  títulos del informe de ejemplo ("Haz 2 sesiones de fuerza a la semana"). "Tu plan de hoy" y "Tus planes" ya
+  no enseñan "No se volvió a medir" ni su nota; la gráfica de "Cómo podrían cambiar" dice qué hacer.
 

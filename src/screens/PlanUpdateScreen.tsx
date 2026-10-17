@@ -10,6 +10,8 @@ import { planVersionRepository, PlanItemStatus } from '@/data/planVersions';
 import { compareUpload } from '@/utils/progress';
 import { basePlanItems, PlanProposal, proposeUpdatedPlan, STATUS_LABEL } from '@/utils/planUpdate';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { buildPlan } from '@/data/planRepository';
+import { profileRepository } from '@/data/profileRepository';
 import { t as tr } from '@/i18n';
 
 export const statusColor = (s: PlanItemStatus) =>
@@ -34,11 +36,15 @@ export const PlanUpdateScreen = () => {
 
   useReloadOnFocus(
     useCallback(async () => {
-      const [all, latest] = await Promise.all([labUploadRepository.getAll(), planVersionRepository.latest()]);
+      const [all, latest, profile] = await Promise.all([
+        labUploadRepository.getAll(),
+        planVersionRepository.latest(),
+        profileRepository.get().catch(() => null),
+      ]);
       const u = all.find((x) => x.id === uploadId);
       if (!u) return;
       const progress = compareUpload(u, all.filter((x) => x.id !== u.id && x.createdAt < u.createdAt));
-      setProposal(proposeUpdatedPlan(basePlanItems(latest), progress));
+      setProposal(proposeUpdatedPlan(basePlanItems(latest, buildPlan(profile)), progress));
     }, [uploadId]),
   );
 

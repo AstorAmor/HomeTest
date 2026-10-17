@@ -32,7 +32,7 @@ export interface MarkerChange {
 
 export interface ProgressResult {
   changes: MarkerChange[];
-  firstTime: { name: string; value: number; unit: string; status: RangeStatus }[]; // reconocidos pero sin valor previo
+  firstTime: { markerId: string; name: string; value: number; unit: string; status: RangeStatus }[]; // reconocidos pero sin valor previo
   notCompared: { name: string; reason: string }[];
 }
 
@@ -125,7 +125,7 @@ export function compareUpload(upload: LabUpload, previousUploads: LabUpload[]): 
       const low = own ? p.rango_min : prev?.low ?? reportMarker?.range.low ?? null;
       const high = own ? p.rango_max : prev?.high ?? reportMarker?.range.high ?? null;
       if (!prev) {
-        result.firstTime.push({ name, value: p.valor, unit: p.unidad, status: status(p.valor, low, high) });
+        result.firstTime.push({ markerId: id, name, value: p.valor, unit: p.unidad, status: status(p.valor, low, high) });
         continue;
       }
       if (!sameUnit(prev.unit, p.unidad)) {

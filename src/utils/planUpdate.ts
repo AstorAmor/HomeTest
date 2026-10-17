@@ -2,6 +2,8 @@ import { currentReport } from '@/data/reportRepository';
 import { getActionPlanContentEn } from '@/data/reportContentEn';
 import { PlanVersion, PlanVersionItem } from '@/data/planVersions';
 import { MarkerChange, ProgressResult } from './progress';
+import { showSamples } from '@/data/dataMode';
+import type { PlanItem } from '@/logic/plan';
 import { num, t } from '@/i18n';
 
 // Propone un plan actualizado a partir de lo que ha cambiado en una analítica nueva.
@@ -15,9 +17,12 @@ import { num, t } from '@/i18n';
 
 type BaseItem = Omit<PlanVersionItem, 'status' | 'note'>;
 
-// Plan vigente: la última versión guardada o, si no hay, el action plan del informe.
-export function basePlanItems(latest: PlanVersion | null): BaseItem[] {
+// Plan vigente: la última versión guardada o, si no hay, el plan personalizado (el de Hoy). Sus acciones
+// son hábitos, no van atadas a marcadores: lo que la analítica saque fuera de rango llega como acción
+// nueva. El action plan del informe de ejemplo solo cuenta en las cuentas de prueba.
+export function basePlanItems(latest: PlanVersion | null, goalsPlan: PlanItem[] = []): BaseItem[] {
   if (latest) return latest.items.map(({ title, why, markers }) => ({ title, why, markers }));
+  if (!showSamples()) return goalsPlan.map((it) => ({ title: it.title, why: it.why, markers: [] }));
   return currentReport.action_plan.map((a) => {
     const en = getActionPlanContentEn(a.action_id, { title: a.title, why: a.why, how: a.how, caveats: a.caveats });
     const markers = Array.from(new Set([...(a.linked_markers ?? []), a.estimated_next_test?.marker_id].filter(Boolean) as string[]));
@@ -34,14 +39,14 @@ interface Rule {
 }
 
 const RULES: Rule[] = [
-  { markers: ['glucose', 'hba1c', 'insulin', 'homa_ir', 'fructosamine'], title: 'Keep your blood sugar steady', why: 'A 10-minute walk after meals, vegetables and protein first, and fewer refined carbs and sugary drinks.' },
-  { markers: ['ldl', 'apob', 'total_cholesterol', 'non_hdl_cholesterol', 'triglycerides', 'hdl', 'lpa'], title: 'Support your cholesterol', why: 'Olive oil, nuts, oily fish and fibre; less processed meat and pastries. Regular movement raises HDL.' },
-  { markers: ['ferritin', 'iron', 'transferrin_saturation', 'hemoglobin', 'tibc'], title: 'Look after your iron', why: 'Iron-rich foods (red meat, legumes, spinach) with vitamin C. Talk to a doctor before taking supplements.' },
-  { markers: ['vitamin_d'], title: 'Raise your vitamin D', why: '15 minutes of midday sun most days and oily fish. Ask a doctor whether you need a supplement.' },
-  { markers: ['vitamin_b12', 'folate'], title: 'Top up your B vitamins', why: 'Eggs, fish, dairy and leafy greens. A doctor can tell you if you need a supplement.' },
-  { markers: ['alt', 'ast', 'ggt'], title: 'Give your liver a break', why: 'Cut back on alcohol and sugary drinks, and keep a healthy weight.' },
-  { markers: ['hs_crp', 'esr', 'fibrinogen'], title: 'Lower inflammation', why: 'Regular sleep, daily movement and oily fish help bring inflammation markers down.' },
-  { markers: ['uric_acid', 'creatinine', 'egfr', 'cystatin_c'], title: 'Support your kidneys', why: 'Drink enough water and limit alcohol, sugary drinks and very salty food.' },
+  { markers: ['glucose', 'hba1c', 'insulin', 'homa_ir', 'fructosamine'], title: 'A 10-minute walk after each main meal', why: 'Vegetables and protein first, whole grains instead of refined ones, and water instead of sugary drinks.' },
+  { markers: ['ldl', 'apob', 'total_cholesterol', 'non_hdl_cholesterol', 'triglycerides', 'hdl', 'lpa'], title: 'Olive oil, nuts, and oily fish 2–3 times a week', why: 'Fibre every day (legumes, oats, fruit), processed meat and pastries only occasionally, and 30 minutes of movement a day, which raises HDL.' },
+  { markers: ['ferritin', 'iron', 'transferrin_saturation', 'hemoglobin', 'tibc'], title: 'Iron-rich foods with vitamin C, 4–5 days a week', why: 'Red meat, legumes or spinach with citrus or peppers in the same meal. Talk to a doctor before taking supplements.' },
+  { markers: ['vitamin_d'], title: '15 minutes of midday sun most days', why: 'And oily fish twice a week. Ask a doctor whether you need a supplement.' },
+  { markers: ['vitamin_b12', 'folate'], title: 'Eggs, fish or dairy every day', why: 'Plus leafy greens. A doctor can tell you if you need a supplement.' },
+  { markers: ['alt', 'ast', 'ggt'], title: 'At least 4 alcohol-free days a week', why: 'Water instead of sugary drinks, and a healthy weight.' },
+  { markers: ['hs_crp', 'esr', 'fibrinogen'], title: '7 hours of sleep and 30 minutes of movement a day', why: 'Oily fish twice a week also helps bring inflammation markers down.' },
+  { markers: ['uric_acid', 'creatinine', 'egfr', 'cystatin_c'], title: '1.5–2 litres of water a day', why: 'Alcohol, sugary drinks and very salty food only occasionally.' },
 ];
 
 const DOCTOR_RULE: Omit<Rule, 'markers'> = {
@@ -83,8 +88,14 @@ export function proposeUpdatedPlan(base: BaseItem[], progress: ProgressResult): 
     return { ...it, status: 'needs_attention', note: `${note}. ${t('No real change yet.')}` };
   });
 
-  // Marcadores fuera de rango que ninguna acción trabaja → acciones nuevas (una por regla)
-  const uncovered = progress.changes.filter((c) => c.afterStatus !== 'in' && !covered.has(c.markerId));
+  // Marcadores fuera de rango que ninguna acción trabaja → acciones nuevas (una por regla). También los
+  // que se miden por primera vez (sin valor anterior con el que comparar), como en una primera analítica.
+  const uncovered = [
+    ...progress.changes.filter((c) => c.afterStatus !== 'in').map((c) => ({ markerId: c.markerId, name: c.name, text: fmt(c) })),
+    ...progress.firstTime
+      .filter((f) => f.status !== 'in')
+      .map((f) => ({ markerId: f.markerId, name: f.name, text: `${f.name} ${num(f.value)} ${f.unit}`.trim() })),
+  ].filter((c) => !covered.has(c.markerId));
   const added = new Map<string, PlanVersionItem>();
   for (const c of uncovered) {
     const rule = RULES.find((r) => r.markers.includes(c.markerId));
@@ -92,7 +103,7 @@ export function proposeUpdatedPlan(base: BaseItem[], progress: ProgressResult): 
     const existing = added.get(key);
     if (existing) {
       existing.markers.push(c.markerId);
-      existing.note = `${existing.note} · ${fmt(c)}`;
+      existing.note = `${existing.note} · ${c.text}`;
       continue;
     }
     added.set(key, {
@@ -100,7 +111,7 @@ export function proposeUpdatedPlan(base: BaseItem[], progress: ProgressResult): 
       why: t(rule?.why ?? DOCTOR_RULE.why),
       markers: [c.markerId],
       status: 'new',
-      note: t('New from this test: {what}', { what: fmt(c) }),
+      note: t('New from this test: {what}', { what: c.text }),
     });
   }
 

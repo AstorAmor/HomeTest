@@ -62,10 +62,12 @@ const VersionCard = ({
           <View key={`${it.title}-${i}`} style={styles.item}>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
               <Text style={[styles.itemTitle, { flex: 1 }]}>{it.title}</Text>
-              <Text style={[styles.status, { color: statusColor(it.status) }]}>{STATUS_LABEL[it.status]}</Text>
+              {it.status !== 'not_retested' && (
+                <Text style={[styles.status, { color: statusColor(it.status) }]}>{STATUS_LABEL[it.status]}</Text>
+              )}
             </View>
             <Text style={styles.itemWhy}>{it.why}</Text>
-            {it.note && <Text style={styles.itemNote}>{it.note}</Text>}
+            {it.note && it.status !== 'not_retested' && <Text style={styles.itemNote}>{it.note}</Text>}
           </View>
         ))}
         <TouchableOpacity style={styles.deleteRow} onPress={onDelete} hitSlop={8}>
