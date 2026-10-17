@@ -37,8 +37,19 @@ export async function requireUser(req: Request): Promise<{ userId: string } | Re
   return { userId: data.user.id };
 }
 
+// ¿Incluye el nivel de quien llama esta función? (has_feature() en Supabase, con su propia sesión).
+// Si la base de datos aún no tiene has_feature (migración plan_access sin aplicar), se permite.
+export async function userHasFeature(req: Request, feature: string): Promise<boolean> {
+  const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', publishableKey(), {
+    global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
+  });
+  const { data, error } = await supabase.rpc('has_feature', { p_feature: feature });
+  if (error) return ['PGRST202', '42883'].includes(error.code ?? '');
+  return data === true;
+}
+
 // Envoltorio común: CORS, método, sesión y errores inesperados.
-export function serve(handler: (body: any, userId: string) => Promise<Response>) {
+export function serve(handler: (body: any, userId: string, req: Request) => Promise<Response>) {
   Deno.serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
     if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -48,7 +59,7 @@ export function serve(handler: (body: any, userId: string) => Promise<Response>)
 
     try {
       const body = await req.json();
-      return await handler(body, auth.userId);
+      return await handler(body, auth.userId, req);
     } catch (err) {
       return json({ error: err instanceof Error ? err.message : 'Unexpected error' }, 500);
     }

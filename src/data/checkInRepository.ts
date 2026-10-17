@@ -1,5 +1,9 @@
 import { createMetricRepository, definedOnly } from './metricRepository';
-import { CheckInEntry, DayMoment, Mood } from '@/types/checkIn';
+import { CheckInEntry, Mood } from '@/types/checkIn';
+import { checkInDayKey } from '@/logic/checkInDay';
+
+// El momento sugerido y el día de cada check-in (de madrugada cuenta para el día anterior)
+export { suggestMoment, checkInDayKey } from '@/logic/checkInDay';
 
 export const checkInRepository = createMetricRepository<CheckInEntry>('hometest:check_ins', {
   table: 'check_ins',
@@ -54,8 +58,7 @@ export interface DailyCheckInPoint {
 export function dailyCheckInSeries(entries: CheckInEntry[], days = 7): DailyCheckInPoint[] {
   const byDay = new Map<string, { energy: number[]; mood: number[] }>();
   for (const e of entries) {
-    const d = new Date(e.fecha);
-    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const day = checkInDayKey(e);
     const bucket = byDay.get(day) ?? { energy: [], mood: [] };
     if (e.energy) bucket.energy.push(e.energy);
     if (e.mood) bucket.mood.push(MOOD_SCORE[e.mood]);
@@ -77,13 +80,6 @@ export function sampleCheckInSeries(days = 7, today = new Date()): DailyCheckInP
     const d = new Date(today.getTime() - (days - 1 - i) * 24 * 3600 * 1000);
     return { date: d.toISOString().slice(0, 10), energy: energy[i % 7], mood: mood[i % 7] };
   });
-}
-
-export function suggestMoment(date = new Date()): DayMoment {
-  const h = date.getHours();
-  if (h < 11) return 'just_woke_up';
-  if (h < 19) return 'mid_day';
-  return 'winding_down';
 }
 
 export interface Suggestion {

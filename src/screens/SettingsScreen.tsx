@@ -26,7 +26,7 @@ const PERMISSIONS: { icon: string; title: string; why: string }[] = [
 export const SettingsScreen = () => {
   const router = useRouter();
   const exit = useLogout();
-  const { authMode } = useAuth();
+  const { authMode, user } = useAuth();
   const [real, setReal] = useState(isRealAccount());
   // Cuenta real ↔ de prueba: cambia lo que se enseña en toda la app, así que recarga (vuelve aquí)
   const toggleReal = async (v: boolean) => {
@@ -82,7 +82,15 @@ export const SettingsScreen = () => {
           <>
             <Text style={styles.section}>{t('Account')}</Text>
             <View style={styles.card}>
-              <View style={styles.row}>
+              <TouchableOpacity style={styles.row} onPress={() => router.push('/your-name')}>
+                <Ionicons name="person-circle-outline" size={22} color={Colors.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle}>{t('Your name')}</Text>
+                  <Text style={styles.rowSub}>{user?.nombre}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
+              <View style={[styles.row, styles.divider]}>
                 <Ionicons name="shield-checkmark-outline" size={22} color={Colors.accent} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowTitle}>{t('Real account')}</Text>

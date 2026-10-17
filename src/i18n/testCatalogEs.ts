@@ -39,21 +39,21 @@ export const TEST_COPY_ES: Record<string, TestCopyEs> = {
   membership: {
     name: 'Suscripción Kuova Basic',
     description:
-      'Dos analíticas completas al año (panel completo al empezar y seguimiento a los 6 meses), revisión médica de cada resultado y tu plan personalizado en la app. 1 € al día.',
+      'Dos analíticas completas al año (panel completo al empezar y seguimiento a los 6 meses), tus propios informes escaneados y explicados, y tu plan personalizado en la app. 1 € al día.',
     includes: [
       'Panel completo (~100 marcadores) + seguimiento a los 6 meses (~60 marcadores)',
-      'Un médico revisa cada resultado (≈15 min)',
+      'Escanea tus propios informes de análisis y entiéndelos',
       'Plan personalizado, tendencias y recordatorios',
     ],
   },
   premium: {
     name: 'Suscripción Kuova Premium',
     description:
-      'Todo lo de Basic, con una analítica cada 3 meses en lugar de cada 6 y 5 videoconsultas con nuestros profesionales incluidas.',
+      'Todo lo de Basic, con una analítica cada 3 meses en lugar de cada 6 y más paneles y pruebas incluidos.',
     includes: [
       'Panel completo + 3 seguimientos al año (cada 3 meses)',
-      'Un médico revisa cada resultado (≈15 min)',
-      '5 videoconsultas incluidas (médico, nutricionista, entrenador…)',
+      'Más paneles y pruebas incluidos',
+      'Escanea tus propios informes de análisis y entiéndelos',
       'Plan personalizado, tendencias y recordatorios',
     ],
   },

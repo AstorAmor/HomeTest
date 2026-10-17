@@ -8,6 +8,7 @@ import { Colors, OnDark } from '@/constants/colors';
 import { EXERCISES } from '@/data/exercises';
 import { mindfulRepository } from '@/data/planRepository';
 import { Confetti } from '@/components/Confetti';
+import { t } from '@/i18n';
 
 const SIZE = 280;
 const MIN_SCALE = 0.5;
@@ -121,12 +122,13 @@ export const ExerciseScreen = () => {
         <View style={[styles.doneIcon, { backgroundColor: `${exercise.color}30` }]}>
           <Ionicons name="checkmark" size={40} color={exercise.color} />
         </View>
-        <Text style={styles.doneTitle}>Well done</Text>
+        <Text style={styles.doneTitle}>{t('Well done')}</Text>
         <Text style={styles.doneText}>
-          {exercise.minutes} minutes of {exercise.title.toLowerCase()}.{exercise.countsAsCalm ? ' It counts towards your Calm mind badge.' : ''}
+          {t('{n} minutes of {name}.', { n: exercise.minutes, name: t(exercise.title).toLowerCase() })}
+          {exercise.countsAsCalm ? ` ${t('It counts towards your Calm mind badge.')}` : ''}
         </Text>
         <TouchableOpacity style={[styles.cta, { backgroundColor: exercise.color }]} onPress={() => router.back()}>
-          <Text style={styles.ctaText}>Done</Text>
+          <Text style={styles.ctaText}>{t('Done')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -138,7 +140,7 @@ export const ExerciseScreen = () => {
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
           <Ionicons name="close" size={26} color={OnDark.text} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>{exercise.title}</Text>
+        <Text style={styles.topTitle} numberOfLines={1}>{t(exercise.title)}</Text>
         <Text style={styles.timer}>{started ? fmt(total - elapsed) : fmt(total)}</Text>
       </View>
 
@@ -148,7 +150,7 @@ export const ExerciseScreen = () => {
         </Animated.View>
         {started && exercise.type === 'breath' && (
           <View style={styles.overlay} pointerEvents="none">
-            <Text style={styles.phaseLabel}>{paused ? 'Paused' : phase.label}</Text>
+            <Text style={styles.phaseLabel}>{paused ? t('Paused') : t(phase.label)}</Text>
             {!paused && <Text style={styles.phaseCount}>{phase.left}</Text>}
           </View>
         )}
@@ -156,11 +158,11 @@ export const ExerciseScreen = () => {
 
       <View style={styles.bottom}>
         {!started ? (
-          <Text style={styles.intro}>{exercise.intro}</Text>
+          <Text style={styles.intro}>{t(exercise.intro)}</Text>
         ) : exercise.type === 'guided' ? (
-          <Text style={styles.guided}>{paused ? 'Paused' : phase.label}</Text>
+          <Text style={styles.guided}>{paused ? t('Paused') : t(phase.label)}</Text>
         ) : (
-          <Text style={styles.hint}>Follow the circle: it grows as you breathe in and shrinks as you breathe out.</Text>
+          <Text style={styles.hint}>{t('Follow the circle: it grows as you breathe in and shrinks as you breathe out.')}</Text>
         )}
 
         <View style={styles.progressTrack}>
@@ -170,7 +172,7 @@ export const ExerciseScreen = () => {
         {!started ? (
           <TouchableOpacity style={[styles.cta, { backgroundColor: exercise.color }]} onPress={() => setStarted(true)}>
             <Ionicons name="play" size={18} color={Colors.background} />
-            <Text style={styles.ctaText}>Start · {exercise.minutes} min</Text>
+            <Text style={styles.ctaText}>{t('Start · {n} min', { n: exercise.minutes })}</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.controls}>
@@ -191,7 +193,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#0B0D16' },
   center: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12 },
-  topTitle: { color: OnDark.text, fontSize: 17, fontWeight: '700' },
+  topTitle: { color: OnDark.text, fontSize: 17, fontWeight: '700', flexShrink: 1, textAlign: 'center', marginHorizontal: 12 },
   timer: { color: OnDark.textSecondary, fontSize: 15, fontVariant: ['tabular-nums'], width: 44, textAlign: 'right' },
   stage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   overlay: { position: 'absolute', alignItems: 'center' },

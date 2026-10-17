@@ -1,12 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_OPTIONS, Mood } from '@/types/checkIn';
 import { checkInRepository, checkInSuggestions, suggestMoment, Suggestion } from '@/data/checkInRepository';
-import { t } from '@/i18n';
+import { checkInDayKey, checkInDayOptions, fechaForCheckIn, localDayKey } from '@/logic/checkInDay';
+import { confirmAsk } from '@/components/dev/confirmAsk';
+import { dateLocale, t } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
@@ -50,12 +52,27 @@ const LevelScale = ({ value, onChange, labels }: { value?: number; onChange: (v:
   </View>
 );
 
+// "Hoy", "Ayer" o "mié 15"
+const dayLabel = (key: string, now: Date) => {
+  if (key === localDayKey(now)) return t('Today');
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  if (key === localDayKey(y)) return t('Yesterday');
+  return new Date(`${key}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric' });
+};
+
 // Todo el check-in en una sola pantalla: momento del día (preseleccionado el
-// sugerido), las preguntas de ese momento, el ánimo y una nota opcional.
+// sugerido), el día al que cuenta, las preguntas de ese momento, el ánimo y una nota opcional.
+// ?id=… edita uno ya hecho (y lo puede mover de día o borrar); ?date=…&moment=… apunta uno de un
+// día pasado (desde "Tus últimos días").
 export const CheckInScreen = () => {
   const router = useRouter();
-  const suggested = useMemo(() => suggestMoment(), []);
-  const [moment, setMoment] = useState<DayMoment>(suggested);
+  const params = useLocalSearchParams<{ id?: string; date?: string; moment?: DayMoment }>();
+  const now = useMemo(() => new Date(), []);
+  const suggested = useMemo(() => suggestMoment(now), [now]);
+  const [moment, setMoment] = useState<DayMoment>(params.moment ?? suggested);
+  const [editing, setEditing] = useState<CheckInEntry | null>(null);
+  const [pickedDay, setPickedDay] = useState<string | null>(params.date ?? null);
   const [answers, setAnswers] = useState<Partial<Record<QuestionId, number>>>({});
   const [mood, setMood] = useState<Mood>();
   const [note, setNote] = useState('');
@@ -63,16 +80,42 @@ export const CheckInScreen = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [accepted, setAccepted] = useState<Set<string>>(new Set());
 
+  // Editar: se cargan las respuestas del check-in
+  useEffect(() => {
+    if (!params.id) return;
+    checkInRepository
+      .getAll()
+      .then((all) => {
+        const e = all.find((x) => x.id === params.id);
+        if (!e) return;
+        setEditing(e);
+        setMoment(e.moment);
+        setPickedDay(checkInDayKey(e));
+        setAnswers({ sleep: e.sleep, energy: e.energy, stress: e.stress, dayRating: e.dayRating });
+        setMood(e.mood);
+        setNote(e.note ?? '');
+      })
+      .catch(() => undefined);
+  }, [params.id]);
+
   const scales = QUESTIONS[moment].filter((q): q is ScaleId => q !== 'mood');
   const complete = !!mood && scales.every((q) => answers[q] !== undefined);
 
+  // Día al que cuenta: el elegido o, si no, el que toca por la hora (de madrugada, el anterior)
+  const dayOptions = checkInDayOptions(moment, now, pickedDay ?? undefined);
+  const day = pickedDay && dayOptions.includes(pickedDay) ? pickedDay : dayOptions[0];
+  const pastMidnight = !pickedDay && !params.id && day !== localDayKey(now);
+  // Apuntado o movido a otro día (no el que toca ahora): sin ideas "para ahora" al guardar
+  const backdated = !!params.id || !!params.date || day !== dayOptions[0];
+
   const save = async () => {
     if (!complete) return;
-    const now = new Date().toISOString();
-    // Solo se guardan las respuestas de las preguntas del momento elegido.
+    const nowIso = new Date().toISOString();
+    // Solo se guardan las respuestas de las preguntas del momento elegido (al editar, las del
+    // momento anterior se borran con null).
     const pick = (q: ScaleId) => (scales.includes(q) ? answers[q] : undefined);
     const entry: Omit<CheckInEntry, 'id' | 'createdAt'> = {
-      fecha: now,
+      fecha: fechaForCheckIn(day, moment, editing?.fecha ?? nowIso),
       moment,
       sleep: pick('sleep'),
       energy: pick('energy'),
@@ -81,9 +124,35 @@ export const CheckInScreen = () => {
       mood,
       note: note.trim() || undefined,
     };
-    await checkInRepository.save({ ...entry, id: `checkin-${Date.now()}`, createdAt: now });
+    if (editing) {
+      const clear = <V,>(v: V | undefined) => (v === undefined ? (null as unknown as V) : v);
+      await checkInRepository.update(editing.id, {
+        ...entry,
+        sleep: clear(entry.sleep),
+        energy: clear(entry.energy),
+        stress: clear(entry.stress),
+        dayRating: clear(entry.dayRating),
+        note: clear(entry.note),
+      });
+      router.back();
+      return;
+    }
+    await checkInRepository.save({ ...entry, id: `checkin-${Date.now()}`, createdAt: nowIso });
+    // Apuntado para un día pasado: sin ideas "para ahora"
+    if (backdated) {
+      router.back();
+      return;
+    }
     setSuggestions(checkInSuggestions(entry));
     setDone(true);
+  };
+
+  const remove = async () => {
+    if (!editing) return;
+    const ok = await confirmAsk(t('Delete this check-in?'), t('It will disappear from your days and your trends.'), t('Delete'));
+    if (!ok) return;
+    await checkInRepository.remove(editing.id);
+    router.back();
   };
 
   return (
@@ -96,7 +165,7 @@ export const CheckInScreen = () => {
         ) : (
           <View style={{ width: 24 }} />
         )}
-        <Text style={styles.topTitle}>{t('Check in')}</Text>
+        <Text style={styles.topTitle}>{params.id ? t('Edit check-in') : t('Check in')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -122,7 +191,25 @@ export const CheckInScreen = () => {
                 );
               })}
             </View>
-            {moment === suggested && <Text style={styles.hint}>{t('Suggested from the time of day.')}</Text>}
+            {moment === suggested && !backdated && <Text style={styles.hint}>{t('Suggested from the time of day.')}</Text>}
+
+            <Text style={[styles.question, styles.dayQuestion]}>{t('Which day does it count for?')}</Text>
+            <View style={styles.dayRow}>
+              {dayOptions.map((key) => {
+                const selected = key === day;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.dayChip, selected && styles.momentChipSelected]}
+                    onPress={() => setPickedDay(key)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.dayChipText, selected && { color: Colors.textPrimary }]}>{dayLabel(key, now)}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {pastMidnight && <Text style={styles.hint}>{t('It is the small hours, so it counts for yesterday.')}</Text>}
 
             {scales.map((q) => (
               <View key={q} style={styles.block}>
@@ -211,9 +298,16 @@ export const CheckInScreen = () => {
       </KeyboardAwareScrollView>
 
       {!done ? (
-        <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>
-          <Text style={styles.ctaText}>{t('Save check-in')}</Text>
-        </TouchableOpacity>
+        <>
+          <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>
+            <Text style={styles.ctaText}>{params.id ? t('Save changes') : t('Save check-in')}</Text>
+          </TouchableOpacity>
+          {editing && (
+            <TouchableOpacity onPress={remove} style={styles.deleteLink} hitSlop={8}>
+              <Text style={styles.deleteText}>{t('Delete this check-in')}</Text>
+            </TouchableOpacity>
+          )}
+        </>
       ) : (
         <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
           <Text style={styles.ctaText}>{t('Done')}</Text>
@@ -274,6 +368,19 @@ const styles = StyleSheet.create({
     borderColor: Colors.accent,
     backgroundColor: withAlpha(Colors.accent, 0.08),
   },
+  dayQuestion: { marginTop: 22, fontSize: 15 },
+  dayRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  dayChip: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  dayChipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', textTransform: 'capitalize' },
+  deleteLink: { alignSelf: 'center', marginBottom: 12 },
+  deleteText: { color: Colors.attention, fontSize: 14, fontWeight: '700' },
   momentText: {
     color: Colors.textSecondary,
     fontSize: 12,

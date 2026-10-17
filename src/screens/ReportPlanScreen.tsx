@@ -6,6 +6,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { ActionPlanList } from '@/components/ActionPlanList';
 import { SharePlanButton } from '@/components/SharePlanButton';
+import { t } from '@/i18n';
 
 // Plan personalizado del informe: solo qué puedes hacer y qué se espera que mejore.
 // La comparativa de hábitos (sueño, HRV, pasos…) vive aparte en /habits.
@@ -15,11 +16,11 @@ export const ReportPlanScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="My Plan" showBack />
+        <ScreenHeader title={t('My Plan')} showBack />
 
         <View style={styles.introBlock}>
           <Text style={styles.intro}>
-            What you can do, and what we expect to improve by your next test in about 6 months.
+            {t('What you can do, and what we expect to improve by your next test in about 6 months.')}
           </Text>
           <SharePlanButton />
         </View>
@@ -32,14 +33,14 @@ export const ReportPlanScreen = () => {
             onPress={() => router.push('/(tabs)')}
             activeOpacity={0.85}
           >
-            <Text style={styles.ctaPrimaryText}>Let's do this!</Text>
+            <Text style={styles.ctaPrimaryText}>{t("Let's do this!")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.ctaSecondary}
             onPress={() => router.push('/talk-to-specialist')}
             activeOpacity={0.85}
           >
-            <Text style={styles.ctaSecondaryText}>Talk to a specialist</Text>
+            <Text style={styles.ctaSecondaryText}>{t('Talk to a specialist')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

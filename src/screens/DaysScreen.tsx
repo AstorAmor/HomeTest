@@ -1,13 +1,13 @@
 import React, { useCallback, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { dateLocale, t } from '@/i18n';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { checkInRepository, MOOD_SCORE } from '@/data/checkInRepository';
+import { checkInDayKey, checkInRepository, MOOD_SCORE } from '@/data/checkInRepository';
 import { CheckInEntry, MOMENT_OPTIONS, MOOD_OPTIONS } from '@/types/checkIn';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { BowelEntry, BRISTOL_TYPES, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
@@ -44,8 +44,11 @@ interface DayData {
 const valueOn = (pts: DailyPoint[] | undefined, key: string) => pts?.find((p) => p.date === key)?.value ?? null;
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 const WORKOUT_LABEL: Record<string, string> = { strength: 'Strength', cardio: 'Cardio', mobility: 'Mobility', sport: 'Sport' };
+// Los tres huecos de check-in de cada día
+const SLOT_LABEL: Record<string, string> = { just_woke_up: 'Morning', mid_day: 'Midday', winding_down: 'Night' };
 
 export const DaysScreen = () => {
+  const router = useRouter();
   const params = useLocalSearchParams<{ date?: string }>();
   const { series } = useDailyWearables(30);
   const scroll = useRef<ScrollView>(null);
@@ -98,7 +101,8 @@ export const DaysScreen = () => {
     const on = <T extends { fecha: string }>(xs: T[]) => xs.filter((x) => dayKey(new Date(x.fecha)) === key);
     return {
       key,
-      checkIns: on(raw.checkIns).sort((a, b) => a.fecha.localeCompare(b.fecha)),
+      // De madrugada, "mi día termina" cuenta para el día anterior (logic/checkInDay)
+      checkIns: raw.checkIns.filter((c) => checkInDayKey(c) === key).sort((a, b) => a.fecha.localeCompare(b.fecha)),
       sleep: valueOn(series.sleep_duration, key),
       steps: valueOn(series.steps, key),
       rhr: valueOn(series.resting_heart_rate, key),
@@ -148,6 +152,7 @@ export const DaysScreen = () => {
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your last days')} showBack />
         <Text style={styles.intro}>{t('Everything you logged and measured each day. Days that stand out from your usual are marked.')}</Text>
+        <Text style={styles.slotsHelp}>{t('The three circles are morning, midday and night. Tap one to add that check-in or change it.')}</Text>
 
         {days.map((d) => {
           const why = reasons(d);
@@ -169,10 +174,35 @@ export const DaysScreen = () => {
                     ? t('Today')
                     : date.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'short' })}
                 </Text>
-                {d.checkIns.map((c) => {
-                  const m = MOOD_OPTIONS.find((o) => o.id === c.mood);
-                  return m ? <Text key={c.id} style={styles.emoji}>{m.emoji}</Text> : null;
-                })}
+                {/* Mañana, mediodía y noche: el ánimo del check-in o el hueco vacío para apuntarlo */}
+                <View style={styles.slots}>
+                  {MOMENT_OPTIONS.map((o) => {
+                    const last = d.checkIns.filter((c) => c.moment === o.id).pop();
+                    const mood = last && MOOD_OPTIONS.find((m) => m.id === last.mood);
+                    return (
+                      <TouchableOpacity
+                        key={o.id}
+                        style={[styles.slot, last ? styles.slotFilled : styles.slotEmpty]}
+                        onPress={() =>
+                          router.push(
+                            last
+                              ? { pathname: '/check-in', params: { id: last.id } }
+                              : { pathname: '/check-in', params: { date: d.key, moment: o.id } },
+                          )
+                        }
+                        hitSlop={4}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${t(SLOT_LABEL[o.id])}: ${last ? t('change check-in') : t('add check-in')}`}
+                      >
+                        {mood ? (
+                          <Text style={styles.slotEmoji}>{mood.emoji}</Text>
+                        ) : (
+                          <Ionicons name={o.icon as any} size={13} color={last ? Colors.gold : Colors.textMuted} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
 
               {why.length > 0 && (
@@ -196,12 +226,17 @@ export const DaysScreen = () => {
                 ].filter(Boolean);
                 const time = new Date(c.fecha).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
                 return (
-                  <View key={c.id}>
-                    <Line icon={(moment?.icon as any) ?? 'happy-outline'} color={Colors.gold}>
-                      <Text style={styles.strong}>{time}</Text> · {bits.join(', ')}
-                    </Line>
+                  <TouchableOpacity key={c.id} onPress={() => router.push({ pathname: '/check-in', params: { id: c.id } })} activeOpacity={0.7}>
+                    <View style={styles.checkInLine}>
+                      <View style={{ flex: 1 }}>
+                        <Line icon={(moment?.icon as any) ?? 'happy-outline'} color={Colors.gold}>
+                          <Text style={styles.strong}>{time}</Text> · {bits.join(', ')}
+                        </Line>
+                      </View>
+                      <Ionicons name="create-outline" size={15} color={Colors.textMuted} style={styles.lineIcon} />
+                    </View>
                     {c.note ? <Text style={styles.note}>“{c.note}”</Text> : null}
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
 
@@ -294,7 +329,13 @@ const styles = StyleSheet.create({
   cardFocus: { borderColor: Colors.accent, borderWidth: 2 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   date: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700', textTransform: 'capitalize' },
-  emoji: { fontSize: 18 },
+  slotsHelp: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 6 },
+  slots: { flexDirection: 'row', gap: 6 },
+  slot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  slotFilled: { backgroundColor: withAlpha(Colors.gold, 0.16), borderWidth: 1, borderColor: withAlpha(Colors.gold, 0.6) },
+  slotEmpty: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: withAlpha(Colors.textMuted, 0.6) },
+  slotEmoji: { fontSize: 16 },
+  checkInLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   flag: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   flagText: { flex: 1, color: Colors.attention, fontSize: 13, fontWeight: '600' },
   none: { color: Colors.textMuted, fontSize: 13 },

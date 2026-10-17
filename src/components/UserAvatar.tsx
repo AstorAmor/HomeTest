@@ -2,13 +2,16 @@ import React from 'react';
 import { Avatar } from './Avatar';
 import { useAuth } from '@/context/AuthContext';
 import { mockPatient } from '@/data/mockData';
+import { useAvatar } from '@/data/avatar';
 
 const demoPhoto = require('../../assets/images/avatar.jpg');
 
-// Avatar del usuario con sesión: iniciales de su nombre real. La foto de ejemplo
-// (Juan) solo aparece en modo demo, sin cuenta.
+// Avatar del usuario con sesión: su foto (Mi perfil → tocar la foto) o, si no tiene, la inicial
+// de su alias. La foto de ejemplo (Juan) solo aparece en modo demo, sin cuenta y sin foto propia.
 export const UserAvatar = ({ size = 38 }: { size?: number }) => {
   const { user, authMode } = useAuth();
+  const photo = useAvatar();
+  if (photo) return <Avatar nombre={user?.nombre || '?'} source={{ uri: photo }} size={size} />;
   if (authMode === 'demo') {
     return <Avatar nombre={user?.nombre ?? mockPatient.nombre} source={demoPhoto} size={size} />;
   }

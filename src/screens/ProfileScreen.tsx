@@ -1,5 +1,6 @@
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -13,6 +14,8 @@ import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserPro
 import { PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { removeAvatar, setAvatar, useAvatar } from '@/data/avatar';
+import { confirmAsk } from '@/components/dev/confirmAsk';
 
 // Se evalúa con el idioma ya cargado (index.js); cambiar de idioma recarga la app.
 const LABELS: Record<string, string> = {
@@ -39,6 +42,31 @@ const LABELS: Record<string, string> = {
 export const ProfileScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const photo = useAvatar();
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [heroError, setHeroError] = useState('');
+
+  const pickPhoto = async () => {
+    setHeroError('');
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+    if (result.canceled) return;
+    setPhotoBusy(true);
+    try {
+      await setAvatar(result.assets[0].uri);
+    } catch (e) {
+      setHeroError(e instanceof Error ? e.message : t('Could not save the photo'));
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
+  const dropPhoto = async () => {
+    if (!(await confirmAsk(t('Remove your photo?'), t('Your initial will show instead.'), t('Remove')))) return;
+    setPhotoBusy(true);
+    await removeAvatar().catch(() => undefined);
+    setPhotoBusy(false);
+  };
+
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
   const prefs = useAppPrefs();
   const chosen = PURPOSE_OPTIONS.filter((p) => prefs.purposes.includes(p.id));
@@ -86,9 +114,26 @@ export const ProfileScreen = () => {
         <ScreenHeader title={t('My Profile')} showBack backFallback={tabHref(TAB.more)} />
 
         <View style={styles.hero}>
-          <UserAvatar size={84} />
-          <Text style={styles.name}>{user?.nombre ?? mockPatient.nombre}</Text>
+          {/* Tocar la foto: elegir otra de la galería */}
+          <TouchableOpacity onPress={pickPhoto} disabled={photoBusy} activeOpacity={0.85} accessibilityLabel={t('Change photo')}>
+            <UserAvatar size={84} />
+            <View style={styles.cameraBadge}>
+              {photoBusy ? <ActivityIndicator size="small" color={Colors.background} /> : <Ionicons name="camera" size={15} color={Colors.background} />}
+            </View>
+          </TouchableOpacity>
+          {photo && !photoBusy && (
+            <TouchableOpacity onPress={dropPhoto} hitSlop={8}>
+              <Text style={styles.photoLink}>{t('Remove photo')}</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* El alias tiene su propia pantalla (/your-name), también en Ajustes → Cuenta */}
+          <TouchableOpacity style={styles.nameRow} onPress={() => router.push('/your-name')} accessibilityLabel={t('Change your name')}>
+            <Text style={styles.name}>{user?.nombre ?? mockPatient.nombre}</Text>
+            <Ionicons name="pencil" size={15} color={Colors.accent} />
+          </TouchableOpacity>
           <Text style={styles.email}>{user?.email ?? mockPatient.email}</Text>
+          {heroError ? <Text style={styles.heroError}>{heroError}</Text> : null}
         </View>
 
         <View style={styles.sectionHeader}>
@@ -152,7 +197,23 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 32 },
   hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 24 },
-  name: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginTop: 12 },
+  cameraBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.accent,
+    borderWidth: 2,
+    borderColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoLink: { color: Colors.textMuted, fontSize: 12, fontWeight: '600', marginTop: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  name: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800' },
+  heroError: { color: Colors.attention, fontSize: 13, marginTop: 8, textAlign: 'center' },
   email: { color: Colors.textSecondary, fontSize: 14, marginTop: 2 },
   sectionHeader: {
     flexDirection: 'row',

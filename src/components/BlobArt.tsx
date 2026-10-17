@@ -27,7 +27,7 @@ export const BlobArt = ({
 }: {
   seed: string;
   palette: [string, string, string];
-  icon: string;
+  icon?: string; // sin icono: solo el fondo (p. ej. a pantalla completa, con el icono colocado aparte)
   size: number | { width: number; height: number };
   radius?: number;
   iconSize?: number;
@@ -65,9 +65,11 @@ export const BlobArt = ({
         <Ellipse cx={w * pick(4, 0.6, 0.9)} cy={h * pick(12, 0.1, 0.35)} rx={w * pick(20, 0.25, 0.4)} ry={h * pick(2, 0.2, 0.35)} fill={`url(#${id}s2)`} />
         <Ellipse cx={w * pick(6, 0.7, 1)} cy={h * pick(14, 0.7, 1)} rx={w * 0.3} ry={h * 0.28} fill={`url(#${id}s3)`} />
       </Svg>
-      <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-        <MaterialCommunityIcons name={icon as any} size={iconSize ?? Math.round(Math.min(w, h) * 0.36)} color="rgba(255,255,255,0.95)" />
-      </View>
+      {icon ? (
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+          <MaterialCommunityIcons name={icon as any} size={iconSize ?? Math.round(Math.min(w, h) * 0.36)} color="rgba(255,255,255,0.95)" />
+        </View>
+      ) : null}
     </View>
   );
 };

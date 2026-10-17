@@ -125,7 +125,7 @@ export const LogBowelScreen = () => {
               <View style={styles.askCard}>
                 <Text style={styles.askTitle}>{tr('Could something explain it?')}</Text>
                 <Text style={styles.askText}>{tr('In the last two days, did you have any of these?')}</Text>
-                <ChoiceChips options={[...causes, NONE].map((c) => ({ id: c, label: c }))} value={cause} onChange={setCause} center />
+                <ChoiceChips options={[...causes, NONE].map((c) => ({ id: c, label: tr(c) }))} value={cause} onChange={setCause} center />
                 {cause === NONE && (
                   <Text style={styles.askAdvice}>
                     {color === 'black'

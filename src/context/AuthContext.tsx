@@ -44,6 +44,8 @@ interface AuthContextType {
   realAccount: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, nombre: string, professional?: ProfessionalSignup) => Promise<void>;
+  // Alias con el que te saluda la app ("¡Hola, Astor!"). Sin alias, la parte del email antes de la @
+  updateDisplayName: (nombre: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -177,6 +179,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setDemoUser({ id: mockPatient.id, email, nombre });
   };
 
+  const updateDisplayName = async (nombre: string) => {
+    const name = nombre.trim();
+    if (!name) return;
+    if (supabase) {
+      const { data, error } = await supabase.auth.updateUser({ data: { display_name: name } });
+      if (error) throw new Error(error.message);
+      // También en el perfil (lo que ven los profesionales con permiso); si falla, el saludo ya cambió
+      await supabase.from('profiles').update({ display_name: name }).eq('id', data.user.id).then(() => undefined, () => undefined);
+      setUser((u) => (u ? { ...u, nombre: name } : u));
+      return;
+    }
+    if (user) setDemoUser({ ...user, nombre: name });
+  };
+
   const logout = () => {
     setDemoMode(null);
     if (supabase) {
@@ -201,6 +217,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         realAccount,
         login,
         signup,
+        updateDisplayName,
         logout,
       }}
     >

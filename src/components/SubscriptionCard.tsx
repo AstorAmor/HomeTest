@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { formatPrice, localizeTest, PLANS, testIcon } from '@/data/testCatalog';
 import { getMySubscription, MySubscription } from '@/data/orders';
+import { Access, getMyAccess, tierName } from '@/data/access';
 import { mockNextTestDate } from '@/data/mockData';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, t } from '@/i18n';
@@ -17,24 +18,61 @@ const longDate = (iso: string) =>
 export const SubscriptionCard = () => {
   const router = useRouter();
   const [sub, setSub] = useDeepState<MySubscription | null>(null);
+  const [access, setAccess] = useDeepState<Access | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useReloadOnFocus(
     useCallback(async () => {
-      setSub(await getMySubscription());
+      const [s, a] = await Promise.all([getMySubscription(), getMyAccess().catch(() => null)]);
+      setSub(s);
+      setAccess(a);
       setLoaded(true);
-    }, [setSub]),
+    }, [setSub, setAccess]),
   );
 
   if (!loaded) return null;
+
+  // Sin pagar, con acceso por invitación (código o dado por Kuova) o como administrador
+  if (!sub && access && (access.source === 'code' || access.source === 'admin_grant' || access.source === 'admin')) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.head}>
+          <View style={styles.icon}>
+            <Ionicons name={access.source === 'admin' ? 'shield-checkmark-outline' : 'gift-outline'} size={20} color={Colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>
+              {access.source === 'admin' ? t('Admin access') : t('Invitation access · {plan}', { plan: tierName(access.tier) })}
+            </Text>
+            <Text style={styles.text}>
+              {access.source === 'admin'
+                ? t('As an admin you can use everything in the app.')
+                : access.expiresAt
+                  ? t('Everything in {plan} until {date}.', { plan: tierName(access.tier), date: longDate(access.expiresAt.slice(0, 10)) })
+                  : t('Everything in {plan}, with no end date.', { plan: tierName(access.tier) })}
+            </Text>
+          </View>
+          <View style={styles.active}>
+            <Text style={styles.activeText}>{t('Active')}</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.secondary} onPress={() => router.push('/compare-plans')}>
+          <Text style={styles.secondaryText}>{t('Compare subscriptions')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (!sub) {
     return (
       <View style={styles.card}>
         <Text style={styles.title}>{t('No active subscription')}</Text>
-        <Text style={styles.text}>{t("Join to get two full blood tests a year, a doctor's review and your personalised plan.")}</Text>
+        <Text style={styles.text}>{t('Subscribe to get two full blood tests a year, scan your own lab reports and keep your personalised plan.')}</Text>
         <TouchableOpacity style={styles.cta} onPress={() => router.push('/compare-plans')}>
           <Text style={styles.ctaText}>{t('See subscriptions')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/redeem-code')} hitSlop={8} style={styles.codeLink}>
+          <Text style={styles.codeLinkText}>{t('Have an invitation code?')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -115,4 +153,6 @@ const styles = StyleSheet.create({
   ctaText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
   secondary: { flex: 1, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 10, alignItems: 'center' },
   secondaryText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  codeLink: { alignSelf: 'center', paddingVertical: 2 },
+  codeLinkText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
 });

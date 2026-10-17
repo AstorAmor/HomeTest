@@ -1,4 +1,5 @@
 import { Alert, Platform } from 'react-native';
+import { t } from '@/i18n';
 
 // Pregunta antes de algo que borra datos (Test scenarios). En la web, el confirm del navegador.
 export const confirmAsk = (title: string, message: string, okLabel: string) =>
@@ -9,7 +10,7 @@ export const confirmAsk = (title: string, message: string, okLabel: string) =>
           title,
           message,
           [
-            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: t('Cancel'), style: 'cancel', onPress: () => resolve(false) },
             { text: okLabel, style: 'destructive', onPress: () => resolve(true) },
           ],
           { cancelable: true, onDismiss: () => resolve(false) }

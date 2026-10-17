@@ -88,7 +88,7 @@ export const PanelMarkersScreen = () => {
         ))}
 
         <Text style={styles.footnote}>
-          {t('Indicative list: the final panel is confirmed with our partner laboratory. A doctor reviews every result.')}
+          {t('Indicative list: the final panel is confirmed with our partner laboratory.')}
         </Text>
       </ScrollView>
     </SafeAreaView>

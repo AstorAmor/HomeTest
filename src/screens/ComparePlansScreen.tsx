@@ -7,28 +7,24 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { formatPrice, localizeTest, MEMBERSHIP, PREMIUM, testIcon } from '@/data/testCatalog';
 import { getMySubscription } from '@/data/orders';
-import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { DEFAULT_PLAN_FEATURES, FeatureValue, loadPlanFeatures, localText, PlanFeatureRow, TIERS, tierName } from '@/data/access';
+import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { t } from '@/i18n';
 
 type PlanId = 'membership' | 'premium';
 
-// Qué cambia entre Basic y Premium, en filas: [etiqueta, Basic, Premium] (true = incluido).
-const ROWS = (): [string, string | boolean, string | boolean][] => [
-  [t('Blood tests a year'), t('2 (full panel + follow-up at 6 months)'), t('4 (full panel + a follow-up every 3 months)')],
-  [t('A doctor reviews every result'), true, true],
-  [t('Video consultations included'), false, t('5 a year')],
-  [t('Personalised plan, trends and reminders'), true, true],
-];
-
-// "Compare subscriptions": solo los dos planes, uno junto al otro (sin el resto de la tienda).
+// "Compare subscriptions": los dos planes uno junto al otro y, debajo, qué incluye cada nivel
+// (también el gratuito). Las filas las decide el admin (Más → Suscripciones (admin)).
 export const ComparePlansScreen = () => {
   const router = useRouter();
   const [current, setCurrent] = useState<PlanId | null>(null);
+  const [rows, setRows] = useDeepState<PlanFeatureRow[]>(DEFAULT_PLAN_FEATURES);
 
   useReloadOnFocus(
     useCallback(async () => {
       setCurrent((await getMySubscription())?.productId ?? null);
-    }, []),
+      setRows((await loadPlanFeatures()).rows);
+    }, [setRows]),
   );
 
   const plans = [localizeTest(MEMBERSHIP), localizeTest(PREMIUM)];
@@ -65,16 +61,29 @@ export const ComparePlansScreen = () => {
         </View>
 
         <View style={styles.table}>
-          {ROWS().map(([label, basic, premium], i) => (
-            <View key={label} style={[styles.row, i > 0 && styles.rowBorder]}>
-              <Text style={styles.rowLabel}>{label}</Text>
+          <View style={[styles.cells, styles.tableHead]}>
+            {TIERS.map((tier) => (
+              <Text key={tier} style={styles.headText}>
+                {tierName(tier)}
+              </Text>
+            ))}
+          </View>
+          {rows.map((r) => (
+            <View key={r.id} style={[styles.row, styles.rowBorder]}>
+              <Text style={styles.rowLabel}>{localText(r.label)}</Text>
               <View style={styles.cells}>
-                <Cell value={basic} />
-                <Cell value={premium} />
+                {TIERS.map((tier) => (
+                  <Cell key={tier} value={r.values[tier]} />
+                ))}
               </View>
             </View>
           ))}
         </View>
+
+        <TouchableOpacity style={styles.link} onPress={() => router.push('/redeem-code')}>
+          <Ionicons name="gift-outline" size={18} color={Colors.accent} />
+          <Text style={styles.linkText}>{t('Have an invitation code?')}</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.link} onPress={() => router.push('/panel-markers')}>
           <Ionicons name="list-outline" size={18} color={Colors.accent} />
@@ -85,14 +94,14 @@ export const ComparePlansScreen = () => {
   );
 };
 
-const Cell = ({ value }: { value: string | boolean }) => (
+const Cell = ({ value }: { value: FeatureValue }) => (
   <View style={styles.cell}>
     {value === true ? (
       <Ionicons name="checkmark-circle" size={18} color={Colors.accent} />
-    ) : value === false ? (
+    ) : value === false || !value ? (
       <Text style={styles.dash}>–</Text>
     ) : (
-      <Text style={styles.cellText}>{value}</Text>
+      <Text style={styles.cellText}>{localText(value)}</Text>
     )}
   </View>
 );
@@ -131,6 +140,8 @@ const styles = StyleSheet.create({
   },
   row: { paddingVertical: 12, gap: 8 },
   rowBorder: { borderTopWidth: 1, borderTopColor: Colors.divider },
+  tableHead: { paddingVertical: 10 },
+  headText: { flex: 1, textAlign: 'center', color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   rowLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   cells: { flexDirection: 'row', gap: 10 },
   cell: { flex: 1, alignItems: 'center' },

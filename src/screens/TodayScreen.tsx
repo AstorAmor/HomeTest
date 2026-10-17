@@ -10,8 +10,10 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
 import { currentReport } from '@/data/reportRepository';
+import { labUploadRepository } from '@/data/labUploads';
+import { labReports } from '@/utils/labReportView';
 import { reportSeenKey, userFlags } from '@/data/userFlags';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useFirstName } from '@/components/UserAvatar';
 import { BadgesSection } from '@/components/BadgesSection';
@@ -124,8 +126,10 @@ const localToday = () => {
 
 export const TodayScreen = () => {
   const router = useRouter();
-  const { demoMode } = useAuth();
+  const { demoMode, user } = useAuth();
   const firstName = useFirstName();
+  // Sin alias, la app saluda con la parte del email: se ofrece poner un nombre
+  const noAlias = !!user?.email && user.nombre === user.email.split('@')[0];
   const show = useSections();
   // Web del paciente en escritorio: Hoy se queda con lo del día; agenda, estado y biomarcadores ya están en el resumen
   const web = useWebShell();
@@ -133,6 +137,8 @@ export const TodayScreen = () => {
   const { series, isSample, sources, hasAny } = useDailyWearables(14, { autoSync: true });
   const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(initialBiomarkers());
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
+  // Hay resultados (informe o analítica subida): el plan ya se apoya en ellos
+  const [hasResults, setHasResults] = useState(labReports().length > 0);
   const [achievementData, setAchievementData] = useDeepState<{
     workouts: { fecha: string; type: string }[];
     meals: { fecha: string }[];
@@ -177,6 +183,10 @@ export const TodayScreen = () => {
 
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
+    labUploadRepository
+      .getAll()
+      .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
+      .catch(() => undefined);
     userFlags.get('today_week_open').then((v) => setWeekOpen(v === true));
     Promise.all([loadNutrientFocus(), nutrientsDoneToday()])
       .then(([items, done]) => setNutrients({ done: done.filter((d) => items.some((i) => i.id === d)).length, total: items.length }))
@@ -310,6 +320,12 @@ export const TodayScreen = () => {
 
         <View style={styles.greeting}>
           <Text style={styles.greetingTitle}>{t('Hi {name}!', { name: firstName })}</Text>
+          {noAlias && (
+            <TouchableOpacity onPress={() => router.push('/your-name')} hitSlop={8} style={styles.aliasLink}>
+              <Ionicons name="create-outline" size={14} color={Colors.accent} />
+              <Text style={styles.aliasLinkText}>{t('How should we call you?')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {!web && (
@@ -707,12 +723,18 @@ export const TodayScreen = () => {
         {/* Your plan */}
         {show('plan') && (
           <>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>{t('Your plan')}</Text>
-              <TouchableOpacity onPress={() => router.push('/action-plan')} hitSlop={8}>
-                <Text style={styles.link}>{t('Full plan')}</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sectionTitle}>{t('Your plan')}</Text>
+            {/* El plan completo, como bloque (antes era un enlace aquí y una tarjeta en Lab) */}
+            <TouchableOpacity style={styles.planHero} onPress={() => router.push('/action-plan')} activeOpacity={0.85}>
+              <View style={styles.planHeroIcon}>
+                <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.planHeroTitle}>{t('Your personalised plan')}</Text>
+                <Text style={styles.fullPlanSub}>{hasResults ? t('Based on your latest results') : t('Based on your goals for now')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
             <View style={styles.planList}>
               {plan.map((item) => {
                 const color = PLAN_COLOR[item.kind];
@@ -928,6 +950,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  planHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 12,
+  },
+  planHeroIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: withAlpha(Colors.gold, 0.14),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  planHeroTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
   fullPlanLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
   fullPlanLinkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   medCard: {
@@ -1005,6 +1048,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 22,
   },
+  aliasLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  aliasLinkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   greetingTitle: {
     fontSize: 24,
     fontWeight: '700',

@@ -833,3 +833,48 @@ ya guardan en las carpetas nuevas.
 - El modo demo sigue igual (Developer mode → Simulated users → "Open the app as…").
 - Cómo probar: crear en la app una cuenta por caso (p. ej. tensión alta, energía baja, medicación), entrar,
   Ajustes → Casos de prueba → elegir el caso → Load. La app recarga en Today con el caso y su bandeja de avisos.
+
+## 2026-10-17 — Notas del fundador: plan, check-in, suscripciones, códigos de invitación, foto y alias
+
+- **Tarjetas del plan personalizado** (`PlanIntroScreen`): el degradado ocupa toda la pantalla (antes cortaba el
+  "Cómo" a media altura), icono arriba y texto en su propio scroll vertical (en móviles bajos se desplaza).
+  Botones "Siguiente" / "¡Empezamos!" y "¡Vamos a por ello!" (`ReportPlanScreen`) en español. `BlobArt` acepta
+  ir sin icono.
+- **Ejercicios guiados** (`ExerciseScreen` + `data/exercises.ts`): títulos, intros, pasos, fases de respiración y
+  botones pasan por `t()`; traducciones nuevas en es.ts.
+- **Wearables**: botones con el texto centrado aunque ocupe dos líneas; solo llevan `flex: 1` dentro de una fila.
+  Ojo: el texto "Sincronizar los últimos 7 días" que vio el fundador ya no existe desde 6b0b78e.
+- **Día de cada check-in** (`logic/checkInDay.ts`, tests): antes de las 4:00, lo que no es "me acabo de levantar"
+  cuenta para el día anterior. De madrugada se sugiere "mi día está acabando". El check-in pregunta "¿Para qué
+  día cuenta?" (hoy y los dos anteriores); `?id=` edita (mover de día o momento, borrar) y `?date=&moment=`
+  apunta uno pasado. La fecha guardada es la real si cae en ese día; si no, la hora típica del momento
+  (8/14/22 h), nunca futura. `dailyCheckInSeries` y "Tus últimos días" agrupan con `checkInDayKey`.
+- **Tus últimos días**: en vez de los emojis sueltos, tres círculos por día (mañana, mediodía, noche): el ánimo
+  si hay check-in, hueco discontinuo si no; tocar abre ese check-in o apunta uno nuevo. Cada línea de check-in
+  también abre la edición.
+- **Plan en Today**: bloque "Tu plan personalizado" (→ /action-plan) encima de las acciones, en lugar del enlace
+  "Plan completo"; la tarjeta del plan sale de Lab.
+- **Suscripciones sin médico ni videoconsultas** (testCatalog, testCatalogEs, SubscriptionCard, PanelMarkers).
+- **Qué incluye cada nivel, editable por el admin** (`data/access.ts`, `/admin-plans`, Más → Suscripciones
+  (admin)): filas {id, label es/en, valores gratis/Basic/Premium: sí/no/texto} en `app_config`
+  'plan_features'. "Comparar suscripciones" las lee (con columna Gratis). Las filas con candado además las aplica
+  la app: hoy solo `scan_reports`.
+- **Códigos de invitación y accesos**: el admin crea códigos (nivel, días de acceso, usos máx., nota) y da o quita
+  acceso a un email. Quien canjea en `/redeem-code` ("¿Tienes un código de invitación?") recibe ese nivel.
+  Nivel efectivo con `my_access()`: admin > suscripción pagada > invitación > gratis.
+- **Escanear informes, solo con acceso**: `/upload-test` sin acceso enseña "Escanear tus informes viene con la
+  suscripción" + ver suscripciones + código. La Edge Function `extract` lo comprueba también con
+  `has_feature('scan_reports')` (`userHasFeature` en `_shared/http.ts`) — **sin desplegar**.
+- **Foto de perfil** (Mi perfil): tocar la foto → galería, se reduce a 400 px y va al bucket privado `avatars`
+  (ruta en user_flags `avatar_path`, URL firmada de 7 días cacheada, `data/avatar.ts`).
+- **Tu nombre (alias)**, para cualquier cuenta: pantalla propia `/your-name` desde Mi perfil (lápiz), Ajustes →
+  Cuenta → Tu nombre y, si aún no hay alias (saluda con la parte del email), un enlace bajo el saludo de Today.
+  Se guarda en `user_metadata.display_name` y `profiles.display_name` (`updateDisplayName` en AuthContext).
+- **Heces y orina en español**: `ColorSwatches` traduce los nombres de color; causas de color de heces y orina y
+  "{n} horas" de la medicación, traducidas.
+- **Migración `20261017100000_plan_access.sql` SIN APLICAR**: app_config, access_codes, access_grants,
+  my_access(), has_feature(), redeem_access_code(), admin_grant_access(), admin_list_access_grants() y el bucket
+  avatars. Mientras no esté aplicada, la app no bloquea nada (fuente 'legacy'), el panel de admin lo avisa y la
+  foto da "aún no disponible". Al aplicarla, las cuentas gratis dejan de poder escanear (salvo admin o código).
+- Pendiente de decidir: precios editables desde el admin (hoy en `testCatalog.ts` y `_shared/products.ts`);
+  el business case aún menciona la revisión médica en la suscripción.

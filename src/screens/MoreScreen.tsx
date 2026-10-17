@@ -89,20 +89,29 @@ const menuItems: MenuItem[] = [
 ];
 
 // Solo para administradores de Kuova
-const ADMIN_ITEM: MenuItem = {
-  id: 'admin',
-  title: 'Professionals review',
-  subtitle: 'Verify professionals and approve their rates (admin)',
-  iconFamily: 'ionicons',
-  icon: 'ribbon-outline',
-};
+const ADMIN_ITEMS: MenuItem[] = [
+  {
+    id: 'admin',
+    title: 'Professionals review',
+    subtitle: 'Verify professionals and approve their rates (admin)',
+    iconFamily: 'ionicons',
+    icon: 'ribbon-outline',
+  },
+  {
+    id: 'admin-plans',
+    title: 'Subscriptions (admin)',
+    subtitle: 'What each level includes, invitation codes and who has access',
+    iconFamily: 'ionicons',
+    icon: 'key-outline',
+  },
+];
 
 export const MoreScreen = () => {
   const { isAdmin } = useAuth();
   const router = useRouter();
   // El de administración va justo antes de Settings
   const settingsAt = menuItems.findIndex((m) => m.id === 'settings');
-  const items = isAdmin ? [...menuItems.slice(0, settingsAt), ADMIN_ITEM, ...menuItems.slice(settingsAt)] : menuItems;
+  const items = isAdmin ? [...menuItems.slice(0, settingsAt), ...ADMIN_ITEMS, ...menuItems.slice(settingsAt)] : menuItems;
 
   const handlePress = (id: string) => {
     if (id === 'settings') return router.push('/settings');
@@ -111,6 +120,7 @@ export const MoreScreen = () => {
     if (id === 'evidence') return router.push('/evidence');
     if (id === 'sharing') return router.push('/sharing');
     if (id === 'admin') return router.push('/admin');
+    if (id === 'admin-plans') return router.push('/admin-plans');
     if (id === 'professionals') return router.push('/professionals');
     if (id === 'track') return router.push('/track-tests');
     if (id === 'catalog') return router.push('/catalogo');

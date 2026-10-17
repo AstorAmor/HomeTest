@@ -23,6 +23,7 @@ import { prepareImage, chunk } from '@/utils/imageUpload';
 import { useRouter } from 'expo-router';
 import { labUploadRepository } from '@/data/labUploads';
 import { useSections } from '@/data/appPrefs';
+import { useFeature } from '@/data/access';
 import { t } from '@/i18n';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
@@ -39,6 +40,8 @@ const BATCH_SIZE = 2;
 
 export const UploadTestScreen = () => {
   const show = useSections();
+  // Escanear informes es de la suscripción (o de un código de invitación); el admin lo decide
+  const allowed = useFeature('scan_reports');
   const [pages, setPages] = useState<CapturedPage[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [report, setReport] = useState<ExtractedLabReport | null>(null);
@@ -231,6 +234,35 @@ export const UploadTestScreen = () => {
 
   const isBusy = status === 'reading' || status === 'uploading';
 
+  if (allowed !== true) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <ScreenHeader title={t('Upload lab report')} showBack />
+          {allowed === null ? (
+            <ActivityIndicator color={Colors.accent} style={{ marginTop: 40 }} />
+          ) : (
+            <View style={styles.locked}>
+              <View style={styles.lockedIcon}>
+                <Ionicons name="scan-outline" size={28} color={Colors.gold} />
+              </View>
+              <Text style={styles.lockedTitle}>{t('Scanning your reports comes with a subscription')}</Text>
+              <Text style={styles.lockedText}>
+                {t('Take a photo or upload the PDF of any blood test and Kuova reads it for you: each marker explained, your ranges and how it changes over time.')}
+              </Text>
+              <TouchableOpacity style={styles.lockedCta} onPress={() => router.push('/compare-plans')}>
+                <Text style={styles.lockedCtaText}>{t('See subscriptions')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/redeem-code')} hitSlop={8}>
+                <Text style={styles.lockedLink}>{t('Have an invitation code?')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -347,6 +379,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  locked: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    padding: 20,
+    gap: 14,
+    alignItems: 'center',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.gold,
+    borderRadius: 18,
+  },
+  lockedIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
+  lockedTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', textAlign: 'center' },
+  lockedText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  lockedCta: { alignSelf: 'stretch', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
+  lockedCtaText: { color: Colors.background, fontSize: 15, fontWeight: '800', textAlign: 'center' },
+  lockedLink: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   content: {
     paddingBottom: 40,
   },

@@ -325,7 +325,7 @@ export const MedicationSetupScreen = () => {
             {frequency === 'every_hours' && (
               <>
                 <Text style={styles.label}>{tr('Every')}</Text>
-                <ChoiceChips options={[4, 6, 8, 12].map((h) => ({ id: h, label: `${h} hours` }))} value={hours} onChange={setHours} />
+                <ChoiceChips options={[4, 6, 8, 12].map((h) => ({ id: h, label: tr('{n} hours', { n: h }) }))} value={hours} onChange={setHours} />
                 <Text style={styles.label}>{tr('First dose of the day')}</Text>
                 <ChoiceChips
                   options={['06:00', '07:00', '08:00', '09:00'].map((t) => ({ id: t, label: t }))}

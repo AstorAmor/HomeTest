@@ -75,16 +75,7 @@ export const LabScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Lab')} />
 
-        {/* El plan, arriba del todo (fundador): va fuera del informe, que es objetivo */}
-        <TouchableOpacity style={styles.planCard} onPress={() => router.push('/action-plan')} activeOpacity={0.85}>
-          <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.planCardSub}>{reports.length || uploads.length ? t('Based on your latest results') : t('Based on your goals for now')}</Text>
-            <Text style={styles.planCardTitle}>{t('See my personalized plan')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
-
+        {/* El plan personalizado vive en Today ("Tu plan"), no en Lab (fundador, 2026-10-17) */}
         <Text style={styles.sectionTitle}>{t('Upcoming Analysis')}</Text>
         <View style={styles.sectionBlock}>
           {draws.map((e) => (
@@ -321,20 +312,6 @@ const styles = StyleSheet.create({
   },
   finderBtnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.accent },
   finderBtnText: { color: Colors.background, fontSize: 13, fontWeight: '800', textAlign: 'center', flexShrink: 1 },
-  planCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.gold,
-    backgroundColor: Colors.card,
-  },
-  planCardSub: { color: Colors.textSecondary, fontSize: 12 },
-  planCardTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 2 },
   mapCard: {
     marginHorizontal: 20,
     marginBottom: 28,

@@ -157,9 +157,11 @@ export const WearablesScreen = () => {
       .map(([date, rows]) => [date, rows.sort((a, b) => METRIC_ORDER.indexOf(a.metric) - METRIC_ORDER.indexOf(b.metric))] as const);
   }, [records]);
 
-  const Button = ({ label, onPress, id, disabled, ghost }: { label: string; onPress: () => void; id: string; disabled?: boolean; ghost?: boolean }) => (
+  // `grow`: reparte el ancho con otro botón de la misma fila. Solo, el botón no lleva flex (en una
+  // columna de alto automático, flex: 1 lo encogía y el texto no quedaba centrado).
+  const Button = ({ label, onPress, id, disabled, ghost, grow }: { label: string; onPress: () => void; id: string; disabled?: boolean; ghost?: boolean; grow?: boolean }) => (
     <TouchableOpacity
-      style={[styles.button, ghost && styles.buttonGhost, disabled && styles.buttonDisabled]}
+      style={[styles.button, grow && styles.buttonGrow, ghost && styles.buttonGhost, disabled && styles.buttonDisabled]}
       onPress={onPress}
       disabled={disabled || busy !== null}
     >
@@ -193,8 +195,8 @@ export const WearablesScreen = () => {
           ) : connected ? (
             <>
               <View style={styles.row}>
-                <Button id="hc-sync" label={t('Sync now')} onPress={sync} />
-                <Button id="hc-settings" label={t('Permissions')} onPress={openHealthConnectSettings} ghost />
+                <Button id="hc-sync" label={t('Sync now')} onPress={sync} grow />
+                <Button id="hc-settings" label={t('Permissions')} onPress={openHealthConnectSettings} ghost grow />
               </View>
               <Text style={styles.syncText}>
                 {lastSync ? t('Last sync {ago}. It also syncs by itself when you open Today.', { ago: timeAgo(lastSync) }) : t('It syncs by itself when you open Today.')}
@@ -323,16 +325,20 @@ const styles = StyleSheet.create({
   warning: { color: Colors.warning, fontSize: 13, lineHeight: 19 },
   hint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 4 },
   row: { flexDirection: 'row', gap: 10 },
+  // Texto centrado también cuando ocupa dos líneas (letra grande o botones en fila)
   button: {
-    flex: 1,
+    minHeight: 48,
     backgroundColor: Colors.accent,
     borderRadius: 12,
     paddingVertical: 12,
+    paddingHorizontal: 12,
     alignItems: 'center',
+    justifyContent: 'center',
   },
+  buttonGrow: { flex: 1 },
   buttonGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.accent },
   buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: Colors.background, fontWeight: '700', fontSize: 15 },
+  buttonText: { color: Colors.background, fontWeight: '700', fontSize: 15, textAlign: 'center' },
   buttonGhostText: { color: Colors.accent },
   message: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', marginTop: 8 },

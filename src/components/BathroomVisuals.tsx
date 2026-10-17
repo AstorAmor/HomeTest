@@ -4,6 +4,7 @@ import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { BristolType } from '@/types/bathroom';
+import { t } from '@/i18n';
 
 // Formas abstractas de la escala de Bristol: siluetas sencillas en un tono neutro, nada
 // realista, para que registrar la consistencia no resulte desagradable.
@@ -84,7 +85,7 @@ export function ColorSwatches<T extends string>({
               </View>
             </View>
             <Text style={[styles.swatchLabel, selected && { color: Colors.textPrimary }]} numberOfLines={2}>
-              {o.label}
+              {t(o.label)}
             </Text>
           </TouchableOpacity>
         );
