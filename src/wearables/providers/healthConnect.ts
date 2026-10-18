@@ -15,9 +15,11 @@ import { DailyWearableRecord, WearableMetric } from '../types';
 // - Pulso en reposo: el que escribe el reloj (RestingHeartRate); si no lo escribe, se estima
 //   con la media horaria más baja del día a partir del pulso (HeartRate).
 // - Pulso medio, VFC (RMSSD) y sueño (tiempo dormido sin los ratos despierto; cuenta para el
-//   día en que te despiertas).
+//   día en que te despiertas). Del sueño, además, la hora de dormirte y de despertarte y los
+//   minutos de cada fase (profundo, ligero, REM, despierto, fuera de la cama) si la fuente los da.
 
 import { joinSources, originName, PHONE_SOURCE } from '../sources';
+import { summarizeSleepSessions } from '../seriesLogic';
 
 export { originName, PHONE_SOURCE };
 
@@ -239,18 +241,31 @@ export async function readHealthConnectDaily(days = 30): Promise<HealthConnectRe
   }
   note('HeartRateVariabilityRmssd', [...hrv.entries()].map(([k, v]) => rec(k.split('|')[0], 'hrv', v.sum / v.n, k.split('|')[1], 'HeartRateVariabilityRmssd')));
 
-  // Sueño: tiempo dormido (sin despierto ni fuera de la cama), al día en que te despiertas
-  const sleep = new Map<string, number>();
-  for (const r of await readAll('SleepSession')) {
-    const stages = (r.stages ?? []) as { startTime: string; endTime: string; stage: number }[];
-    const ms = (a: string, b: string) => new Date(b).getTime() - new Date(a).getTime();
-    const asleep = stages.length
-      ? stages.filter((s) => s.stage !== 1 && s.stage !== 3).reduce((a, s) => a + ms(s.startTime, s.endTime), 0)
-      : ms(r.startTime, r.endTime);
-    const key = `${dayOf(r.endTime)}|${originName(r.metadata?.dataOrigin)}`;
-    sleep.set(key, (sleep.get(key) ?? 0) + asleep / 60000);
-  }
-  note('SleepSession', [...sleep.entries()].filter(([, m]) => m >= 30).map(([k, m]) => rec(k.split('|')[0], 'sleep_duration', m, k.split('|')[1], 'SleepSession')));
+  // Sueño: tiempo dormido (sin despierto ni fuera de la cama), al día en que te despiertas, con la hora
+  // de dormirte y de despertarte y, si la fuente las manda, los minutos de cada fase
+  const nights = summarizeSleepSessions(
+    (await readAll('SleepSession')).map((r) => ({
+      startTime: r.startTime,
+      endTime: r.endTime,
+      stages: r.stages ?? [],
+      source: originName(r.metadata?.dataOrigin),
+    })),
+  );
+  note(
+    'SleepSession',
+    nights
+      .filter((n) => n.asleep >= 30)
+      .flatMap((n) => {
+        const night = (metric: WearableMetric, value: number) => rec(n.date, metric, value, n.source, 'SleepSession');
+        const rows = [night('sleep_duration', n.asleep), night('sleep_start', n.start), night('sleep_end', n.end)];
+        if (n.stages) {
+          const { deep, light, rem, awake, outOfBed } = n.stages;
+          rows.push(night('sleep_deep', deep), night('sleep_light', light), night('sleep_rem', rem), night('sleep_awake', awake));
+          if (outOfBed > 0) rows.push(night('sleep_out_of_bed', outOfBed));
+        }
+        return rows;
+      }),
+  );
 
   return { records: out, from: localDay(start), granted, found };
 }

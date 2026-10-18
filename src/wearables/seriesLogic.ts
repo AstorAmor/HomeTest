@@ -1,4 +1,4 @@
-import { DailyWearableRecord, WearableMetric } from './types';
+import { DailyWearableRecord, SleepDetailMetric, WearableMetric } from './types';
 import { PHONE_SOURCE } from './sources';
 
 // Lógica pura de las series diarias de wearables (sin React Native, con tests en __tests__).
@@ -31,12 +31,31 @@ const better = (a: DailyWearableRecord, b: DailyWearableRecord) => {
   return CUMULATIVE.includes(a.metric) ? a.value > b.value : false;
 };
 
+export const SLEEP_DETAIL: readonly SleepDetailMetric[] = [
+  'sleep_deep',
+  'sleep_light',
+  'sleep_rem',
+  'sleep_awake',
+  'sleep_out_of_bed',
+  'sleep_start',
+  'sleep_end',
+];
+export const isSleepDetail = (m: WearableMetric) => (SLEEP_DETAIL as readonly string[]).includes(m);
+
+// Las fases y las horas del sueño van con la noche elegida (la misma fuente que la duración), para no
+// mezclar el sueño profundo de una app con la hora de dormir de otra. Sin duración ese día, no cuentan.
 export function pickPerDay(records: DailyWearableRecord[]): DailyWearableRecord[] {
   const best = new Map<string, DailyWearableRecord>();
   for (const r of records) {
+    if (isSleepDetail(r.metric)) continue;
     const key = `${r.metric}|${r.date}`;
     const cur = best.get(key);
     if (!cur || better(r, cur)) best.set(key, r);
+  }
+  for (const r of records) {
+    if (!isSleepDetail(r.metric)) continue;
+    const night = best.get(`sleep_duration|${r.date}`);
+    if (night && night.sourceName === r.sourceName && night.provider === r.provider) best.set(`${r.metric}|${r.date}`, r);
   }
   return [...best.values()];
 }
@@ -109,3 +128,142 @@ export function computeReadiness(series: DailySeries, now = new Date()): Readine
   };
 }
 
+
+// ---------------------------------------------------------------------------
+// Sueño de cada noche: fases y horas
+// ---------------------------------------------------------------------------
+
+// Fases de SleepSessionRecord en Health Connect. AWAKE_IN_BED (7) no está en las constantes de
+// react-native-health-connect, pero Android lo manda.
+export const SLEEP_STAGE = { UNKNOWN: 0, AWAKE: 1, SLEEPING: 2, OUT_OF_BED: 3, LIGHT: 4, DEEP: 5, REM: 6, AWAKE_IN_BED: 7 } as const;
+
+export interface SleepSessionInput {
+  startTime: string; // instantes ISO
+  endTime: string;
+  stages?: { startTime: string; endTime: string; stage: number }[];
+  source: string; // nombre visible de la app (originName)
+}
+
+// Minutos en cada fase
+export interface SleepStages {
+  deep: number;
+  light: number;
+  rem: number;
+  awake: number;
+  outOfBed: number;
+}
+
+export interface SleepNightSummary {
+  date: string; // día en que te despiertas
+  source: string;
+  asleep: number; // minutos dormido, sin los ratos despierto ni fuera de la cama
+  start: number; // hora de dormirte: minutos desde la medianoche de `date` (negativo = la víspera)
+  end: number; // hora de despertarte, igual
+  stages: SleepStages | null; // null si la fuente no manda fases (solo la sesión, o solo "dormido")
+}
+
+const msOf = (iso: string) => new Date(iso).getTime();
+const minutesBetween = (a: string, b: string) => Math.max(0, msOf(b) - msOf(a)) / 60000;
+const dayNumber = (key: string) => Date.UTC(+key.slice(0, 4), +key.slice(5, 7) - 1, +key.slice(8, 10)) / 86400000;
+
+// Hora de reloj de un instante en minutos desde la medianoche local de `day`. Va por la hora de reloj y
+// no por el tiempo transcurrido, para que la noche del cambio de hora no la desplace.
+export const clockMinutesFrom = (iso: string, day: string) => {
+  const d = new Date(iso);
+  return (dayNumber(localDayKey(d)) - dayNumber(day)) * 1440 + d.getHours() * 60 + d.getMinutes();
+};
+
+// Entre dos sesiones de la misma noche (te levantas un rato) hay menos de una hora
+const SAME_SLEEP_GAP_MS = 60 * 60000;
+
+// Una noche por día en que te despiertas y por fuente. El tiempo dormido y las fases suman todas las
+// sesiones de ese día (siestas incluidas); la hora de dormirte y de despertarte salen del bloque con más
+// sueño (sesiones casi seguidas), para que una siesta no las cambie.
+export function summarizeSleepSessions(sessions: SleepSessionInput[]): SleepNightSummary[] {
+  const groups = new Map<string, SleepSessionInput[]>();
+  for (const s of sessions) {
+    const key = `${localDayKey(new Date(s.endTime))}|${s.source}`;
+    groups.set(key, [...(groups.get(key) ?? []), s]);
+  }
+
+  const out: SleepNightSummary[] = [];
+  for (const [key, list] of groups) {
+    const date = key.slice(0, 10);
+    const st: SleepStages = { deep: 0, light: 0, rem: 0, awake: 0, outOfBed: 0 };
+    const asleepOf = (s: SleepSessionInput) => {
+      if (!s.stages?.length) return minutesBetween(s.startTime, s.endTime);
+      let asleep = 0;
+      for (const g of s.stages) {
+        const m = minutesBetween(g.startTime, g.endTime);
+        if (g.stage === SLEEP_STAGE.AWAKE || g.stage === SLEEP_STAGE.AWAKE_IN_BED) st.awake += m;
+        else if (g.stage === SLEEP_STAGE.OUT_OF_BED) st.outOfBed += m;
+        else {
+          asleep += m;
+          if (g.stage === SLEEP_STAGE.DEEP) st.deep += m;
+          else if (g.stage === SLEEP_STAGE.LIGHT) st.light += m;
+          else if (g.stage === SLEEP_STAGE.REM) st.rem += m;
+        }
+      }
+      return asleep;
+    };
+
+    const blocks: { start: string; end: string; asleep: number }[] = [];
+    for (const s of [...list].sort((a, b) => msOf(a.startTime) - msOf(b.startTime))) {
+      const asleep = asleepOf(s);
+      const last = blocks[blocks.length - 1];
+      if (last && msOf(s.startTime) - msOf(last.end) <= SAME_SLEEP_GAP_MS) {
+        if (msOf(s.endTime) > msOf(last.end)) last.end = s.endTime;
+        last.asleep += asleep;
+      } else blocks.push({ start: s.startTime, end: s.endTime, asleep });
+    }
+    const main = blocks.reduce((a, b) => (b.asleep > a.asleep ? b : a));
+
+    out.push({
+      date,
+      source: key.slice(11),
+      asleep: blocks.reduce((a, b) => a + b.asleep, 0),
+      start: clockMinutesFrom(main.start, date),
+      end: clockMinutesFrom(main.end, date),
+      stages: st.deep + st.light + st.rem > 0 ? st : null,
+    });
+  }
+  return out;
+}
+
+// Lo que enseña el detalle del sueño de cada noche, a partir de las series guardadas
+export interface SleepNight {
+  date: string; // día en que te despiertas
+  asleep: number; // minutos
+  start: number | null; // como en SleepNightSummary
+  end: number | null;
+  // `other`: dormido sin fase (p. ej. una siesta de una fuente que no da fases ese día)
+  stages: (SleepStages & { other: number }) | null;
+}
+
+export function sleepNights(series: DailySeries): SleepNight[] {
+  const byDate = (m: WearableMetric) => new Map((series[m] ?? []).map((p) => [p.date, p.value]));
+  const [deep, light, rem, awake, outOfBed, start, end] = (
+    ['sleep_deep', 'sleep_light', 'sleep_rem', 'sleep_awake', 'sleep_out_of_bed', 'sleep_start', 'sleep_end'] as const
+  ).map(byDate);
+  return (series.sleep_duration ?? []).map(({ date, value }) => {
+    const staged = deep.has(date) || light.has(date) || rem.has(date);
+    const d = deep.get(date) ?? 0;
+    const l = light.get(date) ?? 0;
+    const r = rem.get(date) ?? 0;
+    // Por el redondeo de cada fase pueden sobrar uno o dos minutos: eso no es "sin fase"
+    const other = value - d - l - r >= 3 ? value - d - l - r : 0;
+    return {
+      date,
+      asleep: value,
+      start: start.get(date) ?? null,
+      end: end.get(date) ?? null,
+      stages: staged ? { deep: d, light: l, rem: r, awake: awake.get(date) ?? 0, outOfBed: outOfBed.get(date) ?? 0, other } : null,
+    };
+  });
+}
+
+// "23:15" a partir de minutos desde una medianoche (negativo = la víspera)
+export const formatClock = (minutes: number) => {
+  const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  return `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`;
+};

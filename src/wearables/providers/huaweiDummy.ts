@@ -1,7 +1,7 @@
 import { DailyWearableRecord, WearableMetric } from '../types';
 
 // Datos DUMMY con la forma de lo que dará Huawei Health: 14 días de pasos,
-// pulso en reposo, VFC, sueño, calorías activas y temperatura. Deterministas (misma salida cada vez) para que
+// pulso en reposo, VFC, sueño (con fases y horas), calorías activas y temperatura. Deterministas (misma salida cada vez) para que
 // las pruebas sean reproducibles. Se sustituirán por el adaptador real de
 // Huawei Health Kit cuando la cuenta de desarrollador tenga esos permisos.
 const SOURCE = 'Huawei Health (dummy)';
@@ -36,7 +36,22 @@ export function generateHuaweiDummy(days = 14, today = new Date()): DailyWearabl
     push(date, 'steps', Math.round((weekend ? 5200 : 8400) + noise(i) * 3000), 'Steps');
     push(date, 'resting_heart_rate', Math.round(58 + noise(i + 100) * 4 + (badStreak ? 6 : 0)), 'Resting heart rate');
     push(date, 'hrv', Math.round(48 + noise(i + 200) * 10 - (badStreak ? 12 : 0)), 'HRV (RMSSD)');
-    push(date, 'sleep_duration', Math.round(410 + noise(i + 300) * 60 - (badStreak ? 90 : 0)), 'Sleep (minutes)');
+    const asleep = Math.round(410 + noise(i + 300) * 60 - (badStreak ? 90 : 0));
+    push(date, 'sleep_duration', asleep, 'Sleep (minutes)');
+    // Hora de dormirte entre las 22:30 y las 00:15 (más tarde en la mala racha) y fases típicas; una
+    // noche de cada seis sin fases, como las fuentes que solo dan la sesión
+    const awake = Math.round(15 + noise(i + 600) * 30);
+    const start = Math.round(-90 + noise(i + 700) * 75 + (badStreak ? 30 : 0));
+    push(date, 'sleep_start', start, 'Sleep start (minutes from midnight)');
+    push(date, 'sleep_end', start + asleep + awake, 'Sleep end (minutes from midnight)');
+    if (i % 6 !== 4) {
+      const deep = Math.round(asleep * (0.14 + noise(i + 800) * 0.08 - (badStreak ? 0.04 : 0)));
+      const rem = Math.round(asleep * (0.18 + noise(i + 900) * 0.07));
+      push(date, 'sleep_deep', deep, 'Deep sleep (minutes)');
+      push(date, 'sleep_rem', rem, 'REM sleep (minutes)');
+      push(date, 'sleep_light', asleep - deep - rem, 'Light sleep (minutes)');
+      push(date, 'sleep_awake', awake, 'Awake (minutes)');
+    }
     push(date, 'active_energy', Math.round((weekend ? 380 : 520) + noise(i + 400) * 180), 'Active calories (kcal)');
     push(date, 'body_temperature', Math.round((36.5 + noise(i + 500) * 0.4 + (badStreak ? 0.2 : 0)) * 10) / 10, 'Body temperature (°C)');
   }

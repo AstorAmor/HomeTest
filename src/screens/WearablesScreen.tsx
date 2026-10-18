@@ -10,7 +10,7 @@ import { wearableRepository } from '@/wearables/wearableRepository';
 import { generateHuaweiDummy } from '@/wearables/providers/huaweiDummy';
 import { TAB, tabHref } from '@/constants/tabs';
 import { showSamples } from '@/data/dataMode';
-import { localDayKey, pickPerDay, syncHealthConnectIfDue } from '@/wearables/dailySeries';
+import { isSleepDetail, localDayKey, pickPerDay, syncHealthConnectIfDue } from '@/wearables/dailySeries';
 import { sourceLabel } from '@/wearables/sourceLabel';
 import {
   connectHealthConnect,
@@ -29,6 +29,13 @@ const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string }> = {
   heart_rate_avg: { label: 'Average heart rate', unit: 'bpm' },
   hrv: { label: 'HRV', unit: 'ms' },
   sleep_duration: { label: 'Sleep', unit: '' },
+  sleep_deep: { label: 'Deep sleep', unit: '' },
+  sleep_light: { label: 'Light sleep', unit: '' },
+  sleep_rem: { label: 'REM sleep', unit: '' },
+  sleep_awake: { label: 'Awake', unit: '' },
+  sleep_out_of_bed: { label: 'Out of bed', unit: '' },
+  sleep_start: { label: 'Fell asleep', unit: '' },
+  sleep_end: { label: 'Woke up', unit: '' },
   active_energy: { label: 'Active energy', unit: 'kcal' },
   body_temperature: { label: 'Body temperature', unit: '°C' },
   distance: { label: 'Distance', unit: 'km' },
@@ -147,10 +154,11 @@ export const WearablesScreen = () => {
     connected && coverage.some((c) => c.days > 0) && coverage.every((c) => c.sources.every((s) => s === PHONE_SOURCE));
   const missingPermissions = connected && coverage.some((c) => !c.allowed);
 
-  // Últimos 7 días con datos, agrupados por fecha (una fuente por métrica y día, la que usa la app)
+  // Últimos 7 días con datos, agrupados por fecha (una fuente por métrica y día, la que usa la app).
+  // Las fases y horas del sueño se ven en el detalle del sueño; aquí, solo la duración.
   const byDate = useMemo(() => {
     const map = new Map<string, DailyWearableRecord[]>();
-    for (const r of pickPerDay(records)) map.set(r.date, [...(map.get(r.date) ?? []), r]);
+    for (const r of pickPerDay(records)) if (!isSleepDetail(r.metric)) map.set(r.date, [...(map.get(r.date) ?? []), r]);
     return [...map.entries()]
       .sort((a, b) => b[0].localeCompare(a[0]))
       .slice(0, 7)
