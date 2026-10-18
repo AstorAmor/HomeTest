@@ -7,6 +7,14 @@ export type StoolColor = 'brown' | 'light_brown' | 'dark_brown' | 'yellow' | 'gr
 // Escala de Bristol: 1 bolitas duras … 4 suave y con forma … 7 líquida
 export type BristolType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+// Una vez concreta, apuntada con "Ahora": su hora sirve para cruzarla con las comidas
+// (src/logic/gutPatterns.ts). El apunte del día entero no la lleva.
+export interface BowelMovement {
+  at: string; // ISO
+  consistency?: BristolType;
+  urgent?: boolean; // "tuve que ir corriendo"
+}
+
 export interface BowelEntry {
   id: string;
   fecha: string; // ISO del día del apunte (mediodía local)
@@ -17,6 +25,7 @@ export interface BowelEntry {
   note?: string;
   // Respuesta a "¿has comido o tomado algo que lo explique?" cuando el color es llamativo
   explainedBy?: string;
+  movements?: BowelMovement[];
 }
 
 // Los marrones van de claro a muy oscuro con saltos de luminosidad parecidos (claro → marrón →

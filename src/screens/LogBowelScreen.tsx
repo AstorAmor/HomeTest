@@ -34,6 +34,7 @@ export const LogBowelScreen = () => {
   const [consistency, setConsistency] = useState<BristolType | undefined>();
   const [cause, setCause] = useState<string | undefined>();
   const [note, setNote] = useState('');
+  const [urgent, setUrgent] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -64,6 +65,8 @@ export const LogBowelScreen = () => {
           // El color y la forma de esta vez pasan a ser los del día (los últimos)
           ...(color ? { color, explainedBy: cause && cause !== NONE ? cause : undefined } : {}),
           ...(consistency ? { consistency } : {}),
+          // Y su hora, para cruzarla con las comidas (src/logic/gutPatterns.ts)
+          movements: [...(existing?.movements ?? []), { at: new Date().toISOString(), consistency, urgent: urgent || undefined }],
         }
       : {
           count: total,
@@ -101,7 +104,7 @@ export const LogBowelScreen = () => {
           <View style={styles.iconBadge}>
             <IntestineIcon size={26} color={Colors.green} />
           </View>
-          <Text style={styles.title}>{quick ? tr('Just now') : tr('Digestion today')}</Text>
+          <Text style={styles.title}>{quick ? tr('Just now') : tr('Your stools today')}</Text>
           <Text style={styles.subtitle}>
             {quick
               ? tr('It adds one time to today ({n} so far). Colour and shape are optional.', { n: existing?.count ?? 0 })
@@ -173,6 +176,12 @@ export const LogBowelScreen = () => {
                 );
               })}
             </View>
+            {quick && (
+              <TouchableOpacity style={[styles.urgent, urgent && styles.urgentOn]} onPress={() => setUrgent(!urgent)} activeOpacity={0.85}>
+                <Ionicons name={urgent ? 'checkbox' : 'square-outline'} size={20} color={urgent ? Colors.accent : Colors.textMuted} />
+                <Text style={styles.typeTitle}>{tr('I had to rush (urgency)')}</Text>
+              </TouchableOpacity>
+            )}
           </>
         )}
 
@@ -261,6 +270,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   typeCardSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
+  urgent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    backgroundColor: Colors.card,
+  },
+  urgentOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
   typeTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   typeHint: { color: Colors.textSecondary, fontSize: 12, marginTop: 1 },
 });

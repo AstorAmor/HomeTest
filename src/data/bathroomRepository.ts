@@ -4,6 +4,12 @@ import { BowelEntry, UrineEntry } from '@/types/bathroom';
 // Registro digestivo y urinario: un apunte por día (se edita si ya existe el de ese día).
 // Tablas bowel_logs y urine_logs (supabase/migrations/20261008110000_bowel_urine_logs.sql).
 
+// Las horas de cada vez (bowel_logs.movements) y el registro de Digestión (gut_symptom_logs) van en
+// la migración 20261018150000_gut_symptom_logs.sql, PREPARADA Y SIN APLICAR. Hasta aplicarla (con
+// el OK del fundador), las horas no se suben y Digestión se guarda solo en el móvil; después,
+// poner true.
+export const REMOTE_HAS_GUT_LOGS = false;
+
 export const bowelRepository = createMetricRepository<BowelEntry>('hometest:bowel_logs', {
   table: 'bowel_logs',
   dateColumn: 'logged_at',
@@ -15,12 +21,14 @@ export const bowelRepository = createMetricRepository<BowelEntry>('hometest:bowe
       consistency: e.consistency,
       note: e.note,
       explained_by: e.explainedBy,
+      movements: REMOTE_HAS_GUT_LOGS ? e.movements : undefined,
       logged_at: e.fecha,
       created_at: e.createdAt,
     }),
   fromRow: (r) => ({
     id: r.id,
     count: r.count,
+    movements: r.movements ?? undefined,
     color: r.color ?? undefined,
     consistency: r.consistency ?? undefined,
     note: r.note ?? undefined,

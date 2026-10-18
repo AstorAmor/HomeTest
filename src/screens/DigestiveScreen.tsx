@@ -14,6 +14,10 @@ import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/ba
 import { bowelObservations, hydrationFromUrine, Observation, urineObservations, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
 import { BowelEntry, STOOL_COLORS, URINE_COLORS, UrineEntry } from '@/types/bathroom';
 import { showSamples } from '@/data/dataMode';
+import { digestionRepository, LoadedGut, loadGutContext } from '@/data/digestionRepository';
+import { analyseGut, CONFIDENCE_LABEL, GutAnalysis, groupLabel, matchingMeal, MIN_MEALS, Outcome } from '@/logic/gutPatterns';
+import { mealGroups } from '@/logic/foodGroups';
+import { DigestionEntry, GUT_SYMPTOMS, GutSymptom, INTENSITIES } from '@/types/digestion';
 
 const LEVEL: Record<Observation['level'], { icon: string; color: string }> = {
   good: { icon: 'checkmark-circle', color: Colors.ok },
@@ -84,6 +88,39 @@ const lastSevenDays = () =>
     return d;
   });
 
+// Digestión (lo que notas): el peor nivel del día. 0 = "Hoy, bien"; null = nada apuntado
+const TUMMY_COLORS = [Colors.ok, Colors.warning, Colors.attention, Colors.danger];
+const TUMMY_LABELS = ['Good', 'Mild', 'Moderate', 'Strong'];
+const worstOfDay = (entries: DigestionEntry[], day: string): number | null => {
+  const sameDay = entries.filter((e) => dayKey(new Date(e.fecha)) === day);
+  if (!sameDay.length) return null;
+  return Math.max(0, ...sameDay.flatMap((e) => Object.values(e.symptoms ?? {}) as number[]));
+};
+const TummyWeek = ({ days, levels, onDay }: { days: Date[]; levels: (number | null)[]; onDay: (d: Date) => void }) => (
+  <View style={styles.week}>
+    {days.map((d, i) => {
+      const level = levels[i];
+      return (
+        <TouchableOpacity key={d.toISOString()} style={styles.dayCol} onPress={() => onDay(d)} activeOpacity={0.7}>
+          <View style={styles.barTrack}>
+            {level == null ? (
+              <View style={styles.barEmpty} />
+            ) : (
+              <View style={[styles.bar, { height: 10 + level * 18, backgroundColor: TUMMY_COLORS[level] }]} />
+            )}
+          </View>
+          <Text style={styles.dayLabel}>{d.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}</Text>
+        </TouchableOpacity>
+      );
+    })}
+  </View>
+);
+const symptomText = (e: DigestionEntry) =>
+  GUT_SYMPTOMS.filter((s) => e.symptoms?.[s.id])
+    .map((s) => `${t(s.label)} (${t(INTENSITIES.find((i) => i.id === e.symptoms![s.id])!.label).toLowerCase()})`)
+    .join(' · ');
+const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+
 // Gut y Bladder (?part=gut|bladder desde su tarjeta de Today; sin part, las dos): los últimos 7
 // días y lo que notamos esta semana. Las observaciones se calculan al momento (también desde el
 // aviso semanal); las preguntas de contexto van antes de recomendar el médico.
@@ -105,14 +142,25 @@ export const DigestiveScreen = () => {
   const [volume, setVolume] = useDeepState<VolumeCheckSuggestion>(null);
   const [answers, setAnswers] = useState<Record<string, 'yes' | 'no'>>({});
   const [checkedAt, setCheckedAt] = useState<Date>(new Date());
+  const [gut, setGut] = useDeepState<LoadedGut | null>(null);
+  const [gutAnalysis, setGutAnalysis] = useDeepState<GutAnalysis | null>(null);
 
   const load = useCallback(async () => {
-    const [b, u] = await Promise.all([bowelRepository.getAll(), urineRepository.getAll()]);
+    const [b, u, g] = await Promise.all([bowelRepository.getAll(), urineRepository.getAll(), loadGutContext()]);
     setBowel(b);
     setUrine(u);
     setVolume(volumeCheckSuggestion(u));
+    setGut(g);
+    setGutAnalysis(analyseGut(g));
     setCheckedAt(new Date());
-  }, [setBowel, setUrine, setVolume]);
+  }, [setBowel, setUrine, setVolume, setGut, setGutAnalysis]);
+
+  // "Hoy, bien" / "Nada más hoy" con un toque
+  const markDayOk = async () => {
+    const now = new Date().toISOString();
+    await digestionRepository.save({ id: `gut-ok-${Date.now()}`, kind: 'day_ok', fecha: now, createdAt: now });
+    load();
+  };
   useReloadOnFocus(load);
 
   const days = lastSevenDays();
@@ -182,13 +230,16 @@ export const DigestiveScreen = () => {
         <ScreenHeader title={part === 'gut' ? t('Digestion') : part === 'bladder' ? t('Hydration') : t('Digestion and hydration')} showBack />
         {/* Como las fichas de VFC o glucosa: título en negrita y, debajo, el icono y lo de hoy */}
         {part === 'gut' && (() => {
+          // Cómo está la tripa hoy (Digestión) y cuántas veces al baño (Heces)
+          const level = worstOfDay(gut && !gut.sample ? gut.digestion : [], dayKey(new Date()));
           const e = entryForDay(bowel, dayKey(new Date()));
+          const stools = e ? `${t('Stools')}: ${tn(e.count, '{n} time', '{n} times')}` : '';
           return (
             <MetricHero
               icon="intestine"
               color={Colors.green}
-              value={e ? tn(e.count, '{n} time', '{n} times') : '—'}
-              sub={e ? t('Today') : t('Nothing logged today yet')}
+              value={level != null ? t(TUMMY_LABELS[level]) : '—'}
+              sub={level != null || e ? [t('Today'), stools].filter(Boolean).join(' · ') : t('Nothing logged today yet')}
             />
           );
         })()}
@@ -205,20 +256,138 @@ export const DigestiveScreen = () => {
         })()}
         <Text style={styles.intro}>
           {part === 'gut'
-            ? t('A quick daily note on your digestion.')
+            ? t('How your tummy feels and your stools. The app links them to your meals on its own.')
             : part === 'bladder'
               ? t('A quick daily note on your urine: it says a lot about how hydrated you are.')
               : t('A quick daily note on your digestion and urine.')}{' '}
           {t('Each week we tell you what we notice, and you can check any time.')}
         </Text>
 
-        {/* Digestión */}
+        {/* Digestión: lo que notas en la tripa, cruzado por detrás con las comidas y las heces */}
+        {showGut && gut && (() => {
+          const tummy = gut.digestion;
+          const todayKey = dayKey(new Date());
+          const todayEntries = gut.sample ? [] : tummy.filter((e) => dayKey(new Date(e.fecha)) === todayKey);
+          const dayOkToday = todayEntries.some((e) => e.kind === 'day_ok');
+          const symptomsToday = todayEntries.filter((e) => e.kind === 'symptoms');
+          const mealsToday = gut.sample
+            ? []
+            : gut.meals.filter((m) => dayKey(new Date(m.fecha)) === todayKey).sort((x, y) => x.fecha.localeCompare(y.fecha));
+          const alarm = gutAnalysis?.alarms[0];
+          const pattern = gutAnalysis?.patterns.find((p) => p.confidence !== 'hint');
+          return (
+            <>
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>{t('Digestion')}</Text>
+                  <Text style={styles.cardMeta}>{t('Last 7 days')}</Text>
+                </View>
+                <TummyWeek
+                  days={days}
+                  levels={days.map((d) => worstOfDay(tummy, dayKey(d)))}
+                  onDay={(d) => router.push({ pathname: '/log-digestion', params: { day: dayKey(d) } })}
+                />
+                <View style={styles.legend}>
+                  {TUMMY_LABELS.map((l, i) => (
+                    <View key={l} style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: TUMMY_COLORS[i] }]} />
+                      <Text style={styles.legendText}>{t(l)}</Text>
+                    </View>
+                  ))}
+                </View>
+                {gut.sample && <Text style={styles.sampleText}>{t('Sample month: log your own days to see yours.')}</Text>}
+              </View>
+              <AddMeasurementButton onPress={() => router.push('/log-digestion')} label={t('I feel something')} />
+              <TouchableOpacity style={styles.wholeDay} onPress={markDayOk} disabled={dayOkToday} activeOpacity={0.85}>
+                <Ionicons name={dayOkToday ? 'checkmark-circle' : 'happy-outline'} size={18} color={Colors.ok} />
+                <Text style={styles.wholeDayText}>
+                  {dayOkToday ? t('Marked as a good day') : symptomsToday.length ? t('Nothing else today') : t('All good today')}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Hoy: las comidas de "Tus nutrientes" con lo que creemos que llevaban, y cada molestia
+                  con la comida con la que encaja por la hora */}
+              <Text style={styles.sectionTitle}>{t('Today')}</Text>
+              {!mealsToday.length && !symptomsToday.length && (
+                <Text style={styles.empty}>{t('Log your meals in Your nutrients and we will link them to how you feel.')}</Text>
+              )}
+              {mealsToday.map((m) => {
+                const groups = mealGroups(m.description, m.groups);
+                return (
+                  <TouchableOpacity
+                    key={m.id}
+                    style={styles.row}
+                    onPress={() => router.push({ pathname: '/meal-groups', params: { id: m.id } })}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="restaurant-outline" size={18} color={Colors.textSecondary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowTitle}>
+                        {hhmm(m.fecha)} · {m.description || t('Meal with a photo')}
+                      </Text>
+                      <Text style={styles.rowSub}>
+                        {groups.length
+                          ? `${m.groups ? t('It had:') : t('We think it had:')} ${groups.map((g) => groupLabel(g).toLowerCase()).join(', ')}`
+                          : m.description
+                            ? t('Nothing from the groups we track. Tap to fix it.')
+                            : t('Add what it was so we can link it.')}
+                      </Text>
+                    </View>
+                    <Ionicons name="create-outline" size={16} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                );
+              })}
+              {symptomsToday.map((e) => {
+                const first = Object.keys(e.symptoms ?? {})[0] as GutSymptom | undefined;
+                const match = first ? matchingMeal(new Date(e.fecha).getTime(), first as Outcome, gut.meals, !!e.wokeAtNight) : null;
+                return (
+                  <View key={e.id} style={styles.row}>
+                    <AppIcon name="intestine" size={18} color={Colors.attention} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowTitle}>
+                        {hhmm(e.fecha)} · {symptomText(e)}
+                      </Text>
+                      {match && (
+                        <Text style={styles.rowSub}>
+                          {t('Fits with: {meal} ({time})', { meal: match.description || t('Meal with a photo'), time: hhmm(match.fecha) })}
+                        </Text>
+                      )}
+                    </View>
+                    <TouchableOpacity onPress={() => digestionRepository.remove(e.id).then(load)} hitSlop={10}>
+                      <Ionicons name="trash-outline" size={16} color={Colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+
+              {/* Lo que vemos: lo más importante (alarma primero) y el enlace al análisis completo */}
+              <TouchableOpacity style={styles.insight} onPress={() => router.push('/gut-insights')} activeOpacity={0.85}>
+                <Ionicons name={alarm ? 'medkit-outline' : 'sparkles-outline'} size={20} color={alarm ? Colors.danger : Colors.gold} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardTitle}>{t('What we see in your digestion')}</Text>
+                  <Text style={styles.obsBody}>
+                    {alarm
+                      ? alarm.title
+                      : pattern
+                        ? `${pattern.title} · ${t(CONFIDENCE_LABEL[pattern.confidence])}`
+                        : gutAnalysis?.ready
+                          ? t('Nothing stands out yet')
+                          : t('{m} of {M} meals so far on days with your tummy logged.', { m: gutAnalysis?.observedMeals ?? 0, M: MIN_MEALS })}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
+            </>
+          );
+        })()}
+
+        {/* Heces */}
         {showGut && (
           <>
-          <View style={styles.card}>
+          <View style={[styles.card, { marginTop: 22 }]}>
             <View style={styles.cardHeader}>
               {!part && <AppIcon name="intestine" size={20} color={Colors.green} />}
-              <Text style={styles.cardTitle}>{t('Bowel movements')}</Text>
+              <Text style={styles.cardTitle}>{t('Stools')}</Text>
               <Text style={styles.cardMeta}>{t('Last 7 days')}</Text>
             </View>
             <WeekBars
@@ -313,6 +482,37 @@ export const DigestiveScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  legend: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 10 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendText: { color: Colors.textMuted, fontSize: 11 },
+  empty: { color: Colors.textMuted, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 10 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 14,
+    padding: 12,
+    marginHorizontal: 20,
+    marginBottom: 8,
+  },
+  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  rowSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  insight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.gold, 0.5),
+    borderRadius: 16,
+    padding: 14,
+    marginHorizontal: 20,
+    marginTop: 6,
+  },
   wholeDay: {
     flexDirection: 'row',
     alignItems: 'center',

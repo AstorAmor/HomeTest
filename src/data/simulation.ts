@@ -25,6 +25,7 @@ import { checkInRepository } from './checkInRepository';
 import { cycleRepository } from './cycleRepository';
 import { mealRepository, workoutRepository } from './planRepository';
 import { bowelRepository, urineRepository } from './bathroomRepository';
+import { digestionRepository } from './digestionRepository';
 import { doseRepository, medicationRepository } from './medicationRepository';
 import { bloodPressureRepository } from './bloodPressureRepository';
 import { glucoseRepository } from './glucoseRepository';
@@ -129,6 +130,7 @@ const LOG_REPOSITORIES = [
   mealRepository,
   cycleRepository,
   bowelRepository,
+  digestionRepository,
   urineRepository,
   medicationRepository,
   doseRepository,
