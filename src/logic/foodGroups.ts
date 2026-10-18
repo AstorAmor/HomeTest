@@ -1,5 +1,6 @@
-// Qué llevaba una comida, deducido de lo que escribió el usuario en "Tus nutrientes" (no se le
-// pregunta nada más). Lógica pura, sin React Native: se usa en la app y en los tests.
+// Qué llevaba una comida, deducido de lo que escribe el usuario en Digestión ("¿Qué comiste
+// antes?"): rellena las casillas de grupos, que el usuario puede corregir. Lógica pura, sin React
+// Native: se usa en la app y en los tests.
 //
 // Grupos que de verdad separan causas distintas de molestias digestivas:
 // - lactose: lácteos con lactosa (leche, yogur, nata, quesos frescos). Los quesos curados, la

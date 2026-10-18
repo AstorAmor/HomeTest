@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { inferFoodGroups } from '@/logic/foodGroups';
-import { analyseGut, fisherGreater, grade, GutMeal, gutEvents, matchingMeal } from '@/logic/gutPatterns';
-import type { DigestionEntry, GutSafetyAnswers } from '@/types/digestion';
+import { analyseGut, binomialGreater, foodEpisodes, grade, gutEvents } from '@/logic/gutPatterns';
+import type { DigestionEntry, FoodBefore, GutSafetyAnswers, UsualFoods } from '@/types/digestion';
 import type { BowelEntry } from '@/types/bathroom';
 
 const now = new Date('2026-10-18T20:00:00');
@@ -12,19 +12,33 @@ const at = (daysAgo: number, hh: number, mm = 0) => {
   return d.toISOString();
 };
 let seq = 0;
-const meal = (fecha: string, description: string): GutMeal => ({ id: `m${seq++}`, fecha, description });
-const sym = (fecha: string, symptoms: DigestionEntry['symptoms'], wokeAtNight?: boolean): DigestionEntry => ({
+const sym = (fecha: string, symptoms: DigestionEntry['symptoms'], food?: FoodBefore, wokeAtNight?: boolean): DigestionEntry => ({
   id: `s${seq++}`,
   fecha,
   createdAt: fecha,
   kind: 'symptoms',
   symptoms,
+  food,
   wokeAtNight,
+});
+// Lo que comió antes, con los grupos deducidos del texto (como al apuntarlo)
+const ate = (description: string, minutesBefore = 120, extra: Partial<FoodBefore> = {}): FoodBefore => ({
+  description,
+  groups: inferFoodGroups(description).map((g) => g.group),
+  minutesBefore,
+  ...extra,
 });
 const dayOk = (daysAgo: number): DigestionEntry => ({ id: `ok${seq++}`, fecha: at(daysAgo, 22), createdAt: at(daysAgo, 22), kind: 'day_ok' });
 const safetyOk: GutSafetyAnswers = { answeredAt: at(2, 12), answers: {} };
 const groups = (text: string) => inferFoodGroups(text).map((g) => g.group);
 const days = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
+const ctx = (digestion: DigestionEntry[], usual: UsualFoods = {}, bowel: BowelEntry[] = [], safety: GutSafetyAnswers | null = safetyOk) => ({
+  digestion,
+  bowel,
+  usual,
+  safety,
+  now,
+});
 
 describe('qué llevaba la comida (deducido del texto)', () => {
   it('platos habituales', () => {
@@ -53,78 +67,89 @@ describe('qué llevaba la comida (deducido del texto)', () => {
   });
 });
 
-describe('estadística', () => {
-  it('Fisher de una cola', () => {
-    expect(fisherGreater(7, 1, 1, 7)).toBeCloseTo(65 / 12870, 5);
-    expect(fisherGreater(0, 5, 5, 0)).toBeCloseTo(1, 9);
+describe('estadística frente a lo que sueles tomar', () => {
+  it('binomial de una cola', () => {
+    expect(binomialGreater(3, 3, 0.5)).toBeCloseTo(0.125, 9);
+    expect(binomialGreater(0, 5, 0.3)).toBe(1);
+    expect(binomialGreater(2, 4, 0.5)).toBeCloseTo(11 / 16, 9);
   });
   it('niveles de seguridad', () => {
-    expect(grade(9, 10, 1, 12)).toBe('clear');
-    expect(grade(5, 6, 1, 8)).toBe('probable');
-    expect(grade(4, 6, 1, 8)).toBe('hint'); // p ≈ 0,06
-    expect(grade(3, 3, 1, 6)).toBe('hint'); // muy claro pero con solo 3 comidas
-    expect(grade(2, 10, 2, 10)).toBeNull();
-    expect(grade(3, 4, 0, 2)).not.toBe('clear'); // pocas comidas sin el factor
+    expect(grade(9, 10, 0.1)).toBe('clear');
+    expect(grade(4, 6, 0.1)).toBe('probable');
+    expect(grade(2, 4, 0.1)).toBe('hint');
+    // Lo tomas en casi todas las comidas: aunque salga siempre, no puede ser "bastante claro"
+    expect(grade(12, 12, 0.75)).not.toBe('clear');
+    expect(grade(3, 10, 0.3)).toBeNull(); // justo lo esperable
+    expect(grade(5, 5, 0)).toBeNull(); // sin frecuencia válida no se compara
   });
 });
 
-// 28 días con desayuno, comida y cena; los días pares el desayuno lleva leche y a las 2 h hay
-// hinchazón. El resto de días, "Hoy, bien".
+// 28 días; los pares, café con leche y tostada en el desayuno y a las 2 h hinchazón y gases
 function lactoseMonth() {
-  const meals: GutMeal[] = [];
   const digestion: DigestionEntry[] = [];
   for (const d of days(28)) {
-    const dairy = d % 2 === 0;
-    meals.push(meal(at(d, 8), dairy ? 'Café con leche' : 'Café solo'));
-    meals.push(meal(at(d, 14), 'Arroz con pollo'));
-    meals.push(meal(at(d, 21), 'Ensalada'));
-    if (dairy) digestion.push(sym(at(d, 10), { bloating: 2, gas: 2 }));
+    if (d % 2 === 0) digestion.push(sym(at(d, 10), { bloating: 2, gas: 2 }, ate('Café con leche y tostada')));
     digestion.push(dayOk(d));
   }
-  return { meals, digestion };
+  return digestion;
 }
+const COFFEE_DRINKER: UsualFoods = { gluten: 'most', coffee: 'daily', lactose: 'weekly' };
 
 describe('patrones de comida', () => {
-  it('con pocas comidas no saca patrones, solo el progreso', () => {
-    const meals = [meal(at(1, 8), 'Café con leche'), meal(at(1, 14), 'Pizza')];
-    const r = analyseGut({ meals, digestion: [dayOk(1)], bowel: [], safety: safetyOk, now });
+  it('con pocas veces no saca patrones, solo el progreso', () => {
+    const r = analyseGut(ctx([sym(at(1, 10), { bloating: 2 }, ate('Pizza')), dayOk(1)], { gluten: 'daily' }));
     expect(r.ready).toBe(false);
-    expect(r.observedMeals).toBe(2);
+    expect(r.foodEpisodes).toBe(1);
     expect(r.patterns.filter((p) => p.kind === 'food')).toEqual([]);
   });
 
-  it('las comidas de días sin nada en Digestión no cuentan', () => {
-    const { meals } = lactoseMonth();
-    const r = analyseGut({ meals, digestion: [], bowel: [], safety: safetyOk, now });
-    expect(r.observedMeals).toBe(0);
+  it('sin lo que comiste antes, o en ayunas, no cuenta', () => {
+    const digestion = [sym(at(1, 10), { bloating: 2 }), sym(at(2, 10), { bloating: 2 }, { fasted: true }), sym(at(3, 10), { bloating: 2 }, {})];
+    expect(analyseGut(ctx(digestion)).foodEpisodes).toBe(0);
+  });
+
+  it('pregunta cada cuánto tomas lo que sale antes de las molestias', () => {
+    const r = analyseGut(ctx(lactoseMonth(), { gluten: 'most' }));
+    expect(r.missingUsual).toEqual(['lactose', 'coffee']);
+    expect(r.patterns.some((p) => p.factor === 'lactose')).toBe(false); // sin frecuencia, no se compara
   });
 
   it('lácteos: bastante claro, con sus números, y el test de aliento de lactosa', () => {
-    const { meals, digestion } = lactoseMonth();
-    const r = analyseGut({ meals, digestion, bowel: [], safety: safetyOk, now });
+    const r = analyseGut(ctx(lactoseMonth(), COFFEE_DRINKER));
     expect(r.ready).toBe(true);
     const lactose = r.patterns.find((p) => p.factor === 'lactose')!;
     expect(lactose.confidence).toBe('clear');
-    expect(lactose.numbers).toBe('Symptoms after 14 of 14 meals with dairy, against 0 of 70 of the rest.');
+    expect(lactose.numbers).toBe('Dairy with lactose: before 14 of your 14 logs. You have it a few times a week; normal would be around 1 of 14.');
     expect(lactose.suggestion?.storeIds).toEqual(['lactose']);
-    // El café va en todos esos desayunos, pero el café solo sienta bien: no se confunde
+    // El café y el pan van en todos esos desayunos, pero los tomas mucho más a menudo: no se enseñan
     expect(lactose.confoundedWith).toBeUndefined();
-    // El FODMAP conjunto no se repite si la lactosa ya lo explica
-    expect(r.patterns.some((p) => p.factor === 'fodmap')).toBe(false);
+    expect(r.patterns.some((p) => p.factor === 'coffee' || p.factor === 'gluten')).toBe(false);
     expect(r.showTests).toBe(true);
   });
 
+  it('el café no hincha: no es confusión de la hinchazón', () => {
+    const r = analyseGut(ctx(lactoseMonth(), { gluten: 'most', coffee: 'daily', lactose: 'daily' }));
+    expect(r.patterns.find((p) => p.factor === 'lactose')!.confoundedWith).toBeUndefined();
+  });
+
+  it('café con leche a diario y urgencia después: no se puede separar la leche del café', () => {
+    const digestion = lactoseMonth();
+    const bowel: BowelEntry[] = days(28)
+      .filter((d) => d % 2 === 0)
+      .map((d) => ({ id: `b${d}`, fecha: at(d, 12), createdAt: at(d, 12), count: 1, consistency: 6, movements: [{ at: at(d, 11), consistency: 6, urgent: true }] }));
+    const r = analyseGut(ctx(digestion, { gluten: 'most', coffee: 'daily', lactose: 'daily' }, bowel));
+    const lactose = r.patterns.find((p) => p.factor === 'lactose')!;
+    expect(lactose.confoundedWith).toBe('coffee');
+    expect(lactose.body).toMatch(/try one without the other/);
+  });
+
   it('gluten y lactosa siempre juntos (lasaña): avisa de que no se pueden separar', () => {
-    const meals: GutMeal[] = [];
     const digestion: DigestionEntry[] = [];
     for (const d of days(20)) {
-      const lasagna = d % 2 === 0;
-      meals.push(meal(at(d, 8), 'Tortilla francesa'));
-      meals.push(meal(at(d, 14), lasagna ? 'Lasaña' : 'Arroz con pollo'));
-      if (lasagna) digestion.push(sym(at(d, 16), { bloating: 3 }));
+      if (d % 2 === 0) digestion.push(sym(at(d, 16), { bloating: 3 }, ate('Lasaña')));
       digestion.push(dayOk(d));
     }
-    const r = analyseGut({ meals, digestion, bowel: [], safety: safetyOk, now });
+    const r = analyseGut(ctx(digestion, { gluten: 'weekly', lactose: 'weekly' }));
     const gluten = r.patterns.find((p) => p.factor === 'gluten')!;
     const lactose = r.patterns.find((p) => p.factor === 'lactose')!;
     expect(gluten.confoundedWith).toBe('lactose');
@@ -133,41 +158,47 @@ describe('patrones de comida', () => {
     expect(gluten.suggestion?.warning).toMatch(/Do not cut out gluten/);
   });
 
-  it('reflujo cuando cenas tarde', () => {
-    const meals: GutMeal[] = [];
-    const digestion: DigestionEntry[] = [];
-    for (const d of days(28)) {
-      const late = d % 2 === 0;
-      meals.push(meal(at(d, 14), 'Arroz con pollo'));
-      meals.push(meal(at(d, late ? 22 : 20, 30), 'Pescado con verduras'));
-      if (late) digestion.push(sym(at(d, 23, 30), { reflux: 2 }));
-      digestion.push(dayOk(d));
-    }
-    const r = analyseGut({ meals, digestion, bowel: [], safety: safetyOk, now });
-    expect(r.patterns.find((p) => p.factor === 'late_meal')?.confidence).toBe('clear');
-    const freq = r.patterns.find((p) => p.id === 'freq_reflux')!;
-    expect(freq.suggestion?.id).toBe('reflux_advice');
-    expect(freq.body).toMatch(/after 10 pm/);
+  it('una molestia fuera de la ventana de esa comida no se le atribuye', () => {
+    // Reflujo 6 h después de comer: no encaja con esa comida
+    const ep = foodEpisodes([sym(at(1, 20), { reflux: 2, bloating: 2 }, ate('Pizza', 360))], [], now)[0];
+    expect(ep.outcomes).toEqual({ bloating: 2 });
+  });
+
+  it('heces sueltas después de una comida apuntada cuentan para esa comida', () => {
+    const bowel: BowelEntry[] = [
+      { id: 'b', fecha: at(1, 12), createdAt: at(1, 12), count: 1, consistency: 6, movements: [{ at: at(1, 12), consistency: 6, urgent: true }] },
+    ];
+    const ep = foodEpisodes([sym(at(1, 10), { bloating: 2 }, ate('Café con leche', 60))], bowel, now)[0];
+    expect(ep.outcomes).toEqual({ bloating: 2, diarrhoea: 2 });
   });
 });
 
 describe('patrones de frecuencia', () => {
-  it('hinchazón con casi cualquier comida y sin alimento que lo explique: SIBO', () => {
-    const meals: GutMeal[] = [];
+  it('hinchazón casi a diario con comidas de todo tipo: SIBO', () => {
+    const lunches = ['Tortilla francesa', 'Arroz con pollo', 'Pescado con verduras', 'Lentejas', 'Pasta con tomate'];
     const digestion: DigestionEntry[] = [];
     for (const d of days(28)) {
-      meals.push(meal(at(d, 8), 'Tortilla francesa'));
-      meals.push(meal(at(d, 14), 'Arroz con pollo'));
-      meals.push(meal(at(d, 21), 'Pescado con verduras'));
-      digestion.push(sym(at(d, 16), { bloating: 2 }));
+      digestion.push(sym(at(d, 16), { bloating: 2 }, ate(lunches[d % lunches.length])));
       digestion.push(dayOk(d));
     }
-    const r = analyseGut({ meals, digestion, bowel: [], safety: safetyOk, now });
+    const r = analyseGut(ctx(digestion, { gluten: 'most', legumes: 'weekly', onion_garlic: 'daily' }));
     const p = r.patterns.find((x) => x.id === 'freq_bloating')!;
     expect(p.suggestion?.storeIds).toEqual(['sibo']);
     expect(r.weeksCovered).toBe(4);
     expect(p.confidence).toBe('probable');
     expect(p.body).toMatch(/3 months/);
+  });
+
+  it('reflujo frecuente: dice si llega tras cenar tarde o comer mucho', () => {
+    const digestion: DigestionEntry[] = [];
+    for (const d of days(28)) {
+      if (d % 2 === 0) digestion.push(sym(at(d, 23, 30), { reflux: 2 }, ate('Pescado con verduras', 60, { amount: 'lot' })));
+      digestion.push(dayOk(d));
+    }
+    const r = analyseGut(ctx(digestion));
+    const freq = r.patterns.find((p) => p.id === 'freq_reflux')!;
+    expect(freq.suggestion?.id).toBe('reflux_advice');
+    expect(freq.body).toBe('It shows up most with meals after 10 pm, that were big.');
   });
 
   it('dolor que coincide con heces más sueltas: parecido a colon irritable', () => {
@@ -179,7 +210,7 @@ describe('patrones de frecuencia', () => {
       digestion.push(dayOk(d));
       bowel.push({ id: `b${d}`, fecha: at(d, 12), createdAt: at(d, 12), count: 1, consistency: bad ? 6 : 4 });
     }
-    const r = analyseGut({ meals: [], digestion, bowel, safety: safetyOk, now });
+    const r = analyseGut(ctx(digestion, {}, bowel));
     const p = r.patterns.find((x) => x.id === 'freq_ibs')!;
     expect(p.suggestion?.storeIds).toEqual(['coeliac', 'consult_digestive']);
     expect(p.body).toMatch(/loose side/);
@@ -188,47 +219,45 @@ describe('patrones de frecuencia', () => {
 
 describe('alarmas y preguntas de seguridad', () => {
   it('sin preguntas de seguridad no se sugieren pruebas', () => {
-    const { meals, digestion } = lactoseMonth();
-    const r = analyseGut({ meals, digestion, bowel: [], safety: null, now });
+    const r = analyseGut(ctx(lactoseMonth(), COFFEE_DRINKER, [], null));
     expect(r.safety).toBe('needed');
     expect(r.showTests).toBe(false);
     expect(r.patterns.some((p) => p.factor === 'lactose')).toBe(true); // el patrón se sigue viendo
   });
   it('preguntas de hace más de 3 meses: se vuelven a hacer', () => {
-    const r = analyseGut({ meals: [], digestion: [], bowel: [], safety: { answeredAt: at(120, 12), answers: {} }, now });
+    const r = analyseGut(ctx([], {}, [], { answeredAt: at(120, 12), answers: {} }));
     expect(r.safety).toBe('needed');
   });
   it('cualquier "sí" es una alarma: médico antes que pruebas', () => {
-    const { meals, digestion } = lactoseMonth();
-    const r = analyseGut({ meals, digestion, bowel: [], safety: { answeredAt: at(1, 12), answers: { blood: true } }, now });
+    const r = analyseGut(ctx(lactoseMonth(), COFFEE_DRINKER, [], { answeredAt: at(1, 12), answers: { blood: true } }));
     expect(r.alarms.map((a) => a.id)).toEqual(['blood']);
     expect(r.showTests).toBe(false);
   });
   it('del perfil y de Conoce tus raíces, sin volver a preguntar', () => {
-    const r = analyseGut({ meals: [], digestion: [], bowel: [], safety: safetyOk, anaemia: true, familyColorectal: true, now });
+    const r = analyseGut({ ...ctx([]), anaemia: true, familyColorectal: true });
     expect(r.alarms.map((a) => a.id)).toEqual(['anaemia', 'family']);
   });
   it('heces rojizas sin explicar, aunque haya comido algo', () => {
     const bowel: BowelEntry[] = [{ id: 'b', fecha: at(3, 12), createdAt: at(3, 12), count: 1, color: 'red' }];
-    expect(analyseGut({ meals: [], digestion: [], bowel, safety: safetyOk, now }).alarms[0].id).toBe('stool_blood');
+    expect(analyseGut(ctx([], {}, bowel)).alarms[0].id).toBe('stool_blood');
     bowel[0].explainedBy = 'Beetroot';
-    expect(analyseGut({ meals: [], digestion: [], bowel, safety: safetyOk, now }).alarms).toEqual([]);
+    expect(analyseGut(ctx([], {}, bowel)).alarms).toEqual([]);
   });
   it('dolor que despierta dos noches', () => {
-    const digestion = [sym(at(3, 3), { pain: 2 }, true), sym(at(9, 4), { pain: 3 }, true)];
-    expect(analyseGut({ meals: [], digestion, bowel: [], safety: safetyOk, now }).alarms.map((a) => a.id)).toEqual(['night_logs']);
+    const digestion = [sym(at(3, 3), { pain: 2 }, undefined, true), sym(at(9, 4), { pain: 3 }, undefined, true)];
+    expect(analyseGut(ctx(digestion)).alarms.map((a) => a.id)).toEqual(['night_logs']);
   });
   it('el reflujo nocturno no es alarma', () => {
-    const digestion = [sym(at(3, 3), { reflux: 3 }, true), sym(at(9, 4), { reflux: 3 }, true)];
-    expect(analyseGut({ meals: [], digestion, bowel: [], safety: safetyOk, now }).alarms).toEqual([]);
+    const digestion = [sym(at(3, 3), { reflux: 3 }, undefined, true), sym(at(9, 4), { reflux: 3 }, undefined, true)];
+    expect(analyseGut(ctx(digestion)).alarms).toEqual([]);
   });
   it('heces sueltas más de 4 semanas', () => {
     const bowel: BowelEntry[] = Array.from({ length: 28 }, (_, d) => ({ id: `b${d}`, fecha: at(d, 12), createdAt: at(d, 12), count: 2, consistency: 6 as const }));
-    expect(analyseGut({ meals: [], digestion: [], bowel, safety: safetyOk, now }).alarms.map((a) => a.id)).toEqual(['diarrhoea_4w']);
+    expect(analyseGut(ctx([], {}, bowel)).alarms.map((a) => a.id)).toEqual(['diarrhoea_4w']);
   });
 });
 
-describe('cruce por horas', () => {
+describe('heces con hora', () => {
   it('las deposiciones sueltas o con urgencia cuentan como molestia, con su hora', () => {
     const bowel: BowelEntry[] = [
       {
@@ -251,21 +280,6 @@ describe('cruce por horas', () => {
       [3, 18],
     ]);
   });
-  it('heces sueltas apuntadas para el día entero: cuentan para las comidas de ese día', () => {
-    const meals = [meal(at(2, 21), 'Cena de la víspera'), meal(at(1, 8), 'Desayuno'), meal(at(1, 14), 'Comida')];
-    const bowel: BowelEntry[] = [{ id: 'b', fecha: at(1, 12), createdAt: at(1, 12), count: 2, consistency: 6 }];
-    const r = analyseGut({ meals, digestion: [dayOk(1), dayOk(2)], bowel, safety: safetyOk, now });
-    expect(r.observedMeals).toBe(3);
-    const ev = gutEvents([], bowel)[0];
-    expect(matchingMeal(ev.at, 'diarrhoea', meals)?.description).toBe('Comida');
-  });
-  it('una molestia encaja con la comida más reciente de su ventana', () => {
-    const meals = [meal(at(1, 8), 'Desayuno'), meal(at(1, 14), 'Pizza'), meal(at(1, 21), 'Cena')];
-    expect(matchingMeal(new Date(at(1, 15, 30)).getTime(), 'bloating', meals)?.description).toBe('Pizza');
-    expect(matchingMeal(new Date(at(1, 14, 10)).getTime(), 'bloating', meals)?.description).toBe('Desayuno');
-    expect(matchingMeal(new Date(at(1, 14, 10)).getTime(), 'reflux', meals)?.description).toBe('Pizza');
-    expect(matchingMeal(new Date(at(0, 3)).getTime(), 'reflux', meals, true)?.description).toBe('Cena');
-  });
 });
 
 describe('mes de ejemplo (cuentas de prueba)', () => {
@@ -278,8 +292,7 @@ describe('mes de ejemplo (cuentas de prueba)', () => {
     const top = r.patterns[0];
     expect(top.factor).toBe('lactose');
     expect(top.confidence).not.toBe('hint');
-    // La tostada (gluten) va con el café con leche, pero también con el café solo, que sienta bien:
-    // el gluten lo explica la lactosa y no se enseña
-    expect(r.patterns.some((p) => p.factor === 'gluten')).toBe(false);
+    // La tostada y el café van con la leche, pero los tomas mucho más a menudo: lo explica la lactosa
+    expect(r.patterns.some((p) => p.factor === 'gluten' || p.factor === 'coffee')).toBe(false);
   });
 });

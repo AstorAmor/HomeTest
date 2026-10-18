@@ -1007,3 +1007,30 @@ ya guardan en las carpetas nuevas.
   28c7f07e y las dos webs a la primera. `npm run release` volvió a quedarse sin memoria al exportar; se hizo a mano:
   `expo export` de Android, luego Android + iOS (solo pasó con `--max-workers 1`), `eas-cli update --skip-bundler
   --input-dir dist` con `EAS_SKIP_AUTO_FINGERPRINT=1` y `node scripts/deploy-web.mjs` (y `demo`).
+
+## 2026-10-18 (noche) — Digestión separada de "Tus nutrientes": la comida se pregunta después de la molestia
+
+Sin commit todavía. Nota del fundador: «lo de los nutrientes lo separaría; en Digestión, preguntas sobre la comida
+al rellenar el cuestionario, no antes de ningún síntoma sino tras registrarlo».
+
+- **Tus nutrientes no cambia** y Digestión ya no lee sus comidas. Fuera `MealGroupsScreen`, la ruta `/meal-groups`
+  y `mealGroupsStore` (las correcciones guardadas en `user_flags.meal_food_groups` se quedan sin uso).
+- **Cuestionario en dos pasos** (`LogDigestionScreen`): 1) molestias como antes; al pulsar ✓ se guardan y 2)
+  «¿Qué comiste antes?»: «Llevaba horas sin comer», qué fue (texto), grupos rellenados con `inferFoodGroups` y
+  corregibles, cuánto antes (<1 h, 1-3 h, 3-6 h, >6 h), cuánto (un poco / como siempre / mucho) y, solo la primera
+  vez que sale cada grupo, «¿cada cuánto lo sueles tomar?». «Ahora no» deja la molestia guardada sin comida.
+  `?id=` abre la comida de un apunte para añadirla o corregirla (desde la fila de Hoy en Digestión).
+- **Datos:** `DigestionEntry.food` (`FoodBefore`) y frecuencias en `user_flags.gut_usual_foods`. La migración
+  `20261018150000_gut_symptom_logs.sql` (aún SIN aplicar) lleva ya las columnas `food_*`.
+- **Análisis** (`logic/gutPatterns.ts`): como ya no hay comidas «buenas», se compara con la frecuencia habitual
+  (case-crossover, Maclure 1991): binomial de una cola y razón de odds frente a la parte de comidas de cada
+  respuesta (casi todas 0,75; una al día 0,3; algunas por semana 0,1; casi nunca 0,03). Mínimo 5 apuntes con
+  comida. Dos alimentos que van juntos: el que tomas mucho más a menudo queda explicado por el otro (pan y café
+  con la leche); si no se pueden separar, se avisa y se sugiere probar uno sin el otro. Solo cuenta como confusión
+  lo que puede dar esas mismas molestias (el café no hincha). Las heces sueltas se cruzan por la hora con esas
+  comidas. Fuera el factor FODMAP conjunto y la «cena tardía» como patrón: la cena tarde y las comidas abundantes
+  quedan como nota del reflujo frecuente (y de la pesadez). Tests reescritos (28).
+- **Lo que vemos en tu digestión:** progreso «X de 5 apuntes con lo que comiste antes» y tarjeta «Cada cuánto los
+  sueles tomar» para contestar o cambiar las frecuencias. Ficha de método (`evidence.ts`) y textos en español al día.
+- Comprobado en la web demo local: guardar molestia → paso de comida → grupos deducidos → frecuencias → fila de Hoy
+  con «Antes: …» y progreso 1 de 5; reabrir la comida por `?id=`.

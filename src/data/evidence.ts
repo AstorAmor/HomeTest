@@ -177,17 +177,18 @@ export const EVIDENCE: EvidenceTopic[] = [
   {
     id: 'gut_patterns',
     title: 'What we see in your digestion',
-    summary: 'We link your meals, how your tummy feels and your stools by the time, and say how sure we are.',
+    summary: 'We compare what you ate before each symptom with how often you usually have it, and say how sure we are.',
     body: [
-      'You log three things separately: meals (in Your nutrients), what you feel in your tummy (Digestion) and your stools. We work out what each meal had from what you wrote (gluten, dairy, legumes, onion and garlic, sweet fruit, polyols, fried food, spicy food, alcohol, coffee) and link each symptom to the meals that fit by the time: heaviness, heartburn and nausea up to 3 hours after eating; bloating, gas and pain from 30 minutes to 8 hours; loose stools from 1 to 12 hours.',
-      'Symptoms follow the GSRS questionnaire in plain words, with three levels. We only compare days when you logged your tummy, including the good ones, and only pairs that make clinical sense (for example dairy and bloating, late dinners and reflux).',
-      'We need at least 15 meals over 7 days. A pattern is "likely" with 5 meals with and without the food, at least 1.5 times more symptoms and a Fisher test under 0.05; "quite clear" with 8 and 8, twice as many and under 0.005. We always show the numbers, and warn when two foods always go together.',
+      'When you log a symptom in Digestion, we ask what you ate before: what it was, what it had (gluten, dairy, legumes, onion and garlic, sweet fruit, polyols, fried food, spicy food, alcohol, coffee), how long before and how much. We never ask before anything happens, and we do not use the meals in Your nutrients. The first time a food shows up, we ask how often you usually have it.',
+      'Then we compare: if dairy came before 9 of your 10 logs and you have it a few times a week, that is far more than chance. Doctors call this a case-crossover design with your usual frequency (Maclure, 1991). A symptom only counts for a meal that fits by the time: heaviness, heartburn and nausea up to 3 hours after eating; bloating, gas and pain from 30 minutes to 8 hours; loose stools from 1 to 12 hours.',
+      'Symptoms follow the GSRS questionnaire in plain words, with three levels, and we only look at pairs that make clinical sense (for example dairy and bloating, alcohol and reflux). We need at least 5 logs with what you ate. A pattern is "likely" with 5 logs, the food at least 25 points above what you usually eat and a binomial test under 0.05; "quite clear" with 8 logs, 30 points above and under 0.005. When two foods always go together, we say so, unless you eat one of them far more often without trouble (bread at almost every meal, symptoms only with milk). We always show the numbers.',
       'Frequent symptoms follow Rome IV (heaviness 3 days a week, pain with changes in your stools 1 day a week) and the Montreal definition of reflux. Rome IV asks for 3 months.',
       'Before any test we ask about warning signs (weight loss, blood, anaemia, symptoms at night, trouble swallowing, starting after 50, family history). With any of them, we suggest a doctor instead of a test.',
       'We do not recommend IgG "food intolerance" tests: allergy societies advise against using them for diagnosis. This is guidance from your own notes, not a diagnosis.',
     ],
     sources: [
       { label: 'Svedlund et al. Dig Dis Sci 1988 (GSRS)', url: 'https://pubmed.ncbi.nlm.nih.gov/3123181/' },
+      { label: 'Maclure. Am J Epidemiol 1991 (case-crossover design)', url: 'https://pubmed.ncbi.nlm.nih.gov/1985444/' },
       { label: 'Drossman. Gastroenterology 2016 (Rome IV)', url: 'https://pubmed.ncbi.nlm.nih.gov/27144617/' },
       { label: 'Vakil et al. Am J Gastroenterol 2006 (Montreal definition of reflux)', url: 'https://pubmed.ncbi.nlm.nih.gov/16928254/' },
       { label: 'Rezaie et al. Am J Gastroenterol 2017 (breath testing, North American consensus)', url: 'https://pubmed.ncbi.nlm.nih.gov/28323273/' },

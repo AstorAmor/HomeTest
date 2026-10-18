@@ -15,9 +15,9 @@ import { bowelObservations, hydrationFromUrine, Observation, urineObservations, 
 import { BowelEntry, STOOL_COLORS, URINE_COLORS, UrineEntry } from '@/types/bathroom';
 import { showSamples } from '@/data/dataMode';
 import { digestionRepository, LoadedGut, loadGutContext } from '@/data/digestionRepository';
-import { analyseGut, CONFIDENCE_LABEL, GutAnalysis, groupLabel, matchingMeal, MIN_MEALS, Outcome } from '@/logic/gutPatterns';
+import { analyseGut, CONFIDENCE_LABEL, GutAnalysis, groupLabel, MIN_EPISODES } from '@/logic/gutPatterns';
 import { mealGroups } from '@/logic/foodGroups';
-import { DigestionEntry, GUT_SYMPTOMS, GutSymptom, INTENSITIES } from '@/types/digestion';
+import { DigestionEntry, GUT_SYMPTOMS, INTENSITIES, MINUTES_BEFORE } from '@/types/digestion';
 
 const LEVEL: Record<Observation['level'], { icon: string; color: string }> = {
   good: { icon: 'checkmark-circle', color: Colors.ok },
@@ -120,6 +120,17 @@ const symptomText = (e: DigestionEntry) =>
     .map((s) => `${t(s.label)} (${t(INTENSITIES.find((i) => i.id === e.symptoms![s.id])!.label).toLowerCase()})`)
     .join(' · ');
 const hhmm = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+// Lo que comió antes, en una línea: "Antes: café con leche (1-3 h antes) · lácteos con lactosa, café"
+const foodText = (e: DigestionEntry) => {
+  const f = e.food;
+  if (!f) return null;
+  if (f.fasted) return t('Before: nothing for hours');
+  const groups = mealGroups(f.description ?? '', f.groups ?? null);
+  const when = MINUTES_BEFORE.find((m) => m.id === f.minutesBefore);
+  const ago = when ? t('{time} before', { time: t(when.label) }) : '';
+  const what = f.description ? (ago ? `${f.description} (${ago})` : f.description) : ago;
+  return [what && `${t('Before:')} ${what}`, groups.map((g) => groupLabel(g).toLowerCase()).join(', ')].filter(Boolean).join(' · ') || null;
+};
 
 // Gut y Bladder (?part=gut|bladder desde su tarjeta de Today; sin part, las dos): los últimos 7
 // días y lo que notamos esta semana. Las observaciones se calculan al momento (también desde el
@@ -256,7 +267,7 @@ export const DigestiveScreen = () => {
         })()}
         <Text style={styles.intro}>
           {part === 'gut'
-            ? t('How your tummy feels and your stools. The app links them to your meals on its own.')
+            ? t('How your tummy feels and your stools. When you note something, we ask what you ate before.')
             : part === 'bladder'
               ? t('A quick daily note on your urine: it says a lot about how hydrated you are.')
               : t('A quick daily note on your digestion and urine.')}{' '}
@@ -269,10 +280,7 @@ export const DigestiveScreen = () => {
           const todayKey = dayKey(new Date());
           const todayEntries = gut.sample ? [] : tummy.filter((e) => dayKey(new Date(e.fecha)) === todayKey);
           const dayOkToday = todayEntries.some((e) => e.kind === 'day_ok');
-          const symptomsToday = todayEntries.filter((e) => e.kind === 'symptoms');
-          const mealsToday = gut.sample
-            ? []
-            : gut.meals.filter((m) => dayKey(new Date(m.fecha)) === todayKey).sort((x, y) => x.fecha.localeCompare(y.fecha));
+          const symptomsToday = todayEntries.filter((e) => e.kind === 'symptoms').sort((x, y) => x.fecha.localeCompare(y.fecha));
           const alarm = gutAnalysis?.alarms[0];
           const pattern = gutAnalysis?.patterns.find((p) => p.confidence !== 'hint');
           return (
@@ -305,58 +313,28 @@ export const DigestiveScreen = () => {
                 </Text>
               </TouchableOpacity>
 
-              {/* Hoy: las comidas de "Tus nutrientes" con lo que creemos que llevaban, y cada molestia
-                  con la comida con la que encaja por la hora */}
-              <Text style={styles.sectionTitle}>{t('Today')}</Text>
-              {!mealsToday.length && !symptomsToday.length && (
-                <Text style={styles.empty}>{t('Log your meals in Your nutrients and we will link them to how you feel.')}</Text>
-              )}
-              {mealsToday.map((m) => {
-                const groups = mealGroups(m.description, m.groups);
+              {/* Hoy: cada molestia con lo que comiste antes (tocar para añadirlo o corregirlo) */}
+              {symptomsToday.length > 0 && <Text style={styles.sectionTitle}>{t('Today')}</Text>}
+              {symptomsToday.map((e) => {
+                const food = foodText(e);
                 return (
                   <TouchableOpacity
-                    key={m.id}
+                    key={e.id}
                     style={styles.row}
-                    onPress={() => router.push({ pathname: '/meal-groups', params: { id: m.id } })}
+                    onPress={() => router.push({ pathname: '/log-digestion', params: { id: e.id } })}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name="restaurant-outline" size={18} color={Colors.textSecondary} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowTitle}>
-                        {hhmm(m.fecha)} · {m.description || t('Meal with a photo')}
-                      </Text>
-                      <Text style={styles.rowSub}>
-                        {groups.length
-                          ? `${m.groups ? t('It had:') : t('We think it had:')} ${groups.map((g) => groupLabel(g).toLowerCase()).join(', ')}`
-                          : m.description
-                            ? t('Nothing from the groups we track. Tap to fix it.')
-                            : t('Add what it was so we can link it.')}
-                      </Text>
-                    </View>
-                    <Ionicons name="create-outline" size={16} color={Colors.textMuted} />
-                  </TouchableOpacity>
-                );
-              })}
-              {symptomsToday.map((e) => {
-                const first = Object.keys(e.symptoms ?? {})[0] as GutSymptom | undefined;
-                const match = first ? matchingMeal(new Date(e.fecha).getTime(), first as Outcome, gut.meals, !!e.wokeAtNight) : null;
-                return (
-                  <View key={e.id} style={styles.row}>
                     <AppIcon name="intestine" size={18} color={Colors.attention} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.rowTitle}>
                         {hhmm(e.fecha)} · {symptomText(e)}
                       </Text>
-                      {match && (
-                        <Text style={styles.rowSub}>
-                          {t('Fits with: {meal} ({time})', { meal: match.description || t('Meal with a photo'), time: hhmm(match.fecha) })}
-                        </Text>
-                      )}
+                      <Text style={[styles.rowSub, !food && { color: Colors.accent }]}>{food ?? t('Add what you ate before')}</Text>
                     </View>
                     <TouchableOpacity onPress={() => digestionRepository.remove(e.id).then(load)} hitSlop={10}>
                       <Ionicons name="trash-outline" size={16} color={Colors.textMuted} />
                     </TouchableOpacity>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
 
@@ -372,7 +350,7 @@ export const DigestiveScreen = () => {
                         ? `${pattern.title} · ${t(CONFIDENCE_LABEL[pattern.confidence])}`
                         : gutAnalysis?.ready
                           ? t('Nothing stands out yet')
-                          : t('{m} of {M} meals so far on days with your tummy logged.', { m: gutAnalysis?.observedMeals ?? 0, M: MIN_MEALS })}
+                          : t('{m} of {M} times with what you ate before, so far.', { m: gutAnalysis?.foodEpisodes ?? 0, M: MIN_EPISODES })}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
@@ -486,7 +464,6 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendText: { color: Colors.textMuted, fontSize: 11 },
-  empty: { color: Colors.textMuted, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 10 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

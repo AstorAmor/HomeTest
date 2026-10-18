@@ -1,6 +1,8 @@
-// Registro de Digestión: lo que notas en la tripa, cuando lo notas. Va aparte de las comidas (el
-// registro de "Tus nutrientes", que no cambia) y de las heces (bowel_logs): la app los cruza por
-// detrás con las horas (src/logic/gutPatterns.ts), sin pedir al usuario que los relacione.
+import type { FoodGroup } from '@/logic/foodGroups';
+
+// Registro de Digestión: lo que notas en la tripa, cuando lo notas, y después (solo si notaste
+// algo) qué comiste antes. Va aparte de "Tus nutrientes" (que no se toca ni se lee aquí) y de las
+// heces (bowel_logs), que se cruzan por la hora (src/logic/gutPatterns.ts).
 //
 // Síntomas adaptados de la GSRS (Gastrointestinal Symptom Rating Scale; Svedlund, Sjödin y
 // Dotevall, Dig Dis Sci 1988;33:129-134), que puntúa 15 síntomas de 1 a 7. Aquí quedan 6 en
@@ -29,6 +31,45 @@ export const INTENSITIES: { id: Intensity; label: string }[] = [
   { id: 3, label: 'Strong' },
 ];
 
+// Lo que comiste antes de notarlo: la última comida o picoteo. Se pregunta justo después de
+// apuntar las molestias, nunca antes de que pase nada.
+export type MealAmount = 'little' | 'normal' | 'lot';
+
+export interface FoodBefore {
+  fasted?: boolean; // no había comido nada en las horas antes
+  description?: string;
+  groups?: FoodGroup[]; // lo que confirmó el usuario (relleno con lo deducido del texto)
+  minutesBefore?: number; // cuánto antes de empezar: 30, 120, 270 o 480
+  amount?: MealAmount;
+}
+
+export const MINUTES_BEFORE: { id: number; label: string }[] = [
+  { id: 30, label: 'Less than 1 h' },
+  { id: 120, label: '1–3 h' },
+  { id: 270, label: '3–6 h' },
+  { id: 480, label: 'More than 6 h' },
+];
+
+export const MEAL_AMOUNTS: { id: MealAmount; label: string }[] = [
+  { id: 'little', label: 'A little' },
+  { id: 'normal', label: 'As usual' },
+  { id: 'lot', label: 'A lot' },
+];
+
+// Cada cuánto sueles tomar cada grupo: es la comparación (diseño case-crossover con la frecuencia
+// habitual, Maclure, Am J Epidemiol 1991;133:144-153). Se pregunta una vez por grupo, la primera
+// vez que aparece antes de una molestia.
+export type UsualFrequency = 'most' | 'daily' | 'weekly' | 'rarely';
+
+export const USUAL_FREQUENCIES: { id: UsualFrequency; label: string }[] = [
+  { id: 'most', label: 'In most meals' },
+  { id: 'daily', label: 'Once a day' },
+  { id: 'weekly', label: 'A few times a week' },
+  { id: 'rarely', label: 'Hardly ever' },
+];
+
+export type UsualFoods = Partial<Record<FoodGroup, UsualFrequency>>;
+
 export interface DigestionEntry {
   id: string;
   // Cuándo empezó (síntomas) o el mediodía del día (day_ok)
@@ -40,6 +81,7 @@ export interface DigestionEntry {
   symptoms?: Partial<Record<GutSymptom, Intensity>>;
   wokeAtNight?: boolean;
   note?: string;
+  food?: FoodBefore; // solo en symptoms
 }
 
 // Preguntas de seguridad antes de sugerir ninguna prueba (se vuelven a hacer cada 3 meses)

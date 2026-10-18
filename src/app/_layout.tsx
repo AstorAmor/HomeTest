@@ -56,7 +56,6 @@ export default function Layout() {
             <Stack.Screen name="log-bowel" options={MODAL} />
             <Stack.Screen name="log-digestion" options={MODAL} />
             <Stack.Screen name="gut-safety" options={MODAL} />
-            <Stack.Screen name="meal-groups" options={MODAL} />
             <Stack.Screen name="log-urine" options={MODAL} />
             <Stack.Screen name="volume-check" options={MODAL} />
             <Stack.Screen name="log-temperature" options={MODAL} />

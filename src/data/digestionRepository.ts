@@ -1,14 +1,12 @@
 import { createMetricRepository, definedOnly } from './metricRepository';
 import { bowelRepository, REMOTE_HAS_GUT_LOGS } from './bathroomRepository';
-import { mealRepository } from './planRepository';
 import { userFlags } from './userFlags';
 import { familyHistoryStore } from './familyHistoryStore';
 import { ageFromDob, profileRepository } from './profileRepository';
 import { showSamples } from './dataMode';
 import { sampleGutData } from './sampleDigestion';
-import type { FoodGroup } from '@/logic/foodGroups';
 import type { GutContext } from '@/logic/gutPatterns';
-import type { DigestionEntry, GutSafetyAnswers, GutSymptom, Intensity } from '@/types/digestion';
+import type { DigestionEntry, GutSafetyAnswers, GutSymptom, Intensity, UsualFoods } from '@/types/digestion';
 import type { RelationId } from '@/types/familyHistory';
 
 // Registro de Digestión (lo que notas en la tripa). Tabla gut_symptom_logs de la migración
@@ -29,6 +27,11 @@ export const digestionRepository = createMetricRepository<DigestionEntry>(
             ...Object.fromEntries(SYMPTOM_COLUMNS.map((s) => [s, e.symptoms ? (e.symptoms[s] ?? null) : undefined])),
             woke_at_night: e.wokeAtNight,
             note: e.note,
+            food_fasted: e.food ? !!e.food.fasted : undefined,
+            food_description: e.food ? (e.food.description ?? null) : undefined,
+            food_groups: e.food ? (e.food.groups ?? null) : undefined,
+            food_minutes_before: e.food ? (e.food.minutesBefore ?? null) : undefined,
+            food_amount: e.food ? (e.food.amount ?? null) : undefined,
             logged_at: e.fecha,
             created_at: e.createdAt,
           }),
@@ -38,6 +41,16 @@ export const digestionRepository = createMetricRepository<DigestionEntry>(
           symptoms: Object.fromEntries(SYMPTOM_COLUMNS.filter((s) => r[s]).map((s) => [s, r[s] as Intensity])),
           wokeAtNight: r.woke_at_night ?? undefined,
           note: r.note ?? undefined,
+          food:
+            r.food_fasted != null || r.food_description || r.food_groups
+              ? {
+                  fasted: r.food_fasted || undefined,
+                  description: r.food_description ?? undefined,
+                  groups: r.food_groups ?? undefined,
+                  minutesBefore: r.food_minutes_before ?? undefined,
+                  amount: r.food_amount ?? undefined,
+                }
+              : undefined,
           fecha: r.logged_at,
           createdAt: r.created_at,
         }),
@@ -45,20 +58,20 @@ export const digestionRepository = createMetricRepository<DigestionEntry>(
     : undefined
 );
 
-// Correcciones del usuario a lo que la app dedujo de una comida ({ idComida: grupos }). Son pocas,
-// así que van en user_flags (se sincroniza solo, sin tabla nueva). El registro de comidas de
-// "Tus nutrientes" no cambia.
-const MEAL_GROUPS_KEY = 'meal_food_groups';
+// Cada cuánto sueles tomar cada grupo de alimentos (la comparación de los patrones). Son pocas
+// respuestas, así que van en user_flags (se sincroniza solo, sin tabla nueva).
+const USUAL_KEY = 'gut_usual_foods';
 const SAFETY_KEY = 'gut_safety';
 
-export const mealGroupsStore = {
-  async getAll(): Promise<Record<string, FoodGroup[]>> {
-    const v = await userFlags.get(MEAL_GROUPS_KEY);
-    return v && typeof v === 'object' ? (v as Record<string, FoodGroup[]>) : {};
+export const usualFoodsStore = {
+  async get(): Promise<UsualFoods> {
+    const v = await userFlags.get(USUAL_KEY);
+    return v && typeof v === 'object' ? (v as UsualFoods) : {};
   },
-  async set(mealId: string, groups: FoodGroup[]): Promise<void> {
-    const all = await this.getAll();
-    await userFlags.set(MEAL_GROUPS_KEY, { ...all, [mealId]: groups });
+  async merge(answers: UsualFoods): Promise<UsualFoods> {
+    const next = { ...(await this.get()), ...answers };
+    await userFlags.set(USUAL_KEY, next);
+    return next;
   },
 };
 
@@ -80,19 +93,18 @@ export interface LoadedGut extends GutContext {
 
 // Todo lo que necesita el análisis. En cuentas de prueba sin nada en Digestión, un mes de ejemplo.
 export async function loadGutContext(): Promise<LoadedGut> {
-  const [meals, digestion, bowel, overrides, safety, profile, family] = await Promise.all([
-    mealRepository.getAll(),
+  const [digestion, bowel, usual, safety, profile, family] = await Promise.all([
     digestionRepository.getAll(),
     bowelRepository.getAll(),
-    mealGroupsStore.getAll(),
+    usualFoodsStore.get(),
     gutSafetyStore.get(),
     profileRepository.get().catch(() => null),
     familyHistoryStore.getRecord().catch(() => null),
   ]);
   if (!digestion.length && showSamples()) return { ...sampleGutData(), sample: true };
   return {
-    meals: meals.map((m) => ({ id: m.id, fecha: m.fecha, description: m.description, groups: overrides[m.id] ?? null })),
     digestion,
+    usual,
     bowel,
     safety,
     age: ageFromDob(profile?.dateOfBirth),

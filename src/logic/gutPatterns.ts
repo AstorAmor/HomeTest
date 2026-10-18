@@ -1,12 +1,18 @@
-import { FODMAP_GROUPS, FOOD_GROUPS, FoodGroup, isFodmap, mealGroups } from './foodGroups';
-import type { DigestionEntry, GutSafetyAnswers, GutSymptom, SafetyQuestionId } from '@/types/digestion';
+import { FOOD_GROUPS, FoodGroup, mealGroups } from './foodGroups';
+import type { DigestionEntry, GutSafetyAnswers, GutSymptom, SafetyQuestionId, UsualFoods, UsualFrequency } from '@/types/digestion';
+import { USUAL_FREQUENCIES } from '@/types/digestion';
 import type { BowelEntry } from '@/types/bathroom';
 import { num, t } from '@/i18n';
 
-// Lo que vemos en tu digestión: cruza por detrás tres registros que el usuario apunta por separado
-// (comidas de "Tus nutrientes", molestias de Digestión y heces), solo con las horas. Lógica pura
-// para la app y los tests. Es orientación, no diagnóstico (riesgo de producto sanitario, MDR regla
-// 11): nunca dice qué tienes; dice lo que se repite en tus datos y qué prueba tiene sentido.
+// Lo que vemos en tu digestión. Cada vez que el usuario apunta una molestia en Digestión, le
+// preguntamos qué comió antes (no se le pide nada antes de que pase algo, y no se usan las comidas
+// de "Tus nutrientes"). Así no hay comidas "buenas" con las que comparar, de modo que la
+// comparación es la frecuencia habitual: si los lácteos salen antes de 9 de 10 molestias y los
+// tomas unas veces por semana, es mucho más de lo esperable. Es el diseño case-crossover con la
+// frecuencia habitual de exposición (Maclure, Am J Epidemiol 1991;133:144-153). Las heces sueltas
+// o con urgencia (Heces) se cruzan por la hora con esas comidas. Lógica pura para la app y los
+// tests. Es orientación, no diagnóstico (riesgo de producto sanitario, MDR regla 11): nunca dice
+// qué tienes; dice lo que se repite en tus datos y qué prueba tiene sentido.
 //
 // Fuentes:
 // - Síntomas: GSRS (Svedlund et al., Dig Dis Sci 1988) adaptada (src/types/digestion.ts).
@@ -25,26 +31,19 @@ import { num, t } from '@/i18n';
 // - Test IgG de "intolerancias": no (EAACI, Stapel et al., Allergy 2008; AAAAI Choosing Wisely).
 // - Señales de alarma: NICE NG12 y CG184, ACG/CAG 2017 (dispepsia), BSG 2018 (diarrea crónica).
 //
-// SUPUESTOS (revisión clínica, memoria kuova-clinical-review-backlog): ventanas de tiempo,
-// mínimos de comidas y días, cortes de seguridad estadística, qué cuenta como día "observado",
-// la cena tardía a partir de las 22:00 y los textos de cada prueba.
+// SUPUESTOS (revisión clínica, memoria kuova-clinical-review-backlog): ventanas de tiempo, la
+// parte de las comidas que corresponde a cada respuesta de frecuencia, mínimos de apuntes, cortes
+// de seguridad estadística, cuándo un alimento "explica" a otro que va con él, qué cuenta como día
+// "observado", la cena tardía a partir de las 22:00 y los textos de cada prueba.
 
 export type Outcome = GutSymptom | 'diarrhoea';
-export type Factor = FoodGroup | 'fodmap' | 'late_meal';
+export type Factor = FoodGroup;
 export type Confidence = 'clear' | 'probable' | 'hint';
 
-export interface GutMeal {
-  id: string;
-  fecha: string;
-  description: string;
-  groups?: FoodGroup[] | null; // corregidos por el usuario; si no, se deducen del texto
-}
-
-// Cuánto después de comer suele notarse cada cosa (minutos desde que se apuntó la comida).
-// Pesadez, reflujo y náuseas: durante la comida y hasta ~3 h (se aceptan 30 min antes porque la
-// comida se suele apuntar al terminar). Hinchazón, gases y dolor: fermentación, de 30 min a 8 h.
-// Heces sueltas o con urgencia: de 1 a 12 h (con 24 h se repartían a las comidas de la víspera).
-// Lo de la noche puede venir de la cena (hasta 10 h).
+// Cuánto después de comer suele notarse cada cosa (minutos desde la comida).
+// Pesadez, reflujo y náuseas: durante la comida y hasta ~3 h (se aceptan 30 min antes por si la
+// hora es aproximada). Hinchazón, gases y dolor: fermentación, de 30 min a 8 h.
+// Heces sueltas o con urgencia: de 1 a 12 h. Lo de la noche puede venir de la cena (hasta 10 h).
 export const WINDOWS: Record<Outcome, [number, number]> = {
   fullness: [-30, 180],
   reflux: [-30, 180],
@@ -56,21 +55,29 @@ export const WINDOWS: Record<Outcome, [number, number]> = {
 };
 const NIGHT_MAX = 600;
 
-// Mínimos para enseñar patrones de comida (antes, solo alarmas y el progreso)
-export const MIN_MEALS = 15;
-export const MIN_DAYS = 7;
+// "¿Cada cuánto sueles tomarlo?" → parte de tus comidas que lo llevan, contando 3-4 comidas o
+// picoteos al día (una vez al día ≈ 0,3; algunas veces por semana ≈ 3 de 28). SUPUESTO.
+export const USUAL_SHARE: Record<UsualFrequency, number> = { most: 0.75, daily: 0.3, weekly: 0.1, rarely: 0.03 };
+
+// Mínimo de veces con lo que comiste antes para enseñar patrones de comida (antes, solo alarmas
+// y el progreso)
+export const MIN_EPISODES = 5;
 // Patrones de frecuencia: semanas (bloques de 7 días) con al menos 3 días observados
 export const MIN_WEEKS = 4;
 const ROME_WEEKS = 12;
 const LOOKBACK_DAYS = 90;
 const SAFETY_VALID_DAYS = 90;
 const LATE_HOUR = 22;
+const DEFAULT_MINUTES_BEFORE = 120; // si no dijo cuánto antes comió. SUPUESTO.
+// Dos alimentos que van juntos: el que tomas más a menudo sin molestias queda explicado por el
+// otro si este sale al menos 3 veces más por encima de lo esperable. SUPUESTO.
+const DOMINANCE = 3;
 
 const LOWER: Outcome[] = ['bloating', 'gas', 'pain', 'diarrhoea'];
 const ALL: Outcome[] = ['fullness', 'bloating', 'reflux', 'gas', 'pain', 'nausea', 'diarrhoea'];
 
 // Solo pares con sentido clínico, fijados de antemano: comparar todo con todo encontraría
-// casualidades (con 12 pares, el corte de "bastante claro" es p < 0,005, ≈ Bonferroni)
+// casualidades (con 10 pares, el corte de "bastante claro" es p < 0,005, ≈ Bonferroni)
 export const PAIRS: { factor: Factor; outcomes: Outcome[] }[] = [
   { factor: 'lactose', outcomes: LOWER },
   { factor: 'gluten', outcomes: ALL },
@@ -78,12 +85,10 @@ export const PAIRS: { factor: Factor; outcomes: Outcome[] }[] = [
   { factor: 'legumes', outcomes: LOWER },
   { factor: 'onion_garlic', outcomes: LOWER },
   { factor: 'polyols', outcomes: ['bloating', 'gas', 'diarrhoea'] },
-  { factor: 'fodmap', outcomes: LOWER },
   { factor: 'fatty', outcomes: ['fullness', 'nausea', 'reflux', 'diarrhoea'] },
   { factor: 'spicy', outcomes: ['reflux', 'pain'] },
   { factor: 'alcohol', outcomes: ['reflux', 'diarrhoea'] },
   { factor: 'coffee', outcomes: ['reflux', 'diarrhoea'] },
-  { factor: 'late_meal', outcomes: ['reflux'] },
 ];
 
 // ---------- Utilidades ----------
@@ -99,38 +104,31 @@ const logFact = (n: number) => {
   for (let i = logFactCache.length; i <= n; i++) logFactCache[i] = logFactCache[i - 1] + Math.log(i);
   return logFactCache[n];
 };
-const hyper = (a: number, b: number, c: number, d: number) =>
-  Math.exp(
-    logFact(a + b) + logFact(c + d) + logFact(a + c) + logFact(b + d) - logFact(a + b + c + d) - logFact(a) - logFact(b) - logFact(c) - logFact(d)
-  );
 
-// Test exacto de Fisher de una cola: ¿hay más molestias con el factor (a de a+b) que sin él (c de
-// c+d) de lo que daría el azar?
-export function fisherGreater(a: number, b: number, c: number, d: number): number {
-  const row1 = a + b;
-  const col1 = a + c;
-  const row2 = c + d;
-  let p = 0;
-  for (let x = a; x <= Math.min(row1, col1); x++) {
-    const cx = col1 - x;
-    const dx = row2 - cx;
-    if (cx < 0 || dx < 0) continue;
-    p += hyper(x, row1 - x, cx, dx);
-  }
-  return Math.min(1, p);
+// Binomial de una cola: si el alimento no tuviera nada que ver, saldría antes de cada molestia
+// con su frecuencia habitual p. ¿Qué probabilidad hay de verlo a veces o más de n?
+export function binomialGreater(a: number, n: number, p: number): number {
+  if (a <= 0) return 1;
+  if (a > n || p <= 0) return 0;
+  if (p >= 1) return 1;
+  let s = 0;
+  for (let x = a; x <= n; x++) s += Math.exp(logFact(n) - logFact(x) - logFact(n - x) + x * Math.log(p) + (n - x) * Math.log(1 - p));
+  return Math.min(1, s);
 }
 
-// Riesgo relativo con corrección de Haldane (+0,5) para que un 0 no dé infinito
-const relativeRisk = (a: number, n1: number, c: number, n0: number) => (a + 0.5) / (n1 + 1) / ((c + 0.5) / (n0 + 1));
+// Cuántas veces más de lo esperable (razón de odds frente a la frecuencia habitual, con +0,5 para
+// que un 0 o un "todas" no den infinito)
+export const oddsVsUsual = (a: number, n: number, p: number) => (a + 0.5) / (n - a + 0.5) / (p / (1 - p));
 
-export function grade(a: number, n1: number, c: number, n0: number): Confidence | null {
-  if (!n1 || !n0) return null;
-  const rr = relativeRisk(a, n1, c, n0);
-  const p = fisherGreater(a, n1 - a, c, n0 - c);
-  const diff = a / n1 - c / n0;
-  if (n1 >= 8 && n0 >= 8 && a >= 3 && rr >= 2 && p < 0.005) return 'clear';
-  if (n1 >= 5 && n0 >= 5 && a >= 3 && rr >= 1.5 && diff >= 0.2 && p < 0.05) return 'probable';
-  if (n1 >= 3 && a >= 2 && rr >= 1.5 && diff > 0 && p < 0.2) return 'hint';
+// a de n molestias con el alimento, que tomas en una parte p de tus comidas
+export function grade(a: number, n: number, p: number): Confidence | null {
+  if (!n || p <= 0 || p >= 1) return null;
+  const or = oddsVsUsual(a, n, p);
+  const pv = binomialGreater(a, n, p);
+  const diff = a / n - p;
+  if (n >= 8 && a >= 4 && or >= 3 && diff >= 0.3 && pv < 0.005) return 'clear';
+  if (n >= 5 && a >= 3 && or >= 2 && diff >= 0.25 && pv < 0.05) return 'probable';
+  if (n >= 3 && a >= 2 && or >= 1.5 && diff >= 0.1 && pv < 0.2) return 'hint';
   return null;
 }
 
@@ -187,49 +185,51 @@ const inWindow = (mealAt: number, ev: GutEvent) => {
   return delta >= lo && delta <= (ev.night ? Math.max(hi, NIGHT_MAX) : hi);
 };
 
-// La comida con la que encaja una molestia: la más reciente dentro de su ventana
-export function matchingMeal<M extends { fecha: string }>(at: number, outcome: Outcome, meals: M[], night = false): M | null {
-  const ev: GutEvent = { at, outcome, intensity: 1, night, woke: false };
-  return (
-    meals
-      .filter((m) => inWindow(new Date(m.fecha).getTime(), ev))
-      .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())[0] ?? null
-  );
-}
+// ---------- Veces con lo que comiste antes ----------
 
-// ---------- Comidas observadas ----------
-
-interface ScoredMeal {
+export interface FoodEpisode {
   id: string;
-  at: number;
-  day: string;
-  factors: Set<Factor>;
-  worst: Partial<Record<Outcome, number>>;
+  mealAt: number;
+  factors: Set<FoodGroup>;
+  // Lo que encaja por la hora con esa comida: las molestias apuntadas y las heces sueltas de después
+  outcomes: Partial<Record<Outcome, number>>;
+  late: boolean; // comida a partir de las 22:00
+  big: boolean; // "Mucho"
 }
 
-const symptomatic = (m: ScoredMeal, outcomes: Outcome[], min = 2) => outcomes.some((o) => (m.worst[o] ?? 0) >= min);
-
-// Un día cuenta como observado si ese día hay algo en Digestión (molestias o "Hoy, bien"): si el
-// usuario apunta, damos por hecho que apunta lo que nota. Las comidas de las últimas 8 h aún no
-// cuentan (su ventana no ha terminado). SUPUESTO.
-function scoreMeals(meals: GutMeal[], events: GutEvent[], observed: Set<string>, now: Date): ScoredMeal[] {
+// Cada apunte de molestias con su comida de antes. Si no había comido, no cuenta (no hay comida
+// que comparar). Una molestia fuera de la ventana de esa comida no se le atribuye.
+export function foodEpisodes(digestion: DigestionEntry[], bowel: BowelEntry[], now = new Date()): FoodEpisode[] {
   const from = now.getTime() - LOOKBACK_DAYS * DAY;
-  const until = now.getTime() - 8 * 60 * MIN;
-  return meals
-    .map((m) => {
-      const d = new Date(m.fecha);
-      const groups = mealGroups(m.description, m.groups);
-      const factors = new Set<Factor>(groups);
-      if (isFodmap(groups)) factors.add('fodmap');
-      if (d.getHours() >= LATE_HOUR) factors.add('late_meal');
-      const worst: Partial<Record<Outcome, number>> = {};
-      for (const ev of events) {
-        if (inWindow(d.getTime(), ev)) worst[ev.outcome] = Math.max(worst[ev.outcome] ?? 0, ev.intensity);
-      }
-      return { id: m.id, at: d.getTime(), day: dayKeyOf(d), factors, worst };
-    })
-    .filter((m) => m.at >= from && m.at <= until && observed.has(m.day));
+  const loose = gutEvents([], bowel);
+  const out: FoodEpisode[] = [];
+  for (const e of digestion) {
+    const f = e.food;
+    if (e.kind !== 'symptoms' || !f || f.fasted || (!f.groups && !f.description?.trim())) continue;
+    const start = new Date(e.fecha);
+    if (start.getTime() < from) continue;
+    const mealAt = start.getTime() - (f.minutesBefore ?? DEFAULT_MINUTES_BEFORE) * MIN;
+    const night = !!e.wokeAtNight || isNightHour(start);
+    const outcomes: Partial<Record<Outcome, number>> = {};
+    for (const [s, v] of Object.entries(e.symptoms ?? {})) {
+      if (v && inWindow(mealAt, { at: start.getTime(), outcome: s as Outcome, intensity: v, night, woke: false })) outcomes[s as Outcome] = v;
+    }
+    for (const ev of loose) {
+      if (inWindow(mealAt, ev)) outcomes.diarrhoea = Math.max(outcomes.diarrhoea ?? 0, ev.intensity);
+    }
+    out.push({
+      id: e.id,
+      mealAt,
+      factors: new Set(mealGroups(f.description ?? '', f.groups ?? null)),
+      outcomes,
+      late: new Date(mealAt).getHours() >= LATE_HOUR,
+      big: f.amount === 'lot',
+    });
+  }
+  return out;
 }
+
+const hasAny = (e: FoodEpisode, outcomes: Outcome[]) => outcomes.some((o) => e.outcomes[o]);
 
 // ---------- Resultado ----------
 
@@ -263,9 +263,9 @@ export interface GutAlarm {
 }
 
 export interface GutAnalysis {
-  observedMeals: number;
-  observedDays: number;
+  foodEpisodes: number; // veces con lo que comiste antes
   ready: boolean;
+  missingUsual: FoodGroup[]; // salen antes de molestias pero no sabemos cada cuánto los tomas
   weeksCovered: number;
   alarms: GutAlarm[];
   safety: 'needed' | 'ok';
@@ -274,9 +274,9 @@ export interface GutAnalysis {
 }
 
 export interface GutContext {
-  meals: GutMeal[];
   digestion: DigestionEntry[];
   bowel: BowelEntry[];
+  usual: UsualFoods; // cada cuánto sueles tomar cada grupo
   safety: GutSafetyAnswers | null;
   age?: number | null;
   anaemia?: boolean; // en el perfil
@@ -292,22 +292,6 @@ export const CONFIDENCE_LABEL: Record<Confidence, string> = {
   hint: 'A hint',
 };
 
-const FACTOR_WITH: Record<Factor, string> = {
-  gluten: 'with gluten',
-  lactose: 'with dairy',
-  dairy_low_lactose: 'with low-lactose dairy',
-  legumes: 'with legumes',
-  onion_garlic: 'with onion or garlic',
-  fructose: 'with sweet fruit, juice or honey',
-  polyols: 'with polyols (sugar-free sweets, plums, mushrooms…)',
-  fatty: 'that were fried or fatty',
-  spicy: 'that were spicy',
-  alcohol: 'with alcohol',
-  coffee: 'with coffee',
-  fodmap: 'with fermentable foods (FODMAP)',
-  late_meal: 'after 10 pm',
-};
-
 const FACTOR_TITLE: Record<Factor, string> = {
   lactose: 'Dairy with lactose seems to disagree with you',
   gluten: 'Symptoms come mostly with gluten',
@@ -315,16 +299,23 @@ const FACTOR_TITLE: Record<Factor, string> = {
   legumes: 'Legumes seem to disagree with you',
   onion_garlic: 'Onion and garlic seem to disagree with you',
   polyols: 'Polyols seem to disagree with you',
-  fodmap: 'Fermentable foods (FODMAP) seem to disagree with you',
   fatty: 'Fried or fatty meals sit heavy',
   spicy: 'Spicy food brings heartburn or pain',
   alcohol: 'Alcohol brings reflux or loose stools',
   coffee: 'Coffee brings reflux or urgency',
-  late_meal: 'Reflux when you have dinner late',
   dairy_low_lactose: 'Low-lactose dairy seems to disagree with you',
 };
 
+// Para la lista de "Aparece sobre todo con las comidas…" del reflujo
+const FACTOR_WITH: Partial<Record<Factor, string>> = {
+  fatty: 'that were fried or fatty',
+  spicy: 'that were spicy',
+  alcohol: 'with alcohol',
+  coffee: 'with coffee',
+};
+
 export const groupLabel = (g: FoodGroup) => t(FOOD_GROUPS.find((x) => x.id === g)!.label);
+export const usualLabel = (f: UsualFrequency) => t(USUAL_FREQUENCIES.find((x) => x.id === f)!.label);
 
 const BREATH_PREP = 'Follow the kit instructions: usually 8–12 hours fasting, a low-fibre dinner the night before and no antibiotics in the previous 4 weeks.';
 
@@ -397,13 +388,11 @@ const FACTOR_SUGGESTION: Record<Factor, TestSuggestion['id']> = {
   legumes: 'fodmap_advice',
   onion_garlic: 'fodmap_advice',
   polyols: 'fodmap_advice',
-  fodmap: 'fodmap_advice',
   dairy_low_lactose: 'trigger_advice',
   fatty: 'trigger_advice',
   spicy: 'trigger_advice',
   alcohol: 'trigger_advice',
   coffee: 'trigger_advice',
-  late_meal: 'reflux_advice',
 };
 
 const ALARM_TEXT: Record<AlarmId, { title: string; body: string }> = {
@@ -436,9 +425,10 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
   const observed = new Set(
     ctx.digestion.filter((e) => now.getTime() - new Date(e.fecha).getTime() < LOOKBACK_DAYS * DAY).map((e) => dayKeyOf(new Date(e.fecha)))
   );
-  const meals = scoreMeals(ctx.meals, events, observed, now);
-  const observedMealDays = new Set(meals.map((m) => m.day)).size;
-  const ready = meals.length >= MIN_MEALS && observedMealDays >= MIN_DAYS;
+  const episodes = foodEpisodes(ctx.digestion, ctx.bowel, now);
+  const ready = episodes.length >= MIN_EPISODES;
+  const shareOf = (g: FoodGroup) => (ctx.usual[g] ? USUAL_SHARE[ctx.usual[g]!] : null);
+  const missingUsual = FOOD_GROUPS.map((g) => g.id).filter((g) => !ctx.usual[g] && episodes.some((e) => e.factors.has(g)));
 
   // Semanas cubiertas (bloques de 7 días hacia atrás con ≥ 3 días observados)
   const dayBack = (n: number) => {
@@ -485,34 +475,43 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
   const safety = safetyIsCurrent(ctx.safety, now) ? 'ok' : 'needed';
   const showTests = safety === 'ok' && alarms.length === 0;
 
-  // ---- Patrones de comida ----
+  // ---- Patrones de comida: lo que sale antes de las molestias más de lo que lo tomas ----
   const patterns: GutPattern[] = [];
   if (ready) {
     // Primero los candidatos, del más fuerte al más débil
-    const candidates = PAIRS.map(({ factor, outcomes }) => {
-      const withF = meals.filter((m) => m.factors.has(factor));
-      const without = meals.filter((m) => !m.factors.has(factor));
-      const a = withF.filter((m) => symptomatic(m, outcomes)).length;
-      const c = without.filter((m) => symptomatic(m, outcomes)).length;
-      return { factor, outcomes, withF, without, a, c, confidence: grade(a, withF.length, c, without.length), p: fisherGreater(a, withF.length - a, c, without.length - c) };
-    })
-      .filter((x) => x.confidence)
-      .sort((x, y) => rank[y.confidence!] - rank[x.confidence!] || x.p - y.p);
+    const candidates = PAIRS.flatMap(({ factor, outcomes }) => {
+      const p = shareOf(factor);
+      if (p == null) return [];
+      const cases = episodes.filter((e) => hasAny(e, outcomes));
+      const a = cases.filter((e) => e.factors.has(factor)).length;
+      const confidence = grade(a, cases.length, p);
+      return confidence
+        ? [{ factor, outcomes, cases, a, p, confidence, pv: binomialGreater(a, cases.length, p) }]
+        : [];
+    }).sort((x, y) => rank[y.confidence] - rank[x.confidence] || x.pv - y.pv);
+    // Cuánto por encima de lo esperable sale g en esas mismas molestias
+    const oddsIn = (g: FoodGroup, cases: FoodEpisode[]) => {
+      const p = shareOf(g);
+      return p == null ? null : oddsVsUsual(cases.filter((e) => e.factors.has(g)).length, cases.length, p);
+    };
+    // ¿Lo explica otro alimento que va con él y que tomas menos a menudo? (la tostada del café con
+    // leche: comes pan casi siempre y las molestias solo llegan con la leche)
+    const dominatedBy = (f: Factor, g: Factor, cases: FoodEpisode[]) => {
+      const withF = cases.filter((e) => e.factors.has(f));
+      const together = withF.filter((e) => e.factors.has(g)).length / Math.max(1, withF.length);
+      const of = oddsIn(f, cases);
+      const og = oddsIn(g, cases);
+      return together >= 0.8 && of != null && og != null && og >= DOMINANCE * of;
+    };
     const kept: Factor[] = [];
-    const related = (f: Factor, g: Factor) =>
-      (f === 'fodmap' && FODMAP_GROUPS.includes(g as FoodGroup)) || (g === 'fodmap' && FODMAP_GROUPS.includes(f as FoodGroup));
-    for (const { factor, outcomes, withF, without, a, c, confidence: conf } of candidates) {
-      const confidence = conf!;
-      // ¿Lo explica un patrón más fuerte? (el gluten de la tostada del café con leche): sin las
-      // comidas de ese otro factor, la diferencia desaparece. Entonces no se enseña.
+    for (const { factor, cases, a, p, confidence } of candidates) {
+      // Sin las molestias de un patrón más fuerte, ¿queda algo? Si no, o si el otro lo domina, no se enseña
       const explained = kept.some((g) => {
-        if (related(factor, g)) return false;
-        const w1 = withF.filter((m) => !m.factors.has(g));
-        const w0 = without.filter((m) => !m.factors.has(g));
-        if (w1.length < 3 || !w0.length) return false; // no se puede separar: lo dice el aviso de abajo
-        const a1 = w1.filter((m) => symptomatic(m, outcomes)).length;
-        const c1 = w0.filter((m) => symptomatic(m, outcomes)).length;
-        return grade(a1, w1.length, c1, w0.length) === null; // sin el otro, ni una pista
+        if (dominatedBy(factor, g, cases)) return true;
+        const rest = cases.filter((e) => !e.factors.has(g));
+        const restWith = rest.filter((e) => e.factors.has(factor)).length;
+        if (rest.length < 3 || cases.filter((e) => e.factors.has(factor) && !e.factors.has(g)).length < 3) return false; // no se puede separar: lo dice el aviso
+        return grade(restWith, rest.length, p) === null;
       });
       if (explained) continue;
       kept.push(factor);
@@ -522,50 +521,49 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
         factor,
         confidence,
         title: t(FACTOR_TITLE[factor]),
-        numbers: t('Symptoms after {a} of {n1} meals {with}, against {c} of {n0} of the rest.', {
+        numbers: t('{food}: before {a} of your {n} logs. You have it {usual}; normal would be around {e} of {n}.', {
+          food: groupLabel(factor),
           a,
-          n1: withF.length,
-          with: t(FACTOR_WITH[factor]),
-          c,
-          n0: without.length,
+          n: cases.length,
+          usual: usualLabel(ctx.usual[factor]!).toLowerCase(),
+          e: Math.max(0, Math.round(cases.length * p)),
         }),
       };
-      // ¿Va siempre con otro grupo? (p. ej. gluten y lácteos en la pizza)
+      // ¿Va casi siempre con otro grupo? (p. ej. gluten y lácteos en la lasaña)
       if (confidence !== 'hint') {
-        const others = FOOD_GROUPS.map((g) => g.id).filter(
-          (g) => g !== factor && !(factor === 'fodmap' && FODMAP_GROUPS.includes(g))
-        );
+        const withF = cases.filter((e) => e.factors.has(factor));
+        // Solo cuenta como confusión lo que podría dar esas mismas molestias (el café no hincha)
+        const couldCause = (g: FoodGroup) => {
+          const outs = PAIRS.find((x) => x.factor === g)?.outcomes;
+          return !outs || withF.some((e) => hasAny(e, outs));
+        };
         let worstShare = 0;
-        for (const g of others) {
-          const share = withF.filter((m) => m.factors.has(g)).length / withF.length;
+        for (const g of FOOD_GROUPS.map((x) => x.id).filter((x) => x !== factor && couldCause(x))) {
+          const share = withF.filter((e) => e.factors.has(g)).length / withF.length;
           if (share < 0.6 || share <= worstShare) continue;
-          // ¿El factor se sostiene solo? (comidas con él y sin el otro)
-          const w1 = withF.filter((m) => !m.factors.has(g));
-          const w0 = without.filter((m) => !m.factors.has(g));
-          const a1 = w1.filter((m) => symptomatic(m, outcomes)).length;
-          const c1 = w0.filter((m) => symptomatic(m, outcomes)).length;
-          const standsAlone = w1.length >= 3 && w0.length > 0 && grade(a1, w1.length, c1, w0.length) !== null;
-          // ¿El otro queda descartado? (comidas con él y sin el factor que sientan bien)
-          const gOnly = without.filter((m) => m.factors.has(g));
-          const gRate = gOnly.filter((m) => symptomatic(m, outcomes)).length / Math.max(1, gOnly.length);
-          const neitherRate = c1 / Math.max(1, w0.length);
-          const otherCleared = gOnly.length >= 3 && gRate <= neitherRate + 0.15;
+          // ¿El factor se sostiene solo? (molestias sin el otro)
+          const rest = cases.filter((e) => !e.factors.has(g));
+          const standsAlone = rest.length >= 3 && grade(rest.filter((e) => e.factors.has(factor)).length, rest.length, p) !== null;
+          // ¿El otro queda descartado? (lo tomas a menudo y no sale más de lo normal, o este lo domina)
+          const pg = shareOf(g);
+          const otherCleared = pg != null && (grade(cases.filter((e) => e.factors.has(g)).length, cases.length, pg) === null || dominatedBy(g, factor, cases));
           if (!standsAlone && !otherCleared) {
             pattern.confoundedWith = g;
             worstShare = share;
           }
         }
         if (pattern.confoundedWith) {
-          pattern.body = t('Many of those meals also had {other}: we cannot tell yet which of the two it is.', {
-            other: groupLabel(pattern.confoundedWith).toLowerCase(),
-          });
+          pattern.body = [
+            t('Many of those meals also had {other}: we cannot tell yet which of the two it is.', { other: groupLabel(pattern.confoundedWith).toLowerCase() }),
+            t('To tell them apart, try one without the other for a few days and log how you feel.'),
+          ].join(' ');
         }
       }
       if (factor === 'lactose') {
-        // Los lácteos casi sin lactosa como comparación: si sientan bien, apunta a la lactosa
-        const low = meals.filter((m) => m.factors.has('dairy_low_lactose') && !m.factors.has('lactose'));
-        const lowSym = low.filter((m) => symptomatic(m, outcomes)).length;
-        if (low.length >= 3 && lowSym / low.length <= c / Math.max(1, without.length) + 0.1) {
+        // Los lácteos casi sin lactosa como comparación: si los tomas a menudo y no salen, apunta a la lactosa
+        const pLow = shareOf('dairy_low_lactose');
+        const lowOnly = cases.filter((e) => e.factors.has('dairy_low_lactose') && !e.factors.has('lactose')).length;
+        if (pLow != null && pLow >= USUAL_SHARE.weekly && grade(lowOnly, cases.length, pLow) === null) {
           pattern.body = [pattern.body, t('Aged cheese and lactose-free dairy sit better with you, which fits with lactose.')].filter(Boolean).join(' ');
         }
       }
@@ -573,12 +571,13 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
       else pattern.suggestion = SUGGESTIONS[FACTOR_SUGGESTION[factor]]();
       patterns.push(pattern);
     }
-    // El FODMAP conjunto solo si ningún grupo concreto lo explica igual o mejor
-    const fodmap = patterns.find((p) => p.factor === 'fodmap');
-    if (fodmap && patterns.some((p) => p.factor && FODMAP_GROUPS.includes(p.factor as FoodGroup) && rank[p.confidence] >= rank[fodmap.confidence])) {
-      patterns.splice(patterns.indexOf(fodmap), 1);
-    }
   }
+
+  // Parte de las molestias de un tipo que llegaron tras una cena tardía o una comida abundante
+  const shareAfter = (outcome: Outcome, pick: (e: FoodEpisode) => boolean) => {
+    const cases = episodes.filter((e) => e.outcomes[outcome]);
+    return cases.length >= 3 ? cases.filter(pick).length / cases.length : 0;
+  };
 
   // ---- Patrones de frecuencia (Roma IV, Montreal) ----
   if (weeksCovered >= MIN_WEEKS) {
@@ -592,16 +591,16 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
       (p) => p.kind === 'food' && p.confidence !== 'hint' && PAIRS.find((x) => x.factor === p.factor)!.outcomes.includes('bloating')
     );
 
-    // Hinchazón con casi cualquier comida, sin un alimento que lo explique → SIBO
+    // Hinchazón casi a diario, con comidas de todo tipo, sin un alimento que lo explique → SIBO
     const bloatWeek = perWeek(['bloating', 'gas'], 2);
-    const bloatShare = meals.length ? meals.filter((m) => symptomatic(m, ['bloating', 'gas'])).length / meals.length : 0;
-    if (ready && bloatWeek >= 3 && bloatShare >= 0.4 && !foodExplainsBloating) {
+    const bloatCases = episodes.filter((e) => hasAny(e, ['bloating', 'gas'])).length;
+    if (ready && bloatWeek >= 3 && bloatCases >= MIN_EPISODES && !foodExplainsBloating) {
       patterns.push({
         id: 'freq_bloating',
         kind: 'frequency',
         confidence: freqConfidence,
         title: t('You bloat with almost any meal'),
-        numbers: `${perWeekText(bloatWeek)} ${t('Bloating or gas after {p}% of your meals, whatever they had.', { p: Math.round(bloatShare * 100) })}`,
+        numbers: `${perWeekText(bloatWeek)} ${t('After all kinds of meals: no food stands out.')}`,
         body: romeNote,
         suggestion: SUGGESTIONS.sibo(),
       });
@@ -616,7 +615,9 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
         confidence: freqConfidence,
         title: t('Heaviness or feeling full too soon, often'),
         numbers: perWeekText(fullWeek),
-        body: romeNote,
+        body: [shareAfter('fullness', (e) => e.big) >= 0.5 ? t('It comes mostly after big meals: smaller ones may help.') : '', romeNote]
+          .filter(Boolean)
+          .join(' '),
         suggestion: SUGGESTIONS.hpylori(),
       });
     }
@@ -626,8 +627,10 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
     const refluxStrong = perWeek(['reflux'], 2);
     if (refluxMild >= 2 || refluxStrong >= 1) {
       const triggers = patterns
-        .filter((p) => p.kind === 'food' && p.factor && ['late_meal', 'alcohol', 'fatty', 'spicy', 'coffee'].includes(p.factor))
-        .map((p) => t(FACTOR_WITH[p.factor!]));
+        .filter((p) => p.kind === 'food' && p.factor && FACTOR_WITH[p.factor])
+        .map((p) => t(FACTOR_WITH[p.factor!]!));
+      if (shareAfter('reflux', (e) => e.late) >= 0.5) triggers.push(t('after 10 pm'));
+      if (shareAfter('reflux', (e) => e.big) >= 0.5) triggers.push(t('that were big'));
       patterns.push({
         id: 'freq_reflux',
         kind: 'frequency',
@@ -678,9 +681,9 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
   patterns.sort((x, y) => rank[y.confidence] - rank[x.confidence]);
 
   return {
-    observedMeals: meals.length,
-    observedDays: observedMealDays,
+    foodEpisodes: episodes.length,
     ready,
+    missingUsual,
     weeksCovered,
     alarms,
     safety,

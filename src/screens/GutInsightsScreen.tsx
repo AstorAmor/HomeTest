@@ -8,9 +8,12 @@ import { InfoButton } from '@/components/InfoButton';
 import { TestCard } from '@/components/TestCard';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { loadGutContext } from '@/data/digestionRepository';
+import { ChoiceChips } from '@/components/ChoiceChips';
+import { loadGutContext, usualFoodsStore } from '@/data/digestionRepository';
 import { CATALOG, localizeTest } from '@/data/testCatalog';
-import { analyseGut, CONFIDENCE_LABEL, Confidence, GutAnalysis, GutPattern, MIN_DAYS, MIN_MEALS, TestSuggestion } from '@/logic/gutPatterns';
+import { analyseGut, CONFIDENCE_LABEL, Confidence, groupLabel, GutAnalysis, GutPattern, MIN_EPISODES, TestSuggestion } from '@/logic/gutPatterns';
+import { FOOD_GROUPS, FoodGroup } from '@/logic/foodGroups';
+import { USUAL_FREQUENCIES, UsualFoods, UsualFrequency } from '@/types/digestion';
 import { t } from '@/i18n';
 
 const CONFIDENCE_COLOR: Record<Confidence, string> = { clear: Colors.ok, probable: Colors.gold, hint: Colors.textMuted };
@@ -25,14 +28,21 @@ export const GutInsightsScreen = () => {
   const router = useRouter();
   const [analysis, setAnalysis] = useDeepState<GutAnalysis | null>(null);
   const [sample, setSample] = useState(false);
+  const [usual, setUsual] = useDeepState<UsualFoods>({});
   const [openTest, setOpenTest] = useState<string | null>(null);
   const tests = useMemo(() => new Map(CATALOG.map((p) => [p.id, localizeTest(p)])), []);
 
   const load = useCallback(async () => {
     const ctx = await loadGutContext();
     setSample(ctx.sample);
+    setUsual(ctx.usual);
     setAnalysis(analyseGut(ctx));
-  }, [setAnalysis]);
+  }, [setAnalysis, setUsual]);
+
+  const setUsualFor = async (g: FoodGroup, f: UsualFrequency) => {
+    await usualFoodsStore.merge({ [g]: f });
+    load();
+  };
   useReloadOnFocus(load);
 
   const findDoctor = () => router.push({ pathname: '/professionals', params: { role: 'doctor' } });
@@ -95,7 +105,7 @@ export const GutInsightsScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('What we see in your digestion')} showBack backFallback="/digestive?part=gut" />
         <Text style={styles.intro}>
-          {t('We link your meals, how your tummy feels and your stools by the time, and only compare days when you logged your tummy.')}
+          {t('We look at what you ate before each symptom and compare it with how often you usually have it. Loose stools are linked to those meals by the time.')}
         </Text>
         {sample && (
           <View style={styles.sample}>
@@ -134,18 +144,11 @@ export const GutInsightsScreen = () => {
             {!a.ready && (
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>{t('Still learning how food sits with you')}</Text>
-                <Text style={styles.body}>
-                  {t('{m} of {M} meals on days with your tummy logged, over {d} of {D} days.', {
-                    m: a.observedMeals,
-                    M: MIN_MEALS,
-                    d: a.observedDays,
-                    D: MIN_DAYS,
-                  })}
-                </Text>
+                <Text style={styles.body}>{t('{m} of {M} times with what you ate before, so far.', { m: a.foodEpisodes, M: MIN_EPISODES })}</Text>
                 <View style={styles.progressTrack}>
-                  <View style={[styles.progressFill, { width: `${Math.min(100, (a.observedMeals / MIN_MEALS) * 100)}%` }]} />
+                  <View style={[styles.progressFill, { width: `${Math.min(100, (a.foodEpisodes / MIN_EPISODES) * 100)}%` }]} />
                 </View>
-                <Text style={styles.prep}>{t('Log your meals in Your nutrients, and each day in Digestion what you felt, or "All good".')}</Text>
+                <Text style={styles.prep}>{t('Each time you note something in Digestion, tell us what you ate before. On good days, tap "All good today".')}</Text>
               </View>
             )}
 
@@ -157,6 +160,27 @@ export const GutInsightsScreen = () => {
             )}
 
             {a.patterns.map((p) => renderPattern(p, a))}
+
+            {/* Cada cuánto sueles tomarlo: es la comparación; lo que falta, primero */}
+            {!sample && (a.missingUsual.length > 0 || Object.keys(usual).length > 0) && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>{t('How often you usually have them')}</Text>
+                <Text style={styles.body}>{t('We compare with this. Change it if it is not right.')}</Text>
+                {[...a.missingUsual, ...FOOD_GROUPS.map((g) => g.id).filter((g) => usual[g])].map((g) => (
+                  <View key={g} style={styles.usualRow}>
+                    <Text style={styles.usualTitle}>
+                      {groupLabel(g)}
+                      {!usual[g] ? ` · ${t('Not answered yet')}` : ''}
+                    </Text>
+                    <ChoiceChips
+                      options={USUAL_FREQUENCIES.map((o) => ({ id: o.id, label: t(o.label) }))}
+                      value={usual[g]}
+                      onChange={(v) => setUsualFor(g, v)}
+                    />
+                  </View>
+                ))}
+              </View>
+            )}
           </>
         )}
 
@@ -217,6 +241,8 @@ const styles = StyleSheet.create({
   warningText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '600' },
   prep: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
   link: { color: Colors.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
+  usualRow: { gap: 8, marginTop: 10 },
+  usualTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   progressTrack: { height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden', marginVertical: 4 },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.green },
   footerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingHorizontal: 20, marginTop: 8 },
