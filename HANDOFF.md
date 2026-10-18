@@ -999,3 +999,10 @@ ya guardan en las carpetas nuevas.
 - **Laboratorio** (`components/LabCenterInfo.tsx`): dirección, horario, llamar, cómo llegar, teléfono y cómo ir
   preparado, en la ficha de la cita y en "Pedir cita" en cuanto eliges centro.
 - Comprobado en web local (claro/oscuro, castellano) con una analítica de prueba en el almacenamiento local.
+- **Medallón de Tu edad KUOVA con las «capas» de la marca** (7888e88, de la sesión de opciones visuales): láminas
+  apiladas con bordes de ruido fractal, sin línea dorada en las láminas; verde o verde con centro ámbar en oscuro,
+  arena o terracota suave en claro. Imágenes en `assets/images/kuova-age/`, generadas con `scripts/kuova-age-art.py`.
+  `KuovaAgeBadge.tsx` no cambia.
+- **Publicado 7888e88 el 18/10** (con el OK del fundador, «publica todo»), junto con c9b2097: EAS Update grupo
+  28c7f07e y las dos webs a la primera. `npm run release` volvió a quedarse sin memoria al exportar; se usó el
+  método manual de [[hometest-repos-publishing]], y el export de Android + iOS solo pasó con `--max-workers 1`.
