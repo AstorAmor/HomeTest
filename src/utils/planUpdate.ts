@@ -34,31 +34,78 @@ const fmt = (c: MarkerChange) => `${c.name} ${num(c.before)} → ${num(c.after)}
 
 interface Rule {
   markers: string[];
+  family: string; // cómo se llama el grupo en las gráficas del plan ("Colesterol")
   title: string;
-  why: string;
+  why: string; // vale para cualquier marcador del grupo
+  // Lo que se añade solo si uno de esos marcadores es el que hay que trabajar: así quien tiene alto el
+  // colesterol total no lee que el ejercicio sube el HDL. Palancas de la guía ESC/EAS 2019 de
+  // dislipemias (tabla de intervenciones de estilo de vida): grasa saturada y fibra para el LDL, peso,
+  // alcohol y azúcares para los triglicéridos, actividad física para el HDL; la Lp(a) es genética.
+  notes?: { markers: string[]; text: string }[];
 }
 
 const RULES: Rule[] = [
-  { markers: ['glucose', 'hba1c', 'insulin', 'homa_ir', 'fructosamine'], title: 'A 10-minute walk after each main meal', why: 'Vegetables and protein first, whole grains instead of refined ones, and water instead of sugary drinks.' },
-  { markers: ['ldl', 'apob', 'total_cholesterol', 'non_hdl_cholesterol', 'triglycerides', 'hdl', 'lpa'], title: 'Olive oil, nuts, and oily fish 2–3 times a week', why: 'Fibre every day (legumes, oats, fruit), processed meat and pastries only occasionally, and 30 minutes of movement a day, which raises HDL.' },
-  { markers: ['ferritin', 'iron', 'transferrin_saturation', 'hemoglobin', 'tibc'], title: 'Iron-rich foods with vitamin C, 4–5 days a week', why: 'Red meat, legumes or spinach with citrus or peppers in the same meal. Talk to a doctor before taking supplements.' },
-  { markers: ['vitamin_d'], title: '15 minutes of midday sun most days', why: 'And oily fish twice a week. Ask a doctor whether you need a supplement.' },
-  { markers: ['vitamin_b12', 'folate'], title: 'Eggs, fish or dairy every day', why: 'Plus leafy greens. A doctor can tell you if you need a supplement.' },
-  { markers: ['alt', 'ast', 'ggt'], title: 'At least 4 alcohol-free days a week', why: 'Water instead of sugary drinks, and a healthy weight.' },
-  { markers: ['hs_crp', 'esr', 'fibrinogen'], title: '7 hours of sleep and 30 minutes of movement a day', why: 'Oily fish twice a week also helps bring inflammation markers down.' },
-  { markers: ['uric_acid', 'creatinine', 'egfr', 'cystatin_c'], title: '1.5–2 litres of water a day', why: 'Alcohol, sugary drinks and very salty food only occasionally.' },
+  { markers: ['glucose', 'hba1c', 'insulin', 'homa_ir', 'fructosamine'], family: 'Blood sugar', title: 'A 10-minute walk after each main meal', why: 'Vegetables and protein first, whole grains instead of refined ones, and water instead of sugary drinks.' },
+  {
+    markers: ['ldl', 'apob', 'total_cholesterol', 'non_hdl_cholesterol', 'triglycerides', 'hdl', 'lpa'],
+    family: 'Cholesterol',
+    title: 'Olive oil, nuts, and oily fish 2–3 times a week',
+    why: 'Fibre every day (legumes, oats, fruit), and processed meat, butter and pastries only occasionally.',
+    notes: [
+      { markers: ['ldl', 'apob', 'total_cholesterol', 'non_hdl_cholesterol'], text: 'Swapping that saturated fat for olive oil and nuts, plus the fibre, is what lowers LDL and total cholesterol the most.' },
+      { markers: ['triglycerides'], text: 'Triglycerides come down most with less sugar, refined flour and alcohol, and with regular exercise.' },
+      { markers: ['hdl'], text: '30 minutes of movement a day is what raises HDL the most, although it rises slowly.' },
+      { markers: ['lpa'], text: 'Lp(a) is mostly genetic and barely changes with lifestyle: review it with a doctor.' },
+    ],
+  },
+  { markers: ['ferritin', 'iron', 'transferrin_saturation', 'hemoglobin', 'tibc'], family: 'Iron', title: 'Iron-rich foods with vitamin C, 4–5 days a week', why: 'Red meat, legumes or spinach with citrus or peppers in the same meal. Talk to a doctor before taking supplements.' },
+  { markers: ['vitamin_d'], family: 'Vitamin D', title: '15 minutes of midday sun most days', why: 'And oily fish twice a week. Ask a doctor whether you need a supplement.' },
+  { markers: ['vitamin_b12', 'folate'], family: 'Vitamin B12 and folate', title: 'Eggs, fish or dairy every day', why: 'Plus leafy greens. A doctor can tell you if you need a supplement.' },
+  { markers: ['alt', 'ast', 'ggt'], family: 'Liver', title: 'At least 4 alcohol-free days a week', why: 'Water instead of sugary drinks, and a healthy weight.' },
+  { markers: ['hs_crp', 'esr', 'fibrinogen'], family: 'Inflammation', title: '7 hours of sleep and 30 minutes of movement a day', why: 'Oily fish twice a week also helps bring inflammation markers down.' },
+  { markers: ['uric_acid', 'creatinine', 'egfr', 'cystatin_c'], family: 'Kidneys and uric acid', title: '1.5–2 litres of water a day', why: 'Alcohol, sugary drinks and very salty food only occasionally.' },
 ];
 
-const DOCTOR_RULE: Omit<Rule, 'markers'> = {
+// Texto que se guardaba antes en los planes para el colesterol (decía a todos que el ejercicio sube el
+// HDL): los planes guardados con él lo enseñan ya ajustado a sus marcadores (ver ruleWhyForItem)
+const LEGACY_WHY: Record<string, string> = {
+  'Fibre every day (legumes, oats, fruit), processed meat and pastries only occasionally, and 30 minutes of movement a day, which raises HDL.': 'Cholesterol',
+  'Fibra todos los días (legumbres, avena, fruta), embutido y bollería solo de vez en cuando, y 30 minutos de movimiento al día, que sube el HDL.': 'Cholesterol',
+};
+
+const DOCTOR_RULE: Omit<Rule, 'markers' | 'family'> = {
   title: 'Review this result with a doctor',
   why: 'This marker is out of range and needs a professional look before changing anything.',
 };
 
-// Qué acción del plan trabaja un marcador ("Cuida tu colesterol" + qué hacer), traducida; null si
-// ninguna (entonces lo que toca es revisarlo con un médico)
-export function planRuleForMarker(markerId: string): { title: string; why: string } | null {
-  const rule = RULES.find((r) => r.markers.includes(markerId));
-  return rule ? { title: t(rule.title), why: t(rule.why) } : null;
+export interface PlanRule {
+  family: string;
+  title: string;
+  why: string;
+}
+
+const ruleText = (rule: Rule, markerIds: string[]): PlanRule => ({
+  family: t(rule.family),
+  title: t(rule.title),
+  why: [rule.why, ...(rule.notes ?? []).filter((n) => n.markers.some((m) => markerIds.includes(m))).map((n) => n.text)]
+    .map((s) => t(s))
+    .join(' '),
+});
+
+// Qué acción del plan trabaja unos marcadores de la misma familia ("Colesterol": aceite de oliva… y qué
+// hacer, con lo propio de esos marcadores), traducida; null si ninguna (toca revisarlo con un médico)
+export function planRuleForMarkers(markerIds: string[]): PlanRule | null {
+  const rule = RULES.find((r) => markerIds.some((m) => r.markers.includes(m)));
+  return rule ? ruleText(rule, markerIds) : null;
+}
+
+export const planRuleForMarker = (markerId: string) => planRuleForMarkers([markerId]);
+
+// El porqué de una acción guardada; si es el texto antiguo del colesterol, el de ahora para sus marcadores
+export function ruleWhyForItem(item: { why: string; markers: string[] }): string {
+  const family = LEGACY_WHY[item.why];
+  const rule = family ? RULES.find((r) => r.family === family) : undefined;
+  return rule ? ruleText(rule, item.markers).why : item.why;
 }
 
 export interface PlanProposal {
@@ -104,11 +151,12 @@ export function proposeUpdatedPlan(base: BaseItem[], progress: ProgressResult): 
     if (existing) {
       existing.markers.push(c.markerId);
       existing.note = `${existing.note} · ${c.text}`;
+      if (rule) existing.why = ruleText(rule, existing.markers).why;
       continue;
     }
     added.set(key, {
       title: rule ? t(rule.title) : `${t(DOCTOR_RULE.title)}: ${c.name}`,
-      why: t(rule?.why ?? DOCTOR_RULE.why),
+      why: rule ? ruleText(rule, [c.markerId]).why : t(DOCTOR_RULE.why),
       markers: [c.markerId],
       status: 'new',
       note: t('New from this test: {what}', { what: c.text }),
@@ -141,11 +189,12 @@ export function draftActionsForMarkers(markers: { id: string; name: string; valu
     if (existing) {
       existing.markers.push(m.id);
       existing.note = `${existing.note} · ${line}`;
+      if (rule) existing.why = ruleText(rule, existing.markers).why;
       continue;
     }
     out.set(key, {
       title: rule ? t(rule.title) : t('Follow up: {what}', { what: m.name }),
-      why: t(rule?.why ?? DOCTOR_RULE.why),
+      why: rule ? ruleText(rule, [m.id]).why : t(DOCTOR_RULE.why),
       markers: [m.id],
       status: 'new',
       note: line,

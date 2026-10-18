@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ProjectionChart } from "@/components/ProjectionChart";
 import { InfoButton } from "@/components/InfoButton";
 import { Colors } from "@/constants/colors";
-import { currentReport } from "@/data/reportRepository";
+import { currentReport, findMarkerInCurrentReport } from "@/data/reportRepository";
 import { actionCategory, PlanCategory } from "@/data/planCategories";
 import { t } from "@/i18n";
 import { showSamples } from '@/data/dataMode';
@@ -45,6 +45,7 @@ export const ActionPlanList = ({ category, compact }: { category?: PlanCategory;
   return (
     <View style={[styles.actionList, compact && styles.actionListCompact]}>
       {actionPlan.map((item) => {
+        const range = findMarkerInCurrentReport(item.estimated_next_test.marker_id)?.range;
         const content = getActionPlanContentEn(item.action_id, {
           title: item.title,
           why: item.why,
@@ -108,6 +109,8 @@ export const ActionPlanList = ({ category, compact }: { category?: PlanCategory;
                 }
                 expectedRangeLow={item.estimated_next_test.expected_range_low}
                 expectedRangeHigh={item.estimated_next_test.expected_range_high}
+                targetLow={range?.low ?? null}
+                targetHigh={range?.high ?? null}
               />
               <Text style={styles.uncertaintyNote}>
                 {t(PROJECTION_UNCERTAINTY_NOTE_EN)}

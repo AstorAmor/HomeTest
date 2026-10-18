@@ -811,7 +811,7 @@ ya guardan en las carpetas nuevas.
 - Pendiente: cuentas de prueba con casuísticas cargadas en la nube (hoy los usuarios simulados solo van en la demo);
   ciclo de una mujer con cuenta real sin registros (sigue saliendo el ejemplo); APK nueva para calorías/distancia.
 
-## 2026-10-17 — Fases y horas del sueño desde Health Connect (rama `sleep-stages`, sin publicar)
+## 2026-10-17 — Fases y horas del sueño desde Health Connect (rama `sleep-stages`, unida y publicada el 18/10 como 904334b)
 
 - Health Connect ya da las fases de cada noche en `SleepSessionRecord.stages` (profundo, ligero, REM, despierto,
   fuera de la cama) y la hora de inicio y fin. `summarizeSleepSessions` (`src/wearables/seriesLogic.ts`, con tests)
@@ -979,3 +979,23 @@ ya guardan en las carpetas nuevas.
   títulos del informe de ejemplo ("Haz 2 sesiones de fuerza a la semana"). "Tu plan de hoy" y "Tus planes" ya
   no enseñan "No se volvió a medir" ni su nota; la gráfica de "Cómo podrían cambiar" dice qué hacer.
 
+
+## 2026-10-18 — Qué hacer para el colesterol según tus valores, franja del objetivo en las gráficas, ficha del laboratorio al reservar
+
+- Publicado antes 904334b (EAS 7287110d, las dos webs a la primera): fases del sueño (rama `sleep-stages` unida) y
+  acceso de soporte (d463339).
+- **Colesterol** (`utils/planUpdate.ts`): la regla de lípidos decía a todos "y 30 minutos de movimiento al día, que
+  sube el HDL", también a quien solo tenía alto el colesterol total. Ahora cada regla tiene `family` ("Colesterol")
+  y `notes` por marcador, y `planRuleForMarkers(ids)` junta el texto común con las notas de los marcadores que hay
+  que trabajar (LDL/total: grasa saturada y fibra; triglicéridos: azúcar, harinas, alcohol, ejercicio; HDL: moverse;
+  Lp(a): genética, al médico). Palancas de la tabla de estilo de vida de la guía ESC/EAS 2019. Las acciones nuevas
+  de un plan se guardan ya con el texto ajustado; los planes guardados con el texto antiguo lo enseñan ajustado en
+  "Tus planes" (`ruleWhyForItem`, solo si el texto es exactamente el antiguo: lo que edite un especialista no se toca).
+- **"Cómo podrían cambiar tus marcadores"** (plan completo): una tarjeta por familia ("Colesterol", qué hacer y una
+  gráfica por valor). `ProjectionChart` acepta `targetLow`/`targetHigh`: franja verde con raya discontinua en el
+  límite y etiqueta "OBJETIVO < 200" (como la banda de la web, pero se llama objetivo porque es el rango del
+  laboratorio, no un rango óptimo). El eje incluye el límite y medio tramo más allá para que la franja se vea.
+  El informe de ejemplo (`ActionPlanList`) también la pasa, con el rango del marcador.
+- **Laboratorio** (`components/LabCenterInfo.tsx`): dirección, horario, llamar, cómo llegar, teléfono y cómo ir
+  preparado, en la ficha de la cita y en "Pedir cita" en cuanto eliges centro.
+- Comprobado en web local (claro/oscuro, castellano) con una analítica de prueba en el almacenamiento local.

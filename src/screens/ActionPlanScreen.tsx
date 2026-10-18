@@ -24,9 +24,20 @@ import { ProjectionChart } from '@/components/ProjectionChart';
 import { InfoButton } from '@/components/InfoButton';
 import { labUploadRepository } from '@/data/labUploads';
 import { latestUpload, MarkerProjection, projectMarkers } from '@/logic/markerProjection';
-import { planRuleForMarker } from '@/utils/planUpdate';
+import { planRuleForMarkers } from '@/utils/planUpdate';
 import { rangeText } from '@/utils/rangeStatus';
 import { PROJECTION_UNCERTAINTY_NOTE_EN } from '@/data/reportContentEn';
+
+// Las gráficas, por familias: "Colesterol", qué hacer (ajustado a los marcadores que hay que trabajar)
+// y debajo una gráfica por marcador. Los que ninguna acción trabaja van solos.
+const groupProjections = (list: MarkerProjection[]) => {
+  const groups = new Map<string, MarkerProjection[]>();
+  for (const p of list) {
+    const key = planRuleForMarkers([p.markerId])?.title ?? p.markerId;
+    groups.set(key, [...(groups.get(key) ?? []), p]);
+  }
+  return [...groups.entries()].map(([key, items]) => ({ key, items, rule: planRuleForMarkers(items.map((p) => p.markerId)) }));
+};
 
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
@@ -95,33 +106,40 @@ export const ActionPlanScreen = () => {
             <Text style={styles.projSub}>
               {t('If you keep up the changes in your plan, starting from your analysis of {date}.', { date: longDate(projections[0].testDate) })}
             </Text>
-            {projections.map((p) => {
-              const rule = planRuleForMarker(p.markerId);
-              const range = rangeText(p.rangeLow, p.rangeHigh);
-              return (
-                <View key={p.markerId} style={styles.projCard}>
-                  <Text style={styles.projName}>{p.name}</Text>
-                  <Text style={styles.projValues}>
-                    {num(p.current)} → ~{num(p.expected)} {p.unit}
-                    {range ? <Text style={styles.projRange}>{`  ·  ${t('Range: {range}', { range })}`}</Text> : null}
-                  </Text>
-                  {rule && (
-                    <>
-                      <Text style={styles.projWith}>{t('With: {action}', { action: rule.title })}</Text>
-                      <Text style={styles.projWhy}>{rule.why}</Text>
-                    </>
-                  )}
-                  <ProjectionChart
-                    markerId={p.markerId}
-                    currentValue={p.current}
-                    expectedValueIn6Months={p.expected}
-                    expectedRangeLow={p.bandLow}
-                    expectedRangeHigh={p.bandHigh}
-                    unit={p.unit}
-                  />
-                </View>
-              );
-            })}
+            {groupProjections(projections).map((g) => (
+              <View key={g.key} style={styles.projCard}>
+                <Text style={styles.projFamily}>{g.rule?.family ?? g.items[0].name}</Text>
+                {g.rule && (
+                  <>
+                    <Text style={styles.projWith}>{g.rule.title}</Text>
+                    <Text style={styles.projWhy}>{g.rule.why}</Text>
+                  </>
+                )}
+                {g.items.map((p, i) => {
+                  const range = rangeText(p.rangeLow, p.rangeHigh);
+                  return (
+                    <View key={p.markerId} style={[styles.projMarker, i > 0 && styles.projMarkerSep]}>
+                      {/* "Vitamina D" ya es el título del grupo: no se repite */}
+                      {p.name.toLowerCase() !== (g.rule?.family ?? g.items[0].name).toLowerCase() && <Text style={styles.projName}>{p.name}</Text>}
+                      <Text style={styles.projValues}>
+                        {num(p.current)} → ~{num(p.expected)} {p.unit}
+                        {range ? <Text style={styles.projRange}>{`  ·  ${t('Range: {range}', { range })}`}</Text> : null}
+                      </Text>
+                      <ProjectionChart
+                        markerId={p.markerId}
+                        currentValue={p.current}
+                        expectedValueIn6Months={p.expected}
+                        expectedRangeLow={p.bandLow}
+                        expectedRangeHigh={p.bandHigh}
+                        unit={p.unit}
+                        targetLow={p.rangeLow}
+                        targetHigh={p.rangeHigh}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            ))}
             <Text style={styles.projNote}>{t(PROJECTION_UNCERTAINTY_NOTE_EN)}</Text>
           </View>
         )}
@@ -200,11 +218,14 @@ const styles = StyleSheet.create({
   projTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
   projSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 4, marginBottom: 10 },
   projCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 16, marginBottom: 10 },
-  projName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  projValues: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 2 },
+  projFamily: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
+  projMarker: { marginTop: 10 },
+  projMarkerSep: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 12, marginTop: 14 },
+  projName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  projValues: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 2, marginBottom: 6 },
   projRange: { color: Colors.textMuted, fontSize: 12, fontWeight: '400' },
-  projWith: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 4 },
-  projWhy: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2, marginBottom: 6 },
+  projWith: { color: Colors.accent, fontSize: 14, fontWeight: '700', marginTop: 6 },
+  projWhy: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 2 },
   projNote: { color: Colors.textMuted, fontSize: 11 },
   links: { marginHorizontal: 20, marginTop: 8, gap: 8 },
   updated: {

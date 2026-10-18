@@ -3300,6 +3300,20 @@ export const es: Record<string, string> = {
   'A 10-minute walk after each main meal': 'Un paseo de 10 minutos después de cada comida principal',
   'Vegetables and protein first, whole grains instead of refined ones, and water instead of sugary drinks.': 'Primero verdura y proteína, cereales integrales en vez de refinados y agua en vez de bebidas azucaradas.',
   'Olive oil, nuts, and oily fish 2–3 times a week': 'Aceite de oliva, frutos secos y pescado azul 2-3 veces por semana',
+  'Fibre every day (legumes, oats, fruit), and processed meat, butter and pastries only occasionally.':
+    'Fibra todos los días (legumbres, avena, fruta), y embutido, mantequilla y bollería solo de vez en cuando.',
+  'Swapping that saturated fat for olive oil and nuts, plus the fibre, is what lowers LDL and total cholesterol the most.':
+    'Cambiar esa grasa saturada por aceite de oliva y frutos secos, junto con la fibra, es lo que más baja el LDL y el colesterol total.',
+  'Triglycerides come down most with less sugar, refined flour and alcohol, and with regular exercise.':
+    'Los triglicéridos bajan sobre todo con menos azúcar, harinas refinadas y alcohol, y con ejercicio regular.',
+  '30 minutes of movement a day is what raises HDL the most, although it rises slowly.':
+    'Moverte 30 minutos al día es lo que más sube el HDL, aunque sube despacio.',
+  'Lp(a) is mostly genetic and barely changes with lifestyle: review it with a doctor.':
+    'La Lp(a) depende sobre todo de la genética y apenas cambia con el estilo de vida: revísala con un médico.',
+  Cholesterol: 'Colesterol',
+  'Vitamin B12 and folate': 'Vitamina B12 y ácido fólico',
+  'Kidneys and uric acid': 'Riñón y ácido úrico',
+  'Target {range}': 'Objetivo {range}',
   'Fibre every day (legumes, oats, fruit), processed meat and pastries only occasionally, and 30 minutes of movement a day, which raises HDL.': 'Fibra todos los días (legumbres, avena, fruta), embutido y bollería solo de vez en cuando, y 30 minutos de movimiento al día, que sube el HDL.',
   'Iron-rich foods with vitamin C, 4–5 days a week': 'Alimentos ricos en hierro con vitamina C, 4-5 días por semana',
   'Red meat, legumes or spinach with citrus or peppers in the same meal. Talk to a doctor before taking supplements.': 'Carne roja, legumbres o espinacas con cítricos o pimiento en la misma comida. Habla con un médico antes de tomar suplementos.',

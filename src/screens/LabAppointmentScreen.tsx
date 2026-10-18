@@ -1,14 +1,15 @@
 import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TileMap } from '@/components/TileMap';
+import { LabCenterInfo } from '@/components/LabCenterInfo';
 import { confirmAsk } from '@/components/dev/confirmAsk';
-import { Colors, withAlpha } from '@/constants/colors';
-import { directionsUrl, hoursLabel, LAB_CENTERS } from '@/data/labCenters';
+import { Colors } from '@/constants/colors';
+import { LAB_CENTERS } from '@/data/labCenters';
 import { appointmentEvent, LabAppointment, labAppointmentRepository } from '@/data/labAppointments';
 import { calendarLinks } from '@/data/schedule';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -47,7 +48,6 @@ export const LabAppointmentScreen = () => {
   }
 
   const links = calendarLinks(appointmentEvent(appt, center));
-  const tel = `tel:${center.phone.replace(/\s/g, '')}`;
 
   const cancel = async () => {
     const ok = await confirmAsk(
@@ -80,38 +80,7 @@ export const LabAppointmentScreen = () => {
         <View style={styles.mapWrap}>
           <TileMap points={[center]} selectedId={center.id} height={220} />
         </View>
-        <Text style={styles.address}>{center.address}</Text>
-        <Text style={styles.muted}>{t('Blood draws: {hours}', { hours: hoursLabel(center) })}</Text>
-        {center.notes && <Text style={styles.muted}>{t(center.notes)}</Text>}
-
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.action} onPress={() => Linking.openURL(tel)} activeOpacity={0.85}>
-            <View style={styles.actionIcon}>
-              <Ionicons name="call-outline" size={20} color={Colors.accent} />
-            </View>
-            <Text style={styles.actionText}>{t('Phone the lab')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.action} onPress={() => Linking.openURL(directionsUrl(center))} activeOpacity={0.85}>
-            <View style={styles.actionIcon}>
-              <Ionicons name="navigate-outline" size={20} color={Colors.accent} />
-            </View>
-            <Text style={styles.actionText}>{t('Directions')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.action} onPress={() => Linking.openURL(links.google)} activeOpacity={0.85}>
-            <View style={styles.actionIcon}>
-              <Ionicons name="calendar-outline" size={20} color={Colors.accent} />
-            </View>
-            <Text style={styles.actionText}>{t('Calendar')}</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.phone}>{center.phone}</Text>
-
-        <View style={styles.prepCard}>
-          <Ionicons name="information-circle-outline" size={18} color={Colors.textSecondary} />
-          <Text style={styles.prepText}>
-            {t('Bring your ID. For most blood tests, fast for 8 hours beforehand (water is fine) and avoid intense exercise the day before.')}
-          </Text>
-        </View>
+        <LabCenterInfo center={center} calendarUrl={links.google} />
 
         <TouchableOpacity
           style={styles.reschedule}
@@ -148,32 +117,6 @@ const styles = StyleSheet.create({
   heroTime: { color: Colors.accent, fontSize: 30, fontWeight: '800' },
   heroLab: { color: Colors.textSecondary, fontSize: 14, textAlign: 'center' },
   mapWrap: { marginHorizontal: 20, borderRadius: 16, overflow: 'hidden' },
-  address: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginHorizontal: 20, marginTop: 12 },
-  muted: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 3 },
-  actions: { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 20, marginTop: 20 },
-  action: { alignItems: 'center', gap: 6, width: 90 },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: withAlpha(Colors.accent, 0.12),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  phone: { color: Colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: 8 },
-  prepCard: {
-    flexDirection: 'row',
-    gap: 8,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 12,
-    marginHorizontal: 20,
-    marginTop: 18,
-  },
-  prepText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
   reschedule: {
     flexDirection: 'row',
     gap: 8,

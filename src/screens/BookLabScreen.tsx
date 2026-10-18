@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TileMap } from '@/components/TileMap';
+import { LabCenterInfo } from '@/components/LabCenterInfo';
 import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
 import { Colors } from '@/constants/colors';
 import { directionsUrl, hoursLabel, LAB_CENTERS, slotsFor, windowFor } from '@/data/labCenters';
@@ -163,7 +164,9 @@ export const BookLabScreen = () => {
         </View>
 
         <Text style={styles.section}>{center ? t('Your lab') : t('{n} labs within your reach', { n: LAB_CENTERS.length })}</Text>
-        {(center ? [center] : LAB_CENTERS).map((c) => (
+        {/* Con el centro elegido, su ficha entera (la misma que la de la cita ya reservada) */}
+        {center && <LabCenterInfo center={center} title />}
+        {!center && LAB_CENTERS.map((c) => (
           <TouchableOpacity
             key={c.id}
             style={[styles.card, c.id === selectedId && styles.cardOn]}
@@ -266,7 +269,7 @@ const styles = StyleSheet.create({
   cardTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', flex: 1 },
   cardText: { color: Colors.textSecondary, fontSize: 13 },
   muted: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 0 },
-  change: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginHorizontal: 20, marginTop: 4 },
+  change: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginHorizontal: 20, marginTop: 14 },
   calendar: { marginHorizontal: 20 },
   slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 20 },
   slot: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, paddingVertical: 8, width: '22.5%', alignItems: 'center' },

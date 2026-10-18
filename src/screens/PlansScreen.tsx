@@ -11,7 +11,7 @@ import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
 import { markerIn, planHistory, reportsForProgress } from '@/data/planHistory';
 import { flagColor, labReports } from '@/utils/labReportView';
 import { PlanVersion, planVersionRepository } from '@/data/planVersions';
-import { STATUS_LABEL } from '@/utils/planUpdate';
+import { ruleWhyForItem, STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { buildPlan, PlanItem } from '@/data/planRepository';
@@ -66,7 +66,7 @@ const VersionCard = ({
                 <Text style={[styles.status, { color: statusColor(it.status) }]}>{STATUS_LABEL[it.status]}</Text>
               )}
             </View>
-            <Text style={styles.itemWhy}>{it.why}</Text>
+            <Text style={styles.itemWhy}>{ruleWhyForItem(it)}</Text>
             {it.note && it.status !== 'not_retested' && <Text style={styles.itemNote}>{it.note}</Text>}
           </View>
         ))}
@@ -203,7 +203,7 @@ export const PlansScreen = () => {
                   {p.items.map((it) => (
                     <View key={it.title} style={styles.item}>
                       <Text style={styles.itemTitle}>{it.title}</Text>
-                      <Text style={styles.itemWhy}>{it.why}</Text>
+                      <Text style={styles.itemWhy}>{ruleWhyForItem(it)}</Text>
                       {it.markers.map((id) => {
                         const before = markerIn(reportsForProgress.before, id);
                         const after = markerIn(reportsForProgress.after, id);

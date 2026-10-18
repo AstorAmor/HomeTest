@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
-import Svg, { Path, Polygon, Circle, Line } from 'react-native-svg';
+import Svg, { Path, Polygon, Circle, Line, Rect } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { num, t } from '@/i18n';
 import { axisLabel, axisPadding, getResponseProfile, HORIZON_MONTHS, projectionCurve } from '@/logic/projection';
+import { rangeText } from '@/utils/rangeStatus';
 
 interface ProjectionChartProps {
   markerId: string;
@@ -13,6 +14,10 @@ interface ProjectionChartProps {
   expectedRangeHigh: number;
   unit?: string;
   color?: string;
+  // Rango al que hay que llegar (el de la analítica): una franja verde como la de la web, con una raya
+  // en el límite que se cruza; puede ser de un solo lado ("< 200", "> 40")
+  targetLow?: number | null;
+  targetHigh?: number | null;
 }
 
 const CARD_MARGIN = 40;
@@ -35,6 +40,8 @@ export const ProjectionChart = ({
   expectedRangeHigh,
   unit = '',
   color = Colors.accent,
+  targetLow = null,
+  targetHigh = null,
 }: ProjectionChartProps) => {
   const { width: screenWidth } = useWindowDimensions();
   const chartWidth = Math.max(screenWidth - CARD_MARGIN - CARD_PADDING - Y_AXIS_WIDTH - 10, 120);
@@ -48,7 +55,10 @@ export const ProjectionChart = ({
   });
   const note = getResponseProfile(markerId).note;
 
-  const allValues = [currentValue, expectedValueIn6Months, expectedRangeLow, expectedRangeHigh];
+  // El eje incluye el límite que hay que cruzar y un trozo del rango detrás, para que la franja se vea
+  const limit = targetHigh !== null && currentValue > targetHigh ? targetHigh : targetLow !== null && currentValue < targetLow ? targetLow : null;
+  const inside = limit === null ? [] : [limit, limit + (limit - currentValue) * 0.5];
+  const allValues = [currentValue, expectedValueIn6Months, expectedRangeLow, expectedRangeHigh, ...inside];
   const rawMin = Math.min(...allValues);
   const rawMax = Math.max(...allValues);
   const pad = axisPadding(rawMin, rawMax);
@@ -71,6 +81,14 @@ export const ProjectionChart = ({
   const last = curve[curve.length - 1];
   const midX = scaleX(HORIZON_MONTHS / 2);
 
+  const range = rangeText(targetLow, targetHigh);
+  const hasTarget = range !== null && (targetHigh === null || targetHigh > min) && (targetLow === null || targetLow < max);
+  const bandTop = targetHigh !== null && targetHigh < max ? scaleY(targetHigh) : 0;
+  const bandBottom = targetLow !== null && targetLow > min ? scaleY(targetLow) : CHART_HEIGHT;
+  const edges = [targetHigh, targetLow].filter((v): v is number => v !== null && v > min && v < max);
+  // La etiqueta va dentro de la franja, pegada al límite que se cruza
+  const labelTop = bandTop > 0 && (limit === null || limit === targetHigh) ? bandTop + 3 : bandBottom - 15;
+
   return (
     <View>
       <View style={styles.chartRow}>
@@ -88,11 +106,20 @@ export const ProjectionChart = ({
             strokeWidth={1}
             strokeDasharray="3,4"
           />
+          {hasTarget && (
+            <>
+              <Rect x={0} y={bandTop} width={chartWidth} height={Math.max(bandBottom - bandTop, 0)} rx={6} fill={Colors.ok} fillOpacity={0.14} />
+              {edges.map((v) => (
+                <Line key={v} x1={0} x2={chartWidth} y1={scaleY(v)} y2={scaleY(v)} stroke={Colors.ok} strokeOpacity={0.7} strokeWidth={1} strokeDasharray="4,3" />
+              ))}
+            </>
+          )}
           <Polygon points={bandPoints} fill={color} fillOpacity={0.15} />
           <Path d={expectedPath} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           <Circle cx={scaleX(first.month)} cy={scaleY(first.expected)} r={3.5} fill={Colors.textSecondary} />
           <Circle cx={scaleX(last.month)} cy={scaleY(last.expected)} r={4} fill={color} />
         </Svg>
+        {hasTarget && <Text style={[styles.target, { top: labelTop, left: Y_AXIS_WIDTH, width: chartWidth - 6 }]}>{t('Target {range}', { range }).toUpperCase()}</Text>}
       </View>
       <View style={styles.xAxisRow}>
         <View style={styles.yAxisSpacer} />
@@ -143,6 +170,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: MID_LABEL_WIDTH,
     textAlign: 'center',
+  },
+  target: {
+    position: 'absolute',
+    textAlign: 'right',
+    color: Colors.ok,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.6,
   },
   note: {
     color: Colors.textSecondary,
