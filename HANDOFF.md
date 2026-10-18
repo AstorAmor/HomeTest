@@ -1004,5 +1004,6 @@ ya guardan en las carpetas nuevas.
   arena o terracota suave en claro. Imágenes en `assets/images/kuova-age/`, generadas con `scripts/kuova-age-art.py`.
   `KuovaAgeBadge.tsx` no cambia.
 - **Publicado 7888e88 el 18/10** (con el OK del fundador, «publica todo»), junto con c9b2097: EAS Update grupo
-  28c7f07e y las dos webs a la primera. `npm run release` volvió a quedarse sin memoria al exportar; se usó el
-  método manual de [[hometest-repos-publishing]], y el export de Android + iOS solo pasó con `--max-workers 1`.
+  28c7f07e y las dos webs a la primera. `npm run release` volvió a quedarse sin memoria al exportar; se hizo a mano:
+  `expo export` de Android, luego Android + iOS (solo pasó con `--max-workers 1`), `eas-cli update --skip-bundler
+  --input-dir dist` con `EAS_SKIP_AUTO_FINGERPRINT=1` y `node scripts/deploy-web.mjs` (y `demo`).
