@@ -4,11 +4,12 @@ import { Image } from 'expo-image';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 
-// Insignia de la Edad KUOVA, el "buque insignia" de Mis datos: la foto del corazón con su nebulosa
-// (la que eligió el fundador), recortada en círculo, con el aro dorado y solo el número encima.
-// Hay cuatro versiones de la misma foto (assets/images/kuova-age, hechas con un script a partir del
-// original): dorada o rojiza en tema oscuro y verde o terracota en claro, según si la Edad KUOVA
-// sale por debajo (good) o por encima (watch) de la edad real.
+// Insignia de la Edad KUOVA, el "buque insignia" de Mis datos: las "capas" de la marca (láminas
+// apiladas con borde de ruido fractal, sin contorno; las eligió el fundador), recortadas en círculo,
+// con el aro dorado y solo el número encima, en la meseta del centro. Hay cuatro versiones
+// (assets/images/kuova-age, generadas con scripts/kuova-age-art.py): verde o verde con centro ámbar en
+// tema oscuro y arena o terracota suave en claro, según si la Edad KUOVA sale por debajo (good) o por
+// encima (watch) de la edad real.
 const ART = {
   dark: { good: require('../../assets/images/kuova-age/dark_good.jpg'), watch: require('../../assets/images/kuova-age/dark_watch.jpg') },
   light: { good: require('../../assets/images/kuova-age/light_good.jpg'), watch: require('../../assets/images/kuova-age/light_watch.jpg') },
