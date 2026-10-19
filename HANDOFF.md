@@ -1067,3 +1067,17 @@ Digestión a0e488b): EAS Update grupo c2ea682e y las dos webs, todo a la primera
     permisos en español). Perfil `testflight` en `eas.json` (canal `preview`: recibe los mismos `npm run release`).
   - Pasos para el fundador (cuenta de Apple Developer, TestFlight, lo que bloquea la App Store):
     `docs/iphone-y-apple-salud.md`. **Bloqueante para la App Store y Google Play: no hay «Borrar mi cuenta» en la app.**
+
+## 2026-10-19 (tarde) — Peso y composición corporal en Hoy
+
+- Tarjeta **Peso** en Hoy (Biomarcadores): último valor y "Toca pesarse" / "Próxima: lun 26". Abre `/weight-detail`
+  (gráfica e historial como el resto de mediciones, tendencia de las últimas semanas, próxima pesada, última
+  composición y "Cómo pesarte") y `/log-weight` (ruedas como las demás mediciones + composición opcional a mano:
+  grasa %, agua %, músculo kg, hueso kg, con rangos y aviso en rojo).
+- Aviso pedido por el fundador: no hace falta pesarse a diario (1-2 kg de un día a otro por comida, sal, líquido
+  retenido, ciclo); una vez por semana, mismo día, por la mañana, después del baño y antes de desayunar. Si ya te
+  pesaste hace menos de 7 días se explica (no se bloquea); con 3 o más en una semana, aviso en la ficha.
+- Datos: tabla genérica `metric_readings` (kinds `weight`, `body_fat`, `body_water`, `muscle_mass`, `bone_mass`),
+  **sin migración**. La composición lleva la fecha de la pesada y su id + "-tipo". La pesada más reciente actualiza
+  `profiles.weight_kg` (lo usan el menú semanal y otros cálculos). Lógica en `src/logic/weight.ts` (8 tests;
+  días de calendario por el cambio de hora). Umbral de "estable" ±0,2 kg/semana = SUPUESTO.

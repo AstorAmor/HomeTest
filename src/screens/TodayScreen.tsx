@@ -25,11 +25,13 @@ import { consult } from '@/data/consultations';
 import { KIND_LABEL } from '@/data/specialistTypes';
 import { buildSummary, SummaryLine } from '@/logic/summary';
 import { loadNutrientFocus, nutrientsDoneToday } from '@/screens/NutrientsScreen';
-import { dateLocale, t } from '@/i18n';
+import { dateLocale, num, t } from '@/i18n';
 import { computeAchievements } from '@/data/achievements';
 import { BlobArt } from '@/components/BlobArt';
 import { KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { weightRepository } from '@/data/weightRepository';
+import { WeighAdvice, weighAdvice } from '@/logic/weight';
 import { useSections } from '@/data/appPrefs';
 import { WelcomePrompts } from '@/components/WelcomePrompts';
 import { InboxItem, nudgeStore } from '@/data/nudgeStore';
@@ -183,6 +185,8 @@ export const TodayScreen = () => {
   const [weekOpen, setWeekOpen] = useState(true);
   const [nutrients, setNutrients] = useDeepState<{ done: number; total: number }>({ done: 0, total: 0 });
 
+  // Peso: el último y cuándo toca pesarse (una vez por semana)
+  const [weight, setWeight] = useState<WeighAdvice | null>(null);
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
     labUploadRepository
@@ -227,6 +231,10 @@ export const TodayScreen = () => {
         setReminderIds(active.filter((i) => i.reminders && !isReminderMuted(i)).map((i) => i.id));
       })
       .catch(() => setDosesToday([]));
+    weightRepository
+      .getAll()
+      .then((all) => setWeight(weighAdvice(all)))
+      .catch(() => setWeight(null));
     thermometerRepository
       .getAll()
       .then((all) => {
@@ -611,6 +619,22 @@ export const TodayScreen = () => {
               onPress={() => router.push('/blood-pressure-detail')}
             />
           )}
+          <BiomarkerCard
+            name={t('Weight')}
+            icon="mci:scale-bathroom"
+            iconColor={Colors.violet}
+            value={weight?.last ? num(weight.last.valor.toFixed(1)) : '—'}
+            unit="kg"
+            status={
+              !weight?.last
+                ? t('Tap to log')
+                : weight.due
+                  ? t('Time to weigh in')
+                  : t('Next: {day}', { day: weight.next ? weight.next.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric' }) : '' })
+            }
+            color={weight?.due ? Colors.accent : Colors.textMuted}
+            onPress={() => router.push(weight?.last ? '/weight-detail' : '/log-weight')}
+          />
           {show('wearables') && (
             <>
               <BiomarkerCard

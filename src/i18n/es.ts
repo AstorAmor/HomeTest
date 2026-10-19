@@ -3531,4 +3531,33 @@ export const es: Record<string, string> = {
     'Solo te llegan datos del iPhone. Si llevas reloj o anillo, abre su app (Oura, Garmin Connect, WHOOP, Huawei Health…) y activa compartir con Salud. Después toca Sincronizar ahora.',
   'Something shows No data? Allow it in Health → your photo → Apps → Kuova, and check that your watch or ring app writes it to Health.':
     '¿Algo sale «Sin datos»? Permítelo en Salud → tu foto → Apps → Kuova, y comprueba que la app de tu reloj o anillo lo escribe en Salud.',
+
+  // 2026-10-19: peso y composición corporal (Hoy, /weight-detail, /log-weight)
+  'Time to weigh in': 'Toca pesarse',
+  'Next: {day}': 'Próxima: {day}',
+  'Body composition (optional)': 'Composición corporal (opcional)',
+  'Body composition': 'Composición corporal',
+  'Body fat': 'Grasa',
+  'Body water': 'Agua',
+  Muscle: 'Músculo',
+  Bone: 'Hueso',
+  'If your scale measures it, copy it here. It changes a lot with how hydrated you are, so compare it only between weigh-ins in the same conditions.':
+    'Si tu báscula la mide, cópiala aquí. Cambia mucho según lo hidratado que estés, así que compárala solo entre pesadas hechas en las mismas condiciones.',
+  'Check the values in red: they are outside the usual range.': 'Revisa los valores en rojo: se salen del rango habitual.',
+  'Once a week is enough: same day, in the morning, after the toilet and before breakfast, with little clothing. Weight swings 1–2 kg from one day to the next with food, salt, fluid retention or your cycle; the trend over several weeks is what counts.':
+    'Con una vez por semana basta: el mismo día, por la mañana, después de ir al baño y antes de desayunar, con poca ropa. El peso sube y baja 1-2 kg de un día a otro por la comida, la sal, el líquido que retienes o el ciclo; lo que cuenta es la tendencia de varias semanas.',
+  'You weighed yourself {n} days ago. Day-to-day changes are mostly water and food, not fat. Once a week is enough.':
+    'Te pesaste hace {n} días. Los cambios de un día a otro son sobre todo agua y comida, no grasa. Con una vez por semana basta.',
+  'Time to weigh yourself.': 'Toca pesarse.',
+  'Next weigh-in: {day}.': 'Próxima pesada: {day}.',
+  'You have weighed yourself 3 or more times this week: once a week is enough.': 'Esta semana te has pesado 3 veces o más: con una vez por semana basta.',
+  'Home scales estimate it from your hydration: compare it between weigh-ins in the same conditions.':
+    'Las básculas de casa la estiman a partir de tu hidratación: compárala entre pesadas en las mismas condiciones.',
+  'How to weigh yourself': 'Cómo pesarte',
+  'Once a week, on the same day: in the morning, after the toilet and before eating or drinking, with little clothing and on the same scale. Weight changes 1–2 kg from one day to the next with what you ate, salt, fluid retention or your menstrual cycle, so a single weigh-in says little. Look at the trend over several weeks.':
+    'Una vez por semana, el mismo día: por la mañana, después de ir al baño y antes de comer o beber, con poca ropa y en la misma báscula. El peso cambia 1-2 kg de un día a otro por lo que comiste, la sal, el líquido retenido o el ciclo menstrual, así que una pesada sola dice poco. Fíjate en la tendencia de varias semanas.',
+  'With 3 weeks of weigh-ins you will see your trend.': 'Con 3 semanas de pesadas verás tu tendencia.',
+  'Stable over the last weeks': 'Estable en las últimas semanas',
+  'Going down about {v} kg a week': 'Bajando unos {v} kg por semana',
+  'Going up about {v} kg a week': 'Subiendo unos {v} kg por semana',
 };

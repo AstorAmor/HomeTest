@@ -49,6 +49,7 @@ export default function Layout() {
             <Stack.Screen name="log-cholesterol" options={MODAL} />
             <Stack.Screen name="log-cortisol" options={MODAL} />
             <Stack.Screen name="log-vo2max" options={MODAL} />
+            <Stack.Screen name="log-weight" options={MODAL} />
             <Stack.Screen name="log-cycle" options={MODAL} />
             <Stack.Screen name="check-in" options={MODAL} />
             <Stack.Screen name="log-workout" options={MODAL} />
@@ -67,6 +68,7 @@ export default function Layout() {
             <Stack.Screen name="cholesterol-detail" />
             <Stack.Screen name="cortisol-detail" />
             <Stack.Screen name="vo2max-detail" />
+            <Stack.Screen name="weight-detail" />
             <Stack.Screen name="cycle-detail" />
             <Stack.Screen name="digestive" />
             <Stack.Screen name="gut-insights" />
