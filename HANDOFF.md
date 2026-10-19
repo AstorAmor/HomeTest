@@ -1034,3 +1034,40 @@ al rellenar el cuestionario, no antes de ningún síntoma sino tras registrarlo�
   sueles tomar» para contestar o cambiar las frecuencias. Ficha de método (`evidence.ts`) y textos en español al día.
 - Comprobado en la web demo local: guardar molestia → paso de comida → grupos deducidos → frecuencias → fila de Hoy
   con «Antes: …» y progreso 1 de 5; reabrir la comida por `?id=`.
+
+## 2026-10-19 — Entrenamientos: generador, sesión guiada y vista del entrenador (rama `workouts`, sin commitear)
+
+Hecho en el worktree `C:\Users\Astor\proyectos\hometest-app-workouts` (rama `workouts`, sale de a0e488b),
+porque `master` tenía cambios de la sesión de Apple Salud. **Nada commiteado ni publicado.**
+
+- **Catálogo provisional** (`src/data/workouts/exerciseData.ts`, GENERADO por `scripts/exercise-catalog.py`):
+  126 ejercicios de free-exercise-db (commit fijado f00c92c), con patrón de movimiento, material, por tiempo /
+  por lado / con saltos, y nombre e indicaciones en español escritos a mano. Dos fotos por ejercicio (inicio y
+  final) que `ExerciseLoop` alterna con un fundido, como un GIF de ~2 s. Las fotos se cargan de
+  raw.githubusercontent.com (no van en el bundle). **Son provisionales**: el repositorio se declara de dominio
+  público pero no dice de dónde salen las fotos (parecen de una web comercial). Antes de usuarios reales,
+  sustituirlas por clips propios: solo hay que cambiar `exerciseMedia()` en `src/data/workouts/catalog.ts`.
+- **Generador** (`src/logic/workoutGenerator.ts`, 13 tests): objetivo (salud, fuerza, músculo, perder grasa,
+  movilidad), nivel, 2-5 días, 20-60 min, dónde (casa sin material / con material / gimnasio) y "sin saltos".
+  Reparto: cuerpo completo hasta 3 días, torso/pierna con 4-5; huecos por patrón con alternativas si falta
+  material; dosis ACSM 2009 (supuestos, ver backlog clínico); se ajusta a los minutos; determinista por semilla.
+- **App**: `/workouts` (programa activo, siguiente sesión, esta semana, cómo progresar, otros programas,
+  biblioteca), `/workout-new` (cuestionario + vista previa + "Otra versión"), `/workout-session` (lista y modo
+  guiado: vídeo, serie, temporizador, descanso con cuenta atrás; al acabar guarda la sesión en el programa y un
+  entrenamiento en `workouts`, que cuenta para las 3 de fuerza), `/exercise-info`, `/exercise-library`.
+  La acción de fuerza del plan (Hoy y Plan completo) ahora lleva a `/workouts` (antes, `/log-workout`, que sigue
+  desde allí). Entrada "Entrenamientos" en el menú de la web del paciente. En cuentas de prueba y en la demo sale
+  un programa de ejemplo "de Álex Romero" (entrenador ficticio).
+- **Portal**: sección Entrenamientos (`/pro-workouts`: programas mandados con sesiones hechas, nuevo programa,
+  biblioteca) y editor `/pro-workout?patient=` (borrador desde el objetivo del paciente; cambiar ejercicio por otro
+  del mismo patrón, series/repeticiones/descanso, indicación por ejercicio, orden, añadir; mandar o actualizar).
+  Botón "Crear entrenamiento" en la ficha del paciente. En la demo se guarda en el estado de la demo (Elena y
+  Javier ya tienen uno).
+- **Supabase**: migración `20261019120000_workout_programs.sql` PREPARADA, **SIN APLICAR** (tabla
+  `workout_programs`, RLS paciente/profesional con `is_my_patient`, trigger que impide cambiar de quién es).
+  Mientras `REMOTE_HAS_WORKOUT_PROGRAMS = false` (`src/data/workouts/programRepository.ts`), los programas propios
+  van al móvil y el portal real avisa de que no puede mandar. Decisión pendiente: el profesional ve las sesiones
+  hechas del programa que mandó sin pedir el permiso "Actividad y entrenamientos"; si se quiere exigirlo, añadir
+  `has_share(patient_id, 'activity')` a su política de lectura.
+- Textos en español en `src/i18n/workoutsEs.ts` (se junta con es.ts en `src/i18n/index.ts`).
+- Probar: `preview_start expo-web-workouts` (puerto 8086, desde `proyectos/.claude/launch.json`).

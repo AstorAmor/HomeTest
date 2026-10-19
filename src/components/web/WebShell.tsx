@@ -54,6 +54,7 @@ const CATEGORIES: NavItem[] = [
 
 const PLAN: NavItem[] = [
   { id: 'plans', label: 'My plan', icon: 'list-outline', color: Colors.accent, pathname: '/plans', section: 'plan' },
+  { id: 'workouts', label: 'Workouts', icon: 'barbell-outline', color: Colors.coral, pathname: '/workouts' },
   { id: 'schedule', label: 'Schedule', icon: 'calendar-outline', color: Colors.sky, pathname: '/(tabs)', tab: TAB.schedule },
   { id: 'tracking', label: 'Track your tests', icon: 'mci:van-utility', color: Colors.amber, pathname: '/track-tests' },
   { id: 'pros', label: 'Professionals', icon: 'medkit-outline', color: Colors.green, pathname: '/professionals' },
