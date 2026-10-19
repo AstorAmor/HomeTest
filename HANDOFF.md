@@ -1063,7 +1063,9 @@ porque `master` tenía cambios de la sesión de Apple Salud. **Nada commiteado n
   del mismo patrón, series/repeticiones/descanso, indicación por ejercicio, orden, añadir; mandar o actualizar).
   Botón "Crear entrenamiento" en la ficha del paciente. En la demo se guarda en el estado de la demo (Elena y
   Javier ya tienen uno).
-- **Supabase**: migración `20261019120000_workout_programs.sql` PREPARADA, **SIN APLICAR** (tabla
+- **Supabase**: migración `20261019120000_workout_programs.sql` **APLICADA el 2026-10-19** (OK del fundador;
+  `db query --linked` en transacción + `migration repair`) y `REMOTE_HAS_WORKOUT_PROGRAMS = true`; lo guardado en
+  el móvil antes se sube la primera vez. Antes decía: PREPARADA, SIN APLICAR (tabla
   `workout_programs`, RLS paciente/profesional con `is_my_patient`, trigger que impide cambiar de quién es).
   Mientras `REMOTE_HAS_WORKOUT_PROGRAMS = false` (`src/data/workouts/programRepository.ts`), los programas propios
   van al móvil y el portal real avisa de que no puede mandar. Decisión pendiente: el profesional ve las sesiones

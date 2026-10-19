@@ -7,11 +7,11 @@ import type { WorkoutCompletion, WorkoutProgram } from './types';
 // Programas de entrenamiento del usuario: los que se hace con el generador y los que le manda su
 // profesional desde el portal.
 //
-// Dónde viven: tabla `workout_programs` (migración 20261019120000_workout_programs.sql). Está
-// PREPARADA Y SIN APLICAR: mientras REMOTE_HAS_WORKOUT_PROGRAMS = false, los programas propios se
-// guardan en este dispositivo y los del entrenador no llegan (el portal lo avisa al enviar).
-// En cuentas de prueba y en la demo sale además un programa de ejemplo "de tu entrenador".
-export const REMOTE_HAS_WORKOUT_PROGRAMS = false;
+// Dónde viven: con cuenta, tabla `workout_programs` (migración 20261019120000_workout_programs.sql,
+// aplicada el 2026-10-19); sin cuenta (demo), en este dispositivo. Lo que se guardó en el móvil antes de
+// tener la tabla se sube la primera vez. En cuentas de prueba y en la demo sale además un programa de
+// ejemplo "de tu entrenador" (siempre en el móvil).
+export const REMOTE_HAS_WORKOUT_PROGRAMS = true;
 
 const KEY = 'workouts.programs.v1';
 const SAMPLE_OFF_KEY = 'workouts.sampleDismissed.v1';
@@ -91,9 +91,24 @@ async function listRemote(): Promise<WorkoutProgram[]> {
   return (data as Row[]).map(fromRow);
 }
 
+// Sube una vez lo que se guardó en el móvil antes de tener la tabla (menos el ejemplo)
+async function uploadLocalOnce(local: WorkoutProgram[]): Promise<WorkoutProgram[]> {
+  const mine = local.filter((p) => !isSampleProgram(p) && p.source === 'self');
+  if (!mine.length) return local;
+  const { error } = await supabase!.from('workout_programs').upsert(
+    mine.map((p) => ({ ...toRow(p), patient_id: getCurrentUserId() })),
+    { onConflict: 'patient_id,id' },
+  );
+  if (error) return local;
+  const rest = local.filter((p) => !mine.includes(p));
+  await writeLocal(rest);
+  return rest;
+}
+
 export const programRepository = {
   async list(): Promise<WorkoutProgram[]> {
-    const local = await readLocal();
+    let local = await readLocal();
+    if (remote()) local = await uploadLocalOnce(local);
     // Con la tabla, lo propio y lo del entrenador viene de Supabase; el ejemplo vive siempre en el móvil
     let list = remote() ? [...(await listRemote().catch(() => local.filter((p) => !isSampleProgram(p)))), ...local.filter(isSampleProgram)] : local;
     if (showSamples() && !list.some(isSampleProgram) && (await AsyncStorage.getItem(SAMPLE_OFF_KEY).catch(() => null)) !== '1') {

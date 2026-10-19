@@ -5,8 +5,8 @@
 -- saber si su paciente sigue el programa.
 -- Clave (patient_id, id) como en los registros: se puede subir lo guardado en el móvil sin duplicar.
 --
--- PREPARADA, SIN APLICAR: aplicar solo con el OK explícito del fundador. Después, poner
--- REMOTE_HAS_WORKOUT_PROGRAMS = true en src/data/workouts/programRepository.ts.
+-- APLICADA el 2026-10-19 con el OK del fundador (db query --linked en una transacción + migration repair),
+-- antes de juntar la rama con master. REMOTE_HAS_WORKOUT_PROGRAMS = true en src/data/workouts/programRepository.ts.
 
 create table public.workout_programs (
   patient_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
