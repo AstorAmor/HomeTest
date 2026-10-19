@@ -81,8 +81,8 @@ export const TodayMenuCard = () => {
       </View>
       {plan.reasons.some((r) => r.caution) ? (
         <TouchableOpacity style={styles.caution} onPress={() => router.push('/diet')}>
-          <Ionicons name="warning-outline" size={16} color={Colors.danger} />
-          <Text style={styles.cautionText}>{t('Attention: some of your results need a doctor. See why')}</Text>
+          <Ionicons name="medkit-outline" size={15} color={Colors.accent} />
+          <Text style={styles.cautionText}>{t('Something in your menu to discuss with your doctor. See')}</Text>
         </TouchableOpacity>
       ) : null}
       {totals ? <MacroDonut m={totals} size={80} /> : null}
@@ -116,8 +116,8 @@ export const TodayMenuCard = () => {
 };
 
 const styles = StyleSheet.create({
-  caution: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.dangerSoft, borderRadius: 10, paddingVertical: 7, paddingHorizontal: 10 },
-  cautionText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600', flex: 1 },
+  caution: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.accentSoft, borderRadius: 10, paddingVertical: 7, paddingHorizontal: 10 },
+  cautionText: { color: Colors.textPrimary, fontSize: 13, flex: 1 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginHorizontal: 20, marginBottom: 16, gap: 10 },
   locked: { alignItems: 'center' },
   lockedIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },

@@ -127,7 +127,7 @@ export interface DietReason {
   title: string; // texto fuente en inglés
   detail: string;
   marker?: string;
-  caution?: boolean; // "¡Atención!": algo que mirar con un médico (riñón, potasio, embarazo, insulina)
+  caution?: boolean; // "Para comentar con tu médico" (riñón, potasio, embarazo, insulina); sin diagnósticos
 }
 
 export interface DietPlan {

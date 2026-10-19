@@ -59,7 +59,7 @@ export const dietEs: Record<string, string> = {
   'Your triglycerides came out high': 'Tus triglicéridos salieron altos',
   'Oily fish three times a week and fewer sugars and sweet drinks. Alcohol raises them too.':
     'Pescado azul tres veces por semana y menos azúcares y bebidas dulces. El alcohol también los sube.',
-  'Your blood sugar needs care': 'Tu glucosa necesita cuidado',
+  'For your blood sugar': 'Para tu glucosa',
   'Wholegrain carbs and legumes, protein at breakfast, little added sugar. If you take medication for diabetes, tell your doctor before changing how you eat.':
     'Hidratos integrales y legumbres, proteína en el desayuno y poco azúcar añadido. Si tomas medicación para la diabetes, díselo a tu médico antes de cambiar tu alimentación.',
   'Your uric acid came out high': 'Tu ácido úrico salió alto',
@@ -101,13 +101,13 @@ export const dietEs: Record<string, string> = {
     'Con una enfermedad renal, la proteína, el potasio y el fósforo los tiene que ajustar un profesional.',
   'If you have or had an eating disorder, a meal plan with calories is best done with a professional.':
     'Si tienes o has tenido un trastorno de la conducta alimentaria, un menú con calorías es mejor hacerlo con un profesional.',
-  'With insulin or medication that can cause low blood sugar, changing your diet changes your doses.':
-    'Con insulina o con medicación que puede bajar mucho la glucosa, cambiar la dieta cambia tus dosis.',
+  'With insulin or medication that can lower blood sugar, a change in diet can affect the treatment.':
+    'Con insulina o con medicación que puede bajar la glucosa, un cambio de dieta puede influir en el tratamiento.',
   'Under 18, energy and nutrient needs are different.': 'Con menos de 18 años, las necesidades de energía y nutrientes son distintas.',
-  'Your kidney function in your last test (filtration or creatinine) needs a professional to adjust protein and potassium.':
-    'Tu función renal en la última analítica (filtrado o creatinina) pide que un profesional ajuste la proteína y el potasio.',
-  'Your potassium came out high: many healthy foods have a lot of it, so it needs a professional.':
-    'Tu potasio salió alto: muchos alimentos sanos llevan mucho, así que necesita un profesional.',
+  'Creatinine above or eGFR below the lab range in the last test: protein and potassium may need adjusting.':
+    'Creatinina por encima o filtrado por debajo del rango del laboratorio en la última analítica: puede que haya que ajustar la proteína y el potasio.',
+  'Potassium above the lab range in the last test: many healthy foods are rich in it.':
+    'Potasio por encima del rango del laboratorio en la última analítica: muchos alimentos sanos llevan mucho.',
   'An automatic menu could get it wrong for you. A dietitian on Kuova can see your results and make the menu with you.':
     'Un menú automático podría equivocarse contigo. Un dietista de Kuova puede ver tus resultados y hacer el menú contigo.',
   'Find a dietitian': 'Buscar un dietista',
@@ -325,27 +325,30 @@ export const dietEs: Record<string, string> = {
   'Fewer people': 'Menos personas',
   'More people': 'Más personas',
 
-  // 2026-10-19: con riñón, potasio, embarazo o insulina el menú se hace con "¡Atención!" en vez de no hacerse
-  'Attention: see a doctor': '¡Atención! Consúltalo con un médico',
+  // 2026-10-19: con riñón, potasio, embarazo o insulina el menú se hace con una tarjeta para comentar con el médico.
+  // Sin diagnósticos: lo de la analítica, frente al rango del laboratorio; lo del cuestionario, "Has marcado".
+  'To discuss with your doctor': 'Para comentar con tu médico',
   'This menu is adapted to it, but it is general guidance: it does not replace your doctor.':
     'El menú está adaptado a esto, pero es una orientación general: no sustituye a tu médico.',
-  'Attention: some of your results need a doctor. See why': '¡Atención! Algunos resultados necesitan un médico. Ver por qué',
-  'Your kidney values are out of range': 'Tus valores del riñón salieron fuera de rango',
-  'See a doctor with this blood test before you change how you eat. Meanwhile this menu keeps protein moderate (about {protein} g a day), salt low and no processed meat. A high creatinine is not always the kidney: a lot of muscle, hard exercise in the days before the test, a lot of meat the day before or creatine supplements raise it too.':
-    'Ve al médico con esta analítica antes de cambiar tu forma de comer. Mientras, este menú lleva proteína moderada (unos {protein} g al día), poca sal y nada de carne procesada. Una creatinina alta no siempre es el riñón: mucho músculo, ejercicio intenso los días antes de la analítica, mucha carne el día anterior o tomar creatina también la suben.',
-  'You have kidney disease': 'Tienes una enfermedad renal',
-  'Check this menu with your nephrologist or a dietitian: protein, potassium and phosphorus depend on your stage. This menu keeps protein moderate (about {protein} g a day), salt low and no processed meat.':
-    'Revisa este menú con tu nefrólogo o con un dietista: la proteína, el potasio y el fósforo dependen de tu estadio. Este menú lleva proteína moderada (unos {protein} g al día), poca sal y nada de carne procesada.',
-  'Your potassium came out high': 'Tu potasio salió alto',
-  'See a doctor soon with this blood test: high potassium can affect the heart. This menu leaves out the dishes with the most potassium (about {potassium} mg a day, much less than a usual menu), but it does not replace medical advice.':
-    'Ve pronto al médico con esta analítica: el potasio alto puede afectar al corazón. Este menú deja fuera los platos con más potasio (unos {potassium} mg al día, mucho menos que un menú normal), pero no sustituye al consejo médico.',
-  'Pregnancy or breastfeeding': 'Embarazo o lactancia',
-  'Check this menu with your midwife or doctor. It has no calorie cut and leaves out cured ham; from the second trimester you need a little more energy. Cook meat, fish and eggs well, wash fruit and vegetables, and no alcohol.':
-    'Revisa este menú con tu matrona o tu médico. No recorta calorías y deja fuera el jamón curado; desde el segundo trimestre necesitas algo más de energía. Cocina bien la carne, el pescado y el huevo, lava bien la fruta y la verdura, y nada de alcohol.',
-  'Insulin or pills that lower your blood sugar': 'Insulina o pastillas que bajan el azúcar',
-  'Talk to your doctor before you start this menu: eating differently can change the dose you need. This menu has no calorie cut and keeps regular meals.':
-    'Habla con tu médico antes de empezar este menú: comer de otra forma puede cambiar la dosis que necesitas. Este menú no recorta calorías y mantiene comidas regulares.',
-  'You take creatine': 'Tomas creatina',
-  'Creatine raises creatinine in blood tests even when the kidneys are fine. Tell your doctor: sometimes the test is repeated after a few weeks without it.':
-    'La creatina sube la creatinina de la analítica aunque el riñón esté bien. Díselo a tu médico: a veces se repite la analítica tras unas semanas sin tomarla.',
+  'Something in your menu to discuss with your doctor. See': 'Hay algo de tu menú para comentar con tu médico. Ver',
+  'Your creatinine or eGFR is outside the lab range': 'Tu creatinina o tu filtrado glomerular salieron fuera del rango del laboratorio',
+  'Your creatinine is above the lab range': 'Tu creatinina salió por encima del rango del laboratorio',
+  'Your eGFR (filtration rate) is below the lab range': 'Tu filtrado glomerular (FGe) salió por debajo del rango del laboratorio',
+  'Talk to your doctor about this result before you change how you eat. Meanwhile, this menu keeps protein moderate (about {protein} g a day), salt low and no processed meat. Also tell your doctor if you take creatine, train hard or ate a lot of meat the day before the test: they affect this value.':
+    'Coméntale este resultado a tu médico antes de cambiar tu forma de comer. Mientras, este menú lleva proteína moderada (unos {protein} g al día), poca sal y nada de carne procesada. Cuéntale también si tomas creatina, si entrenas fuerte o si comiste mucha carne el día antes de la analítica: influyen en este valor.',
+  'Your answer: kidney disease': 'Has marcado: enfermedad renal',
+  'Check this menu with your nephrologist or a dietitian: protein, potassium and phosphorus depend on each case. This menu keeps protein moderate (about {protein} g a day), salt low and no processed meat.':
+    'Revisa este menú con tu nefrólogo o con un dietista: la proteína, el potasio y el fósforo dependen de cada caso. Este menú lleva proteína moderada (unos {protein} g al día), poca sal y nada de carne procesada.',
+  'Your potassium is above the lab range': 'Tu potasio salió por encima del rango del laboratorio',
+  'It is worth your doctor seeing this result soon. Meanwhile, this menu leaves out the dishes with the most potassium (about {potassium} mg a day, quite a bit less than a usual menu).':
+    'Conviene que tu médico vea este resultado pronto. Mientras, este menú deja fuera los platos con más potasio (unos {potassium} mg al día, bastante menos que un menú normal).',
+  'Your answer: pregnancy or breastfeeding': 'Has marcado: embarazo o lactancia',
+  'Check this menu with your midwife or doctor. It has no calorie cut and leaves out cured ham; from the second trimester a little more energy is needed. Cook meat, fish and eggs well, wash fruit and vegetables, and no alcohol.':
+    'Revisa este menú con tu matrona o tu médico. No recorta calorías y deja fuera el jamón curado; desde el segundo trimestre se necesita algo más de energía. Cocina bien la carne, el pescado y el huevo, lava bien la fruta y la verdura, y nada de alcohol.',
+  'Your answer: insulin or pills that can lower blood sugar': 'Has marcado: insulina o pastillas que pueden bajar la glucosa',
+  'Show this menu to your doctor before you start it: changing what you eat can affect your treatment. It has no calorie cut and keeps regular meals.':
+    'Enséñale este menú a tu médico antes de empezarlo: cambiar lo que comes puede influir en tu tratamiento. No recorta calorías y mantiene comidas regulares.',
+  'Your answer: you take creatine': 'Has marcado: tomas creatina',
+  'Creatine can raise creatinine in blood tests. Mention it to your doctor when you talk about this result.':
+    'La creatina puede subir la creatinina de la analítica. Díselo a tu médico cuando habléis de este resultado.',
 };

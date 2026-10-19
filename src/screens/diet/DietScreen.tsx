@@ -113,8 +113,8 @@ export const DietScreen = () => {
         {cautions.length ? (
           <View style={styles.caution}>
             <View style={styles.cautionHead}>
-              <Ionicons name="warning-outline" size={20} color={Colors.danger} />
-              <Text style={styles.cautionTitle}>{t('Attention: see a doctor')}</Text>
+              <Ionicons name="medkit-outline" size={18} color={Colors.accent} />
+              <Text style={styles.cautionTitle}>{t('To discuss with your doctor')}</Text>
             </View>
             {cautions.map((r) => (
               <View key={r.id} style={{ gap: 2 }}>
@@ -295,14 +295,14 @@ const styles = StyleSheet.create({
   whyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   whyTitle: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   reason: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 8, gap: 2 },
-  caution: { backgroundColor: Colors.dangerSoft, borderWidth: 1, borderColor: Colors.danger, borderRadius: 16, padding: 14, gap: 10, marginBottom: 12 },
+  caution: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderLeftWidth: 3, borderLeftColor: Colors.accent, borderRadius: 16, padding: 14, gap: 10, marginBottom: 12 },
   cautionHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cautionTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', flex: 1 },
+  cautionTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', flex: 1 },
   cautionFoot: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
   cautionBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  cautionBtn: { backgroundColor: Colors.danger, borderRadius: 20, paddingVertical: 9, paddingHorizontal: 16 },
-  cautionBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
-  cautionBtnGhost: { borderWidth: 1, borderColor: Colors.danger, borderRadius: 20, paddingVertical: 9, paddingHorizontal: 16 },
+  cautionBtn: { backgroundColor: Colors.accentSoft, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14 },
+  cautionBtnText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  cautionBtnGhost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14 },
   cautionGhostText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   reasonTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
   reasonText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },

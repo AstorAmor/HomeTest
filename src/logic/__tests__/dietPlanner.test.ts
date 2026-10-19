@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { FOODS, RECIPE_LIST, getRecipe } from '@/data/diet/catalog';
 import type { DietPrefs } from '@/data/diet/types';
+import { dietEs } from '@/i18n/dietEs';
 import {
   DEFAULT_DIET_PREFS,
   LabFlag,
   alternativesForSlot,
   blockingReasons,
+  CAUTION_TEXT,
+  REFERRAL_TEXT,
   cautionReasons,
   dayTotals,
   dietTargets,
@@ -60,7 +63,7 @@ describe('Cuándo lo hace un dietista y cuándo va con aviso', () => {
     expect(referralReasons(prefs(ADULT), [{ marker: 'ldl', status: 'high' }])).toEqual([]);
   });
 
-  it('solo el trastorno alimentario y los menores se quedan sin menú; el resto va con "¡Atención!"', () => {
+  it('solo el trastorno alimentario y los menores se quedan sin menú; el resto va con aviso para el médico', () => {
     const all = referralReasons(prefs({ safety: ['pregnancy', 'eating_disorder', 'insulin'], age: 16 }), [{ marker: 'creatinine', status: 'high' }]);
     expect(blockingReasons(all).sort()).toEqual(['eating_disorder', 'under_18']);
     expect(cautionReasons(all).sort()).toEqual(['insulin', 'low_kidney_lab', 'pregnancy']);
@@ -86,6 +89,22 @@ describe('Cuándo lo hace un dietista y cuándo va con aviso', () => {
     const k = (days: typeof plain.days) => days.reduce((a, d) => a + dayTotals(d).potassium, 0) / days.length;
     expect(k(flagged.days)).toBeLessThan(k(plain.days));
     expect(k(flagged.days)).toBeLessThan(3000);
+  });
+
+  it('los avisos no diagnostican, no quitan importancia a un resultado ni hablan de dosis (prompts/system-prompt.md)', () => {
+    const g = generateDiet(prefs({ ...ADULT, safety: ['kidney', 'pregnancy', 'insulin'], supplements: ['creatine'] }), [
+      { marker: 'creatinine', status: 'high' },
+      { marker: 'potassium', status: 'high' },
+    ]);
+    const texts = [
+      ...g.reasons.flatMap((r) => [r.title, r.detail]),
+      ...Object.values(CAUTION_TEXT).flatMap((c) => [c.title, c.detail]),
+      ...Object.values(REFERRAL_TEXT),
+    ];
+    const all = [...texts, ...texts.map((x) => dietEs[x] ?? '')];
+    const banned = [/(you have|you suffer|tienes|padeces|sufres) (a |an |una |un )?(kidney|renal|enfermedad|disease|insuficiencia)/i, /not always|no siempre es/i, /(dose|doses|dosis)/i, /kidney values|valores del riñón|función renal/i];
+    for (const x of all) for (const re of banned) expect(x, x).not.toMatch(re);
+    expect(texts.every((x) => dietEs[x]), 'todos traducidos').toBe(true);
   });
 
   it('embarazo: sin recorte de calorías aunque quiera perder peso, y sin jamón curado', () => {

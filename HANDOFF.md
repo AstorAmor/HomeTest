@@ -1201,3 +1201,10 @@ que lleva de verdad el menú y botones a médico y dietista. Los avisos van en `
 jsonb de siempre (sin migración). Lo que se vio al probarlo: el generador nunca respetaba la proteína objetivo (salían
 ~120-150 g); con el riñón ahora la puntuación la limita por cada 500 kcal y con un tope diario, y la cabecera del
 menú enseña la proteína real. 0835e16, sin publicar.
+
+Corrección el mismo día (el fundador: demasiado alarmista y «no puedes diagnosticar»): la tarjeta es «Para comentar con
+tu médico», neutra (borde con el color de acento, sin rojo). Los textos siguen `prompts/system-prompt.md`: lo de la
+analítica, frente al rango del laboratorio («Tu creatinina salió por encima del rango del laboratorio», según el
+marcador); lo del cuestionario, «Has marcado: …»; sin «no siempre es el riñón» y sin hablar de dosis. Un test de
+`dietPlanner.test.ts` impide que vuelvan las frases de diagnóstico y comprueba que todo está traducido.
+

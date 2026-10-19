@@ -127,7 +127,7 @@ export const DietBuilderScreen = () => {
   const finish = async () => {
     if (!ctx) return;
     const prefs: DietPrefs = { ...p, dislikes: DISLIKES.filter((d) => dislikeGroups.includes(d.id)).flatMap((d) => d.foods) };
-    // Riñón, potasio, embarazo o insulina: el menú se hace, adaptado y con "¡Atención!" encima (DietScreen)
+    // Riñón, potasio, embarazo o insulina: el menú se hace, adaptado y con "Para comentar con tu médico" encima (DietScreen)
     const why = blockingReasons(referralReasons(prefs, ctx.labs));
     if (why.length) {
       setReferral(why);

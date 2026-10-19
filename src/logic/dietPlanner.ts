@@ -27,7 +27,7 @@ import type {
 // - Semana: pescado azul 2 veces (3 con triglicéridos u omega-3 bajos), legumbres 3-4 (AESAN 2022),
 //   carne roja ≤ 2 (≤ 1 con LDL, ácido úrico o PCR altos), procesada ≤ 1 (0 con LDL, tensión o PCR).
 //
-// Con estos se hace el menú igualmente, adaptado y con un aviso de "¡Atención!, ve a un médico" encima
+// Con estos se hace el menú igualmente, adaptado y con una tarjeta "Para comentar con tu médico" encima
 // (decisión del fundador, 2026-10-19; antes se derivaba al dietista sin menú):
 // - Riñón (enfermedad renal o filtrado bajo / creatinina alta en la analítica): objetivo de proteína 0,8 g/kg
 //   (KDIGO 2024, ERC G3-G5; con el recetario sale ~0,9-1,1 g/kg, frente a ~1,7 sin el aviso), sal < 2.000 mg,
@@ -502,42 +502,55 @@ export function portionFor(recipeId: string, slot: MealSlot, prefs: DietPrefs, l
 }
 
 // ── Por qué el menú es así (texto fuente en inglés; el español en dietEs.ts) ──
+// Textos del aviso (prompts/system-prompt.md): nunca un diagnóstico, nunca quitar importancia a un resultado
+// marcado, nunca sugerir cambiar medicación. Lo de la analítica se dice como resultado frente al rango del
+// laboratorio; lo del cuestionario, como "Has marcado: …".
 export const CAUTION_TEXT: Record<Exclude<ReferralReason, 'eating_disorder' | 'under_18'>, { title: string; detail: string }> = {
   low_kidney_lab: {
-    title: 'Your kidney values are out of range',
+    title: 'Your creatinine or eGFR is outside the lab range',
     detail:
-      'See a doctor with this blood test before you change how you eat. Meanwhile this menu keeps protein moderate (about {protein} g a day), salt low and no processed meat. A high creatinine is not always the kidney: a lot of muscle, hard exercise in the days before the test, a lot of meat the day before or creatine supplements raise it too.',
+      'Talk to your doctor about this result before you change how you eat. Meanwhile, this menu keeps protein moderate (about {protein} g a day), salt low and no processed meat. Also tell your doctor if you take creatine, train hard or ate a lot of meat the day before the test: they affect this value.',
   },
   kidney: {
-    title: 'You have kidney disease',
-    detail: 'Check this menu with your nephrologist or a dietitian: protein, potassium and phosphorus depend on your stage. This menu keeps protein moderate (about {protein} g a day), salt low and no processed meat.',
+    title: 'Your answer: kidney disease',
+    detail: 'Check this menu with your nephrologist or a dietitian: protein, potassium and phosphorus depend on each case. This menu keeps protein moderate (about {protein} g a day), salt low and no processed meat.',
   },
   high_potassium_lab: {
-    title: 'Your potassium came out high',
-    detail: 'See a doctor soon with this blood test: high potassium can affect the heart. This menu leaves out the dishes with the most potassium (about {potassium} mg a day, much less than a usual menu), but it does not replace medical advice.',
+    title: 'Your potassium is above the lab range',
+    detail: 'It is worth your doctor seeing this result soon. Meanwhile, this menu leaves out the dishes with the most potassium (about {potassium} mg a day, quite a bit less than a usual menu).',
   },
   pregnancy: {
-    title: 'Pregnancy or breastfeeding',
-    detail: 'Check this menu with your midwife or doctor. It has no calorie cut and leaves out cured ham; from the second trimester you need a little more energy. Cook meat, fish and eggs well, wash fruit and vegetables, and no alcohol.',
+    title: 'Your answer: pregnancy or breastfeeding',
+    detail: 'Check this menu with your midwife or doctor. It has no calorie cut and leaves out cured ham; from the second trimester a little more energy is needed. Cook meat, fish and eggs well, wash fruit and vegetables, and no alcohol.',
   },
   insulin: {
-    title: 'Insulin or pills that lower your blood sugar',
-    detail: 'Talk to your doctor before you start this menu: eating differently can change the dose you need. This menu has no calorie cut and keeps regular meals.',
+    title: 'Your answer: insulin or pills that can lower blood sugar',
+    detail: 'Show this menu to your doctor before you start it: changing what you eat can affect your treatment. It has no calorie cut and keeps regular meals.',
   },
 };
+
+// Título según el marcador que salió fuera de rango (creatinina alta, filtrado bajo o los dos)
+function kidneyLabTitle(labs: LabFlag[]): string {
+  const creat = labs.some((l) => l.marker === 'creatinine' && l.status === 'high');
+  const egfr = labs.some((l) => l.marker === 'egfr' && l.status === 'low');
+  if (creat && !egfr) return 'Your creatinine is above the lab range';
+  if (egfr && !creat) return 'Your eGFR (filtration rate) is below the lab range';
+  return CAUTION_TEXT.low_kidney_lab.title;
+}
 
 export function dietReasons(prefs: DietPrefs, labs: LabFlag[], targets: DietTargets): DietReason[] {
   const f = focusesFrom(prefs, labs);
   const out: DietReason[] = [];
-  // Primero, lo que hay que mirar con un médico (sale como "¡Atención!" encima del menú)
+  // Primero, lo que conviene comentar con un médico (sale en una tarjeta encima del menú)
   const cautions = cautionReasons(referralReasons(prefs, labs)) as (keyof typeof CAUTION_TEXT)[];
-  for (const c of cautions) out.push({ id: `caution_${c}`, caution: true, ...CAUTION_TEXT[c] });
+  for (const c of cautions)
+    out.push({ id: `caution_${c}`, caution: true, ...CAUTION_TEXT[c], ...(c === 'low_kidney_lab' ? { title: kidneyLabTitle(labs) } : {}) });
   if (cautions.includes('low_kidney_lab') && prefs.supplements.includes('creatine'))
     out.push({
       id: 'caution_creatine',
       caution: true,
-      title: 'You take creatine',
-      detail: 'Creatine raises creatinine in blood tests even when the kidneys are fine. Tell your doctor: sometimes the test is repeated after a few weeks without it.',
+      title: 'Your answer: you take creatine',
+      detail: 'Creatine can raise creatinine in blood tests. Mention it to your doctor when you talk about this result.',
     });
   const goalTitle =
     prefs.goal === 'lose' ? 'To lose weight' : prefs.goal === 'gain' ? 'To build muscle' : prefs.goal === 'perform' ? 'For your training' : 'To eat well';
@@ -550,7 +563,7 @@ export function dietReasons(prefs: DietPrefs, labs: LabFlag[], targets: DietTarg
     out.push({ id: 'ldl', title: 'Your cholesterol came out high', detail: 'Less saturated fat, more fibre (oats, legumes, fruit), nuts and oily fish. Hardly any cured meat or fatty cheese.' });
   if (f.has('tg')) out.push({ id: 'tg', title: 'Your triglycerides came out high', detail: 'Oily fish three times a week and fewer sugars and sweet drinks. Alcohol raises them too.' });
   if (f.has('glucose'))
-    out.push({ id: 'glucose', title: 'Your blood sugar needs care', detail: 'Wholegrain carbs and legumes, protein at breakfast, little added sugar. If you take medication for diabetes, tell your doctor before changing how you eat.' });
+    out.push({ id: 'glucose', title: 'For your blood sugar', detail: 'Wholegrain carbs and legumes, protein at breakfast, little added sugar. If you take medication for diabetes, tell your doctor before changing how you eat.' });
   if (f.has('uric')) out.push({ id: 'uric', title: 'Your uric acid came out high', detail: 'Less red meat, shellfish and small oily fish; dairy and plenty of water help.' });
   if (f.has('liver')) out.push({ id: 'liver', title: 'Your liver enzymes came out high', detail: 'Fewer sugars, fried food and cured meats; more vegetables and fibre. Avoid alcohol.' });
   if (f.has('bp')) out.push({ id: 'bp', title: 'For your blood pressure', detail: 'Under 1,500 mg of sodium a day: little salt and cured food, more fruit, vegetables and legumes (potassium).' });
@@ -574,10 +587,10 @@ export const REFERRAL_TEXT: Record<ReferralReason, string> = {
   pregnancy: 'During pregnancy or breastfeeding, your needs change week by week.',
   kidney: 'With kidney disease, protein, potassium and phosphorus need to be adjusted by a professional.',
   eating_disorder: 'If you have or had an eating disorder, a meal plan with calories is best done with a professional.',
-  insulin: 'With insulin or medication that can cause low blood sugar, changing your diet changes your doses.',
+  insulin: 'With insulin or medication that can lower blood sugar, a change in diet can affect the treatment.',
   under_18: 'Under 18, energy and nutrient needs are different.',
-  low_kidney_lab: 'Your kidney function in your last test (filtration or creatinine) needs a professional to adjust protein and potassium.',
-  high_potassium_lab: 'Your potassium came out high: many healthy foods have a lot of it, so it needs a professional.',
+  low_kidney_lab: 'Creatinine above or eGFR below the lab range in the last test: protein and potassium may need adjusting.',
+  high_potassium_lab: 'Potassium above the lab range in the last test: many healthy foods are rich in it.',
 };
 
 export function newDietPlan(prefs: DietPrefs, labs: LabFlag[], extra: Partial<DietPlan> = {}): DietPlan {
