@@ -202,13 +202,14 @@ export const dietEs: Record<string, string> = {
   Multivitamin: 'Multivitamínico',
   'Protein powder': 'Proteína en polvo',
   'Does any of these apply to you?': '¿Te pasa alguna de estas cosas?',
-  'In these cases, a dietitian does a better job than an automatic menu.': 'En estos casos, un dietista lo hace mejor que un menú automático.',
+  'We adapt the menu to it and tell you what to check with your doctor. With an eating disorder, a dietitian is the better option.':
+    'Adaptamos el menú y te decimos qué conviene revisar con tu médico. Con un trastorno de la conducta alimentaria, mejor un dietista.',
   'I am pregnant or breastfeeding': 'Estoy embarazada o dando el pecho',
   'I have kidney disease': 'Tengo una enfermedad renal',
   'I have or had an eating disorder': 'Tengo o he tenido un trastorno de la conducta alimentaria',
   'I use insulin or diabetes pills that can cause low blood sugar': 'Me pongo insulina o tomo pastillas para la diabetes que pueden bajar mucho la glucosa',
   'To get your amounts right': 'Para acertar con las cantidades',
-  'We use them to calculate your calories. They stay on your phone.': 'Los usamos para calcular tus calorías. Se quedan en tu móvil.',
+  'We use them to calculate your calories. They are saved with your menu.': 'Los usamos para calcular tus calorías. Se guardan con tu menú.',
   Woman: 'Mujer',
   Man: 'Hombre',
   'How active are you?': '¿Cuánto te mueves?',
@@ -323,4 +324,28 @@ export const dietEs: Record<string, string> = {
   'for {n} people': 'para {n} personas',
   'Fewer people': 'Menos personas',
   'More people': 'Más personas',
+
+  // 2026-10-19: con riñón, potasio, embarazo o insulina el menú se hace con "¡Atención!" en vez de no hacerse
+  'Attention: see a doctor': '¡Atención! Consúltalo con un médico',
+  'This menu is adapted to it, but it is general guidance: it does not replace your doctor.':
+    'El menú está adaptado a esto, pero es una orientación general: no sustituye a tu médico.',
+  'Attention: some of your results need a doctor. See why': '¡Atención! Algunos resultados necesitan un médico. Ver por qué',
+  'Your kidney values are out of range': 'Tus valores del riñón salieron fuera de rango',
+  'See a doctor with this blood test before you change how you eat. Meanwhile this menu keeps protein moderate (about {protein} g a day), salt low and no processed meat. A high creatinine is not always the kidney: a lot of muscle, hard exercise in the days before the test, a lot of meat the day before or creatine supplements raise it too.':
+    'Ve al médico con esta analítica antes de cambiar tu forma de comer. Mientras, este menú lleva proteína moderada (unos {protein} g al día), poca sal y nada de carne procesada. Una creatinina alta no siempre es el riñón: mucho músculo, ejercicio intenso los días antes de la analítica, mucha carne el día anterior o tomar creatina también la suben.',
+  'You have kidney disease': 'Tienes una enfermedad renal',
+  'Check this menu with your nephrologist or a dietitian: protein, potassium and phosphorus depend on your stage. This menu keeps protein moderate (about {protein} g a day), salt low and no processed meat.':
+    'Revisa este menú con tu nefrólogo o con un dietista: la proteína, el potasio y el fósforo dependen de tu estadio. Este menú lleva proteína moderada (unos {protein} g al día), poca sal y nada de carne procesada.',
+  'Your potassium came out high': 'Tu potasio salió alto',
+  'See a doctor soon with this blood test: high potassium can affect the heart. This menu leaves out the dishes with the most potassium (about {potassium} mg a day, much less than a usual menu), but it does not replace medical advice.':
+    'Ve pronto al médico con esta analítica: el potasio alto puede afectar al corazón. Este menú deja fuera los platos con más potasio (unos {potassium} mg al día, mucho menos que un menú normal), pero no sustituye al consejo médico.',
+  'Pregnancy or breastfeeding': 'Embarazo o lactancia',
+  'Check this menu with your midwife or doctor. It has no calorie cut and leaves out cured ham; from the second trimester you need a little more energy. Cook meat, fish and eggs well, wash fruit and vegetables, and no alcohol.':
+    'Revisa este menú con tu matrona o tu médico. No recorta calorías y deja fuera el jamón curado; desde el segundo trimestre necesitas algo más de energía. Cocina bien la carne, el pescado y el huevo, lava bien la fruta y la verdura, y nada de alcohol.',
+  'Insulin or pills that lower your blood sugar': 'Insulina o pastillas que bajan el azúcar',
+  'Talk to your doctor before you start this menu: eating differently can change the dose you need. This menu has no calorie cut and keeps regular meals.':
+    'Habla con tu médico antes de empezar este menú: comer de otra forma puede cambiar la dosis que necesitas. Este menú no recorta calorías y mantiene comidas regulares.',
+  'You take creatine': 'Tomas creatina',
+  'Creatine raises creatinine in blood tests even when the kidneys are fine. Tell your doctor: sometimes the test is repeated after a few weeks without it.':
+    'La creatina sube la creatinina de la analítica aunque el riñón esté bien. Díselo a tu médico: a veces se repite la analítica tras unas semanas sin tomarla.',
 };

@@ -27,9 +27,16 @@ import type {
 // - Semana: pescado azul 2 veces (3 con triglicéridos u omega-3 bajos), legumbres 3-4 (AESAN 2022),
 //   carne roja ≤ 2 (≤ 1 con LDL, ácido úrico o PCR altos), procesada ≤ 1 (0 con LDL, tensión o PCR).
 //
-// Cuándo NO se hace el menú automático y se deriva al dietista: embarazo o lactancia, enfermedad renal o
-// filtrado bajo en la analítica (proteínas y potasio), potasio alto, trastorno de la conducta alimentaria,
-// diabetes con insulina o con fármacos que causan hipoglucemia, y menores de 18.
+// Con estos se hace el menú igualmente, adaptado y con un aviso de "¡Atención!, ve a un médico" encima
+// (decisión del fundador, 2026-10-19; antes se derivaba al dietista sin menú):
+// - Riñón (enfermedad renal o filtrado bajo / creatinina alta en la analítica): objetivo de proteína 0,8 g/kg
+//   (KDIGO 2024, ERC G3-G5; con el recetario sale ~0,9-1,1 g/kg, frente a ~1,7 sin el aviso), sal < 2.000 mg,
+//   sin carne procesada (fosfatos añadidos) y sin premiar el potasio. El aviso enseña lo que lleva de verdad.
+// - Potasio alto: objetivo de ~2.500 mg de potasio al día en la puntuación (SUPUESTO; con 2.000-2.700 kcal sale
+//   ~2.500-3.500 mg, frente a ~5.000 sin el aviso) y sin premiar los alimentos ricos en él.
+// - Embarazo o lactancia: sin recorte de calorías y sin jamón curado (AESAN: embutidos crudos curados).
+// - Insulina o pastillas que bajan el azúcar: sin recorte de calorías.
+// Siguen sin menú automático (se deriva al dietista): trastorno de la conducta alimentaria y menores de 18.
 
 export interface LabFlag {
   marker: string; // marker_id (ldl, ferritin, vitamin_d…)
@@ -93,20 +100,46 @@ export function referralReasons(prefs: Pick<DietPrefs, 'safety' | 'age'>, labs: 
   return [...out];
 }
 
+// Lo que sigue derivando al dietista sin menú; el resto se hace con aviso (ver la cabecera)
+const BLOCKING: ReferralReason[] = ['eating_disorder', 'under_18'];
+export const blockingReasons = (r: ReferralReason[]) => r.filter((x) => BLOCKING.includes(x));
+export const cautionReasons = (r: ReferralReason[]) => r.filter((x) => !BLOCKING.includes(x));
+
+interface Cautions {
+  kidney: boolean;
+  potassium: boolean;
+  noDeficit: boolean; // embarazo o insulina: sin recorte de calorías
+  pregnancy: boolean;
+}
+function cautionsFor(prefs: Pick<DietPrefs, 'safety' | 'age'>, labs: LabFlag[]): Cautions {
+  const c = cautionReasons(referralReasons(prefs, labs));
+  return {
+    kidney: c.includes('kidney') || c.includes('low_kidney_lab'),
+    potassium: c.includes('high_potassium_lab'),
+    noDeficit: c.includes('pregnancy') || c.includes('insulin'),
+    pregnancy: c.includes('pregnancy'),
+  };
+}
+export const KIDNEY_PROTEIN_PER_KG = 0.8;
+export const POTASSIUM_MAX_MG = 2500;
+const PREGNANCY_AVOID = ['serrano_ham'];
+
 const ACTIVITY = { sedentary: 1.2, light: 1.375, active: 1.55, very_active: 1.725 } as const;
 
 export function dietTargets(prefs: DietPrefs, labs: LabFlag[]): DietTargets {
   const f = focusesFrom(prefs, labs);
+  const c = cautionsFor(prefs, labs);
   const female = prefs.sex === 'female';
+  const goal = c.noDeficit && prefs.goal === 'lose' ? 'health' : prefs.goal;
   let kcal: number;
   if (prefs.weightKg && prefs.heightCm && prefs.age && prefs.sex) {
     const bmr = 10 * prefs.weightKg + 6.25 * prefs.heightCm - 5 * prefs.age + (female ? -161 : 5);
     const tdee = bmr * ACTIVITY[prefs.activity];
-    kcal = prefs.goal === 'lose' ? Math.max(tdee * 0.8, bmr * 1.05, female ? 1200 : 1500) : prefs.goal === 'gain' || prefs.goal === 'perform' ? tdee * 1.1 : tdee;
+    kcal = goal === 'lose' ? Math.max(tdee * 0.8, bmr * 1.05, female ? 1200 : 1500) : goal === 'gain' || goal === 'perform' ? tdee * 1.1 : tdee;
   } else {
     kcal = female ? 1900 : prefs.sex === 'male' ? 2400 : 2100;
-    if (prefs.goal === 'lose') kcal *= 0.85;
-    if (prefs.goal === 'gain' || prefs.goal === 'perform') kcal *= 1.1;
+    if (goal === 'lose') kcal *= 0.85;
+    if (goal === 'gain' || goal === 'perform') kcal *= 1.1;
   }
   kcal = Math.round(kcal / 50) * 50;
   if (prefs.kcalTarget) kcal = prefs.kcalTarget;
@@ -114,6 +147,8 @@ export function dietTargets(prefs: DietPrefs, labs: LabFlag[]): DietTargets {
   let protein = prefs.weightKg ? prefs.weightKg * perKg : (kcal * 0.18) / 4;
   if (prefs.diet === 'vegan') protein *= 1.1;
   protein = Math.min(Math.round(protein), Math.round((kcal * 0.3) / 4));
+  // Riñón: proteína moderada (sin peso, ~10 % de la energía). Lo que fije el dietista manda.
+  if (c.kidney) protein = Math.min(protein, Math.round(prefs.weightKg ? prefs.weightKg * KIDNEY_PROTEIN_PER_KG : (kcal * 0.1) / 4));
   if (prefs.proteinTarget) protein = prefs.proteinTarget;
   return {
     kcal,
@@ -125,6 +160,7 @@ export function dietTargets(prefs: DietPrefs, labs: LabFlag[]): DietTargets {
     oilyFishPerWeek: canEat(prefs, 'fish') ? (f.has('tg') || f.has('omega3') || f.has('crp') ? 3 : 2) : 0,
     legumesPerWeek: f.has('ldl') || f.has('glucose') || f.has('iron') ? 4 : 3,
     redMeatMaxPerWeek: !canEat(prefs, 'meat') ? 0 : prefs.diet === 'flexitarian' || f.has('ldl') || f.has('uric') || f.has('crp') ? 1 : 2,
+    ...(c.potassium ? { potassiumMax: POTASSIUM_MAX_MG } : {}),
   };
 }
 
@@ -153,6 +189,7 @@ export function recipeAllowed(r: Recipe, prefs: DietPrefs): boolean {
   if (r.allergens.some((a) => prefs.allergies.includes(a))) return false;
   if (r.groups.some((g) => prefs.avoidGroups.includes(g))) return false;
   if (r.ingredients.some((i) => prefs.dislikes.includes(i.food))) return false;
+  if (prefs.safety.includes('pregnancy') && r.ingredients.some((i) => PREGNANCY_AVOID.includes(i.food))) return false;
   return true;
 }
 
@@ -167,7 +204,13 @@ export function recipeFits(r: Recipe, prefs: DietPrefs, slot: MealSlot, o: FitOp
 }
 
 // ── Puntuación de una receta para esta persona (por cada 500 kcal, para comparar platos de distinto tamaño) ──
-export function recipeScore(r: Recipe, focuses: Set<Focus>, targets: DietTargets, prefs: DietPrefs): number {
+export function recipeScore(
+  r: Recipe,
+  focuses: Set<Focus>,
+  targets: DietTargets,
+  prefs: DietPrefs,
+  caution: Pick<Cautions, 'kidney' | 'potassium'> = { kidney: false, potassium: targets.potassiumMax !== undefined }
+): number {
   const n = r.nutrients;
   const k = 500 / Math.max(n.kcal, 50);
   const per = (v: number) => v * k;
@@ -177,7 +220,9 @@ export function recipeScore(r: Recipe, focuses: Set<Focus>, targets: DietTargets
   const has = (f: string) => r.flags.includes(f as any);
   // Base: fibra, proteína, poca sal, poca grasa saturada
   s += Math.min(per(n.fiber) / 8, 1.5);
-  s += Math.min(per(n.protein) / 30, 0.8);
+  // Con el riñón la proteína no suma: resta lo que pase de su parte (proteína del día por cada 500 kcal)
+  if (!caution.kidney) s += Math.min(per(n.protein) / 30, 0.8);
+  else s -= Math.max(0, per(n.protein) - (targets.protein * 500) / targets.kcal) / 3;
   s -= Math.max(0, satPct - targets.satFatMaxPct) / 4;
   s -= Math.max(0, per(n.sodium) - 600) / 350;
   s -= Math.max(0, sugarPct - targets.sugarsMaxPct) / 8;
@@ -189,7 +234,9 @@ export function recipeScore(r: Recipe, focuses: Set<Focus>, targets: DietTargets
   if (focuses.has('glucose')) s += Math.min(per(n.fiber) / 6, 1.2) + (has('whole_grain') || has('legume') ? 0.5 : 0) - Math.max(0, per(n.sugars) - 15) / 8;
   if (focuses.has('uric')) s -= has('purine') ? 1.5 : 0;
   if (focuses.has('liver')) s -= Math.max(0, sugarPct - 12) / 4 + (has('processed_meat') ? 0.8 : 0) + (r.groups.includes('fatty') ? 0.8 : 0);
-  if (focuses.has('bp')) s += Math.min(per(n.potassium) / 1200, 1) - Math.max(0, per(n.sodium) - 500) / 300 - (has('processed_meat') ? 1 : 0);
+  // Con el riñón o el potasio alto no se premia el potasio; con el potasio alto, además, se penaliza
+  if (focuses.has('bp')) s += (caution.kidney || caution.potassium ? 0 : Math.min(per(n.potassium) / 1200, 1)) - Math.max(0, per(n.sodium) - 500) / 300 - (has('processed_meat') ? 1 : 0);
+  if (targets.potassiumMax !== undefined) s -= Math.max(0, per(n.potassium) - (targets.potassiumMax * 500) / targets.kcal) / 150;
   if (focuses.has('iron')) s += Math.min(per(n.iron) / 4, 1.5) + (per(n.vitC) > 30 ? 0.3 : 0);
   if (focuses.has('vitd')) s += Math.min(per(n.vitD) / 3, 1.5);
   if (focuses.has('b12') && prefs.diet !== 'vegan') s += Math.min(per(n.b12) / 1.5, 1);
@@ -234,6 +281,7 @@ export interface GeneratedDiet {
 export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
   const targets = dietTargets(prefs, labs);
   const focuses = focusesFrom(prefs, labs);
+  const caution = cautionsFor(prefs, labs);
   const rand = rng(prefs.seed * 7919 + 17);
   const relaxed = new Set<'time' | 'budget' | 'skill'>();
   const shares = slotShares(prefs.snacks);
@@ -265,7 +313,7 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
     pool[slot] = list;
   }
 
-  const base = new Map(RECIPE_LIST.map((r) => [r.id, recipeScore(r, focuses, targets, prefs)]));
+  const base = new Map(RECIPE_LIST.map((r) => [r.id, recipeScore(r, focuses, targets, prefs, caution)]));
   const uses = new Map<string, number>();
   const lastDay = new Map<string, number>();
   const count = { oily: 0, legume: 0, red: 0, processed: 0 };
@@ -292,6 +340,9 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
       const est = (r: Recipe, sl: MealSlot) => roundPortion((targets.kcal * (shares[sl] ?? 0.1)) / r.nutrients.kcal);
       const sodiumSoFar = chosen.reduce((a, c) => a + getRecipe(c.recipeId)!.nutrients.sodium * est(getRecipe(c.recipeId)!, c.slot), 0);
       const sodiumLeft = targets.sodiumMax - sodiumSoFar;
+      const potassiumSoFar = chosen.reduce((a, c) => a + getRecipe(c.recipeId)!.nutrients.potassium * est(getRecipe(c.recipeId)!, c.slot), 0);
+      const potassiumLeft = (targets.potassiumMax ?? Infinity) - potassiumSoFar;
+      const proteinLeft = targets.protein - chosen.reduce((a, c) => a + getRecipe(c.recipeId)!.nutrients.protein * est(getRecipe(c.recipeId)!, c.slot), 0);
       const slotsLeft = order.length - chosen.length;
       let best: Recipe | null = null;
       let bestScore = -Infinity;
@@ -302,6 +353,8 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
         let s = (base.get(r.id) ?? 0) + rand() * 0.8 - used * 1.2;
         // Que el día no pase de la sal objetivo: cada plato, como mucho su parte de lo que queda
         s -= Math.max(0, r.nutrients.sodium * est(r, slot) - sodiumLeft / Math.max(1, slotsLeft)) / 300;
+        if (targets.potassiumMax) s -= Math.max(0, r.nutrients.potassium * est(r, slot) - potassiumLeft / Math.max(1, slotsLeft)) / 150;
+        if (caution.kidney) s -= Math.max(0, r.nutrients.protein * est(r, slot) - proteinLeft / Math.max(1, slotsLeft)) / 3;
         const last = lastDay.get(r.id);
         if (last !== undefined && day - last < 2) s -= 3;
         const has = (f: string) => r.flags.includes(f as any);
@@ -310,7 +363,7 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
           if (has('oily_fish') && count.oily < targets.oilyFishPerWeek) s += 0.8 + (targets.oilyFishPerWeek - count.oily >= daysLeft / 2 ? 1 : 0);
           if (has('legume') && count.legume < targets.legumesPerWeek) s += 0.5 + (targets.legumesPerWeek - count.legume >= daysLeft / 1.5 ? 0.8 : 0);
           if (has('red_meat') && count.red >= targets.redMeatMaxPerWeek) s -= 10;
-          if (has('processed_meat') && count.processed >= (focuses.has('ldl') || focuses.has('bp') || focuses.has('crp') ? 0 : 1)) s -= 10;
+          if (has('processed_meat') && count.processed >= (focuses.has('ldl') || focuses.has('bp') || focuses.has('crp') || caution.kidney ? 0 : 1)) s -= 10;
           // Variedad en la semana: ni legumbre a diario ni pollo cada día
           const kind = mainKind(r);
           const capKind = KIND_CAP[prefs.diet][kind] ?? 3;
@@ -319,7 +372,7 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
           const other = chosen.find((c) => c.slot === 'lunch' || c.slot === 'dinner');
           const o = other && getRecipe(other.recipeId);
           if (o && mainKind(o) === mainKind(r)) s -= 0.8;
-        } else if (has('processed_meat') && count.processed >= 1) s -= 5;
+        } else if (has('processed_meat') && count.processed >= (caution.kidney ? 0 : 1)) s -= 5;
         if (s > bestScore) {
           bestScore = s;
           best = r;
@@ -438,7 +491,8 @@ export function alternativesForSlot(prefs: DietPrefs, labs: LabFlag[], slot: Mea
   const focuses = focusesFrom(prefs, labs);
   const fit = RECIPE_LIST.filter((r) => !exclude.includes(r.id) && recipeFits(r, prefs, slot, { extraMinutes: 15 }));
   const list = fit.length >= 4 ? fit : RECIPE_LIST.filter((r) => !exclude.includes(r.id) && r.meals.includes(slot) && recipeAllowed(r, prefs));
-  return list.map((r) => ({ r, s: recipeScore(r, focuses, targets, prefs) })).sort((a, b) => b.s - a.s).map((x) => x.r);
+  const c = cautionsFor(prefs, labs);
+  return list.map((r) => ({ r, s: recipeScore(r, focuses, targets, prefs, c) })).sort((a, b) => b.s - a.s).map((x) => x.r);
 }
 
 export function portionFor(recipeId: string, slot: MealSlot, prefs: DietPrefs, labs: LabFlag[]): number {
@@ -448,9 +502,43 @@ export function portionFor(recipeId: string, slot: MealSlot, prefs: DietPrefs, l
 }
 
 // ── Por qué el menú es así (texto fuente en inglés; el español en dietEs.ts) ──
+export const CAUTION_TEXT: Record<Exclude<ReferralReason, 'eating_disorder' | 'under_18'>, { title: string; detail: string }> = {
+  low_kidney_lab: {
+    title: 'Your kidney values are out of range',
+    detail:
+      'See a doctor with this blood test before you change how you eat. Meanwhile this menu keeps protein moderate (about {protein} g a day), salt low and no processed meat. A high creatinine is not always the kidney: a lot of muscle, hard exercise in the days before the test, a lot of meat the day before or creatine supplements raise it too.',
+  },
+  kidney: {
+    title: 'You have kidney disease',
+    detail: 'Check this menu with your nephrologist or a dietitian: protein, potassium and phosphorus depend on your stage. This menu keeps protein moderate (about {protein} g a day), salt low and no processed meat.',
+  },
+  high_potassium_lab: {
+    title: 'Your potassium came out high',
+    detail: 'See a doctor soon with this blood test: high potassium can affect the heart. This menu leaves out the dishes with the most potassium (about {potassium} mg a day, much less than a usual menu), but it does not replace medical advice.',
+  },
+  pregnancy: {
+    title: 'Pregnancy or breastfeeding',
+    detail: 'Check this menu with your midwife or doctor. It has no calorie cut and leaves out cured ham; from the second trimester you need a little more energy. Cook meat, fish and eggs well, wash fruit and vegetables, and no alcohol.',
+  },
+  insulin: {
+    title: 'Insulin or pills that lower your blood sugar',
+    detail: 'Talk to your doctor before you start this menu: eating differently can change the dose you need. This menu has no calorie cut and keeps regular meals.',
+  },
+};
+
 export function dietReasons(prefs: DietPrefs, labs: LabFlag[], targets: DietTargets): DietReason[] {
   const f = focusesFrom(prefs, labs);
   const out: DietReason[] = [];
+  // Primero, lo que hay que mirar con un médico (sale como "¡Atención!" encima del menú)
+  const cautions = cautionReasons(referralReasons(prefs, labs)) as (keyof typeof CAUTION_TEXT)[];
+  for (const c of cautions) out.push({ id: `caution_${c}`, caution: true, ...CAUTION_TEXT[c] });
+  if (cautions.includes('low_kidney_lab') && prefs.supplements.includes('creatine'))
+    out.push({
+      id: 'caution_creatine',
+      caution: true,
+      title: 'You take creatine',
+      detail: 'Creatine raises creatinine in blood tests even when the kidneys are fine. Tell your doctor: sometimes the test is repeated after a few weeks without it.',
+    });
   const goalTitle =
     prefs.goal === 'lose' ? 'To lose weight' : prefs.goal === 'gain' ? 'To build muscle' : prefs.goal === 'perform' ? 'For your training' : 'To eat well';
   out.push({

@@ -21,7 +21,7 @@ import {
   SUPPLEMENTS,
 } from '@/data/diet/labels';
 import type { DietPrefs, ReferralReason } from '@/data/diet/types';
-import { DEFAULT_DIET_PREFS, newDietPlan, REFERRAL_TEXT, referralReasons } from '@/logic/dietPlanner';
+import { blockingReasons, DEFAULT_DIET_PREFS, newDietPlan, REFERRAL_TEXT, referralReasons } from '@/logic/dietPlanner';
 import { t } from '@/i18n';
 import { DIET_FEATURE, DietLocked } from '@/components/diet/TodayMenuCard';
 import { useFeature } from '@/data/access';
@@ -127,7 +127,8 @@ export const DietBuilderScreen = () => {
   const finish = async () => {
     if (!ctx) return;
     const prefs: DietPrefs = { ...p, dislikes: DISLIKES.filter((d) => dislikeGroups.includes(d.id)).flatMap((d) => d.foods) };
-    const why = referralReasons(prefs, ctx.labs);
+    // Riñón, potasio, embarazo o insulina: el menú se hace, adaptado y con "¡Atención!" encima (DietScreen)
+    const why = blockingReasons(referralReasons(prefs, ctx.labs));
     if (why.length) {
       setReferral(why);
       return;
@@ -261,12 +262,12 @@ export const DietBuilderScreen = () => {
     { title: 'Do you take any supplement?', body: <Multi options={SUPPLEMENTS} value={p.supplements} onChange={(supplements) => set({ supplements })} noneLabel="None" /> },
     {
       title: 'Does any of these apply to you?',
-      hint: 'In these cases, a dietitian does a better job than an automatic menu.',
+      hint: 'We adapt the menu to it and tell you what to check with your doctor. With an eating disorder, a dietitian is the better option.',
       body: <Multi options={SAFETY} value={p.safety} onChange={(safety) => set({ safety })} noneLabel="None of these" />,
     },
     {
       title: 'To get your amounts right',
-      hint: 'We use them to calculate your calories. They stay on your phone.',
+      hint: 'We use them to calculate your calories. They are saved with your menu.',
       body: (
         <View style={{ gap: 12 }}>
           <Single

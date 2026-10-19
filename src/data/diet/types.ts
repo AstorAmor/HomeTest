@@ -118,6 +118,7 @@ export interface DietTargets {
   oilyFishPerWeek: number;
   legumesPerWeek: number;
   redMeatMaxPerWeek: number;
+  potassiumMax?: number; // mg, solo con el potasio alto
 }
 
 // Por qué el menú es así: lo que se ha tenido en cuenta de las analíticas y del cuestionario
@@ -126,6 +127,7 @@ export interface DietReason {
   title: string; // texto fuente en inglés
   detail: string;
   marker?: string;
+  caution?: boolean; // "¡Atención!": algo que mirar con un médico (riñón, potasio, embarazo, insulina)
 }
 
 export interface DietPlan {

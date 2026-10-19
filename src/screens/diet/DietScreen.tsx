@@ -97,7 +97,11 @@ export const DietScreen = () => {
     );
   }
 
+  const cautions = plan.reasons.filter((r) => r.caution);
   const summary = weekSummary(plan.days);
+  // Lo que lleva de verdad el menú (media de la semana), no el objetivo: la proteína no se ajusta con las raciones
+  const potassium = Math.round(plan.days.reduce((a, d) => a + dayTotals(d).potassium, 0) / Math.max(1, plan.days.length) / 100) * 100;
+  const tp = { kcal: num(plan.targets.kcal), protein: Math.round(summary.protein), potassium };
   const current = plan.days[day];
   const totals = current ? dayTotals(current) : null;
   const slots = plan.days[0]?.meals.map((m) => m.slot) ?? [];
@@ -106,10 +110,33 @@ export const DietScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScreenHeader title={t('Weekly menu')} showBack backFallback="/nutrients" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {cautions.length ? (
+          <View style={styles.caution}>
+            <View style={styles.cautionHead}>
+              <Ionicons name="warning-outline" size={20} color={Colors.danger} />
+              <Text style={styles.cautionTitle}>{t('Attention: see a doctor')}</Text>
+            </View>
+            {cautions.map((r) => (
+              <View key={r.id} style={{ gap: 2 }}>
+                <Text style={styles.reasonTitle}>{t(r.title)}</Text>
+                <Text style={styles.reasonText}>{t(r.detail, tp)}</Text>
+              </View>
+            ))}
+            <Text style={styles.cautionFoot}>{t('This menu is adapted to it, but it is general guidance: it does not replace your doctor.')}</Text>
+            <View style={styles.cautionBtns}>
+              <TouchableOpacity style={styles.cautionBtn} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
+                <Text style={styles.cautionBtnText}>{t('Find a doctor')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cautionBtnGhost} onPress={() => router.push({ pathname: '/professionals', params: { role: 'dietitian' } })}>
+                <Text style={styles.cautionGhostText}>{t('Find a dietitian')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : null}
         <View style={styles.headCard}>
           <Text style={styles.badge}>{plan.source === 'professional' ? t('From {name}', { name: plan.professionalName || t('your dietitian') }) : t('Made for you')}</Text>
           <Text style={styles.headText}>
-            {t('About {kcal} kcal and {protein} g of protein a day', { kcal: num(plan.targets.kcal), protein: plan.targets.protein })}
+            {t('About {kcal} kcal and {protein} g of protein a day', tp)}
           </Text>
           <TouchableOpacity style={styles.whyRow} onPress={() => setShowWhy((v) => !v)}>
             <Ionicons name="information-circle-outline" size={16} color={Colors.accent} />
@@ -117,10 +144,10 @@ export const DietScreen = () => {
             <Ionicons name={showWhy ? 'chevron-up' : 'chevron-down'} size={16} color={Colors.textMuted} />
           </TouchableOpacity>
           {showWhy &&
-            plan.reasons.map((r) => (
+            plan.reasons.filter((r) => !r.caution).map((r) => (
               <View key={r.id} style={styles.reason}>
                 <Text style={styles.reasonTitle}>{t(r.title)}</Text>
-                <Text style={styles.reasonText}>{t(r.detail, { kcal: num(plan.targets.kcal), protein: plan.targets.protein })}</Text>
+                <Text style={styles.reasonText}>{t(r.detail, tp)}</Text>
               </View>
             ))}
           {plan.note ? <Text style={styles.note}>“{plan.note}”</Text> : null}
@@ -268,6 +295,15 @@ const styles = StyleSheet.create({
   whyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   whyTitle: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   reason: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 8, gap: 2 },
+  caution: { backgroundColor: Colors.dangerSoft, borderWidth: 1, borderColor: Colors.danger, borderRadius: 16, padding: 14, gap: 10, marginBottom: 12 },
+  cautionHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cautionTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', flex: 1 },
+  cautionFoot: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
+  cautionBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  cautionBtn: { backgroundColor: Colors.danger, borderRadius: 20, paddingVertical: 9, paddingHorizontal: 16 },
+  cautionBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  cautionBtnGhost: { borderWidth: 1, borderColor: Colors.danger, borderRadius: 20, paddingVertical: 9, paddingHorizontal: 16 },
+  cautionGhostText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   reasonTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
   reasonText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
   note: { color: Colors.textPrimary, fontSize: 13, fontStyle: 'italic', marginTop: 4 },

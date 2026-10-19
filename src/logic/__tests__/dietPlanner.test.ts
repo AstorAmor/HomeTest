@@ -5,6 +5,8 @@ import {
   DEFAULT_DIET_PREFS,
   LabFlag,
   alternativesForSlot,
+  blockingReasons,
+  cautionReasons,
   dayTotals,
   dietTargets,
   generateDiet,
@@ -49,13 +51,48 @@ describe('Objetivos del día', () => {
   });
 });
 
-describe('Cuándo lo hace un dietista', () => {
-  it('embarazo, riñón, insulina o trastorno alimentario: no hay menú automático', () => {
+describe('Cuándo lo hace un dietista y cuándo va con aviso', () => {
+  it('detecta embarazo, riñón, potasio, menores y nada más', () => {
     expect(referralReasons(prefs({ safety: ['pregnancy'] }), [])).toContain('pregnancy');
     expect(referralReasons(prefs({}), [{ marker: 'egfr', status: 'low', value: 48 }])).toContain('low_kidney_lab');
     expect(referralReasons(prefs({}), [{ marker: 'potassium', status: 'high' }])).toContain('high_potassium_lab');
     expect(referralReasons(prefs({ age: 16 }), [])).toContain('under_18');
     expect(referralReasons(prefs(ADULT), [{ marker: 'ldl', status: 'high' }])).toEqual([]);
+  });
+
+  it('solo el trastorno alimentario y los menores se quedan sin menú; el resto va con "¡Atención!"', () => {
+    const all = referralReasons(prefs({ safety: ['pregnancy', 'eating_disorder', 'insulin'], age: 16 }), [{ marker: 'creatinine', status: 'high' }]);
+    expect(blockingReasons(all).sort()).toEqual(['eating_disorder', 'under_18']);
+    expect(cautionReasons(all).sort()).toEqual(['insulin', 'low_kidney_lab', 'pregnancy']);
+  });
+
+  it('creatinina alta: menú con proteína moderada, sin procesados y el aviso primero', () => {
+    const p = prefs({ ...ADULT, sex: 'male', weightKg: 80, goal: 'gain', supplements: ['creatine'] });
+    const labs: LabFlag[] = [{ marker: 'creatinine', status: 'high', value: 1.4 }];
+    const g = generateDiet(p, labs);
+    expect(g.targets.protein).toBeLessThanOrEqual(64); // 0,8 g/kg
+    expect(dietTargets(p, []).protein).toBeGreaterThan(100); // sin el aviso, 1,6 g/kg
+    expect(g.reasons[0]).toMatchObject({ id: 'caution_low_kidney_lab', caution: true });
+    expect(g.reasons.some((r) => r.id === 'caution_creatine')).toBe(true);
+    expect(meals(g.days).some((r) => r.flags.includes('processed_meat'))).toBe(false);
+    expect(g.days.every((d) => d.meals.length >= 3)).toBe(true);
+  });
+
+  it('potasio alto: tope diario y menos potasio que sin el aviso', () => {
+    const p = prefs({ ...ADULT, conditions: ['hypertension'] });
+    const flagged = generateDiet(p, [{ marker: 'potassium', status: 'high' }]);
+    const plain = generateDiet(p, []);
+    expect(flagged.targets.potassiumMax).toBe(2500);
+    const k = (days: typeof plain.days) => days.reduce((a, d) => a + dayTotals(d).potassium, 0) / days.length;
+    expect(k(flagged.days)).toBeLessThan(k(plain.days));
+    expect(k(flagged.days)).toBeLessThan(3000);
+  });
+
+  it('embarazo: sin recorte de calorías aunque quiera perder peso, y sin jamón curado', () => {
+    const g = generateDiet(prefs({ ...ADULT, goal: 'lose', safety: ['pregnancy'] }), []);
+    expect(g.targets.kcal).toBe(dietTargets(prefs(ADULT), []).kcal);
+    expect(meals(g.days).some((r) => r.ingredients.some((i) => i.food === 'serrano_ham'))).toBe(false);
+    expect(g.reasons[0]).toMatchObject({ id: 'caution_pregnancy', caution: true });
   });
 });
 
