@@ -3546,6 +3546,10 @@ export const es: Record<string, string> = {
   'Check the values in red: they are outside the usual range.': 'Revisa los valores en rojo: se salen del rango habitual.',
   'Once a week is enough: same day, in the morning, after the toilet and before breakfast, with little clothing. Weight swings 1–2 kg from one day to the next with food, salt, fluid retention or your cycle; the trend over several weeks is what counts.':
     'Con una vez por semana basta: el mismo día, por la mañana, después de ir al baño y antes de desayunar, con poca ropa. El peso sube y baja 1-2 kg de un día a otro por la comida, la sal, el líquido que retienes o el ciclo; lo que cuenta es la tendencia de varias semanas.',
+  'You already weighed yourself today. Day-to-day changes are mostly water and food, not fat. Once a week is enough.':
+    'Ya te has pesado hoy. Los cambios de un día a otro son sobre todo agua y comida, no grasa. Con una vez por semana basta.',
+  'You weighed yourself yesterday. Day-to-day changes are mostly water and food, not fat. Once a week is enough.':
+    'Te pesaste ayer. Los cambios de un día a otro son sobre todo agua y comida, no grasa. Con una vez por semana basta.',
   'You weighed yourself {n} days ago. Day-to-day changes are mostly water and food, not fat. Once a week is enough.':
     'Te pesaste hace {n} días. Los cambios de un día a otro son sobre todo agua y comida, no grasa. Con una vez por semana basta.',
   'Time to weigh yourself.': 'Toca pesarse.',

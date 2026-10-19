@@ -142,7 +142,11 @@ export const LogWeightScreen = () => {
           <Ionicons name="information-circle-outline" size={18} color={Colors.accent} />
           <Text style={styles.noteText}>
             {soon
-              ? t('You weighed yourself {n} days ago. Day-to-day changes are mostly water and food, not fat. Once a week is enough.', { n: recent.daysSince ?? 0 })
+              ? recent.daysSince === 0
+                ? t('You already weighed yourself today. Day-to-day changes are mostly water and food, not fat. Once a week is enough.')
+                : recent.daysSince === 1
+                  ? t('You weighed yourself yesterday. Day-to-day changes are mostly water and food, not fat. Once a week is enough.')
+                  : t('You weighed yourself {n} days ago. Day-to-day changes are mostly water and food, not fat. Once a week is enough.', { n: recent.daysSince ?? 0 })
               : t('Once a week is enough: same day, in the morning, after the toilet and before breakfast, with little clothing. Weight swings 1–2 kg from one day to the next with food, salt, fluid retention or your cycle; the trend over several weeks is what counts.')}
           </Text>
         </View>
