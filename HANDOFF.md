@@ -1213,3 +1213,12 @@ marcador); lo del cuestionario, «Has marcado: …»; sin «no siempre es el ri�
 (preview, android + ios) y las dos webs a la primera. Pasos a mano otra vez (1,7 GB de RAM libres): export `--clear
 --max-workers 1`, `eas-cli update --skip-bundler`, `deploy-web.mjs` y `deploy-web.mjs demo`. Sin dependencias nativas
 nuevas: vale el APK ee97dd7d.
+
+## 2026-10-19 (noche) — Encuesta del periodo en español, publicada
+
+Las respuestas de la encuesta inicial del ciclo (`CycleGoalScreen`) iban sin `tr()` y salían en inglés aunque la
+traducción existía; también el párrafo de la temperatura después de ovular, el objetivo en `CycleGoalPanel` y la
+leyenda «Wearable (noche)». 6927ae1, **publicado** (OK del fundador): EAS Update grupo
+`1676a3a5-2797-4236-b1ba-3ffd7b346310` y las dos webs a la primera (pasos a mano, 1,4 GB de RAM libres).
+Nota: expo-updates descarga la actualización al abrir la app y la aplica la siguiente vez que se abre desde cerrada;
+el fundador seguía viendo el menú bloqueado por la creatinina con la versión anterior en el móvil.
