@@ -4,8 +4,9 @@
 -- Mismo patrón que bowel_logs: clave (user_id, id) para poder subir lo guardado en el móvil sin
 -- duplicar.
 --
--- PREPARADA, SIN APLICAR: aplicar solo con el OK explícito del fundador. Después, poner
--- REMOTE_HAS_GUT_LOGS = true en src/data/digestionRepository.ts (y subir lo guardado en el móvil).
+-- APLICADA el 2026-10-19 con el OK del fundador (db query --linked en una transacción + migration repair).
+-- REMOTE_HAS_GUT_LOGS = true en src/data/bathroomRepository.ts; lo guardado en el móvil se sube solo
+-- (src/data/digestionRepository.ts).
 
 create table public.gut_symptom_logs (
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,

@@ -5,10 +5,9 @@ import { BowelEntry, UrineEntry } from '@/types/bathroom';
 // Tablas bowel_logs y urine_logs (supabase/migrations/20261008110000_bowel_urine_logs.sql).
 
 // Las horas de cada vez (bowel_logs.movements) y el registro de Digestión (gut_symptom_logs) van en
-// la migración 20261018150000_gut_symptom_logs.sql, PREPARADA Y SIN APLICAR. Hasta aplicarla (con
-// el OK del fundador), las horas no se suben y Digestión se guarda solo en el móvil; después,
-// poner true.
-export const REMOTE_HAS_GUT_LOGS = false;
+// la migración 20261018150000_gut_symptom_logs.sql, aplicada el 2026-10-19. Lo apuntado en Digestión
+// antes se quedó en el móvil y se sube la primera vez (src/data/digestionRepository.ts).
+export const REMOTE_HAS_GUT_LOGS = true;
 
 export const bowelRepository = createMetricRepository<BowelEntry>('hometest:bowel_logs', {
   table: 'bowel_logs',

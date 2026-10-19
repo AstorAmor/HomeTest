@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isRemoteActive } from '@/lib/supabase';
 import { createMetricRepository, definedOnly } from './metricRepository';
 import { bowelRepository, REMOTE_HAS_GUT_LOGS } from './bathroomRepository';
 import { userFlags } from './userFlags';
@@ -10,12 +12,12 @@ import type { DigestionEntry, GutSafetyAnswers, GutSymptom, Intensity, UsualFood
 import type { RelationId } from '@/types/familyHistory';
 
 // Registro de Digestión (lo que notas en la tripa). Tabla gut_symptom_logs de la migración
-// 20261018150000_gut_symptom_logs.sql; mientras no esté aplicada (REMOTE_HAS_GUT_LOGS = false), se
-// guarda solo en el móvil.
+// 20261018150000_gut_symptom_logs.sql (aplicada el 2026-10-19); sin cuenta (demo), en el móvil.
 const SYMPTOM_COLUMNS: GutSymptom[] = ['fullness', 'bloating', 'reflux', 'gas', 'pain', 'nausea'];
+const LOCAL_KEY = 'hometest:gut_symptom_logs';
 
-export const digestionRepository = createMetricRepository<DigestionEntry>(
-  'hometest:gut_symptom_logs',
+const base = createMetricRepository<DigestionEntry>(
+  LOCAL_KEY,
   REMOTE_HAS_GUT_LOGS
     ? {
         table: 'gut_symptom_logs',
@@ -57,6 +59,29 @@ export const digestionRepository = createMetricRepository<DigestionEntry>(
       }
     : undefined
 );
+
+// Lo apuntado antes de tener la tabla (18–19/10) se guardó en el móvil, también con cuenta. Se sube
+// en cuanto se abre Digestión con cuenta y se borra del móvil; sin red se reintenta la próxima vez.
+async function uploadPhoneEntries(): Promise<void> {
+  if (!REMOTE_HAS_GUT_LOGS || !isRemoteActive()) return;
+  try {
+    if (await base.importLocalToRemote()) await AsyncStorage.removeItem(LOCAL_KEY);
+  } catch {
+    // se queda en el móvil hasta el próximo intento
+  }
+}
+
+export const digestionRepository = {
+  ...base,
+  async getAll(): Promise<DigestionEntry[]> {
+    await uploadPhoneEntries();
+    return base.getAll();
+  },
+  async getLatest(): Promise<DigestionEntry | null> {
+    await uploadPhoneEntries();
+    return base.getLatest();
+  },
+};
 
 // Cada cuánto sueles tomar cada grupo de alimentos (la comparación de los patrones). Son pocas
 // respuestas, así que van en user_flags (se sincroniza solo, sin tabla nueva).
