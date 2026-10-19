@@ -1946,6 +1946,11 @@ export const es: Record<string, string> = {
   Dec: 'dic',
   Thermometer: 'Termómetro',
   Wearable: 'Wearable',
+  'Wearable (night)': 'Wearable (noche)',
+  'Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you get up, lets us confirm when it happened and learn your fertile window.':
+    'Tu temperatura sube un poco (unos 0,2-0,5 °C) después de ovular. Si la tomas cada mañana antes de levantarte, podemos confirmar cuándo ovulaste y conocer tu ventana fértil.',
+  'Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you get up, lets us confirm when it happened.':
+    'Tu temperatura sube un poco (unos 0,2-0,5 °C) después de ovular. Si la tomas cada mañana antes de levantarte, podemos confirmar cuándo ovulaste.',
   'Your goal': 'Tu objetivo',
   'Tell us what you are looking for': 'Cuéntanos qué buscas',
   'Log a few mornings to see your curve.': 'Apunta unas cuantas mañanas para ver tu curva.',

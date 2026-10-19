@@ -158,9 +158,9 @@ export const CycleGoalScreen = () => {
             <Text style={styles.hint}>{tr('Regular means they come every 21 to 35 days and roughly on time.')}</Text>
             <ChoiceChips
               options={[
-                { id: 'yes', label: 'Yes' },
-                { id: 'no', label: 'No' },
-                { id: 'unsure', label: 'Not sure' },
+                { id: 'yes', label: tr('Yes') },
+                { id: 'no', label: tr('No') },
+                { id: 'unsure', label: tr('Not sure') },
               ]}
               value={regular}
               onChange={(v) => setRegular(v as CycleGoalAnswers['regularCycles'])}
@@ -169,10 +169,10 @@ export const CycleGoalScreen = () => {
             <Text style={styles.hint}>{tr('It changes how your cycle and predictions behave.')}</Text>
             <ChoiceChips
               options={[
-                { id: 'none', label: 'No' },
-                { id: 'pill', label: 'The pill' },
-                { id: 'hormonal_iud', label: 'Hormonal IUD' },
-                { id: 'other', label: 'Other' },
+                { id: 'none', label: tr('No') },
+                { id: 'pill', label: tr('The pill') },
+                { id: 'hormonal_iud', label: tr('Hormonal IUD') },
+                { id: 'other', label: tr('Other') },
               ]}
               value={contraception}
               onChange={(v) => setContraception(v as CycleGoalAnswers['hormonalContraception'])}
@@ -189,10 +189,10 @@ export const CycleGoalScreen = () => {
             <Text style={styles.label}>{tr('How long have you been trying?')}</Text>
             <ChoiceChips
               options={[
-                { id: 'under_6m', label: 'Less than 6 months' },
-                { id: '6_12m', label: '6 to 12 months' },
-                { id: '1_2y', label: '1 to 2 years' },
-                { id: 'over_2y', label: 'More than 2 years' },
+                { id: 'under_6m', label: tr('Less than 6 months') },
+                { id: '6_12m', label: tr('6 to 12 months') },
+                { id: '1_2y', label: tr('1 to 2 years') },
+                { id: 'over_2y', label: tr('More than 2 years') },
               ]}
               value={tryingFor}
               onChange={(v) => setTryingFor(v as TryingFor)}
@@ -200,10 +200,10 @@ export const CycleGoalScreen = () => {
             <Text style={styles.label}>{tr('How often do you have sex? (optional)')}</Text>
             <ChoiceChips
               options={[
-                { id: 'several_week', label: 'Several times a week' },
-                { id: 'weekly', label: 'About once a week' },
-                { id: 'less', label: 'Less often' },
-                { id: 'skip', label: 'Prefer not to say' },
+                { id: 'several_week', label: tr('Several times a week') },
+                { id: 'weekly', label: tr('About once a week') },
+                { id: 'less', label: tr('Less often') },
+                { id: 'skip', label: tr('Prefer not to say') },
               ]}
               value={frequency}
               onChange={(v) => setFrequency(v as SexFrequency | 'skip')}
@@ -211,10 +211,10 @@ export const CycleGoalScreen = () => {
             <Text style={styles.label}>{tr('Do you plan it around your fertile days? (optional)')}</Text>
             <ChoiceChips
               options={[
-                { id: 'yes', label: 'Yes' },
-                { id: 'sometimes', label: 'Sometimes' },
-                { id: 'no', label: 'No' },
-                { id: 'skip', label: 'Prefer not to say' },
+                { id: 'yes', label: tr('Yes') },
+                { id: 'sometimes', label: tr('Sometimes') },
+                { id: 'no', label: tr('No') },
+                { id: 'skip', label: tr('Prefer not to say') },
               ]}
               value={timing}
               onChange={(v) => setTiming(v as Timing | 'skip')}
@@ -227,8 +227,9 @@ export const CycleGoalScreen = () => {
             <Ionicons name="thermometer-outline" size={34} color={Colors.gold} style={styles.icon} />
             <Text style={styles.title}>{tr('Add your morning temperature?')}</Text>
             <Text style={styles.subtitle}>
-              Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you
-              get up, lets us confirm when it happened{goal === 'conceive' ? ' and learn your fertile window' : ''}.
+              {goal === 'conceive'
+                ? tr('Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you get up, lets us confirm when it happened and learn your fertile window.')
+                : tr('Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you get up, lets us confirm when it happened.')}
             </Text>
             <View style={styles.infoCard}>
               <Ionicons name="watch-outline" size={18} color={Colors.textSecondary} />
@@ -238,8 +239,8 @@ export const CycleGoalScreen = () => {
             </View>
             <ChoiceChips
               options={[
-                { id: 'yes', label: "Yes, I'll log it" },
-                { id: 'no', label: 'Not now' },
+                { id: 'yes', label: tr("Yes, I'll log it") },
+                { id: 'no', label: tr('Not now') },
               ]}
               value={logTemp}
               onChange={(v) => setLogTemp(v as 'yes' | 'no')}

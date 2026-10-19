@@ -92,7 +92,7 @@ export const CycleGoalPanel = () => {
       values: chartDays.map((d) => d.celsius),
     },
     ...(manualDays.length >= 3 && wearableAligned.every((v) => v != null)
-      ? [{ label: 'Wearable (night)', color: Colors.green, values: wearableAligned as number[] }]
+      ? [{ label: tr('Wearable (night)'), color: Colors.green, values: wearableAligned as number[] }]
       : []),
   ];
 
@@ -102,7 +102,7 @@ export const CycleGoalPanel = () => {
         <Ionicons name={(option?.icon ?? 'rose-outline') as any} size={20} color={Colors.pulseAccent} />
         <View style={{ flex: 1 }}>
           <Text style={styles.goalLabel}>{tr('Your goal')}</Text>
-          <Text style={styles.goalTitle}>{option?.title ?? tr('Tell us what you are looking for')}</Text>
+          <Text style={styles.goalTitle}>{option ? tr(option.title) : tr('Tell us what you are looking for')}</Text>
         </View>
         <Text style={styles.link}>{goal ? tr('Change') : tr('Start')}</Text>
       </TouchableOpacity>
