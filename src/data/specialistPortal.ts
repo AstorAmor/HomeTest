@@ -21,6 +21,8 @@ import {
 } from './specialistTypes';
 import { DemoPatient, demoScopeSummary, syntheticPatients, syntheticRequests } from './demoPatients';
 import { SHARE_SCOPES } from './sharing';
+import type { DietPlan } from './diet/types';
+import { dietFromRow, dietToRow, REMOTE_HAS_DIET_PLANS } from './diet/dietRepository';
 
 // Datos del portal del especialista. Con cuenta de especialista: Supabase (RLS decide
 // qué ve). En modo demo: pacientes, citas, solicitudes y notas de ejemplo guardados en
@@ -54,6 +56,7 @@ interface DemoState {
   plans: { patientId: string; items: PlanVersionItem[]; note: string; createdAt: string }[];
   privateData: { personalPhone: string; personalEmail: string };
   patientCount?: number; // "Simular X pacientes": 4 fijos + los de ejemplo hasta este número
+  diets?: DietPlan[]; // menús mandados por el dietista (se conservan de un día a otro)
 }
 
 const at = (dayOffset: number, h: number, m = 0) => {
@@ -122,7 +125,7 @@ async function demo(): Promise<DemoState> {
     const stored: DemoState | null = raw ? JSON.parse(raw) : null;
     const fresh = demoSeed();
     // Otro día: citas y solicitudes nuevas relativas a hoy; se conservan notas y planes.
-    demoCache = stored && stored.seededOn === fresh.seededOn ? stored : { ...fresh, notes: stored?.notes ?? fresh.notes, plans: stored?.plans ?? [], availability: stored?.availability ?? fresh.availability, privateData: stored?.privateData ?? fresh.privateData };
+    demoCache = stored && stored.seededOn === fresh.seededOn ? stored : { ...fresh, notes: stored?.notes ?? fresh.notes, plans: stored?.plans ?? [], availability: stored?.availability ?? fresh.availability, privateData: stored?.privateData ?? fresh.privateData, diets: stored?.diets ?? [] };
     // Solicitudes de ejemplo añadidas después de guardar el estado de hoy: aparecen igualmente
     for (const r of fresh.requests) if (!demoCache.requests.some((x) => x.id === r.id)) demoCache.requests.push(r);
     // Las dudas de los pacientes de ejemplo, según cuántos haya
@@ -556,6 +559,37 @@ export const portal = {
       const shared = patient.scopes.includes(sc.id);
       return { scope: sc.id, shared, summary: shared && demoP ? demoScopeSummary(demoP, sc.id, flagged, lab?.date ?? null) : undefined };
     });
+  },
+
+  // Menús semanales que ha mandado este profesional (de un paciente o de todos)
+  async listDiets(patientId?: string): Promise<DietPlan[]> {
+    if (isPortalDemo()) {
+      const all = (await demo()).diets ?? [];
+      return all.filter((d) => !patientId || d.patientId === patientId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    }
+    if (!REMOTE_HAS_DIET_PLANS) return [];
+    let q = supabase!.from('diet_plans').select('*').eq('professional_id', getCurrentUserId()).order('created_at', { ascending: false });
+    if (patientId) q = q.eq('patient_id', patientId);
+    const { data, error } = await q;
+    fail(error);
+    return (data ?? []).map(dietFromRow);
+  },
+
+  // Mandar (o actualizar) un menú a un paciente: le sale en su app como "de" este profesional
+  async sendDiet(patientId: string, plan: DietPlan, professionalName: string) {
+    const prog: DietPlan = { ...plan, patientId, source: 'professional', professionalId: portal.myId(), professionalName };
+    if (isPortalDemo()) {
+      const s = await demo();
+      s.diets = [prog, ...(s.diets ?? []).filter((d) => d.id !== prog.id)];
+      return saveDemo();
+    }
+    if (!REMOTE_HAS_DIET_PLANS) {
+      throw new Error(t('Sending menus to real patients needs a database update that is not active yet. You can try it in the demo portal.'));
+    }
+    const { error } = await supabase!
+      .from('diet_plans')
+      .upsert({ ...dietToRow(prog), patient_id: patientId, professional_id: getCurrentUserId(), professional_name: professionalName }, { onConflict: 'patient_id,id' });
+    fail(error);
   },
 
   // Solo demo: cuántos pacientes de ejemplo hay (4, 12 o 40)

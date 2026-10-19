@@ -41,7 +41,7 @@ export const KIND_ART: Record<PlanItemKind, { icon: string; palette: [string, st
 // Título de una acción, igual en el avance de Today y en el Plan completo (la de nutrición lleva a
 // la lista de "Tus nutrientes")
 export const planItemTitle = (item: { kind: PlanItemKind; title: string }, tr: (s: string) => string) =>
-  item.kind === 'nutrition' ? tr('Your nutrients') : tr(item.title);
+  item.kind === 'nutrition' ? tr('Food') : tr(item.title);
 
 // A dónde lleva tocar una acción (lo mismo desde Today y desde el Plan completo)
 export const planItemRoute = (kind: PlanItemKind) =>

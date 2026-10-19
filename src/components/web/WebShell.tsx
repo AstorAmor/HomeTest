@@ -48,7 +48,7 @@ const CATEGORIES: NavItem[] = [
   { id: 'gut', label: 'Digestion', icon: 'intestine', color: Colors.green, pathname: '/digestive', params: { part: 'gut' }, section: 'gut' },
   { id: 'bladder', label: 'Hydration', icon: 'water-outline', color: Colors.gold, pathname: '/digestive', params: { part: 'bladder' }, section: 'bladder' },
   { id: 'meds', label: 'Medication', icon: 'medical-outline', color: Colors.gold, pathname: '/medications', section: 'medication' },
-  { id: 'nutrition', label: 'Nutrition', icon: 'nutrition-outline', color: Colors.green, pathname: '/nutrients' },
+  { id: 'nutrition', label: 'Food', icon: 'nutrition-outline', color: Colors.green, pathname: '/nutrients' },
   { id: 'genetics', label: 'Family history', icon: 'mci:dna', color: Colors.gold, pathname: '/genetic-profile' },
 ];
 

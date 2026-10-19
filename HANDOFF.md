@@ -1067,3 +1067,49 @@ Digestión a0e488b): EAS Update grupo c2ea682e y las dos webs, todo a la primera
     permisos en español). Perfil `testflight` en `eas.json` (canal `preview`: recibe los mismos `npm run release`).
   - Pasos para el fundador (cuenta de Apple Developer, TestFlight, lo que bloquea la App Store):
     `docs/iphone-y-apple-salud.md`. **Bloqueante para la App Store y Google Play: no hay «Borrar mi cuenta» en la app.**
+
+## 2026-10-19 — Menús semanales: recetario con datos públicos, generador sin IA y vista del dietista (rama `dietas`, sin commitear)
+
+Worktree `C:\Users\Astor\proyectos\hometest-app-dietas` (rama `dietas`, sale de a56610b). **Nada commiteado ni publicado.**
+Decisiones del fundador (19/10): dieta personalizada completa (también con patologías), fotos generadas con IA, sin IA
+en la primera versión (todo programado, 0 tokens), rama aparte.
+
+- **Alimentos** (`src/data/diet/dietData.ts`, GENERADO por `scripts/diet-catalog.py` desde USDA FoodData Central SR
+  Legacy 04/2018, dominio público): 111 ingredientes con composición por 100 g, precio orientativo (€/kg, estimación),
+  tipo, alérgenos UE y los grupos de Digestión (`logic/foodGroups.ts`). Legumbres de bote = enjuagadas.
+- **Recetario**: 95 recetas propias (21 desayunos, ~57 comidas/cenas, 17 tentempiés) en el mismo script, con gramos
+  en crudo por ración y pasos en es/en; nutrientes, coste, dieta que admite y alérgenos calculados.
+- **Generador** (`src/logic/dietPlanner.ts`, 17 tests): kcal Mifflin-St Jeor × actividad (perder −20 % con suelo),
+  proteína por objetivo, objetivos por analítica (LDL, TG, glucosa, ácido úrico, hígado, tensión, hierro, vit. D, B12,
+  homocisteína, PCR, omega-3, magnesio, HDL), filtros duros (dieta, alergias, lo que sienta mal, lo que no le gusta),
+  blandos (tiempo, dificultad, presupuesto; se aflojan si no hay opciones), cuotas semanales (pescado azul, legumbres,
+  carne roja, procesada), variedad, sal por día, raciones a las kcal, "cocinar una vez para dos días", lista de la
+  compra. **Deriva al dietista** (sin menú automático): embarazo/lactancia, enfermedad renal o filtrado bajo, potasio
+  alto, TCA, insulina o fármacos con hipoglucemia, menores. Reglas = SUPUESTOS (backlog clínico).
+- **Contexto** (`src/data/diet/context.ts`): última analítica subida (en cuentas de prueba, la de ejemplo), perfil y
+  sospechas del diario de Digestión (premarcadas en "lo que me sienta mal").
+- **App**: `/diet` (Día con fotos grandes / Semana en cuadrícula, por qué este menú, resumen, otra versión),
+  `/diet-new` (cuestionario de 12 pasos), `/recipe` (ración ajustable, nutrientes, por qué te conviene, ingredientes,
+  pasos, cambiar plato), `/shopping-list` (por secciones, casillas, copiar/compartir). Entrada en "Tus nutrientes" y en
+  el menú de la web del paciente.
+- **Portal**: `/pro-diet?patient=` desde la ficha del paciente ("Crear menú"): borrador con sus analíticas compartidas,
+  kcal y proteína fijables, cambiar plato/ración/indicación por comida, mandar o actualizar. Demo: estado de la demo.
+- **Supabase**: migración `20261019130000_diet_plans.sql` PREPARADA, **SIN APLICAR** (`REMOTE_HAS_DIET_PLANS = false`
+  en `src/data/diet/dietRepository.ts`): mientras tanto, los menús propios van al móvil y el portal real avisa.
+- **Fotos**: 95 con fal (FLUX.2 Pro, 1024×768, estilo "foto de móvil realista, plato blanco, mesa de madera limpia"
+  elegido por el fundador tras dos pruebas; ≈3,1 $ en total con las pruebas y 2 repeticiones). Originales y
+  `prompts.json` en OneDrive `05 Marca\Contenido IA\2026-10\recetas`; WebP 640×480 (2,2 MB) en
+  `assets/images/recipes` con `scripts/recipe-photos.py` (índice `src/data/diet/recipePhotos.ts`, solo lo importa
+  `RecipeImage`, para que los tests no carguen imágenes).
+- Textos en español en `src/i18n/dietEs.ts`. Probar: `preview_start expo-web-dietas` (8087, con `--clear`).
+- **Ojo con los worktrees**: comparten `node_modules` por un junction, y Metro reutilizaba la caché de otro worktree
+  (servía pantallas de `hometest-app-workouts`). Por eso las configuraciones de los worktrees arrancan con `--clear`.
+- **Notas del fundador (19/10, tarde), hechas en la misma rama**: en el portal, "Tiempo disponible por comida" va en
+  su propia sección; macros en donut (proteína/hidratos/grasa, `components/diet/MacroDonut.tsx`, colores validados
+  con el validador de dataviz en claro y oscuro, siempre con leyenda en g y %) para la media diaria, cada día y cada
+  comida (app y portal); fuera los "× 1,25": en la app se enseñan kcal, y en la receta las cantidades ya salen para
+  tu ración, con un selector "para ti / para N personas"; en el portal la ración se ajusta en kcal. **"Tus
+  nutrientes" pasa a "Alimentación"** (título, plan y menú de la web): arriba "Hoy en tu menú" o "Construye tu plan"
+  (`components/diet/TodayMenuCard.tsx`), debajo "Lo que conviene hoy". El menú va con suscripción: fila
+  `diet_menu` en `src/data/access.ts` (gratis no; Basic y Premium sí; editable en /admin-plans), bloqueado como
+  "Escanear informes" (en la demo y sin la migración de planes, todo abierto).
