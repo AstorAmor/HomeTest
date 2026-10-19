@@ -1190,3 +1190,14 @@ Con el OK del fundador («migra lo de digestión y demás», «publica y push»)
 - Sin probar con una cuenta real: guardar un entrenamiento, un menú y Digestión en Supabase (en la demo todo va al
   móvil). Las fotos de ejercicios (free-exercise-db) siguen siendo provisionales y de origen poco claro.
 - Los worktrees `hometest-app-workouts`, `hometest-app-dietas` (y `hometest-app-sleep`) ya no hacen falta.
+
+## 2026-10-19 (noche) — Menús con valores de riesgo: se hace el menú con «¡Atención!»
+
+El fundador no conseguía su menú porque tiene la creatinina alta. Ahora `referralReasons` se parte en `blockingReasons`
+(trastorno de la conducta alimentaria, menores de 18: siguen sin menú) y `cautionReasons` (riñón, creatinina o
+filtrado, potasio alto, embarazo, insulina). Con una de estas, el menú se hace adaptado (ver la cabecera de
+`src/logic/dietPlanner.ts`) y `DietScreen` muestra arriba «¡Atención! Consúltalo con un médico», con el porqué, lo
+que lleva de verdad el menú y botones a médico y dietista. Los avisos van en `reasons` con `caution: true`, en el
+jsonb de siempre (sin migración). Lo que se vio al probarlo: el generador nunca respetaba la proteína objetivo (salían
+~120-150 g); con el riñón ahora la puntuación la limita por cada 500 kcal y con un tope diario, y la cabecera del
+menú enseña la proteína real. 0835e16, sin publicar.
