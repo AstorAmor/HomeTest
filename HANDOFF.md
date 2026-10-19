@@ -1082,10 +1082,10 @@ Digestión a0e488b): EAS Update grupo c2ea682e y las dos webs, todo a la primera
   `profiles.weight_kg` (lo usan el menú semanal y otros cálculos). Lógica en `src/logic/weight.ts` (8 tests;
   días de calendario por el cambio de hora). Umbral de "estable" ±0,2 kg/semana = SUPUESTO.
 
-## 2026-10-19 — Entrenamientos: generador, sesión guiada y vista del entrenador (rama `workouts`, sin commitear)
+## 2026-10-19 — Entrenamientos: generador, sesión guiada y vista del entrenador (rama `workouts`, juntada con master el 2026-10-19)
 
 Hecho en el worktree `C:\Users\Astor\proyectos\hometest-app-workouts` (rama `workouts`, sale de a0e488b),
-porque `master` tenía cambios de la sesión de Apple Salud. **Nada commiteado ni publicado.**
+porque `master` tenía cambios de la sesión de Apple Salud. Commiteado (9ac1182, e349250), juntado con master (29404af) y publicado el 2026-10-19 (ver al final).
 
 - **Catálogo provisional** (`src/data/workouts/exerciseData.ts`, GENERADO por `scripts/exercise-catalog.py`):
   126 ejercicios de free-exercise-db (commit fijado f00c92c), con patrón de movimiento, material, por tiempo /
@@ -1121,9 +1121,9 @@ porque `master` tenía cambios de la sesión de Apple Salud. **Nada commiteado n
 - Textos en español en `src/i18n/workoutsEs.ts` (se junta con es.ts en `src/i18n/index.ts`).
 - Probar: `preview_start expo-web-workouts` (puerto 8086, desde `proyectos/.claude/launch.json`).
 
-## 2026-10-19 — Menús semanales: recetario con datos públicos, generador sin IA y vista del dietista (rama `dietas`, sin commitear)
+## 2026-10-19 — Menús semanales: recetario con datos públicos, generador sin IA y vista del dietista (rama `dietas`, juntada con master el 2026-10-19)
 
-Worktree `C:\Users\Astor\proyectos\hometest-app-dietas` (rama `dietas`, sale de a56610b). **Nada commiteado ni publicado.**
+Worktree `C:\Users\Astor\proyectos\hometest-app-dietas` (rama `dietas`, sale de a56610b). Commiteado (8ad0976, fabab6a), juntado con master (b7a2c49) y publicado el 2026-10-19 (ver al final).
 Decisiones del fundador (19/10): dieta personalizada completa (también con patologías), fotos generadas con IA, sin IA
 en la primera versión (todo programado, 0 tokens), rama aparte.
 
@@ -1168,3 +1168,25 @@ en la primera versión (todo programado, 0 tokens), rama aparte.
   (`components/diet/TodayMenuCard.tsx`), debajo "Lo que conviene hoy". El menú va con suscripción: fila
   `diet_menu` en `src/data/access.ts` (gratis no; Basic y Premium sí; editable en /admin-plans), bloqueado como
   "Escanear informes" (en la demo y sin la migración de planes, todo abierto).
+
+## 2026-10-19 (noche) — Publicado: entrenamientos, menús, peso y Digestión en la cuenta
+
+Con el OK del fundador («migra lo de digestión y demás», «publica y push»):
+
+- **Supabase**: aplicada `20261018150000_gut_symptom_logs.sql` (tabla `gut_symptom_logs` con RLS + columna
+  `bowel_logs.movements`), con `db query --linked` en una transacción + `migration repair`. Ya estaban aplicadas
+  `20261019120000_workout_programs` y `20261019130000_diet_plans`. No queda ninguna migración pendiente.
+- **Código**: `REMOTE_HAS_GUT_LOGS = true` (df5f2fb). Lo apuntado en Digestión antes (se guardaba en el móvil
+  también con cuenta) se sube solo la primera vez que se abre con cuenta y se borra del móvil
+  (`uploadPhoneEntries` en `src/data/digestionRepository.ts`). Las horas de Heces ya se guardan en la cuenta.
+- **Ramas** `workouts` (29404af) y `dietas` (b7a2c49) juntadas con master. Conflictos solo de "los dos añaden":
+  HANDOFF, `specialistPortal.ts` (estado demo con `workouts` y `diets`), `i18n/index.ts`
+  (`{ ...workoutsEs, ...dietEs, ...es }`) y las acciones de la ficha del paciente. Sin dependencias nativas nuevas:
+  vale el APK ee97dd7d.
+- Peso: «Ya te has pesado hoy» / «Te pesaste ayer» en vez de «hace 0 días» (c99db8f).
+- **Publicado c99db8f**: EAS Update grupo `f4bab0a8-321a-4c24-a974-9218827a5989` (preview, android + ios). Con
+  ~2 GB de RAM libres se hizo a mano (export `--clear --max-workers 1` de android + ios, luego `eas-cli update
+  --skip-bundler`), y después `deploy-web.mjs` y `deploy-web.mjs demo` (las dos webs a la primera).
+- Sin probar con una cuenta real: guardar un entrenamiento, un menú y Digestión en Supabase (en la demo todo va al
+  móvil). Las fotos de ejercicios (free-exercise-db) siguen siendo provisionales y de origen poco claro.
+- Los worktrees `hometest-app-workouts`, `hometest-app-dietas` (y `hometest-app-sleep`) ya no hacen falta.
