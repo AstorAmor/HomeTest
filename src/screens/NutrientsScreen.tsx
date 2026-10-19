@@ -14,6 +14,7 @@ import { userFlags } from '@/data/userFlags';
 import { NutrientFocus, nutrientFocus } from '@/logic/nutrients';
 import { t } from '@/i18n';
 import { showSamples } from '@/data/dataMode';
+import { TodayMenuCard } from '@/components/diet/TodayMenuCard';
 
 // Lo marcado hoy (user_flags "nutrients:YYYY-MM-DD")
 export const nutrientsKey = (d = new Date()) => `nutrients:${d.toISOString().slice(0, 10)}`;
@@ -31,7 +32,8 @@ export async function nutrientsDoneToday(): Promise<string[]> {
   return v && typeof v === 'object' && Array.isArray((v as { ids?: unknown }).ids) ? ((v as { ids: string[] }).ids) : [];
 }
 
-// "Your nutrients": lo que conviene recordar hoy según tus resultados, con su casilla diaria.
+// "Alimentación" (antes "Tus nutrientes"): arriba, el menú de hoy o "Construye tu plan" (con suscripción);
+// debajo, lo que conviene recordar hoy según tus resultados, con su casilla diaria.
 export const NutrientsScreen = () => {
   const router = useRouter();
   const [items, setItems] = useState<NutrientFocus[]>([]);
@@ -54,7 +56,9 @@ export const NutrientsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your nutrients')} showBack />
+        <ScreenHeader title={t('Food')} showBack />
+        <TodayMenuCard />
+        <Text style={styles.section}>{t('What to keep in mind today')}</Text>
         <Text style={styles.intro}>
           {t('What to keep in mind today, based on your latest results and your plan. Tick what you managed.')}
         </Text>
@@ -90,6 +94,7 @@ export const NutrientsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 40 },
+  section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginHorizontal: 20, marginBottom: 6 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 6 },
   count: { color: Colors.gold, fontSize: 13, fontWeight: '800', marginHorizontal: 20, marginBottom: 12 },
   card: {

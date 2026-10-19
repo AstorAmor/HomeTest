@@ -7,7 +7,7 @@ import { getLang, t } from '@/i18n';
 // Qué incluye cada nivel (gratis, Basic, Premium) y quién tiene acceso a qué.
 // - Las filas de "Comparar suscripciones" las edita un admin desde la app (Más → Suscripciones
 //   (admin)) y se guardan en app_config 'plan_features'. Sin nada guardado, valen las de aquí.
-// - Algunas filas además las aplica la app (`gate`): hoy solo 'scan_reports' (escanear informes).
+// - Algunas filas además las aplica la app (`gate`): 'scan_reports' (escanear informes) y 'diet_menu' (menú semanal).
 // - Nivel efectivo (my_access() en Supabase): admin > suscripción pagada > acceso por invitación
 //   (código o dado por el admin) > gratis. Migración 20261017100000_plan_access.sql.
 // Mientras esa migración no esté aplicada, la app no bloquea nada (como antes).
@@ -28,6 +28,7 @@ export interface PlanFeatureRow {
 // Funciones que la app bloquea según el nivel (el resto de filas solo se enseñan)
 export const GATED_FEATURES: Record<string, LocalText> = {
   scan_reports: { en: 'Scan your lab reports', es: 'Escanear tus informes' },
+  diet_menu: { en: 'Personalised weekly menu', es: 'Menú semanal personalizado' },
 };
 
 export const DEFAULT_PLAN_FEATURES: PlanFeatureRow[] = [
@@ -44,6 +45,11 @@ export const DEFAULT_PLAN_FEATURES: PlanFeatureRow[] = [
   {
     id: 'scan_reports',
     label: { en: 'Scan your lab reports and see them explained', es: 'Escanea tus informes de análisis y entiéndelos' },
+    values: { free: false, membership: true, premium: true },
+  },
+  {
+    id: 'diet_menu',
+    label: { en: 'Personalised weekly menu with recipes and shopping list', es: 'Menú semanal personalizado, con recetas y lista de la compra' },
     values: { free: false, membership: true, premium: true },
   },
   {

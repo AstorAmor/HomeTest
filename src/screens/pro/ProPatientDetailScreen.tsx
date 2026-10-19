@@ -74,6 +74,7 @@ export const ProPatientDetailScreen = () => {
     { icon: 'mail-outline', label: tr('Email'), onPress: () => notify(tr('Email'), tr("The patient hasn't shared an email address. Use Message: it stays inside Kuova and is encrypted in transit.")) },
     { icon: 'film-outline', label: tr('Video explanation'), onPress: () => notify(tr('Video explanation'), tr('Prototype: you will be able to record a video explaining the results, and the patient will get it in their app.')) },
     { icon: 'barbell-outline', label: tr('Create workout'), onPress: () => router.push({ pathname: '/pro-workout', params: { patient: patient.id } }) },
+    { icon: 'restaurant-outline', label: tr('Create menu'), onPress: () => router.push({ pathname: '/pro-diet', params: { patient: patient.id } }) },
     { icon: 'sparkles-outline', label: tr('Generate action plan'), onPress: () => router.push({ pathname: '/pro-plan', params: { patient: patient.id } }), primary: true },
   ];
 
