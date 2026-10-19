@@ -1208,3 +1208,8 @@ analítica, frente al rango del laboratorio («Tu creatinina salió por encima d
 marcador); lo del cuestionario, «Has marcado: …»; sin «no siempre es el riñón» y sin hablar de dosis. Un test de
 `dietPlanner.test.ts` impide que vuelvan las frases de diagnóstico y comprueba que todo está traducido.
 
+
+**Publicado f139bb0** (2026-10-19, OK del fundador «Publica»): EAS Update grupo `883d4dc4-0434-48f1-ab71-c8429ff7282a`
+(preview, android + ios) y las dos webs a la primera. Pasos a mano otra vez (1,7 GB de RAM libres): export `--clear
+--max-workers 1`, `eas-cli update --skip-bundler`, `deploy-web.mjs` y `deploy-web.mjs demo`. Sin dependencias nativas
+nuevas: vale el APK ee97dd7d.
