@@ -6,8 +6,8 @@
 -- el profesional que lo mandó mientras sea su paciente.
 -- Clave (patient_id, id): se puede subir lo guardado en el móvil sin duplicar.
 --
--- PREPARADA, SIN APLICAR: aplicar solo con el OK explícito del fundador. Después, poner
--- REMOTE_HAS_DIET_PLANS = true en src/data/diet/dietRepository.ts.
+-- APLICADA el 2026-10-19 con el OK del fundador (db query --linked en una transacción + migration repair),
+-- antes de juntar la rama con master. REMOTE_HAS_DIET_PLANS = true en src/data/diet/dietRepository.ts.
 
 create table public.diet_plans (
   patient_id uuid not null default auth.uid() references auth.users (id) on delete cascade,

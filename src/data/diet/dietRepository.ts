@@ -5,10 +5,10 @@ import type { DietPlan } from './types';
 
 // Menús semanales del usuario: los que se hace con el cuestionario y los que le manda su dietista.
 //
-// Dónde viven: tabla `diet_plans` (migración 20261019130000_diet_plans.sql). PREPARADA Y SIN APLICAR:
-// mientras REMOTE_HAS_DIET_PLANS = false, los menús propios se guardan en este dispositivo y los del
-// dietista no llegan (el portal lo avisa al enviar).
-export const REMOTE_HAS_DIET_PLANS = false;
+// Dónde viven: con cuenta, tabla `diet_plans` (migración 20261019130000_diet_plans.sql, aplicada el
+// 2026-10-19); sin cuenta (demo), en este dispositivo. Lo que se guardó en el móvil antes de tener la
+// tabla se sube la primera vez.
+export const REMOTE_HAS_DIET_PLANS = true;
 
 const KEY = 'diet.plans.v1';
 const remote = () => REMOTE_HAS_DIET_PLANS && isRemoteActive();
@@ -65,10 +65,22 @@ export const dietToRow = (p: DietPlan) => ({
   active: p.active,
 });
 
+// Sube una vez lo que se guardó en el móvil antes de tener la tabla
+async function uploadLocalOnce(): Promise<void> {
+  const local = (await readLocal()).filter((p) => p.source === 'self');
+  if (!local.length) return;
+  const { error } = await supabase!.from('diet_plans').upsert(
+    local.map((p) => ({ ...dietToRow(p), patient_id: getCurrentUserId() })),
+    { onConflict: 'patient_id,id' },
+  );
+  if (!error) await writeLocal((await readLocal()).filter((p) => p.source !== 'self'));
+}
+
 export const dietRepository = {
   async list(): Promise<DietPlan[]> {
     let list: DietPlan[];
     if (remote()) {
+      await uploadLocalOnce();
       const { data, error } = await supabase!.from('diet_plans').select('*').eq('patient_id', getCurrentUserId()).order('created_at', { ascending: false });
       list = error ? await readLocal() : (data as Row[]).map(dietFromRow);
     } else list = await readLocal();

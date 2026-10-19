@@ -1094,7 +1094,9 @@ en la primera versión (todo programado, 0 tokens), rama aparte.
   el menú de la web del paciente.
 - **Portal**: `/pro-diet?patient=` desde la ficha del paciente ("Crear menú"): borrador con sus analíticas compartidas,
   kcal y proteína fijables, cambiar plato/ración/indicación por comida, mandar o actualizar. Demo: estado de la demo.
-- **Supabase**: migración `20261019130000_diet_plans.sql` PREPARADA, **SIN APLICAR** (`REMOTE_HAS_DIET_PLANS = false`
+- **Supabase**: migración `20261019130000_diet_plans.sql` **APLICADA el 2026-10-19** (OK del fundador) y
+  `REMOTE_HAS_DIET_PLANS = true`; lo guardado en el móvil antes se sube la primera vez. Antes decía: PREPARADA, SIN
+  APLICAR (`REMOTE_HAS_DIET_PLANS = false`
   en `src/data/diet/dietRepository.ts`): mientras tanto, los menús propios van al móvil y el portal real avisa.
 - **Fotos**: 95 con fal (FLUX.2 Pro, 1024×768, estilo "foto de móvil realista, plato blanco, mesa de madera limpia"
   elegido por el fundador tras dos pruebas; ≈3,1 $ en total con las pruebas y 2 repeticiones). Originales y
