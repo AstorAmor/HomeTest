@@ -21,6 +21,9 @@ import {
 } from './specialistTypes';
 import { DemoPatient, demoScopeSummary, syntheticPatients, syntheticRequests } from './demoPatients';
 import { SHARE_SCOPES } from './sharing';
+import type { WorkoutProgram } from './workouts/types';
+import { fromRow, REMOTE_HAS_WORKOUT_PROGRAMS, toRow } from './workouts/programRepository';
+import { DEFAULT_PREFS, equipmentForPlace, newProgram } from '@/logic/workoutGenerator';
 
 // Datos del portal del especialista. Con cuenta de especialista: Supabase (RLS decide
 // qué ve). En modo demo: pacientes, citas, solicitudes y notas de ejemplo guardados en
@@ -54,6 +57,7 @@ interface DemoState {
   plans: { patientId: string; items: PlanVersionItem[]; note: string; createdAt: string }[];
   privateData: { personalPhone: string; personalEmail: string };
   patientCount?: number; // "Simular X pacientes": 4 fijos + los de ejemplo hasta este número
+  workouts?: WorkoutProgram[]; // programas de entrenamiento mandados (se conservan de un día a otro)
 }
 
 const at = (dayOffset: number, h: number, m = 0) => {
@@ -110,7 +114,25 @@ function demoSeed(): DemoState {
     availability: DEFAULT_AVAILABILITY,
     plans: [],
     privateData: { personalPhone: '', personalEmail: '' },
+    workouts: demoWorkouts(),
   };
+}
+
+// Dos programas ya mandados en la demo: Elena (media maratón, fuerza en el gimnasio) lo sigue; Javier
+// (perder peso, en casa) aún no ha empezado
+function demoWorkouts(): WorkoutProgram[] {
+  const elena = newProgram(
+    { ...DEFAULT_PREFS, goal: 'strength', level: 'intermediate', daysPerWeek: 2, minutes: 45, place: 'gym', equipment: equipmentForPlace('gym', []), lowImpact: false, seed: 5 },
+    { id: 'demo-wp-elena', title: t('Strength for the half marathon'), source: 'professional', professionalId: DEMO_PRO, patientId: 'p-elena', note: t('Two sessions a week on days without long runs. Keep 2 reps in reserve.') },
+  );
+  const javier = newProgram(
+    { ...DEFAULT_PREFS, goal: 'fat_loss', level: 'beginner', daysPerWeek: 3, minutes: 30, place: 'home', equipment: [], lowImpact: true, seed: 8 },
+    { id: 'demo-wp-javier', title: t('At home, no jumping'), source: 'professional', professionalId: DEMO_PRO, patientId: 'p-javier', note: '' },
+  );
+  return [
+    { ...elena, createdAt: at(-12, 10, 0), completions: [{ sessionId: 'A', at: at(-9, 19, 0), minutes: 47 }, { sessionId: 'B', at: at(-6, 19, 30), minutes: 44 }, { sessionId: 'A', at: at(-2, 18, 45), minutes: 49 }] },
+    { ...javier, createdAt: at(-3, 12, 0) },
+  ];
 }
 
 let demoCache: DemoState | null = null;
@@ -122,7 +144,8 @@ async function demo(): Promise<DemoState> {
     const stored: DemoState | null = raw ? JSON.parse(raw) : null;
     const fresh = demoSeed();
     // Otro día: citas y solicitudes nuevas relativas a hoy; se conservan notas y planes.
-    demoCache = stored && stored.seededOn === fresh.seededOn ? stored : { ...fresh, notes: stored?.notes ?? fresh.notes, plans: stored?.plans ?? [], availability: stored?.availability ?? fresh.availability, privateData: stored?.privateData ?? fresh.privateData };
+    demoCache = stored && stored.seededOn === fresh.seededOn ? stored : { ...fresh, notes: stored?.notes ?? fresh.notes, plans: stored?.plans ?? [], availability: stored?.availability ?? fresh.availability, privateData: stored?.privateData ?? fresh.privateData, workouts: stored?.workouts ?? fresh.workouts };
+    if (!demoCache.workouts) demoCache.workouts = fresh.workouts; // estado guardado antes de que existieran
     // Solicitudes de ejemplo añadidas después de guardar el estado de hoy: aparecen igualmente
     for (const r of fresh.requests) if (!demoCache.requests.some((x) => x.id === r.id)) demoCache.requests.push(r);
     // Las dudas de los pacientes de ejemplo, según cuántos haya
@@ -556,6 +579,48 @@ export const portal = {
       const shared = patient.scopes.includes(sc.id);
       return { scope: sc.id, shared, summary: shared && demoP ? demoScopeSummary(demoP, sc.id, flagged, lab?.date ?? null) : undefined };
     });
+  },
+
+  // Programas de entrenamiento que ha mandado este profesional (de un paciente o de todos)
+  async listWorkouts(patientId?: string): Promise<WorkoutProgram[]> {
+    if (isPortalDemo()) {
+      const all = (await demo()).workouts ?? [];
+      return all.filter((w) => !patientId || w.patientId === patientId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    }
+    if (!REMOTE_HAS_WORKOUT_PROGRAMS) return [];
+    let q = supabase!.from('workout_programs').select('*').eq('professional_id', getCurrentUserId()).order('created_at', { ascending: false });
+    if (patientId) q = q.eq('patient_id', patientId);
+    const { data, error } = await q;
+    fail(error);
+    return (data ?? []).map(fromRow);
+  },
+
+  // Mandar (o actualizar) un programa a un paciente. Sale en su app, en Entrenamientos, como "de" este profesional.
+  async sendWorkout(patientId: string, program: WorkoutProgram, professionalName: string) {
+    const prog: WorkoutProgram = { ...program, patientId, source: 'professional', professionalId: portal.myId(), professionalName };
+    if (isPortalDemo()) {
+      const s = await demo();
+      s.workouts = [prog, ...(s.workouts ?? []).filter((w) => w.id !== prog.id)];
+      return saveDemo();
+    }
+    if (!REMOTE_HAS_WORKOUT_PROGRAMS) {
+      throw new Error(t('Sending workouts to real patients needs a database update that is not active yet. You can try it in the demo portal.'));
+    }
+    const { error } = await supabase!
+      .from('workout_programs')
+      .upsert({ ...toRow(prog), patient_id: patientId, professional_id: getCurrentUserId(), professional_name: professionalName }, { onConflict: 'patient_id,id' });
+    fail(error);
+  },
+
+  async deleteWorkout(patientId: string, id: string) {
+    if (isPortalDemo()) {
+      const s = await demo();
+      s.workouts = (s.workouts ?? []).filter((w) => w.id !== id);
+      return saveDemo();
+    }
+    if (!REMOTE_HAS_WORKOUT_PROGRAMS) return;
+    const { error } = await supabase!.from('workout_programs').delete().eq('patient_id', patientId).eq('id', id).eq('professional_id', getCurrentUserId());
+    fail(error);
   },
 
   // Solo demo: cuántos pacientes de ejemplo hay (4, 12 o 40)

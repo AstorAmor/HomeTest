@@ -19,13 +19,15 @@ export const useIsWide = () => {
   return Platform.OS === 'web' && width >= 900;
 };
 
-export type ProSection = 'agenda' | 'patients' | 'inbox' | 'templates' | 'settings' | 'preferences';
+export type ProSection = 'agenda' | 'patients' | 'inbox' | 'templates' | 'workouts' | 'settings' | 'preferences';
 
-const NAV: { id: ProSection; label: string; icon: string; href: string }[] = [
+// short: nombre corto para la barra de pestañas del móvil
+const NAV: { id: ProSection; label: string; short?: string; icon: string; href: string }[] = [
   { id: 'agenda', label: 'Agenda', icon: 'calendar-outline', href: '/pro' },
   { id: 'patients', label: 'Patients', icon: 'people-outline', href: '/pro-patients' },
   { id: 'inbox', label: 'Inbox', icon: 'chatbubbles-outline', href: '/pro-inbox' },
   { id: 'templates', label: 'Templates', icon: 'documents-outline', href: '/pro-templates' },
+  { id: 'workouts', label: 'Workouts', short: 'Train', icon: 'barbell-outline', href: '/pro-workouts' },
   { id: 'settings', label: 'Profile', icon: 'person-circle-outline', href: '/pro-settings' },
   { id: 'preferences', label: 'Settings', icon: 'settings-outline', href: '/pro-preferences' },
 ];
@@ -166,7 +168,9 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
                 <Ionicons name={n.icon as any} size={22} color={on ? Colors.tabBarActive : Colors.tabBarInactive} />
                 {!!badge?.[n.id] && <View style={styles.tabDot} />}
               </View>
-              <Text style={[styles.tabText, on && { color: Colors.tabBarActive }]}>{t(n.label)}</Text>
+              <Text style={[styles.tabText, on && { color: Colors.tabBarActive }]} numberOfLines={1}>
+                {t(n.short ?? n.label)}
+              </Text>
             </TouchableOpacity>
           );
         })}

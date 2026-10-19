@@ -43,10 +43,11 @@ export const KIND_ART: Record<PlanItemKind, { icon: string; palette: [string, st
 export const planItemTitle = (item: { kind: PlanItemKind; title: string }, tr: (s: string) => string) =>
   item.kind === 'nutrition' ? tr('Your nutrients') : tr(item.title);
 
-// A dónde lleva tocar una acción (lo mismo desde Today y desde el Plan completo)
+// A dónde lleva tocar una acción (lo mismo desde Today y desde el Plan completo). Fuerza va a
+// Entrenamientos: el programa y la sesión que toca, y desde ahí también se registra uno hecho por tu cuenta.
 export const planItemRoute = (kind: PlanItemKind) =>
   kind === 'strength'
-    ? { pathname: '/log-workout' }
+    ? { pathname: '/workouts' }
     : kind === 'steps'
       ? { pathname: '/metric', params: { kind: 'steps' } }
       : kind === 'sleep'
