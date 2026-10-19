@@ -1,6 +1,6 @@
 import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -10,7 +10,7 @@ import { wearableRepository } from '@/wearables/wearableRepository';
 import { generateHuaweiDummy } from '@/wearables/providers/huaweiDummy';
 import { TAB, tabHref } from '@/constants/tabs';
 import { showSamples } from '@/data/dataMode';
-import { isSleepDetail, localDayKey, pickPerDay, syncHealthConnectIfDue } from '@/wearables/dailySeries';
+import { isSleepDetail, localDayKey, pickPerDay, syncAppleHealthIfDue, syncHealthConnectIfDue } from '@/wearables/dailySeries';
 import { sourceLabel } from '@/wearables/sourceLabel';
 import {
   connectHealthConnect,
@@ -22,6 +22,20 @@ import {
   readTypes,
   TYPE_LABEL,
 } from '@/wearables/providers/healthConnect';
+import {
+  APPLE_READ_TYPES,
+  APPLE_TYPE_LABEL,
+  appleHealthAsked,
+  connectAppleHealth,
+  isAppleHealthAvailable,
+  lastAppleHealthSync,
+  openAppleHealth,
+} from '@/wearables/providers/appleHealth';
+
+// En iPhone, Apple Salud; en Android, Health Connect; en la web se explican las dos
+const IS_IOS = Platform.OS === 'ios';
+const SHOW_HC = !IS_IOS;
+const SHOW_APPLE = Platform.OS !== 'android';
 
 const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string }> = {
   steps: { label: 'Steps', unit: '' },
@@ -43,13 +57,14 @@ const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string }> = {
 };
 const METRIC_ORDER: WearableMetric[] = ['steps', 'sleep_duration', 'resting_heart_rate', 'heart_rate_avg', 'hrv', 'active_energy', 'distance', 'body_temperature', 'other'];
 
-// Tipo de Health Connect → métrica de Kuova (para el resumen de qué llega)
+// Tipo de Health Connect o de Apple Salud → métrica de Kuova (para el resumen de qué llega)
 const TYPE_METRIC: Record<string, WearableMetric> = {
   Steps: 'steps',
   SleepSession: 'sleep_duration',
   RestingHeartRate: 'resting_heart_rate',
   HeartRate: 'heart_rate_avg',
   HeartRateVariabilityRmssd: 'hrv',
+  HeartRateVariabilitySDNN: 'hrv',
   ActiveCaloriesBurned: 'active_energy',
   Distance: 'distance',
 };
@@ -78,19 +93,27 @@ export const WearablesScreen = () => {
   const [hcAvailable, setHcAvailable] = useState<boolean | null>(null);
   const [granted, setGranted] = useState<string[]>([]);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [appleAvailable, setAppleAvailable] = useState<boolean | null>(null);
+  const [appleConnected, setAppleConnected] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const samples = showSamples();
 
   const refresh = useCallback(async () => {
     setRecords(await wearableRepository.getRecords().catch(() => []));
-    setGranted(await grantedTypes());
-    setLastSync(await lastHealthConnectSync());
+    if (IS_IOS) {
+      setAppleConnected(await appleHealthAsked());
+      setLastSync(await lastAppleHealthSync());
+    } else {
+      setGranted(await grantedTypes());
+      setLastSync(await lastHealthConnectSync());
+    }
   }, []);
 
   useEffect(() => {
     refresh();
     isHealthConnectAvailable().then(setHcAvailable);
+    isAppleHealthAvailable().then(setAppleAvailable);
   }, [refresh]);
 
   const run = useCallback(async (key: string, fn: () => Promise<string>) => {
@@ -129,6 +152,24 @@ export const WearablesScreen = () => {
       return t('Connected. Your data will update every time you open Today.');
     });
 
+  const syncApple = () =>
+    run('apple-sync', async () => {
+      const changed = await syncAppleHealthIfDue(true);
+      await refresh();
+      return changed ? t('Synced the last 30 days from Apple Health.') : t('No data found in Apple Health for the last 30 days.');
+    });
+
+  // En iPhone, conectar = enseñar la pantalla de permisos de Salud y sincronizar
+  const connectApple = () =>
+    run('apple-connect', async () => {
+      const asked = await connectAppleHealth();
+      setAppleConnected(asked);
+      if (!asked) return t('No permissions were granted.');
+      await syncAppleHealthIfDue(true);
+      await refresh();
+      return t('Connected. Your data will update every time you open Today.');
+    });
+
   const clearAll = () =>
     run('clear', async () => {
       await wearableRepository.clearRecords();
@@ -136,20 +177,25 @@ export const WearablesScreen = () => {
       return t('Wearable data cleared.');
     });
 
-  // Qué llega de cada tipo en los últimos 30 días: días con dato y de qué apps
+  // Qué llega de cada tipo en los últimos 30 días: días con dato y de qué apps. Apple Salud no dice qué
+  // permisos de lectura hay, así que allí todo cuenta como permitido y lo que falta sale "Sin datos".
   const coverage = useMemo(() => {
     const since = localDayKey(new Date(Date.now() - 29 * 86400000));
-    const hc = records.filter((r) => r.provider === 'health_connect' && r.date >= since);
-    return readTypes().map((type) => {
+    const provider = IS_IOS ? 'apple_health' : 'health_connect';
+    const mine = records.filter((r) => r.provider === provider && r.date >= since);
+    const types: readonly string[] = IS_IOS ? APPLE_READ_TYPES : readTypes();
+    return types.map((type) => {
       const metric = TYPE_METRIC[type];
-      const rows = hc.filter((r) => r.metric === metric);
+      const rows = mine.filter((r) => r.metric === metric);
       const sources = new Set<string>();
       rows.forEach((r) => r.sourceName.split(' + ').forEach((s) => sources.add(s)));
       const estimated = type === 'RestingHeartRate' && rows.length > 0 && rows.every((r) => r.rawTypeId.includes(':'));
-      return { type, allowed: granted.includes(type), days: new Set(rows.map((r) => r.date)).size, sources: [...sources], estimated };
+      return { type, allowed: IS_IOS || granted.includes(type), days: new Set(rows.map((r) => r.date)).size, sources: [...sources], estimated };
     });
   }, [records, granted]);
-  const connected = granted.length > 0;
+  const typeLabel = IS_IOS ? APPLE_TYPE_LABEL : TYPE_LABEL;
+  const connected = IS_IOS ? appleConnected : granted.length > 0;
+  const anyMissing = IS_IOS && connected && coverage.some((c) => c.days === 0);
   const onlyPhone =
     connected && coverage.some((c) => c.days > 0) && coverage.every((c) => c.sources.every((s) => s === PHONE_SOURCE));
   const missingPermissions = connected && coverage.some((c) => !c.allowed);
@@ -186,6 +232,38 @@ export const WearablesScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Wearables')} showBack backFallback={tabHref(TAB.more)} />
 
+        {SHOW_APPLE && (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="heart-outline" size={24} color={Colors.accent} />
+              <Text style={styles.cardTitle}>{t('Apple Health')}</Text>
+              {IS_IOS && connected && (
+                <View style={styles.okPill}>
+                  <Ionicons name="checkmark" size={12} color={Colors.ok} />
+                  <Text style={styles.okPillText}>{t('Connected')}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.cardText}>{t('Apple Watch and the apps that write to Health on your iPhone: Oura, Garmin, WHOOP, Huawei Health and others.')}</Text>
+            {appleAvailable === false ? (
+              <Text style={styles.warning}>{t('Apple Health only works in the Kuova app for iPhone (not in the browser or Expo Go).')}</Text>
+            ) : connected ? (
+              <>
+                <View style={styles.row}>
+                  <Button id="apple-sync" label={t('Sync now')} onPress={syncApple} grow />
+                  <Button id="apple-open" label={t('Open Health')} onPress={openAppleHealth} ghost grow />
+                </View>
+                <Text style={styles.syncText}>
+                  {lastSync ? t('Last sync {ago}. It also syncs by itself when you open Today.', { ago: timeAgo(lastSync) }) : t('It syncs by itself when you open Today.')}
+                </Text>
+              </>
+            ) : (
+              <Button id="apple-connect" label={t('Connect Apple Health')} onPress={connectApple} disabled={!appleAvailable} />
+            )}
+          </View>
+        )}
+
+        {SHOW_HC && (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Ionicons name="fitness-outline" size={24} color={Colors.accent} />
@@ -214,6 +292,7 @@ export const WearablesScreen = () => {
             <Button id="hc-connect" label={t('Connect Health Connect')} onPress={connect} disabled={!hcAvailable} />
           )}
         </View>
+        )}
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
 
@@ -228,7 +307,7 @@ export const WearablesScreen = () => {
                     size={18}
                     color={!c.allowed ? Colors.textMuted : c.days ? Colors.ok : Colors.warning}
                   />
-                  <Text style={styles.coverLabel}>{t(TYPE_LABEL[c.type])}</Text>
+                  <Text style={styles.coverLabel}>{t(typeLabel[c.type])}</Text>
                   <Text style={styles.coverValue} numberOfLines={2}>
                     {!c.allowed
                       ? t('No permission')
@@ -240,7 +319,14 @@ export const WearablesScreen = () => {
               ))}
               {onlyPhone && (
                 <Text style={styles.hint}>
-                  {t('Only your phone is sending data (steps). If you wear a watch, open its app (Fitbit, Mi Fitness, Samsung Health…) and turn on sharing with Health Connect. Then tap Sync now.')}
+                  {IS_IOS
+                    ? t('Only your iPhone is sending data. If you wear a watch or a ring, open its app (Oura, Garmin Connect, WHOOP, Huawei Health…) and turn on sharing with Apple Health. Then tap Sync now.')
+                    : t('Only your phone is sending data (steps). If you wear a watch, open its app (Fitbit, Mi Fitness, Samsung Health…) and turn on sharing with Health Connect. Then tap Sync now.')}
+                </Text>
+              )}
+              {anyMissing && (
+                <Text style={styles.hint}>
+                  {t('Something shows No data? Allow it in Health → your photo → Apps → Kuova, and check that your watch or ring app writes it to Health.')}
                 </Text>
               )}
               {missingPermissions && (

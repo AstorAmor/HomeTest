@@ -19,6 +19,11 @@
     "production": {
       "autoIncrement": true,
       "channel": "production"
+    },
+    "testflight": {
+      "extends": "production",
+      "channel": "preview",
+      "distribution": "store"
     }
   },
   "submit": {

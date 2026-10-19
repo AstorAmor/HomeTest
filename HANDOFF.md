@@ -1034,3 +1034,34 @@ al rellenar el cuestionario, no antes de ningún síntoma sino tras registrarlo�
   sueles tomar» para contestar o cambiar las frecuencias. Ficha de método (`evidence.ts`) y textos en español al día.
 - Comprobado en la web demo local: guardar molestia → paso de comida → grupos deducidos → frecuencias → fila de Hoy
   con «Antes: …» y progreso 1 de 5; reabrir la comida por `?id=`.
+
+## 2026-10-19 — Icono del intestino nuevo y app preparada para Apple Salud
+
+Sin commit todavía (el fundador decide cuándo commitear y publicar).
+
+- **Icono del intestino** (`components/IntestineIcon.tsx`): redibujado como la referencia que mandó el fundador:
+  un tubo con tres asas que se meten unas en otras y un tramo recto arriba y abajo. Trazo 1,5 (1,7 a partir de
+  40 px) para que a 16-17 px se vea el hueco entre las asas. Mismo uso en toda la app (`AppIcon name="intestine"`).
+- **Apple Salud** (preparado, sin probar en un iPhone: no hay compilación de iPhone todavía):
+  - Librería `@kingstinct/react-native-healthkit` 16.2 + `react-native-nitro-modules` 0.37.
+  - `wearables/providers/appleHealth.ios.ts` lee pasos, energía activa y distancia (totales por día de Salud, sin
+    duplicar reloj y móvil), pulso medio, pulso en reposo (el del reloj o, si no hay, la media horaria más baja),
+    VFC y sueño con fases y horas. `appleHealth.ts` es la versión vacía para Android y web: sus bundles no llevan
+    HealthKit, así que la APK publicada no se entera. Mismo formato y tabla (`wearable_daily`, provider
+    `apple_health`), así que la web de la app lo enseña sin más.
+  - **La VFC de Apple es SDNN**, no RMSSD: se guarda en `hrv` con `raw_type_id = 'HeartRateVariabilitySDNN'`.
+    Cualquier umbral absoluto de VFC tiene que mirar ese campo.
+  - Salud **no dice qué permisos de lectura se han dado**: «conectado» = ya se enseñó la pantalla de permisos
+    (`getRequestStatusForAuthorization`). Lo que no llega sale «Sin datos» con una pista.
+  - Sueño: `appleSleepSessions` (seriesLogic) junta los tramos por fuente en sesiones (hueco < 1 h) antes de
+    `summarizeSleepSessions`; «en la cama» no cuenta. Fuentes: `appleSourceName` da «Apple Watch» / «This phone»
+    por el modelo, nunca el nombre que el usuario puso al reloj. Tests nuevos en `seriesLogic.test.ts`.
+  - `syncWearablesIfDue` (dailySeries) elige Apple Salud en iPhone y Health Connect en Android; Hoy sincroniza
+    como mucho cada 10 min. Pantalla Wearables: en iPhone, tarjeta «Apple Salud» (conectar, sincronizar, abrir Salud,
+    qué llega); en la web salen las dos tarjetas con su aviso.
+  - `app.json`: bloque `ios` (identificador **`com.kuovahealth.app`**, pendiente de que el fundador lo confirme
+    antes de crear la app en App Store Connect; `supportsTablet: false`; textos de cámara, fotos y micrófono),
+    plugin de HealthKit (solo lectura, sin segundo plano) y `locales.es` (`assets/locales/es.json`, textos de
+    permisos en español). Perfil `testflight` en `eas.json` (canal `preview`: recibe los mismos `npm run release`).
+  - Pasos para el fundador (cuenta de Apple Developer, TestFlight, lo que bloquea la App Store):
+    `docs/iphone-y-apple-salud.md`. **Bloqueante para la App Store y Google Play: no hay «Borrar mi cuenta» en la app.**

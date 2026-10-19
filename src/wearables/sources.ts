@@ -44,3 +44,38 @@ export const joinSources = (pkgs: string[]) => {
   names.sort((a, b) => Number(a === PHONE_SOURCE) - Number(b === PHONE_SOURCE));
   return names.join(' + ') || 'Health Connect';
 };
+
+// --- Apple Salud (iPhone) ---
+
+// Apps que escriben en Apple Salud, por su identificador de iOS. Las que no están aquí usan el nombre
+// de la app que da Salud, que para las apps es su nombre comercial ("Oura", "WHOOP"...).
+const APPLE_BUNDLES: Record<string, string> = {
+  'com.ouraring.oura': 'Oura',
+  'com.garmin.connect.mobile': 'Garmin Connect',
+  'com.huawei.iossporthealth': 'Huawei Health',
+  'com.fitbit.FitbitMobile': 'Fitbit',
+  'com.withings.wiscale2': 'Withings',
+  'fi.polar.polarflow': 'Polar Flow',
+  'com.strava.stravaride': 'Strava',
+};
+
+// El iPhone y el Apple Watch firman con "com.apple.health.<id>" y con el nombre que les puso su dueño
+// ("Apple Watch de …"), que no guardamos: se distinguen por el modelo (productType "Watch7,1" o
+// "iPhone16,2") o, si no viene (resúmenes por día), por si el nombre dice "Watch".
+export function appleSourceName(source?: { name?: string; bundleIdentifier?: string }, productType?: string): string {
+  const id = source?.bundleIdentifier ?? '';
+  if (id.startsWith('com.apple.health')) {
+    const watch = productType ? productType.startsWith('Watch') : /watch/i.test(source?.name ?? '');
+    return watch ? 'Apple Watch' : PHONE_SOURCE;
+  }
+  if (APPLE_BUNDLES[id]) return APPLE_BUNDLES[id];
+  const name = (source?.name ?? '').trim();
+  return name ? name.slice(0, 24) : 'Apple Health';
+}
+
+// Igual que joinSources, para las fuentes de un resumen de Apple Salud
+export const joinAppleSources = (sources: readonly { name?: string; bundleIdentifier?: string }[]) => {
+  const names = [...new Set(sources.map((s) => appleSourceName(s)))];
+  names.sort((a, b) => Number(a === PHONE_SOURCE) - Number(b === PHONE_SOURCE));
+  return names.join(' + ') || 'Apple Health';
+};

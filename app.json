@@ -7,6 +7,18 @@
     "icon": "./assets/images/icon.png",
     "scheme": "apptestsmedicos",
     "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.kuovahealth.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Kuova uses the camera to photograph your lab reports and meals, and for your profile photo.",
+        "NSPhotoLibraryUsageDescription": "Kuova opens your photos so you can choose a lab report, a meal or your profile photo.",
+        "NSMicrophoneUsageDescription": "Kuova uses the microphone to record voice notes in your log, only when you tap record."
+      }
+    },
     "android": {
       "package": "com.astoramor.apptestsmedicos",
       "adaptiveIcon": {
@@ -54,8 +66,21 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Kuova uses the microphone to record voice notes in your log, only when you tap record."
+        }
+      ],
       "react-native-health-connect",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Kuova reads your steps, sleep, heart rate, heart rate variability and activity from Health to show them next to your lab results and your daily log. Kuova never writes to Health.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ],
       "expo-sharing",
       [
         "expo-build-properties",
@@ -84,6 +109,9 @@
     },
     "updates": {
       "url": "https://u.expo.dev/e88f66c2-4fae-44aa-a3b6-1812c06dcd15"
+    },
+    "locales": {
+      "es": "./assets/locales/es.json"
     }
   }
 }

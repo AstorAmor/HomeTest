@@ -6,7 +6,8 @@
 // huawei_dummy: datos de prueba mientras la cuenta de desarrollador de Huawei no
 // tenga acceso a pulso y sueño. huawei: conexión directa (Health Kit, pendiente).
 // health_connect: Android (Xiaomi, Garmin, Oura, Samsung, Google...).
-export type WearableProviderId = 'huawei_dummy' | 'huawei' | 'health_connect';
+// apple_health: iPhone (Apple Watch y las apps que escriben en Salud: Oura, Garmin, WHOOP, Huawei...).
+export type WearableProviderId = 'huawei_dummy' | 'huawei' | 'health_connect' | 'apple_health';
 
 // Detalle de cada noche, del mismo día y fuente que sleep_duration: minutos en cada fase (solo si la
 // fuente manda fases) y la hora de dormirte y de despertarte, en minutos desde la medianoche del día

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { Platform } from 'react-native';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { DailyWearableRecord, WearableMetric } from './types';
 import { wearableRepository } from './wearableRepository';
@@ -10,6 +11,7 @@ import {
   markHealthConnectSynced,
   readHealthConnectDaily,
 } from './providers/healthConnect';
+import { appleHealthAsked, appleHealthSyncDue, isAppleHealthAvailable, markAppleHealthSynced, readAppleHealthDaily } from './providers/appleHealth';
 import { PHONE_SOURCE } from './sources';
 import { showSamples } from '@/data/dataMode';
 import { userFlags } from '@/data/userFlags';
@@ -38,7 +40,8 @@ const recentSources = (records: DailyWearableRecord[]) => {
 // Hook para Today, My Data y el detalle de métrica: lee lo sincronizado y, si todavía no hay nada,
 // usa el dummy de Huawei EN MEMORIA (sin guardarlo) para que la demo no salga vacía; en una cuenta
 // real, no (sale vacío). `days` recorta al periodo que enseña cada pantalla. Con `autoSync`, además,
-// trae lo nuevo de Health Connect en segundo plano (como mucho cada 10 minutos) y repinta.
+// trae lo nuevo de Health Connect (Android) o de Apple Salud (iPhone) en segundo plano (como mucho
+// cada 10 minutos) y repinta.
 export function useDailyWearables(days = 14, opts?: { autoSync?: boolean }) {
   const [series, setSeries] = useDeepState<DailySeries>({});
   const [isSample, setIsSample] = useDeepState(false);
@@ -71,11 +74,11 @@ export function useDailyWearables(days = 14, opts?: { autoSync?: boolean }) {
   const load = useCallback(async () => {
     apply(await wearableRepository.getRecords().catch(() => []));
     if (autoSync) {
-      syncHealthConnectIfDue()
+      syncWearablesIfDue()
         .then(async (changed) => {
           if (changed) apply(await wearableRepository.getRecords());
         })
-        .catch((e) => console.warn('Health Connect sync failed', e));
+        .catch((e) => console.warn('Wearables sync failed', e));
     }
   }, [apply, autoSync]);
 
@@ -104,6 +107,24 @@ export async function syncHealthConnectIfDue(force = false): Promise<boolean> {
   await wearableRepository.replaceProviderFrom('health_connect', read.from, read.records);
   return true;
 }
+
+// Lo mismo con Apple Salud en el iPhone. Salud no dice qué permisos de lectura se han dado, así que
+// "conectado" = ya se ha enseñado la pantalla de permisos; si no se aceptó nada, simplemente no llega nada.
+export async function syncAppleHealthIfDue(force = false): Promise<boolean> {
+  if (!force && !(await appleHealthSyncDue())) return false;
+  if (!force && (await scenarioLoaded())) return false;
+  if (!(await isAppleHealthAvailable())) return false;
+  if (!(await appleHealthAsked())) return false;
+  const read = await readAppleHealthDaily(30);
+  await markAppleHealthSynced();
+  if (!read.records.length) return false;
+  await wearableRepository.replaceProviderFrom('apple_health', read.from, read.records);
+  return true;
+}
+
+// La del sistema de este móvil: Apple Salud en iPhone, Health Connect en Android (en la web, ninguna)
+export const syncWearablesIfDue = (force = false) =>
+  Platform.OS === 'ios' ? syncAppleHealthIfDue(force) : syncHealthConnectIfDue(force);
 
 
 export const latest = (points?: DailyPoint[]) => (points?.length ? points[points.length - 1].value : null);

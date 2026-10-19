@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { computeReadiness, formatClock, localDayKey, pickPerDay, sleepNights, SLEEP_STAGE, summarizeSleepSessions, toDailySeries } from '../seriesLogic';
-import { joinSources, originName, PHONE_SOURCE } from '../sources';
+import { appleSleepSessions, computeReadiness, formatClock, localDayKey, pickPerDay, sleepNights, SLEEP_STAGE, summarizeSleepSessions, toDailySeries } from '../seriesLogic';
+import { appleSourceName, joinAppleSources, joinSources, originName, PHONE_SOURCE } from '../sources';
 import { DailyWearableRecord } from '../types';
 
 const rec = (date: string, metric: DailyWearableRecord['metric'], value: number, sourceName: string, rawTypeId = 'x'): DailyWearableRecord => ({
@@ -184,5 +184,48 @@ describe('sleep detail', () => {
     expect(formatClock(-1)).toBe('23:59');
     expect(formatClock(0)).toBe('00:00');
     expect(formatClock(75)).toBe('01:15');
+  });
+});
+
+describe('Apple Health', () => {
+  const at = (local: string) => new Date(local).toISOString();
+  const sample = (from: string, to: string, value: number, source = 'Apple Watch') => ({ startTime: at(from), endTime: at(to), value, source });
+
+  it('names Apple devices by model, never by the name their owner gave them', () => {
+    const apple = { name: 'Apple Watch de Ana', bundleIdentifier: 'com.apple.health.81B2' };
+    expect(appleSourceName(apple, 'Watch7,1')).toBe('Apple Watch');
+    expect(appleSourceName({ name: 'iPhone de Ana', bundleIdentifier: 'com.apple.health.81B2' }, 'iPhone16,2')).toBe(PHONE_SOURCE);
+    expect(appleSourceName(apple)).toBe('Apple Watch');
+    expect(appleSourceName({ name: 'Oura', bundleIdentifier: 'com.ouraring.oura' })).toBe('Oura');
+    expect(appleSourceName({ name: 'WHOOP', bundleIdentifier: 'com.whoop.unknown' })).toBe('WHOOP');
+    expect(joinAppleSources([{ name: 'iPhone de Ana', bundleIdentifier: 'com.apple.health.1' }, { name: 'Oura', bundleIdentifier: 'com.ouraring.oura' }])).toBe(`Oura + ${PHONE_SOURCE}`);
+  });
+
+  it('joins the stages of one night, even when it starts before midnight', () => {
+    const sessions = appleSleepSessions([
+      sample('2026-10-17T22:50:00', '2026-10-18T07:10:00', 0), // en la cama: no cuenta
+      sample('2026-10-17T23:10:00', '2026-10-18T00:40:00', 3), // básico
+      sample('2026-10-18T00:40:00', '2026-10-18T01:40:00', 4), // profundo
+      sample('2026-10-18T01:40:00', '2026-10-18T02:00:00', 2), // despierto
+      sample('2026-10-18T02:00:00', '2026-10-18T06:00:00', 3),
+      sample('2026-10-18T06:00:00', '2026-10-18T07:00:00', 5), // REM
+    ]);
+    expect(sessions).toHaveLength(1);
+    const [night] = summarizeSleepSessions(sessions);
+    expect(night.date).toBe('2026-10-18');
+    expect(night.asleep).toBe(90 + 60 + 240 + 60);
+    expect(night.stages).toEqual({ deep: 60, light: 330, rem: 60, awake: 20, outOfBed: 0 });
+    expect([night.start, night.end]).toEqual([-50, 420]);
+  });
+
+  it('keeps each app apart and drops nights that are only "in bed"', () => {
+    const sessions = appleSleepSessions([
+      sample('2026-10-17T23:00:00', '2026-10-18T07:00:00', 1, 'Oura'),
+      sample('2026-10-17T23:30:00', '2026-10-18T06:30:00', 0, 'This phone'),
+      sample('2026-10-18T23:00:00', '2026-10-19T06:00:00', 3),
+    ]);
+    expect(sessions.map((s) => s.source).sort()).toEqual(['Apple Watch', 'Oura']);
+    const nights = summarizeSleepSessions(sessions);
+    expect(nights.find((n) => n.source === 'Oura')).toMatchObject({ date: '2026-10-18', asleep: 480, stages: null });
   });
 });

@@ -176,6 +176,46 @@ export const clockMinutesFrom = (iso: string, day: string) => {
 // Entre dos sesiones de la misma noche (te levantas un rato) hay menos de una hora
 const SAME_SLEEP_GAP_MS = 60 * 60000;
 
+// Apple Salud no tiene "sesiones" de sueño: cada muestra es un tramo (en la cama, dormido, despierto,
+// sueño básico, profundo o REM) y cada app escribe los suyos. Esto junta, por fuente, los tramos casi
+// seguidos en una sesión con sus fases, para que una noche que empieza antes de las 12 cuente entera
+// para el día en que te despiertas. "En la cama" no es dormir ni estar despierto (se solapa con las
+// fases): no cuenta, y una sesión que solo tiene eso se descarta.
+const APPLE_SLEEP_STAGE: Record<number, number> = {
+  1: SLEEP_STAGE.SLEEPING, // asleepUnspecified
+  2: SLEEP_STAGE.AWAKE,
+  3: SLEEP_STAGE.LIGHT, // asleepCore: lo que Apple llama sueño básico
+  4: SLEEP_STAGE.DEEP,
+  5: SLEEP_STAGE.REM,
+};
+
+export interface AppleSleepSample {
+  startTime: string; // instantes ISO
+  endTime: string;
+  value: number; // CategoryValueSleepAnalysis de HealthKit (0 = en la cama)
+  source: string; // nombre visible (appleSourceName)
+}
+
+export function appleSleepSessions(samples: AppleSleepSample[]): SleepSessionInput[] {
+  const bySource = new Map<string, AppleSleepSample[]>();
+  for (const s of samples) if (APPLE_SLEEP_STAGE[s.value] !== undefined) bySource.set(s.source, [...(bySource.get(s.source) ?? []), s]);
+  const out: SleepSessionInput[] = [];
+  for (const [source, list] of bySource) {
+    let cur: SleepSessionInput | null = null;
+    for (const s of [...list].sort((a, b) => msOf(a.startTime) - msOf(b.startTime))) {
+      const stage = { startTime: s.startTime, endTime: s.endTime, stage: APPLE_SLEEP_STAGE[s.value] };
+      if (cur && msOf(s.startTime) - msOf(cur.endTime) <= SAME_SLEEP_GAP_MS) {
+        cur.stages!.push(stage);
+        if (msOf(s.endTime) > msOf(cur.endTime)) cur.endTime = s.endTime;
+      } else {
+        cur = { startTime: s.startTime, endTime: s.endTime, stages: [stage], source };
+        out.push(cur);
+      }
+    }
+  }
+  return out;
+}
+
 // Una noche por día en que te despiertas y por fuente. El tiempo dormido y las fases suman todas las
 // sesiones de ese día (siestas incluidas); la hora de dormirte y de despertarte salen del bloque con más
 // sueño (sesiones casi seguidas), para que una siesta no las cambie.

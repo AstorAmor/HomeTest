@@ -3516,4 +3516,19 @@ export const es: Record<string, string> = {
   'Frequent symptoms follow Rome IV (heaviness 3 days a week, pain with changes in your stools 1 day a week) and the Montreal definition of reflux. Rome IV asks for 3 months.': 'Las molestias frecuentes siguen Roma IV (pesadez 3 días por semana, dolor con cambios en las heces 1 día por semana) y la definición de Montreal del reflujo. Roma IV pide 3 meses.',
   'Before any test we ask about warning signs (weight loss, blood, anaemia, symptoms at night, trouble swallowing, starting after 50, family history). With any of them, we suggest a doctor instead of a test.': 'Antes de ninguna prueba preguntamos por señales de alarma (pérdida de peso, sangre, anemia, molestias por la noche, dificultad para tragar, inicio pasados los 50, antecedentes familiares). Con cualquiera de ellas, te sugerimos un médico en vez de una prueba.',
   'We do not recommend IgG "food intolerance" tests: allergy societies advise against using them for diagnosis. This is guidance from your own notes, not a diagnosis.': 'No recomendamos los test de IgG de «intolerancias alimentarias»: las sociedades de alergia desaconsejan usarlos para diagnosticar. Es una orientación a partir de tus apuntes, no un diagnóstico.',
+
+  // 2026-10-19: Apple Salud (app de iPhone)
+  'Apple Health': 'Apple Salud',
+  'Apple Watch and the apps that write to Health on your iPhone: Oura, Garmin, WHOOP, Huawei Health and others.':
+    'El Apple Watch y las apps que escriben en Salud en tu iPhone: Oura, Garmin, WHOOP, Huawei Health y otras.',
+  'Apple Health only works in the Kuova app for iPhone (not in the browser or Expo Go).':
+    'Apple Salud solo funciona en la app de Kuova para iPhone (no en el navegador ni en Expo Go).',
+  'Open Health': 'Abrir Salud',
+  'Connect Apple Health': 'Conectar Apple Salud',
+  'Synced the last 30 days from Apple Health.': 'Sincronizados los últimos 30 días de Apple Salud.',
+  'No data found in Apple Health for the last 30 days.': 'Apple Salud no tiene datos de los últimos 30 días.',
+  'Only your iPhone is sending data. If you wear a watch or a ring, open its app (Oura, Garmin Connect, WHOOP, Huawei Health…) and turn on sharing with Apple Health. Then tap Sync now.':
+    'Solo te llegan datos del iPhone. Si llevas reloj o anillo, abre su app (Oura, Garmin Connect, WHOOP, Huawei Health…) y activa compartir con Salud. Después toca Sincronizar ahora.',
+  'Something shows No data? Allow it in Health → your photo → Apps → Kuova, and check that your watch or ring app writes it to Health.':
+    '¿Algo sale «Sin datos»? Permítelo en Salud → tu foto → Apps → Kuova, y comprueba que la app de tu reloj o anillo lo escribe en Salud.',
 };
