@@ -1037,7 +1037,9 @@ al rellenar el cuestionario, no antes de ningún síntoma sino tras registrarlo�
 
 ## 2026-10-19 — Icono del intestino nuevo y app preparada para Apple Salud
 
-Sin commit todavía (el fundador decide cuándo commitear y publicar).
+**Publicado 4ca4ac5 el 19/10** con el OK del fundador («publica la app con npm run release», sabiendo que también salía
+Digestión a0e488b): EAS Update grupo c2ea682e y las dos webs, todo a la primera con `npm run release`. La migración
+`20261018150000_gut_symptom_logs.sql` sigue SIN aplicar (Digestión se guarda en el móvil).
 
 - **Icono del intestino** (`components/IntestineIcon.tsx`): redibujado como la referencia que mandó el fundador:
   un tubo con tres asas que se meten unas en otras y un tramo recto arriba y abajo. Trazo 1,5 (1,7 a partir de
