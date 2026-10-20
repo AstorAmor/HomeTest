@@ -7,7 +7,7 @@ import { t } from '@/i18n';
 // Agenda del paciente: se deriva de los análisis programados (DUMMY hasta que haya
 // pedidos reales) + la próxima analítica de la membresía (6 meses tras la última).
 
-export type ScheduleType = 'delivery' | 'sample' | 'pickup' | 'results' | 'membership' | 'lab';
+export type ScheduleType = 'delivery' | 'sample' | 'pickup' | 'results' | 'membership' | 'lab' | 'consult';
 
 export const SCHEDULE_COLORS: Record<ScheduleType, string> = {
   delivery: Colors.sky,
@@ -16,6 +16,7 @@ export const SCHEDULE_COLORS: Record<ScheduleType, string> = {
   results: Colors.amber,
   membership: Colors.pinkSoft,
   lab: Colors.coral,
+  consult: Colors.green,
 };
 
 export interface ScheduleEvent {
@@ -26,6 +27,8 @@ export interface ScheduleEvent {
   end?: string;
   title: string;
   detail: string;
+  // Lo que abre la tarjeta en la agenda (p. ej. entrar en la videoconsulta confirmada)
+  action?: { label: string; pathname: string; params: Record<string, string> };
 }
 
 const addDays = (iso: string, days: number) => {

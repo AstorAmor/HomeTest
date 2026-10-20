@@ -1,4 +1,5 @@
 import type { ScheduleEvent } from '@/data/schedule';
+import { Appointment, appointmentTitle, canJoinVideo } from '@/data/specialistTypes';
 import { dateLocale, t } from '@/i18n';
 import { TAB } from '@/constants/tabs';
 
@@ -22,6 +23,12 @@ export interface SummaryLine {
   target: { pathname: string; params?: Record<string, string> };
   highlight?: boolean; // resultados nuevos sin abrir
 }
+
+// Las consultas pendientes o confirmadas, como las espera el resumen
+export const summaryAppointments = (appts: Appointment[]): SummaryAppointment[] =>
+  appts
+    .filter((a) => a.status === 'pending' || a.status === 'confirmed')
+    .map((a) => ({ id: a.id, startsAt: a.startsAt, label: appointmentTitle(a), canJoin: canJoinVideo(a) }));
 
 const HORIZON_DAYS = 30;
 

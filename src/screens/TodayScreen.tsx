@@ -22,8 +22,7 @@ import { LEARNING_TOPICS } from '@/data/learning';
 import { buildSchedule } from '@/data/schedule';
 import { labAppointmentEvents } from '@/data/labAppointments';
 import { consult } from '@/data/consultations';
-import { KIND_LABEL } from '@/data/specialistTypes';
-import { buildSummary, SummaryLine } from '@/logic/summary';
+import { buildSummary, summaryAppointments, SummaryLine } from '@/logic/summary';
 import { loadNutrientFocus, nutrientsDoneToday } from '@/screens/NutrientsScreen';
 import { dateLocale, num, t } from '@/i18n';
 import { computeAchievements } from '@/data/achievements';
@@ -206,14 +205,7 @@ export const TodayScreen = () => {
       setSummary(
         buildSummary({
           events: [...buildSchedule(), ...labEvents],
-          appointments: appts
-            .filter((a) => a.status === 'pending' || a.status === 'confirmed')
-            .map((a) => ({
-              id: a.id,
-              startsAt: a.startsAt,
-              label: `${t(KIND_LABEL[a.kind])}${a.professionalName ? ` ${t('with')} ${a.professionalName}` : ''}`,
-              canJoin: /^[0-9a-f-]{36}$/i.test(a.id) && a.status === 'confirmed',
-            })),
+          appointments: summaryAppointments(appts),
           newResults: showSamples() && demoMode === 'results' && !seen,
           now: new Date(),
         })

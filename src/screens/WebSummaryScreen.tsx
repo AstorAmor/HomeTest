@@ -25,7 +25,8 @@ import { dosesForDay, isActiveOn } from '@/logic/medication';
 import { ScheduledDose } from '@/types/medication';
 import { buildSchedule } from '@/data/schedule';
 import { labAppointmentEvents } from '@/data/labAppointments';
-import { buildSummary, SummaryLine } from '@/logic/summary';
+import { consult } from '@/data/consultations';
+import { buildSummary, summaryAppointments, SummaryLine } from '@/logic/summary';
 import { computeReadiness, formatSleep, latest, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { TAB } from '@/constants/tabs';
 import { WelcomePrompts } from '@/components/WelcomePrompts';
@@ -120,11 +121,11 @@ export const WebSummaryScreen = () => {
 
   const load = useCallback(async () => {
     setLoadedAt(new Date());
-    labAppointmentEvents()
-      .catch(() => [])
-      .then((labEvents) =>
-        setUpcoming(buildSummary({ events: [...buildSchedule(), ...labEvents], appointments: [], newResults: false, now: new Date() }).slice(0, 3)),
-      );
+    Promise.all([labAppointmentEvents().catch(() => []), consult.myAppointments().catch(() => [])]).then(([labEvents, appts]) =>
+      setUpcoming(
+        buildSummary({ events: [...buildSchedule(), ...labEvents], appointments: summaryAppointments(appts), newResults: false, now: new Date() }).slice(0, 3),
+      ),
+    );
     Promise.all([medicationRepository.getAll(), doseRepository.getAll()])
       .then(([m, l]) => setDoses(dosesForDay(m.filter((i) => isActiveOn(i, new Date())), new Date(), l)))
       .catch(() => setDoses([]));

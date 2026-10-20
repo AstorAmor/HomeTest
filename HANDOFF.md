@@ -1286,3 +1286,34 @@ Las notificaciones con la app cerrada van en otra sesión (rama propia, necesita
   iOS no: EAS aún no tiene credenciales de Apple (la primera compilación de iPhone la lanza el fundador con su Apple ID).
   **Juntar esta rama con master antes del próximo `npm run release`**: si sale una release de master sin ella, el APK
   nuevo pasa a la JS sin recordatorios y los ya programados (hasta una semana) siguen saltando sin cancelarse.
+
+## 2026-10-20 (tarde) — Timbre del entrenamiento y consultas en la Agenda (master, sin commit ni publicar)
+
+- **Consultas en la Agenda**: la Agenda nunca leía las citas con especialistas (`consult.myAppointments()`); solo Hoy.
+  Ahora salen como tipo `consult` (verde) con hora local, duración y estado («Pendiente de confirmar» / «Confirmada»),
+  y una videoconsulta real confirmada se abre desde la tarjeta («Entrar en la videollamada»). Las canceladas no salen.
+  `consultationEvent(s)` en `src/data/consultations.ts`; `appointmentTitle` y `canJoinVideo` en `specialistTypes.ts`;
+  `summaryAppointments` en `logic/summary.ts` (Hoy y el resumen de la web del paciente, que no mostraba consultas).
+- **Timbre**: suena al acabar el descanso, al acabar un ejercicio por tiempo y a mitad de los que van por lado
+  («Cambia de lado»). Hoja «Sonido» desde la campana del modo guiado o la fila «Sonido: Campana» de la lista:
+  interruptor para silenciarlo y 4 tonos (Campana, Cuenco, Tres toques, Pitido; suenan al tocarlos). Preferencia por
+  móvil (`workoutBell.v1`). Tonos sintetizados con `scripts/workout-bells.py` → `assets/sounds/kuova_*.wav` (sin
+  licencias de terceros). En la app suenan con expo-audio, mezclados con la música y también con el móvil en silencio.
+- **Cuenta atrás por la hora**: antes restaba 1 por tic y con la pantalla bloqueada se paraba (React Native no da
+  temporizadores en segundo plano). Ahora guarda la hora de fin (`endsAt`) y al volver marca lo que queda; si el
+  ejercicio acabó bloqueado, el descanso cuenta desde que acabó. Lógica en `src/logic/workoutTimer.ts` (tests en
+  `workoutTimer.test.ts`, también los de la agenda).
+- **Con la pantalla bloqueada**: al pasar a segundo plano se programan avisos locales (`expo-notifications`, ids
+  `entreno-*`, no `kuova-*` para que los recordatorios no los cancelen) para cada final que quede (cambio de lado,
+  fin del ejercicio y fin del descanso siguiente); al volver se cancelan y se quitan de la barra. El permiso se pide
+  una vez al empezar la primera sesión guiada con sonido, o desde la hoja. Necesita un APK con expo-notifications
+  (bffff89c o posterior); con ee97dd7d solo suena con la app delante.
+- **APK siguiente (1.1.0, SIN construir)**: `app.json` lleva ya `version` 1.1.0, los 4 WAV en `sounds` del plugin de
+  expo-notifications (res/raw) y `SCHEDULE_EXACT_ALARM`. Un canal Android por tono (`entreno-campana`…; el sonido de un
+  canal no se puede cambiar). La app sabe si la APK los lleva por `nativeApplicationVersion` ≥ 1.1.0 (`lockToneAvailable`
+  en `data/workouts/bell.ts`); con bffff89c usa el canal `entreno` con el tono de avisos del móvil (crear un canal con
+  un sonido que no está en la APK lo dejaría con el tono por defecto para siempre). Sin alarmas exactas (bffff89c, o
+  Android 14+ sin «Alarmas y recordatorios» permitido) Android puede retrasar el aviso; la hoja lo explica. Si se
+  cambian los tonos, regenerar con el script y hace falta otra APK para la pantalla bloqueada.
+- Sin probar en un móvil: el aviso con la pantalla bloqueada y los canales. Probado en la web (demo): reserva → sale en
+  la Agenda; fin de descanso, cambio de lado y fin de ejercicio suenan; silenciado no suena.

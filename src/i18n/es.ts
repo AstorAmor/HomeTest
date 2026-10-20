@@ -191,6 +191,9 @@ export const es: Record<string, string> = {
   Results: 'Resultados',
   Subscription: 'Suscripción',
   'Lab appointment': 'Cita en laboratorio',
+  Consultation: 'Consulta',
+  'Waiting for confirmation': 'Pendiente de confirmar',
+  'Join the video call': 'Entrar en la videollamada',
 
   // ── My Data ──
   'Your biological age': 'Tu edad biológica',

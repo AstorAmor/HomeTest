@@ -157,6 +157,13 @@ export const KIND_LABEL: Record<AppointmentKind, string> = {
   results_review: t('Results review'),
 };
 
+// "Primera visita con Gema Martínez" (Hoy y Agenda)
+export const appointmentTitle = (a: Appointment) =>
+  `${t(KIND_LABEL[a.kind])}${a.professionalName ? ` ${t('with')} ${a.professionalName}` : ''}`;
+
+// Solo las citas reales (id de Supabase) confirmadas tienen sala de vídeo
+export const canJoinVideo = (a: Appointment) => /^[0-9a-f-]{36}$/i.test(a.id) && a.status === 'confirmed';
+
 export const REQUEST_KIND_LABEL: Record<RequestKind, string> = {
   question: t('Question'),
   results_review: t('Review my results'),

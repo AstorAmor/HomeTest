@@ -8,6 +8,7 @@ import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
 import { Colors } from '@/constants/colors';
 import { buildSchedule, calendarLinks, SCHEDULE_COLORS, ScheduleEvent, ScheduleType } from '@/data/schedule';
 import { labAppointmentEvents } from '@/data/labAppointments';
+import { consultationEvents } from '@/data/consultations';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, t } from '@/i18n';
 
@@ -18,26 +19,34 @@ const TYPE_LABEL: Record<ScheduleType, string> = {
   results: 'Results',
   membership: 'Subscription',
   lab: 'Lab appointment',
+  consult: 'Consultation',
 };
 
 const formatDay = (key: string) =>
   new Date(`${key}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
-// "Your schedule" (pestaña de abajo y /schedule): vista mensual de pruebas, envíos y resultados, y botones
-// para añadir cada evento a Google Calendar, Outlook o Yahoo.
+// "Your schedule" (pestaña de abajo y /schedule): vista mensual de pruebas, envíos, resultados, citas en
+// el laboratorio y consultas con especialistas, y botones para añadir cada evento a Google Calendar,
+// Outlook o Yahoo.
 // `embedded`: dentro de la pestaña Schedule (sin flecha atrás)
 export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => {
   const base = useMemo(buildSchedule, []);
   const [labEvents, setLabEvents] = useDeepState<ScheduleEvent[]>([]);
-  useReloadOnFocus(useCallback(async () => setLabEvents(await labAppointmentEvents()), [setLabEvents]));
+  const [consultEvents, setConsultEvents] = useDeepState<ScheduleEvent[]>([]);
+  useReloadOnFocus(
+    useCallback(async () => {
+      labAppointmentEvents().then(setLabEvents).catch(() => undefined);
+      consultationEvents().then(setConsultEvents).catch(() => undefined);
+    }, [setLabEvents, setConsultEvents]),
+  );
   const events = useMemo(
-    () => [...base, ...labEvents].sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? ''))),
-    [base, labEvents],
+    () => [...base, ...labEvents, ...consultEvents].sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? ''))),
+    [base, labEvents, consultEvents],
   );
   const firstUpcoming = events.find((e) => e.date >= toDayKey(new Date()))?.date ?? toDayKey(new Date());
   const [month, setMonth] = useState(new Date(`${firstUpcoming}T12:00:00`));
   const [selected, setSelected] = useState<string | null>(firstUpcoming);
-  // Las citas de laboratorio llegan después (async): mientras el usuario no haya tocado
+  // Las citas de laboratorio y las consultas llegan después (async): mientras el usuario no haya tocado
   // el calendario, se salta al primer evento pendiente.
   const touched = useRef(false);
   useEffect(() => {
@@ -111,14 +120,16 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
   const router = useRouter();
   const links = calendarLinks(event);
   const color = SCHEDULE_COLORS[event.type];
-  // Las citas de laboratorio abren su ficha (mapa, llamar, cambiar o cancelar)
+  // Las citas de laboratorio abren su ficha (mapa, llamar, cambiar o cancelar); una videoconsulta
+  // confirmada, la llamada
   const isLab = event.type === 'lab';
+  const target = isLab ? { pathname: '/lab-appointment', params: { id: event.id } } : event.action;
   return (
     <View style={[styles.event, { borderLeftColor: color }]}>
       <TouchableOpacity
-        disabled={!isLab}
+        disabled={!target}
         activeOpacity={0.85}
-        onPress={() => router.push({ pathname: '/lab-appointment', params: { id: event.id } })}
+        onPress={() => target && router.push(target as any)}
       >
       <View style={styles.eventHeader}>
         <Text style={[styles.eventType, { color }]}>{t(TYPE_LABEL[event.type])}</Text>
@@ -129,9 +140,9 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
       </View>
       <Text style={styles.eventTitle}>{event.title}</Text>
       <Text style={styles.eventDetail}>{event.detail}</Text>
-      {isLab && (
+      {target && (
         <Text style={styles.eventLink}>
-          {t('See appointment: map, call, change or cancel')} <Ionicons name="chevron-forward" size={12} color={Colors.accent} />
+          {isLab ? t('See appointment: map, call, change or cancel') : event.action?.label} <Ionicons name="chevron-forward" size={12} color={Colors.accent} />
         </Text>
       )}
       </TouchableOpacity>

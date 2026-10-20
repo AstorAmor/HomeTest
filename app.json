@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kuova",
     "slug": "app-tests-medicos",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "apptestsmedicos",
@@ -30,6 +30,7 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
@@ -87,7 +88,13 @@
         "expo-notifications",
         {
           "icon": "./assets/images/notification-icon.png",
-          "color": "#2E7D5B"
+          "color": "#2E7D5B",
+          "sounds": [
+            "./assets/sounds/kuova_campana.wav",
+            "./assets/sounds/kuova_cuenco.wav",
+            "./assets/sounds/kuova_toques.wav",
+            "./assets/sounds/kuova_pitido.wav"
+          ]
         }
       ],
       [

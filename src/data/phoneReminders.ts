@@ -30,7 +30,7 @@ import {
 // bajo demanda, como expo-print en src/utils/sharePlan.ts: si falta, todo esto no hace nada y la app
 // sigue con los avisos de la bandeja (src/data/nudgeStore.ts), como hasta ahora.
 
-type NotificationsModule = typeof import('expo-notifications');
+export type NotificationsModule = typeof import('expo-notifications');
 
 // Lo que evalúa `import 'expo-notifications'` al cargarse (si falta uno, el require fallaría)
 const NATIVE_MODULES = [
@@ -44,7 +44,8 @@ const NATIVE_MODULES = [
 
 let native: NotificationsModule | null | undefined;
 
-function loadNotifications(): NotificationsModule | null {
+// También lo usa el timbre del entrenamiento (src/data/workouts/bell.ts)
+export function loadNotifications(): NotificationsModule | null {
   if (native !== undefined) return native;
   native = null;
   if (Platform.OS === 'web' || NATIVE_MODULES.some((m) => !requireOptionalNativeModule(m))) return native;
@@ -65,11 +66,11 @@ export const phoneRemindersSupported = () => loadNotifications() !== null;
 // --- Permiso y «activado» ------------------------------------------------------------------
 
 // Permiso del sistema. blocked = denegado y ya no deja volver a preguntar: solo desde sus ajustes.
-type Permission = 'undetermined' | 'granted' | 'denied' | 'blocked';
+export type Permission = 'undetermined' | 'granted' | 'denied' | 'blocked';
 
 type PermissionResponse = Awaited<ReturnType<NotificationsModule['getPermissionsAsync']>>;
 
-function toPermission(N: NotificationsModule, r: PermissionResponse): Permission {
+export function toPermission(N: NotificationsModule, r: PermissionResponse): Permission {
   if (r.granted || r.ios?.status === N.IosAuthorizationStatus.PROVISIONAL) return 'granted';
   if (r.status === 'undetermined') return 'undetermined';
   return r.canAskAgain ? 'denied' : 'blocked';

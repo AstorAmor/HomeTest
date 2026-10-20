@@ -1,12 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
+import { t } from '@/i18n';
 import { mockProfessionals } from './servicesMock';
+import type { ScheduleEvent } from './schedule';
 import {
   Appointment,
   AppointmentKind,
   AppointmentModality,
+  appointmentTitle,
   Availability,
+  canJoinVideo,
   ConsultRequest,
   DEFAULT_AVAILABILITY,
   RequestKind,
@@ -235,4 +239,37 @@ export async function audioUrl(path: string): Promise<string | null> {
   if (!/^[0-9a-f-]{36}\//i.test(path) || !supabase) return path;
   const { data } = await supabase.storage.from('request-audio').createSignedUrl(path, 3600);
   return data?.signedUrl ?? null;
+}
+
+// Las citas con especialistas en la agenda, a la hora del móvil (startsAt viene en UTC). Las
+// canceladas no salen; las pendientes sí, con su estado, para que no parezca que no se guardó.
+const pad = (n: number) => String(n).padStart(2, '0');
+const localDay = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const localTime = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const STATUS_TEXT: Record<Appointment['status'], string> = {
+  pending: 'Waiting for confirmation',
+  confirmed: 'Confirmed',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+};
+
+export function consultationEvent(a: Appointment): ScheduleEvent {
+  const start = new Date(a.startsAt);
+  const end = new Date(start.getTime() + a.durationMin * 60000);
+  const title = appointmentTitle(a);
+  return {
+    id: a.id,
+    type: 'consult',
+    date: localDay(start),
+    start: localTime(start),
+    end: localTime(end),
+    title,
+    detail: `${t(a.modality === 'video' ? 'Video call' : 'Voice call')} · ${t(STATUS_TEXT[a.status])}`,
+    action: canJoinVideo(a) ? { label: t('Join the video call'), pathname: '/video', params: { appt: a.id, title } } : undefined,
+  };
+}
+
+export async function consultationEvents(): Promise<ScheduleEvent[]> {
+  const all = await consult.myAppointments();
+  return all.filter((a) => a.status !== 'cancelled').map(consultationEvent);
 }

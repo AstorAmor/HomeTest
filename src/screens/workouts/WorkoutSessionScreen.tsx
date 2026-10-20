@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { AppState, View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -18,12 +18,27 @@ import { WorkoutModal } from '@/components/workouts/WorkoutModal';
 import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
 import type { CatalogExercise } from '@/data/workouts/types';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
+import { BellSheet } from '@/components/workouts/BellSheet';
+import {
+  BELL_TONES,
+  BellAlarm,
+  cancelBellAlarms,
+  offerBellOnLock,
+  prepareBell,
+  releaseBells,
+  ringBell,
+  scheduleBellAlarms,
+  useBellPrefs,
+} from '@/data/workouts/bell';
+import { secondsLeft, upcomingEnds } from '@/logic/workoutTimer';
 import { t, tn } from '@/i18n';
 
 // Una sesión del programa: primero la lista (calentamiento, ejercicios, remate y estiramientos) y,
 // al pulsar Empezar, el modo guiado: un ejercicio cada vez con su vídeo, la serie en la que vas,
-// el temporizador si va por tiempo y el descanso con cuenta atrás. Al terminar se guarda como
-// sesión hecha del programa y como entrenamiento del plan (cuenta para las 3 de fuerza a la semana).
+// el temporizador si va por tiempo y el descanso con cuenta atrás. Al acabar cada cuenta atrás suena
+// el timbre elegido, también con la pantalla bloqueada (src/data/workouts/bell.ts). Al terminar se
+// guarda como sesión hecha del programa y como entrenamiento del plan (cuenta para las 3 de fuerza a
+// la semana).
 
 type Step = { item: number; set: number };
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
@@ -55,6 +70,10 @@ export const WorkoutSessionScreen = () => {
   const [saved, setSaved] = useState(false);
   const [swapAt, setSwapAt] = useState<number | null>(null); // índice en session.exercises
   const startedAt = useRef<number>(0);
+  const endsAt = useRef(0); // cuándo acaba la cuenta atrás en marcha (hora del reloj, en ms)
+  const sideRung = useRef(false); // ya sonó el cambio de lado de este ejercicio
+  const [bell, setBell] = useBellPrefs();
+  const [bellOpen, setBellOpen] = useState(false);
 
   useEffect(() => {
     programRepository.get(programId).then(setProgram);
@@ -71,16 +90,33 @@ export const WorkoutSessionScreen = () => {
   const nextStep = steps[cursor + 1];
   const nextItem = nextStep && session ? session.exercises[nextStep.item] : undefined;
   const nextEx = nextItem ? getExercise(nextItem.exerciseId) : undefined;
+  const timed = !!item && isTimed(item);
+  const total = item && timed ? timedSeconds(item.reps) * (ex?.perSide ? 2 : 1) : 0;
 
-  // Reloj general y cuentas atrás
+  // Reloj general y cuentas atrás, por la hora: con la pantalla bloqueada no hay tics y al volver
+  // tiene que marcar lo que de verdad queda
   useEffect(() => {
     if (mode !== 'run') return;
     const id = setInterval(() => {
       setElapsed(Math.round((Date.now() - startedAt.current) / 1000));
-      if (phase === 'rest' || timerOn) setLeft((l) => l - 1);
-    }, 1000);
+      if (phase === 'rest' || timerOn) setLeft(secondsLeft(endsAt.current, Date.now()));
+    }, 250);
     return () => clearInterval(id);
   }, [mode, phase, timerOn]);
+
+  const countTo = useCallback((at: number) => {
+    endsAt.current = at;
+    setLeft(secondsLeft(at, Date.now()));
+  }, []);
+
+  // Suena si el final acaba de pasar con la app delante; si pasó con la pantalla bloqueada ya sonó
+  // el aviso del móvil
+  const ringFor = useCallback(
+    (at: number) => {
+      if (bell.on && AppState.currentState === 'active' && Date.now() - at < 3000) ringBell(bell.tone);
+    },
+    [bell.on, bell.tone],
+  );
 
   const startStep = useCallback(
     (i: number) => {
@@ -89,13 +125,15 @@ export const WorkoutSessionScreen = () => {
       setCursor(i);
       setPhase('work');
       setTimerOn(false);
+      sideRung.current = false;
       if (it && isTimed(it)) setLeft(timedSeconds(it.reps) * (getExercise(it.exerciseId)?.perSide ? 2 : 1));
     },
     [steps, session],
   );
 
-  // done = false cuando se salta: pasa al siguiente sin contarla como serie hecha
-  const finishStep = useCallback((done = true) => {
+  // done = false cuando se salta: pasa al siguiente sin contarla como serie hecha. at = cuándo acabó
+  // (el final de su cuenta atrás, aunque se note al volver de la pantalla bloqueada)
+  const finishStep = useCallback((done = true, at = Date.now()) => {
     if (done) setSetsDone((n) => n + 1);
     setTimerOn(false);
     if (cursor >= steps.length - 1) {
@@ -105,16 +143,67 @@ export const WorkoutSessionScreen = () => {
     const rest = item?.restSec ?? 0;
     if (rest > 0) {
       setPhase('rest');
-      setLeft(rest);
+      countTo(at + rest * 1000);
     } else startStep(cursor + 1);
-  }, [cursor, steps.length, item, startStep]);
+  }, [cursor, steps.length, item, startStep, countTo]);
 
   // Fin de la cuenta atrás: descanso → siguiente; ejercicio por tiempo → hecho
   useEffect(() => {
     if (mode !== 'run' || left > 0) return;
-    if (phase === 'rest') startStep(cursor + 1);
-    else if (timerOn) finishStep();
-  }, [left, mode, phase, timerOn, cursor, startStep, finishStep]);
+    if (phase === 'rest') {
+      ringFor(endsAt.current);
+      startStep(cursor + 1);
+    } else if (timerOn) {
+      ringFor(endsAt.current);
+      finishStep(true, endsAt.current);
+    }
+  }, [left, mode, phase, timerOn, cursor, startStep, finishStep, ringFor]);
+
+  // A mitad de un ejercicio por tiempo que va por lado: cambia de lado
+  useEffect(() => {
+    if (mode !== 'run' || phase !== 'work' || !timerOn || !ex?.perSide || sideRung.current || left > total / 2) return;
+    sideRung.current = true;
+    ringFor(endsAt.current - total * 500);
+  }, [left, mode, phase, timerOn, ex, total, ringFor]);
+
+  // Con la pantalla bloqueada o fuera de la app: un aviso del móvil por cada final que quede. Se
+  // calcula al salir, con lo que haya en ese momento.
+  const planAlarms = useRef<() => BellAlarm[]>(() => []);
+  useEffect(() => {
+    planAlarms.current = () => {
+      if (mode !== 'run' || !bell.on || !item || !ex) return [];
+      const next = nextEx ? exerciseName(nextEx) : '';
+      return upcomingEnds({
+        now: Date.now(),
+        phase,
+        timerOn,
+        endsAt: endsAt.current,
+        totalSec: total,
+        perSide: !!ex.perSide,
+        restAfterSec: cursor < steps.length - 1 ? (item.restSec ?? 0) : 0,
+      }).map((e) => ({
+        at: e.at,
+        title: e.kind === 'side' ? t('Switch sides') : e.kind === 'work' ? t('Time!') : t('Rest is over'),
+        body: e.kind === 'rest' ? (next ? `${t('Next')}: ${next}` : '') : exerciseName(ex),
+      }));
+    };
+  });
+  useEffect(() => {
+    if (mode !== 'run') return;
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'background') scheduleBellAlarms(planAlarms.current(), bell.tone);
+      else if (s === 'active') cancelBellAlarms();
+    });
+    return () => {
+      sub.remove();
+      cancelBellAlarms();
+    };
+  }, [mode, bell.tone]);
+
+  useEffect(() => {
+    if (mode === 'run' && bell.on) prepareBell(bell.tone);
+  }, [mode, bell.on, bell.tone]);
+  useEffect(() => releaseBells, []);
 
   const start = () => {
     startedAt.current = Date.now();
@@ -122,7 +211,11 @@ export const WorkoutSessionScreen = () => {
     setSetsDone(0);
     setMode('run');
     startStep(0);
+    if (bell.on) offerBellOnLock(bell.tone);
   };
+
+  const toneLabel = t(BELL_TONES.find((x) => x.id === bell.tone)?.label ?? 'Bell');
+  const bellSheet = <BellSheet visible={bellOpen} prefs={bell} onChange={setBell} onClose={() => setBellOpen(false)} />;
 
   const quit = async () => {
     const ok = await confirmAsk(t('Stop the session?'), t('What you did so far will not be saved.'), t('Stop'));
@@ -180,8 +273,6 @@ export const WorkoutSessionScreen = () => {
 
   // ── Modo guiado ──
   if (mode === 'run' && item && ex) {
-    const timed = isTimed(item);
-    const total = timed ? timedSeconds(item.reps) * (ex.perSide ? 2 : 1) : 0;
     const secondSide = timed && ex.perSide && left <= total / 2;
     const big = Math.min(width - 40, 520);
     return (
@@ -194,6 +285,9 @@ export const WorkoutSessionScreen = () => {
             <View style={[styles.progressFill, { width: `${(cursor / steps.length) * 100}%` }]} />
           </View>
           <Text style={styles.clock}>{fmt(elapsed)}</Text>
+          <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={10} accessibilityLabel={t('Sound')}>
+            <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={22} color={bell.on ? Colors.accent : Colors.textMuted} />
+          </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.runBody}>
@@ -202,7 +296,7 @@ export const WorkoutSessionScreen = () => {
               <Text style={styles.blockTag}>{t('Rest')}</Text>
               <Text style={styles.restClock}>{fmt(Math.max(0, left))}</Text>
               <View style={styles.restButtons}>
-                <TouchableOpacity style={styles.secondary} onPress={() => setLeft((l) => l + 15)}>
+                <TouchableOpacity style={styles.secondary} onPress={() => countTo(endsAt.current + 15000)}>
                   <Text style={styles.secondaryText}>+15 s</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.secondary} onPress={() => startStep(cursor + 1)}>
@@ -248,7 +342,13 @@ export const WorkoutSessionScreen = () => {
         {phase === 'work' && (
           <View style={styles.runBottom}>
             {timed && !timerOn ? (
-              <TouchableOpacity style={styles.primary} onPress={() => setTimerOn(true)}>
+              <TouchableOpacity
+                style={styles.primary}
+                onPress={() => {
+                  setTimerOn(true);
+                  countTo(Date.now() + total * 1000);
+                }}
+              >
                 <Ionicons name="play" size={18} color={Colors.background} />
                 <Text style={styles.primaryText}>{t('Start timer')}</Text>
               </TouchableOpacity>
@@ -263,6 +363,7 @@ export const WorkoutSessionScreen = () => {
             </TouchableOpacity>
           </View>
         )}
+        {bellSheet}
       </SafeAreaView>
     );
   }
@@ -305,6 +406,11 @@ export const WorkoutSessionScreen = () => {
         <Text style={styles.meta}>
           ~{estimateMinutes(session)} min · {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
         </Text>
+        <TouchableOpacity style={styles.soundRow} onPress={() => setBellOpen(true)} accessibilityLabel={t('Sound')}>
+          <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={16} color={bell.on ? Colors.accent : Colors.textMuted} />
+          <Text style={styles.soundText}>{bell.on ? t('Sound: {tone}', { tone: toneLabel }) : t('No sound')}</Text>
+          <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+        </TouchableOpacity>
         {byBlock.map((g) => (
           <View key={g.block} style={{ marginBottom: 8 }}>
             <Text style={styles.section}>{blockLabel(g.block)}</Text>
@@ -349,6 +455,7 @@ export const WorkoutSessionScreen = () => {
           </>
         )}
       </WorkoutModal>
+      {bellSheet}
     </SafeAreaView>
   );
 };
@@ -361,6 +468,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 24 },
   muted: { color: Colors.textSecondary, fontSize: 13, marginHorizontal: 0 },
   meta: { color: Colors.textSecondary, fontSize: 14, marginBottom: 6 },
+  soundRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4, marginBottom: 4 },
+  soundText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
   section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 10, marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 8, marginBottom: 8 },
   rowName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },

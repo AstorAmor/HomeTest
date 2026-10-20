@@ -235,4 +235,33 @@ export const workoutsEs: Record<string, string> = {
   'Same type of movement, with your equipment.': 'Del mismo tipo de movimiento y con tu material.',
   'Same type of movement, with your equipment. {name} will see the change.': 'Del mismo tipo de movimiento y con tu material. {name} verá el cambio.',
   'Your trainer': 'Tu entrenador',
+
+  // 2026-10-20: timbre al acabar la cuenta atrás
+  Sound: 'Sonido',
+  'Sound: {tone}': 'Sonido: {tone}',
+  'No sound': 'Sin sonido',
+  'Sound when the countdown ends': 'Sonido al acabar la cuenta atrás',
+  'Tap a sound to hear it.': 'Toca un sonido para escucharlo.',
+  Bell: 'Campana',
+  'Singing bowl': 'Cuenco',
+  'Three chimes': 'Tres toques',
+  Beep: 'Pitido',
+  'Switch sides': 'Cambia de lado',
+  'Time!': '¡Tiempo!',
+  'Rest is over': 'Se acabó el descanso',
+  'Workout timer': 'Temporizador del entrenamiento',
+  'When a rest or a timed exercise ends with the screen locked.': 'Cuando acaba un descanso o un ejercicio por tiempo con la pantalla bloqueada.',
+  'In the browser it only rings with this page open.': 'En el navegador solo suena con esta página abierta.',
+  'With the screen locked it will ring once you install the latest version of the app.':
+    'Con la pantalla bloqueada sonará cuando instales la última versión de la app.',
+  'To ring with the screen locked too, Kuova needs permission to send you notifications.':
+    'Para que suene también con la pantalla bloqueada, Kuova necesita permiso para enviarte avisos.',
+  'Notifications from Kuova are off in your phone settings, so it will not ring with the screen locked.':
+    'Los avisos de Kuova están desactivados en los ajustes del móvil: con la pantalla bloqueada no sonará.',
+  'It also rings with the screen locked.': 'También suena con la pantalla bloqueada.',
+  "With the screen locked you will hear your phone's notification sound. The sound you choose here comes with the next version of the app.":
+    'Con la pantalla bloqueada suena el tono de avisos del móvil. El sonido que elijas aquí llegará con la próxima versión de la app.',
+  'Allow notifications': 'Permitir avisos',
+  'If it rings late with the screen locked, allow "Alarms & reminders" for Kuova in your phone settings.':
+    'Si con la pantalla bloqueada suena tarde, permite «Alarmas y recordatorios» para Kuova en los ajustes del móvil.',
 };
