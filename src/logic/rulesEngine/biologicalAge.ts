@@ -1,43 +1,65 @@
-// Cálculo de edad biológica -- PENDIENTE de la investigación externa (ver
-// prompts/README.md). La firma de la función ya está cerrada para que el
-// resto del motor (RecommendationInput.biologicalAge, la sección de
-// "resumen ejecutivo" del informe) se pueda construir ya, sin esperar a la
-// fórmula. NO usar en producción hasta rellenar el cuerpo: lanza un error
-// explícito a propósito para que sea imposible que esto se cuele en un
-// informe real sin que alguien lo note primero.
-//
-// Lo que ya sabemos (de la investigación previa, sin decidir todavía):
-//   - Candidatas: PhenoAge (Levine 2018), Klemera-Doubal (KDM), Homeostatic
-//     Dysregulation. Hay un paquete de referencia en R ("BioAge",
-//     https://github.com/dayoonkwon/BioAge) que implementa las tres.
-//   - PhenoAge usa 9 biomarcadores + edad cronológica: albúmina, creatinina,
-//     glucosa, log(PCR), % linfocitos, VCM, RDW, fosfatasa alcalina y
-//     leucocitos totales -- todos ya existen como canonical_id en el
-//     catálogo (hepatico/renal/metabolico/hematologia.json), lo que la hace
-//     la candidata más fácil de implementar con el panel actual.
-//   - Falta decidir: fórmula exacta con coeficientes, qué hacer si faltan
-//     inputs (¿no calcular, o calcular con menor `confidence`?), y cómo
-//     comunicar el resultado sin parecer un diagnóstico.
+// Edad biológica para el motor: PhenoAge (Levine 2018), el mismo cálculo que la Edad KUOVA de la app
+// (src/logic/phenoAge.ts y src/logic/kuovaAge.ts). Usa los 9 valores por canonical_id más la edad;
+// si falta alguno, la unidad no sirve, la PCR pasa de 10 mg/L o la edad está fuera de 20-84 años,
+// devuelve null (missingBiologicalAgeInputs dice qué valores faltan).
 
 import { BiologicalAgeResult } from '@/types/recommendation';
 import { BiomarkerLookup } from './ratios';
-
-export class BiologicalAgeNotImplementedError extends Error {
-  constructor() {
-    super(
-      'Cálculo de edad biológica pendiente de decisión de fórmula (ver src/logic/rulesEngine/biologicalAge.ts). ' +
-        'No usar computeBiologicalAge() en producción todavía.'
-    );
-    this.name = 'BiologicalAgeNotImplementedError';
-  }
-}
+import {
+  CRP_ACUTE_MG_L,
+  PHENO_MAX_AGE,
+  PHENO_MIN_AGE,
+  PhenoInput,
+  PhenoValues,
+  phenoAge,
+  phenoAgeMargin,
+  toPhenoUnits,
+} from '@/logic/phenoAge';
 
 export interface BiologicalAgeInputs {
   chronologicalAge: number;
   lookup: BiomarkerLookup;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function computeBiologicalAge(inputs: BiologicalAgeInputs): BiologicalAgeResult {
-  throw new BiologicalAgeNotImplementedError();
+const CANONICAL: Record<PhenoInput, string> = {
+  albumin: 'ALBUMIN',
+  creatinine: 'CREATININE',
+  glucose: 'GLUCOSE',
+  hs_crp: 'HS_CRP',
+  lymphocytes_pct: 'LYMPHOCYTES', // solo si viene en %
+  mcv: 'MCV',
+  rdw: 'RDW',
+  alp: 'ALP',
+  wbc: 'WBC_COUNT',
+};
+
+export function missingBiologicalAgeInputs(lookup: BiomarkerLookup): string[] {
+  return (Object.keys(CANONICAL) as PhenoInput[])
+    .filter((id) => {
+      const b = lookup(CANONICAL[id]);
+      return !b || toPhenoUnits(id, b.value, b.unit) == null;
+    })
+    .map((id) => CANONICAL[id]);
+}
+
+export function computeBiologicalAge({ chronologicalAge, lookup }: BiologicalAgeInputs): BiologicalAgeResult | null {
+  if (chronologicalAge < PHENO_MIN_AGE || chronologicalAge >= PHENO_MAX_AGE + 1) return null;
+  if (missingBiologicalAgeInputs(lookup).length) return null;
+  const values = {} as PhenoValues;
+  for (const id of Object.keys(CANONICAL) as PhenoInput[]) {
+    const b = lookup(CANONICAL[id])!;
+    values[id] = toPhenoUnits(id, b.value, b.unit)!;
+  }
+  if (values.hs_crp * 10 > CRP_ACUTE_MG_L) return null;
+  const age = phenoAge(values, chronologicalAge);
+  const margin = phenoAgeMargin(values);
+  return {
+    method: 'PhenoAge',
+    chronologicalAge,
+    biologicalAge: Math.round(age * 10) / 10,
+    delta: Math.round((age - chronologicalAge) * 10) / 10,
+    // Solo para el motor: margen (95 %) de hasta 3 años, alta; hasta 5, media; más, baja
+    confidence: margin <= 3 ? 'high' : margin <= 5 ? 'medium' : 'low',
+    missingInputs: [],
+  };
 }

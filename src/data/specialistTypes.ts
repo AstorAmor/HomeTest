@@ -164,6 +164,22 @@ export const appointmentTitle = (a: Appointment) =>
 // Solo las citas reales (id de Supabase) confirmadas tienen sala de vídeo
 export const canJoinVideo = (a: Appointment) => /^[0-9a-f-]{36}$/i.test(a.id) && a.status === 'confirmed';
 
+// Una consulta con este especialista pedida en los últimos 7 días que sigue en pie (pendiente o
+// confirmada, y aún por llegar). Al pedir otra, la app pregunta si se quiere cambiar por la nueva
+// (y, si el especialista ya la confirmó, también si se quiere cancelar). Sin fecha de petición
+// (citas antiguas del móvil) cuenta como reciente: mejor preguntar de más que duplicar.
+export function recentAppointmentWith(appts: Appointment[], proId: string, now = new Date()): Appointment | null {
+  const weekAgo = now.getTime() - 7 * 86400000;
+  const live = appts.filter(
+    (a) =>
+      a.professionalId === proId &&
+      (a.status === 'pending' || a.status === 'confirmed') &&
+      new Date(a.startsAt).getTime() > now.getTime() &&
+      (!a.createdAt || new Date(a.createdAt).getTime() >= weekAgo),
+  );
+  return live.sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0] ?? null;
+}
+
 export const REQUEST_KIND_LABEL: Record<RequestKind, string> = {
   question: t('Question'),
   results_review: t('Review my results'),

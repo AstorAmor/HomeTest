@@ -26,24 +26,24 @@
     },
     "phenoage": {
       "available": true,
-      "low": 33.4,
-      "high": 37.8,
+      "low": 28.2,
+      "high": 34.4,
       "chronological_age": 32,
       "drivers": [
+        {
+          "marker_id": "glucose",
+          "direction": "suma"
+        },
         {
           "marker_id": "hs_crp",
           "direction": "suma"
         },
         {
-          "marker_id": "homa_ir",
-          "direction": "suma"
-        },
-        {
-          "marker_id": "hdl",
+          "marker_id": "creatinine",
           "direction": "suma"
         }
       ],
-      "explanation": "Tu edad fenotípica estimada es algo superior a tu edad cronológica, principalmente por la inflamación de bajo grado y la resistencia a la insulina."
+      "explanation": "Tu Edad KUOVA está cerca de tu edad real. Lo que más años le suma es la glucosa, la PCR y la creatinina."
     }
   },
   "sections": [

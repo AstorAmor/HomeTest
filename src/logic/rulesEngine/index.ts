@@ -17,7 +17,7 @@ export {
 } from './ratios';
 export type { AvailableBiomarker, BiomarkerLookup } from './ratios';
 
-export { computeBiologicalAge, BiologicalAgeNotImplementedError } from './biologicalAge';
+export { computeBiologicalAge, missingBiologicalAgeInputs } from './biologicalAge';
 export type { BiologicalAgeInputs } from './biologicalAge';
 
 export {

@@ -24,7 +24,6 @@ const TYPE_LABEL: Record<ScheduleType, string> = {
 
 const formatDay = (key: string) =>
   new Date(`${key}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
-
 // "Your schedule" (pestaña de abajo y /schedule): vista mensual de pruebas, envíos, resultados, citas en
 // el laboratorio y consultas con especialistas, y botones para añadir cada evento a Google Calendar,
 // Outlook o Yahoo.
@@ -43,16 +42,17 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
     () => [...base, ...labEvents, ...consultEvents].sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? ''))),
     [base, labEvents, consultEvents],
   );
-  const firstUpcoming = events.find((e) => e.date >= toDayKey(new Date()))?.date ?? toDayKey(new Date());
+  const today = toDayKey(new Date());
+  const firstUpcoming = events.find((e) => e.date >= today)?.date ?? today;
   const [month, setMonth] = useState(new Date(`${firstUpcoming}T12:00:00`));
-  const [selected, setSelected] = useState<string | null>(firstUpcoming);
+  // Por defecto, el mes entero (casi nunca hay más de una cita al día); tocar un día lo filtra
+  const [selected, setSelected] = useState<string | null>(null);
   // Las citas de laboratorio y las consultas llegan después (async): mientras el usuario no haya tocado
-  // el calendario, se salta al primer evento pendiente.
+  // el calendario, se salta al mes del primer evento pendiente.
   const touched = useRef(false);
   useEffect(() => {
     if (touched.current) return;
     setMonth(new Date(`${firstUpcoming}T12:00:00`));
-    setSelected(firstUpcoming);
   }, [firstUpcoming]);
 
   const marks = useMemo(() => {
@@ -62,7 +62,10 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
   }, [events]);
 
   const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
-  const shown = selected ? events.filter((e) => e.date === selected) : events.filter((e) => e.date.startsWith(monthKey));
+  const inMonth = events.filter((e) => e.date.startsWith(monthKey));
+  const upcoming = inMonth.filter((e) => e.date >= today);
+  const past = inMonth.filter((e) => e.date < today).reverse(); // la más reciente primero
+  const dayEvents = selected ? events.filter((e) => e.date === selected) : [];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -96,13 +99,41 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>
-          {selected ? formatDay(selected) : month.toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' })}
-        </Text>
-        {shown.length === 0 ? (
-          <Text style={styles.empty}>{t('Nothing scheduled.')}</Text>
+        {selected ? (
+          <>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionTitle}>{formatDay(selected)}</Text>
+              <TouchableOpacity onPress={() => setSelected(null)} hitSlop={8}>
+                <Text style={styles.sectionLink}>{t('Whole month')}</Text>
+              </TouchableOpacity>
+            </View>
+            {dayEvents.length === 0 ? (
+              <Text style={styles.empty}>{t('Nothing scheduled.')}</Text>
+            ) : (
+              dayEvents.map((e) => <EventCard key={e.id} event={e} showDate={false} past={e.date < today} />)
+            )}
+          </>
         ) : (
-          shown.map((e) => <EventCard key={e.id} event={e} showDate={!selected} />)
+          <>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionTitle}>{t('Upcoming appointments')}</Text>
+            </View>
+            {upcoming.length === 0 ? (
+              <Text style={styles.empty}>{t('Nothing scheduled.')}</Text>
+            ) : (
+              upcoming.map((e) => <EventCard key={e.id} event={e} showDate />)
+            )}
+            {past.length > 0 && (
+              <>
+                <View style={styles.sectionRow}>
+                  <Text style={styles.sectionTitle}>{t('Past appointments')}</Text>
+                </View>
+                {past.map((e) => (
+                  <EventCard key={e.id} event={e} showDate past />
+                ))}
+              </>
+            )}
+          </>
         )}
 
         <View style={styles.syncNote}>
@@ -116,7 +147,8 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
   );
 };
 
-const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolean }) => {
+// past: ya pasó; más apagada y sin los botones de añadir al calendario
+const EventCard = ({ event, showDate, past = false }: { event: ScheduleEvent; showDate: boolean; past?: boolean }) => {
   const router = useRouter();
   const links = calendarLinks(event);
   const color = SCHEDULE_COLORS[event.type];
@@ -125,7 +157,7 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
   const isLab = event.type === 'lab';
   const target = isLab ? { pathname: '/lab-appointment', params: { id: event.id } } : event.action;
   return (
-    <View style={[styles.event, { borderLeftColor: color }]}>
+    <View style={[styles.event, { borderLeftColor: color }, past && styles.eventPast]}>
       <TouchableOpacity
         disabled={!target}
         activeOpacity={0.85}
@@ -142,25 +174,27 @@ const EventCard = ({ event, showDate }: { event: ScheduleEvent; showDate: boolea
       <Text style={styles.eventDetail}>{event.detail}</Text>
       {target && (
         <Text style={styles.eventLink}>
-          {isLab ? t('See appointment: map, call, change or cancel') : event.action?.label} <Ionicons name="chevron-forward" size={12} color={Colors.accent} />
+          {isLab ? t(past ? 'See appointment' : 'See appointment: map, call, change or cancel') : event.action?.label} <Ionicons name="chevron-forward" size={12} color={Colors.accent} />
         </Text>
       )}
       </TouchableOpacity>
-      <View style={styles.addRow}>
-        <Text style={styles.addLabel}>{t('Add to')}</Text>
-        {(
-          [
-            ['Google', links.google, 'logo-google'],
-            ['Outlook', links.outlook, 'mail-outline'],
-            ['Yahoo', links.yahoo, 'calendar-outline'],
-          ] as const
-        ).map(([label, url, icon]) => (
-          <TouchableOpacity key={label} style={styles.addButton} onPress={() => Linking.openURL(url)}>
-            <Ionicons name={icon} size={13} color={Colors.textPrimary} />
-            <Text style={styles.addText}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {!past && (
+        <View style={styles.addRow}>
+          <Text style={styles.addLabel}>{t('Add to')}</Text>
+          {(
+            [
+              ['Google', links.google, 'logo-google'],
+              ['Outlook', links.outlook, 'mail-outline'],
+              ['Yahoo', links.yahoo, 'calendar-outline'],
+            ] as const
+          ).map(([label, url, icon]) => (
+            <TouchableOpacity key={label} style={styles.addButton} onPress={() => Linking.openURL(url)}>
+              <Ionicons name={icon} size={13} color={Colors.textPrimary} />
+              <Text style={styles.addText}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </View>
   );
 };
@@ -181,7 +215,10 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 7, height: 7, borderRadius: 4 },
   legendText: { color: Colors.textSecondary, fontSize: 11 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
+  sectionLink: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  eventPast: { opacity: 0.7 },
   empty: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20 },
   event: {
     backgroundColor: Colors.card,

@@ -1,6 +1,6 @@
 import { dateLocale, t } from '@/i18n';
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,10 +9,11 @@ import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { consult, isRealProfessional } from '@/data/consultations';
 import { createShare } from '@/data/sharing';
-import { AppointmentKind, AppointmentModality, KIND_LABEL } from '@/data/specialistTypes';
+import { Appointment, AppointmentKind, AppointmentModality, KIND_LABEL, recentAppointmentWith } from '@/data/specialistTypes';
 
 const dayLabel = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 const time = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
+const when = (iso: string) => `${dayLabel(iso)}, ${time(iso)}`;
 
 // Reservar una videoconsulta (o llamada) en los huecos libres del especialista.
 export const BookConsultScreen = () => {
@@ -28,9 +29,18 @@ export const BookConsultScreen = () => {
   const [share, setShare] = useState(true);
   const [state, setState] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
   const [error, setError] = useState('');
+  // Memoria: si ya pidió una consulta con este especialista esta semana, se pregunta antes de duplicarla
+  const [existing, setExisting] = useState<Appointment | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [replaced, setReplaced] = useState<string | null>(null);
+  const [note, setNote] = useState('');
 
   useEffect(() => {
     consult.bookableSlots(proId).then(setSlots).catch(() => setSlots([]));
+    consult
+      .myAppointments()
+      .then((all) => setExisting(recentAppointmentWith(all, proId)))
+      .catch(() => undefined);
   }, [proId]);
 
   const byDay = useMemo(() => {
@@ -41,8 +51,10 @@ export const BookConsultScreen = () => {
   const days = Object.keys(byDay);
   const currentDay = day ?? days[0] ?? null;
 
-  const book = async () => {
+  // replace: la consulta anterior que se cambia por esta (se cancela solo si la nueva sale bien)
+  const book = async (replace?: Appointment) => {
     if (!slot) return;
+    setAsking(false);
     setState('saving');
     setError('');
     try {
@@ -55,6 +67,10 @@ export const BookConsultScreen = () => {
         modality,
         reason: reason.trim() || undefined,
       });
+      if (replace) {
+        await consult.cancelAppointment(replace.id);
+        setReplaced(replace.startsAt);
+      }
       if (share && isRealProfessional(proId)) {
         await createShare(proId, ['profile', 'lab_reports'], null).catch(() => undefined);
       }
@@ -62,6 +78,19 @@ export const BookConsultScreen = () => {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not book');
       setState('error');
+    }
+  };
+
+  const cancelExisting = async () => {
+    if (!existing) return;
+    setAsking(false);
+    try {
+      await consult.cancelAppointment(existing.id);
+      setNote(t('Your consultation on {when} has been cancelled.', { when: when(existing.startsAt) }));
+      // Puede quedar otra pedida esa semana: se vuelve a mirar
+      setExisting(recentAppointmentWith(await consult.myAppointments(), proId));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not cancel');
     }
   };
 
@@ -77,6 +106,7 @@ export const BookConsultScreen = () => {
           <Text style={styles.muted}>
             {proName} will confirm it shortly. You'll find it in Manage your schedule, and the video link will appear there.
           </Text>
+          {replaced && <Text style={styles.muted}>{t('We have cancelled the one you had on {when}.', { when: when(replaced) })}</Text>}
           {!isRealProfessional(proId) && <Text style={styles.proto}>{t("Prototype: this specialist isn't on Kuova yet, nothing was sent.")}</Text>}
           <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
             <Text style={styles.ctaText}>{t('Done')}</Text>
@@ -91,6 +121,17 @@ export const BookConsultScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Book a consultation')} showBack />
         <Text style={styles.intro}>with {proName}</Text>
+
+        {existing && (
+          <View style={styles.existing}>
+            <Ionicons name="calendar-outline" size={18} color={Colors.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.existingTitle}>{t('You already requested one for {when}', { when: when(existing.startsAt) })}</Text>
+              <Text style={styles.existingSub}>{t(existing.status === 'confirmed' ? 'Confirmed' : 'Waiting for confirmation')}</Text>
+            </View>
+          </View>
+        )}
+        {note ? <Text style={styles.note}>{note}</Text> : null}
 
         <Text style={styles.section}>{t('Type')}</Text>
         <View style={styles.chips}>
@@ -134,9 +175,45 @@ export const BookConsultScreen = () => {
         </TouchableOpacity>
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
-      <TouchableOpacity style={[styles.cta, !slot && { opacity: 0.5 }]} disabled={!slot || state === 'saving'} onPress={book}>
+      <TouchableOpacity
+        style={[styles.cta, !slot && { opacity: 0.5 }]}
+        disabled={!slot || state === 'saving'}
+        onPress={() => (existing ? setAsking(true) : book())}
+      >
         {state === 'saving' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{slot ? `Request ${dayLabel(slot)}, ${time(slot)}` : 'Choose a time'}</Text>}
       </TouchableOpacity>
+
+      {/* Ya hay una pedida esta semana: cambiarla por la nueva; si está confirmada, también cancelarla */}
+      <Modal visible={asking && !!existing && !!slot} transparent animationType="fade" onRequestClose={() => setAsking(false)}>
+        <View style={styles.backdrop}>
+          {existing && slot && (
+            <View style={styles.sheet}>
+              <Text style={styles.sheetTitle}>
+                {existing.status === 'confirmed' ? t('You already have a consultation with {name}', { name: proName }) : t('You have already requested this')}
+              </Text>
+              <Text style={styles.sheetBody}>
+                {t(
+                  existing.status === 'confirmed'
+                    ? '{name} confirmed it for {when}. Do you want to change it to {next}?'
+                    : '{name} has not answered your request for {when} yet. Do you want to change it to {next}?',
+                  { name: proName, when: when(existing.startsAt), next: when(slot) },
+                )}
+              </Text>
+              <TouchableOpacity style={styles.sheetPrimary} onPress={() => book(existing)}>
+                <Text style={styles.ctaText}>{t('Yes, change it')}</Text>
+              </TouchableOpacity>
+              {existing.status === 'confirmed' && (
+                <TouchableOpacity style={styles.sheetSecondary} onPress={cancelExisting}>
+                  <Text style={styles.sheetDanger}>{t('Cancel the one I have')}</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.sheetSecondary} onPress={() => setAsking(false)}>
+                <Text style={styles.sheetKeep}>{t('No, keep it')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -172,4 +249,16 @@ const styles = StyleSheet.create({
   done: { alignItems: 'center', gap: 12, paddingHorizontal: 28, marginTop: 40 },
   doneTitle: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900' },
   proto: { color: Colors.warning, fontSize: 12, textAlign: 'center' },
+  existing: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12 },
+  existingTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  existingSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  note: { color: Colors.ok, fontSize: 13, marginTop: 12 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
+  sheet: { backgroundColor: Colors.backgroundElevated, borderRadius: 20, padding: 20, gap: 4 },
+  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
+  sheetBody: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 6, marginBottom: 14 },
+  sheetPrimary: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 14, alignItems: 'center' },
+  sheetSecondary: { alignItems: 'center', paddingVertical: 12 },
+  sheetDanger: { color: Colors.danger, fontSize: 14, fontWeight: '700' },
+  sheetKeep: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
 });

@@ -1317,3 +1317,34 @@ Las notificaciones con la app cerrada van en otra sesión (rama propia, necesita
   cambian los tonos, regenerar con el script y hace falta otra APK para la pantalla bloqueada.
 - Sin probar en un móvil: el aviso con la pantalla bloqueada y los canales. Probado en la web (demo): reserva → sale en
   la Agenda; fin de descanso, cambio de lado y fin de ejercicio suenan; silenciado no suena.
+
+## 2026-10-20 (noche) — Edad KUOVA real (PhenoAge), insignia difuminada, Agenda por meses y consultas sin duplicar
+
+- **Edad KUOVA con datos reales**: `src/logic/phenoAge.ts` = PhenoAge (Levine 2018, tabla 1; coeficientes de
+  `phenoage0` de BioAge; Liu 2018 trae erratas). Pasa las unidades españolas a las del modelo (PCR mg/L ÷ 10 antes
+  del logaritmo, albúmina g/dL × 10, glucosa mg/dL ÷ 18,016, creatinina mg/dL × 88,42, leucocitos por µL ÷ 1000) y
+  rechaza las que no sirven (ADE en fL, PCR sin unidad). Suelo de PCR 0,01 mg/dL. No calcula con PCR > 10 mg/L ni
+  fuera de 20-84 años. `kuovaAgeFromUploads` (`logic/kuovaAge.ts`) usa la analítica subida completa más reciente y la
+  fecha de nacimiento; si hay otra completa antes, compara.
+- **Margen en vez de "% de confianza"**: propagación de errores con los CVi de la EFLM (biologicalvariation.eu,
+  consultada el 20/10) y CVa = CVi/2 (Fraser, el mínimo exigible: el margen real puede ser algo mayor, sobre todo por el
+  ADE y el % de linfocitos). Sustitutos sin entrada propia: % linfocitos → linfocitos absolutos, ADE-CV → ADE-SD,
+  FA total → FA hepática. Sale unos ±3 años (95 %); un cambio entre analíticas solo se enseña si supera √(m1² + m2²)
+  (`realChange`), si no «sin cambio real». Todo en la lista del asesor (`kuova-clinical-review-backlog`).
+- **Informes de ejemplo corregidos**: 25,5 ± 3,0 (actual) y 31,3 ± 3,1 (inicial), lo que dan sus propios valores; los
+  «drivers» son solo valores de PhenoAge (años frente a un adulto típico, `phenoAgeDrivers`). Un test comprueba que
+  cuadren. `rulesEngine/computeBiologicalAge` ya calcula con el mismo módulo (antes lanzaba un error).
+- **Insignia difuminada** (cuenta real sin Edad KUOVA): la misma insignia con el fondo desenfocado (expo-image
+  `blurRadius`) y «00,0» desenfocado en SVG (`FeGaussianBlur`; Text no admite blur en iOS), nunca una cifra real. 9
+  puntos con los valores que ya tiene y una frase según el motivo: faltan valores («Mide tu albúmina, PCR y fosfatasa
+  alcalina o pide la analítica completa…», enlace a la tienda: la «Analítica esencial» no trae 7 de los 9), falta la
+  fecha de nacimiento, edad fuera de rango, PCR alta o unidad ilegible. El detalle enseña los 9 marcados.
+  «VCM» y «ADE» añadidos como alias en `knowledge/biomarcadores/hematologia.json`.
+- **Agenda**: abre en el mes (no en un día): «Próximas citas» y debajo «Citas pasadas» (más apagadas, sin añadir al
+  calendario, «Ver la cita»); tocar un día lo filtra y «Todo el mes» vuelve. Una cita de laboratorio pasada ya no se
+  puede cambiar ni cancelar: «Pedir otra cita» en el mismo centro.
+- **Consultas sin duplicar**: al reservar, si hay una consulta con ese especialista pedida en los últimos 7 días que
+  sigue en pie (`recentAppointmentWith` en `specialistTypes.ts`; las citas guardan `createdAt`), arriba sale «Ya pediste
+  una para el…» y al pulsar «Solicitar» se pregunta: sin respuesta, cambiarla o dejarla; confirmada, además cancelarla.
+  Al cambiarla, la anterior solo se cancela si la nueva se guarda. Solo en reservar consulta, no en «Enviar una solicitud».
+- Probado en la web (cuenta real local y demo). Todo JS: llega por EAS Update también a los APK anteriores.

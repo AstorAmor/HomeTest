@@ -18,10 +18,9 @@ aquí abajo.
 
 ## Qué está pendiente a propósito (esperando la investigación externa)
 
-- **`biologicalAge.ts`** — `computeBiologicalAge()` lanza
-  `BiologicalAgeNotImplementedError` siempre. Candidata más probable:
-  PhenoAge (Levine 2018), porque sus 9 inputs ya existen todos en el
-  catálogo. Falta decidir la fórmula exacta y el manejo de inputs faltantes.
+- **`biologicalAge.ts`** — ya no está pendiente (2026-10-20): `computeBiologicalAge()`
+  calcula PhenoAge (Levine 2018) con `src/logic/phenoAge.ts`, el mismo cálculo que
+  la Edad KUOVA, y devuelve `null` si falta algún valor o no se puede calcular.
 - **`cycleAdjustment.ts`** — identifica qué biomarcadores son
   cycle-sensitive (`FSH`, `LH`, `ESTRADIOL`, `PROLACTIN` — lista
   conservadora, ver comentarios del archivo) pero **no ajusta el número**

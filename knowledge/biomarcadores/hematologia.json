@@ -266,7 +266,9 @@
       "aliases": [
         "MCV",
         "Mean Corpuscular Volume",
-        "MCV (mean corpuscular volume)"
+        "MCV (mean corpuscular volume)",
+        "VCM",
+        "Volumen corpuscular medio"
       ],
       "category": "hematologia",
       "measurement_type": "MEASURED",
@@ -316,7 +318,9 @@
       "aliases": [
         "RDW",
         "Red Cell Distribution Width",
-        "RDW (red cell distribution width)"
+        "RDW (red cell distribution width)",
+        "ADE",
+        "Amplitud de distribución eritrocitaria"
       ],
       "category": "hematologia",
       "measurement_type": "MEASURED",

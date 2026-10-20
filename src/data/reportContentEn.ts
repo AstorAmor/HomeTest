@@ -70,8 +70,8 @@ export function getUnitLabelEn(unit: string | null): string {
 }
 
 export const PHENOAGE_EXPLANATION_EN =
-  'Your estimated biological age has come down since your last report, in line with ' +
-  'improvements in inflammation, insulin sensitivity, and your lipid profile.';
+  'Your KUOVA age has come down since your previous test, mainly because your glucose and ' +
+  'CRP have improved.';
 
 export const PROJECTION_UNCERTAINTY_NOTE_EN =
   "This range widens over time — it's an estimate, not a promise.";

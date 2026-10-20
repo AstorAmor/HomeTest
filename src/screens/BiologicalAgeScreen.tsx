@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,23 +8,25 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { baselineReport, currentReport } from '@/data/reportRepository';
 import { showSamples } from '@/data/dataMode';
 import { AppIcon } from '@/components/HealthIcons';
-import { KuovaAgeBadge } from '@/components/KuovaAgeBadge';
-import { kuovaAge, QUALITY_LABEL } from '@/logic/kuovaAge';
+import { KuovaAgeBadge, KuovaAgeDots, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
+import { kuovaAge, kuovaAgeFromUploads, KuovaAgeResult, LabInput, PHENOAGE_INPUTS, realChange } from '@/logic/kuovaAge';
+import type { PhenoInput } from '@/logic/phenoAge';
+import { labUploadRepository } from '@/data/labUploads';
+import { profileRepository } from '@/data/profileRepository';
 import { GaugeBar } from '@/components/GaugeBar';
 import { getMarkerDisplayNameEn, getMarkerValueTextEn } from '@/data/reportContentEn';
 import type { ReportMarker } from '@/types/report';
-import { num, t } from '@/i18n';
+import { dateLocale, num, t } from '@/i18n';
 import { TAB } from '@/constants/tabs';
 
-// "Edad KUOVA" (tu edad biológica), al tocar la insignia de Mis datos. Arriba, como en Whoop: la
-// insignia con los años de diferencia a un lado y el cambio desde la analítica anterior al otro; debajo,
-// qué la mueve (los 9 valores de PhenoAge con su regla y si te quitan o te suman años) y cómo se
-// calcula. Un único número con su grado de confianza (src/logic/kuovaAge.ts). Ahora es un
-// EJEMPLO: el cálculo real está pendiente de validar con el asesor médico
-// (src/logic/rulesEngine/biologicalAge.ts).
+// "Edad KUOVA", al tocar la insignia de Mis datos. Arriba, como en Whoop: la insignia con los años
+// de diferencia a un lado y el cambio desde la analítica anterior al otro (solo si supera el margen);
+// debajo, su margen, qué la mueve (los 9 valores de PhenoAge con su regla y si te quitan o te suman
+// años) y cómo se calcula. Cuenta real: con sus analíticas subidas (src/logic/kuovaAge.ts) o, si
+// aún no se puede, la insignia difuminada con lo que falta. Cuenta de prueba: el informe de ejemplo.
 
 // Los 9 valores de una analítica normal que usa PhenoAge, agrupados por lo que reflejan
-const INPUTS: { group: string; icon: string; markers: string[] }[] = [
+const INPUTS: { group: string; icon: string; markers: PhenoInput[] }[] = [
   { group: 'Inflammation', icon: 'flame-outline', markers: ['hs_crp'] },
   { group: 'Sugar metabolism', icon: 'glucose', markers: ['glucose'] },
   { group: 'Liver and nutrition', icon: 'leaf-outline', markers: ['albumin', 'alp'] },
@@ -32,18 +34,38 @@ const INPUTS: { group: string; icon: string; markers: string[] }[] = [
   { group: 'Blood and defences', icon: 'shield-checkmark-outline', markers: ['wbc', 'lymphocytes_pct', 'mcv', 'rdw'] },
 ];
 
-const allMarkers = currentReport.sections.flatMap((sec) => sec.markers ?? []);
-const findMarker = (id: string) => allMarkers.find((m) => m.marker_id === id);
+const longDay = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
+
+// Lo que necesita una fila: del informe de ejemplo o de la analítica subida
+type FactorMarker = Pick<ReportMarker, 'marker_id' | 'display_name' | 'value' | 'unit' | 'flag'> & {
+  range?: { low: number | null; high: number | null };
+  trend?: { previous_value: number | string };
+};
+
+const SAMPLE_ROWS: Record<string, FactorMarker> = Object.fromEntries(
+  currentReport.sections.flatMap((sec) => sec.markers ?? []).map((m) => [m.marker_id, m]),
+);
+
+// Las filas de una cuenta real, con el valor y el rango tal como vienen en su analítica
+const rowsFromInputs = (inputs: Record<PhenoInput, LabInput>): Record<string, FactorMarker> =>
+  Object.fromEntries(
+    PHENOAGE_INPUTS.map(({ id, label }) => {
+      const { value, unit, low, high } = inputs[id];
+      const flag = low != null && value < low ? 'bajo' : high != null && value > high ? 'alto' : 'en_rango';
+      const name = t(label);
+      return [id, { marker_id: id, display_name: name.charAt(0).toUpperCase() + name.slice(1), value, unit, flag, range: { low, high } }];
+    }),
+  );
 
 // Lo que dice el informe de cada valor: si es de los que más te quitan o suman años, o si está en rango
-const effectOf = (m: ReportMarker, drivers: { marker_id: string; direction: string }[]) => {
+const effectOf = (m: FactorMarker, drivers: { marker_id: string; direction: string }[]) => {
   const d = drivers.find((x) => x.marker_id === m.marker_id);
   if (d) return d.direction === 'resta' ? { label: 'Takes years off', color: Colors.ok, icon: 'arrow-down' } : { label: 'Adds years', color: Colors.attention, icon: 'arrow-up' };
   return m.flag === 'en_rango' ? { label: 'In range', color: Colors.textSecondary, icon: 'remove' } : { label: 'Out of range', color: Colors.warning, icon: 'alert' };
 };
 
 // Una fila por valor: nombre, cifra, regla (verde en el rango del laboratorio) y su efecto
-const FactorRow = ({ m, drivers }: { m: ReportMarker; drivers: { marker_id: string; direction: string }[] }) => {
+const FactorRow = ({ m, drivers }: { m: FactorMarker; drivers: { marker_id: string; direction: string }[] }) => {
   const v = typeof m.value === 'number' ? m.value : null;
   const low = m.range?.low ?? null;
   const high = m.range?.high ?? null;
@@ -89,25 +111,83 @@ const SOURCES = [
 
 export const BiologicalAgeScreen = () => {
   const router = useRouter();
+  const sample = showSamples();
   const p = currentReport.summary.phenoage;
-  // Cuenta real: la de ejemplo no se enseña (aún no hay cálculo real)
-  const k = p.available && showSamples() ? kuovaAge(p) : null;
-  const before = baselineReport.summary.phenoage;
-  const change = k && before.available ? Math.round((k.age - kuovaAge(before).age) * 10) / 10 : null;
-  const years = (n: number) => t(Math.abs(n) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(n)) });
+  // Cuenta real: su Edad KUOVA sale de sus analíticas subidas y su fecha de nacimiento (o qué falta)
+  const [kres, setKres] = useState<KuovaAgeResult | null>(null);
+  useEffect(() => {
+    if (sample) return;
+    Promise.all([labUploadRepository.getAll().catch(() => []), profileRepository.get().catch(() => null)]).then(([uploads, prof]) =>
+      setKres(kuovaAgeFromUploads(uploads, prof?.dateOfBirth)),
+    );
+  }, [sample]);
+
+  const view = sample
+    ? p.available
+      ? {
+          k: kuovaAge(p),
+          previous: baselineReport.summary.phenoage.available ? kuovaAge(baselineReport.summary.phenoage) : null,
+          drivers: p.drivers ?? [],
+          rows: SAMPLE_ROWS,
+          testDate: null,
+        }
+      : null
+    : kres?.status === 'ok'
+      ? { k: kres.k, previous: kres.previous, drivers: kres.drivers, rows: rowsFromInputs(kres.inputs), testDate: kres.testDate }
+      : null;
+  const locked = !sample && kres && kres.status !== 'ok' ? kres : null;
+  const k = view?.k ?? null;
+  const change = view?.previous && k ? realChange(k, view.previous) : null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('KUOVA age')} showBack />
 
-        {!k && (
-          <View style={styles.sampleTag}>
-            <Ionicons name="flask-outline" size={13} color={Colors.warning} />
-            <Text style={styles.sampleText}>
-              {t('You do not have your KUOVA age yet. We will work it out from 9 values of your blood test once our medical team has validated the method.')}
-            </Text>
-          </View>
+        {locked && (
+          <>
+            {/* Aún sin Edad KUOVA: la insignia difuminada y los 9 valores, marcados los que ya tiene */}
+            <View style={styles.lockedTop}>
+              <KuovaAgeBadge size={176} locked />
+              <KuovaAgeDots c={locked.coverage} />
+              <Text style={styles.lockedHint}>{kuovaAgeLockedHint(locked)}</Text>
+            </View>
+
+            <Text style={styles.section}>{t('What it needs')}</Text>
+            {INPUTS.map((g) => (
+              <View key={g.group} style={styles.groupCard}>
+                <View style={styles.groupHead}>
+                  <AppIcon name={g.icon} size={18} color={Colors.accent} />
+                  <Text style={styles.groupTitle}>{t(g.group)}</Text>
+                </View>
+                {g.markers.map((id) => {
+                  const has = locked.coverage.have.includes(id);
+                  const label = t(PHENOAGE_INPUTS.find((i) => i.id === id)!.label);
+                  return (
+                    <View key={id} style={styles.need}>
+                      <Ionicons name={has ? 'checkmark-circle' : 'ellipse-outline'} size={16} color={has ? Colors.ok : Colors.textMuted} />
+                      <Text style={styles.needName}>{getMarkerDisplayNameEn(id, label.charAt(0).toUpperCase() + label.slice(1))}</Text>
+                      <Text style={[styles.needState, has && { color: Colors.ok }]}>{t(has ? 'You have it' : 'Missing')}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            ))}
+            {locked.status === 'missing' && (
+              <>
+                <TouchableOpacity style={styles.labLink} onPress={() => router.push('/store')}>
+                  <Ionicons name="water-outline" size={18} color={Colors.accent} />
+                  <Text style={styles.labLinkText}>{t('Get the full blood test')}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.labLink} onPress={() => router.push('/upload-test')}>
+                  <Ionicons name="cloud-upload-outline" size={18} color={Colors.accent} />
+                  <Text style={styles.labLinkText}>{t('Upload a lab report you already have')}</Text>
+                  <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                </TouchableOpacity>
+              </>
+            )}
+          </>
         )}
         {k && (
           <>
@@ -118,26 +198,31 @@ export const BiologicalAgeScreen = () => {
               </View>
               <KuovaAgeBadge size={176} value={num(k.age.toFixed(1))} good={k.diff >= 0} />
               <View style={styles.topStat}>
-                <Text style={[styles.topValue, { color: change != null && change > 0 ? Colors.attention : Colors.ok }]}>
-                  {change == null ? '—' : `${change > 0 ? '+' : change < 0 ? '−' : ''}${num(Math.abs(change).toFixed(1))}`}
+                <Text style={[styles.topValue, { color: change != null && change > 0 ? Colors.attention : change != null ? Colors.ok : Colors.textSecondary }]}>
+                  {change == null ? '—' : `${change > 0 ? '+' : '−'}${num(Math.abs(change).toFixed(1))}`}
                 </Text>
-                <Text style={styles.topLabel}>{t('since your previous test')}</Text>
+                <Text style={styles.topLabel}>{view?.previous && change == null ? t('no real change since your previous test') : t('since your previous test')}</Text>
               </View>
             </View>
 
+            {/* El margen: cuánto se mueve por la variación normal de la analítica */}
             <View style={styles.confidence}>
               <View style={styles.confidenceIcon}>
-                <Ionicons name="checkmark" size={16} color={Colors.background} />
+                <Ionicons name="swap-vertical" size={16} color={Colors.background} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.confidenceTitle}>{t('{n}% confidence', { n: k.confidence })}</Text>
-                <Text style={styles.confidenceSub}>{t(QUALITY_LABEL[k.quality])}</Text>
+                <Text style={styles.confidenceTitle}>{t('± {n} years', { n: num(k.margin.toFixed(1)) })}</Text>
+                <Text style={styles.confidenceSub}>
+                  {t('Normal variation between blood tests. We only tell you it has changed when the difference is bigger than that.')}
+                </Text>
               </View>
             </View>
             <View style={styles.sampleTag}>
               <Ionicons name="flask-outline" size={13} color={Colors.warning} />
               <Text style={styles.sampleText}>
-                {t('Sample for now: we will calculate yours from your blood tests once our medical team has validated the method.')}
+                {view?.testDate
+                  ? t('Worked out from your blood test of {date}.', { date: longDay(view.testDate) })
+                  : t('Sample: with your own blood test we work out yours.')}
               </Text>
             </View>
 
@@ -150,8 +235,8 @@ export const BiologicalAgeScreen = () => {
                   <Text style={styles.groupTitle}>{t(g.group)}</Text>
                 </View>
                 {g.markers.map((id) => {
-                  const m = findMarker(id);
-                  return m ? <FactorRow key={id} m={m} drivers={p.drivers ?? []} /> : null;
+                  const m = view?.rows[id];
+                  return m ? <FactorRow key={id} m={m} drivers={view.drivers} /> : null;
                 })}
               </View>
             ))}
@@ -175,10 +260,10 @@ export const BiologicalAgeScreen = () => {
           )}
         </Text>
 
-        <Text style={styles.section}>{t('What the confidence means')}</Text>
+        <Text style={styles.section}>{t('What the margin means')}</Text>
         <Text style={styles.body}>
           {t(
-            'The same blood test varies a little from one day to another and from one lab to another. That is why next to your KUOVA age we show how much you can trust it: with high confidence, changes between your tests are real; with low confidence, repeat the test before drawing conclusions.'
+            'The same blood test varies a little from one day to another and from one lab to another. That is why your KUOVA age comes with a margin, worked out from how much each of the 9 values usually varies in the same person. We only tell you it has changed between two tests when the difference is bigger than both margins together.'
           )}
         </Text>
 
@@ -227,7 +312,7 @@ const styles = StyleSheet.create({
   confidenceIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.ok, alignItems: 'center', justifyContent: 'center' },
   confidenceTitle: { color: Colors.ok, fontSize: 17, fontWeight: '800' },
   confidenceSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  sampleTag: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 10, backgroundColor: withAlpha(Colors.warning, 0.1), borderRadius: 10, padding: 10 },
+  sampleTag: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, backgroundColor: withAlpha(Colors.warning, 0.1), borderRadius: 10, padding: 10 },
   sampleText: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flex: 1 },
   section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginTop: 22, marginBottom: 8 },
   body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 21, marginBottom: 8 },
@@ -235,4 +320,9 @@ const styles = StyleSheet.create({
   labLink: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14 },
   labLinkText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   source: { color: Colors.accent, fontSize: 12, lineHeight: 18, marginBottom: 8 },
+  lockedTop: { alignItems: 'center', gap: 12, marginTop: 4 },
+  lockedHint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center', maxWidth: 300 },
+  need: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  needName: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  needState: { color: Colors.textMuted, fontSize: 12, fontWeight: '700' },
 });

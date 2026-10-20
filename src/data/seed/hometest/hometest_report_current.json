@@ -23,24 +23,20 @@
     },
     "phenoage": {
       "available": true,
-      "low": 29.1,
-      "high": 33.2,
+      "low": 22.5,
+      "high": 28.5,
       "chronological_age": 32,
       "drivers": [
         {
-          "marker_id": "hdl",
+          "marker_id": "rdw",
           "direction": "resta"
         },
         {
-          "marker_id": "hs_crp",
-          "direction": "resta"
-        },
-        {
-          "marker_id": "homa_ir",
+          "marker_id": "mcv",
           "direction": "resta"
         }
       ],
-      "explanation": "Tu edad fenotípica estimada ha bajado respecto al informe anterior, en línea con la mejora en inflamación, sensibilidad a la insulina y perfil lipídico."
+      "explanation": "Tu Edad KUOVA ha bajado respecto a la analítica anterior, sobre todo porque han mejorado la glucosa y la PCR."
     }
   },
   "sections": [

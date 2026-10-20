@@ -48,6 +48,8 @@ export const LabAppointmentScreen = () => {
   }
 
   const links = calendarLinks(appointmentEvent(appt, center));
+  // Una cita que ya pasó no se cambia ni se cancela: solo se puede pedir otra en el mismo centro
+  const past = new Date(`${appt.date}T${appt.time}:00`) < new Date();
 
   const cancel = async () => {
     const ok = await confirmAsk(
@@ -80,19 +82,35 @@ export const LabAppointmentScreen = () => {
         <View style={styles.mapWrap}>
           <TileMap points={[center]} selectedId={center.id} height={220} />
         </View>
-        <LabCenterInfo center={center} calendarUrl={links.google} />
+        <LabCenterInfo center={center} calendarUrl={past ? undefined : links.google} />
 
-        <TouchableOpacity
-          style={styles.reschedule}
-          onPress={() => router.push({ pathname: '/book-lab', params: { center: center.id, reschedule: appt.id } })}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="swap-horizontal-outline" size={18} color={Colors.background} />
-          <Text style={styles.rescheduleText}>{t('Change day or time')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelBtn} onPress={cancel} activeOpacity={0.85}>
-          <Text style={styles.cancelText}>{t('Cancel appointment')}</Text>
-        </TouchableOpacity>
+        {past ? (
+          <>
+            <Text style={styles.pastNote}>{t('This appointment has already taken place.')}</Text>
+            <TouchableOpacity
+              style={styles.reschedule}
+              onPress={() => router.push({ pathname: '/book-lab', params: { center: center.id } })}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="add-outline" size={18} color={Colors.background} />
+              <Text style={styles.rescheduleText}>{t('Book another appointment')}</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.reschedule}
+              onPress={() => router.push({ pathname: '/book-lab', params: { center: center.id, reschedule: appt.id } })}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="swap-horizontal-outline" size={18} color={Colors.background} />
+              <Text style={styles.rescheduleText}>{t('Change day or time')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelBtn} onPress={cancel} activeOpacity={0.85}>
+              <Text style={styles.cancelText}>{t('Cancel appointment')}</Text>
+            </TouchableOpacity>
+          </>
+        )}
         <Text style={styles.proto}>{t('Prototype: the lab has not received this booking yet.')}</Text>
       </ScrollView>
     </SafeAreaView>
@@ -132,4 +150,5 @@ const styles = StyleSheet.create({
   cancelBtn: { alignItems: 'center', paddingVertical: 14, marginTop: 4 },
   cancelText: { color: Colors.danger, fontSize: 14, fontWeight: '700' },
   proto: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 2 },
+  pastNote: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center', marginHorizontal: 20, marginTop: 22 },
 });

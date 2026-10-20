@@ -97,6 +97,7 @@ export const consult = {
         modality: input.modality,
         status: 'pending',
         reason: input.reason ?? null,
+        createdAt: new Date().toISOString(),
       };
       await AsyncStorage.setItem(LOCAL_APPTS, JSON.stringify([...(await readLocal<Appointment>(LOCAL_APPTS)), appt]));
       return;
@@ -137,6 +138,7 @@ export const consult = {
       status: r.status,
       reason: r.reason,
       videoRoomUrl: r.video_room_url,
+      createdAt: r.created_at,
     }));
     return [...remote, ...local];
   },
