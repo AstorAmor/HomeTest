@@ -1353,7 +1353,7 @@ Las notificaciones con la app cerrada van en otra sesión (rama propia, necesita
 (preview, runtime exposdk:57.0.0) y las dos webs (hometest-app y hometest-demo) a la primera con `npm run release`.
 Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; el APK 1.1.0 se construye desde aquí.
 
-## 2026-10-20 (noche) — Notas del fundador: entrenamiento, medicación, edad KUOVA, resultados, suscripción, transiciones, objetivos (sin commit)
+## 2026-10-20 (noche) — Notas del fundador: entrenamiento, medicación, edad KUOVA, resultados, suscripción, transiciones, objetivos
 
 - **Timbre que no sonó**: con la app delante suena (probado en web); lo probable es que la pantalla se apagara sola en el
   descanso (a los ~30 s) y ahí depende del aviso del móvil. Ahora la pantalla se queda encendida durante la sesión
@@ -1385,3 +1385,5 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
   incluye según la tabla), con Ver suscripciones / Tengo un código / Ahora no; al cerrar vuelve atrás. En escanear
   informes, el menú semanal y crear el menú (las funciones bloqueadas hoy: scan_reports y diet_menu). No visto en la
   web: la demo tiene todo abierto.
+
+**Publicado 671d0c8** (2026-10-20 noche, OK del fundador «Haz commit de todo y publica con npm run release»): EAS Update grupo `04ded867-6945-4d87-8eef-43c50e64e6da` (preview, android + ios) y las dos webs a la primera (`npm run release` entero, con 2,8 GB libres). Llega a las APK ee97dd7d, bffff89c y 1.1.0 al cerrar y abrir la app.
