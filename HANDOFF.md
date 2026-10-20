@@ -1248,3 +1248,8 @@ el fundador seguía viendo el menú bloqueado por la creatinina con la versión 
 - Precios: siguen siendo estimaciones de supermercado en España (€/kg en `scripts/diet-catalog.py`), sin factor por
   zona. Pendiente: el plan de «rendir más» sigue titulado «Proteína en cada comida» aunque la creatinina salga alta.
 - Notificaciones con la app cerrada: no hay todavía (hace falta expo-notifications y un APK nuevo).
+
+**Publicado 7db7587** (2026-10-20, OK del fundador): EAS Update grupo `b6dbf5a4-6ed9-4121-bf48-ef8a84957cc1` (preview,
+android + ios) y las dos webs a la primera (pasos a mano: export `--clear --max-workers 1`, `eas-cli update
+--skip-bundler`, `deploy-web.mjs` y `deploy-web.mjs demo`). Sin dependencias nativas nuevas: vale el APK ee97dd7d.
+Las notificaciones con la app cerrada van en otra sesión (rama propia, necesita APK nuevo con su OK).
