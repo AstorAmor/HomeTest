@@ -1276,3 +1276,8 @@ el fundador seguía viendo el menú bloqueado por la creatinina con la versión 
   nuevo (`eas build --profile preview`, mismo keystore) y, en iOS, el build `testflight` (el plugin añade el
   entitlement `aps-environment`; EAS lo sincroniza con el App ID). Sin `SCHEDULE_EXACT_ALARM`: Android puede
   retrasar unos minutos un aviso con el móvil en reposo.
+- **APK nuevo (2026-10-20, con OK del fundador)**: EAS build `bffff89c` (perfil preview, mismo keystore, commit e35e1fb
+  de esta rama), solo Android: https://expo.dev/artifacts/eas/UhATCBM_hWAOE6IRWwRm8dc10zjemfRuAhwzsiXDR_A.apk
+  iOS no: EAS aún no tiene credenciales de Apple (la primera compilación de iPhone la lanza el fundador con su Apple ID).
+  **Juntar esta rama con master antes del próximo `npm run release`**: si sale una release de master sin ella, el APK
+  nuevo pasa a la JS sin recordatorios y los ya programados (hasta una semana) siguen saltando sin cancelarse.
