@@ -303,7 +303,7 @@ export const TodayScreen = () => {
 
   const plan = buildPlan(profile);
   // Objetivos de los círculos de «Tu estado de hoy»: los del plan o los que haya puesto el usuario
-  const goals = effectiveGoals(suggestedGoals(plan).goals, savedGoals);
+  const goals = effectiveGoals(suggestedGoals(plan, profile).goals, savedGoals);
   const achievements = computeAchievements({
     dailySteps: series.steps ?? [],
     ...achievementData,
@@ -542,7 +542,7 @@ export const TodayScreen = () => {
                 </Text>
               )}
               {hasAny && (
-                <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/daily-goals')} accessibilityLabel={t('Your daily goals')}>
+                <TouchableOpacity style={styles.ringsTap} activeOpacity={0.8} onPress={() => router.push('/daily-goals')} accessibilityLabel={t('Your daily goals')}>
                 <View style={styles.smallRings}>
                   <SmallRing
                     icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
@@ -909,6 +909,8 @@ const BiomarkerCard = ({
 
 const styles = StyleSheet.create({
   goalsLink: { color: Colors.accent, fontSize: 12, fontWeight: '700', textAlign: 'center', marginTop: 10 },
+  // A todo lo ancho de la tarjeta (centrada): si no, los cuatro círculos se juntan en medio
+  ringsTap: { alignSelf: 'stretch' },
   summaryCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,

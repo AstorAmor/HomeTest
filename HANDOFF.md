@@ -1387,3 +1387,16 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
   web: la demo tiene todo abierto.
 
 **Publicado 671d0c8** (2026-10-20 noche, OK del fundador «Haz commit de todo y publica con npm run release»): EAS Update grupo `04ded867-6945-4d87-8eef-43c50e64e6da` (preview, android + ios) y las dos webs a la primera (`npm run release` entero, con 2,8 GB libres). Llega a las APK ee97dd7d, bffff89c y 1.1.0 al cerrar y abrir la app.
+
+## 2026-10-20 (noche, 2) — Ajustes tras probar 671d0c8 (sin commit)
+
+- Círculos de «Tu estado de hoy» otra vez repartidos (el botón que los envuelve no ocupaba todo el ancho).
+- Objetivos sugeridos según cada persona (`logic/dailyGoals.ts`, tests en `dailyGoals.test.ts`): pasos 8.000 antes de
+  los 60 y 7.000 desde los 60, sueño 7 h 30 (9 h en menores de 18), o los del plan si los tiene; kcal activas = lo
+  que gastan esos pasos con su peso (0,5 kcal/kg/km) + 30 min/día de actividad moderada (3 MET netos, OMS 150-300
+  min/semana); distancia = pasos × zancada (41,5 % de la altura, 41,3 % en mujeres). Peso y altura de referencia si
+  faltan. Textos «Para tu edad», «Para tus pasos, tu sexo y tu peso»… y (i) con fuentes (evidence 'daily_goals').
+- Pestañas: vuelve el deslizamiento lateral al tocarlas (el fundido no gustó) y `offscreenPageLimit` = 4 para que
+  Android no suelte las pestañas que no se ven (al volver a Hoy la repintaba entera mientras deslizaba: ese era el
+  salto). Web: sin fundido, pestañas montadas. El fundido se queda solo para el cambio de tema.
+- Medicación: una hora añadida a mano no se quita al tocarla; lleva su ×. «¿A qué hora?» y «Añadir 09:00» en español.

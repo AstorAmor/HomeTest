@@ -373,11 +373,22 @@ export const MedicationSetupScreen = () => {
             {(frequency === 'once' || frequency === 'twice' || frequency === 'three' || frequency === 'weekdays') && (
               <>
                 <Text style={styles.label}>
-                  At what time{frequency === 'twice' ? 's (pick 2)' : frequency === 'three' ? 's (pick 3)' : ''}?
+                  {frequency === 'twice' ? tr('At what times? (pick 2)') : frequency === 'three' ? tr('At what times? (pick 3)') : tr('At what time?')}
                 </Text>
                 <View style={styles.slots}>
                   {slotOptions.map((s) => {
                     const on = times.includes(s.id);
+                    // Una hora añadida a mano no se quita al tocarla (desaparecería): lleva su × para eso
+                    if (!SLOTS.some((x) => x.id === s.id)) {
+                      return (
+                        <View key={s.id} style={[styles.slot, styles.slotOn, styles.slotCustom]}>
+                          <Text style={[styles.slotText, { color: Colors.textPrimary }]}>{s.label}</Text>
+                          <TouchableOpacity onPress={() => toggleTime(s.id)} hitSlop={10} accessibilityLabel={tr('Remove {time}', { time: s.label })}>
+                            <Ionicons name="close-circle" size={17} color={Colors.textSecondary} />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
                     return (
                       <TouchableOpacity key={s.id} style={[styles.slot, on && styles.slotOn]} onPress={() => toggleTime(s.id)}>
                         <Text style={[styles.slotText, on && { color: Colors.textPrimary }]}>{tr(s.label)}</Text>
@@ -396,9 +407,7 @@ export const MedicationSetupScreen = () => {
                       <WheelPicker items={MINUTES} selectedIndex={otherMinute} onChange={setOtherMinute} width={90} />
                     </View>
                     <TouchableOpacity style={styles.addTime} onPress={addOther} activeOpacity={0.85}>
-                      <Text style={styles.addTimeText}>
-                        Add {HOURS[otherHour]}:{MINUTES[otherMinute]}
-                      </Text>
+                      <Text style={styles.addTimeText}>{tr('Add {time}', { time: `${HOURS[otherHour]}:${MINUTES[otherMinute]}` })}</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -618,6 +627,7 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   slotOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
+  slotCustom: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   suggestion: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   slotText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
   tip: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 16, fontStyle: 'italic' },

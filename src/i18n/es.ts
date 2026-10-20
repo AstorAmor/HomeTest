@@ -3678,7 +3678,26 @@ export const es: Record<string, string> = {
   'Each circle in “Daily readiness” fills up when you reach its goal. We suggest the ones in your plan; change any of them.':
     'Cada círculo de «Tu estado de hoy» se completa al llegar a su objetivo. Te sugerimos los de tu plan; cambia el que quieras.',
   'Your plan: {v}': 'Tu plan: {v}',
-  'General recommendation: {v}': 'Recomendación general: {v}',
+  'For your age: {v}': 'Para tu edad: {v}',
+  'For your steps, sex and weight: {v}': 'Para tus pasos, tu sexo y tu peso: {v}',
+  'For your steps and height: {v}': 'Para tus pasos y tu altura: {v}',
+  // 2026-10-20: horas de la medicación
+  'At what time?': '¿A qué hora?',
+  'At what times? (pick 2)': '¿A qué horas? (elige 2)',
+  'At what times? (pick 3)': '¿A qué horas? (elige 3)',
+  'Add {time}': 'Añadir {time}',
+  'Remove {time}': 'Quitar {time}',
   'Use the plan one': 'Usar la del plan',
   'Use the suggested one': 'Usar la sugerida',
+  'Steps and sleep from your plan or your age; active calories and distance from those steps, your sex, weight and height.':
+    'Pasos y sueño, de tu plan o de tu edad; las kcal activas y la distancia, de esos pasos, tu sexo, tu peso y tu altura.',
+  'Steps: 8,000 a day before 60 and 7,000 from 60. In 15 studies with 47,000 adults, the benefit kept growing up to 8,000-10,000 steps a day before 60 and up to 6,000-8,000 from 60.':
+    'Pasos: 8.000 al día antes de los 60 y 7.000 desde los 60. En 15 estudios con 47.000 adultos, el beneficio seguía subiendo hasta 8.000-10.000 pasos al día antes de los 60 y hasta 6.000-8.000 desde los 60.',
+  'Sleep: 7 h 30. Adults need 7 hours or more; teenagers, 8 to 10.': 'Sueño: 7 h 30. Los adultos necesitan 7 horas o más; los adolescentes, de 8 a 10.',
+  'Active calories: what those steps burn for your weight (about 0.5 kcal per kg and km walked) plus 30 minutes of moderate activity a day, which is how the WHO recommendation of 150-300 minutes a week works out. It is an estimate: each watch measures it its own way.':
+    'Kcal activas: lo que gastan esos pasos con tu peso (unas 0,5 kcal por kilo y kilómetro caminado) más 30 minutos al día de actividad moderada, que es como se reparten los 150-300 minutos a la semana que recomienda la OMS. Es una estimación: cada reloj lo mide a su manera.',
+  'Distance: your steps times your stride, worked out from your height (about 41% of it).':
+    'Distancia: tus pasos por tu zancada, calculada con tu altura (más o menos el 41 %).',
+  'If your plan has a steps or sleep target, we use that one. You can change any goal, and the circles fill up with yours.':
+    'Si tu plan tiene un objetivo de pasos o de sueño, usamos ese. Puedes cambiar cualquiera y los círculos se completan con el tuyo.',
 };

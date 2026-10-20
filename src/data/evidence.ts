@@ -117,6 +117,26 @@ export const EVIDENCE: EvidenceTopic[] = [
     status: 'pending',
   },
   {
+    id: 'daily_goals',
+    title: 'Your daily goals',
+    summary: 'Steps and sleep from your plan or your age; active calories and distance from those steps, your sex, weight and height.',
+    body: [
+      'Steps: 8,000 a day before 60 and 7,000 from 60. In 15 studies with 47,000 adults, the benefit kept growing up to 8,000-10,000 steps a day before 60 and up to 6,000-8,000 from 60.',
+      'Sleep: 7 h 30. Adults need 7 hours or more; teenagers, 8 to 10.',
+      'Active calories: what those steps burn for your weight (about 0.5 kcal per kg and km walked) plus 30 minutes of moderate activity a day, which is how the WHO recommendation of 150-300 minutes a week works out. It is an estimate: each watch measures it its own way.',
+      'Distance: your steps times your stride, worked out from your height (about 41% of it).',
+      'If your plan has a steps or sleep target, we use that one. You can change any goal, and the circles fill up with yours.',
+    ],
+    sources: [
+      { label: 'WHO 2020 guidelines on physical activity and sedentary behaviour (Bull et al., Br J Sports Med 2020)', url: 'https://doi.org/10.1136/bjsports-2020-102955' },
+      { label: 'Daily steps and all-cause mortality, 15 cohorts (Paluch et al., Lancet Public Health 2022)', url: 'https://doi.org/10.1016/S2468-2667(21)00302-9' },
+      { label: 'Recommended amount of sleep for adults: 7 hours or more (Watson et al., Sleep 2015)', url: 'https://doi.org/10.5665/sleep.4716' },
+      { label: 'Sleep duration recommendations by age (Hirshkowitz et al., Sleep Health 2015)', url: 'https://doi.org/10.1016/j.sleh.2014.12.010' },
+      { label: 'Compendium of Physical Activities: energy cost of each activity (Ainsworth et al., Med Sci Sports Exerc 2011)', url: 'https://doi.org/10.1249/MSS.0b013e31821ece12' },
+    ],
+    status: 'pending',
+  },
+  {
     id: 'change_is_real',
     title: 'When a change is real',
     summary: 'Every result varies a little from day to day. We only call a change real when it is bigger than that natural variation.',

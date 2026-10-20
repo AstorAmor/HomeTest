@@ -33,22 +33,3 @@ describe('Barra de rango', () => {
     expect(rangeBarLayout(5, null, null)).toBeNull();
   });
 });
-
-import { DEFAULT_GOALS, effectiveGoals, suggestedGoals } from '@/logic/dailyGoals';
-import type { PlanItem } from '@/logic/plan';
-
-describe('Objetivos del día', () => {
-  const item = (kind: PlanItem['kind'], target: number): PlanItem => ({ kind, title: '', subtitle: '', target, why: '', how: [] });
-
-  it('sugiere los del plan cuando están y los generales si no', () => {
-    const s = suggestedGoals([item('steps', 9000), item('sleep', 7)]);
-    expect(s.goals).toEqual({ ...DEFAULT_GOALS, steps: 9000, sleepMin: 420 });
-    expect(s.fromPlan).toMatchObject({ steps: true, sleepMin: true, activeKcal: false });
-    expect(suggestedGoals([]).goals).toEqual(DEFAULT_GOALS);
-  });
-
-  it('lo que cambia el usuario manda; lo demás sigue al plan', () => {
-    const g = effectiveGoals({ ...DEFAULT_GOALS, steps: 9000 }, { activeKcal: 350, steps: undefined, sleepMin: -5 });
-    expect(g).toEqual({ ...DEFAULT_GOALS, steps: 9000, activeKcal: 350 });
-  });
-});
