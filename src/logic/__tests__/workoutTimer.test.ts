@@ -5,7 +5,7 @@ vi.mock('react-native', () => ({ Platform: { OS: 'android' } }));
 vi.mock('@/lib/supabase', () => ({ getCurrentUserId: () => null, isRemoteActive: () => false, supabase: null }));
 vi.mock('@/data/servicesMock', () => ({ mockProfessionals: [] }));
 
-import { secondsLeft, upcomingEnds } from '@/logic/workoutTimer';
+import { isTimedReps, secondsLeft, timedSeconds, timeText, upcomingEnds } from '@/logic/workoutTimer';
 import { consultationEvent } from '@/data/consultations';
 import type { Appointment } from '@/data/specialistTypes';
 
@@ -38,6 +38,22 @@ describe('Cuenta atrás del entrenamiento', () => {
     const ends = upcomingEnds({ now: later, phase: 'work', timerOn: true, endsAt: now + 60_000, totalSec: 60, perSide: true, restAfterSec: 0 });
     expect(ends).toEqual([{ at: now + 60_000, kind: 'work' }]);
     expect(upcomingEnds({ now, phase: 'work', timerOn: false, endsAt: 0, totalSec: 30, perSide: false, restAfterSec: 60 })).toEqual([]);
+  });
+});
+
+describe('Ejercicios por tiempo', () => {
+  it('lee el tiempo como lo escriben el generador, el entrenador y las ruedas', () => {
+    expect(timedSeconds('30 s')).toBe(30);
+    expect(timedSeconds('20–30 s')).toBe(20);
+    expect(timedSeconds('8 min')).toBe(480);
+    expect(timedSeconds('1 min 30 s')).toBe(90);
+    expect(isTimedReps('1 min 30 s')).toBe(true);
+    expect(isTimedReps('10–12')).toBe(false);
+  });
+
+  it('lo que se guarda desde las ruedas se vuelve a leer igual', () => {
+    for (const sec of [5, 45, 60, 90, 125, 600]) expect(timedSeconds(timeText(sec))).toBe(sec);
+    expect(timeText(90)).toBe('1 min 30 s');
   });
 });
 

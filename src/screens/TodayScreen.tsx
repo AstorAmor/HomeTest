@@ -29,6 +29,8 @@ import { computeAchievements } from '@/data/achievements';
 import { BlobArt } from '@/components/BlobArt';
 import { KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { DailyGoals, effectiveGoals, suggestedGoals } from '@/logic/dailyGoals';
+import { dailyGoalsStore } from '@/data/dailyGoals';
 import { weightRepository } from '@/data/weightRepository';
 import { WeighAdvice, weighAdvice } from '@/logic/weight';
 import { useSections } from '@/data/appPrefs';
@@ -139,6 +141,7 @@ export const TodayScreen = () => {
   const { series, isSample, sources, hasAny } = useDailyWearables(14, { autoSync: true });
   const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(initialBiomarkers());
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
+  const [savedGoals, setSavedGoals] = useDeepState<Partial<DailyGoals> | null>(null);
   // Hay resultados (informe o analítica subida): el plan ya se apoya en ellos
   const [hasResults, setHasResults] = useState(labReports().length > 0);
   const [achievementData, setAchievementData] = useDeepState<{
@@ -223,6 +226,7 @@ export const TodayScreen = () => {
         setReminderIds(active.filter((i) => i.reminders && !isReminderMuted(i)).map((i) => i.id));
       })
       .catch(() => setDosesToday([]));
+    dailyGoalsStore.get().then(setSavedGoals);
     weightRepository
       .getAll()
       .then((all) => setWeight(weighAdvice(all)))
@@ -298,6 +302,8 @@ export const TodayScreen = () => {
   const lastMoment = lastCheckIn ? MOMENT_OPTIONS.find((m) => m.id === lastCheckIn.moment) : null;
 
   const plan = buildPlan(profile);
+  // Objetivos de los círculos de «Tu estado de hoy»: los del plan o los que haya puesto el usuario
+  const goals = effectiveGoals(suggestedGoals(plan).goals, savedGoals);
   const achievements = computeAchievements({
     dailySteps: series.steps ?? [],
     ...achievementData,
@@ -536,11 +542,12 @@ export const TodayScreen = () => {
                 </Text>
               )}
               {hasAny && (
+                <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/daily-goals')} accessibilityLabel={t('Your daily goals')}>
                 <View style={styles.smallRings}>
                   <SmallRing
                     icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
                     color={Colors.sky}
-                    progress={steps / 8000}
+                    progress={steps / goals.steps}
                     value={steps.toLocaleString(dateLocale())}
                     label={t('Steps')}
                   />
@@ -548,7 +555,7 @@ export const TodayScreen = () => {
                     <SmallRing
                       icon={<Ionicons name="flame" size={16} color={Colors.coral} />}
                       color={Colors.coral}
-                      progress={(calories ?? 0) / 500}
+                      progress={(calories ?? 0) / goals.activeKcal}
                       value={calories != null ? `${calories}` : '—'}
                       label={t('Active kcal')}
                     />
@@ -556,7 +563,7 @@ export const TodayScreen = () => {
                     <SmallRing
                       icon={<Ionicons name="navigate-outline" size={16} color={Colors.coral} />}
                       color={Colors.coral}
-                      progress={distanceKm / 6000}
+                      progress={distanceKm / goals.distanceM}
                       value={(distanceKm / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 })}
                       label={t('km')}
                     />
@@ -564,11 +571,15 @@ export const TodayScreen = () => {
                   <SmallRing
                     icon={<Ionicons name="moon" size={15} color={Colors.violet} />}
                     color={Colors.violet}
-                    progress={sleep / 480}
+                    progress={sleep / goals.sleepMin}
                     value={sleep ? formatSleep(sleep) : '—'}
                     label={t('Sleep')}
                   />
                 </View>
+                <Text style={styles.goalsLink}>
+                  <Ionicons name="flag-outline" size={12} color={Colors.accent} /> {t('Your daily goals')}
+                </Text>
+                </TouchableOpacity>
               )}
               <Text style={styles.sourceText}>
                 {hasAny
@@ -897,6 +908,7 @@ const BiomarkerCard = ({
 );
 
 const styles = StyleSheet.create({
+  goalsLink: { color: Colors.accent, fontSize: 12, fontWeight: '700', textAlign: 'center', marginTop: 10 },
   summaryCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,

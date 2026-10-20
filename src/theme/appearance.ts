@@ -50,7 +50,9 @@ export async function reloadKeepingPlace(veilColor: string, returnTo?: string) {
   } else if (__DEV__) {
     DevSettings.reload();
   } else {
-    await Updates.reloadAsync();
+    // Sin esto, durante la recarga sale la pantalla de carga por defecto (blanca y con la rueda):
+    // el destello que se veía al cambiar de tema. Del color del tema nuevo, sin rueda y con fundido.
+    await Updates.reloadAsync({ reloadScreenOptions: { backgroundColor: veilColor, spinner: { enabled: false }, fade: true } });
   }
 }
 

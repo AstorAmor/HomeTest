@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -12,6 +12,8 @@ import { KuovaAgeBadge, KuovaAgeDots, kuovaAgeLockedHint } from '@/components/Ku
 import { kuovaAge, kuovaAgeFromUploads, KuovaAgeResult, LabInput, PHENOAGE_INPUTS, realChange } from '@/logic/kuovaAge';
 import type { PhenoInput } from '@/logic/phenoAge';
 import { labUploadRepository } from '@/data/labUploads';
+import { lastKuovaAge, rememberKuovaAge } from '@/data/kuovaAgeCache';
+import { getMyAccess } from '@/data/access';
 import { profileRepository } from '@/data/profileRepository';
 import { GaugeBar } from '@/components/GaugeBar';
 import { getMarkerDisplayNameEn, getMarkerValueTextEn } from '@/data/reportContentEn';
@@ -114,13 +116,22 @@ export const BiologicalAgeScreen = () => {
   const sample = showSamples();
   const p = currentReport.summary.phenoage;
   // Cuenta real: su Edad KUOVA sale de sus analíticas subidas y su fecha de nacimiento (o qué falta)
-  const [kres, setKres] = useState<KuovaAgeResult | null>(null);
+  // Sale ya con lo que calculó Mis datos; hasta tenerlo no se pinta nada debajo del título, para que la
+  // pantalla aparezca entera de una vez y no a trozos
+  const [kres, setKres] = useState<KuovaAgeResult | null>(() => (sample ? null : lastKuovaAge()));
+  const [subscribed, setSubscribed] = useState(false);
   useEffect(() => {
     if (sample) return;
-    Promise.all([labUploadRepository.getAll().catch(() => []), profileRepository.get().catch(() => null)]).then(([uploads, prof]) =>
-      setKres(kuovaAgeFromUploads(uploads, prof?.dateOfBirth)),
-    );
+    Promise.all([labUploadRepository.getAll().catch(() => []), profileRepository.get().catch(() => null)]).then(([uploads, prof]) => {
+      const age = kuovaAgeFromUploads(uploads, prof?.dateOfBirth);
+      rememberKuovaAge(age);
+      setKres(age);
+    });
+    getMyAccess()
+      .then((a) => setSubscribed(a.tier !== 'free'))
+      .catch(() => undefined);
   }, [sample]);
+  const loading = !sample && kres === null;
 
   const view = sample
     ? p.available
@@ -143,6 +154,7 @@ export const BiologicalAgeScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('KUOVA age')} showBack />
+        {loading && <ActivityIndicator color={Colors.accent} style={{ marginTop: 60 }} />}
 
         {locked && (
           <>
@@ -175,9 +187,22 @@ export const BiologicalAgeScreen = () => {
             ))}
             {locked.status === 'missing' && (
               <>
-                <TouchableOpacity style={styles.labLink} onPress={() => router.push('/store')}>
+                {/* La analítica completa (~100 marcadores) no se vende suelta: va con Kuova Basic y Premium */}
+                <TouchableOpacity
+                  style={styles.labLink}
+                  onPress={() =>
+                    subscribed
+                      ? router.navigate({ pathname: '/(tabs)', params: { tab: String(TAB.lab) } } as any)
+                      : router.push({ pathname: '/checkout', params: { id: 'membership' } })
+                  }
+                >
                   <Ionicons name="water-outline" size={18} color={Colors.accent} />
-                  <Text style={styles.labLinkText}>{t('Get the full blood test')}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.labLinkText}>{subscribed ? t('Your full blood test is included') : t('Get the full blood test')}</Text>
+                    <Text style={styles.labLinkSub}>
+                      {subscribed ? t('See when it is due in Lab.') : t('Comes with Kuova Basic: the full panel and a follow-up at 6 months.')}
+                    </Text>
+                  </View>
                   <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.labLink} onPress={() => router.push('/upload-test')}>
@@ -248,6 +273,8 @@ export const BiologicalAgeScreen = () => {
           </>
         )}
 
+        {!loading && (
+          <>
         <Text style={styles.section}>{t('How it is calculated')}</Text>
         <Text style={styles.body}>
           {t(
@@ -285,6 +312,8 @@ export const BiologicalAgeScreen = () => {
             <Text style={styles.source}>{s.label}</Text>
           </TouchableOpacity>
         ))}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -319,6 +348,7 @@ const styles = StyleSheet.create({
   groupTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
   labLink: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14 },
   labLinkText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  labLinkSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   source: { color: Colors.accent, fontSize: 12, lineHeight: 18, marginBottom: 8 },
   lockedTop: { alignItems: 'center', gap: 12, marginTop: 4 },
   lockedHint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center', maxWidth: 300 },

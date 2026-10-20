@@ -60,3 +60,11 @@ export const doseRepository = createMetricRepository<DoseLog>('hometest:medicati
     createdAt: r.created_at,
   }),
 });
+
+// Borrar del todo un medicamento y las tomas que tenía apuntadas (lo apuntado por error o lo que ya no
+// quiere ver). «Lo he dejado» es otra cosa: guarda el historial y solo deja de programarlo.
+export async function deleteMedication(id: string): Promise<void> {
+  const doses = await doseRepository.getAll();
+  for (const d of doses.filter((x) => x.medId === id)) await doseRepository.remove(d.id);
+  await medicationRepository.remove(id);
+}

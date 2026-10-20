@@ -3662,4 +3662,23 @@ export const es: Record<string, string> = {
   'No, keep it': 'No, dejarla como está',
   'Your consultation on {when} has been cancelled.': 'Has cancelado tu consulta del {when}.',
   'We have cancelled the one you had on {when}.': 'Hemos cancelado la que tenías el {when}.',
+  // 2026-10-20: borrar un medicamento o suplemento
+  'Delete {name}?': '¿Borrar {name}?',
+  'Its logged doses are deleted too. This cannot be undone.': 'También se borran sus tomas apuntadas. No se puede deshacer.',
+  'Options for {name}': 'Opciones de {name}',
+  // 2026-10-20: la analítica completa va con la suscripción
+  'Your full blood test is included': 'Tu analítica completa va incluida',
+  'See when it is due in Lab.': 'Mira cuándo te toca en Laboratorio.',
+  'Comes with Kuova Basic: the full panel and a follow-up at 6 months.': 'Va con Kuova Basic: el panel completo y un seguimiento a los 6 meses.',
+  Yours: 'Tu plan',
+  // 2026-10-20: lo que no va en tu suscripción
+  'Subscribe to {plan}': 'Suscríbete a {plan}',
+  // 2026-10-20: objetivos de «Tu estado de hoy»
+  'Your daily goals': 'Tus objetivos del día',
+  'Each circle in “Daily readiness” fills up when you reach its goal. We suggest the ones in your plan; change any of them.':
+    'Cada círculo de «Tu estado de hoy» se completa al llegar a su objetivo. Te sugerimos los de tu plan; cambia el que quieras.',
+  'Your plan: {v}': 'Tu plan: {v}',
+  'General recommendation: {v}': 'Recomendación general: {v}',
+  'Use the plan one': 'Usar la del plan',
+  'Use the suggested one': 'Usar la sugerida',
 };

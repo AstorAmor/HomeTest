@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { Animated, Easing, View, StyleSheet } from 'react-native';
 import { TodayScreen } from './TodayScreen';
 import { MyDataScreen } from './MyDataScreen';
 import { ScheduleScreen } from './ScheduleScreen';
@@ -15,7 +15,8 @@ const LAST = TABS.length - 1;
 // Variante web de MainTabsScreen: react-native-pager-view no soporta web,
 // así que aquí se cambia de pestaña sin gesto de swipe (solo con la tab bar).
 // La pestaña va en la URL (?tab=N): al recargar (p. ej. al cambiar el tema) se vuelve a la misma,
-// y el modo Señalar sabe en qué pestaña estás.
+// y el modo Señalar sabe en qué pestaña estás. Las cinco se quedan montadas (como en el móvil): al
+// volver a una no se recarga entera de golpe; entra con un fundido corto.
 export const MainTabsScreen = () => {
   const router = useRouter();
   // Web del paciente en escritorio: el menú lateral elige la pestaña, sin barra abajo
@@ -34,6 +35,12 @@ export const MainTabsScreen = () => {
     router.setParams({ tab: String(i) });
   };
 
+  const fade = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    fade.setValue(0);
+    Animated.timing(fade, { toValue: 1, duration: 200, easing: Easing.out(Easing.quad), useNativeDriver: false }).start();
+  }, [currentPage, fade]);
+
   const pages = [
     <TodayScreen key="today" />,
     <MyDataScreen key="my-data" />,
@@ -47,7 +54,13 @@ export const MainTabsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.page}>{pages[currentPage]}</View>
+      <Animated.View style={[styles.page, { opacity: fade }]}>
+        {pages.map((page, i) => (
+          <View key={page.key} style={[styles.page, i !== currentPage && styles.hidden]}>
+            {page}
+          </View>
+        ))}
+      </Animated.View>
       {!shell && <BottomTabBar currentIndex={currentPage} onTabPress={select} />}
     </View>
   );
@@ -61,4 +74,5 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
   },
+  hidden: { display: 'none' },
 });

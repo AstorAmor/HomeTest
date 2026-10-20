@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { labUploadRepository } from '@/data/labUploads';
+import { rememberKuovaAge } from '@/data/kuovaAgeCache';
 import { labValuesFrom } from '@/data/labUploadValues';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart, TrendSeries } from '@/components/TrendChart';
@@ -130,7 +131,9 @@ export const MyDataScreen = () => {
     setGlucose(simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent));
     setCholesterol(simpleChart([...chol, ...labValuesFrom(uploads, 'total_cholesterol')], 'cholesterol', Colors.amber));
     setCortisol(simpleChart([...cort, ...labValuesFrom(uploads, 'cortisol_am')], 'cortisol', Colors.violet));
-    setKres(kuovaAgeFromUploads(uploads, prof?.dateOfBirth));
+    const age = kuovaAgeFromUploads(uploads, prof?.dateOfBirth);
+    rememberKuovaAge(age);
+    setKres(age);
     // VO2max: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
     const voAsc = [...vo].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);    setVo2(
       voAsc.length

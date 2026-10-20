@@ -8,6 +8,7 @@ import { confirmAsk } from '@/components/dev/confirmAsk';
 import { RecipeImage } from '@/components/diet/RecipeImage';
 import { MacroDonut } from '@/components/diet/MacroDonut';
 import { DIET_FEATURE, DietLocked } from '@/components/diet/TodayMenuCard';
+import { SubscribePopup } from '@/components/SubscribePopup';
 import { useFeature } from '@/data/access';
 import { Colors } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -78,6 +79,7 @@ export const DietScreen = () => {
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
           <DietLocked />
         </ScrollView>
+        <SubscribePopup feature={DIET_FEATURE} icon="silverware-fork-knife" text="A week of breakfasts, lunches and dinners made for you: your blood tests, what you like and what sits badly, your budget and your time. With recipes, photos and the shopping list." fallback="/nutrients" />
       </SafeAreaView>
     );
   }

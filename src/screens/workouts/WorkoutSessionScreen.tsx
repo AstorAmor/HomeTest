@@ -30,7 +30,9 @@ import {
   scheduleBellAlarms,
   useBellPrefs,
 } from '@/data/workouts/bell';
-import { secondsLeft, upcomingEnds } from '@/logic/workoutTimer';
+import { isTimedReps, secondsLeft, timedSeconds, upcomingEnds } from '@/logic/workoutTimer';
+import { DoseEditor } from '@/components/workouts/DoseEditor';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { t, tn } from '@/i18n';
 
 // Una sesión del programa: primero la lista (calentamiento, ejercicios, remate y estiramientos) y,
@@ -43,13 +45,7 @@ import { t, tn } from '@/i18n';
 type Step = { item: number; set: number };
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
 
-// Segundos de un ejercicio por tiempo: "30 s" → 30, "20–30 s" → 20 (el mínimo), "8 min" → 480
-export const timedSeconds = (reps: string) => {
-  const n = reps.match(/\d+/);
-  const v = n ? Number(n[0]) : 30;
-  return /min/.test(reps) ? v * 60 : v;
-};
-const isTimed = (it: WorkoutExercise) => /\d\s*(s|min)\b/.test(it.reps);
+const isTimed = (it: WorkoutExercise) => isTimedReps(it.reps);
 
 const workoutType = (s: WorkoutSession): WorkoutType => (s.focus === 'mobility' ? 'mobility' : s.focus === 'conditioning' ? 'cardio' : 'strength');
 
@@ -69,6 +65,7 @@ export const WorkoutSessionScreen = () => {
   const [intensity, setIntensity] = useState<WorkoutEntry['intensity']>('moderate');
   const [saved, setSaved] = useState(false);
   const [swapAt, setSwapAt] = useState<number | null>(null); // índice en session.exercises
+  const [editAt, setEditAt] = useState<number | null>(null); // ídem, para cambiar series, reps o tiempo y descanso
   const startedAt = useRef<number>(0);
   const endsAt = useRef(0); // cuándo acaba la cuenta atrás en marcha (hora del reloj, en ms)
   const sideRung = useRef(false); // ya sonó el cambio de lado de este ejercicio
@@ -205,6 +202,16 @@ export const WorkoutSessionScreen = () => {
   }, [mode, bell.on, bell.tone]);
   useEffect(() => releaseBells, []);
 
+  // Durante la sesión la pantalla no se apaga sola: así el timbre suena desde la app aunque no se
+  // toque el móvil en todo el descanso. Si se bloquea a mano, avisa el móvil (arriba).
+  useEffect(() => {
+    if (mode !== 'run') return;
+    activateKeepAwakeAsync('workout').catch(() => undefined);
+    return () => {
+      deactivateKeepAwake('workout').catch(() => undefined);
+    };
+  }, [mode]);
+
   const start = () => {
     startedAt.current = Date.now();
     setElapsed(0);
@@ -296,6 +303,9 @@ export const WorkoutSessionScreen = () => {
               <Text style={styles.blockTag}>{t('Rest')}</Text>
               <Text style={styles.restClock}>{fmt(Math.max(0, left))}</Text>
               <View style={styles.restButtons}>
+                <TouchableOpacity style={styles.secondary} onPress={() => countTo(Math.max(Date.now(), endsAt.current - 15000))}>
+                  <Text style={styles.secondaryText}>−15 s</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.secondary} onPress={() => countTo(endsAt.current + 15000)}>
                   <Text style={styles.secondaryText}>+15 s</Text>
                 </TouchableOpacity>
@@ -390,6 +400,19 @@ export const WorkoutSessionScreen = () => {
     setProgram(next);
     await programRepository.save(next).catch(() => undefined);
   };
+
+  const editing = editAt !== null ? session.exercises[editAt] : undefined;
+  const editingEx = editing ? getExercise(editing.exerciseId) : undefined;
+  const saveDose = async (change: Pick<WorkoutExercise, 'sets' | 'reps' | 'restSec'>) => {
+    if (editAt === null) return;
+    const next: WorkoutProgram = {
+      ...program,
+      sessions: program.sessions.map((s) => (s.id !== session.id ? s : { ...s, exercises: s.exercises.map((it, j) => (j === editAt ? { ...it, ...change } : it)) })),
+    };
+    setEditAt(null);
+    setProgram(next);
+    await programRepository.save(next).catch(() => undefined);
+  };
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScreenHeader title={sessionTitle(session)} showBack backFallback="/workouts" />
@@ -428,6 +451,9 @@ export const WorkoutSessionScreen = () => {
                     </Text>
                     {it.note ? <Text style={styles.rowNote}>{it.note}</Text> : null}
                   </View>
+                  <TouchableOpacity style={styles.swap} onPress={() => setEditAt(idx)} hitSlop={8} accessibilityLabel={t('Edit {name}', { name: exerciseName(e) })}>
+                    <Ionicons name="pencil" size={16} color={Colors.accent} />
+                  </TouchableOpacity>
                   <TouchableOpacity style={styles.swap} onPress={() => setSwapAt(idx)} hitSlop={8} accessibilityLabel={t('Swap {name}', { name: exerciseName(e) })}>
                     <Ionicons name="swap-horizontal" size={18} color={Colors.accent} />
                   </TouchableOpacity>
@@ -452,6 +478,16 @@ export const WorkoutSessionScreen = () => {
                 : t('Same type of movement, with your equipment.')}
             </Text>
             <ExerciseLibrary forSelf onPick={swap} pickLabel={t('Use this one')} equipment={program.prefs.equipment} onlyPatterns={[swapping.pattern]} excludeId={swapping.id} />
+          </>
+        )}
+      </WorkoutModal>
+      <WorkoutModal visible={editAt !== null} title={editingEx ? exerciseName(editingEx) : ''} onClose={() => setEditAt(null)}>
+        {editing && (
+          <>
+            {program.source === 'professional' && (
+              <Text style={styles.swapHint}>{t('{name} will see the change.', { name: program.professionalName || t('Your trainer') })}</Text>
+            )}
+            <DoseEditor item={editing} perSide={editingEx?.perSide} onSave={saveDose} onCancel={() => setEditAt(null)} />
           </>
         )}
       </WorkoutModal>

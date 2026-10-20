@@ -47,7 +47,9 @@ export const BellSheet = ({
           thumbColor={prefs.on ? Colors.accent : Colors.textMuted}
         />
       </View>
-      <Text style={styles.hint}>{t('Tap a sound to hear it.')}</Text>
+      <Text style={styles.hint}>
+        {t('Tap a sound to hear it.')} {t('During the session the screen stays on, so the bell can ring.')}
+      </Text>
       {BELL_TONES.map((x) => {
         const sel = prefs.on && x.id === prefs.tone;
         return (

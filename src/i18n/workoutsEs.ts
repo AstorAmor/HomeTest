@@ -262,6 +262,18 @@ export const workoutsEs: Record<string, string> = {
   "With the screen locked you will hear your phone's notification sound. The sound you choose here comes with the next version of the app.":
     'Con la pantalla bloqueada suena el tono de avisos del móvil. El sonido que elijas aquí llegará con la próxima versión de la app.',
   'Allow notifications': 'Permitir avisos',
+  'During the session the screen stays on, so the bell can ring.': 'Durante la sesión la pantalla se queda encendida para que pueda sonar el timbre.',
+
+  // 2026-10-20: cambiar series, repeticiones o tiempo y descanso de un ejercicio
+  'Edit {name}': 'Cambiar {name}',
+  '{name} will see the change.': '{name} verá el cambio.',
+  'How you do it': 'Cómo lo haces',
+  'By reps': 'Por repeticiones',
+  'By time': 'Por tiempo',
+  'Rest after each set': 'Descanso después de cada serie',
+  'No rest': 'Sin descanso',
+  'Per side. The bell rings when you switch sides and at the end.': 'Por lado. El timbre suena al cambiar de lado y al acabar.',
+  'The bell rings when the time is up.': 'El timbre suena cuando se acaba el tiempo.',
   'If it rings late with the screen locked, allow "Alarms & reminders" for Kuova in your phone settings.':
     'Si con la pantalla bloqueada suena tarde, permite «Alarmas y recordatorios» para Kuova en los ajustes del móvil.',
 };

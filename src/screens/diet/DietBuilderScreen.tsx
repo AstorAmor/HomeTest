@@ -25,6 +25,7 @@ import type { DietPrefs, ReferralReason } from '@/data/diet/types';
 import { blockingReasons, DEFAULT_DIET_PREFS, newDietPlan, REFERRAL_TEXT, referralReasons } from '@/logic/dietPlanner';
 import { t } from '@/i18n';
 import { DIET_FEATURE, DietLocked } from '@/components/diet/TodayMenuCard';
+import { SubscribePopup } from '@/components/SubscribePopup';
 import { useFeature } from '@/data/access';
 
 // "Crear mi menú": una pregunta cada vez, como una conversación. Parte de lo que ya sabemos (perfil,
@@ -146,6 +147,7 @@ export const DietBuilderScreen = () => {
         <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
           <DietLocked />
         </ScrollView>
+        <SubscribePopup feature={DIET_FEATURE} icon="silverware-fork-knife" text="A week of breakfasts, lunches and dinners made for you: your blood tests, what you like and what sits badly, your budget and your time. With recipes, photos and the shopping list." fallback="/nutrients" />
       </SafeAreaView>
     );
   }

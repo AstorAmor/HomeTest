@@ -10,7 +10,7 @@ import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { compareUpload, ChangeVerdict, ProgressResult, VERDICT_LABEL } from '@/utils/progress';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
-import { LabReportTable } from '@/components/LabReportTable';
+import { LabValuesList } from '@/components/LabValuesList';
 import { OutOfRangeSummary } from '@/components/OutOfRangeSummary';
 import { getRangeStatus, rangeText } from '@/utils/rangeStatus';
 import { TAB, tabHref } from '@/constants/tabs';
@@ -118,7 +118,7 @@ export const ProgressScreen = () => {
             <OutOfRangeSummary report={upload.data} />
             <Text style={styles.allTitle}>{t('All your values')}</Text>
             <View style={styles.table}>
-              <LabReportTable report={upload.data} />
+              <LabValuesList report={upload.data} />
             </View>
           </>
         )}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, Easing, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Transición al cambiar el tema o el idioma. Los estilos de cada pantalla se calculan al cargar
@@ -10,8 +10,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // En la web, public/index.html pinta el fondo del tema antes de que cargue el JavaScript.
 
 const KEY = 'appearance.fade.v1';
-const FADE_OUT_MS = 240;
-const FADE_IN_MS = 420;
+const FADE_OUT_MS = 300;
+const FADE_IN_MS = 520;
 
 let fadeTo: ((color: string) => Promise<void>) | null = null;
 
@@ -47,7 +47,7 @@ export function ThemeVeil({ initial, ready }: { initial: string | null; ready: b
     fadeTo = (c: string) =>
       new Promise<void>((resolve) => {
         setColor(c);
-        Animated.timing(opacity, { toValue: 1, duration: FADE_OUT_MS, useNativeDriver: false }).start(() => resolve());
+        Animated.timing(opacity, { toValue: 1, duration: FADE_OUT_MS, easing: Easing.inOut(Easing.quad), useNativeDriver: false }).start(() => resolve());
       });
     return () => {
       fadeTo = null;
@@ -58,7 +58,7 @@ export function ThemeVeil({ initial, ready }: { initial: string | null; ready: b
     if (!ready || !initial) return;
     // Un respiro para que la primera pantalla se pinte debajo del velo
     const t = setTimeout(() => {
-      Animated.timing(opacity, { toValue: 0, duration: FADE_IN_MS, useNativeDriver: false }).start();
+      Animated.timing(opacity, { toValue: 0, duration: FADE_IN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
     }, 260);
     // Por si la animación no corre (pestaña en segundo plano): el velo nunca se queda puesto
     const safety = setTimeout(() => opacity.setValue(0), 260 + FADE_IN_MS + 400);

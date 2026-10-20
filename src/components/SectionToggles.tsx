@@ -33,9 +33,9 @@ export const SectionToggles = ({
               <AppIcon name={o.icon} size={20} color={on ? Colors.accent : Colors.textMuted} />
               <View style={{ flex: 1 }}>
                 <View style={styles.titleRow}>
-                  <Text style={styles.rowTitle}>{o.title}</Text>
+                  <Text style={styles.rowTitle}>{t(o.title)}</Text>
                 </View>
-                <Text style={styles.rowSubtitle}>{o.subtitle}</Text>
+                <Text style={styles.rowSubtitle}>{t(o.subtitle)}</Text>
                 <Text style={styles.more}>{t('See how it works')}</Text>
               </View>
             </TouchableOpacity>

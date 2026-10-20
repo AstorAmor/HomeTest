@@ -1352,3 +1352,36 @@ Las notificaciones con la app cerrada van en otra sesión (rama propia, necesita
 **Publicado e9045d3** (2026-10-20 noche, OK del fundador): EAS Update grupo `82ecdd33-5570-48d2-aed3-4b5b7c5431a0`
 (preview, runtime exposdk:57.0.0) y las dos webs (hometest-app y hometest-demo) a la primera con `npm run release`.
 Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; el APK 1.1.0 se construye desde aquí.
+
+## 2026-10-20 (noche) — Notas del fundador: entrenamiento, medicación, edad KUOVA, resultados, suscripción, transiciones, objetivos (sin commit)
+
+- **Timbre que no sonó**: con la app delante suena (probado en web); lo probable es que la pantalla se apagara sola en el
+  descanso (a los ~30 s) y ahí depende del aviso del móvil. Ahora la pantalla se queda encendida durante la sesión
+  (`expo-keep-awake`, que ya viene con Expo en todas las APK; añadido a package.json sin cambiar nada nativo). Sin
+  confirmar en el móvil del fundador.
+- **Entrenamiento**: lápiz en cada ejercicio de la lista (`components/workouts/DoseEditor.tsx`): series, por
+  repeticiones o por tiempo (min + s), y descanso (0–5 min de 15 en 15), con ruedas. −15 s en el descanso.
+  `timedSeconds/isTimedReps/timeText` pasan a `logic/workoutTimer.ts` y leen "1 min 30 s".
+- **Medicación**: «Borrar» en el menú (⋮ junto a la campana) y papelera en la edición; borra el medicamento y sus tomas
+  (`deleteMedication` en medicationRepository). «Lo he dejado» sigue guardando el historial.
+- **Edad KUOVA**: el detalle salía a trozos (primero «Cómo se calcula», luego lo de arriba). Ahora sale con lo que ya
+  calculó Mis datos (`data/kuovaAgeCache.ts`) y, sin eso, todo a la vez tras un indicador. «Pedir la analítica
+  completa»: no existe como producto suelto; lleva al pago de Kuova Basic (o a Laboratorio si ya tiene suscripción).
+  Decisión de negocio abierta: ¿vender el panel completo suelto?
+- **Resultados**: «Todos tus valores» de una analítica guardada en formato compacto (`components/LabValuesList.tsx`);
+  la revisión al escanear sigue con LabReportTable (deja corregir). Barra de rango (`components/RangeBar.tsx`, lógica en
+  `utils/rangeBar.ts` con tests): verde dentro, naranja fuera, límites debajo y triángulo en el valor. También en «Para
+  revisar». El RangeBar antiguo no lo usaba nadie y se sustituyó.
+- **Mi suscripción**: la comparación va dentro (`components/PlanComparison.tsx`, también en /compare-plans) con la
+  columna de tu nivel marcada («Tu plan»: la suscripción pagada o el acceso por invitación/admin; gratis si nada).
+- **Configura tu experiencia**: SectionToggles no pasaba los textos por t() (las traducciones ya existían).
+- **Transiciones**: al tocar una pestaña, fundido corto en vez de deslizar por todas las de en medio; en la web las 5
+  quedan montadas (antes se recargaba Hoy entera). Tema: `Updates.reloadAsync` con `reloadScreenOptions` del color del
+  tema nuevo, sin rueda y con fundido (antes salía la pantalla de carga blanca); fundidos algo más largos con easing.
+- **Objetivos del día** (`/daily-goals`, modal desde los círculos de «Tu estado de hoy»): pasos, kcal activas, sueño y
+  distancia con ruedas; se sugieren los del plan (pasos y sueño) o generales (8.000, 500 kcal, 7 h 30, 6 km;
+  kcal y distancia = SUPUESTO); se guarda solo lo cambiado en user_flags 'daily_goals.v1'. `logic/dailyGoals.ts`.
+- **Lo que no va en tu plan**: `components/SubscribePopup.tsx` «Suscríbete a Kuova Basic» (el nivel más barato que lo
+  incluye según la tabla), con Ver suscripciones / Tengo un código / Ahora no; al cerrar vuelve atrás. En escanear
+  informes, el menú semanal y crear el menú (las funciones bloqueadas hoy: scan_reports y diet_menu). No visto en la
+  web: la demo tiene todo abierto.

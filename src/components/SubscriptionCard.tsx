@@ -13,8 +13,8 @@ import { dateLocale, t } from '@/i18n';
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
-// "My subscription": suscripción activa, renovación, próxima analítica y mejora a Premium.
-// Se usa en el perfil y en Lab.
+// "My subscription": suscripción activa, renovación, próxima analítica y mejora a Premium. La
+// comparación de suscripciones va debajo, en la misma pantalla (SubscriptionScreen).
 export const SubscriptionCard = () => {
   const router = useRouter();
   const [sub, setSub] = useDeepState<MySubscription | null>(null);
@@ -56,9 +56,6 @@ export const SubscriptionCard = () => {
             <Text style={styles.activeText}>{t('Active')}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.secondary} onPress={() => router.push('/compare-plans')}>
-          <Text style={styles.secondaryText}>{t('Compare subscriptions')}</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -68,9 +65,6 @@ export const SubscriptionCard = () => {
       <View style={styles.card}>
         <Text style={styles.title}>{t('No active subscription')}</Text>
         <Text style={styles.text}>{t('Subscribe to get two full blood tests a year, scan your own lab reports and keep your personalised plan.')}</Text>
-        <TouchableOpacity style={styles.cta} onPress={() => router.push('/compare-plans')}>
-          <Text style={styles.ctaText}>{t('See subscriptions')}</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/redeem-code')} hitSlop={8} style={styles.codeLink}>
           <Text style={styles.codeLinkText}>{t('Have an invitation code?')}</Text>
         </TouchableOpacity>
@@ -112,9 +106,6 @@ export const SubscriptionCard = () => {
             <Text style={styles.ctaText}>{t('Upgrade to Premium')}</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity style={styles.secondary} onPress={() => router.push('/compare-plans')}>
-          <Text style={styles.secondaryText}>{t('Compare subscriptions')}</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

@@ -51,6 +51,7 @@ export default function Layout() {
             <Stack.Screen name="log-cortisol" options={MODAL} />
             <Stack.Screen name="log-vo2max" options={MODAL} />
             <Stack.Screen name="log-weight" options={MODAL} />
+            <Stack.Screen name="daily-goals" options={MODAL} />
             <Stack.Screen name="log-cycle" options={MODAL} />
             <Stack.Screen name="check-in" options={MODAL} />
             <Stack.Screen name="log-workout" options={MODAL} />

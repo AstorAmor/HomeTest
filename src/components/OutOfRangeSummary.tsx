@@ -8,6 +8,7 @@ import { getRangeStatus, rangeStatusLabel, rangeText } from '@/utils/rangeStatus
 import { getParameterCard } from '@/utils/parameterInfo';
 import { markerIdForExtractedName } from '@/data/markerMatching';
 import { planRuleForMarker } from '@/utils/planUpdate';
+import { RangeBar } from './RangeBar';
 import { num, t } from '@/i18n';
 
 // "Para revisar" de una analítica subida: los valores fuera del rango del laboratorio, cada uno con
@@ -53,12 +54,12 @@ export const OutOfRangeSummary = ({ report }: { report: ExtractedLabReport }) =>
                   <Text style={{ color, fontWeight: '800' }}>
                     {num(p.valor)} {p.unidad}
                   </Text>
-                  {range ? `  ·  ${t('Range: {range}', { range })}` : ''}
                 </Text>
               </View>
               <Text style={[styles.badge, { color, backgroundColor: withAlpha(color, 0.12) }]}>{rangeStatusLabel(status)}</Text>
               <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
             </TouchableOpacity>
+            {range ? <RangeBar value={p.valor} min={p.rango_min} max={p.rango_max} /> : null}
             {isOpen && (
               <View style={styles.body}>
                 <Text style={styles.label}>{t('What it is')}</Text>

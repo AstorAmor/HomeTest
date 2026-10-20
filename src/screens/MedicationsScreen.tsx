@@ -8,7 +8,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
 import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { doseRepository, medicationRepository } from '@/data/medicationRepository';
+import { deleteMedication, doseRepository, medicationRepository } from '@/data/medicationRepository';
+import { confirmAsk } from '@/components/dev/confirmAsk';
 import { muteUntil } from '@/logic/nudges';
 import { MUTE_OPTIONS, MuteOption } from '@/logic/nudges/types';
 import { courseEnd, courseProgress, dosesForDay, isActiveOn, isReminderMuted, MUTED_FOREVER, scheduleText } from '@/logic/medication';
@@ -63,6 +64,13 @@ export const MedicationsScreen = () => {
     setMenuFor(null);
     load();
   };
+  const remove = async (item: MedicationItem) => {
+    const ok = await confirmAsk(t('Delete {name}?', { name: t(item.name) }), t('Its logged doses are deleted too. This cannot be undone.'), t('Delete'));
+    if (!ok) return;
+    await deleteMedication(item.id);
+    setMenuFor(null);
+    load();
+  };
 
   const reminderLabel = (item: MedicationItem) => {
     if (item.schedule.type === 'as_needed') return t('Only when needed');
@@ -100,12 +108,18 @@ export const MedicationsScreen = () => {
             )}
             <Text style={styles.itemMeta}>{reminderLabel(item)}</Text>
           </View>
-          <TouchableOpacity onPress={() => setMenuFor(open ? null : item.id)} hitSlop={10}>
+          <TouchableOpacity
+            onPress={() => setMenuFor(open ? null : item.id)}
+            hitSlop={10}
+            style={styles.menuButton}
+            accessibilityLabel={t('Options for {name}', { name: t(item.name) })}
+          >
             <Ionicons
               name={item.reminders && !isReminderMuted(item) ? 'notifications-outline' : 'notifications-off-outline'}
-              size={20}
+              size={18}
               color={Colors.textMuted}
             />
+            <Ionicons name="ellipsis-vertical" size={16} color={Colors.textMuted} />
           </TouchableOpacity>
         </TouchableOpacity>
         {open && (
@@ -128,7 +142,10 @@ export const MedicationsScreen = () => {
               </>
             )}
             <TouchableOpacity style={styles.menuRow} onPress={() => stop(item)}>
-              <Text style={[styles.menuText, { color: Colors.danger }]}>{t('I stopped taking it')}</Text>
+              <Text style={styles.menuText}>{t('I stopped taking it')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuRow} onPress={() => remove(item)}>
+              <Text style={[styles.menuText, { color: Colors.danger }]}>{t('Delete')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -234,6 +251,7 @@ const styles = StyleSheet.create({
   itemSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   itemMeta: { color: Colors.textMuted, fontSize: 11, marginTop: 4 },
   menu: { borderTopWidth: 1, borderTopColor: Colors.divider, padding: 12, gap: 8 },
+  menuButton: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   menuRow: { paddingVertical: 4 },
   menuText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   menuLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },

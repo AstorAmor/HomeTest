@@ -24,6 +24,7 @@ import { useRouter } from 'expo-router';
 import { labUploadRepository } from '@/data/labUploads';
 import { useSections } from '@/data/appPrefs';
 import { useFeature } from '@/data/access';
+import { SubscribePopup } from '@/components/SubscribePopup';
 import { t } from '@/i18n';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
@@ -267,6 +268,7 @@ export const UploadTestScreen = () => {
             </View>
           )}
         </ScrollView>
+        {allowed === false && <SubscribePopup feature="scan_reports" icon="line-scan" text="Take a photo or upload the PDF of any blood test and Kuova reads it for you: each marker explained, your ranges and how it changes over time." />}
       </SafeAreaView>
     );
   }

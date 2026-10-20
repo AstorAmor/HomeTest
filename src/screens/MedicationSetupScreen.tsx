@@ -6,7 +6,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { WheelPicker } from '@/components/WheelPicker';
-import { medicationRepository } from '@/data/medicationRepository';
+import { deleteMedication, medicationRepository } from '@/data/medicationRepository';
+import { confirmAsk } from '@/components/dev/confirmAsk';
 import { dayKey } from '@/data/bathroomRepository';
 import { defaultTimes, findKnownMed, KnownMed, medIcon, parseMedicationText, scheduleText } from '@/logic/medication';
 import { MedicationItem, MedKind, MedSchedule } from '@/types/medication';
@@ -195,6 +196,14 @@ export const MedicationSetupScreen = () => {
     router.back();
   };
 
+  const remove = async () => {
+    if (!existing) return;
+    const ok = await confirmAsk(tr('Delete {name}?', { name: tr(existing.name) }), tr('Its logged doses are deleted too. This cannot be undone.'), tr('Delete'));
+    if (!ok) return;
+    await deleteMedication(existing.id);
+    router.back();
+  };
+
   const toggleTime = (t: string) =>
     setTimes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t].sort()));
   const slotOptions = [...SLOTS, ...times.filter((t) => !SLOTS.some((s) => s.id === t)).map((t) => ({ id: t, label: t }))];
@@ -234,6 +243,11 @@ export const MedicationSetupScreen = () => {
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${((index + 1) / steps.length) * 100}%` }]} />
         </View>
+        {existing && (
+          <TouchableOpacity style={styles.circleButton} onPress={remove} accessibilityLabel={tr('Delete')}>
+            <Ionicons name="trash-outline" size={20} color={Colors.danger} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
