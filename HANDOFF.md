@@ -1348,3 +1348,7 @@ Las notificaciones con la app cerrada van en otra sesión (rama propia, necesita
   una para el…» y al pulsar «Solicitar» se pregunta: sin respuesta, cambiarla o dejarla; confirmada, además cancelarla.
   Al cambiarla, la anterior solo se cancela si la nueva se guarda. Solo en reservar consulta, no en «Enviar una solicitud».
 - Probado en la web (cuenta real local y demo). Todo JS: llega por EAS Update también a los APK anteriores.
+
+**Publicado e9045d3** (2026-10-20 noche, OK del fundador): EAS Update grupo `82ecdd33-5570-48d2-aed3-4b5b7c5431a0`
+(preview, runtime exposdk:57.0.0) y las dos webs (hometest-app y hometest-demo) a la primera con `npm run release`.
+Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; el APK 1.1.0 se construye desde aquí.
