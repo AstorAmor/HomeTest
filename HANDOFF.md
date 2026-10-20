@@ -1403,7 +1403,7 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
 
 **Publicado ea28241** (2026-10-20 noche, OK del fundador «Haz commit de todo y publica con npm run release»): EAS Update grupo `018cfd62-9cf4-434c-aa8f-54efe51b4a41` (preview, android + ios) y las dos webs a la primera (`npm run release` entero, aunque solo había 1,4 GB libres).
 
-## 2026-10-21 — Notas del fundador: especialista, filas de resultados, originales, entrenamiento, edad KUOVA, permisos (sin commit)
+## 2026-10-21 — Notas del fundador: especialista, filas de resultados, originales, entrenamiento, edad KUOVA, permisos
 
 - **Habla con un especialista** (/talk-to-specialist, desde Tu plan y el plan del informe): era un prototipo en inglés
   que no enviaba nada; ahora en español, eliges médico, dietista o entrenador y te lleva a /professionals?role=… (reserva
@@ -1427,3 +1427,5 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
   avisos, Health Connect / Apple Salud, cámara y fotos, micrófono: para qué y cuándo se piden, y que se puede decir que
   no. «Continuar» pide ya el de avisos (turnOnPhoneReminders); el resto sigue pidiéndose al usarlo. Una vez por
   instalación (AsyncStorage `permissionsIntro.v1`); quien ya tenía la app también la ve una vez.
+
+**Publicado ee21efa** (2026-10-21, OK del fundador «Haz commit de todo y publica con npm run release»): EAS Update grupo `e41021c1-99c8-495d-a15c-48e05acfed8b` (preview, android + ios) y las dos webs a la primera (`npm run release` entero, 1,7 GB libres).
