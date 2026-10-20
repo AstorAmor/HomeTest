@@ -10,6 +10,7 @@ import { checkInDayKey, checkInDayOptions, fechaForCheckIn, localDayKey } from '
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { dateLocale, t } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { offerPhoneReminders } from '@/data/phoneReminders';
 
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
 type ScaleId = Exclude<QuestionId, 'mood'>;
@@ -138,6 +139,7 @@ export const CheckInScreen = () => {
       return;
     }
     await checkInRepository.save({ ...entry, id: `checkin-${Date.now()}`, createdAt: nowIso });
+    void offerPhoneReminders('checkin');
     // Apuntado para un día pasado: sin ideas "para ahora"
     if (backdated) {
       router.back();

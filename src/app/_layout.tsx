@@ -8,6 +8,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { DevInspector } from '@/components/dev/DevInspector';
 import { Colors } from '@/constants/colors';
 import { WebShell } from '@/components/web/WebShell';
+import { PhoneReminders } from '@/components/PhoneReminders';
 
 // La pantalla de carga se mantiene desde index.js (donde se aplica el tema).
 
@@ -131,6 +132,8 @@ export default function Layout() {
           </WebShell>
           {/* Modo "Señalar" para anotar cambios de diseño (solo web, ver DevInspector.web.tsx) */}
           <DevInspector />
+          {/* Recordatorios del móvil con la app cerrada (solo con un APK que lleve expo-notifications) */}
+          <PhoneReminders />
         </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

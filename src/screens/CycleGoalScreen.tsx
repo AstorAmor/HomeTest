@@ -11,6 +11,7 @@ import { userFlags } from '@/data/userFlags';
 import { CYCLE_GOAL_OPTIONS, CycleGoal, CycleGoalAnswers } from '@/types/cycleGoal';
 import { fertilityAdvice, SexFrequency, Timing, TryingFor } from '@/logic/fertility';
 import { t as tr } from '@/i18n';
+import { offerPhoneReminders } from '@/data/phoneReminders';
 
 type Step = 'goal' | 'cycle' | 'trying' | 'temperature' | 'result';
 
@@ -81,6 +82,7 @@ export const CycleGoalScreen = () => {
   const next = async () => {
     if (step === 'result') {
       await cycleGoalStore.set(answers());
+      if (goal === 'conceive' && logTemp === 'yes') void offerPhoneReminders('temperature');
       router.back();
       return;
     }

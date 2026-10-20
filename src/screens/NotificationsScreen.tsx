@@ -12,8 +12,17 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { InboxItem, nudgeStore } from '@/data/nudgeStore';
 import { activeSimulation, ActiveSimulation } from '@/data/simulation';
 import { AppSection, SECTION_OPTIONS, useSections } from '@/data/appPrefs';
-import { MUTE_OPTIONS, NudgeCategory, NudgeDecision, NudgeId, NudgePrefs } from '@/logic/nudges/types';
+import { MUTE_OPTIONS, NudgeCategory, NudgeDecision, NudgeId, NudgePrefs, ReminderId } from '@/logic/nudges/types';
 import { NUDGE_RULES } from '@/logic/nudges';
+import {
+  getPhoneStatus,
+  openPhoneSettings,
+  PhoneStatus,
+  syncPhoneReminders,
+  turnOffPhoneReminders,
+  turnOnPhoneReminders,
+  upcomingPhoneReminders,
+} from '@/data/phoneReminders';
 
 const STATUS: Record<NudgeDecision['status'], { label: string; color: string }> = {
   send: { label: 'Sent now', color: Colors.ok },
@@ -56,6 +65,21 @@ const CATEGORY_LABEL: Record<NudgeCategory, string> = {
   engagement: 'Reminders',
 };
 
+// Recordatorios que solo llegan al móvil (la temperatura y el check-in ya tienen su interruptor
+// arriba y también salen en el móvil). Las tomas se eligen en cada medicamento.
+const PHONE_ROWS: { id: 'doses' | ReminderId; label: string; description: string; needs?: AppSection }[] = [
+  {
+    id: 'doses',
+    label: 'Medication and supplement doses',
+    description: 'At their time, for each one with reminders on. You choose them in Medication & supplements.',
+    needs: 'medication',
+  },
+  { id: 'weigh_in', label: 'Weekly weigh-in', description: 'A morning reminder a week after your last weigh-in.' },
+];
+
+const upcomingWhen = (d: Date) =>
+  `${d.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' })} · ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
 const ago = (iso: string) => {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   if (days <= 0) return t('Today');
@@ -80,6 +104,17 @@ export const NotificationsScreen = () => {
   const [sim, setSim] = useDeepState<ActiveSimulation | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [showWhy, setShowWhy] = useState(false);
+  // Avisos con la app cerrada: 'unsupported' en la web y en los APK sin expo-notifications
+  const [phone, setPhone] = useDeepState<{ status: PhoneStatus; upcoming: { id: string; at: Date; title: string }[] }>({
+    status: 'unsupported',
+    upcoming: [],
+  });
+
+  const loadPhone = useCallback(async () => {
+    const status = await getPhoneStatus();
+    if (status === 'on') await syncPhoneReminders();
+    setPhone({ status, upcoming: status === 'on' ? await upcomingPhoneReminders(3) : [] });
+  }, [setPhone]);
 
   const load = useCallback(async () => {
     const result = await nudgeStore.refresh();
@@ -88,18 +123,29 @@ export const NotificationsScreen = () => {
     setPrefs(await nudgeStore.getPrefs());
     setSim(await activeSimulation());
     await nudgeStore.markAllRead();
-  }, [setInbox, setDecisions, setPrefs, setSim]);
+    await loadPhone().catch(() => undefined);
+  }, [setInbox, setDecisions, setPrefs, setSim, loadPhone]);
   useReloadOnFocus(load);
 
   const mute = async (id: NudgeId, option: (typeof MUTE_OPTIONS)[number]['id']) => {
     await nudgeStore.mute(id, option);
     setOpenMenu(null);
     setPrefs(await nudgeStore.getPrefs());
+    loadPhone().catch(() => undefined);
   };
-  const toggle = async (id: NudgeId, on: boolean) => {
+  const toggle = async (id: ReminderId, on: boolean) => {
     if (on) await nudgeStore.unmute(id);
     else await nudgeStore.mute(id, 'forever');
     setPrefs(await nudgeStore.getPrefs());
+    loadPhone().catch(() => undefined);
+  };
+  const turnOnPhone = async () => {
+    await turnOnPhoneReminders();
+    await loadPhone();
+  };
+  const turnOffPhone = async () => {
+    await turnOffPhoneReminders();
+    await loadPhone();
   };
 
   const recent = inbox.filter((i) => Date.now() - new Date(i.at).getTime() < 30 * 86400000);
@@ -112,6 +158,52 @@ export const NotificationsScreen = () => {
           <Text style={styles.intro}>{t('At most two a day, and you can switch off any of them.')}</Text>
           <InfoButton topic="notifications" />
         </View>
+
+        {phone.status !== 'unsupported' && (
+          <View style={styles.phoneCard}>
+            <View style={styles.phoneHead}>
+              <Ionicons name="phone-portrait-outline" size={18} color={Colors.textPrimary} />
+              <Text style={styles.ruleTitle}>{t('On your phone')}</Text>
+            </View>
+            {phone.status === 'on' ? (
+              <>
+                <Text style={styles.ruleBody}>
+                  {t('On, even with the app closed. Dose reminders do not count towards the two a day.')}
+                </Text>
+                <Text style={styles.phoneSub}>{t('Next reminders')}</Text>
+                {phone.upcoming.length ? (
+                  phone.upcoming.map((u) => (
+                    <View key={u.id} style={styles.upcomingRow}>
+                      <Text style={styles.upcomingWhen}>{upcomingWhen(u.at)}</Text>
+                      <Text style={styles.upcomingTitle} numberOfLines={1}>
+                        {u.title}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.ruleBody}>{t('Nothing scheduled for the next few days.')}</Text>
+                )}
+                <TouchableOpacity onPress={turnOffPhone} hitSlop={8}>
+                  <Text style={styles.phoneOff}>{t('Turn off on this phone')}</Text>
+                </TouchableOpacity>
+              </>
+            ) : phone.status === 'blocked' ? (
+              <>
+                <Text style={styles.ruleBody}>{t('Kuova notifications are off in your phone settings.')}</Text>
+                <TouchableOpacity style={styles.phoneButton} onPress={openPhoneSettings} activeOpacity={0.85}>
+                  <Text style={styles.phoneButtonText}>{t('Open settings')}</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.ruleBody}>{t('Get your reminders even when the app is closed.')}</Text>
+                <TouchableOpacity style={styles.phoneButton} onPress={turnOnPhone} activeOpacity={0.85}>
+                  <Text style={styles.phoneButtonText}>{t('Turn on')}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
 
         {sim && (
           <TouchableOpacity style={styles.simBanner} onPress={() => router.push('/simulation')} activeOpacity={0.85}>
@@ -211,6 +303,49 @@ export const NotificationsScreen = () => {
           );
         })}
 
+        {phone.status !== 'unsupported' && (
+          <View style={styles.group}>
+            <Text style={styles.groupTitle}>{t('On your phone')}</Text>
+            {PHONE_ROWS.map((row, i) => {
+              const available = !row.needs || show(row.needs);
+              const m = row.id === 'doses' ? undefined : prefs.muted[row.id];
+              const on = available && !m;
+              return (
+                <View key={row.id} style={[styles.ruleRow, i > 0 && styles.ruleDivider]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.ruleTitle, !available && styles.ruleOff]}>{t(row.label)}</Text>
+                    <Text style={styles.ruleBody}>{t(row.description)}</Text>
+                    {!available && row.needs ? (
+                      <TouchableOpacity onPress={() => router.push('/app-sections')}>
+                        <Text style={styles.ruleNeeds}>{t('Needs {section}: switch it on', { section: sectionTitle(row.needs) })}</Text>
+                      </TouchableOpacity>
+                    ) : m?.until ? (
+                      <Text style={styles.itemMeta}>
+                        {t('Muted until {date}', { date: new Date(m.until).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' }) })}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {row.id === 'doses' ? (
+                    available && (
+                      <TouchableOpacity onPress={() => router.push('/medications')} hitSlop={10} accessibilityLabel={t(row.label)}>
+                        <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+                      </TouchableOpacity>
+                    )
+                  ) : (
+                    <Switch
+                      value={on}
+                      disabled={!available}
+                      onValueChange={(v) => toggle(row.id as ReminderId, v)}
+                      trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
+                      thumbColor={on ? Colors.accent : Colors.textMuted}
+                    />
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         {authMode === 'demo' && (
           <>
             <TouchableOpacity style={styles.whyHeader} onPress={() => setShowWhy((v) => !v)}>
@@ -253,6 +388,31 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   simText: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  phoneCard: {
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 16,
+    marginHorizontal: 20,
+    marginTop: 12,
+    padding: 14,
+    gap: 4,
+  },
+  phoneHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+  phoneSub: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', marginTop: 10 },
+  upcomingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 3 },
+  upcomingWhen: { color: Colors.textSecondary, fontSize: 12, minWidth: 104 },
+  upcomingTitle: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  phoneButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.accent,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginTop: 8,
+  },
+  phoneButtonText: { color: Colors.background, fontSize: 13, fontWeight: '700' },
+  phoneOff: { color: Colors.textMuted, fontSize: 12, fontWeight: '700', marginTop: 10 },
   item: {
     backgroundColor: Colors.card,
     borderWidth: 1,

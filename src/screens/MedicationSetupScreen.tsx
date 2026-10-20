@@ -11,6 +11,7 @@ import { dayKey } from '@/data/bathroomRepository';
 import { defaultTimes, findKnownMed, KnownMed, medIcon, parseMedicationText, scheduleText } from '@/logic/medication';
 import { MedicationItem, MedKind, MedSchedule } from '@/types/medication';
 import { t as tr } from '@/i18n';
+import { offerPhoneReminders } from '@/data/phoneReminders';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
 type Step = 'what' | 'dose' | 'when' | 'duration' | 'reminders' | 'summary';
@@ -175,6 +176,8 @@ export const MedicationSetupScreen = () => {
     };
     if (existing) await medicationRepository.update(existing.id, item);
     else await medicationRepository.save(item);
+    // Acaba de pedir recordatorios: buen momento para el permiso de notificaciones del móvil
+    if (item.reminders) void offerPhoneReminders('medication');
     if (queue.length) {
       // El siguiente de la lista, desde cero
       const [nextOne, ...rest] = queue;

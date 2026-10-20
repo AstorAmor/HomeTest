@@ -11,13 +11,15 @@ import { bloodPressureRepository } from './bloodPressureRepository';
 import { glucoseRepository } from './glucoseRepository';
 import { wearableRepository } from '@/wearables/wearableRepository';
 import { evaluateNudges, muteUntil, pruneResolved } from '@/logic/nudges';
-import { MuteOption, NudgeContext, NudgeDecision, NudgeId, NudgePrefs } from '@/logic/nudges/types';
+import { MuteOption, NudgeContext, NudgeDecision, NudgeId, NudgePrefs, ReminderId } from '@/logic/nudges/types';
+import { phoneReminderLog } from './phoneReminderLog';
 
 // Bandeja de avisos de la app y preferencias de silencio (user_flags "nudge_inbox" y
 // "nudge_prefs"). Al abrir Today o la bandeja se evalúan las reglas (src/logic/nudges) con los
 // datos del usuario; lo que toca enviar se guarda aquí, y eso mismo sirve de historial para
-// respetar el tiempo mínimo entre avisos. Las notificaciones push del móvil vendrán después
-// (hace falta un APK nuevo con expo-notifications); la lógica ya es la definitiva.
+// respetar el tiempo mínimo entre avisos. Los recordatorios que llegan al móvil con la app cerrada
+// (tomas, peso, temperatura, check-in) van aparte, en src/data/phoneReminders.ts; lo que ya saltó
+// en el móvil cuenta aquí para el máximo diario y el tiempo entre avisos.
 
 const PREFS_KEY = 'nudge_prefs';
 const INBOX_KEY = 'nudge_inbox';
@@ -98,14 +100,14 @@ export const nudgeStore = {
     return v && typeof v === 'object' && 'muted' in v ? (v as unknown as NudgePrefs) : { muted: {} };
   },
 
-  async mute(id: NudgeId, option: MuteOption): Promise<void> {
+  async mute(id: ReminderId, option: MuteOption): Promise<void> {
     const prefs = await this.getPrefs();
     const now = new Date();
     prefs.muted[id] = { until: muteUntil(option, now), setAt: now.toISOString() };
     await userFlags.set(PREFS_KEY, prefs as unknown as Record<string, unknown>);
   },
 
-  async unmute(id: NudgeId): Promise<void> {
+  async unmute(id: ReminderId): Promise<void> {
     const prefs = await this.getPrefs();
     delete prefs.muted[id];
     await userFlags.set(PREFS_KEY, prefs as unknown as Record<string, unknown>);
@@ -129,10 +131,15 @@ export const nudgeStore = {
   // Evalúa las reglas ahora y guarda en la bandeja lo que toca enviar. Devuelve la bandeja y
   // la decisión de cada regla (con su motivo), que el modo desarrollador enseña para supervisar.
   async refresh(now = new Date()): Promise<{ inbox: InboxItem[]; decisions: NudgeDecision[] }> {
-    const [ctx, prefs, stored] = await Promise.all([buildNudgeContext(now), this.getPrefs(), this.getInbox()]);
+    const [ctx, prefs, stored, phone] = await Promise.all([
+      buildNudgeContext(now),
+      this.getPrefs(),
+      this.getInbox(),
+      phoneReminderLog.fired(now),
+    ]);
     // Lo que ya está hecho (la toma marcada, la temperatura apuntada…) sale de la bandeja
     const inbox = pruneResolved(stored, ctx);
-    const decisions = evaluateNudges(ctx, prefs, stored.map((i) => ({ id: i.id, at: i.at })));
+    const decisions = evaluateNudges(ctx, prefs, [...stored.map((i) => ({ id: i.id, at: i.at })), ...phone]);
     const fresh = decisions
       .filter((d) => d.status === 'send')
       .map((d): InboxItem => ({ id: d.id, at: now.toISOString(), title: d.title ?? d.label, body: d.body ?? '', route: d.route }));

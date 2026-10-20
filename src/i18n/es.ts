@@ -1375,6 +1375,36 @@ export const es: Record<string, string> = {
   'A very high reading from your home blood pressure monitor.': 'Una medición muy alta de tu tensiómetro en casa.',
   'Blood pressure running high for several weeks.': 'Tensión alta durante varias semanas.',
   'Several high glucose readings over a few weeks.': 'Varias mediciones altas de glucosa en unas semanas.',
+  // Recordatorios en el móvil con la app cerrada (src/logic/nudges/phone.ts, src/data/phoneReminders.ts)
+  '{name}: your {time} dose': '{name}: tu toma de las {time}',
+  'Your {time} doses': 'Tus tomas de las {time}',
+  'Mark it in Kuova when you take it.': 'Cuando la tomes, márcala en Kuova.',
+  '{names}. Mark them in Kuova when you take them.': '{names}. Cuando las tomes, márcalas en Kuova.',
+  'Time for your weekly weigh-in': 'Hoy toca pesarte',
+  'In the morning, after the toilet and before breakfast: that way one week compares with the next.':
+    'Por la mañana, después de ir al baño y antes de desayunar: así puedes comparar una semana con otra.',
+  'At the time of each dose with reminders on.': 'A la hora de cada toma con el recordatorio activado.',
+  'Weigh-in, morning temperature and check-in.': 'Pesarte, la temperatura de la mañana y el check-in.',
+  'On your phone': 'En el móvil',
+  'Get your reminders even when the app is closed.': 'Recibe tus recordatorios aunque tengas la app cerrada.',
+  'Kuova notifications are off in your phone settings.': 'Las notificaciones de Kuova están desactivadas en los ajustes del móvil.',
+  'Open settings': 'Abrir ajustes',
+  'On, even with the app closed. Dose reminders do not count towards the two a day.':
+    'Activados, también con la app cerrada. Los recordatorios de tus tomas no cuentan para los dos al día.',
+  'Next reminders': 'Próximos avisos',
+  'Turn off on this phone': 'Desactivar en este móvil',
+  'Nothing scheduled for the next few days.': 'No hay nada programado para los próximos días.',
+  'Medication and supplement doses': 'Tomas de medicación y suplementos',
+  'At their time, for each one with reminders on. You choose them in Medication & supplements.':
+    'A su hora, las que tengan el recordatorio activado. Se eligen en Medicación y suplementos.',
+  'Weekly weigh-in': 'Pesarte cada semana',
+  'A morning reminder a week after your last weigh-in.': 'Un recordatorio por la mañana, una semana después de tu última pesada.',
+  'Reminders on your phone?': '¿Te avisamos en el móvil?',
+  'We can remind you to weigh in once a week, even with the app closed. You can change it in Settings → Notifications.':
+    'Podemos recordarte que te peses una vez por semana, aunque tengas la app cerrada. Puedes cambiarlo en Ajustes → Notificaciones.',
+  'If you go a few days without a check-in, we can send you a reminder, even with the app closed. You can change it in Settings → Notifications.':
+    'Si pasas unos días sin hacer el check-in, podemos mandarte un recordatorio, aunque tengas la app cerrada. Puedes cambiarlo en Ajustes → Notificaciones.',
+  'Yes, remind me': 'Sí, avisadme',
   "I've been up for a few hours": 'Llevo unas horas despierto',
   Terrible: 'Fatal',
   Poor: 'Mal',

@@ -11,6 +11,7 @@ import { WheelPicker } from '@/components/WheelPicker';
 import { profileRepository } from '@/data/profileRepository';
 import { BodyComp, bodyCompFor, removeWeighIn, saveWeighIn, weightRepository } from '@/data/weightRepository';
 import { BODY_COMP, BodyCompKind, parseComp, weighAdvice } from '@/logic/weight';
+import { offerPhoneReminders } from '@/data/phoneReminders';
 
 // Apuntar el peso (ruedas, como el resto de mediciones) y, si la báscula la da, la composición corporal
 // a mano: grasa, agua, músculo y hueso. Con el aviso de que no hace falta pesarse a diario.
@@ -99,6 +100,7 @@ export const LogWeightScreen = () => {
     setSaving(true);
     try {
       await saveWeighIn({ id, kg: Math.round(value * 10) / 10, fecha: dateTime.toISOString(), comp: parsed });
+      if (!id) void offerPhoneReminders('weigh_in');
       router.back();
     } finally {
       setSaving(false);

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
+import { emitDataChange } from './dataEvents';
 
 export interface BaseMetricEntry {
   id: string;
@@ -116,16 +117,19 @@ export function createMetricRepository<T extends BaseMetricEntry>(storageKey: st
   const local = localRepository<T>(storageKey);
   const cloud = remote ? remoteRepository<T>(remote) : null;
   const backend = () => (cloud && isRemoteActive() ? cloud : local);
+  // Tras guardar se avisa (src/data/dataEvents.ts): p. ej. los recordatorios del móvil se reprograman
+  const changed = (p: Promise<void>) => p.then(() => emitDataChange(storageKey));
 
   return {
     getAll: (): Promise<T[]> => backend().getAll(),
-    save: (entry: T): Promise<void> => backend().save(entry),
-    update: (id: string, updated: Partial<T>): Promise<void> => backend().update(id, updated),
-    remove: (id: string): Promise<void> => backend().remove(id),
+    save: (entry: T): Promise<void> => changed(backend().save(entry)),
+    update: (id: string, updated: Partial<T>): Promise<void> => changed(backend().update(id, updated)),
+    remove: (id: string): Promise<void> => changed(backend().remove(id)),
     // Varias entradas de golpe (upsert por id). Para cargar un usuario simulado.
-    saveMany: (entries: T[]): Promise<void> => (cloud && isRemoteActive() ? cloud.upsertMany(entries) : local.saveMany(entries)),
+    saveMany: (entries: T[]): Promise<void> =>
+      changed(cloud && isRemoteActive() ? cloud.upsertMany(entries) : local.saveMany(entries)),
     // Vacía la tabla del usuario (o, sin sesión, lo guardado en el móvil). Solo cuentas de prueba.
-    clearAll: (): Promise<void> => backend().clearAll(),
+    clearAll: (): Promise<void> => changed(backend().clearAll()),
     async getLatest(): Promise<T | null> {
       const entries = await backend().getAll();
       if (!entries.length) return null;
