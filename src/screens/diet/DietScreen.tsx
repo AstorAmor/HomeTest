@@ -13,10 +13,12 @@ import { Colors } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getRecipe, recipeName, slotLabel } from '@/data/diet/catalog';
 import { loadDietContext } from '@/data/diet/context';
-import { dietRepository } from '@/data/diet/dietRepository';
+import { dietRepository, eatenMeals } from '@/data/diet/dietRepository';
 import type { DietPlan, PlannedMeal } from '@/data/diet/types';
 import { dayTotals, generateDiet, weekSummary } from '@/logic/dietPlanner';
 import { num, t } from '@/i18n';
+import { menuFileName, menuToHtml, shoppingText } from '@/utils/menuPdf';
+import { shareHtmlPdf } from '@/utils/shareHtml';
 
 // "Tu menú de la semana": por día (fotos grandes, toca para ver la receta) o la semana entera como un
 // calendario. Arriba, por qué es así (analíticas y respuestas); abajo, la lista de la compra.
@@ -35,8 +37,21 @@ export const DietScreen = () => {
   const [day, setDay] = useState(todayIndex());
   const [showWhy, setShowWhy] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [eaten, setEaten] = useState<number[]>([]);
 
-  useReloadOnFocus(useCallback(async () => setPlan(await dietRepository.active()), []));
+  useReloadOnFocus(
+    useCallback(async () => {
+      const p = await dietRepository.active();
+      setPlan(p);
+      setEaten(p ? await eatenMeals.get(p.id) : []);
+    }, [])
+  );
+  const toggleEaten = (i: number) => {
+    if (!plan) return;
+    const next = eaten.includes(i) ? eaten.filter((x) => x !== i) : [...eaten, i];
+    setEaten(next);
+    eatenMeals.set(plan.id, next);
+  };
   const allowed = useFeature(DIET_FEATURE);
 
   const openMeal = (d: number, m: PlannedMeal) =>
@@ -172,6 +187,9 @@ export const DietScreen = () => {
               ))}
             </View>
             <Text style={styles.dayTitle}>{t(WEEKDAYS_LONG[day])}</Text>
+            {day === todayIndex() && current ? (
+              <Text style={styles.eatenCount}>{t('{done} of {total} meals eaten today', { done: eaten.length, total: current.meals.length })}</Text>
+            ) : null}
             {totals && (
               <View style={styles.dayCard}>
                 <MacroDonut m={totals} size={96} />
@@ -189,7 +207,7 @@ export const DietScreen = () => {
                     <RecipeImage recipeId={r.id} slot={m.slot} height={wide ? 150 : 170} radius={14} />
                     <View style={styles.mealBody}>
                       <Text style={styles.slot}>
-                        {slotLabel(m.slot)}
+                        {slotLabel(m.slot, plan.prefs)}
                         {m.leftover ? ` · ${t('leftovers from yesterday')}` : ''}
                       </Text>
                       <Text style={styles.mealName}>{recipeName(r)}</Text>
@@ -202,6 +220,12 @@ export const DietScreen = () => {
                         />
                       </View>
                       {m.note ? <Text style={styles.mealNote}>“{m.note}”</Text> : null}
+                      {day === todayIndex() ? (
+                        <TouchableOpacity style={[styles.eatBtn, eaten.includes(i) && styles.eatBtnOn]} onPress={() => toggleEaten(i)} hitSlop={6}>
+                          <Ionicons name={eaten.includes(i) ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={eaten.includes(i) ? Colors.background : Colors.accent} />
+                          <Text style={[styles.eatText, eaten.includes(i) && styles.eatTextOn]}>{eaten.includes(i) ? t('Eaten') : t('Mark as eaten')}</Text>
+                        </TouchableOpacity>
+                      ) : null}
                     </View>
                   </TouchableOpacity>
                 );
@@ -222,7 +246,7 @@ export const DietScreen = () => {
               {slots.map((slot, si) => (
                 <View key={`${slot}-${si}`} style={styles.weekRow}>
                   <View style={styles.weekLabel}>
-                    <Text style={styles.weekLabelText}>{slotLabel(slot)}</Text>
+                    <Text style={styles.weekLabelText}>{slotLabel(slot, plan.prefs)}</Text>
                   </View>
                   {plan.days.map((d) => {
                     const m = d.meals[si];
@@ -257,6 +281,15 @@ export const DietScreen = () => {
           <TouchableOpacity style={styles.primary} onPress={() => router.push({ pathname: '/shopping-list', params: { plan: plan.id } })}>
             <Ionicons name="cart-outline" size={18} color={Colors.background} />
             <Text style={styles.primaryText}>{t('Shopping list')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondary}
+            onPress={() =>
+              shareHtmlPdf({ html: menuToHtml(plan), fileName: menuFileName(), fallbackText: shoppingText(plan), dialogTitle: t('Send your menu') }).catch(() => undefined)
+            }
+          >
+            <Ionicons name="document-text-outline" size={18} color={Colors.accent} />
+            <Text style={styles.secondaryText}>{t('Menu and list as PDF')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondary} onPress={another} disabled={busy}>
             {busy ? <ActivityIndicator color={Colors.accent} /> : <Ionicons name="shuffle" size={18} color={Colors.accent} />}
@@ -295,6 +328,11 @@ const styles = StyleSheet.create({
   whyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   whyTitle: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   reason: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 8, gap: 2 },
+  eatenCount: { color: Colors.textSecondary, fontSize: 13, marginTop: -4, marginBottom: 10 },
+  eatBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6, borderWidth: 1, borderColor: Colors.accent, borderRadius: 18, paddingVertical: 6, paddingHorizontal: 12, marginTop: 10 },
+  eatBtnOn: { backgroundColor: Colors.accent },
+  eatText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  eatTextOn: { color: Colors.background },
   caution: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderLeftWidth: 3, borderLeftColor: Colors.accent, borderRadius: 16, padding: 14, gap: 10, marginBottom: 12 },
   cautionHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cautionTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', flex: 1 },

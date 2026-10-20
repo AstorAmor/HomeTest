@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useFeature } from '@/data/access';
 import { getRecipe, recipeName, slotLabel } from '@/data/diet/catalog';
-import { dietRepository } from '@/data/diet/dietRepository';
+import { dietRepository, eatenMeals } from '@/data/diet/dietRepository';
 import type { DietPlan } from '@/data/diet/types';
 import { dayTotals } from '@/logic/dietPlanner';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -45,7 +45,14 @@ export const TodayMenuCard = () => {
   const router = useRouter();
   const allowed = useFeature(DIET_FEATURE);
   const [plan, setPlan] = useState<DietPlan | null | undefined>(undefined);
-  useReloadOnFocus(useCallback(async () => setPlan(await dietRepository.active()), []));
+  const [eaten, setEaten] = useState<number[]>([]);
+  useReloadOnFocus(
+    useCallback(async () => {
+      const p = await dietRepository.active();
+      setPlan(p);
+      setEaten(p ? await eatenMeals.get(p.id) : []);
+    }, [])
+  );
 
   if (allowed === null || plan === undefined) return <ActivityIndicator color={Colors.accent} style={{ marginVertical: 20 }} />;
   if (!allowed) return <DietLocked />;
@@ -74,6 +81,7 @@ export const TodayMenuCard = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.badge}>{plan.source === 'professional' ? t('From {name}', { name: plan.professionalName || t('your dietitian') }) : t('Your food plan')}</Text>
           <Text style={styles.title}>{t('Today on your menu')}</Text>
+          {day && eaten.length ? <Text style={styles.eaten}>{t('{done} of {total} meals eaten today', { done: eaten.length, total: day.meals.length })}</Text> : null}
         </View>
         <TouchableOpacity onPress={() => router.push('/diet')} hitSlop={8}>
           <Text style={styles.link}>{t('See the week')}</Text>
@@ -98,7 +106,10 @@ export const TodayMenuCard = () => {
               onPress={() => router.push({ pathname: '/recipe', params: { id: r.id, portion: String(m.portion), plan: plan.id, day: String(todayIndex()), slot: m.slot } })}
             >
               <RecipeImage recipeId={r.id} slot={m.slot} size={136} radius={12} />
-              <Text style={styles.slot}>{slotLabel(m.slot)}</Text>
+              <Text style={styles.slot}>
+                {eaten.includes(i) ? '✓ ' : ''}
+                {slotLabel(m.slot, plan.prefs)}
+              </Text>
               <Text style={styles.mealName} numberOfLines={2}>
                 {recipeName(r)}
               </Text>
@@ -116,6 +127,7 @@ export const TodayMenuCard = () => {
 };
 
 const styles = StyleSheet.create({
+  eaten: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   caution: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.accentSoft, borderRadius: 10, paddingVertical: 7, paddingHorizontal: 10 },
   cautionText: { color: Colors.textPrimary, fontSize: 13, flex: 1 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginHorizontal: 20, marginBottom: 16, gap: 10 },

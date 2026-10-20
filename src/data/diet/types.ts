@@ -70,6 +70,9 @@ export type CookingSkill = 1 | 2 | 3;
 // Situaciones en las que el menú automático no basta y lo hace un dietista
 export type ReferralReason = 'pregnancy' | 'kidney' | 'eating_disorder' | 'insulin' | 'under_18' | 'low_kidney_lab' | 'high_potassium_lab';
 
+// Pautas religiosas o culturales (opcional; dato sensible: solo para adaptar el menú)
+export type FoodCustom = 'halal' | 'kosher' | 'lent_fridays' | 'ramadan';
+
 export interface DietPrefs {
   goal: DietGoal;
   diet: DietType;
@@ -90,6 +93,7 @@ export interface DietPrefs {
   activity: 'sedentary' | 'light' | 'active' | 'very_active';
   conditions: string[]; // diabetes (sin insulina), hypertension, high_cholesterol… (del perfil o del cuestionario)
   safety: ReferralReason[]; // respuestas del cuestionario de seguridad
+  customs?: FoodCustom[]; // halal, kosher, viernes sin carne, Ramadán (los menús de antes no lo tienen)
   kcalTarget?: number | null; // los fija el dietista desde el portal (si no, se calculan)
   proteinTarget?: number | null;
   seed: number;

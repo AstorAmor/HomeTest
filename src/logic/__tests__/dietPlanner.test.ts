@@ -207,3 +207,40 @@ describe('Menú semanal', () => {
 });
 
 void ({} as LabFlag);
+
+describe('Soja y pautas religiosas o culturales', () => {
+  const soy = (r: { ingredients: { food: string }[] }) => r.ingredients.some((i) => i.food === 'tofu' || i.food === 'tempeh');
+  const isMeat = (r: { ingredients: { food: string }[] }) => r.ingredients.some((i) => FOODS[i.food]?.kind === 'meat');
+
+  it('quien come carne o pescado no lleva tofu ni tempeh; en vegano, como mucho 3 a la semana y con nota', () => {
+    for (const diet of ['omnivore', 'flexitarian', 'pescatarian'] as const)
+      expect(meals(generateDiet(prefs({ ...ADULT, diet }), [{ marker: 'ldl', status: 'high' }]).days).some(soy), diet).toBe(false);
+    const vegan = generateDiet(prefs({ ...ADULT, diet: 'vegan' }), []);
+    expect(meals(vegan.days).filter(soy).length).toBeLessThanOrEqual(3);
+    if (meals(vegan.days).some(soy)) expect(vegan.reasons.some((r) => r.id === 'soy')).toBe(true);
+  });
+
+  it('halal y kosher: sin cerdo; kosher, sin marisco ni carne con lácteos en el mismo plato', () => {
+    const pork = ['pork_loin', 'cooked_ham', 'serrano_ham'];
+    const halal = meals(generateDiet(prefs({ ...ADULT, customs: ['halal'] }), []).days);
+    expect(halal.some((r) => r.ingredients.some((i) => pork.includes(i.food)))).toBe(false);
+    const kosher = meals(generateDiet(prefs({ ...ADULT, customs: ['kosher'] }), []).days);
+    expect(kosher.some((r) => r.ingredients.some((i) => [...pork, 'shrimp', 'mussels', 'squid'].includes(i.food)))).toBe(false);
+    expect(kosher.some((r) => isMeat(r) && r.ingredients.some((i) => FOODS[i.food]?.kind === 'dairy'))).toBe(false);
+  });
+
+  it('viernes sin carne en Cuaresma', () => {
+    const g = generateDiet(prefs({ ...ADULT, customs: ['lent_fridays'] }), []);
+    expect(meals([g.days[4]]).some(isMeat)).toBe(false);
+  });
+
+  it('Ramadán: antes del amanecer y al romper el ayuno, sin comida de mediodía; aviso si usa insulina', () => {
+    const g = generateDiet(prefs({ ...ADULT, snacks: 1, customs: ['ramadan'] }), []);
+    for (const d of g.days) expect(d.meals.map((m) => m.slot)).toEqual(['breakfast', 'dinner', 'snack']);
+    const kcal = g.days.reduce((a, d) => a + dayTotals(d).kcal, 0) / 7;
+    expect(Math.abs(kcal - g.targets.kcal)).toBeLessThan(g.targets.kcal * 0.2);
+    const ins = generateDiet(prefs({ ...ADULT, customs: ['ramadan'], safety: ['insulin'] }), []);
+    expect(ins.reasons.some((r) => r.id === 'caution_ramadan' && r.caution)).toBe(true);
+  });
+});
+

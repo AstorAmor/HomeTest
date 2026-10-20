@@ -128,6 +128,7 @@ export const workoutsEs: Record<string, string> = {
   Core: 'Abdomen',
   'Mobility and stretching': 'Movilidad y estiramientos',
   'Only with the equipment they have': 'Solo con el material que tiene',
+  'Only with my equipment': 'Solo con mi material',
   'Show more ({n} left)': 'Ver más (quedan {n})',
   'No exercises match. Try another word or filter.': 'Ningún ejercicio coincide. Prueba con otra palabra u otro filtro.',
 
@@ -230,4 +231,8 @@ export const workoutsEs: Record<string, string> = {
     'Le sale en su app, en Entrenamientos, con el vídeo de cada ejercicio y un modo guiado. Aquí verás las sesiones que vaya haciendo.',
   'Back to Workouts': 'Volver a Entrenamientos',
   'Keep editing': 'Seguir editando',
+  // 2026-10-20: cambiar ejercicios en tu programa
+  'Same type of movement, with your equipment.': 'Del mismo tipo de movimiento y con tu material.',
+  'Same type of movement, with your equipment. {name} will see the change.': 'Del mismo tipo de movimiento y con tu material. {name} verá el cambio.',
+  'Your trainer': 'Tu entrenador',
 };

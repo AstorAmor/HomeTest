@@ -7,24 +7,29 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { currentReport } from '@/data/reportRepository';
 import { profileRepository } from '@/data/profileRepository';
 import { buildPlan } from '@/data/planRepository';
 import { userFlags } from '@/data/userFlags';
 import { NutrientFocus, nutrientFocus } from '@/logic/nutrients';
 import { t } from '@/i18n';
-import { showSamples } from '@/data/dataMode';
+import { labFlags } from '@/data/diet/context';
+import { dietRepository } from '@/data/diet/dietRepository';
 import { TodayMenuCard } from '@/components/diet/TodayMenuCard';
 
-// Lo marcado hoy (user_flags "nutrients:YYYY-MM-DD")
-export const nutrientsKey = (d = new Date()) => `nutrients:${d.toISOString().slice(0, 10)}`;
+// Lo marcado hoy (user_flags "nutrients:YYYY-MM-DD", día local)
+const localDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+export const nutrientsKey = (d = new Date()) => `nutrients:${localDay(d)}`;
 
 export async function loadNutrientFocus(): Promise<NutrientFocus[]> {
-  const profile = await profileRepository.get().catch(() => null);
+  const [profile, lab, menu] = await Promise.all([
+    profileRepository.get().catch(() => null),
+    labFlags().catch(() => ({ labs: [] })),
+    dietRepository.active().catch(() => null),
+  ]);
   const planTips = buildPlan(profile).find((p) => p.kind === 'nutrition')?.how ?? [];
-  // Marcadores de la analítica de ejemplo solo en cuentas de prueba (en una real, de momento, el plan)
-  const markers = (showSamples() ? currentReport.sections : []).flatMap((s) => s.markers).map((m) => ({ marker_id: m.marker_id, flag: m.flag }));
-  return nutrientFocus(markers, planTips);
+  // La última analítica subida (en cuentas de prueba sin subidas, la de ejemplo), como en el menú
+  const markers = lab.labs.map((l) => ({ marker_id: l.marker, flag: l.status === 'high' ? 'alto' : 'bajo' }));
+  return nutrientFocus(markers, planTips, { snacks: menu ? menu.prefs.snacks > 0 : undefined });
 }
 
 export async function nutrientsDoneToday(): Promise<string[]> {

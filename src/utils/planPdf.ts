@@ -118,7 +118,7 @@ function projectionSvg(p: PlanDocAction['projection']): string {
 }
 
 // Logotipo KUOVA (mismos trazos que components/KuovaLogo.tsx)
-const WORDMARK = `<svg viewBox="226 189 1556 276" height="22" xmlns="http://www.w3.org/2000/svg" aria-label="Kuova">
+export const WORDMARK = `<svg viewBox="226 189 1556 276" height="22" xmlns="http://www.w3.org/2000/svg" aria-label="Kuova">
   <path d="M230 200H268V327L427 200H490L333.67 315.49L480 457H424L302.58 338.45L268 364V402C267 430 250 450 230 457Z" fill="#0E2A24"/>
   <path d="M561.5 198v141a103.5 103.5 0 0 0 207 0V198" fill="none" stroke="#0E2A24" stroke-width="37"/>
   <ellipse cx="990.5" cy="326.5" rx="126.5" ry="116.5" fill="none" stroke="#0E2A24" stroke-width="38"/>

@@ -5,6 +5,7 @@ import type {
   DietPrefs,
   DietReason,
   DietTargets,
+  FoodCustom,
   MealSlot,
   Nutrients,
   PlannedMeal,
@@ -124,6 +125,20 @@ export const KIDNEY_PROTEIN_PER_KG = 0.8;
 export const POTASSIUM_MAX_MG = 2500;
 const PREGNANCY_AVOID = ['serrano_ham'];
 
+// Soja: el fundador no quiere tofu ni tempeh en menús de quien come carne o pescado; con dieta vegetariana
+// o vegana, como mucho unas veces por semana y con una nota (decisión del 2026-10-20)
+const SOY_MAINS = ['tofu', 'tempeh'];
+const SOY_WEEK_CAP: Partial<Record<DietPrefs['diet'], number>> = { vegetarian: 2, vegan: 3 };
+const hasSoyMain = (r: Recipe) => r.ingredients.some((i) => SOY_MAINS.includes(i.food));
+
+// Pautas religiosas o culturales
+const PORK = ['pork_loin', 'cooked_ham', 'serrano_ham'];
+const NOT_KOSHER = [...PORK, 'shrimp', 'mussels', 'squid'];
+const hasCustom = (prefs: Pick<DietPrefs, 'customs'>, c: FoodCustom) => !!prefs.customs?.includes(c);
+const isMeat = (r: Recipe) => r.ingredients.some((i) => FOODS[i.food]?.kind === 'meat');
+export const FRIDAY = 4; // lunes = 0
+export const isRamadan = (prefs: Pick<DietPrefs, 'customs'>) => hasCustom(prefs, 'ramadan');
+
 const ACTIVITY = { sedentary: 1.2, light: 1.375, active: 1.55, very_active: 1.725 } as const;
 
 export function dietTargets(prefs: DietPrefs, labs: LabFlag[]): DietTargets {
@@ -190,6 +205,12 @@ export function recipeAllowed(r: Recipe, prefs: DietPrefs): boolean {
   if (r.groups.some((g) => prefs.avoidGroups.includes(g))) return false;
   if (r.ingredients.some((i) => prefs.dislikes.includes(i.food))) return false;
   if (prefs.safety.includes('pregnancy') && r.ingredients.some((i) => PREGNANCY_AVOID.includes(i.food))) return false;
+  if (hasSoyMain(r) && !SOY_WEEK_CAP[prefs.diet]) return false;
+  if ((hasCustom(prefs, 'halal') || hasCustom(prefs, 'ramadan')) && r.ingredients.some((i) => PORK.includes(i.food))) return false;
+  if (hasCustom(prefs, 'kosher')) {
+    if (r.ingredients.some((i) => NOT_KOSHER.includes(i.food))) return false;
+    if (isMeat(r) && r.ingredients.some((i) => FOODS[i.food]?.kind === 'dairy')) return false;
+  }
   return true;
 }
 
@@ -252,7 +273,8 @@ export function recipeScore(
 }
 
 // Reparto de las calorías del día por comida
-export function slotShares(snacks: number): Partial<Record<MealSlot, number>> {
+export function slotShares(snacks: number, ramadan = false): Partial<Record<MealSlot, number>> {
+  if (ramadan) return snacks >= 1 ? { breakfast: 0.4, dinner: 0.45, snack: 0.15 } : { breakfast: 0.45, dinner: 0.55 };
   if (snacks >= 2) return { breakfast: 0.2, lunch: 0.3, dinner: 0.3, snack: 0.1 };
   if (snacks === 1) return { breakfast: 0.25, lunch: 0.35, dinner: 0.3, snack: 0.1 };
   return { breakfast: 0.25, lunch: 0.4, dinner: 0.35 };
@@ -269,7 +291,8 @@ function rng(seed: number) {
   };
 }
 
-const roundPortion = (p: number) => Math.min(1.75, Math.max(0.75, Math.round(p * 4) / 4));
+// Raciones de 0,75 a 1,75 (hasta 2,25 en Ramadán: dos comidas tienen que llegar a las calorías del día)
+const roundPortion = (p: number, max = 1.75) => Math.min(max, Math.max(0.75, Math.round(p * 4) / 4));
 
 export interface GeneratedDiet {
   days: DietDay[];
@@ -284,8 +307,12 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
   const caution = cautionsFor(prefs, labs);
   const rand = rng(prefs.seed * 7919 + 17);
   const relaxed = new Set<'time' | 'budget' | 'skill'>();
-  const shares = slotShares(prefs.snacks);
-  const slots: MealSlot[] = ['breakfast', 'lunch', 'dinner', ...Array.from({ length: Math.min(2, prefs.snacks) }, () => 'snack' as MealSlot)];
+  const ramadan = isRamadan(prefs);
+  const shares = slotShares(prefs.snacks, ramadan);
+  const maxPortion = ramadan ? 2.25 : 1.75;
+  const slots: MealSlot[] = ramadan
+    ? ['breakfast', 'dinner', ...(prefs.snacks > 0 ? (['snack'] as MealSlot[]) : [])]
+    : ['breakfast', 'lunch', 'dinner', ...Array.from({ length: Math.min(2, prefs.snacks) }, () => 'snack' as MealSlot)];
 
   // Candidatos por comida; si hay muy pocos, se afloja tiempo, presupuesto y dificultad (nunca lo demás)
   const pool: Partial<Record<MealSlot, Recipe[]>> = {};
@@ -306,6 +333,11 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
       }
     }
     // Sin gluten y sin lactosa quedan pocos desayunos: valen también los tentempiés que encajen
+    // En Ramadán, antes del amanecer vale también un plato de comida rápido de hacer (es una comida completa)
+    if (slot === 'breakfast' && ramadan) {
+      const extra = RECIPE_LIST.filter((r) => r.meals.includes('lunch') && !list.includes(r) && recipeFits({ ...r, meals: ['breakfast'] }, prefs, 'breakfast', { extraMinutes: 10 }));
+      list = [...list, ...extra];
+    }
     if (slot === 'breakfast' && list.length < 4) {
       const extra = RECIPE_LIST.filter((r) => r.meals.includes('snack') && !list.includes(r) && recipeFits({ ...r, meals: ['breakfast'] }, prefs, 'breakfast', { extraMinutes: 15, ignoreBudget: true }));
       list = [...list, ...extra];
@@ -316,12 +348,12 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
   const base = new Map(RECIPE_LIST.map((r) => [r.id, recipeScore(r, focuses, targets, prefs, caution)]));
   const uses = new Map<string, number>();
   const lastDay = new Map<string, number>();
-  const count = { oily: 0, legume: 0, red: 0, processed: 0 };
+  const count = { oily: 0, legume: 0, red: 0, processed: 0, soy: 0 };
   const kinds = new Map<string, number>();
   const days: DietDay[] = Array.from({ length: 7 }, (_, day) => ({ day, meals: [] }));
 
   for (let day = 0; day < 7; day++) {
-    const order: MealSlot[] = ['lunch', 'dinner', 'breakfast', ...slots.filter((s) => s === 'snack')];
+    const order: MealSlot[] = ramadan ? ['dinner', 'breakfast', ...slots.filter((s) => s === 'snack')] : ['lunch', 'dinner', 'breakfast', ...slots.filter((s) => s === 'snack')];
     const chosen: PlannedMeal[] = [];
     for (const slot of order) {
       // Sobras de la cena de ayer (cocinar una vez para dos días)
@@ -337,7 +369,7 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
       const cands = pool[slot] ?? [];
       const daysLeft = 7 - day;
       // Sal que ya lleva el día (con la ración que tendrá cada plato)
-      const est = (r: Recipe, sl: MealSlot) => roundPortion((targets.kcal * (shares[sl] ?? 0.1)) / r.nutrients.kcal);
+      const est = (r: Recipe, sl: MealSlot) => roundPortion((targets.kcal * (shares[sl] ?? 0.1)) / r.nutrients.kcal, maxPortion);
       const sodiumSoFar = chosen.reduce((a, c) => a + getRecipe(c.recipeId)!.nutrients.sodium * est(getRecipe(c.recipeId)!, c.slot), 0);
       const sodiumLeft = targets.sodiumMax - sodiumSoFar;
       const potassiumSoFar = chosen.reduce((a, c) => a + getRecipe(c.recipeId)!.nutrients.potassium * est(getRecipe(c.recipeId)!, c.slot), 0);
@@ -348,6 +380,9 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
       let bestScore = -Infinity;
       for (const r of cands) {
         if (chosen.some((c) => c.recipeId === r.id)) continue;
+        // Viernes sin carne (Cuaresma); y la soja, como mucho unas veces por semana
+        if (hasCustom(prefs, 'lent_fridays') && day === FRIDAY && isMeat(r)) continue;
+        if (hasSoyMain(r) && count.soy >= (SOY_WEEK_CAP[prefs.diet] ?? 0)) continue;
         const used = uses.get(r.id) ?? 0;
         if (used >= (cands.length < 6 ? 3 : 2)) continue;
         let s = (base.get(r.id) ?? 0) + rand() * 0.8 - used * 1.2;
@@ -387,7 +422,7 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
     // Raciones: cada comida hacia su parte de las calorías del día
     for (const m of chosen) {
       const r = getRecipe(m.recipeId)!;
-      m.portion = roundPortion((targets.kcal * (shares[m.slot] ?? 0.1)) / r.nutrients.kcal);
+      m.portion = roundPortion((targets.kcal * (shares[m.slot] ?? 0.1)) / r.nutrients.kcal, maxPortion);
     }
     // Las sobras, con la misma ración que el día que se cocinó
     for (const m of chosen.filter((x) => x.leftover)) {
@@ -404,14 +439,26 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
     if (r.flags.includes('legume')) count.legume++;
     if (r.flags.includes('red_meat')) count.red++;
     if (r.flags.includes('processed_meat')) count.processed++;
+    if (hasSoyMain(r)) count.soy++;
   }
 
-  return { days, targets, reasons: dietReasons(prefs, labs, targets), relaxed: [...relaxed] };
+  const reasons = dietReasons(prefs, labs, targets);
+  if (days.some((d) => d.meals.some((m) => hasSoyMain(getRecipe(m.recipeId)!))))
+    reasons.push({
+      id: 'soy',
+      title: 'About soy',
+      detail: 'Tofu and tempeh are a good plant protein, and guidelines consider them safe in the amounts of a normal menu. If you take thyroid medication or have questions about anything hormonal, talk to your doctor.',
+    });
+  return { days, targets, reasons, relaxed: [...relaxed] };
 }
 
 // Orden del día: desayuno, (media mañana), comida, merienda, cena. Con un solo tentempié, es la merienda.
 export function orderMeals(meals: PlannedMeal[]): PlannedMeal[] {
   const snacks = meals.filter((m) => m.slot === 'snack');
+  if (!meals.some((m) => m.slot === 'lunch') && meals.some((m) => m.slot === 'dinner')) {
+    const rpos = (m: PlannedMeal) => (m.slot === 'breakfast' ? 0 : m.slot === 'dinner' ? 1 : 2);
+    return [...meals].sort((a, b) => rpos(a) - rpos(b));
+  }
   const pos = (m: PlannedMeal) =>
     m.slot === 'breakfast' ? 0 : m.slot === 'lunch' ? 2 : m.slot === 'dinner' ? 4 : snacks.length >= 2 && snacks.indexOf(m) === 0 ? 1 : 3;
   return [...meals].sort((a, b) => pos(a) - pos(b));
@@ -498,7 +545,7 @@ export function alternativesForSlot(prefs: DietPrefs, labs: LabFlag[], slot: Mea
 export function portionFor(recipeId: string, slot: MealSlot, prefs: DietPrefs, labs: LabFlag[]): number {
   const r = getRecipe(recipeId);
   if (!r) return 1;
-  return roundPortion((dietTargets(prefs, labs).kcal * (slotShares(prefs.snacks)[slot] ?? 0.1)) / r.nutrients.kcal);
+  return roundPortion((dietTargets(prefs, labs).kcal * (slotShares(prefs.snacks, isRamadan(prefs))[slot] ?? 0.1)) / r.nutrients.kcal, isRamadan(prefs) ? 2.25 : 1.75);
 }
 
 // ── Por qué el menú es así (texto fuente en inglés; el español en dietEs.ts) ──
@@ -552,6 +599,13 @@ export function dietReasons(prefs: DietPrefs, labs: LabFlag[], targets: DietTarg
       title: 'Your answer: you take creatine',
       detail: 'Creatine can raise creatinine in blood tests. Mention it to your doctor when you talk about this result.',
     });
+  if (hasCustom(prefs, 'ramadan') && (prefs.safety.includes('insulin') || prefs.safety.includes('pregnancy') || prefs.conditions.includes('diabetes')))
+    out.push({
+      id: 'caution_ramadan',
+      caution: true,
+      title: 'Your answer: Ramadan',
+      detail: 'Fasting can affect your treatment or what you need: talk to your doctor before Ramadan to plan it.',
+    });
   const goalTitle =
     prefs.goal === 'lose' ? 'To lose weight' : prefs.goal === 'gain' ? 'To build muscle' : prefs.goal === 'perform' ? 'For your training' : 'To eat well';
   out.push({
@@ -579,6 +633,15 @@ export function dietReasons(prefs: DietPrefs, labs: LabFlag[], targets: DietTarg
   if (f.has('magnesium')) out.push({ id: 'magnesium', title: 'Your magnesium came out low', detail: 'Nuts, seeds, legumes and wholegrains.' });
   if (prefs.supplements.includes('iron')) out.push({ id: 'supp_iron', title: 'Your iron supplement', detail: 'Take it away from coffee, tea and dairy, ideally with some vitamin C.' });
   if (prefs.supplements.includes('vitamin_d')) out.push({ id: 'supp_vitd', title: 'Your vitamin D supplement', detail: 'Take it with a meal that has some fat.' });
+  if (hasCustom(prefs, 'ramadan'))
+    out.push({
+      id: 'ramadan',
+      title: 'Ramadan',
+      detail: 'Two main meals: before dawn (suhoor) and when you break the fast (iftar). Drink water between sunset and dawn. No pork or alcohol.',
+    });
+  else if (hasCustom(prefs, 'halal')) out.push({ id: 'halal', title: 'Halal', detail: 'No pork or alcohol. Buy meat with a halal label.' });
+  if (hasCustom(prefs, 'kosher')) out.push({ id: 'kosher', title: 'Kosher', detail: 'No pork or shellfish, and no meat with dairy in the same dish. Buy meat with a kosher label.' });
+  if (hasCustom(prefs, 'lent_fridays')) out.push({ id: 'lent', title: 'Fridays without meat', detail: 'On Fridays the menu has fish, eggs or legumes instead of meat.' });
   void targets;
   return out;
 }

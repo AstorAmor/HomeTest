@@ -1,5 +1,5 @@
 import type { FoodGroup } from '@/logic/foodGroups';
-import type { Allergen, Budget, CookingSkill, DietGoal, DietType, ReferralReason } from './types';
+import type { Allergen, Budget, CookingSkill, DietGoal, DietType, FoodCustom, ReferralReason } from './types';
 
 // Opciones del cuestionario del menú (texto fuente en inglés; español en src/i18n/dietEs.ts)
 
@@ -84,6 +84,13 @@ export const SUPPLEMENTS: { id: string; label: string }[] = [
   { id: 'multivitamin', label: 'Multivitamin' },
   { id: 'protein', label: 'Protein powder' },
   { id: 'creatine', label: 'Creatine' },
+];
+
+export const CUSTOMS: { id: FoodCustom; label: string }[] = [
+  { id: 'halal', label: 'Halal (no pork or alcohol)' },
+  { id: 'kosher', label: 'Kosher (no pork or shellfish, no meat with dairy)' },
+  { id: 'lent_fridays', label: 'Fridays without meat (Lent)' },
+  { id: 'ramadan', label: 'Ramadan (eating before dawn and after sunset)' },
 ];
 
 export const SAFETY: { id: ReferralReason; label: string }[] = [

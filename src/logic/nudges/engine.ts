@@ -66,3 +66,24 @@ export function evaluateNudges(ctx: NudgeContext, prefs: NudgePrefs, log: NudgeL
     return { ...base, ...content, status: 'send', reason: check.reason };
   });
 }
+
+// Quita de la bandeja los avisos-tarea que ya están hechos: «¿Te has tomado la creatina?» no debe seguir
+// ahí cuando la toma ya está marcada. Los avisos de salud (tensión, color de las heces…) se quedan.
+export function pruneResolved<T extends { id: NudgeId }>(inbox: T[], ctx: NudgeContext): T[] {
+  const due = new Map<NudgeId, boolean>();
+  const stillDue = (id: NudgeId) => {
+    if (!due.has(id)) {
+      const rule = NUDGE_RULES.find((r) => r.id === id);
+      let d = true;
+      try {
+        d = !rule?.resolvesWhenDone || rule.evaluate(ctx).due;
+      } catch {
+        d = true;
+      }
+      due.set(id, d);
+    }
+    return due.get(id)!;
+  };
+  return inbox.filter((i) => stillDue(i.id));
+}
+

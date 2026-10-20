@@ -157,7 +157,7 @@ export const MedicationsScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.doseName}>{t(item.name)}</Text>
                   <Text style={styles.itemSub}>
-                    When needed · {logs.filter((l) => l.medId === item.id && l.fecha.slice(0, 10) === now.toISOString().slice(0, 10)).length} today
+                    {t('When needed · {n} today', { n: logs.filter((l) => l.medId === item.id && new Date(l.fecha).toDateString() === now.toDateString()).length })}
                   </Text>
                 </View>
                 <TouchableOpacity style={styles.take} onPress={() => logNow(item)}>

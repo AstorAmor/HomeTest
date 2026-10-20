@@ -21,8 +21,16 @@ export interface FlaggedMarker {
 const low = (f: string) => f === 'bajo' || f === 'limite_bajo';
 const high = (f: string) => f === 'alto' || f === 'limite_alto';
 
-export function nutrientFocus(markers: FlaggedMarker[], planTips: string[] = []): NutrientFocus[] {
+export interface FocusOptions {
+  snacks?: boolean; // false = su menú no lleva tentempiés: no se habla de "tentempié"
+}
+
+const MAX_ITEMS = 5; // pocos y sencillos: es una lista para marcar cada día
+
+export function nutrientFocus(markers: FlaggedMarker[], planTips: string[] = [], opts: FocusOptions = {}): NutrientFocus[] {
   const has = (ids: string[], test: (f: string) => boolean) => markers.some((m) => ids.includes(m.marker_id) && test(m.flag));
+  // Creatinina o filtrado fuera de rango: aquí no se empuja la proteína (el menú la deja moderada)
+  const kidneyFlag = has(['creatinine', 'cystatin_c'], high) || has(['egfr'], low);
   const out: NutrientFocus[] = [];
 
   if (has(['ferritin', 'iron', 'transferrin_saturation', 'hemoglobin'], low))
@@ -74,20 +82,31 @@ export function nutrientFocus(markers: FlaggedMarker[], planTips: string[] = [])
       foods: t('Start meals with vegetables or salad, choose wholegrain over white, and swap sugary drinks for water.'),
     });
 
-  // Siempre: fruta y verdura (la OMS recomienda al menos 400 g al día)
-  out.push({
+  // Siempre, y lo primero: fruta y verdura (la OMS recomienda al menos 400 g al día) y una ración de proteína
+  out.unshift({
     id: 'five_a_day',
     icon: 'carrot',
     title: t('Fruit and vegetables'),
     why: t('At least five portions a day (about 400 g) for everyone.'),
-    foods: t('Half of lunch and dinner on the plate, and fruit as a snack.'),
+    foods: opts.snacks === false ? t('Half of lunch and dinner on the plate, and fruit for dessert.') : t('Half of lunch and dinner on the plate, and fruit as a snack.'),
   });
+  if (!kidneyFlag)
+    out.splice(1, 0, {
+      id: 'protein',
+      icon: 'egg-outline',
+      title: t('A portion of protein at each meal'),
+      why: t('It keeps you full for longer and looks after your muscles.'),
+      foods: t('Legumes, eggs, fish, meat or dairy: about the size of your palm.'),
+    });
 
-  // Los consejos del plan que no estén ya cubiertos
+  // Los consejos del plan que no estén ya cubiertos (sin repetir verdura ni proteína, y sin tentempiés si su
+  // menú no los lleva)
   for (const [i, tip] of planTips.entries()) {
-    if (out.length >= 6) break;
-    if (/vegetables|verdura/i.test(tip) && out.some((o) => o.id === 'five_a_day')) continue;
+    if (out.length >= MAX_ITEMS) break;
+    if (/vegetables|verdura/i.test(tip)) continue;
+    if (/protein|proteína/i.test(tip)) continue;
+    if (opts.snacks === false && /snack|tentempié/i.test(tip)) continue;
     out.push({ id: `plan_${i}`, icon: 'clipboard-check-outline', title: t(tip), why: t('From your plan.'), foods: '' });
   }
-  return out;
+  return out.slice(0, MAX_ITEMS);
 }

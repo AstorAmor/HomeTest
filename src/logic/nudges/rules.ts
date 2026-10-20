@@ -209,6 +209,7 @@ export const NUDGE_RULES: NudgeRule[] = [
   },
   {
     id: 'medication_missed',
+    resolvesWhenDone: true,
     category: 'medication',
     label: 'Missed dose',
     cooldownDays: 1,
@@ -252,6 +253,7 @@ export const NUDGE_RULES: NudgeRule[] = [
   },
   {
     id: 'period_late',
+    resolvesWhenDone: true,
     category: 'cycle',
     label: 'Late period',
     cooldownDays: 7,
@@ -296,6 +298,7 @@ export const NUDGE_RULES: NudgeRule[] = [
   },
   {
     id: 'bowel_none_3d',
+    resolvesWhenDone: true,
     category: 'digestive',
     label: 'No bowel movement',
     cooldownDays: 4,
@@ -426,6 +429,7 @@ export const NUDGE_RULES: NudgeRule[] = [
   },
   {
     id: 'temperature_reminder',
+    resolvesWhenDone: true,
     category: 'cycle',
     label: 'Morning temperature',
     cooldownDays: 2,
@@ -497,6 +501,7 @@ export const NUDGE_RULES: NudgeRule[] = [
   },
   {
     id: 'checkin_missed_3d',
+    resolvesWhenDone: true,
     category: 'engagement',
     label: 'Missed check-ins',
     cooldownDays: 5,
@@ -522,6 +527,7 @@ export const NUDGE_RULES: NudgeRule[] = [
   },
   {
     id: 'inactive_7d',
+    resolvesWhenDone: true,
     category: 'engagement',
     label: 'Inactivity reminder',
     cooldownDays: 7,

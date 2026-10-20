@@ -351,4 +351,43 @@ export const dietEs: Record<string, string> = {
   'Your answer: you take creatine': 'Has marcado: tomas creatina',
   'Creatine can raise creatinine in blood tests. Mention it to your doctor when you talk about this result.':
     'La creatina puede subir la creatinina de la analítica. Díselo a tu médico cuando habléis de este resultado.',
+  // 2026-10-20: soja, pautas religiosas o culturales y marcar lo comido
+  'About soy': 'Sobre la soja',
+  'Tofu and tempeh are a good plant protein, and guidelines consider them safe in the amounts of a normal menu. If you take thyroid medication or have questions about anything hormonal, talk to your doctor.':
+    'El tofu y el tempeh son una buena proteína vegetal, y las guías los consideran seguros en las cantidades de un menú normal. Si tomas medicación para el tiroides o tienes dudas por algún tema hormonal, coméntalo con tu médico.',
+  'Do you follow any religious or cultural food customs?': '¿Sigues alguna pauta religiosa o cultural al comer?',
+  'Optional. We only use it to adapt your menu.': 'Es opcional. Solo lo usamos para adaptar tu menú.',
+  'No, none': 'No, ninguna',
+  'Halal (no pork or alcohol)': 'Halal (sin cerdo ni alcohol)',
+  'Kosher (no pork or shellfish, no meat with dairy)': 'Kosher (sin cerdo ni marisco, y sin mezclar carne con lácteos)',
+  'Fridays without meat (Lent)': 'Viernes sin carne (Cuaresma)',
+  'Ramadan (eating before dawn and after sunset)': 'Ramadán (comer antes del amanecer y después de la puesta de sol)',
+  'Before dawn (suhoor)': 'Antes del amanecer (suhoor)',
+  'Breaking the fast (iftar)': 'Al romper el ayuno (iftar)',
+  'Ramadan': 'Ramadán',
+  'Two main meals: before dawn (suhoor) and when you break the fast (iftar). Drink water between sunset and dawn. No pork or alcohol.':
+    'Dos comidas principales: antes del amanecer (suhoor) y al romper el ayuno (iftar). Bebe agua entre la puesta de sol y el amanecer. Sin cerdo ni alcohol.',
+  'Halal': 'Halal',
+  'No pork or alcohol. Buy meat with a halal label.': 'Sin cerdo ni alcohol. Compra la carne con sello halal.',
+  'Kosher': 'Kosher',
+  'No pork or shellfish, and no meat with dairy in the same dish. Buy meat with a kosher label.':
+    'Sin cerdo ni marisco, y sin mezclar carne con lácteos en el mismo plato. Compra la carne con sello kosher.',
+  'Fridays without meat': 'Viernes sin carne',
+  'On Fridays the menu has fish, eggs or legumes instead of meat.': 'Los viernes, el menú lleva pescado, huevo o legumbres en vez de carne.',
+  'Your answer: Ramadan': 'Has marcado: Ramadán',
+  'Fasting can affect your treatment or what you need: talk to your doctor before Ramadan to plan it.':
+    'El ayuno puede influir en tu tratamiento o en lo que necesitas: habla con tu médico antes del Ramadán para planificarlo.',
+  'Mark as eaten': 'Marcar como comida',
+  'Eaten': 'Comida',
+  '{done} of {total} meals eaten today': 'Hoy llevas {done} de {total} comidas del menú',
+  'Shopping list · KUOVA': 'Lista de la compra · KUOVA',
+  'For your weekly menu': 'Para tu menú de la semana',
+  'Made with Kuova Health · kuovahealth.com': 'Kuova Health · kuovahealth.com',
+  'General guidance based on dietary guidelines and your answers: it does not replace your doctor or a dietitian.':
+    'Orientación general según las guías de alimentación y tus respuestas: no sustituye a tu médico ni a un dietista.',
+  'Menu and list as PDF': 'Menú y lista en PDF',
+  'Send your menu': 'Enviar tu menú',
+  'Shopping': 'Compra',
+  day: 'día',
+  week: 'semana',
 };

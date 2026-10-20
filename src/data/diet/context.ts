@@ -32,7 +32,7 @@ export function ageFrom(dob?: string | null, now = new Date()): number | null {
   return Number.isFinite(a) ? a : null;
 }
 
-async function labFlags(): Promise<Pick<DietContext, 'labs' | 'labSource' | 'labDate'>> {
+export async function labFlags(): Promise<Pick<DietContext, 'labs' | 'labSource' | 'labDate'>> {
   const up = latestUpload(await labUploadRepository.getAll().catch(() => []));
   if (up) {
     const labs: LabFlag[] = [];

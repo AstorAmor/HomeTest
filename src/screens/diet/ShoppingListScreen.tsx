@@ -11,6 +11,8 @@ import { dietRepository, shoppingChecks } from '@/data/diet/dietRepository';
 import type { DietPlan, ShopSection } from '@/data/diet/types';
 import { shoppingList } from '@/logic/dietPlanner';
 import { num, t } from '@/i18n';
+import { menuFileName, menuToHtml, shoppingText } from '@/utils/menuPdf';
+import { shareHtmlPdf } from '@/utils/shareHtml';
 
 // Lista de la compra de la semana, por secciones del súper, con casillas y el coste aproximado
 const ORDER: ShopSection[] = ['produce', 'meat_fish', 'chilled', 'frozen', 'bakery', 'pantry'];
@@ -40,13 +42,8 @@ export const ShoppingListScreen = () => {
     shoppingChecks.set(plan.id, next);
   };
 
-  const text = () =>
-    ORDER.map((sec) => {
-      const list = items.filter((i) => FOODS[i.food]?.section === sec && !checked.includes(i.food));
-      return list.length ? `${t(SECTION_LABEL[sec])}\n${list.map((i) => `- ${foodName(FOODS[i.food])}: ${amountText(i.food, i.grams, { whole: true })}`).join('\n')}` : '';
-    })
-      .filter(Boolean)
-      .join('\n\n');
+  // Lo que falta por comprar, con la cabecera de la marca (lo ya marcado no se manda)
+  const text = () => (plan ? shoppingText(plan, checked) : '');
 
   const share = async () => {
     const message = text();
@@ -73,6 +70,15 @@ export const ShoppingListScreen = () => {
             <Ionicons name={Platform.OS === 'web' ? 'copy-outline' : 'share-outline'} size={16} color={Colors.accent} />
             <Text style={styles.shareText}>{copied ? t('Copied') : Platform.OS === 'web' ? t('Copy') : t('Share')}</Text>
           </TouchableOpacity>
+          {plan ? (
+            <TouchableOpacity
+              style={styles.share}
+              onPress={() => shareHtmlPdf({ html: menuToHtml(plan), fileName: menuFileName(), fallbackText: text(), dialogTitle: t('Send your menu') }).catch(() => undefined)}
+            >
+              <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
+              <Text style={styles.shareText}>PDF</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
         <Text style={styles.hint}>{t('Amounts for the whole week, as they go into the recipes (raw weight). Rinse tinned legumes.')}</Text>
         {ORDER.map((sec) => {

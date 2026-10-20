@@ -1222,3 +1222,29 @@ leyenda «Wearable (noche)». 6927ae1, **publicado** (OK del fundador): EAS Upda
 `1676a3a5-2797-4236-b1ba-3ffd7b346310` y las dos webs a la primera (pasos a mano, 1,4 GB de RAM libres).
 Nota: expo-updates descarga la actualización al abrir la app y la aplica la siguiente vez que se abre desde cerrada;
 el fundador seguía viendo el menú bloqueado por la creatinina con la versión anterior en el móvil.
+
+## 2026-10-20 — Notas del fundador: ejercicios, menú, «Lo que conviene hoy», creatina
+
+- **Cambiar ejercicios** en tu programa (`WorkoutSessionScreen`): botón ⇄ en cada ejercicio → los del mismo tipo de
+  movimiento y con tu material (`ExerciseLibrary forSelf`, «Solo con mi material»); en los principales se mantienen
+  series y repeticiones. Si el programa es de su entrenador, se avisa de que lo verá (la fila es suya; RLS ya lo deja).
+- **«¿Te has tomado la creatina?» con la toma ya marcada**: el aviso se quedaba en la bandeja. Ahora las reglas con
+  `resolvesWhenDone` (toma sin marcar, regla tardía, sin heces 3 días, temperatura, check-in, inactividad) salen de
+  la bandeja al dejar de tocar (`pruneResolved` en `logic/nudges/engine.ts`). Los avisos de salud se quedan.
+  También: «When needed · N today» de Medicación iba en inglés y contaba el día en UTC.
+- **«Lo que conviene hoy»**: en cuentas reales usaba solo el plan (sin analítica): ahora usa la última analítica
+  subida (`labFlags` de `data/diet/context.ts`, como el menú). Más sencillo: «Fruta y verdura» y «Una ración de
+  proteína en cada comida» primero, como mucho 5; sin «tentempié» si su menú no los lleva; sin empujar la proteína
+  con creatinina/filtrado fuera de rango. El plan de «rendir más» ya no habla de hidratos alrededor de las sesiones.
+  La clave del día de las casillas pasa a día local (antes UTC).
+- **Hoy → Tu plan**: la fila de Alimentación dice «Marca lo que comes bien hoy» (cuenta las casillas de arriba).
+- **Menú**: sin tofu ni tempeh si come carne o pescado; en vegetariano 2 y en vegano 3 a la semana como mucho, con
+  una nota neutra sobre la soja. Pregunta opcional de **pautas religiosas o culturales** (`customs`: halal, kosher,
+  viernes sin carne, Ramadán; dato sensible, apuntado en el borrador de la política). Ramadán: antes del amanecer
+  (suhoor) y al romper el ayuno (iftar), raciones hasta 2,25 y aviso para el médico si usa insulina, diabetes o
+  embarazo. **Marcar como comida** cada comida de hoy (user_flags `diet_eaten:AAAA-MM-DD`, sin migración).
+- **Lista de la compra** con cabecera «Lista de la compra · KUOVA» al compartir, y **menú + lista en PDF** con la
+  marca (`utils/menuPdf.ts` + `utils/shareHtml(.web).ts`; móvil: expo-print, ya en el APK ee97dd7d; web: imprimir).
+- Precios: siguen siendo estimaciones de supermercado en España (€/kg en `scripts/diet-catalog.py`), sin factor por
+  zona. Pendiente: el plan de «rendir más» sigue titulado «Proteína en cada comida» aunque la creatinina salga alta.
+- Notificaciones con la app cerrada: no hay todavía (hace falta expo-notifications y un APK nuevo).

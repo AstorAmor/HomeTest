@@ -1271,6 +1271,15 @@ export const es: Record<string, string> = {
   'Your home readings average {avg} mmHg {when}. Measure twice in the morning and twice in the evening for 7 days so your doctor can see the full picture.':
     'Tus mediciones en casa tienen una media de {avg} mmHg {when}. Mide dos veces por la mañana y dos por la noche durante 7 días para que tu médico tenga la imagen completa.',
   'Did you take your {name}?': '¿Te has tomado {name}?',
+  'When needed · {n} today': 'Cuando lo necesites · {n} hoy',
+  // 2026-10-20: "Lo que conviene hoy" más sencillo y la fila de Alimentación de "Tu plan"
+  'Tick off what you eat well today': 'Marca lo que comes bien hoy',
+  'Half of lunch and dinner on the plate, and fruit for dessert.': 'La mitad del plato en la comida y la cena, y fruta de postre.',
+  'A portion of protein at each meal': 'Una ración de proteína en cada comida',
+  'It keeps you full for longer and looks after your muscles.': 'Te sacia más y cuida tus músculos.',
+  'Legumes, eggs, fish, meat or dairy: about the size of your palm.': 'Legumbres, huevo, pescado, carne o lácteos: más o menos lo que ocupa tu palma.',
+  'A full meal after training': 'Después de entrenar, una comida completa',
+  'Fruit and vegetables every day': 'Fruta y verdura todos los días',
   '{n} doses not marked today': '{n} tomas sin marcar hoy',
   'It was due at {time}. Mark it as taken or skipped so your record stays right.': 'Tocaba a las {time}. Márcala como tomada u omitida para que tu registro sea correcto.',
   'About the colour you logged': 'Sobre el color que apuntaste',

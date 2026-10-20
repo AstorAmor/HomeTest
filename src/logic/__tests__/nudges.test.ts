@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluateNudges, muteUntil, NUDGE_RULES, simulatePersona } from '@/logic/nudges';
+import { evaluateNudges, muteUntil, NUDGE_RULES, pruneResolved, simulatePersona } from '@/logic/nudges';
 import { PERSONAS } from '../../../simulation/personas';
 import { NudgeContext } from '@/logic/nudges/types';
 
@@ -88,3 +88,30 @@ describe('usuarios simulados', () => {
     }
   }
 });
+
+describe('bandeja: los avisos-tarea hechos se van', () => {
+  const now = new Date('2026-10-20T12:00:00');
+  const creatina = {
+    id: 'm1',
+    fecha: '2026-10-01T08:00:00.000Z',
+    createdAt: '2026-10-01T08:00:00.000Z',
+    name: 'Creatine',
+    kind: 'supplement' as const,
+    schedule: { type: 'times' as const, times: ['09:00'] },
+    course: { type: 'ongoing' as const },
+    reminders: true,
+  };
+  const at9 = new Date('2026-10-20T09:00:00').toISOString();
+  const inbox = [
+    { id: 'medication_missed' as const, title: '¿Te has tomado la creatina?' },
+    { id: 'bp_very_high' as const, title: 'Tensión muy alta' },
+  ];
+
+  it('«¿Te has tomado…?» sale de la bandeja cuando la toma ya está marcada; los avisos de salud se quedan', () => {
+    const ctx = { ...empty(now), medications: [creatina], doses: [] } as NudgeContext;
+    expect(pruneResolved(inbox, ctx).map((i) => i.id)).toEqual(['medication_missed', 'bp_very_high']);
+    const marked = { ...ctx, doses: [{ id: 'd1', fecha: at9, createdAt: at9, medId: 'm1', scheduledFor: at9, status: 'taken' as const }] } as NudgeContext;
+    expect(pruneResolved(inbox, marked).map((i) => i.id)).toEqual(['bp_very_high']);
+  });
+});
+

@@ -30,6 +30,7 @@ export const ExerciseLibrary = ({
   onlyPatterns,
   excludeId,
   columns,
+  forSelf,
 }: {
   onOpen?: (ex: CatalogExercise) => void;
   onPick?: (ex: CatalogExercise) => void; // botón "Añadir" en cada tarjeta
@@ -38,6 +39,7 @@ export const ExerciseLibrary = ({
   onlyPatterns?: MovementPattern[]; // p. ej. para cambiar un ejercicio por otro del mismo patrón
   excludeId?: string; // el que se está cambiando
   columns?: number;
+  forSelf?: boolean; // lo usa el propio usuario ("mi material"), no su entrenador
 }) => {
   const { width } = useWindowDimensions();
   const [query, setQuery] = useState('');
@@ -104,7 +106,7 @@ export const ExerciseLibrary = ({
       {equipment && (
         <TouchableOpacity style={styles.mine} onPress={() => setOnlyMine((v) => !v)}>
           <Ionicons name={onlyMine ? 'checkbox' : 'square-outline'} size={18} color={Colors.accent} />
-          <Text style={styles.mineText}>{t('Only with the equipment they have')}</Text>
+          <Text style={styles.mineText}>{forSelf ? t('Only with my equipment') : t('Only with the equipment they have')}</Text>
         </TouchableOpacity>
       )}
 

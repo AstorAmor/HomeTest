@@ -17,7 +17,8 @@ export const foodName = (f: DietFood | undefined) => (!f ? '' : getLang() === 'e
 
 
 export const SLOT_LABEL: Record<MealSlot, string> = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
-export const slotLabel = (s: MealSlot) => t(SLOT_LABEL[s]);
+export const slotLabel = (s: MealSlot, prefs?: { customs?: string[] }) =>
+  prefs?.customs?.includes('ramadan') && (s === 'breakfast' || s === 'dinner') ? t(s === 'breakfast' ? 'Before dawn (suhoor)' : 'Breaking the fast (iftar)') : t(SLOT_LABEL[s]);
 export const SLOT_ICON: Record<MealSlot, string> = { breakfast: 'coffee-outline', lunch: 'silverware-fork-knife', dinner: 'weather-night', snack: 'food-apple-outline' };
 
 export const SECTION_LABEL: Record<ShopSection, string> = {

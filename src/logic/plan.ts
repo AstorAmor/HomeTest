@@ -179,7 +179,7 @@ function nutrition(p: PlanProfile, has: (g: string) => boolean, cond: (c: string
         ...base,
         title: t('Protein at every meal'),
         why: t('You want to perform better. Spreading protein across your meals helps your muscles recover and adapt to training.'),
-        how: [t('A palm-sized portion of protein at each meal'), t('A protein-rich snack after training'), ...alcoholTip, t('Carbs around your sessions')].slice(0, 3),
+        how: [t('A palm-sized portion of protein at each meal'), t('A full meal after training'), ...alcoholTip, t('Fruit and vegetables every day')].slice(0, 3),
       },
     };
   return {

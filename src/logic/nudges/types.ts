@@ -58,6 +58,8 @@ export interface NudgeRule {
   category: NudgeCategory;
   label: string; // nombre corto para los ajustes ("Inactivity reminder")
   cooldownDays: number; // mínimo entre dos avisos iguales
+  // Es una tarea (marcar una toma, apuntar algo): cuando deja de tocar, el aviso sale de la bandeja
+  resolvesWhenDone?: boolean;
   evaluate: (ctx: NudgeContext) => NudgeCheck;
 }
 

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { DEFAULT_DIET_PREFS } from '@/logic/dietPlanner';
+import { userFlags } from '@/data/userFlags';
 import type { DietPlan } from './types';
 
 // Menús semanales del usuario: los que se hace con el cuestionario y los que le manda su dietista.
@@ -129,3 +130,17 @@ export const shoppingChecks = {
   },
   set: (planId: string, ids: string[]) => AsyncStorage.setItem(shopKey(planId), JSON.stringify(ids)).catch(() => undefined),
 };
+
+// Lo que ha comido del menú cada día: user_flags "diet_eaten:YYYY-MM-DD" = { plan, meals } con los índices
+// de las comidas de ese día. Por fecha (no por día del menú), porque el menú se repite cada semana.
+const localDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const eatenKey = (d: Date) => `diet_eaten:${localDay(d)}`;
+export const eatenMeals = {
+  async get(planId: string, d = new Date()): Promise<number[]> {
+    const v = (await userFlags.get(eatenKey(d)).catch(() => undefined)) as { plan?: string; meals?: unknown } | undefined;
+    return v && v.plan === planId && Array.isArray(v.meals) ? (v.meals as number[]) : [];
+  },
+  set: (planId: string, meals: number[], d = new Date()) =>
+    userFlags.set(eatenKey(d), { plan: planId, meals } as unknown as Record<string, unknown>).catch(() => undefined),
+};
+

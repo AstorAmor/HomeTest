@@ -17,6 +17,7 @@ import {
   DISLIKES,
   MARKER_NAME,
   SAFETY,
+  CUSTOMS,
   SKILLS,
   SUPPLEMENTS,
 } from '@/data/diet/labels';
@@ -210,6 +211,11 @@ export const DietBuilderScreen = () => {
     },
     { title: 'What is your goal?', body: <Single options={DIET_GOALS} value={p.goal} onChange={(goal) => set({ goal })} /> },
     { title: 'How do you eat?', body: <Single options={DIET_TYPES} value={p.diet} onChange={(diet) => set({ diet })} /> },
+    {
+      title: 'Do you follow any religious or cultural food customs?',
+      hint: 'Optional. We only use it to adapt your menu.',
+      body: <Multi options={CUSTOMS} value={p.customs ?? []} onChange={(customs) => set({ customs })} noneLabel="No, none" />,
+    },
     {
       title: 'Any allergy or coeliac disease?',
       hint: 'These foods will never appear.',

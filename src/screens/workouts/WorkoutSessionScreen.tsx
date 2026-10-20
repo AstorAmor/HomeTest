@@ -13,7 +13,10 @@ import { BLOCK_ORDER, blockLabel, doseText, restText, sessionTitle } from '@/dat
 import { programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutExercise, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
 import { workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
-import { estimateMinutes } from '@/logic/workoutGenerator';
+import { defaultDose, estimateMinutes } from '@/logic/workoutGenerator';
+import { WorkoutModal } from '@/components/workouts/WorkoutModal';
+import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
+import type { CatalogExercise } from '@/data/workouts/types';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
 import { t, tn } from '@/i18n';
 
@@ -50,6 +53,7 @@ export const WorkoutSessionScreen = () => {
   const [setsDone, setSetsDone] = useState(0);
   const [intensity, setIntensity] = useState<WorkoutEntry['intensity']>('moderate');
   const [saved, setSaved] = useState(false);
+  const [swapAt, setSwapAt] = useState<number | null>(null); // índice en session.exercises
   const startedAt = useRef<number>(0);
 
   useEffect(() => {
@@ -264,7 +268,27 @@ export const WorkoutSessionScreen = () => {
   }
 
   // ── Lista de la sesión ──
-  const byBlock = BLOCK_ORDER.map((b) => ({ block: b, items: session.exercises.filter((e) => e.block === b) })).filter((g) => g.items.length);
+  const indexed = session.exercises.map((it, idx) => ({ it, idx }));
+  const byBlock = BLOCK_ORDER.map((b) => ({ block: b, items: indexed.filter((x) => x.it.block === b) })).filter((g) => g.items.length);
+  const swapping = swapAt !== null ? getExercise(session.exercises[swapAt]?.exerciseId) : undefined;
+
+  // Cambiar un ejercicio por otro del mismo tipo de movimiento (como los platos del menú). En los
+  // principales se mantienen las series y repeticiones; en calentamiento y vuelta a la calma, las suyas.
+  const swap = async (ex: CatalogExercise) => {
+    if (swapAt === null) return;
+    const old = session.exercises[swapAt];
+    const next: WorkoutProgram = {
+      ...program,
+      sessions: program.sessions.map((s) =>
+        s.id !== session.id
+          ? s
+          : { ...s, exercises: s.exercises.map((it, j) => (j === swapAt ? { ...it, exerciseId: ex.id, ...(old.block === 'main' ? {} : defaultDose(ex.id, program.prefs, old.block, s.focus)) } : it)) }
+      ),
+    };
+    setSwapAt(null);
+    setProgram(next);
+    await programRepository.save(next).catch(() => undefined);
+  };
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScreenHeader title={sessionTitle(session)} showBack backFallback="/workouts" />
@@ -284,11 +308,11 @@ export const WorkoutSessionScreen = () => {
         {byBlock.map((g) => (
           <View key={g.block} style={{ marginBottom: 8 }}>
             <Text style={styles.section}>{blockLabel(g.block)}</Text>
-            {g.items.map((it, i) => {
+            {g.items.map(({ it, idx }) => {
               const e = getExercise(it.exerciseId);
               if (!e) return null;
               return (
-                <TouchableOpacity key={`${it.exerciseId}-${i}`} style={styles.row} onPress={() => router.push({ pathname: '/exercise-info', params: { id: e.id } })}>
+                <TouchableOpacity key={`${it.exerciseId}-${idx}`} style={styles.row} onPress={() => router.push({ pathname: '/exercise-info', params: { id: e.id } })}>
                   <ExerciseLoop exercise={e} size={64} radius={12} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.rowName}>{exerciseName(e)}</Text>
@@ -298,7 +322,9 @@ export const WorkoutSessionScreen = () => {
                     </Text>
                     {it.note ? <Text style={styles.rowNote}>{it.note}</Text> : null}
                   </View>
-                  <Ionicons name="information-circle-outline" size={18} color={Colors.textMuted} />
+                  <TouchableOpacity style={styles.swap} onPress={() => setSwapAt(idx)} hitSlop={8} accessibilityLabel={t('Swap {name}', { name: exerciseName(e) })}>
+                    <Ionicons name="swap-horizontal" size={18} color={Colors.accent} />
+                  </TouchableOpacity>
                 </TouchableOpacity>
               );
             })}
@@ -311,11 +337,25 @@ export const WorkoutSessionScreen = () => {
           <Text style={styles.primaryText}>{t('Start')}</Text>
         </TouchableOpacity>
       </View>
+      <WorkoutModal visible={swapAt !== null} title={swapping ? t('Swap {name}', { name: exerciseName(swapping) }) : ''} onClose={() => setSwapAt(null)}>
+        {swapping && (
+          <>
+            <Text style={styles.swapHint}>
+              {program.source === 'professional'
+                ? t('Same type of movement, with your equipment. {name} will see the change.', { name: program.professionalName || t('Your trainer') })
+                : t('Same type of movement, with your equipment.')}
+            </Text>
+            <ExerciseLibrary forSelf onPick={swap} pickLabel={t('Use this one')} equipment={program.prefs.equipment} onlyPatterns={[swapping.pattern]} excludeId={swapping.id} />
+          </>
+        )}
+      </WorkoutModal>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  swap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
+  swapHint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 10 },
   safeArea: { flex: 1, backgroundColor: Colors.background },
   centered: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   content: { paddingHorizontal: 20, paddingBottom: 24 },

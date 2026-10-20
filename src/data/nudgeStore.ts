@@ -10,7 +10,7 @@ import { doseRepository, medicationRepository } from './medicationRepository';
 import { bloodPressureRepository } from './bloodPressureRepository';
 import { glucoseRepository } from './glucoseRepository';
 import { wearableRepository } from '@/wearables/wearableRepository';
-import { evaluateNudges, muteUntil } from '@/logic/nudges';
+import { evaluateNudges, muteUntil, pruneResolved } from '@/logic/nudges';
 import { MuteOption, NudgeContext, NudgeDecision, NudgeId, NudgePrefs } from '@/logic/nudges/types';
 
 // Bandeja de avisos de la app y preferencias de silencio (user_flags "nudge_inbox" y
@@ -129,13 +129,15 @@ export const nudgeStore = {
   // Evalúa las reglas ahora y guarda en la bandeja lo que toca enviar. Devuelve la bandeja y
   // la decisión de cada regla (con su motivo), que el modo desarrollador enseña para supervisar.
   async refresh(now = new Date()): Promise<{ inbox: InboxItem[]; decisions: NudgeDecision[] }> {
-    const [ctx, prefs, inbox] = await Promise.all([buildNudgeContext(now), this.getPrefs(), this.getInbox()]);
-    const decisions = evaluateNudges(ctx, prefs, inbox.map((i) => ({ id: i.id, at: i.at })));
+    const [ctx, prefs, stored] = await Promise.all([buildNudgeContext(now), this.getPrefs(), this.getInbox()]);
+    // Lo que ya está hecho (la toma marcada, la temperatura apuntada…) sale de la bandeja
+    const inbox = pruneResolved(stored, ctx);
+    const decisions = evaluateNudges(ctx, prefs, stored.map((i) => ({ id: i.id, at: i.at })));
     const fresh = decisions
       .filter((d) => d.status === 'send')
       .map((d): InboxItem => ({ id: d.id, at: now.toISOString(), title: d.title ?? d.label, body: d.body ?? '', route: d.route }));
     const next = fresh.length ? [...fresh, ...inbox] : inbox;
-    if (fresh.length) await this.saveInbox(next);
+    if (fresh.length || inbox.length !== stored.length) await this.saveInbox(next);
     return { inbox: next, decisions };
   },
 };

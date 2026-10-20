@@ -775,7 +775,7 @@ export const TodayScreen = () => {
                     <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={50} radius={14} iconSize={24} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.planCategory}>{t(PLAN_CATEGORIES.find((c) => c.id === KIND_CATEGORY[item.kind])!.title)}</Text>
-                      <Text style={styles.planTitle}>{planItemTitle(item, t)}</Text>
+                      <Text style={styles.planTitle}>{item.kind === 'nutrition' ? t('Tick off what you eat well today') : planItemTitle(item, t)}</Text>
                       <View style={styles.planBarTrack}>
                         <View
                           style={[
