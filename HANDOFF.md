@@ -1308,7 +1308,7 @@ Las notificaciones con la app cerrada van en otra sesión (rama propia, necesita
   fin del ejercicio y fin del descanso siguiente); al volver se cancelan y se quitan de la barra. El permiso se pide
   una vez al empezar la primera sesión guiada con sonido, o desde la hoja. Necesita un APK con expo-notifications
   (bffff89c o posterior); con ee97dd7d solo suena con la app delante.
-- **APK siguiente (1.1.0, SIN construir)**: `app.json` lleva ya `version` 1.1.0, los 4 WAV en `sounds` del plugin de
+- **APK 1.1.0 (construido el 2026-10-20 con OK del fundador, EAS build `01beee90`, commit ac1bff3 = código de e9045d3, solo Android)**: https://expo.dev/artifacts/eas/C9T1bG5kYt2Ng2FcUI3xRuytyx8FdGmA9Kigs2OGZLY.apk — sustituye a bffff89c (no hace falta instalar esa antes). Lo que lleva: `app.json` lleva ya `version` 1.1.0, los 4 WAV en `sounds` del plugin de
   expo-notifications (res/raw) y `SCHEDULE_EXACT_ALARM`. Un canal Android por tono (`entreno-campana`…; el sonido de un
   canal no se puede cambiar). La app sabe si la APK los lleva por `nativeApplicationVersion` ≥ 1.1.0 (`lockToneAvailable`
   en `data/workouts/bell.ts`); con bffff89c usa el canal `entreno` con el tono de avisos del móvil (crear un canal con
