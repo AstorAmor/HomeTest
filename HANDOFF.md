@@ -1248,3 +1248,31 @@ el fundador seguía viendo el menú bloqueado por la creatinina con la versión 
 - Precios: siguen siendo estimaciones de supermercado en España (€/kg en `scripts/diet-catalog.py`), sin factor por
   zona. Pendiente: el plan de «rendir más» sigue titulado «Proteína en cada comida» aunque la creatinina salga alta.
 - Notificaciones con la app cerrada: no hay todavía (hace falta expo-notifications y un APK nuevo).
+
+## 2026-10-20 — Recordatorios en el móvil con la app cerrada (rama `notificaciones-locales`, sin juntar ni publicar)
+
+- **Qué llega**: notificaciones **locales programadas** con `expo-notifications` (sin servidor ni push). Tomas de
+  medicación y suplementos a su hora (solo las que tienen el recordatorio encendido y sin silenciar; varias a la misma
+  hora van en un aviso), pesarse a la semana de la última pesada (08:00; si no, a la semana siguiente; tras 4
+  semanas se deja), temperatura basal cada mañana a la hora de costumbre (mediana de sus tomas, 07:30 si aún no hay
+  3; se deja tras 7 días sin apuntarla) y el check-in (la regla `checkin_missed_3d` evaluada a las 20:00 de los
+  próximos días). Lógica pura en `src/logic/nudges/phone.ts`, tests en `src/logic/__tests__/phoneReminders.test.ts`.
+- **Reglas**: respeta los interruptores de Notificaciones (temperatura y check-in usan los suyos; nuevo `weigh_in`,
+  «Pesarte cada semana»), los silencios, las secciones de la app y `MAX_NUDGES_PER_DAY` contando lo que ya salió ese
+  día en la bandeja y en el móvil (prioridad: temperatura, peso, check-in). Las tomas no cuentan para el máximo: son
+  alarmas que pide el usuario. Lo que saltó en el móvil también cuenta para la bandeja (`data/phoneReminderLog.ts`).
+- **Cuándo se reprograma**: al abrir la app, al volver a ella (como mucho cada 15 min) y tras cada cambio: los
+  repositorios y `userFlags.set` avisan por `data/dataEvents.ts` y `data/phoneReminders.ts` recalcula (una semana
+  vista, máx. 60 por el límite de 64 de iOS) y solo cancela/programa la diferencia (ids estables). Marcar una toma
+  cancela su aviso y lo quita de la barra si ya había salido. Al cerrar sesión se borra todo.
+- **Permiso**: nunca al arrancar. Sale el del sistema al encender recordatorios de un medicamento o la temperatura del
+  ciclo; tras pesarse o un check-in (con 3 días o más) primero un diálogo propio («¿Te avisamos en el móvil?»). Cada
+  motivo, como mucho una vez al mes. En Ajustes → Notificaciones, tarjeta «En el móvil» (Activar / Abrir ajustes /
+  Próximos avisos / Desactivar en este móvil). Además del permiso hace falta el «sí» en Kuova (en Android ≤ 12 el
+  permiso viene dado). Dos canales Android (`tomas` alta, `recordatorios` normal), con el texto oculto en la
+  pantalla bloqueada. Icono `assets/images/notification-icon.png` (la K blanca), color `#2E7D5B`.
+- **APK publicado sin el módulo**: `expo-notifications` se carga con `requireOptionalNativeModule` (como expo-print).
+  En el APK ee97dd7d y en la web no hace nada y sigue la bandeja como hasta ahora. Para que lleguen hace falta un APK
+  nuevo (`eas build --profile preview`, mismo keystore) y, en iOS, el build `testflight` (el plugin añade el
+  entitlement `aps-environment`; EAS lo sincroniza con el App ID). Sin `SCHEDULE_EXACT_ALARM`: Android puede
+  retrasar unos minutos un aviso con el móvil en reposo.

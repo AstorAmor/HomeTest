@@ -16,6 +16,7 @@ import { DoseLog, MedicationItem } from '@/types/medication';
 import { DoseRows } from '@/components/DoseRows';
 import { MedIcon } from '@/components/MedIcon';
 import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
+import { offerPhoneReminders } from '@/data/phoneReminders';
 
 
 // Medicación y suplementos: las tomas de hoy (marcar tomada u omitida), lo que toma de forma
@@ -48,6 +49,7 @@ export const MedicationsScreen = () => {
   };
   const setReminders = async (item: MedicationItem, on: boolean) => {
     await medicationRepository.update(item.id, { reminders: on, remindersMutedUntil: undefined });
+    if (on) void offerPhoneReminders('medication');
     setMenuFor(null);
     load();
   };

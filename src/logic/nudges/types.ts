@@ -24,6 +24,11 @@ export type NudgeId =
   | 'low_energy_weeks'
   | 'short_sleep_weeks';
 
+// Recordatorios que solo existen como notificación del móvil (sin regla en la bandeja), pero que se
+// silencian igual que los avisos: con su interruptor en Notificaciones (src/logic/nudges/phone.ts)
+export type PhoneOnlyReminderId = 'weigh_in';
+export type ReminderId = NudgeId | PhoneOnlyReminderId;
+
 export type NudgeCategory = 'engagement' | 'wellbeing' | 'cycle' | 'digestive' | 'urinary' | 'medication' | 'measurements';
 
 // Lo que sabe el motor en un momento dado (todo con fechas ISO)
@@ -74,11 +79,11 @@ export const MUTE_OPTIONS: { id: MuteOption; label: string }[] = [
 
 export interface NudgePrefs {
   // until = null → silenciado para siempre (hasta que lo reactive)
-  muted: Partial<Record<NudgeId, { until: string | null; setAt: string }>>;
+  muted: Partial<Record<ReminderId, { until: string | null; setAt: string }>>;
 }
 
 export interface NudgeLogEntry {
-  id: NudgeId;
+  id: ReminderId;
   at: string;
 }
 

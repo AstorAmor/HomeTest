@@ -1,5 +1,5 @@
 import { MAX_NUDGES_PER_DAY, NUDGE_RULES } from './rules';
-import { MuteOption, NudgeContext, NudgeDecision, NudgeId, NudgeLogEntry, NudgePrefs } from './types';
+import { MuteOption, NudgeContext, NudgeDecision, NudgeId, NudgeLogEntry, NudgePrefs, ReminderId } from './types';
 
 const DAY = 24 * 3600 * 1000;
 const fmt = (iso: string) => iso.slice(0, 10);
@@ -14,7 +14,7 @@ export function muteUntil(option: MuteOption, from: Date): string | null {
   return d.toISOString();
 }
 
-export function isMuted(prefs: NudgePrefs, id: NudgeId, now: Date) {
+export function isMuted(prefs: NudgePrefs, id: ReminderId, now: Date) {
   const m = prefs.muted[id];
   if (!m) return null;
   if (m.until === null) return m;

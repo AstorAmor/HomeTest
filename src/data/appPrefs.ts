@@ -124,6 +124,11 @@ export const appPrefs = {
     return prefs;
   },
 
+  // Las del usuario con sesión: si ya están cargadas no se vuelven a leer (ni se repintan las pantallas)
+  async current(): Promise<AppPrefs> {
+    return state.loadedFor === currentOwner() ? state.prefs : this.load();
+  },
+
   async save(prefs: AppPrefs): Promise<void> {
     const clean = sanitize(prefs);
     state = { prefs: clean, loadedFor: currentOwner() };

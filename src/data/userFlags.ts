@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
+import { emitDataChange } from './dataEvents';
 
 // Lo que el usuario ya ha hecho o visto en la app ("report_seen:<id>", "tip_dismissed:x"…),
 // para que la app actúe en coherencia (p. ej. no volver a enseñar "Your report is here!").
@@ -56,6 +57,7 @@ export const userFlags = {
     try {
       const local = await readLocal();
       await writeLocal({ ...local, [key]: value });
+      emitDataChange(`flag:${key}`); // mientras sube, leer ya devuelve lo nuevo (pending)
       if (isRemoteActive() && supabase) {
         await supabase
           .from('user_flags')
