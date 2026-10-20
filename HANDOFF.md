@@ -1402,3 +1402,28 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
 - Medicación: una hora añadida a mano no se quita al tocarla; lleva su ×. «¿A qué hora?» y «Añadir 09:00» en español.
 
 **Publicado ea28241** (2026-10-20 noche, OK del fundador «Haz commit de todo y publica con npm run release»): EAS Update grupo `018cfd62-9cf4-434c-aa8f-54efe51b4a41` (preview, android + ios) y las dos webs a la primera (`npm run release` entero, aunque solo había 1,4 GB libres).
+
+## 2026-10-21 — Notas del fundador: especialista, filas de resultados, originales, entrenamiento, edad KUOVA, permisos (sin commit)
+
+- **Habla con un especialista** (/talk-to-specialist, desde Tu plan y el plan del informe): era un prototipo en inglés
+  que no enviaba nada; ahora en español, eliges médico, dietista o entrenador y te lleva a /professionals?role=… (reserva
+  de verdad).
+- **Resultados**: una sola fila para «Para revisar» y «Todos tus valores» (`components/LabValueRow.tsx`): nombre con el
+  valor debajo, estado a la derecha («En rango», «Por encima»…), flecha para desplegar qué es, para qué se mide, qué
+  puede moverlo y qué ayuda (en rango: «Nada que cambiar…» si no hay regla del plan), y la barra de rango.
+- **Originales en Tus archivos**: al guardar una analítica escaneada se suben también las fotos o el PDF al bucket
+  privado `lab-files` (ya existía, esquema inicial; políticas solo del dueño) en `<usuario>/uploads/<id>/<n>.jpg|pdf`,
+  sin tabla nueva (se listan por carpeta). «Ver original» → /lab-original (fotos en la app, PDF con el visor del móvil).
+  Lo subido antes no tiene original. En la demo no se guarda. Pendiente (tarea en next-actions): la política de
+  privacidad debe decir que se guarda una copia (lleva nombre y datos del laboratorio); al borrar la cuenta habrá que
+  borrar también esa carpeta.
+- **Sigue aprendiendo → Entrenamiento**: tarjeta «Tu plan de entrenamiento · Construye tu plan» (o ir a tu programa)
+  como el menú en Alimentación (`components/workouts/TrainingPlanCard.tsx`). Sin bloquear todavía; cuando vaya con
+  suscripción, SubscribePopup y una fila en la tabla de planes.
+- **Edad KUOVA, ida y vuelta**: el «00,0» difuminado era un SVG con FeGaussianBlur (en Android se calcula por software
+  cada vez que se pinta: tirón al entrar y al volver a Mis datos). Ahora es una imagen ya pintada
+  (`scripts/kuova-age-blur.py` → `assets/images/kuova-age/blur_*`). Sin probar en el móvil.
+- **Permisos al abrir por primera vez** (`components/PermissionsIntro.tsx`, en el layout): ventana «Antes de empezar» con
+  avisos, Health Connect / Apple Salud, cámara y fotos, micrófono: para qué y cuándo se piden, y que se puede decir que
+  no. «Continuar» pide ya el de avisos (turnOnPhoneReminders); el resto sigue pidiéndose al usarlo. Una vez por
+  instalación (AsyncStorage `permissionsIntro.v1`); quien ya tenía la app también la ve una vez.

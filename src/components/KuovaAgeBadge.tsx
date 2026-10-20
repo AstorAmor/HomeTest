@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import Svg, { Circle, Defs, FeGaussianBlur, Filter, LinearGradient, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { Colors, withAlpha } from '@/constants/colors';
 import { KuovaAgeResult, PHENOAGE_INPUTS, PhenoAgeCoverage } from '@/logic/kuovaAge';
 import type { PhenoInput } from '@/logic/phenoAge';
@@ -48,7 +48,7 @@ export const KuovaAgeBadge = ({ size = 220, value, good = true, locked = false }
       </Svg>
       <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
         {locked ? (
-          <BlurredNumber size={size} color={light ? '#0E2A24' : '#FFFFFF'} />
+          <BlurredNumber size={size} light={light} />
         ) : (
           <Text
             style={[
@@ -65,29 +65,16 @@ export const KuovaAgeBadge = ({ size = 220, value, good = true, locked = false }
   );
 };
 
-// El número desenfocado, en SVG porque Text no admite blur en iOS (react-native-svg sí, en las tres
-// plataformas). Siempre "00,0": decorativo, no es la edad de nadie.
-const BlurredNumber = ({ size, color }: { size: number; color: string }) => (
-  <Svg width={size} height={size} viewBox="0 0 200 200">
-    <Defs>
-      <Filter id="kaBlur" x="-30%" y="-60%" width="160%" height="220%">
-        <FeGaussianBlur stdDeviation={4.5} />
-      </Filter>
-    </Defs>
-    <SvgText
-      x={100}
-      y={119}
-      fontSize={54.5}
-      fontWeight="800"
-      fontFamily={Platform.OS === 'web' ? 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' : undefined}
-      fill={color}
-      fillOpacity={0.85}
-      textAnchor="middle"
-      filter="url(#kaBlur)"
-    >
-      {num('00.0')}
-    </SvgText>
-  </Svg>
+// El número desenfocado. Ya viene pintado (scripts/kuova-age-blur.py): como SVG con FeGaussianBlur,
+// Android lo recalculaba por software cada vez que se pintaba la pantalla y la entrada y la vuelta de
+// la Edad KUOVA iban a tirones. Siempre "00,0" (o "00.0" en inglés): decorativo, no es la edad de nadie.
+const BLUR = {
+  dark: { comma: require('../../assets/images/kuova-age/blur_comma_dark.png'), dot: require('../../assets/images/kuova-age/blur_dot_dark.png') },
+  light: { comma: require('../../assets/images/kuova-age/blur_comma_light.png'), dot: require('../../assets/images/kuova-age/blur_dot_light.png') },
+};
+
+const BlurredNumber = ({ size, light }: { size: number; light: boolean }) => (
+  <Image source={BLUR[light ? 'light' : 'dark'][num('0.5').includes(',') ? 'comma' : 'dot']} style={{ width: size, height: size }} contentFit="contain" />
 );
 
 const andList = (items: string[]) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} ${t('and')} ${items[items.length - 1]}`);

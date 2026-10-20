@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { labUploadRepository } from '@/data/labUploads';
+import { hasOriginals, labUploadRepository } from '@/data/labUploads';
 import { userFlags } from '@/data/userFlags';
 import { labReports } from '@/utils/labReportView';
 import { dateLocale, t } from '@/i18n';
@@ -14,7 +14,8 @@ import { TAB, tabHref } from '@/constants/tabs';
 
 // "Your files": los informes que nos envía el laboratorio y todo lo que sube el usuario (escaneado
 // o PDF), en una lista. Cada archivo puede llevar el nombre que el usuario quiera dentro de la app
-// (user_flags "file_names"), sin importar cómo se llame fuera.
+// (user_flags "file_names"), sin importar cómo se llame fuera. Lo subido desde el 2026-10-21 guarda
+// también el original (foto o PDF): «Ver original» (/lab-original).
 
 const NAMES_KEY = 'file_names';
 
@@ -25,6 +26,7 @@ interface FileItem {
   sourceLabel: string;
   addedAt: string; // ISO o YYYY-MM-DD
   open: () => void;
+  original?: () => void; // ver la foto o el PDF que se subió
 }
 
 const fmt = (d: string) =>
@@ -47,13 +49,15 @@ export const FilesScreen = () => {
       addedAt: r.report.test_date,
       open: () => (r.id === 'current' ? router.push('/report-summary') : router.push({ pathname: '/lab-report', params: { id: r.id } })),
     }));
-    const mine: FileItem[] = uploads.map((u) => ({
+    const withOriginal = await Promise.all(uploads.map((u) => hasOriginals(u.id).catch(() => false)));
+    const mine: FileItem[] = uploads.map((u, i) => ({
       id: `upload:${u.id}`,
       defaultName: u.labName ? t('Lab report · {lab}', { lab: u.labName }) : t('Uploaded lab report'),
       source: 'upload',
       sourceLabel: t('Uploaded by you'),
       addedAt: u.createdAt,
       open: () => router.push({ pathname: '/progress', params: { upload: u.id } }),
+      original: withOriginal[i] ? () => router.push({ pathname: '/lab-original', params: { upload: u.id } }) : undefined,
     }));
     setFiles([...fromLab, ...mine].sort((a, b) => b.addedAt.localeCompare(a.addedAt)));
     setNames(saved && typeof saved === 'object' ? (saved as Record<string, string>) : {});
@@ -109,6 +113,12 @@ export const FilesScreen = () => {
                     <Text style={styles.meta}>
                       {f.source === 'lab' ? t('Received {date}', { date: fmt(f.addedAt) }) : t('Uploaded {date}', { date: fmt(f.addedAt) })} · {f.sourceLabel}
                     </Text>
+                    {f.original && (
+                      <TouchableOpacity onPress={f.original} hitSlop={8} style={styles.originalLink}>
+                        <Ionicons name="image-outline" size={14} color={Colors.accent} />
+                        <Text style={styles.originalText}>{t('See the original')}</Text>
+                      </TouchableOpacity>
+                    )}
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
@@ -153,6 +163,8 @@ const styles = StyleSheet.create({
   icon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   meta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  originalLink: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, alignSelf: 'flex-start' },
+  originalText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
   input: {
     flex: 1,
     color: Colors.textPrimary,

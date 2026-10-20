@@ -105,6 +105,11 @@ export const workoutsEs: Record<string, string> = {
   Stop: 'Parar',
   'Session complete!': '¡Sesión hecha!',
   '{m} min': '{m} min',
+  // 2026-10-21: «Construye tu plan» en Sigue aprendiendo → Entrenamiento
+  'Your training plan': 'Tu plan de entrenamiento',
+  'Go to my workouts': 'Ir a mis entrenamientos',
+  '{n} session': '{n} sesión',
+  '{n} sessions': '{n} sesiones',
   '{n} set': '{n} serie',
   '{n} sets': '{n} series',
   'How did it feel?': '¿Qué tal te ha ido?',

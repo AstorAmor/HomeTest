@@ -72,3 +72,52 @@ export const labUploadRepository = {
     return upload;
   },
 };
+
+// --- Originales (la foto o el PDF que se subió) ---------------------------------------------
+// En el bucket privado lab-files (políticas del esquema inicial: cada usuario solo lee y escribe en
+// su carpeta): <usuario>/uploads/<id de la subida>/<n>.jpg|pdf. Sin tabla: se listan por carpeta.
+// Las subidas anteriores al 2026-10-21 no los guardaron. En la demo (sin cuenta) no se guardan.
+const FILES_BUCKET = 'lab-files';
+const filesPrefix = (uploadId: string) => `${getCurrentUserId()}/uploads/${uploadId}`;
+
+export interface OriginalPage {
+  uri: string;
+  mimeType: string;
+}
+
+export interface OriginalFile {
+  name: string;
+  url: string; // firmada, 1 h
+  kind: 'image' | 'pdf';
+}
+
+export async function saveOriginals(uploadId: string, pages: OriginalPage[]): Promise<void> {
+  if (!isRemoteActive() || !supabase || !pages.length) return;
+  for (const [i, p] of pages.entries()) {
+    const pdf = p.mimeType === 'application/pdf';
+    const bytes = await (await fetch(p.uri)).arrayBuffer();
+    const { error } = await supabase.storage
+      .from(FILES_BUCKET)
+      .upload(`${filesPrefix(uploadId)}/${i + 1}.${pdf ? 'pdf' : 'jpg'}`, bytes, { contentType: pdf ? 'application/pdf' : 'image/jpeg', upsert: true });
+    if (error) throw new Error(error.message);
+  }
+}
+
+export async function originalFiles(uploadId: string): Promise<OriginalFile[]> {
+  if (!isRemoteActive() || !supabase) return [];
+  const { data, error } = await supabase.storage.from(FILES_BUCKET).list(filesPrefix(uploadId));
+  if (error || !data?.length) return [];
+  const names = data.map((f) => f.name).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  const out: OriginalFile[] = [];
+  for (const name of names) {
+    const { data: signed } = await supabase.storage.from(FILES_BUCKET).createSignedUrl(`${filesPrefix(uploadId)}/${name}`, 3600);
+    if (signed?.signedUrl) out.push({ name, url: signed.signedUrl, kind: name.endsWith('.pdf') ? 'pdf' : 'image' });
+  }
+  return out;
+}
+
+export async function hasOriginals(uploadId: string): Promise<boolean> {
+  if (!isRemoteActive() || !supabase) return false;
+  const { data } = await supabase.storage.from(FILES_BUCKET).list(filesPrefix(uploadId), { limit: 1 });
+  return !!data?.length;
+}

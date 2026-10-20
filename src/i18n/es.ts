@@ -3681,6 +3681,30 @@ export const es: Record<string, string> = {
   'For your age: {v}': 'Para tu edad: {v}',
   'For your steps, sex and weight: {v}': 'Para tus pasos, tu sexo y tu peso: {v}',
   'For your steps and height: {v}': 'Para tus pasos y tu altura: {v}',
+  // 2026-10-21: hablar con un especialista sobre tu plan
+  'See specialists': 'Ver especialistas',
+  // 2026-10-21: permisos, antes de que los pida el móvil
+  Microphone: 'Micrófono',
+  'Before we start': 'Antes de empezar',
+  'Kuova will ask your phone for a few permissions. They help us give you the best experience:': 'Kuova pedirá al móvil algunos permisos. Nos ayudan a darte la mejor experiencia:',
+  'For your medication reminders and the workout bell. We ask for this one now.': 'Para los recordatorios de tu medicación y el timbre del entrenamiento. Este te lo pedimos ahora.',
+  'To read the steps, sleep and heart rate from your watch. We ask when you connect it.': 'Para leer los pasos, el sueño y el pulso de tu reloj. Te lo pedimos cuando lo conectes.',
+  'Camera and photos': 'Cámara y fotos',
+  'To scan your lab reports and take photos of your meals. Only when you use them.': 'Para escanear tus informes y hacer fotos de tus comidas. Solo cuando lo uses.',
+  'For voice notes. Only while you record.': 'Para las notas de voz. Solo mientras grabas.',
+  'You are free to say no to any of them: Kuova keeps working, although some features may not be available. You can change them at any time in your phone settings.': 'Eres libre de decir que no a cualquiera: Kuova sigue funcionando, aunque algunas funciones podrían no estar disponibles. Puedes cambiarlos cuando quieras en los ajustes del móvil.',
+  // 2026-10-21: ver el original de lo subido
+  'See the original': 'Ver original',
+  'Original file': 'Archivo original',
+  'Open the PDF': 'Abrir el PDF',
+  'Page {n}': 'Página {n}',
+  'This report was uploaded before Kuova kept the originals, so only its values were saved.':
+    'Este informe se subió antes de que Kuova guardara los originales: solo se guardaron sus valores.',
+  'Nothing to change: it is within the lab range. Keep up your usual habits.': 'Nada que cambiar: está dentro del rango del laboratorio. Sigue con tus hábitos de siempre.',
+  'Who would you like to talk to about your plan?': '¿Con quién quieres hablar sobre tu plan?',
+  'Review your full report and the values to watch': 'Revisa tu informe completo y los valores que conviene vigilar',
+  'Turn your diet recommendations into a real plan': 'Convierte las recomendaciones de alimentación en un plan real',
+  'Build a training plan around your goals': 'Prepara un plan de entrenamiento según tus objetivos',
   // 2026-10-20: horas de la medicación
   'At what time?': '¿A qué hora?',
   'At what times? (pick 2)': '¿A qué horas? (elige 2)',

@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { BlobArt } from '@/components/BlobArt';
 import { Colors } from '@/constants/colors';
 import { findTopic } from '@/data/learning';
+import { TrainingPlanCard } from '@/components/workouts/TrainingPlanCard';
 import { t } from '@/i18n';
 
 // Tema de "Keep learning": introducción, ideas clave, una acción en la app y las fuentes.
@@ -24,6 +25,8 @@ export const LearnTopicScreen = () => {
           <BlobArt seed={topic.id} palette={topic.palette} icon={topic.icon} size={{ width: Math.min(width, 560) - 40, height: 180 }} iconSize={64} />
         </View>
         <Text style={styles.intro}>{t(topic.intro)}</Text>
+        {/* Entrenamiento: «Construye tu plan», como el menú en Alimentación */}
+        {topic.id === 'training' && <TrainingPlanCard />}
         {topic.lessons.map((l, i) => (
           <View key={l.title} style={styles.card}>
             <Text style={styles.num}>{i + 1}</Text>

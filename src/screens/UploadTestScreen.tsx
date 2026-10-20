@@ -21,7 +21,7 @@ import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
 import { prepareImage, chunk } from '@/utils/imageUpload';
 import { useRouter } from 'expo-router';
-import { labUploadRepository } from '@/data/labUploads';
+import { labUploadRepository, saveOriginals } from '@/data/labUploads';
 import { useSections } from '@/data/appPrefs';
 import { useFeature } from '@/data/access';
 import { SubscribePopup } from '@/components/SubscribePopup';
@@ -63,6 +63,11 @@ export const UploadTestScreen = () => {
       if (!id) {
         id = (await labUploadRepository.save(report)).id;
         setSavedId(id);
+        // El original (fotos o PDF) también, para verlo después en «Tus archivos». Sin esperar: si
+        // falla, los valores ya están guardados
+        saveOriginals(id, pages.map((p) => ({ uri: p.uri, mimeType: p.mimeType }))).catch((e) =>
+          console.warn('Lab upload: originals not saved', e instanceof Error ? e.message : e),
+        );
       }
       router.push({ pathname, params: pathname === '/progress' ? { upload: id, view: 'progress' } : { upload: id } });
     } catch (e) {

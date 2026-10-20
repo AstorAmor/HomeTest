@@ -2,49 +2,38 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
+import type { ProfessionalRole } from '@/data/servicesMock';
+import { t } from '@/i18n';
+
+// «Habla con un especialista sobre tu plan» (Tu plan y el plan del informe): eliges con quién y te
+// lleva a sus especialistas en /professionals, donde se reserva de verdad.
 
 interface SpecialistOption {
-  id: string;
+  id: ProfessionalRole;
   title: string;
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
 }
 
 const OPTIONS: SpecialistOption[] = [
-  {
-    id: 'doctor',
-    title: 'Doctor',
-    subtitle: 'Review your full report and escalated markers',
-    icon: 'medkit-outline',
-  },
-  {
-    id: 'dietitian',
-    title: 'Dietitian',
-    subtitle: 'Turn your diet recommendations into a real plan',
-    icon: 'nutrition-outline',
-  },
-  {
-    id: 'trainer',
-    title: 'Personal trainer',
-    subtitle: 'Build a training plan around your goals',
-    icon: 'barbell-outline',
-  },
+  { id: 'doctor', title: 'Doctor', subtitle: 'Review your full report and the values to watch', icon: 'medkit-outline' },
+  { id: 'dietitian', title: 'Dietitian', subtitle: 'Turn your diet recommendations into a real plan', icon: 'nutrition-outline' },
+  { id: 'trainer', title: 'Personal trainer', subtitle: 'Build a training plan around your goals', icon: 'barbell-outline' },
 ];
 
 export const TalkToSpecialistScreen = () => {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [requested, setRequested] = useState(false);
+  const router = useRouter();
+  const [selectedId, setSelectedId] = useState<ProfessionalRole | null>(null);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScreenHeader title="Talk to a Specialist" showBack />
+      <ScreenHeader title={t('Talk to a specialist')} showBack />
 
       <View style={styles.content}>
-        <Text style={styles.intro}>
-          Pick who you'd like to talk to. This is a prototype — no request is sent yet.
-        </Text>
+        <Text style={styles.intro}>{t('Who would you like to talk to about your plan?')}</Text>
 
         <View style={styles.list}>
           {OPTIONS.map((option) => {
@@ -53,48 +42,30 @@ export const TalkToSpecialistScreen = () => {
               <TouchableOpacity
                 key={option.id}
                 style={[styles.card, selected && styles.cardSelected]}
-                onPress={() => {
-                  setSelectedId(option.id);
-                  setRequested(false);
-                }}
+                onPress={() => setSelectedId(option.id)}
                 activeOpacity={0.8}
               >
                 <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
-                  <Ionicons
-                    name={option.icon}
-                    size={24}
-                    color={selected ? Colors.background : Colors.accent}
-                  />
+                  <Ionicons name={option.icon} size={24} color={selected ? Colors.background : Colors.accent} />
                 </View>
                 <View style={styles.textWrap}>
-                  <Text style={styles.cardTitle}>{option.title}</Text>
-                  <Text style={styles.cardSubtitle}>{option.subtitle}</Text>
+                  <Text style={styles.cardTitle}>{t(option.title)}</Text>
+                  <Text style={styles.cardSubtitle}>{t(option.subtitle)}</Text>
                 </View>
-                {selected && (
-                  <Ionicons name="checkmark-circle" size={22} color={Colors.accent} />
-                )}
+                {selected && <Ionicons name="checkmark-circle" size={22} color={Colors.accent} />}
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {requested ? (
-          <View style={styles.confirmation}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
-            <Text style={styles.confirmationText}>
-              Request noted — a real booking flow isn't wired up in this prototype yet.
-            </Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.submitButton, !selectedId && styles.submitButtonDisabled]}
-            disabled={!selectedId}
-            onPress={() => setRequested(true)}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.submitButtonText}>Request appointment</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[styles.submitButton, !selectedId && styles.submitButtonDisabled]}
+          disabled={!selectedId}
+          onPress={() => selectedId && router.push({ pathname: '/professionals', params: { role: selectedId } })}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.submitButtonText}>{t('See specialists')}</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -112,8 +83,8 @@ const styles = StyleSheet.create({
   },
   intro: {
     color: Colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 20,
     marginBottom: 20,
   },
   list: {
@@ -170,19 +141,5 @@ const styles = StyleSheet.create({
     color: Colors.background,
     fontSize: 16,
     fontWeight: '700',
-  },
-  confirmation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.accentSoft,
-    borderRadius: 14,
-    padding: 14,
-  },
-  confirmationText: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: 13,
-    lineHeight: 18,
   },
 });
