@@ -40,6 +40,14 @@ const menuItems: MenuItem[] = [
     iconFamily: 'ionicons',
     icon: 'card-outline',
   },
+  // Lo que ves en la app (también en Ajustes): el tutorial lo señala aquí
+  {
+    id: 'experience',
+    title: 'Configure my experience',
+    subtitle: 'What you use Kuova for, what you see and how each part works',
+    iconFamily: 'ionicons',
+    icon: 'options-outline',
+  },
   {
     id: 'professionals',
     title: 'Professionals',
@@ -138,6 +146,7 @@ export const MoreScreen = () => {
 
   const handlePress = (id: string) => {
     if (id === 'settings') return router.push('/settings');
+    if (id === 'experience') return router.push('/app-sections');
     if (id === 'profile') return router.push('/profile');
     if (id === 'subscription') return router.push('/subscription');
     if (id === 'evidence') return router.push('/evidence');

@@ -12,6 +12,7 @@ export type BristolType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export interface BowelMovement {
   at: string; // ISO
   consistency?: BristolType;
+  color?: StoolColor;
   urgent?: boolean; // "tuve que ir corriendo"
 }
 
@@ -56,11 +57,19 @@ export type UrineColor = 'clear' | 'pale' | 'yellow' | 'dark' | 'amber' | 'brown
 // Prueba de volumen de una micción con una botella de 500 ml: hasta dónde se llenó
 export type VoidVolume = 'quarter' | 'half' | 'three_quarters' | 'full';
 
+// Una vez concreta, con su hora (como BowelMovement). Cuentan dentro de `count`, que nunca es menor
+export interface UrineVisit {
+  at: string; // ISO
+  color?: UrineColor;
+  burning?: boolean;
+}
+
 export interface UrineEntry {
   id: string;
   fecha: string; // ISO del día del apunte (mediodía local)
   createdAt: string;
   count?: number; // veces que ha orinado ese día
+  visits?: UrineVisit[];
   nightCount?: number; // veces que se ha levantado por la noche a orinar
   color?: UrineColor;
   burning?: boolean; // escozor o dolor al orinar

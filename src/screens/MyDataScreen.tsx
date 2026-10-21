@@ -369,7 +369,8 @@ export const MyDataScreen = () => {
         </View>}
 
         {/* Perfil genético: antecedentes familiares ("Know your roots") y, más adelante, resultados */}
-        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
+        <TourTarget id="mydata.genetics" scroll={tourScroll} style={styles.geneticSlot}>
+        <TouchableOpacity style={[styles.genetic, styles.geneticInSlot]} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
           <View style={styles.geneticIcon}>
             <MaterialCommunityIcons name="dna" size={20} color={Colors.gold} />
           </View>
@@ -379,6 +380,7 @@ export const MyDataScreen = () => {
           </View>
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
+        </TourTarget>
 
         <TouchableOpacity style={styles.genetic} onPress={() => router.push('/files')} activeOpacity={0.85}>
           <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.accent, 0.12) }]}>
@@ -509,6 +511,9 @@ const styles = StyleSheet.create({
   bioAgeMore: { color: Colors.accent, fontSize: 13, fontWeight: '800', marginTop: 10 },
   bioAgeDiff: { fontSize: 17, fontWeight: '800', marginTop: 14 },
   bioAgeMargin: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800' },
+  // El tutorial señala el bloque genético: los márgenes van en su marco para que el hueco se ajuste
+  geneticSlot: { marginHorizontal: 20, marginBottom: 20 },
+  geneticInSlot: { marginHorizontal: 0, marginBottom: 0 },
   genetic: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -19,10 +19,12 @@ import { DailyPoint, DailySeries, localDayKey, pickPerDay, toDailySeries } from 
 
 export * from './seriesLogic';
 
-// Deja solo los últimos `days` días de cada métrica.
+// Deja solo los últimos `days` días de calendario de cada métrica (hoy incluido). Por fecha y no por
+// número de registros: con huecos, «los últimos 7» podían ser de hace semanas.
 const lastDays = (series: DailySeries, days: number): DailySeries => {
+  const since = localDayKey(new Date(Date.now() - (days - 1) * 86400000));
   const out: DailySeries = {};
-  for (const metric of Object.keys(series) as WearableMetric[]) out[metric] = series[metric]!.slice(-days);
+  for (const metric of Object.keys(series) as WearableMetric[]) out[metric] = series[metric]!.filter((p) => p.date >= since);
   return out;
 };
 

@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, Pressable, Platform, useWindowDimensions } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
-import { getTarget, onTourStart, RegisteredTarget, setTourActive, takeTourPending, TOUR_STEPS } from './tourStore';
+import { getTarget, onTourStart, RegisteredTarget, setTourActive, stepAvailable, takeTourPending, TOUR_STEPS, TourStep } from './tourStore';
 import { t } from '@/i18n';
 
 // El tutorial en marcha: oscurece la pantalla menos el elemento de cada paso (cuatro franjas alrededor),
 // con un bocadillo encima o debajo. Tocar el elemento o «Siguiente» pasa al siguiente; «Saltar» lo
-// cierra. Cambia de pestaña él solo y baja hasta el elemento si está más abajo. Va dentro de las
-// pestañas (MainTabsScreen), que le dan `goToTab`.
+// cierra. Cambia de pestaña él solo y baja hasta el elemento si está más abajo. Un paso con `route` abre
+// esa pantalla encima (Tus objetivos, Digestión, Hidratación) para enseñar cómo se edita, y la cierra al
+// pasar a otro. Va dentro de las pestañas (MainTabsScreen), que le dan `goToTab`; se pinta en un Modal,
+// por encima de todo, y mientras abre o cierra una pantalla se quita (en iOS una pantalla modal no se
+// abre por debajo de otro Modal).
 
 type Rect = { x: number; y: number; width: number; height: number };
 
@@ -66,7 +70,10 @@ function scrollBackToTop(target: RegisteredTarget) {
 
 export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number) => void; enabled?: boolean }) => {
   const { width: W, height: H } = useWindowDimensions();
+  const router = useRouter();
   const [index, setIndex] = useState<number | null>(null);
+  const [navigating, setNavigating] = useState(false);
+  const routeNow = useRef<string | null>(null); // la pantalla que ha abierto el tutorial
   const [rect, setRect] = useState<Rect | null>(null);
   const [busy, setBusy] = useState(false);
   const run = useRef(0); // para que un paso que aún se está preparando no pise al siguiente
@@ -79,17 +86,43 @@ export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number
     scrolled.current.clear();
   };
 
+  // Abre la pantalla del paso (o cierra la que abrió) si hace falta
+  const openRoute = useCallback(
+    async (route: TourStep['route']) => {
+      const key = route ? JSON.stringify(route) : null;
+      if (routeNow.current === key) return;
+      setNavigating(true);
+      if (routeNow.current) {
+        if (router.canGoBack()) router.back();
+        routeNow.current = null;
+        await wait(450);
+      }
+      if (route) {
+        router.push(route);
+        routeNow.current = key;
+        await wait(700);
+      }
+      setNavigating(false);
+    },
+    [router],
+  );
+
   const end = useCallback(() => {
     run.current++;
     setIndex(null);
     setRect(null);
+    setNavigating(false);
+    if (routeNow.current) {
+      routeNow.current = null;
+      if (router.canGoBack()) router.back();
+    }
     // Antes de cambiar de pestaña: en la web, una pantalla oculta ya no se deja mover
     resetScrolled();
     tabNow.current = null;
     current.current = null;
     goToTab(0);
     setTourActive(false);
-  }, [goToTab]);
+  }, [goToTab, router]);
 
   const go = useCallback(
     async (from: number) => {
@@ -97,17 +130,34 @@ export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number
       setTourActive(true);
       for (let i = from; i < TOUR_STEPS.length; i++) {
         const step = TOUR_STEPS[i];
+        if (step.route && !stepAvailable(i)) continue; // su tarjeta no está en Hoy: no se abre
         setBusy(true);
         setRect(null);
         current.current = null;
         setIndex(i);
-        if (tabNow.current !== step.tab) resetScrolled();
-        tabNow.current = step.tab;
-        goToTab(step.tab);
+        await openRoute(step.route);
+        if (me !== run.current) return;
+        if (!step.route) {
+          if (tabNow.current !== step.tab) resetScrolled();
+          tabNow.current = step.tab;
+          goToTab(step.tab);
+        }
         await wait(450);
         if (me !== run.current) return;
-        const target = getTarget(step.target);
-        if (!target) continue; // sección apagada: al siguiente
+        let target = getTarget(step.target);
+        // Una pantalla recién abierta puede tardar un poco en pintar lo que señala
+        for (let k = 0; !target && step.route && k < 5; k++) {
+          await wait(300);
+          if (me !== run.current) return;
+          target = getTarget(step.target);
+        }
+        if (!target && !step.always) continue; // sección apagada: al siguiente
+        if (!target) {
+          // Un paso que sale aunque no esté su tarjeta (la medicación): el bocadillo solo
+          setRect(null);
+          setBusy(false);
+          return;
+        }
         if (target.scroll) scrolled.current.add(target);
         await bringIntoView(target, H);
         await wait(Platform.OS === 'web' ? 450 : 380);
@@ -122,7 +172,7 @@ export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number
       }
       end();
     },
-    [goToTab, H, end],
+    [goToTab, H, end, openRoute],
   );
 
   // Si algo de la pantalla carga tarde y lo mueve, el hueco lo sigue
@@ -150,9 +200,12 @@ export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number
     return off;
   }, [enabled, go]);
 
-  if (index === null) return null;
+  if (index === null || navigating) return null;
   const step = TOUR_STEPS[index];
-  const last = index === TOUR_STEPS.length - 1;
+  // El contador y el último paso, sin los que se saltan (secciones apagadas en «Configura tu experiencia»)
+  const shown = TOUR_STEPS.filter((s, i) => i === index || stepAvailable(i));
+  const position = shown.indexOf(step) + 1;
+  const last = position === shown.length;
   const next = () => (last ? end() : go(index + 1));
 
   const hole = rect ? { x: rect.x - PAD, y: rect.y - PAD, w: rect.width + PAD * 2, h: rect.height + PAD * 2 } : null;
@@ -180,7 +233,7 @@ export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number
         )}
         {!busy && (
           <View style={[styles.bubble, { left: 16, width: Math.min(W - 32, 420) }, bubblePos]}>
-            <Text style={styles.counter}>{t('{a} of {b}', { a: index + 1, b: TOUR_STEPS.length })}</Text>
+            <Text style={styles.counter}>{t('{a} of {b}', { a: position, b: shown.length })}</Text>
             <Text style={styles.title}>{t(step.title)}</Text>
             <Text style={styles.text}>{t(step.text)}</Text>
             <View style={styles.buttons}>

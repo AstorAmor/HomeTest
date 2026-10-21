@@ -68,11 +68,54 @@ describe('computeReadiness', () => {
     );
     expect(r).not.toBeNull();
     expect(r!.missing).toEqual(['hrv']);
-    // sueño 100 (peso 0,4) y pulso como siempre 70 (peso 0,25), repartidos: (40 + 17,5) / 0,65 ≈ 88
-    expect(r!.score).toBe(88);
+    // sueño cumplido 90 (peso 0,4) y pulso como siempre 65 (peso 0,25), repartidos: (36 + 16,25) / 0,65 ≈ 80
+    expect(r!.score).toBe(80);
   });
   it('ignores yesterday when today has no data yet', () => {
     expect(computeReadiness({ sleep_duration: [{ date: day(-1), value: 480 }] }, now)).toBeNull();
+  });
+
+  // Cuatro semanas con algo de ruido normal y hoy, el valor que se pase
+  const history = (today: number, base: number, noise: number) =>
+    Array.from({ length: 29 }, (_, i) => ({ date: day(i - 28), value: i === 28 ? today : base + (i % 2 ? noise : -noise) }));
+
+  it('a normal day scores in the middle, not near the top', () => {
+    const r = computeReadiness(
+      { sleep_duration: [{ date: day(0), value: 420 }], hrv: history(45, 45, 4), resting_heart_rate: history(58, 58, 1.5) },
+      now,
+    )!;
+    expect(r.score).toBeGreaterThanOrEqual(60);
+    expect(r.score).toBeLessThan(80);
+  });
+
+  it('a slightly better day does not max out (the old formula gave 100)', () => {
+    const r = computeReadiness(
+      { sleep_duration: [{ date: day(0), value: 480 }], hrv: history(52, 45, 4), resting_heart_rate: history(56, 58, 1.5) },
+      now,
+    )!;
+    expect(r.hrv!).toBeLessThan(100);
+    expect(r.score).toBeLessThan(95);
+  });
+
+  it('sleep is scored against your own goal', () => {
+    const series = { sleep_duration: [{ date: day(0), value: 420 }], resting_heart_rate: history(58, 58, 1.5) };
+    expect(computeReadiness(series, now, { sleepNeedMin: 420 })!.sleep).toBe(90);
+    expect(computeReadiness(series, now, { sleepNeedMin: 480 })!.sleep).toBeLessThan(90);
+  });
+
+  it('with only a few days of history a good day counts less', () => {
+    const short = Array.from({ length: 6 }, (_, i) => ({ date: day(i - 5), value: i === 5 ? 52 : 57 }));
+    const r = computeReadiness({ sleep_duration: [{ date: day(0), value: 450 }], resting_heart_rate: short }, now)!;
+    expect(r.restingHr!).toBeLessThan(85);
+  });
+
+  it('in the luteal phase a slightly higher pulse is not penalised', () => {
+    const series = { sleep_duration: [{ date: day(0), value: 450 }], resting_heart_rate: history(60, 58, 1.5) };
+    const plain = computeReadiness(series, now)!;
+    const luteal = computeReadiness(series, now, { luteal: true })!;
+    expect(luteal.restingHr!).toBeGreaterThan(plain.restingHr!);
+    expect(luteal.cycleAdjusted).toBe(true);
+    expect(plain.cycleAdjusted).toBe(false);
   });
 });
 

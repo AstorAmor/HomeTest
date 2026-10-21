@@ -1,5 +1,5 @@
 import { dateLocale, t, tn } from '@/i18n';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,9 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
 import { AppIcon } from '@/components/HealthIcons';
 import { AddMeasurementButton, MetricHero } from '@/components/MetricDetailParts';
+import { WaterCard } from '@/components/WaterCard';
+import { TourTarget } from '@/components/tour/TourTarget';
+import { makeTourScroll } from '@/components/tour/tourStore';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
@@ -148,6 +151,7 @@ export const DigestiveScreen = () => {
   const { part } = useLocalSearchParams<{ part?: 'gut' | 'bladder' }>();
   const showGut = part !== 'bladder';
   const showBladder = part !== 'gut';
+  const tourScroll = useMemo(makeTourScroll, []);
   const [bowel, setBowel] = useDeepState<BowelEntry[]>([]);
   const [urine, setUrine] = useDeepState<UrineEntry[]>([]);
   const [volume, setVolume] = useDeepState<VolumeCheckSuggestion>(null);
@@ -237,7 +241,7 @@ export const DigestiveScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={part === 'gut' ? t('Digestion') : part === 'bladder' ? t('Hydration') : t('Digestion and hydration')} showBack />
         {/* Como las fichas de VFC o glucosa: título en negrita y, debajo, el icono y lo de hoy */}
         {part === 'gut' && (() => {
@@ -259,7 +263,7 @@ export const DigestiveScreen = () => {
           return (
             <MetricHero
               icon="water-outline"
-              color={Colors.gold}
+              color={Colors.water}
               value={e ? t(hydrationFromUrine(e).label) : '—'}
               sub={e?.count != null ? `${t('Today')} · ${tn(e.count, '{n} time', '{n} times')}` : t('Nothing logged today yet')}
             />
@@ -269,7 +273,7 @@ export const DigestiveScreen = () => {
           {part === 'gut'
             ? t('How your tummy feels and your stools. When you note something, we ask what you ate before.')
             : part === 'bladder'
-              ? t('A quick daily note on your urine: it says a lot about how hydrated you are.')
+              ? t('What you drink and a quick note on your urine: together they say a lot about how hydrated you are.')
               : t('A quick daily note on your digestion and urine.')}{' '}
           {t('Each week we tell you what we notice, and you can check any time.')}
         </Text>
@@ -285,6 +289,7 @@ export const DigestiveScreen = () => {
           const pattern = gutAnalysis?.patterns.find((p) => p.confidence !== 'hint');
           return (
             <>
+              <TourTarget id="digestive.gut" scroll={tourScroll} inset={20}>
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardTitle}>{t('Digestion')}</Text>
@@ -306,6 +311,7 @@ export const DigestiveScreen = () => {
                 {gut.sample && <Text style={styles.sampleText}>{t('Sample month: log your own days to see yours.')}</Text>}
               </View>
               <AddMeasurementButton onPress={() => router.push('/log-digestion')} label={t('I feel something')} />
+              </TourTarget>
               <TouchableOpacity style={styles.wholeDay} onPress={markDayOk} disabled={dayOkToday} activeOpacity={0.85}>
                 <Ionicons name={dayOkToday ? 'checkmark-circle' : 'happy-outline'} size={18} color={Colors.ok} />
                 <Text style={styles.wholeDayText}>
@@ -397,12 +403,17 @@ export const DigestiveScreen = () => {
           </>
         )}
 
-        {/* Orina */}
+        {/* Agua y orina */}
         {showBladder && (
           <>
-          <View style={[styles.card, showGut && { marginTop: 22 }]}>
+          {showGut && <View style={{ height: 22 }} />}
+          <TourTarget id="digestive.water" scroll={tourScroll} inset={20}>
+            <WaterCard />
+          </TourTarget>
+          <TourTarget id="digestive.urine" scroll={tourScroll} inset={20}>
+          <View style={styles.card}>
             <View style={styles.cardHeader}>
-              {!part && <AppIcon name="water-outline" size={20} color={Colors.gold} />}
+              {!part && <AppIcon name="water-outline" size={20} color={Colors.water} />}
               <Text style={styles.cardTitle}>{t('Urine')}</Text>
               <Text style={styles.cardMeta}>{t('Last 7 days')}</Text>
             </View>
@@ -422,13 +433,14 @@ export const DigestiveScreen = () => {
           </View>
           <AddMeasurementButton onPress={() => router.push({ pathname: '/log-urine', params: { quick: '1' } })} label={t('Add measurement (just now)')} />
           <WholeDayButton onPress={() => router.push('/log-urine')} />
+          </TourTarget>
           {volume && (
             <TouchableOpacity
               style={styles.volumeCard}
               onPress={() => router.push('/volume-check')}
               activeOpacity={0.85}
             >
-              <Ionicons name="beaker-outline" size={20} color={Colors.gold} />
+              <Ionicons name="beaker-outline" size={20} color={Colors.water} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>{volume.kind === 'collect_24h' ? t('Measure a whole day') : t('Quick volume check')}</Text>
                 <Text style={styles.obsBody}>

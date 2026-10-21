@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { TodayScreen } from './TodayScreen';
@@ -10,6 +10,7 @@ import { MoreScreen } from './MoreScreen';
 import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
 import { TourOverlay } from '@/components/tour/TourOverlay';
+import { useAuth } from '@/context/AuthContext';
 
 // Pestañas con deslizamiento lateral (también al tocarlas). Las cinco se quedan preparadas
 // (offscreenPageLimit): sin eso, Android suelta las que no se ven y al volver a Hoy la tenía que pintar
@@ -23,6 +24,10 @@ export const MainTabsScreen = () => {
   const handleTabPress = (index: number) => {
     pagerRef.current?.setPage(index);
   };
+
+  // Sin sesión (se ha cerrado o ha caducado) no se queda dentro: al inicio de sesión
+  const { isLoggedIn, initializing } = useAuth();
+  if (!initializing && !isLoggedIn) return <Redirect href="/" />;
 
   return (
     <View style={styles.container}>

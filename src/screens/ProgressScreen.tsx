@@ -1,5 +1,5 @@
 import { dateLocale, t } from '@/i18n';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -63,6 +63,13 @@ export const ProgressScreen = () => {
   const [result, setResult] = useState<ProgressResult | null>(null);
   const [showOthers, setShowOthers] = useState(false);
   const [tab, setTab] = useState<'results' | 'progress'>(view === 'progress' ? 'progress' : 'results');
+  // Tocar «En rango», «Para revisar» o «Sin referencia» baja a su grupo
+  const scrollRef = useRef<ScrollView>(null);
+  const groupY = useRef<Partial<Record<'in' | 'out' | 'none', number>>>({});
+  const jumpTo = (g: 'in' | 'out' | 'none') => {
+    const y = groupY.current[g];
+    if (y != null) scrollRef.current?.scrollTo({ y: Math.max(0, y - 12), animated: true });
+  };
 
   useReloadOnFocus(
     useCallback(async () => {
@@ -89,7 +96,7 @@ export const ProgressScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.lab)} />
         <Text style={styles.subhead}>
           {upload.testDate ? shortDate(upload.testDate) : t('Uploaded test')} · {upload.labName ?? t('User upload')}
@@ -111,14 +118,19 @@ export const ProgressScreen = () => {
         {tab === 'results' && (
           <>
             <View style={styles.summary}>
-              <Stat value={counts.in} label={t('In range')} color={Colors.ok} />
-              <Stat value={counts.out} label={t('To review')} color={counts.out ? Colors.attention : Colors.textSecondary} />
-              {counts.none > 0 && <Stat value={counts.none} label={t('No reference')} color={Colors.textSecondary} />}
+              <Stat value={counts.in} label={t('In range')} color={Colors.ok} onPress={() => jumpTo('in')} />
+              <Stat value={counts.out} label={t('To review')} color={counts.out ? Colors.attention : Colors.textSecondary} onPress={() => jumpTo('out')} />
+              {counts.none > 0 && <Stat value={counts.none} label={t('No reference')} color={Colors.textSecondary} onPress={() => jumpTo('none')} />}
             </View>
-            <OutOfRangeSummary report={upload.data} />
-            <Text style={styles.allTitle}>{t('All your values')}</Text>
-            <View style={styles.table}>
-              <LabValuesList report={upload.data} />
+            {/* Agrupados por estado, en el mismo orden que los bloques de arriba */}
+            <View onLayout={(e) => (groupY.current.out = e.nativeEvent.layout.y)}>
+              <OutOfRangeSummary report={upload.data} />
+            </View>
+            <View style={styles.table} onLayout={(e) => (groupY.current.in = e.nativeEvent.layout.y)}>
+              <LabValuesList report={upload.data} group="in" title={t('In range')} />
+            </View>
+            <View style={styles.table} onLayout={(e) => (groupY.current.none = e.nativeEvent.layout.y)}>
+              <LabValuesList report={upload.data} group="none" title={t('No reference')} />
             </View>
           </>
         )}
@@ -200,11 +212,11 @@ export const ProgressScreen = () => {
   );
 };
 
-const Stat = ({ value, label, color }: { value: number; label: string; color: string }) => (
-  <View style={styles.stat}>
+const Stat = ({ value, label, color, onPress }: { value: number; label: string; color: string; onPress?: () => void }) => (
+  <TouchableOpacity style={styles.stat} onPress={onPress} disabled={!onPress || value === 0} activeOpacity={0.8} accessibilityRole="button">
     <Text style={[styles.statValue, { color }]}>{value}</Text>
     <Text style={styles.statLabel}>{label}</Text>
-  </View>
+  </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({

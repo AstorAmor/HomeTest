@@ -7,8 +7,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { BristolShape, ColorSwatches } from '@/components/BathroomVisuals';
+import { DayCountStepper, VisitsSection } from '@/components/BathroomVisits';
 import { bowelRepository, dayKey, entryForDay, noonOf } from '@/data/bathroomRepository';
-import { BowelEntry, BRISTOL_TYPES, BristolType, STOOL_COLORS, StoolColor } from '@/types/bathroom';
+import { BowelEntry, BowelMovement, BRISTOL_TYPES, BristolType, STOOL_COLORS, StoolColor } from '@/types/bathroom';
 import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 
@@ -19,9 +20,8 @@ const CAUSES: Partial<Record<StoolColor, string[]>> = {
 };
 const NONE = 'None of these';
 
-const COUNTS = [0, 1, 2, 3, 4].map((n) => ({ id: n, label: n === 4 ? '4+' : String(n) }));
-
-// Apunte del día: cuántas veces, color, consistencia y notas. Si ya existe, se edita.
+// Apunte del día: cuántas veces (con − y +), cada vez suelta con su hora (BathroomVisits), color,
+// consistencia y notas. Si ya existe, se edita.
 // Con ?quick=1, "una vez, ahora": solo color y consistencia, y se suma una vez al día de hoy.
 export const LogBowelScreen = () => {
   const router = useRouter();
@@ -30,6 +30,7 @@ export const LogBowelScreen = () => {
   const day = quick ? dayKey(new Date()) : (params.day ?? dayKey(new Date()));
   const [existing, setExisting] = useState<BowelEntry | null>(null);
   const [count, setCount] = useState<number | null>(null);
+  const [visits, setVisits] = useState<BowelMovement[]>([]);
   const [color, setColor] = useState<StoolColor | undefined>();
   const [consistency, setConsistency] = useState<BristolType | undefined>();
   const [cause, setCause] = useState<string | undefined>();
@@ -44,6 +45,7 @@ export const LogBowelScreen = () => {
       setExisting(e);
       if (quick) return; // una vez más: lo de esta vez empieza en blanco
       setCount(e.count);
+      setVisits(e.movements ?? []);
       setColor(e.color);
       setConsistency(e.consistency);
       setCause(e.explainedBy);
@@ -66,10 +68,11 @@ export const LogBowelScreen = () => {
           ...(color ? { color, explainedBy: cause && cause !== NONE ? cause : undefined } : {}),
           ...(consistency ? { consistency } : {}),
           // Y su hora, para cruzarla con las comidas (src/logic/gutPatterns.ts)
-          movements: [...(existing?.movements ?? []), { at: new Date().toISOString(), consistency, urgent: urgent || undefined }],
+          movements: [...(existing?.movements ?? []), { at: new Date().toISOString(), consistency, color, urgent: urgent || undefined }],
         }
       : {
           count: total,
+          movements: visits,
           color: total > 0 ? color : undefined,
           consistency: total > 0 ? consistency : undefined,
           explainedBy: total > 0 && cause && cause !== NONE ? cause : undefined,
@@ -115,7 +118,24 @@ export const LogBowelScreen = () => {
         {!quick && (
           <>
             <Text style={styles.label}>{tr('How many times did you go today?')}</Text>
-            <ChoiceChips options={COUNTS} value={count} onChange={setCount} center />
+            <DayCountStepper count={count} min={visits.length} max={20} onChange={setCount} />
+            <VisitsSection
+              kind="bowel"
+              day={day}
+              visits={visits}
+              max={20}
+              onChange={(next, saved) => {
+                setVisits(next as BowelMovement[]);
+                setCount((c) => Math.max(c ?? 0, next.length));
+                // Lo de la última vez pasa al día, como en «una vez, ahora» (y así sale la pregunta del color)
+                if (saved?.color) {
+                  setColor(saved.color as StoolColor);
+                  setCause(undefined);
+                }
+                if (saved?.consistency) setConsistency(saved.consistency);
+              }}
+            />
+            {total != null && total > 0 && <Text style={styles.dayHeading}>{tr('The day in general')}</Text>}
           </>
         )}
 
@@ -283,5 +303,6 @@ const styles = StyleSheet.create({
   },
   urgentOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
   typeTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  dayHeading: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 28 },
   typeHint: { color: Colors.textSecondary, fontSize: 12, marginTop: 1 },
 });

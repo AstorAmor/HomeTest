@@ -158,6 +158,8 @@ export function dietTargets(prefs: DietPrefs, labs: LabFlag[]): DietTargets {
   }
   kcal = Math.round(kcal / 50) * 50;
   if (prefs.kcalTarget) kcal = prefs.kcalTarget;
+  // Si el dietista fija los tres macros y no las kcal, las kcal salen de ellos (4, 4 y 9 kcal por gramo)
+  else if (prefs.proteinTarget && prefs.carbsTarget && prefs.fatTarget) kcal = prefs.proteinTarget * 4 + prefs.carbsTarget * 4 + prefs.fatTarget * 9;
   const perKg = prefs.goal === 'gain' ? 1.6 : prefs.goal === 'lose' || prefs.goal === 'perform' ? 1.4 : 1.0;
   let protein = prefs.weightKg ? prefs.weightKg * perKg : (kcal * 0.18) / 4;
   if (prefs.diet === 'vegan') protein *= 1.1;
@@ -165,9 +167,14 @@ export function dietTargets(prefs: DietPrefs, labs: LabFlag[]): DietTargets {
   // Riñón: proteína moderada (sin peso, ~10 % de la energía). Lo que fije el dietista manda.
   if (c.kidney) protein = Math.min(protein, Math.round(prefs.weightKg ? prefs.weightKg * KIDNEY_PROTEIN_PER_KG : (kcal * 0.1) / 4));
   if (prefs.proteinTarget) protein = prefs.proteinTarget;
+  // Grasa: el 30 % de la energía (dentro del 20-35 % de las guías); hidratos, lo que queda
+  const fat = prefs.fatTarget || Math.round((kcal * 0.3) / 9);
+  const carbs = prefs.carbsTarget || Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   return {
     kcal,
     protein,
+    carbs,
+    fat,
     fiberMin: f.has('ldl') || f.has('glucose') || f.has('liver') ? 30 : female ? 25 : 30,
     satFatMaxPct: f.has('ldl') ? 7 : 10,
     sodiumMax: f.has('bp') ? 1500 : 2000,
@@ -280,6 +287,74 @@ export function slotShares(snacks: number, ramadan = false): Partial<Record<Meal
   return { breakfast: 0.25, lunch: 0.4, dinner: 0.35 };
 }
 
+export interface MealMacros {
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+// Cuántas veces sale cada comida en el día (los tentempiés pueden ser dos)
+export const slotCount = (prefs: Pick<DietPrefs, 'snacks' | 'customs'>, slot: MealSlot) =>
+  slot !== 'snack' ? 1 : isRamadan(prefs) ? (prefs.snacks > 0 ? 1 : 0) : Math.min(2, prefs.snacks);
+
+// Lo que le toca a cada comida: su parte de las kcal (la del dietista o la de siempre, reajustadas para
+// que el día sume el 100 %) y de cada macro (lo que haya puesto el dietista en gramos, o su parte). Si
+// fija los tres macros de una comida, sus kcal salen de ellos.
+export function mealTargets(prefs: DietPrefs, targets: DietTargets): Partial<Record<MealSlot, MealMacros>> {
+  const base = slotShares(prefs.snacks, isRamadan(prefs));
+  const slots = Object.keys(base) as MealSlot[];
+  const raw = (s: MealSlot) => {
+    const own = prefs.meals?.[s]?.share;
+    return own != null && own > 0 ? own / 100 : base[s] ?? 0;
+  };
+  const total = slots.reduce((a, s) => a + raw(s) * slotCount(prefs, s), 0) || 1;
+  const out: Partial<Record<MealSlot, MealMacros>> = {};
+  for (const s of slots) {
+    const share = raw(s) / total;
+    const m = prefs.meals?.[s];
+    const protein = m?.protein || targets.protein * share;
+    const carbs = m?.carbs || (targets.carbs ?? 0) * share;
+    const fat = m?.fat || (targets.fat ?? 0) * share;
+    const kcal = m?.protein && m?.carbs && m?.fat ? protein * 4 + carbs * 4 + fat * 9 : targets.kcal * share;
+    out[s] = { kcal, protein, carbs, fat };
+  }
+  return out;
+}
+
+// ¿Ha fijado el dietista algún macro aparte de la proteína (del día o de una comida)? Solo entonces los
+// platos se eligen también por cómo se reparten sus macros
+export const macrosCustom = (prefs: DietPrefs) =>
+  !!(prefs.carbsTarget || prefs.fatTarget || Object.values(prefs.meals ?? {}).some((m) => m && (m.protein || m.carbs || m.fat)));
+
+// Cuánto se aleja el reparto de un plato (proteína, hidratos y grasa, en % de sus kcal) del de la comida
+export function macroMismatch(r: Recipe, t: MealMacros): number {
+  const n = r.nutrients;
+  const rk = Math.max(1, n.protein * 4 + n.carbs * 4 + n.fat * 9);
+  const tk = Math.max(1, t.protein * 4 + t.carbs * 4 + t.fat * 9);
+  return Math.abs((n.protein * 4) / rk - (t.protein * 4) / tk) + Math.abs((n.carbs * 4) / rk - (t.carbs * 4) / tk) + Math.abs((n.fat * 9) / rk - (t.fat * 9) / tk);
+}
+
+// La ración (de 0,75 en adelante, de 0,25 en 0,25) que más se acerca a lo de esa comida: a sus kcal y,
+// si el dietista ha fijado macros, también a sus gramos de proteína, hidratos y grasa
+export function bestPortion(r: Recipe, t: MealMacros | undefined, max: number, useMacros: boolean): number {
+  if (!t) return 1;
+  const n = r.nutrients;
+  let best = 1;
+  let bestErr = Infinity;
+  for (let p = 0.75; p <= max + 1e-9; p += 0.25) {
+    let err = Math.abs(n.kcal * p - t.kcal) / Math.max(t.kcal, 50);
+    if (useMacros)
+      err +=
+        (Math.abs(n.protein * p - t.protein) / Math.max(t.protein, 10) + Math.abs(n.carbs * p - t.carbs) / Math.max(t.carbs, 10) + Math.abs(n.fat * p - t.fat) / Math.max(t.fat, 5)) / 3;
+    if (err < bestErr - 1e-9) {
+      bestErr = err;
+      best = p;
+    }
+  }
+  return best;
+}
+
 function rng(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -291,8 +366,7 @@ function rng(seed: number) {
   };
 }
 
-// Raciones de 0,75 a 1,75 (hasta 2,25 en Ramadán: dos comidas tienen que llegar a las calorías del día)
-const roundPortion = (p: number, max = 1.75) => Math.min(max, Math.max(0.75, Math.round(p * 4) / 4));
+// Raciones de 0,75 a 1,75 (hasta 2,25 en Ramadán: dos comidas tienen que llegar a las calorías del día): bestPortion
 
 export interface GeneratedDiet {
   days: DietDay[];
@@ -308,8 +382,9 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
   const rand = rng(prefs.seed * 7919 + 17);
   const relaxed = new Set<'time' | 'budget' | 'skill'>();
   const ramadan = isRamadan(prefs);
-  const shares = slotShares(prefs.snacks, ramadan);
-  const maxPortion = ramadan ? 2.25 : 1.75;
+  const mt = mealTargets(prefs, targets);
+  const useMacros = macrosCustom(prefs);
+  const maxPortion = maxPortionFor(prefs, targets.kcal);
   const slots: MealSlot[] = ramadan
     ? ['breakfast', 'dinner', ...(prefs.snacks > 0 ? (['snack'] as MealSlot[]) : [])]
     : ['breakfast', 'lunch', 'dinner', ...Array.from({ length: Math.min(2, prefs.snacks) }, () => 'snack' as MealSlot)];
@@ -369,7 +444,7 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
       const cands = pool[slot] ?? [];
       const daysLeft = 7 - day;
       // Sal que ya lleva el día (con la ración que tendrá cada plato)
-      const est = (r: Recipe, sl: MealSlot) => roundPortion((targets.kcal * (shares[sl] ?? 0.1)) / r.nutrients.kcal, maxPortion);
+      const est = (r: Recipe, sl: MealSlot) => bestPortion(r, mt[sl], maxPortion, useMacros);
       const sodiumSoFar = chosen.reduce((a, c) => a + getRecipe(c.recipeId)!.nutrients.sodium * est(getRecipe(c.recipeId)!, c.slot), 0);
       const sodiumLeft = targets.sodiumMax - sodiumSoFar;
       const potassiumSoFar = chosen.reduce((a, c) => a + getRecipe(c.recipeId)!.nutrients.potassium * est(getRecipe(c.recipeId)!, c.slot), 0);
@@ -390,6 +465,8 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
         s -= Math.max(0, r.nutrients.sodium * est(r, slot) - sodiumLeft / Math.max(1, slotsLeft)) / 300;
         if (targets.potassiumMax) s -= Math.max(0, r.nutrients.potassium * est(r, slot) - potassiumLeft / Math.max(1, slotsLeft)) / 150;
         if (caution.kidney) s -= Math.max(0, r.nutrients.protein * est(r, slot) - proteinLeft / Math.max(1, slotsLeft)) / 3;
+        // Macros fijados por el dietista: mejor los platos que ya se reparten como esa comida
+        if (useMacros && mt[slot]) s -= macroMismatch(r, mt[slot]!) * 8;
         const last = lastDay.get(r.id);
         if (last !== undefined && day - last < 2) s -= 3;
         const has = (f: string) => r.flags.includes(f as any);
@@ -419,10 +496,10 @@ export function generateDiet(prefs: DietPrefs, labs: LabFlag[]): GeneratedDiet {
         lastDay.set(best.id, day);
       }
     }
-    // Raciones: cada comida hacia su parte de las calorías del día
+    // Raciones: cada comida hacia su parte de las calorías (y de los macros, si los ha fijado el dietista)
     for (const m of chosen) {
       const r = getRecipe(m.recipeId)!;
-      m.portion = roundPortion((targets.kcal * (shares[m.slot] ?? 0.1)) / r.nutrients.kcal, maxPortion);
+      m.portion = bestPortion(r, mt[m.slot], maxPortion, useMacros);
     }
     // Las sobras, con la misma ración que el día que se cocinó
     for (const m of chosen.filter((x) => x.leftover)) {
@@ -545,7 +622,58 @@ export function alternativesForSlot(prefs: DietPrefs, labs: LabFlag[], slot: Mea
 export function portionFor(recipeId: string, slot: MealSlot, prefs: DietPrefs, labs: LabFlag[]): number {
   const r = getRecipe(recipeId);
   if (!r) return 1;
-  return roundPortion((dietTargets(prefs, labs).kcal * (slotShares(prefs.snacks, isRamadan(prefs))[slot] ?? 0.1)) / r.nutrients.kcal, isRamadan(prefs) ? 2.25 : 1.75);
+  const targets = dietTargets(prefs, labs);
+  return bestPortion(r, mealTargets(prefs, targets)[slot], maxPortionFor(prefs, targets.kcal), macrosCustom(prefs));
+}
+
+// Ración máxima: 1,75 (2,25 en Ramadán). Con muchas kcal (un deportista a 4.000 o 5.000) crece con ellas,
+// hasta 4: si no, el menú se quedaba muy por debajo de lo que pide el dietista.
+export const maxPortionFor = (prefs: Pick<DietPrefs, 'customs'>, kcal: number) =>
+  Math.min(4, Math.max(isRamadan(prefs) ? 2.25 : 1.75, Math.ceil((kcal / 2100) * 1.75 * 4) / 4));
+
+// Las preferencias con lo que el dietista haya fijado para un día (lo que no, lo de la semana)
+export function prefsForDay(prefs: DietPrefs, day?: Pick<DietDay, 'targets'>): DietPrefs {
+  const d = day?.targets;
+  if (!d) return prefs;
+  return { ...prefs, kcalTarget: d.kcal || prefs.kcalTarget, proteinTarget: d.protein || prefs.proteinTarget, carbsTarget: d.carbs || prefs.carbsTarget, fatTarget: d.fat || prefs.fatTarget };
+}
+
+// Las raciones de un día hechas a sus objetivos, sin cambiar los platos (al cambiar kcal o macros)
+export function fitDay(day: DietDay, prefs: DietPrefs, labs: LabFlag[]): DietDay {
+  const p = prefsForDay(prefs, day);
+  const targets = dietTargets(p, labs);
+  const mt = mealTargets(p, targets);
+  const max = maxPortionFor(p, targets.kcal);
+  const use = macrosCustom(p);
+  return {
+    ...day,
+    meals: day.meals.map((m) => {
+      const r = getRecipe(m.recipeId);
+      return r ? { ...m, portion: bestPortion(r, mt[m.slot], max, use) } : m;
+    }),
+  };
+}
+
+export const fitPortions = (days: DietDay[], prefs: DietPrefs, labs: LabFlag[]) => days.map((d) => fitDay(d, prefs, labs));
+
+// Lo que trae de media cada comida del menú (para compararlo con lo que le toca)
+export function slotAverages(days: DietDay[]): Partial<Record<MealSlot, MealMacros>> {
+  const sums: Partial<Record<MealSlot, MealMacros & { n: number }>> = {};
+  for (const d of days)
+    for (const m of d.meals) {
+      const r = getRecipe(m.recipeId);
+      if (!r) continue;
+      const acc = (sums[m.slot] ??= { kcal: 0, protein: 0, carbs: 0, fat: 0, n: 0 });
+      acc.kcal += r.nutrients.kcal * m.portion;
+      acc.protein += r.nutrients.protein * m.portion;
+      acc.carbs += r.nutrients.carbs * m.portion;
+      acc.fat += r.nutrients.fat * m.portion;
+      acc.n++;
+    }
+  const out: Partial<Record<MealSlot, MealMacros>> = {};
+  for (const [s, v] of Object.entries(sums) as [MealSlot, MealMacros & { n: number }][])
+    out[s] = { kcal: v.kcal / v.n, protein: v.protein / v.n, carbs: v.carbs / v.n, fat: v.fat / v.n };
+  return out;
 }
 
 // ── Por qué el menú es así (texto fuente en inglés; el español en dietEs.ts) ──

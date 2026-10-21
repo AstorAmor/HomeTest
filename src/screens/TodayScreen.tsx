@@ -30,15 +30,19 @@ import { BlobArt } from '@/components/BlobArt';
 import { KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { TourTarget } from '@/components/tour/TourTarget';
-import { makeTourScroll } from '@/components/tour/tourStore';
-import { DailyGoals, effectiveGoals, suggestedGoals } from '@/logic/dailyGoals';
-import { dailyGoalsStore } from '@/data/dailyGoals';
+import { WaterQuick } from '@/components/WaterQuick';
+import { makeTourScroll, TourScroll } from '@/components/tour/tourStore';
+import { DailyGoals, effectiveGoals, goalsShown, GoalsShown, suggestedGoals } from '@/logic/dailyGoals';
+import { dailyGoalsStore, goalsShownStore } from '@/data/dailyGoals';
+import { useWaterToday } from '@/hooks/useWaterToday';
+import { litres } from '@/data/waterRepository';
+import { TummyFaces } from '@/components/TummyFaces';
 import { weightRepository } from '@/data/weightRepository';
 import { WeighAdvice, weighAdvice } from '@/logic/weight';
 import { useSections } from '@/data/appPrefs';
 import { WelcomePrompts } from '@/components/WelcomePrompts';
 import { InboxItem, nudgeStore } from '@/data/nudgeStore';
-import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
+import { addBowelVisit, addUrineVisit, bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { hydrationFromUrine, HYDRATION_SCALE } from '@/logic/bathroom';
 import { BowelEntry, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
 import { GaugeBar } from '@/components/GaugeBar';
@@ -141,7 +145,7 @@ export const TodayScreen = () => {
   // Web del paciente en escritorio: Hoy se queda con lo del día; agenda, estado y biomarcadores ya están en el resumen
   const web = useWebShell();
   // Today trae lo nuevo de Health Connect al abrirse (como mucho cada 10 minutos)
-  const { series, isSample, sources, hasAny } = useDailyWearables(14, { autoSync: true });
+  const { series, isSample, sources, hasAny } = useDailyWearables(29, { autoSync: true });
   const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(initialBiomarkers());
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
   const [savedGoals, setSavedGoals] = useDeepState<Partial<DailyGoals> | null>(null);
@@ -194,6 +198,16 @@ export const TodayScreen = () => {
 
   // Peso: el último y cuándo toca pesarse (una vez por semana)
   const [weight, setWeight] = useState<WeighAdvice | null>(null);
+  const [savedShown, setSavedShown] = useState<Partial<GoalsShown> | null>(null);
+  const water = useWaterToday();
+  // Veces al baño de hoy (heces y orina); el «+» de sus tarjetas suma una y vuelve a leer
+  const reloadBathroom = useCallback(
+    () =>
+      Promise.all([bowelRepository.getAll(), urineRepository.getAll()])
+        .then(([b, u]) => setBathroomToday({ bowel: entryForDay(b, dayKey(new Date())) ?? null, urine: entryForDay(u, dayKey(new Date())) ?? null }))
+        .catch(() => undefined),
+    [setBathroomToday],
+  );
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
     labUploadRepository
@@ -232,6 +246,7 @@ export const TodayScreen = () => {
       })
       .catch(() => setDosesToday([]));
     dailyGoalsStore.get().then(setSavedGoals);
+    goalsShownStore.get().then(setSavedShown);
     weightRepository
       .getAll()
       .then((all) => setWeight(weighAdvice(all)))
@@ -243,9 +258,7 @@ export const TodayScreen = () => {
         setThermo(last && Date.now() - new Date(last.fecha).getTime() < 24 * 3600 * 1000 ? last.valor : null);
       })
       .catch(() => setThermo(null));
-    Promise.all([bowelRepository.getAll(), urineRepository.getAll()])
-      .then(([b, u]) => setBathroomToday({ bowel: entryForDay(b, dayKey(new Date())) ?? null, urine: entryForDay(u, dayKey(new Date())) ?? null }))
-      .catch(() => undefined);
+    reloadBathroom();
     const [p, checkIns, cycleEntries, strength, meals, workoutList, mealList, mindfulList, mindfulThisWeek] =
       await Promise.all([
         profileRepository.get(),
@@ -280,11 +293,10 @@ export const TodayScreen = () => {
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
-  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, setBathroomToday, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, reloadBathroom, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);
 
   useReloadOnFocus(load);
 
-  const readiness = computeReadiness(series);
   // Lo de HOY (si el último dato es de ayer, hoy aún no hay: 0). En la demo, el último día de ejemplo.
   const ofToday = (p?: DailyPoint[]) => (isSample ? latest(p) : todayValue(p));
   const steps = ofToday(series.steps) ?? 0;
@@ -310,6 +322,34 @@ export const TodayScreen = () => {
   const plan = buildPlan(profile);
   // Objetivos de los círculos de «Tu estado de hoy»: los del plan o los que haya puesto el usuario
   const goals = effectiveGoals(suggestedGoals(plan, profile).goals, savedGoals);
+  // Frente a su objetivo de sueño y, en la fase lútea (con reglas apuntadas), sin restar lo propio del ciclo
+  const readiness = computeReadiness(series, new Date(), { sleepNeedMin: goals.sleepMin, luteal: !!cycle && !cycle.isSample && cycle.phase === 'luteal' });
+  // Los círculos que ha elegido (Tus objetivos del día). Si el reloj no da kcal y la distancia no está,
+  // la distancia ocupa el sitio de las kcal, como antes
+  const shownGoals = goalsShown(savedShown, show('bladder'));
+  const distanceForKcal = shownGoals.activeKcal && calories == null && distanceKm != null && !shownGoals.distanceM;
+  const rings = [
+    shownGoals.steps && { key: 'steps', icon: <Ionicons name="footsteps" size={16} color={Colors.sky} />, color: Colors.sky, progress: steps / goals.steps, value: steps.toLocaleString(dateLocale()), label: t('Steps') },
+    shownGoals.activeKcal && !distanceForKcal && {
+      key: 'kcal',
+      icon: <Ionicons name="flame" size={16} color={Colors.coral} />,
+      color: Colors.coral,
+      progress: (calories ?? 0) / goals.activeKcal,
+      value: calories != null ? `${calories}` : '—',
+      label: t('Active kcal'),
+    },
+    (shownGoals.distanceM || distanceForKcal) && {
+      key: 'distance',
+      icon: <Ionicons name="navigate-outline" size={16} color={Colors.amber} />,
+      color: Colors.amber,
+      progress: (distanceKm ?? 0) / goals.distanceM,
+      value: distanceKm != null ? (distanceKm / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 }) : '—',
+      label: t('km'),
+    },
+    shownGoals.sleepMin && { key: 'sleep', icon: <Ionicons name="moon" size={15} color={Colors.violet} />, color: Colors.violet, progress: sleep / goals.sleepMin, value: sleep ? formatSleep(sleep) : '—', label: t('Sleep') },
+    shownGoals.waterMl && { key: 'water', icon: <Ionicons name="water" size={16} color={Colors.water} />, color: Colors.water, progress: water.total / goals.waterMl, value: litres(water.total), label: t('Water') },
+  ].filter((r) => !!r) as { key: string; icon: React.ReactNode; color: string; progress: number; value: string; label: string }[];
+  const ringSize = rings.length >= 5 ? 52 : rings.length === 4 ? 58 : 64;
   const achievements = computeAchievements({
     dailySteps: series.steps ?? [],
     ...achievementData,
@@ -460,6 +500,7 @@ export const TodayScreen = () => {
         )}
 
         {show('medication') && (
+          <TourTarget id="today.medication" scroll={tourScroll} inset={20}>
           <View style={styles.medCard}>
           <ZoneChangeBanner onChanged={load} />
           <View style={styles.medHeader}>
@@ -504,6 +545,7 @@ export const TodayScreen = () => {
             </View>
           )}
           </View>
+          </TourTarget>
         )}
 
         {cycle && show('cycle') && (
@@ -543,6 +585,9 @@ export const TodayScreen = () => {
                       : t('No sleep or heart rate from today yet. Open your watch app so it syncs.')}
                 </Text>
               )}
+              {readiness?.cycleAdjusted && (
+                <Text style={styles.cardFootnote}>{t('Luteal phase: a slightly higher resting heart rate and lower HRV are normal now, so they do not count against you.')}</Text>
+              )}
               {readiness && readiness.missing.length > 0 && (
                 <Text style={styles.cardFootnote}>
                   {t('Worked out without: {parts}', {
@@ -551,44 +596,20 @@ export const TodayScreen = () => {
                 </Text>
               )}
               {hasAny && (
+                <TourTarget id="today.goals" scroll={tourScroll} style={styles.ringsTap}>
                 <TouchableOpacity style={styles.ringsTap} activeOpacity={0.8} onPress={() => router.push('/daily-goals')} accessibilityLabel={t('Your daily goals')}>
-                <View style={styles.smallRings}>
-                  <SmallRing
-                    icon={<Ionicons name="footsteps" size={16} color={Colors.sky} />}
-                    color={Colors.sky}
-                    progress={steps / goals.steps}
-                    value={steps.toLocaleString(dateLocale())}
-                    label={t('Steps')}
-                  />
-                  {calories != null || distanceKm == null ? (
-                    <SmallRing
-                      icon={<Ionicons name="flame" size={16} color={Colors.coral} />}
-                      color={Colors.coral}
-                      progress={(calories ?? 0) / goals.activeKcal}
-                      value={calories != null ? `${calories}` : '—'}
-                      label={t('Active kcal')}
-                    />
-                  ) : (
-                    <SmallRing
-                      icon={<Ionicons name="navigate-outline" size={16} color={Colors.coral} />}
-                      color={Colors.coral}
-                      progress={distanceKm / goals.distanceM}
-                      value={(distanceKm / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 })}
-                      label={t('km')}
-                    />
-                  )}
-                  <SmallRing
-                    icon={<Ionicons name="moon" size={15} color={Colors.violet} />}
-                    color={Colors.violet}
-                    progress={sleep / goals.sleepMin}
-                    value={sleep ? formatSleep(sleep) : '—'}
-                    label={t('Sleep')}
-                  />
-                </View>
+                {rings.length > 0 && (
+                  <View style={styles.smallRings}>
+                    {rings.map(({ key, ...r }) => (
+                      <SmallRing key={key} size={ringSize} {...r} />
+                    ))}
+                  </View>
+                )}
                 <Text style={styles.goalsLink}>
                   <Ionicons name="flag-outline" size={12} color={Colors.accent} /> {t('Your daily goals')}
                 </Text>
                 </TouchableOpacity>
+                </TourTarget>
               )}
               <Text style={styles.sourceText}>
                 {hasAny
@@ -630,6 +651,8 @@ export const TodayScreen = () => {
               status={t(bp.statusLabel)}
               color={statusColor(bp.status)}
               onPress={() => router.push('/blood-pressure-detail')}
+              tourId="today.bp"
+              tourScroll={tourScroll}
             />
           )}
           <BiomarkerCard
@@ -725,6 +748,11 @@ export const TodayScreen = () => {
                 status={t(status)}
                 color={tone}
                 onPress={() => router.push({ pathname: '/digestive', params: { part: 'gut' } })}
+                tourId="today.gut"
+                tourScroll={tourScroll}
+                above={<TummyFaces />}
+                onAdd={() => addBowelVisit().then(reloadBathroom)}
+                addLabel={t('Add one bathroom visit')}
               />
             );
           })()}
@@ -736,12 +764,17 @@ export const TodayScreen = () => {
               <BiomarkerCard
                 name={t('Hydration')}
                 icon="water-outline"
-                iconColor={Colors.gold}
+                iconColor={Colors.water}
                 value={u?.count != null ? String(u.count) : '—'}
-                unit={t('times')}
+                unit={u?.count === 1 ? t('time') : t('times')}
                 status={t(h.label)}
                 color={tone}
                 onPress={() => router.push({ pathname: '/digestive', params: { part: 'bladder' } })}
+                tourId="today.hydration"
+                tourScroll={tourScroll}
+                above={<WaterQuick goalMl={goals.waterMl} />}
+                onAdd={() => addUrineVisit().then(reloadBathroom)}
+                addLabel={t('Add one time you peed')}
               >
                 {/* Regla de hidratación: del color más claro al más oscuro de la orina */}
                 <GaugeBar
@@ -781,8 +814,8 @@ export const TodayScreen = () => {
                 const color = PLAN_COLOR[item.kind];
                 const progress = planProgress(item.kind, item.target);
                 return (
+                  <TourTarget key={item.kind} id={`today.plan.${item.kind}`} scroll={tourScroll}>
                   <TouchableOpacity
-                    key={item.kind}
                     style={styles.planRow}
                     onPress={() => onPlanPress(item.kind)}
                     activeOpacity={0.85}
@@ -813,6 +846,7 @@ export const TodayScreen = () => {
                       color={item.kind === 'steps' || item.kind === 'sleep' ? Colors.textMuted : color}
                     />
                   </TouchableOpacity>
+                  </TourTarget>
                 );
               })}
             </View>
@@ -843,7 +877,7 @@ export const TodayScreen = () => {
 
         {/* Keep learning */}
         {show('learning') && (
-          <>
+          <TourTarget id="today.learning" scroll={tourScroll}>
             <Text style={styles.sectionTitle}>{t('Keep learning')}</Text>
             <SpecialistCarousel
               loop
@@ -851,7 +885,7 @@ export const TodayScreen = () => {
               onSelect={(x) => router.push({ pathname: '/learn', params: { topic: x.id } })}
               more={{ label: t('More'), subtitle: t('All topics'), onPress: () => router.push('/learn-all') }}
             />
-          </>
+          </TourTarget>
         )}
       </ScrollView>
       {/* Perfil genético y, a las mujeres, cuestionario de la regla: las primeras veces que entra */}
@@ -866,15 +900,17 @@ const SmallRing = ({
   progress,
   value,
   label,
+  size = 64,
 }: {
   icon: React.ReactNode;
   color: string;
   progress: number;
   value: string;
   label: string;
+  size?: number;
 }) => (
   <View style={styles.smallRing}>
-    <ProgressRing size={64} strokeWidth={7} progress={progress} color={color}>
+    <ProgressRing size={size} strokeWidth={size < 60 ? 6 : 7} progress={progress} color={color}>
       {icon}
     </ProgressRing>
     <Text style={styles.smallRingValue}>{value}</Text>
@@ -893,6 +929,11 @@ const BiomarkerCard = ({
   onPress,
   wide,
   children,
+  tourId,
+  tourScroll,
+  above,
+  onAdd,
+  addLabel,
 }: {
   name: string;
   icon: string;
@@ -904,20 +945,44 @@ const BiomarkerCard = ({
   onPress: () => void;
   wide?: boolean;
   children?: React.ReactNode; // p. ej. una regla con el rango normal
-}) => (
-  <TouchableOpacity style={[styles.biomarkerCard, wide && styles.biomarkerCardWide]} onPress={onPress} activeOpacity={0.85}>
+  tourId?: string; // si el tutorial la señala
+  tourScroll?: TourScroll;
+  above?: React.ReactNode; // primera capa, encima del valor (p. ej. Digestión: cómo te sienta)
+  onAdd?: () => void; // «+» junto al valor: una vez más hoy
+  addLabel?: string;
+}) => {
+  const card = (
+  <TouchableOpacity style={[styles.biomarkerCard, wide && styles.biomarkerCardWide, tourId ? styles.biomarkerCardInSlot : null]} onPress={onPress} activeOpacity={0.85}>
     <View style={styles.biomarkerHead}>
       <Text style={styles.biomarkerName}>{name}</Text>
       <IconBadge name={icon} color={iconColor} size={28} />
     </View>
-    <View style={styles.biomarkerValueRow}>
-      <Text style={[styles.biomarkerValue, value.length > 5 && !wide && styles.biomarkerValueLong]}>{value}</Text>
-      <Text style={styles.biomarkerUnit}> {unit.split(' ')[0]}</Text>
+    {above ? <View style={styles.biomarkerAbove}>{above}</View> : null}
+    <View style={styles.biomarkerValueLine}>
+      <View style={[styles.biomarkerValueRow, { flex: 1 }]}>
+        <Text style={[styles.biomarkerValue, value.length > 5 && !wide && styles.biomarkerValueLong]}>{value}</Text>
+        <Text style={styles.biomarkerUnit}> {unit.split(' ')[0]}</Text>
+      </View>
+      {onAdd ? (
+        <TouchableOpacity style={[styles.biomarkerAdd, { backgroundColor: iconColor }]} onPress={onAdd} hitSlop={8} accessibilityLabel={addLabel}>
+          <Ionicons name="add" size={16} color={Colors.background} />
+        </TouchableOpacity>
+      ) : null}
     </View>
     <Text style={[styles.biomarkerStatus, { color }]}>{status}</Text>
     {children ? <View style={{ marginTop: 10 }}>{children}</View> : null}
   </TouchableOpacity>
-);
+  );
+  // En el tutorial, el sitio en la cuadrícula lo ocupa el marco (con el ancho de la tarjeta) y la
+  // tarjeta lo llena; flexGrow y no flex: 1, que dentro de una columna la dejaría sin altura en Android
+  return tourId ? (
+    <TourTarget id={tourId} scroll={tourScroll} style={[styles.biomarkerSlot, wide && styles.biomarkerCardWide]}>
+      {card}
+    </TourTarget>
+  ) : (
+    card
+  );
+};
 
 const styles = StyleSheet.create({
   goalsLink: { color: Colors.accent, fontSize: 12, fontWeight: '700', textAlign: 'center', marginTop: 10 },
@@ -1273,6 +1338,12 @@ const styles = StyleSheet.create({
   biomarkerCardWide: {
     width: '100%',
   },
+  biomarkerSlot: { width: '47%', flexGrow: 1 },
+  // Las dos capas de Digestión e Hidratación: lo de arriba, una raya, y las veces con su «+»
+  biomarkerAbove: { paddingBottom: 10, marginBottom: 10, borderBottomWidth: 1, borderBottomColor: Colors.divider },
+  biomarkerValueLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  biomarkerAdd: { width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  biomarkerCardInSlot: { width: '100%', flexGrow: 1 },
   biomarkerHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
   biomarkerName: {
     flex: 1,

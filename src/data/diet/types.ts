@@ -96,7 +96,19 @@ export interface DietPrefs {
   customs?: FoodCustom[]; // halal, kosher, viernes sin carne, Ramadán (los menús de antes no lo tienen)
   kcalTarget?: number | null; // los fija el dietista desde el portal (si no, se calculan)
   proteinTarget?: number | null;
+  carbsTarget?: number | null; // g al día
+  fatTarget?: number | null;
+  // Reparto por comida que fija el dietista: % de las kcal del día y, si quiere, gramos de cada macro.
+  // En el tentempié, por cada uno.
+  meals?: Partial<Record<MealSlot, MealMacroPlan>> | null;
   seed: number;
+}
+
+export interface MealMacroPlan {
+  share?: number | null; // % de las kcal del día
+  protein?: number | null; // g
+  carbs?: number | null;
+  fat?: number | null;
 }
 
 export interface PlannedMeal {
@@ -110,11 +122,22 @@ export interface PlannedMeal {
 export interface DietDay {
   day: number; // 0 = lunes
   meals: PlannedMeal[];
+  // Lo que el dietista fija para ese día (p. ej. más kcal un día de entreno); lo demás, lo de la semana
+  targets?: DayTargets;
+}
+
+export interface DayTargets {
+  kcal?: number | null;
+  protein?: number | null;
+  carbs?: number | null;
+  fat?: number | null;
 }
 
 export interface DietTargets {
   kcal: number;
   protein: number; // g
+  carbs?: number; // g (los menús de antes no lo tienen)
+  fat?: number; // g
   fiberMin: number;
   satFatMaxPct: number; // % de la energía
   sodiumMax: number; // mg

@@ -9,11 +9,14 @@ import { getParameterCard } from '@/utils/parameterInfo';
 import { markerIdForExtractedName } from '@/data/markerMatching';
 import { planRuleForMarker } from '@/utils/planUpdate';
 import { RangeBar } from './RangeBar';
+import { UnitLabel } from './UnitLabel';
+import { labEvidence } from '@/utils/labEvidence';
 import { num, t } from '@/i18n';
 
-// Una fila de una analítica, igual en «Para revisar» y en «Todos tus valores»: el nombre con el valor
-// debajo, a la derecha si está en rango o fuera y la flecha para desplegar qué es, para qué se mide,
-// qué puede moverlo y qué ayuda; debajo, la barra de rango. Textos de la base de conocimiento
+// Una fila de una analítica, igual en todos los grupos: el nombre con el valor debajo, a la derecha si
+// está en rango o fuera y la flecha para desplegar qué es, para qué se mide y qué puede moverlo; fuera
+// de rango, además, qué se ha asociado a mejorarlo (utils/labEvidence, lenguaje prudente) o, si no hay
+// nada claro, que lo hable con un médico. Debajo, la barra de rango. Textos de la base de conocimiento
 // (pendientes de revisión médica): orientan, no diagnostican.
 const ICON: Record<RangeStatus, string> = {
   en_rango: 'checkmark-circle',
@@ -33,11 +36,7 @@ export const LabValueRow = ({ p, open, onToggle, divider }: { p: ExtractedParame
   const markerId = markerIdForExtractedName(p.nombre);
   const rule = markerId ? planRuleForMarker(markerId) : null;
   const card = open ? getParameterCard(p.nombre) : null;
-  const helps = rule
-    ? `${rule.title}: ${rule.why}`
-    : out
-      ? t('Talk to a doctor about this result before changing anything.')
-      : t('Nothing to change: it is within the lab range. Keep up your usual habits.');
+  const evidence = out ? labEvidence(markerId, status === 'por_encima' ? 'high' : 'low') : null;
 
   return (
     <View style={[styles.item, divider && styles.divider]}>
@@ -45,9 +44,10 @@ export const LabValueRow = ({ p, open, onToggle, divider }: { p: ExtractedParame
         <Ionicons name={ICON[status] as any} size={20} color={color} />
         <View style={{ flex: 1 }}>
           <Text style={styles.name}>{p.nombre}</Text>
-          <Text style={[styles.value, { color: out ? Colors.attention : Colors.textPrimary }]}>
-            {isNumber ? num(p.valor) : String(p.valor ?? '—')} {p.unidad}
-          </Text>
+          <View style={styles.valueRow}>
+            <Text style={[styles.value, { color: out ? Colors.attention : Colors.textPrimary }]}>{isNumber ? num(p.valor) : String(p.valor ?? '—')}</Text>
+            <UnitLabel unit={p.unidad} style={[styles.value, styles.unit, { color: out ? Colors.attention : Colors.textSecondary }]} />
+          </View>
         </View>
         <Text style={[styles.badge, { color, backgroundColor: withAlpha(color, 0.12) }]}>{rangeStatusLabel(status)}</Text>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
@@ -69,8 +69,12 @@ export const LabValueRow = ({ p, open, onToggle, divider }: { p: ExtractedParame
               <Text style={styles.text}>{card.factors}</Text>
             </>
           ) : null}
-          <Text style={styles.label}>{t('What helps')}</Text>
-          <Text style={styles.text}>{helps}</Text>
+          {out && (
+            <>
+              <Text style={styles.label}>{evidence ? t('What has been associated with better values') : t('What to do')}</Text>
+              <Text style={styles.text}>{evidence ? t(evidence) : t('Talk to a doctor about this result before changing anything.')}</Text>
+            </>
+          )}
           {out && (
             <View style={styles.links}>
               {rule && (
@@ -96,7 +100,9 @@ const styles = StyleSheet.create({
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   name: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  value: { fontSize: 13, fontWeight: '800', marginTop: 2 },
+  valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 2 },
+  value: { fontSize: 13, fontWeight: '800' },
+  unit: { fontWeight: '600' },
   badge: { fontSize: 11, fontWeight: '800', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
   body: { marginTop: 10, marginLeft: 30, gap: 3 },
   label: { color: Colors.textMuted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', marginTop: 6 },

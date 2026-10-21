@@ -12,8 +12,13 @@ import {
   cautionReasons,
   dayTotals,
   dietTargets,
+  fitDay,
+  fitPortions,
   generateDiet,
+  mealTargets,
   referralReasons,
+  slotAverages,
+  slotCount,
   shoppingList,
   weekSummary,
 } from '@/logic/dietPlanner';
@@ -241,6 +246,53 @@ describe('Soja y pautas religiosas o culturales', () => {
     expect(Math.abs(kcal - g.targets.kcal)).toBeLessThan(g.targets.kcal * 0.2);
     const ins = generateDiet(prefs({ ...ADULT, customs: ['ramadan'], safety: ['insulin'] }), []);
     expect(ins.reasons.some((r) => r.id === 'caution_ramadan' && r.caution)).toBe(true);
+  });
+});
+
+
+describe('Macros que fija el dietista', () => {
+  it('los tres macros sin kcal: las kcal salen de ellos; sin fijar, grasa 30 % e hidratos el resto', () => {
+    const t = dietTargets(prefs({ ...ADULT, proteinTarget: 120, carbsTarget: 200, fatTarget: 60 }), []);
+    expect(t.kcal).toBe(120 * 4 + 200 * 4 + 60 * 9);
+    const d = dietTargets(prefs(ADULT), []);
+    expect(Math.abs(d.fat! * 9 - d.kcal * 0.3)).toBeLessThan(10);
+    expect(Math.abs(d.protein * 4 + d.carbs! * 4 + d.fat! * 9 - d.kcal)).toBeLessThan(15);
+  });
+
+  it('el reparto por comida suma el día, aunque el dietista cambie el % de una', () => {
+    const p = prefs({ ...ADULT, snacks: 2, meals: { lunch: { share: 45 } } });
+    const t = dietTargets(p, []);
+    const mt = mealTargets(p, t);
+    const sum = (['breakfast', 'lunch', 'dinner', 'snack'] as const).reduce((a, s) => a + (mt[s]?.kcal ?? 0) * slotCount(p, s), 0);
+    expect(Math.round(sum)).toBe(t.kcal);
+    expect(mt.lunch!.kcal).toBeGreaterThan(mt.dinner!.kcal);
+  });
+
+  it('con más proteína en la cena, la cena del menú trae más proteína', () => {
+    const base = prefs({ ...ADULT, snacks: 0 });
+    const plain = slotAverages(generateDiet(base, []).days);
+    const high = slotAverages(generateDiet({ ...base, meals: { dinner: { protein: 55 } } }, []).days);
+    expect(high.dinner!.protein).toBeGreaterThan(plain.dinner!.protein);
+  });
+
+  it('con muchas kcal (5.000) las raciones crecen y el menú se acerca al objetivo', () => {
+    const g = generateDiet(prefs({ ...ADULT, kcalTarget: 5000, snacks: 2 }), []);
+    expect(weekSummary(g.days).kcal).toBeGreaterThan(4500);
+  });
+
+  it('al cambiar las kcal, fitPortions rehace las raciones sin cambiar los platos', () => {
+    const p = prefs({ ...ADULT, snacks: 1 });
+    const g = generateDiet(p, []);
+    const more = fitPortions(g.days, { ...p, kcalTarget: 3200 }, []);
+    expect(more.map((d) => d.meals.map((m) => m.recipeId))).toEqual(g.days.map((d) => d.meals.map((m) => m.recipeId)));
+    expect(weekSummary(more).kcal).toBeGreaterThan(weekSummary(g.days).kcal + 600);
+  });
+
+  it('un día con su propio objetivo: solo ese día cambia', () => {
+    const p = prefs({ ...ADULT, snacks: 1 });
+    const g = generateDiet(p, []);
+    const monday = fitDay({ ...g.days[0], targets: { kcal: 3000 } }, p, []);
+    expect(dayTotals(monday).kcal).toBeGreaterThan(dayTotals(g.days[0]).kcal + 500);
   });
 });
 

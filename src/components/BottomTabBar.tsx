@@ -64,9 +64,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tabBarBackground,
     paddingTop: 8,
   },
+  // El reparto del ancho lo hace el hueco del tutorial; el botón, sin flex (dentro de una columna,
+  // flex: 1 lo dejaba con altura 0 en Android y la barra desaparecía)
   tabSlot: { flex: 1 },
   tabButton: {
-    flex: 1,
     alignItems: 'center',
     gap: 2,
     paddingBottom: 6,

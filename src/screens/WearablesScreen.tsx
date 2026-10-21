@@ -37,23 +37,24 @@ const IS_IOS = Platform.OS === 'ios';
 const SHOW_HC = !IS_IOS;
 const SHOW_APPLE = Platform.OS !== 'android';
 
-const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string }> = {
-  steps: { label: 'Steps', unit: '' },
-  resting_heart_rate: { label: 'Resting heart rate', unit: 'bpm' },
-  heart_rate_avg: { label: 'Average heart rate', unit: 'bpm' },
-  hrv: { label: 'HRV', unit: 'ms' },
-  sleep_duration: { label: 'Sleep', unit: '' },
-  sleep_deep: { label: 'Deep sleep', unit: '' },
-  sleep_light: { label: 'Light sleep', unit: '' },
-  sleep_rem: { label: 'REM sleep', unit: '' },
-  sleep_awake: { label: 'Awake', unit: '' },
-  sleep_out_of_bed: { label: 'Out of bed', unit: '' },
-  sleep_start: { label: 'Fell asleep', unit: '' },
-  sleep_end: { label: 'Woke up', unit: '' },
-  active_energy: { label: 'Active energy', unit: 'kcal' },
-  body_temperature: { label: 'Body temperature', unit: '°C' },
-  distance: { label: 'Distance', unit: 'km' },
-  other: { label: 'Other', unit: '' },
+// Con el mismo icono y color que en Hoy (círculos y tarjetas)
+const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string; icon: string; color: () => string }> = {
+  steps: { label: 'Steps', unit: '', icon: 'footsteps', color: () => Colors.sky },
+  resting_heart_rate: { label: 'Resting heart rate', unit: 'bpm', icon: 'heart-outline', color: () => Colors.coral },
+  heart_rate_avg: { label: 'Average heart rate', unit: 'bpm', icon: 'heart', color: () => Colors.coral },
+  hrv: { label: 'HRV', unit: 'ms', icon: 'pulse-outline', color: () => Colors.accent },
+  sleep_duration: { label: 'Sleep', unit: '', icon: 'moon', color: () => Colors.violet },
+  sleep_deep: { label: 'Deep sleep', unit: '', icon: 'moon', color: () => Colors.violet },
+  sleep_light: { label: 'Light sleep', unit: '', icon: 'moon-outline', color: () => Colors.sky },
+  sleep_rem: { label: 'REM sleep', unit: '', icon: 'eye-outline', color: () => Colors.pulseAccent },
+  sleep_awake: { label: 'Awake', unit: '', icon: 'sunny-outline', color: () => Colors.amber },
+  sleep_out_of_bed: { label: 'Out of bed', unit: '', icon: 'walk-outline', color: () => Colors.textMuted },
+  sleep_start: { label: 'Fell asleep', unit: '', icon: 'moon-outline', color: () => Colors.violet },
+  sleep_end: { label: 'Woke up', unit: '', icon: 'sunny-outline', color: () => Colors.amber },
+  active_energy: { label: 'Active energy', unit: 'kcal', icon: 'flame', color: () => Colors.coral },
+  body_temperature: { label: 'Body temperature', unit: '°C', icon: 'thermometer-outline', color: () => Colors.pinkSoft },
+  distance: { label: 'Distance', unit: 'km', icon: 'navigate-outline', color: () => Colors.amber },
+  other: { label: 'Other', unit: '', icon: 'ellipse-outline', color: () => Colors.textMuted },
 };
 const METRIC_ORDER: WearableMetric[] = ['steps', 'sleep_duration', 'resting_heart_rate', 'heart_rate_avg', 'hrv', 'active_energy', 'distance', 'body_temperature', 'other'];
 
@@ -347,7 +348,9 @@ export const WearablesScreen = () => {
           <Text style={styles.cardText}>
             {samples
               ? t('Direct connection coming soon. Until then, load test data with the same shape Huawei will send.')
-              : t('Direct connection coming soon. Huawei Health does not share with Health Connect yet.')}
+              : IS_IOS
+                ? t('On iPhone, Huawei Health can share with Apple Health: turn it on in the Huawei Health app and Kuova reads it from there.')
+                : t('Direct connection coming soon. Huawei Health does not share with Health Connect yet.')}
           </Text>
           {samples && <Button id="dummy" label={t('Load dummy Huawei data')} onPress={loadDummy} />}
         </View>
@@ -361,9 +364,12 @@ export const WearablesScreen = () => {
               <Text style={styles.dayTitle}>{formatDate(date)}</Text>
               {rows.map((r) => (
                 <View key={`${r.metric}|${r.sourceName}|${r.rawTypeId}`} style={styles.metricRow}>
-                  <Text style={styles.metricLabel} numberOfLines={1}>
-                    {t(METRIC_LABEL[r.metric].label)}
-                  </Text>
+                  <View style={styles.metricLabelWrap}>
+                    <Ionicons name={METRIC_LABEL[r.metric].icon as any} size={16} color={METRIC_LABEL[r.metric].color()} />
+                    <Text style={styles.metricLabel} numberOfLines={1}>
+                      {t(METRIC_LABEL[r.metric].label)}
+                    </Text>
+                  </View>
                   <View style={styles.metricRight}>
                     <Text style={styles.metricValue} numberOfLines={1}>
                       {formatValue(r.metric, r.value)}
@@ -449,6 +455,7 @@ const styles = StyleSheet.create({
   },
   dayTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
   metricRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  metricLabelWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   metricLabel: { color: Colors.textSecondary, fontSize: 14, flexShrink: 1 },
   metricRight: { alignItems: 'flex-end', flexShrink: 1, maxWidth: '60%' },
   metricValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },

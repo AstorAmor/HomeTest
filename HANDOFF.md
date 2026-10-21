@@ -1480,3 +1480,54 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
   `supabase/templates/confirmar-cuenta.html`.
 
 **Publicado 46f2578** (2026-10-21, OK del fundador «Haz commit de todo, publica con npm run release y aplica la migración de probadores en Supabase»): migración 20261021100000_testers aplicada antes (db query --linked en una transacción + migration repair; comprobada con claims simulados: alias «+» de un admin = true, otro email = false). EAS Update grupo `06f0cbd1-ac80-448e-8eb9-25efcf679c3e` (preview, android + ios) y las dos webs a la primera. Incluye el tutorial guiado. Sin migraciones pendientes. Falta (fundador): SMTP de hello@kuovahealth.com y «Confirm email» en Supabase.
+
+## 2026-10-21 — iPhone: lo que se puede preparar sin cuenta de Apple (master, sin commit)
+
+Guía completa y pasos del fundador en `docs/iphone-y-apple-salud.md` (actualizada hoy).
+
+- **Fecha y hora en iPhone** (`components/DateTimeSheet.tsx`): las pantallas de tensión, glucosa, peso y métricas
+  sueltas pintaban `DateTimePicker` en modo rueda al pie de la pantalla, y en iOS esa rueda no se cierra sola ni
+  trae botón: se habría quedado abierta. Ahora en iOS va en una hoja abajo con «Hecho» (cada giro ya cambia el
+  valor); en Android y web sigue el diálogo del sistema, igual que antes.
+- **app.json**: `NSPhotoLibraryAddUsageDescription` (sin él, «Guardar imagen» en la hoja de compartir de iOS cierra
+  la app); texto del permiso de Salud ampliado a peso, entrenos, tensión, glucosa, oxígeno, temperatura y
+  respiración (el texto es nativo: así se pueden leer más tipos con una actualización); `expo-audio` con
+  `enableBackgroundPlayback: false` y fuera `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_MEDIA_PLAYBACK` de Android
+  (nada reproduce en segundo plano: `shouldPlayInBackground: false` en todas partes). Afecta solo a la próxima
+  compilación nativa; la APK 1.1.0 instalada no cambia.
+- Ajustes → Permisos dice «Apple Salud» en iPhone, y la tarjeta de Huawei en Wearables explica que en iPhone
+  Huawei Health puede escribir en Salud.
+- Comprobado sin Mac: `npx expo config --type introspect` (Info.plist con los dos idiomas, entitlement de HealthKit,
+  `aps-environment`, sin `UIBackgroundModes`). `expo prebuild --platform ios` no funciona en Windows. tsc + 380 tests.
+- Sigue faltando antes de la App Store: **borrar la cuenta desde la app** (también lo pide Google Play) y la
+  decisión de cómo se cobra en iPhone (tareas del fundador ya en next-actions).
+
+## 2026-10-21 (tarde) — Lote de notas del fundador: baño, agua, tutorial, disposición, dietas del especialista, gota de la orina
+
+Con el OK del fundador («Primero actualiza la app», tras «No publiques aún; sigue con el resto y lo publicamos todo junto»),
+publicado junto con lo del iPhone de la sección anterior. Detalle de cada ronda en la memoria del proyecto (hometest-app-wip).
+
+- **Barra de pestañas en Android**: desaparecía (el `flex: 1` del botón dentro de la columna del tutorial daba alto 0).
+- **Resultados**: unidades con `UnitLabel`, grupos «Para revisar / En rango / Sin referencia» (los contadores bajan a su
+  grupo), «Qué se ha asociado a mejores valores» con matices (`utils/labEvidence.ts`) o «habla con un médico».
+- **Ciclo** traducido; **Acceso profesionales** en el login (el alta del profesional se guarda en
+  `user_metadata.pending_professional` y la fila se crea al primer inicio de sesión).
+- **Agua**: `metric_readings` tipo `water` (sin migración), objetivo diario EFSA por sexo, «+» en Hoy, `WaterCard`,
+  `/log-water` con rueda; cantidad habitual del «+» (`user_flags water_usual_ml`); Hidratación en su azul `Colors.water`.
+- **Hoy**: Digestión e Hidratación con dos capas (caritas / agua, y debajo las veces del baño con «+»); Objetivos del día
+  con «En Hoy / Oculto» por objetivo.
+- **Orina y heces del día**: «¿Cuántas veces hoy?» con − / + y «Cada vez» (`components/BathroomVisits.tsx`: hora,
+  color, escozor o forma de Bristol, prisa). Heces en `bowel_logs.movements`; orina en **`urine_logs.visits`**:
+  migración `20261021120000_urine_visits.sql` **aplicada el 2026-10-21** (db query --linked en una transacción +
+  migration repair; columna jsonb comprobada) y `REMOTE_HAS_URINE_VISITS = true`.
+- **Colores de la orina con forma de gota** (la de la infografía de la newsletter n.º 1): `UrineDrop` en
+  `components/BathroomVisuals.tsx` (borde #D9CFBE en los tonos muy claros, brillo, motas en «Turbia», anillo de selección
+  con la forma de la gota, check oscuro en los tonos claros) y `ColorSwatches shape="drop"`; también en la fila de cada
+  vez y en la vista previa de Hidratación. Las heces siguen con círculo.
+- **Tutorial**: 23 pasos, «Saltar», pasos con `route`; «Configura tu experiencia» también en Más.
+- **Disposición** (readiness) nueva en `computeReadiness`: VFC y pulso en reposo frente a tus 28 días anteriores, sueño
+  frente a tu objetivo y fase lútea; rangos por fecha de calendario; cerrar sesión limpia el usuario al momento.
+- **Portal del especialista**: sección Dietas (`/pro-diets`), macros del día y por comida, porciones que se reajustan
+  (`fitPortions`, hasta 4 raciones) y detalle por día con sus propios objetivos.
+- tsc + 380 tests. Sin migraciones pendientes de la app (la `20261021180000_newsletter.sql` es de la newsletter de la web,
+  de otra sesión: ni aplicada ni en este commit).

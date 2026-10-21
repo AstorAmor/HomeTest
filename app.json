@@ -16,7 +16,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Kuova uses the camera to photograph your lab reports and meals, and for your profile photo.",
         "NSPhotoLibraryUsageDescription": "Kuova opens your photos so you can choose a lab report, a meal or your profile photo.",
-        "NSMicrophoneUsageDescription": "Kuova uses the microphone to record voice notes in your log, only when you tap record."
+        "NSMicrophoneUsageDescription": "Kuova uses the microphone to record voice notes in your log, only when you tap record.",
+        "NSPhotoLibraryAddUsageDescription": "Kuova only saves an image to your photos when you choose Save Image, for example a badge you want to share."
       }
     },
     "android": {
@@ -33,8 +34,6 @@
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
         "android.permission.health.READ_STEPS",
         "android.permission.health.READ_HEART_RATE",
         "android.permission.health.READ_RESTING_HEART_RATE",
@@ -71,14 +70,15 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Kuova uses the microphone to record voice notes in your log, only when you tap record."
+          "microphonePermission": "Kuova uses the microphone to record voice notes in your log, only when you tap record.",
+          "enableBackgroundPlayback": false
         }
       ],
       "react-native-health-connect",
       [
         "@kingstinct/react-native-healthkit",
         {
-          "NSHealthShareUsageDescription": "Kuova reads your steps, sleep, heart rate, heart rate variability and activity from Health to show them next to your lab results and your daily log. Kuova never writes to Health.",
+          "NSHealthShareUsageDescription": "Kuova reads your activity, sleep, heart rate and heart rate variability from Health (and, if you have them, your weight, workouts, blood pressure, glucose, blood oxygen, temperature and breathing rate) to show them next to your lab results and your daily log. Kuova never writes to Health.",
           "NSHealthUpdateUsageDescription": false,
           "background": false
         }

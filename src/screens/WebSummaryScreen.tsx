@@ -111,7 +111,7 @@ const values = (points?: DailyPoint[], n = 7) => (points ?? []).slice(-n).map((p
 export const WebSummaryScreen = () => {
   const router = useRouter();
   const show = useSections();
-  const { series, isSample } = useDailyWearables();
+  const { series, isSample } = useDailyWearables(29);
   const [width, setWidth] = useState(0);
   const [loadedAt, setLoadedAt] = useState(new Date());
   const [lastCheckIn, setLastCheckIn] = useDeepState<CheckInEntry | null>(null);
@@ -152,7 +152,7 @@ export const WebSummaryScreen = () => {
   const sleep = latest(series.sleep_duration);
   const steps = latest(series.steps);
   const rhr = latest(series.resting_heart_rate);
-  const readiness = computeReadiness(series);
+  const readiness = computeReadiness(series, new Date(), { luteal: !!cycle && !cycle.isSample && cycle.phase === 'luteal' });
   const mood = lastCheckIn?.mood ? MOOD_OPTIONS.find((m) => m.id === lastCheckIn.mood) : null;
   const hydration = hydrationFromUrine(bathroom.urine);
   const taken = doses.filter((d) => d.log?.status === 'taken').length;

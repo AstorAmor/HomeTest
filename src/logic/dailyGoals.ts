@@ -1,9 +1,9 @@
 import type { PlanItem, PlanProfile } from './plan';
 
-// Objetivos del día de «Tu estado de hoy»: pasos, kcal activas, sueño y distancia. Cada círculo se
-// completa con su objetivo. Pasos y sueño salen del plan cuando están entre tus acciones; si no, de tu
-// edad. Las kcal y la distancia se calculan a partir de esos pasos, tu sexo, tu peso y tu altura. El
-// usuario puede cambiar cualquiera (se guardan en user_flags 'daily_goals.v1'). Fuentes en
+// Objetivos del día de «Tu estado de hoy»: pasos, kcal activas, sueño y distancia (cada círculo se
+// completa con su objetivo) y el agua, que se ve en Hidratación. Pasos y sueño salen del plan cuando
+// están entre tus acciones; si no, de tu edad. Las kcal y la distancia se calculan a partir de esos
+// pasos, tu sexo, tu peso y tu altura; el agua, de tu sexo. El usuario puede cambiar cualquiera (se guardan en user_flags 'daily_goals.v1'). Fuentes en
 // src/data/evidence.ts (tema 'daily_goals'). PENDIENTE de revisión médica.
 
 export interface DailyGoals {
@@ -11,6 +11,7 @@ export interface DailyGoals {
   activeKcal: number;
   sleepMin: number;
   distanceM: number;
+  waterMl: number; // de bebidas
 }
 
 export type GoalKey = keyof DailyGoals;
@@ -19,7 +20,7 @@ export type GoalKey = keyof DailyGoals;
 export type GoalBasis = 'plan' | 'age' | 'body';
 
 // Sin perfil: lo de un adulto de menos de 60 con peso y altura de referencia
-export const DEFAULT_GOALS: DailyGoals = { steps: 8000, activeKcal: 350, sleepMin: 450, distanceM: 6000 };
+export const DEFAULT_GOALS: DailyGoals = { steps: 8000, activeKcal: 350, sleepMin: 450, distanceM: 6000, waterMl: 1800 };
 
 const ageFrom = (dob?: string) => {
   if (!dob) return null;
@@ -38,6 +39,12 @@ const roundTo = (v: number, step: number) => Math.max(step, Math.round(v / step)
 // adultos, 7 horas o más (7 h 30); menores de 18, 8 a 10 (9 h).
 export const stepsForAge = (age: number | null) => (age !== null && age >= 60 ? 7000 : 8000);
 export const sleepForAge = (age: number | null) => (age !== null && age < 18 ? 540 : 450);
+
+// Agua de las bebidas. La EFSA da como ingesta adecuada de agua total 2 L al día en mujeres y 2,5 L en
+// hombres (adultos, también mayores), y calcula que un 20 % llega con la comida: de bebidas, unos 1,6 y
+// 2 L. Sin sexo, el punto medio. Con calor o ejercicio hace falta más; con una enfermedad del riñón o del
+// corazón, lo que diga su médico (lo dice la ficha de fuentes).
+export const waterForSex = (sex?: string) => (sex === 'female' ? 1600 : sex === 'male' ? 2000 : 1800);
 
 // kcal activas y distancia a partir de los pasos. Zancada ≈ 41,5 % de la altura (41,3 % en mujeres).
 // Caminar gasta ≈ 0,5 kcal por kg y km por encima del reposo (ecuación de la marcha del ACSM), y se
@@ -58,8 +65,8 @@ export function suggestedGoals(plan: PlanItem[], profile?: PlanProfile | null): 
   const planSleep = plan.find((i) => i.kind === 'sleep')?.target;
   const steps = planSteps || stepsForAge(age);
   return {
-    goals: { steps, sleepMin: planSleep ? Math.round(planSleep * 60) : sleepForAge(age), ...fromSteps(steps, profile) },
-    basis: { steps: planSteps ? 'plan' : 'age', sleepMin: planSleep ? 'plan' : 'age', activeKcal: 'body', distanceM: 'body' },
+    goals: { steps, sleepMin: planSleep ? Math.round(planSleep * 60) : sleepForAge(age), ...fromSteps(steps, profile), waterMl: waterForSex(profile?.sex) },
+    basis: { steps: planSteps ? 'plan' : 'age', sleepMin: planSleep ? 'plan' : 'age', activeKcal: 'body', distanceM: 'body', waterMl: 'body' },
   };
 }
 
@@ -69,6 +76,20 @@ export function effectiveGoals(suggested: DailyGoals, saved: Partial<DailyGoals>
   for (const k of Object.keys(out) as GoalKey[]) {
     const v = saved?.[k];
     if (typeof v === 'number' && Number.isFinite(v) && v > 0) out[k] = v;
+  }
+  return out;
+}
+
+// Qué círculos salen en «Tu estado de hoy» (en Tus objetivos del día, «En Hoy» en cada uno). Por
+// defecto, pasos, kcal y sueño, y el agua si sigue la hidratación; la distancia, no (sale en lugar de
+// las kcal si el reloj no las da). Se guardan solo los que cambia (user_flags 'daily_goals_shown.v1').
+export type GoalsShown = Record<GoalKey, boolean>;
+
+export function goalsShown(saved: Partial<GoalsShown> | null | undefined, hydration: boolean): GoalsShown {
+  const out: GoalsShown = { steps: true, activeKcal: true, distanceM: false, sleepMin: true, waterMl: hydration };
+  for (const k of Object.keys(out) as GoalKey[]) {
+    const v = saved?.[k];
+    if (typeof v === 'boolean') out[k] = v;
   }
   return out;
 }

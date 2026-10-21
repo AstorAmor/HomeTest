@@ -19,7 +19,7 @@ export const useIsWide = () => {
   return Platform.OS === 'web' && width >= 900;
 };
 
-export type ProSection = 'agenda' | 'patients' | 'inbox' | 'templates' | 'workouts' | 'settings' | 'preferences';
+export type ProSection = 'agenda' | 'patients' | 'inbox' | 'templates' | 'workouts' | 'diets' | 'settings' | 'preferences';
 
 // short: nombre corto para la barra de pestañas del móvil
 const NAV: { id: ProSection; label: string; short?: string; icon: string; href: string }[] = [
@@ -28,6 +28,7 @@ const NAV: { id: ProSection; label: string; short?: string; icon: string; href: 
   { id: 'inbox', label: 'Inbox', icon: 'chatbubbles-outline', href: '/pro-inbox' },
   { id: 'templates', label: 'Templates', icon: 'documents-outline', href: '/pro-templates' },
   { id: 'workouts', label: 'Workouts', short: 'Train', icon: 'barbell-outline', href: '/pro-workouts' },
+  { id: 'diets', label: 'Diets', icon: 'nutrition-outline', href: '/pro-diets' },
   { id: 'settings', label: 'Profile', icon: 'person-circle-outline', href: '/pro-settings' },
   { id: 'preferences', label: 'Settings', icon: 'settings-outline', href: '/pro-preferences' },
 ];
@@ -216,6 +217,7 @@ const styles = StyleSheet.create({
   bodyWideFlex: { paddingHorizontal: 8 },
   tabBar: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: Colors.tabBarBorder, backgroundColor: Colors.tabBarBackground, paddingTop: 8, paddingBottom: 4 },
   tab: { flex: 1, alignItems: 'center', gap: 2 },
-  tabText: { color: Colors.tabBarInactive, fontSize: 11, fontWeight: '600' },
+  // Ocho pestañas en el móvil: letra un punto más pequeña para que quepan
+  tabText: { color: Colors.tabBarInactive, fontSize: 10, fontWeight: '600' },
   tabDot: { position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.danger },
 });

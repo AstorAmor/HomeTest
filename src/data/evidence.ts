@@ -110,10 +110,15 @@ export const EVIDENCE: EvidenceTopic[] = [
     title: 'Daily readiness',
     summary: 'A daily score from your sleep, resting heart rate and HRV compared with your own usual values.',
     body: [
-      'We compare last night with your recent average: more sleep, lower resting heart rate and higher heart rate variability than usual raise the score.',
-      'It is a guide to how hard to push today, not a medical measure. The formula is simple on purpose and is being reviewed by our medical team.',
+      'Each part is compared with your own last four weeks, not with an average person: how far today’s HRV and resting heart rate are from your usual, measured in your own day-to-day spread. A normal day scores around 65; it takes a clearly better day than usual to go above 90.',
+      'Sleep is compared with your sleep goal (Your daily goals): reaching it scores 90, and each 10% short takes off 15.',
+      'If you log your periods, in the luteal phase we allow for the slightly higher resting heart rate and lower HRV that are normal then.',
+      'It is a guide to how hard to push today, not a medical measure. The formula is being reviewed by our medical team.',
     ],
-    sources: [],
+    sources: [
+      { label: 'HRV-guided training: daily values compared with your own rolling baseline (Plews et al., Sports Med 2013)', url: 'https://doi.org/10.1007/s40279-013-0071-8' },
+      { label: 'Wrist wearables capture menstrual-cycle temperature changes (Shilaih et al., 2018)', url: 'https://doi.org/10.1038/s41598-018-20796-9' },
+    ],
     status: 'pending',
   },
   {
@@ -125,6 +130,7 @@ export const EVIDENCE: EvidenceTopic[] = [
       'Sleep: 7 h 30. Adults need 7 hours or more; teenagers, 8 to 10.',
       'Active calories: what those steps burn for your weight (about 0.5 kcal per kg and km walked) plus 30 minutes of moderate activity a day, which is how the WHO recommendation of 150-300 minutes a week works out. It is an estimate: each watch measures it its own way.',
       'Distance: your steps times your stride, worked out from your height (about 41% of it).',
+      'Water: 1.6 L a day from drinks for women and 2 L for men. EFSA sets an adequate intake of 2 L of water a day for women and 2.5 L for men, and about a fifth of it comes from food. You need more when it is hot or you exercise; with a kidney or heart condition, follow what your doctor tells you.',
       'If your plan has a steps or sleep target, we use that one. You can change any goal, and the circles fill up with yours.',
     ],
     sources: [
@@ -133,6 +139,7 @@ export const EVIDENCE: EvidenceTopic[] = [
       { label: 'Recommended amount of sleep for adults: 7 hours or more (Watson et al., Sleep 2015)', url: 'https://doi.org/10.5665/sleep.4716' },
       { label: 'Sleep duration recommendations by age (Hirshkowitz et al., Sleep Health 2015)', url: 'https://doi.org/10.1016/j.sleh.2014.12.010' },
       { label: 'Compendium of Physical Activities: energy cost of each activity (Ainsworth et al., Med Sci Sports Exerc 2011)', url: 'https://doi.org/10.1249/MSS.0b013e31821ece12' },
+      { label: 'Dietary Reference Values for water (EFSA Panel on Dietetic Products, Nutrition and Allergies, EFSA Journal 2010)', url: 'https://doi.org/10.2903/j.efsa.2010.1459' },
     ],
     status: 'pending',
   },

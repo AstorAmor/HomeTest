@@ -11,6 +11,22 @@
       "port": 8081
     },
     {
+      "name": "expo-web-cuenta",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "web",
+        "--",
+        "--port",
+        "8085"
+      ],
+      "env": {
+        "WEB_OUTPUT": "single",
+        "NODE_OPTIONS": "--max-old-space-size=6144"
+      },
+      "port": 8085
+    },
+    {
       "name": "expo-web-demo",
       "runtimeExecutable": "cmd",
       "runtimeArgs": [

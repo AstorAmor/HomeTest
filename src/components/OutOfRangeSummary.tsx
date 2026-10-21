@@ -30,7 +30,7 @@ export const OutOfRangeSummary = ({ report }: { report: ExtractedLabReport }) =>
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{t('To review')}</Text>
-      <Text style={styles.sub}>{t('Tap a value to see what it is and what helps.')}</Text>
+      <Text style={styles.sub}>{t('Tap a value to see what it is and what has been linked to better values.')}</Text>
       {items.map(({ p }, i) => {
         const key = `${p.nombre}-${i}`;
         return <LabValueRow key={key} p={p} open={open === key} onToggle={() => setOpen(open === key ? null : key)} divider={i > 0} />;

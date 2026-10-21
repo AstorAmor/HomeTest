@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
 import { MetricHero, RangeId, rangeDays, RangeTabs, StatsRow } from '@/components/MetricDetailParts';
 import { Colors } from '@/constants/colors';
-import { DailyPoint, formatClock, formatSleep, shortDate, sleepNights, useDailyWearables } from '@/wearables/dailySeries';
+import { DailyPoint, formatClock, formatSleep, shortDate, sinceDay, sleepNights, useDailyWearables, weeklyAverages, weeklyNights } from '@/wearables/dailySeries';
 import { SleepNightsCard } from '@/components/SleepNightsCard';
 import { WearableMetric } from '@/wearables/types';
 import { thermometerRepository } from '@/data/temperatureRepository';
@@ -103,16 +103,9 @@ const INFO: Partial<Record<WearableMetric, MetricInfo>> = {
   },
 };
 
-// En 6M se agrupa por semanas (media de 7 días, contando desde el último día):
-// 180 puntos diarios no se leen en una gráfica de móvil.
-const weekly = (pts: DailyPoint[]): DailyPoint[] => {
-  const out: DailyPoint[] = [];
-  for (let end = pts.length; end > 0; end -= 7) {
-    const chunk = pts.slice(Math.max(0, end - 7), end);
-    out.unshift({ date: chunk[0].date, value: chunk.reduce((a, p) => a + p.value, 0) / chunk.length });
-  }
-  return out;
-};
+// Los periodos van por fecha (los últimos 7, 14, 30 o 182 días de calendario, hoy incluido), no por
+// número de registros. En 6M, por semanas de calendario (weeklyAverages): 180 puntos diarios no se
+// leen en una gráfica de móvil.
 
 export const MetricDetailScreen = () => {
   const router = useRouter();
@@ -121,22 +114,26 @@ export const MetricDetailScreen = () => {
   const { series, isSample } = useDailyWearables(182);
   const [range, setRange] = useState<RangeId>('14D');
   const days = rangeDays(range);
-  const byWeek = days > 31;
-
   const all = series[kind as WearableMetric] ?? [];
-  const daily = all.slice(-days);
-  const points = byWeek ? weekly(daily) : daily;
+  const since = sinceDay(days);
+  const daily = all.filter((p) => p.date >= since);
+  // Por semanas solo si los datos abarcan más de un mes; si no (p. ej. un reloj conectado hace poco),
+  // también en 6M día a día: una o dos medias semanales no dicen nada
+  const spanDays = daily.length ? (Date.parse(daily[daily.length - 1].date) - Date.parse(daily[0].date)) / 86400000 : 0;
+  const byWeek = days > 31 && spanDays > 31;
+  const points = byWeek ? weeklyAverages(daily) : daily;
   const values = points.map((p) => p.value);
   const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
   const latestValue = values[values.length - 1];
-  const recent = all.slice(-7).map((p) => p.value);
-  const previous = all.slice(-14, -7).map((p) => p.value);
+  const recent = all.filter((p) => p.date >= sinceDay(7)).map((p) => p.value);
+  const previous = all.filter((p) => p.date >= sinceDay(14) && p.date < sinceDay(7)).map((p) => p.value);
   const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
   const change = previous.length ? (mean(recent) - mean(previous)) / mean(previous) : NaN;
   const trendGood = info.higherIsBetter === null ? null : info.higherIsBetter ? change > 0 : change < 0;
 
   // Sueño: fases y horas de cada noche del periodo
-  const nights = kind === 'sleep_duration' ? sleepNights(series).slice(-days) : [];
+  const dailyNights = kind === 'sleep_duration' ? sleepNights(series).filter((n) => n.date >= since) : [];
+  const nights = byWeek ? weeklyNights(dailyNights) : dailyNights;
   const nightOf = new Map(nights.map((n) => [n.date, n]));
 
   // Lecturas con termómetro (solo en la temperatura)
@@ -226,7 +223,7 @@ export const MetricDetailScreen = () => {
           </View>
         )}
 
-        {kind === 'sleep_duration' && <SleepNightsCard nights={nights} showBars={!byWeek} />}
+        {kind === 'sleep_duration' && <SleepNightsCard key={range} nights={nights} weekly={byWeek} />}
 
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>{tr('What it is')}</Text>

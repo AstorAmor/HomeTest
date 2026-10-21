@@ -9,6 +9,8 @@ import { DemoMode, useAuth } from '@/context/AuthContext';
 import { currentReport } from '@/data/reportRepository';
 import { reportSeenKey, userFlags } from '@/data/userFlags';
 import { isPublicDemo } from '@/lib/supabase';
+import { setRealAccount } from '@/data/dataMode';
+import { reloadKeepingPlace } from '@/theme/appearance';
 import { useWebShell } from '@/web/webMode';
 
 const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; color: string }[] = [
@@ -48,6 +50,13 @@ export const DevModeSelectScreen = () => {
   const { setDemoMode, authMode } = useAuth();
   const webShell = useWebShell();
 
+  // Su cuenta de verdad, sin ejemplos (lo mismo que Ajustes → Cuenta real): recarga para leerla así
+  const chooseReal = async () => {
+    setDemoMode(null);
+    await setRealAccount(true);
+    await reloadKeepingPlace(Colors.background, '/(tabs)');
+  };
+
   const choose = (mode: DemoMode) => {
     setDemoMode(mode);
     if (mode === 'new') router.replace('/onboarding');
@@ -72,6 +81,18 @@ export const DevModeSelectScreen = () => {
         <Text style={styles.subtitle}>Prototype only. Log out from More → Settings to come back here.</Text>
 
         <View style={styles.list}>
+          {authMode === 'supabase' && (
+            <TouchableOpacity style={styles.card} onPress={chooseReal} activeOpacity={0.85}>
+              <View style={[styles.iconWrap, { backgroundColor: `${Colors.ok}26` }]}>
+                <Ionicons name="shield-checkmark-outline" size={24} color={Colors.ok} />
+              </View>
+              <View style={styles.textWrap}>
+                <Text style={styles.cardTitle}>My real account</Text>
+                <Text style={styles.cardSubtitle}>Only your own data, no examples. Change it in More → Settings → Real account</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+          )}
           {OPTIONS.filter((o) => !(isPublicDemo && o.mode === 'pro')).map((o) => (
             <TouchableOpacity
               key={o.mode}

@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { CycleGoalPanel } from '@/components/CycleGoalPanel';
 import { InfoButton } from '@/components/InfoButton';
-import { Colors } from '@/constants/colors';
+import { Colors, withAlpha } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { CycleEntry, CyclePrediction } from '@/types/cycle';
 import { cycleRepository } from '@/data/cycleRepository';
@@ -51,13 +51,14 @@ export const CycleDetailScreen = () => {
       );
       const data = await response.json();
       if (!response.ok || data.error) {
-        setPredictionError(data.error ?? t('Could not compute prediction'));
+        // El servidor responde en inglés: aquí, siempre el mensaje traducido
+        setPredictionError(t('Could not compute prediction'));
         setPrediction(null);
       } else {
         setPrediction(data as CyclePrediction);
       }
     } catch (err) {
-      setPredictionError(err instanceof Error ? err.message : 'Unknown error');
+      setPredictionError(t('Could not compute prediction'));
     } finally {
       setLoadingPrediction(false);
     }
@@ -108,9 +109,9 @@ export const CycleDetailScreen = () => {
           <View style={styles.predictionCard}>
             {prediction.is_late && (
               <View style={styles.lateBadge}>
-                <Ionicons name="alert-circle" size={14} color={Colors.danger} />
+                <Ionicons name="alert-circle" size={14} color={Colors.attention} />
                 <Text style={styles.lateBadgeText}>
-                  {prediction.days_late} day{prediction.days_late !== 1 ? 's' : ''} late
+                  {prediction.days_late === 1 ? t('1 day late') : t('{n} days late', { n: prediction.days_late })}
                 </Text>
               </View>
             )}
@@ -121,7 +122,7 @@ export const CycleDetailScreen = () => {
             <Text style={styles.predictionDate}>
               {formatFullDate(prediction.predicted_next_start)}
             </Text>
-            <Text style={styles.predictionWindow}>± {prediction.window_days} days</Text>
+            <Text style={styles.predictionWindow}>± {t('{n} days', { n: prediction.window_days })}</Text>
 
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
@@ -139,7 +140,7 @@ export const CycleDetailScreen = () => {
             </View>
 
             <Text style={styles.confidenceText}>
-              {CONFIDENCE_LABEL[prediction.confidence]}
+              {t(CONFIDENCE_LABEL[prediction.confidence])}
             </Text>
           </View>
         )}
@@ -171,7 +172,7 @@ export const CycleDetailScreen = () => {
                 <Text style={styles.historyDate}>{formatListDate(entry.fecha)}</Text>
                 <Text style={styles.historyValue}>
                   {entry.endFecha
-                    ? `until ${formatListDate(entry.endFecha)} · ${periodDays(entry)} days`
+                    ? t('until {date} · {n} days', { date: formatListDate(entry.endFecha), n: periodDays(entry) ?? 0 })
                     : t('Ongoing / end not logged')}
                 </Text>
                 <Ionicons name="pencil-outline" size={16} color={Colors.textMuted} />
@@ -223,14 +224,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.dangerSoft,
+    backgroundColor: withAlpha(Colors.attention, 0.12),
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginBottom: 14,
   },
   lateBadgeText: {
-    color: Colors.danger,
+    color: Colors.attention,
     fontSize: 12,
     fontWeight: '700',
   },

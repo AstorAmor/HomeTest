@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -94,10 +94,9 @@ export const LogCycleScreen = () => {
           <View style={styles.iconBadge}>
             <Ionicons name="rose-outline" size={26} color={Colors.pulseAccent} />
           </View>
-          <Text style={styles.title}>Log period</Text>
+          <Text style={styles.title}>{t('Log period')}</Text>
           <Text style={styles.subtitle}>
-            Tap the first day, then the last day. If it hasn't finished yet, just save the first day and add the end
-            later.
+            {t('Tap the first day, then the last day. If it has not finished yet, just save the first day and add the end later.')}
           </Text>
         </View>
 
@@ -114,23 +113,23 @@ export const LogCycleScreen = () => {
 
         <View style={styles.summary}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Started</Text>
+            <Text style={styles.summaryLabel}>{t('Started')}</Text>
             <Text style={styles.summaryValue}>{start ? formatDay(start) : '—'}</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Ended</Text>
-            <Text style={styles.summaryValue}>{end ? formatDay(end) : start ? 'Ongoing' : '—'}</Text>
+            <Text style={styles.summaryLabel}>{t('Ended')}</Text>
+            <Text style={styles.summaryValue}>{end ? formatDay(end) : start ? t('Ongoing') : '—'}</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Duration</Text>
-            <Text style={styles.summaryValue}>{start && end ? `${days} days` : '—'}</Text>
+            <Text style={styles.summaryLabel}>{t('Duration')}</Text>
+            <Text style={styles.summaryValue}>{start && end ? t('{n} days', { n: days }) : '—'}</Text>
           </View>
         </View>
 
         {isEditing && (
           <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
             <Ionicons name="trash-outline" size={16} color={Colors.danger} />
-            <Text style={styles.deleteButtonText}>Delete entry</Text>
+            <Text style={styles.deleteButtonText}>{t('Delete entry')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>

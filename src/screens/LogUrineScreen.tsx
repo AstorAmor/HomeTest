@@ -6,9 +6,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { ColorSwatches } from '@/components/BathroomVisuals';
+import { DayCountStepper, VisitsSection } from '@/components/BathroomVisits';
 import { dayKey, entryForDay, noonOf, urineRepository } from '@/data/bathroomRepository';
 import { urineAdvice, UrineAdvice, volumeCheckSuggestion, VolumeCheckSuggestion } from '@/logic/bathroom';
-import { UrineColor, UrineEntry, URINE_COLORS, VOID_VOLUMES } from '@/types/bathroom';
+import { UrineColor, UrineEntry, UrineVisit, URINE_COLORS, VOID_VOLUMES } from '@/types/bathroom';
 import { logScreenStyles } from './LogBowelScreen';
 import { t } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
@@ -17,8 +18,9 @@ const RED_CAUSES = ['Beetroot', 'Blackberries', 'Rhubarb', 'A new medicine'];
 const NONE = 'None of these';
 const NIGHTS = [0, 1, 2, 3].map((n) => ({ id: n, label: n === 3 ? '3+' : String(n) }));
 
-// Apunte del día: veces, por la noche, color y escozor. La medición rápida de volumen tiene su
-// propia pantalla (/volume-check, con el vaso graduado); desde aquí solo se enlaza.
+// Apunte del día: veces (con − y +), cada vez suelta con su hora (BathroomVisits), por la noche, color y
+// escozor. La medición rápida de volumen tiene su propia pantalla (/volume-check, con el vaso
+// graduado); desde aquí solo se enlaza.
 // Con ?quick=1, "una vez, ahora": color y escozor de esta vez, y se suma una vez al día de hoy.
 export const LogUrineScreen = () => {
   const router = useRouter();
@@ -28,6 +30,7 @@ export const LogUrineScreen = () => {
   const [existing, setExisting] = useState<UrineEntry | null>(null);
   const [suggestion, setSuggestion] = useState<VolumeCheckSuggestion>(null);
   const [count, setCount] = useState(6);
+  const [visits, setVisits] = useState<UrineVisit[]>([]);
   const [nightCount, setNightCount] = useState<number | undefined>();
   const [color, setColor] = useState<UrineColor | undefined>();
   const [cause, setCause] = useState<string | undefined>();
@@ -46,6 +49,7 @@ export const LogUrineScreen = () => {
       setExisting(e);
       if (quick) return; // una vez más: lo de esta vez empieza en blanco
       if (e.count != null) setCount(e.count);
+      setVisits(e.visits ?? []);
       setNightCount(e.nightCount);
       setColor(e.color);
       setCause(e.explainedBy);
@@ -59,12 +63,14 @@ export const LogUrineScreen = () => {
     const values: Partial<UrineEntry> = quick
       ? {
           count: (existing?.count ?? 0) + 1,
+          visits: [...(existing?.visits ?? []), { at: new Date().toISOString(), color, burning: burning == null ? undefined : burning === 'yes' }],
           // El color de esta vez pasa a ser el del día (el último); el escozor, si lo hay, se queda
           ...(color ? { color, explainedBy: color === 'red' && cause && cause !== NONE ? cause : undefined } : {}),
           ...(burning === 'yes' ? { burning: true } : burning === 'no' && existing?.burning == null ? { burning: false } : {}),
         }
       : {
       count,
+      visits,
       nightCount,
       color,
       explainedBy: color === 'red' && cause && cause !== NONE ? cause : undefined,
@@ -143,23 +149,34 @@ export const LogUrineScreen = () => {
         {!quick && (
         <>
         <Text style={styles.label}>{t('How many times today?')}</Text>
-        <View style={[styles.stepper, styles.centered]}>
-          <TouchableOpacity style={styles.stepButton} onPress={() => setCount((c) => Math.max(0, c - 1))}>
-            <Ionicons name="remove" size={20} color={Colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.stepValue}>{count}</Text>
-          <TouchableOpacity style={styles.stepButton} onPress={() => setCount((c) => Math.min(30, c + 1))}>
-            <Ionicons name="add" size={20} color={Colors.textPrimary} />
-          </TouchableOpacity>
-        </View>
+        <DayCountStepper count={count} min={visits.length} max={30} onChange={setCount} />
+
+        <VisitsSection
+          kind="urine"
+          day={day}
+          visits={visits}
+          max={30}
+          onChange={(next, saved) => {
+            setVisits(next as UrineVisit[]);
+            setCount((c) => Math.max(c, next.length));
+            // Lo de la última vez pasa al día, como en «una vez, ahora» (y así sale la pregunta del color)
+            if (saved?.color) {
+              setColor(saved.color as UrineColor);
+              setCause(undefined);
+            }
+            if (saved?.burning) setBurning('yes');
+          }}
+        />
 
         <Text style={styles.label}>{t('Times you woke up at night to go')}</Text>
         <ChoiceChips options={NIGHTS} value={nightCount} onChange={setNightCount} center />
+
+        <Text style={styles.dayHeading}>{t('The day in general')}</Text>
         </>
         )}
 
         <Text style={styles.label}>{t('Colour')}</Text>
-        <ColorSwatches options={URINE_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
+        <ColorSwatches options={URINE_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center shape="drop" />
         {color === 'red' && (
           <View style={styles.askCard}>
             <Text style={styles.askTitle}>{t('Could something explain it?')}</Text>
@@ -221,8 +238,7 @@ export const LogUrineScreen = () => {
 
 const styles = StyleSheet.create({
   ...logScreenStyles,
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 18 },
-  centered: { justifyContent: 'center' },
+  dayHeading: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 28 },
   adviceScreen: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28, gap: 10 },
   adviceIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   savedText: { color: Colors.textMuted, fontSize: 13, fontWeight: '600' },
@@ -238,17 +254,6 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   adviceButtonText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
-  stepButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepValue: { color: Colors.textPrimary, fontSize: 28, fontWeight: '800', minWidth: 40, textAlign: 'center' },
   volumeHeader: {
     flexDirection: 'row',
     alignItems: 'center',

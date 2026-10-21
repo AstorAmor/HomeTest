@@ -15,7 +15,7 @@ import { reloadKeepingPlace } from '@/theme/appearance';
 
 const PERMISSIONS: { icon: string; title: string; why: string }[] = [
   { icon: 'notifications-outline', title: 'Notifications', why: 'Reminders for your medication, check-ins and tests.' },
-  { icon: 'fitness-outline', title: 'Health data', why: 'Read sleep, heart rate and steps from Health Connect or your wearable.' },
+  { icon: 'fitness-outline', title: 'Health data', why: Platform.OS === 'ios' ? 'Read sleep, heart rate and steps from Apple Health or your wearable.' : 'Read sleep, heart rate and steps from Health Connect or your wearable.' },
   { icon: 'camera-outline', title: 'Camera', why: 'Scan a lab report to add it to your files.' },
   { icon: 'document-outline', title: 'Photos and files', why: 'Upload a PDF or a photo of your results.' },
   { icon: 'location-outline', title: 'Location', why: 'Show the labs closest to you. Only while you use that screen.' },

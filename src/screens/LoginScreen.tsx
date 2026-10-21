@@ -17,6 +17,7 @@ import { CosmicBackground } from '@/components/CosmicBackground';
 import { KuovaWordmark } from '@/components/KuovaLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
+import { isPublicDemo } from '@/lib/supabase';
 import { t } from '@/i18n';
 import { PasswordInput } from '@/components/PasswordInput';
 
@@ -41,19 +42,23 @@ export const LoginScreen = () => {
   const [nombre, setNombre] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // Alta como profesional sanitario (solo con Supabase: necesita cuenta real)
-  const [isProfessional, setIsProfessional] = useState(false);
+  // «Acceso profesionales»: entrar al portal o darse de alta como profesional sanitario. El alta necesita
+  // Supabase (cuenta real); en la demo, entrar lleva al portal de ejemplo
+  const [proAccess, setProAccess] = useState(false);
   const [proRole, setProRole] = useState<ProfessionalRole>('doctor');
   const [specialty, setSpecialty] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
 
-  const { login, signup, authMode } = useAuth();
+  const { login, signup, authMode, setDemoMode } = useAuth();
+  const isProfessional = proAccess && authMode === 'supabase';
 
   const handleSubmit = async () => {
     setError('');
     setLoading(true);
 
     try {
+      // En la demo no hay fichas de profesional: el modo del portal se elige aquí (como en el selector)
+      if (proAccess && authMode === 'demo') setDemoMode('pro');
       if (isSignUp) {
         if (!nombre.trim()) {
           setError(t('Please enter your name'));
@@ -105,7 +110,12 @@ export const LoginScreen = () => {
               <KuovaWordmark height={34} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />
             </View>
             <Text style={styles.health}>{t('HEALTH')}</Text>
-            <Text style={styles.subtitle}>{t('Know more. Live better.')}</Text>
+            <Text style={styles.subtitle}>{proAccess ? t('Professional access') : t('Know more. Live better.')}</Text>
+            {proAccess && (
+              <Text style={styles.proIntro}>
+                {t('For doctors, nutritionists and other health professionals: see what your patients choose to share with you.')}
+              </Text>
+            )}
           </View>
 
           <View style={styles.form}>
@@ -120,21 +130,6 @@ export const LoginScreen = () => {
                   onChangeText={setNombre}
                   editable={!loading}
                 />
-
-                {authMode === 'supabase' && (
-                  <TouchableOpacity
-                    style={styles.proToggle}
-                    onPress={() => setIsProfessional(!isProfessional)}
-                    disabled={loading}
-                  >
-                    <Ionicons
-                      name={isProfessional ? 'checkbox' : 'square-outline'}
-                      size={22}
-                      color={isProfessional ? Colors.accent : Colors.textSecondary}
-                    />
-                    <Text style={styles.proToggleText}>{t("I'm a healthcare professional")}</Text>
-                  </TouchableOpacity>
-                )}
 
                 {isProfessional && (
                   <View style={styles.proBox}>
@@ -254,6 +249,23 @@ export const LoginScreen = () => {
                   : t("Don't have an account? Create one")}
               </Text>
             </TouchableOpacity>
+
+            {/* Médicos y demás profesionales: su propia entrada (el portal de pacientes que les comparten) */}
+            {!isPublicDemo && (
+              <TouchableOpacity
+                style={styles.proLink}
+                onPress={() => {
+                  setProAccess(!proAccess);
+                  setError('');
+                  setSentTo(null);
+                }}
+                disabled={loading}
+                accessibilityRole="button"
+              >
+                <Ionicons name={proAccess ? 'person-outline' : 'medkit-outline'} size={16} color={Colors.accent} />
+                <Text style={styles.proLinkText}>{proAccess ? t('Patient access') : t('Professional access')}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={[styles.demoHint, authMode !== 'demo' && styles.privacyHint]}>
@@ -358,16 +370,31 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 8,
   },
-  proToggle: {
+  proIntro: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginTop: 8,
+    maxWidth: 320,
+  },
+  proLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginTop: 16,
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 22,
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: withAlpha(Colors.accent, 0.35),
   },
-  proToggleText: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+  proLinkText: {
+    color: Colors.accent,
+    fontSize: 14,
+    fontWeight: '700',
   },
   proBox: {
     marginTop: 12,

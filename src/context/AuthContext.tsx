@@ -118,6 +118,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Alta de profesional pendiente (se pidió con confirmación de correo): crear la ficha y limpiar el dato
+  const finishPendingProfessional = async (session: Session) => {
+    const pending = session.user.user_metadata?.pending_professional as ProfessionalSignup | null | undefined;
+    if (!pending) return;
+    try {
+      if (!(await getMyProfessionalAccount())) {
+        const displayName = (session.user.user_metadata?.display_name as string | undefined) ?? '';
+        await registerAsProfessional({ displayName, ...pending });
+      }
+      await supabase!.auth.updateUser({ data: { pending_professional: null } });
+    } catch {
+      // Se reintenta en el siguiente inicio de sesión
+    }
+  };
+
   useEffect(() => {
     if (!supabase) return;
     const apply = async (session: Session | null) => {
@@ -130,7 +145,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsSupportAgent(false);
         resetDataMode();
       } else {
-        if (!creatingProfessional.current) await refreshProfessional();
+        if (!creatingProfessional.current) {
+          await finishPendingProfessional(session);
+          await refreshProfessional();
+        }
         const admin = await amIAdmin();
         setIsAdmin(admin);
         const tester = await amITester(admin);
@@ -175,7 +193,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { display_name: nombre.trim() } },
+          // Los datos del profesional van en la cuenta: si hay que confirmar el correo, la ficha se crea al
+          // primer inicio de sesión (finishPendingProfessional)
+          options: { data: { display_name: nombre.trim(), ...(professionalSignup ? { pending_professional: professionalSignup } : {}) } },
         });
         if (error) throw new Error(error.message);
         // Con «Confirm email» activado en Supabase no hay sesión hasta abrir el correo
@@ -211,7 +231,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setDemoMode(null);
     if (supabase) {
-      supabase.auth.signOut();
+      // Fuera ya, sin esperar al aviso de Supabase: si no, «/» volvía a entrar en las pestañas con la
+      // sesión aún puesta y, al cerrarse, se quedaba dentro sin cuenta (con lo guardado en el móvil)
+      setCurrentUserId(null);
+      setUser(null);
+      setProfessional(null);
+      setIsAdmin(false);
+      setIsTester(false);
+      setIsSupportAgent(false);
+      setRealAccount(false);
+      resetDataMode();
+      supabase.auth.signOut().catch(() => undefined);
       return;
     }
     setDemoUser(null);

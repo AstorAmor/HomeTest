@@ -40,6 +40,10 @@ export const bowelRepository = createMetricRepository<BowelEntry>('hometest:bowe
 // El volumen exacto (void_ml) va en la columna de la migración 20261012100000_urine_void_ml.sql
 // (aplicada el 2026-10-12 con el OK del fundador). Si hiciera falta volver atrás, poner false.
 const REMOTE_HAS_VOID_ML = true;
+// Cada vez con su hora (urine_logs.visits): migración 20261021120000_urine_visits.sql (aplicada el
+// 2026-10-21 con el OK del fundador). Con false, en una cuenta las veces sueltas no se suben (el total
+// del día sí).
+const REMOTE_HAS_URINE_VISITS = true;
 
 export const urineRepository = createMetricRepository<UrineEntry>('hometest:urine_logs', {
   table: 'urine_logs',
@@ -48,6 +52,7 @@ export const urineRepository = createMetricRepository<UrineEntry>('hometest:urin
     definedOnly({
       id: e.id,
       count: e.count,
+      visits: REMOTE_HAS_URINE_VISITS ? e.visits : undefined,
       night_count: e.nightCount,
       color: e.color,
       burning: e.burning,
@@ -63,6 +68,7 @@ export const urineRepository = createMetricRepository<UrineEntry>('hometest:urin
   fromRow: (r) => ({
     id: r.id,
     count: r.count ?? undefined,
+    visits: r.visits ?? undefined,
     nightCount: r.night_count ?? undefined,
     color: r.color ?? undefined,
     burning: r.burning ?? undefined,
@@ -85,3 +91,21 @@ export const noonOf = (day: string) => new Date(`${day}T12:00:00`).toISOString()
 
 export const entryForDay = <T extends { fecha: string }>(entries: T[], day: string) =>
   entries.find((e) => dayKey(new Date(e.fecha)) === day) ?? null;
+
+// El «+» de las tarjetas de Hoy: una vez más hoy, con su hora y sin color ni forma (eso se añade
+// entrando, en esa misma vez)
+export async function addUrineVisit(): Promise<void> {
+  const today = dayKey(new Date());
+  const now = new Date().toISOString();
+  const e = entryForDay(await urineRepository.getAll(), today);
+  if (e) await urineRepository.update(e.id, { count: (e.count ?? 0) + 1, visits: [...(e.visits ?? []), { at: now }] });
+  else await urineRepository.save({ id: `${Date.now()}`, fecha: noonOf(today), createdAt: now, count: 1, visits: [{ at: now }] });
+}
+
+export async function addBowelVisit(): Promise<void> {
+  const today = dayKey(new Date());
+  const now = new Date().toISOString();
+  const e = entryForDay(await bowelRepository.getAll(), today);
+  if (e) await bowelRepository.update(e.id, { count: e.count + 1, movements: [...(e.movements ?? []), { at: now }] });
+  else await bowelRepository.save({ id: `${Date.now()}`, fecha: noonOf(today), createdAt: now, count: 1, movements: [{ at: now }] });
+}

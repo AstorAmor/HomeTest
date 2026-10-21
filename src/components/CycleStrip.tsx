@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { CyclePhaseInfo, PHASE_COLORS, phaseBoundaries } from '@/utils/cyclePhase';
+import { t } from '@/i18n';
 
 interface CycleStripProps {
   info: CyclePhaseInfo;
@@ -25,11 +26,11 @@ export const CycleStrip = ({ info, onPress }: CycleStripProps) => {
       <View style={styles.header}>
         <View style={styles.phaseRow}>
           <Ionicons name="rose-outline" size={16} color={Colors.pulseAccent} />
-          <Text style={[styles.phase, { color: PHASE_COLORS[info.phase] }]}>{info.label}</Text>
+          <Text style={[styles.phase, { color: PHASE_COLORS[info.phase] }]}>{t(info.label)}</Text>
         </View>
         <Text style={styles.day}>
-          Day {info.day} of {info.length}
-          {info.isSample ? ' · sample' : ''}
+          {t('Day {n} of {total}', { n: info.day, total: info.length })}
+          {info.isSample ? ` · ${t('sample')}` : ''}
         </Text>
       </View>
       <View style={styles.bar}>
@@ -38,7 +39,7 @@ export const CycleStrip = ({ info, onPress }: CycleStripProps) => {
         ))}
         <View style={[styles.marker, { left: `${markerPct}%` }]} />
       </View>
-      <Text style={styles.hint}>{info.hint}</Text>
+      <Text style={styles.hint}>{t(info.hint)}</Text>
     </TouchableOpacity>
   );
 };

@@ -146,7 +146,12 @@ export const CycleGoalPanel = () => {
           )}
           <Text style={styles.cardText}>
             {shift
-              ? `Your temperature rose on ${shortDay(shift.shiftDate)}: you most likely ovulated around ${shortDay(shift.likelyOvulation)}${shift.confidence === 'low' ? ' (from your wearable, less precise)' : ''}.`
+              ? tr(
+                  shift.confidence === 'low'
+                    ? 'Your temperature rose on {date}: you most likely ovulated around {ovulation} (from your wearable, less precise).'
+                    : 'Your temperature rose on {date}: you most likely ovulated around {ovulation}.',
+                  { date: shortDay(shift.shiftDate), ovulation: shortDay(shift.likelyOvulation) },
+                )
               : tr('After ovulation your temperature rises about 0.2–0.5 °C and stays up until your period. We will mark it when we see it.')}
           </Text>
         </View>

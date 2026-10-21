@@ -6,7 +6,8 @@ import { StatsRow } from '@/components/MetricDetailParts';
 import { dateLocale, t } from '@/i18n';
 import { formatClock, formatSleep, shortDate, SleepNight } from '@/wearables/dailySeries';
 
-// Detalle de cada noche en la ficha del sueño: una barra por noche con sus fases (tocarla la elige),
+// Detalle de cada noche en la ficha del sueño: una barra por noche con sus fases (tocarla la elige; en
+// 6M, una por semana con la media de esa semana),
 // los minutos de cada fase de la noche elegida, la hora de dormirte y de despertarte, y la media de
 // esas horas en el periodo. Una noche sin fases (la fuente solo da la sesión) enseña solo la
 // duración y las horas, sin barra de fases.
@@ -42,7 +43,12 @@ const nightLabel = (date: string) => {
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 
-export const SleepNightsCard = ({ nights, showBars }: { nights: SleepNight[]; showBars: boolean }) => {
+const weekLabel = (date: string) =>
+  t('Week of {date}', { date: new Date(`${date}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }) });
+
+export const SleepNightsCard = ({ nights, weekly = false }: { nights: SleepNight[]; weekly?: boolean }) => {
+  const showBars = true;
+  const labelOf = weekly ? weekLabel : nightLabel;
   const [picked, setPicked] = useState<string | null>(null);
   const staged = nights.some((n) => n.stages);
   if (!nights.length || !nights.some((n) => n.stages || n.start != null)) return null;
@@ -65,7 +71,7 @@ export const SleepNightsCard = ({ nights, showBars }: { nights: SleepNight[]; sh
                   key={n.date}
                   style={[styles.barSlot, n.date !== night.date && styles.barDim]}
                   onPress={() => setPicked(n.date)}
-                  accessibilityLabel={nightLabel(n.date)}
+                  accessibilityLabel={labelOf(n.date)}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.bar, { height: (total(n) / max) * BARS_HEIGHT }]}>
@@ -85,12 +91,12 @@ export const SleepNightsCard = ({ nights, showBars }: { nights: SleepNight[]; sh
               {nights.length > 2 && <Text style={styles.xLabel}>{shortDate(nights[mid].date)}</Text>}
               <Text style={styles.xLabel}>{shortDate(nights[nights.length - 1].date)}</Text>
             </View>
-            <Text style={styles.hint}>{t('Tap a night to see its stages')}</Text>
+            <Text style={styles.hint}>{weekly ? t('Weekly averages · tap a week to see it') : t('Tap a night to see its stages')}</Text>
           </>
         )}
 
         <View style={[styles.nightHead, showBars && staged && nights.length > 1 && styles.nightHeadSpaced]}>
-          <Text style={styles.nightTitle}>{nightLabel(night.date)}</Text>
+          <Text style={styles.nightTitle}>{labelOf(night.date)}</Text>
           <Text style={styles.nightTotal}>{formatSleep(night.asleep)}</Text>
         </View>
 

@@ -5,7 +5,7 @@ import { Colors } from '@/constants/colors';
 import { ProgressRing } from '@/components/ProgressRing';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
-import { BristolShape } from '@/components/BathroomVisuals';
+import { BristolShape, UrineDrop } from '@/components/BathroomVisuals';
 import { currentCyclePhase } from '@/utils/cyclePhase';
 import { AppSection } from '@/data/appPrefs';
 import { GaugeBar } from '@/components/GaugeBar';
@@ -124,9 +124,9 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
     <View style={{ gap: 10 }}>
       <View style={styles.week}>
         {(['pale', 'yellow', 'pale', 'dark', 'yellow', 'pale', 'pale'] as const).map((c, i) => (
-          <View key={i} style={[styles.dot, { backgroundColor: URINE_COLORS.find((u) => u.id === c)!.swatch }]}>
+          <UrineDrop key={i} color={URINE_COLORS.find((u) => u.id === c)!.swatch} size={34} shine={false}>
             <Text style={[styles.dotText, { color: '#3A3320' }]}>{[6, 7, 6, 4, 6, 7, 6][i]}</Text>
-          </View>
+          </UrineDrop>
         ))}
       </View>
       <GaugeBar

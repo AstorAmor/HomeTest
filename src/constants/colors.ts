@@ -50,6 +50,7 @@ const DARK = {
   violet: '#9B8CFF',
   violetSoft: 'rgba(155, 140, 255, 0.15)',
   sky: '#5AB8F0',
+  water: '#4A90F0', // hidratación y agua (los pasos ya usan sky)
   amber: '#F0B84D',
   coral: '#FF8A65',
 
@@ -100,6 +101,7 @@ const LIGHT: typeof DARK = {
   violet: '#7A5BB5',
   violetSoft: 'rgba(122, 91, 181, 0.12)',
   sky: '#3E7FA8',
+  water: '#2F6DC4',
   amber: '#B8904F',
   coral: '#D9663F',
 

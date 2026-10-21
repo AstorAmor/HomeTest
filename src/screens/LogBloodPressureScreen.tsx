@@ -15,7 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DateTimeSheet } from '@/components/DateTimeSheet';
 import { Colors } from '@/constants/colors';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { WheelPicker } from '@/components/WheelPicker';
@@ -317,14 +317,7 @@ export const LogBloodPressureScreen = () => {
         )}
       </ScrollView>
 
-      {pickerMode && (
-        <DateTimePicker
-          value={dateTime}
-          mode={pickerMode}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={onPickerChange}
-        />
-      )}
+      <DateTimeSheet mode={pickerMode} value={dateTime} onChange={onPickerChange} onClose={() => setPickerMode(null)} />
     </SafeAreaView>
   );
 };

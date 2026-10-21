@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform, ScrollView, TextInp
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DateTimeSheet } from '@/components/DateTimeSheet';
 import { Colors, withAlpha } from '@/constants/colors';
 import { AppIcon } from '@/components/HealthIcons';
 import { WheelPicker } from '@/components/WheelPicker';
@@ -218,7 +218,7 @@ export const LogWeightScreen = () => {
         )}
       </ScrollView>
 
-      {pickerMode && <DateTimePicker value={dateTime} mode={pickerMode} display={Platform.OS === 'ios' ? 'spinner' : 'default'} onChange={onPickerChange} />}
+      <DateTimeSheet mode={pickerMode} value={dateTime} onChange={onPickerChange} onClose={() => setPickerMode(null)} />
     </SafeAreaView>
   );
 };

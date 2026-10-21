@@ -10,6 +10,7 @@ import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
 import { useWebShell } from '@/web/webMode';
 import { TourOverlay } from '@/components/tour/TourOverlay';
+import { useAuth } from '@/context/AuthContext';
 
 const LAST = TABS.length - 1;
 
@@ -22,6 +23,7 @@ export const MainTabsScreen = () => {
   const router = useRouter();
   // Web del paciente en escritorio: el menú lateral elige la pestaña, sin barra abajo
   const shell = useWebShell();
+  const { isLoggedIn, initializing } = useAuth();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const [currentPage, setCurrentPage] = useState(Math.min(LAST, Math.max(0, Number(tab) || 0)));
 
@@ -44,6 +46,8 @@ export const MainTabsScreen = () => {
     <MoreScreen key="more" />,
   ];
 
+  // Sin sesión (se ha cerrado o ha caducado) no se queda dentro: al inicio de sesión
+  if (!initializing && !isLoggedIn) return <Redirect href="/" />;
   // En la web del paciente, "Hoy" es el resumen
   if (shell && currentPage === 0) return <Redirect href="/resumen" />;
 

@@ -83,29 +83,63 @@ export interface Readiness {
   restingHr: number | null;
   // Lo que no ha llegado hoy y por tanto no cuenta (el resto se reparte su peso)
   missing: ReadinessPart[];
+  // En la fase lútea se descuenta lo que suben el pulso y baja la VFC por el ciclo
+  cycleAdjusted: boolean;
 }
 
-// Daily readiness (0-100), versión simple y explicable:
-// sueño de anoche frente a 8 h, VFC y pulso en reposo de hoy frente a su media de los días
-// anteriores (hasta 14). Pesos 40/35/25; si falta alguna parte, las demás se reparten su peso.
-// Hace falta el sueño de anoche o el pulso en reposo de hoy. Pendiente de validar con el médico.
-export function computeReadiness(series: DailySeries, now = new Date()): Readiness | null {
+export interface ReadinessOptions {
+  sleepNeedMin?: number; // su objetivo de sueño (Tus objetivos del día); 7 h 30 si no hay
+  luteal?: boolean; // fase lútea según sus reglas apuntadas (no la de ejemplo)
+}
+
+const sd = (xs: number[]) => {
+  const m = mean(xs);
+  return Math.sqrt(mean(xs.map((x) => (x - m) ** 2)));
+};
+
+// Lo que cambian de media en la fase lútea frente a la folicular (Shilaih 2018: pulso en reposo unos
+// 2 lpm más; la VFC, algo más baja): se descuenta para no restar por algo propio del ciclo
+const LUTEAL_RHR_BPM = 2;
+const LUTEAL_HRV_LN = 0.07;
+
+// Daily readiness (0-100). Como hacen Oura o WHOOP, cada parte frente a lo TUYO, no frente a una media:
+// - VFC (en escala logarítmica, como se analiza en deporte) y pulso en reposo de hoy frente a tus 28
+//   días anteriores: cuántas desviaciones típicas te separan de lo habitual (z). Un día normal da 65 y
+//   cada desviación suma o resta 15: hace falta un día claramente mejor de lo normal para pasar de 90.
+//   Con menos de 5 días de historia se usa una variación «típica» fija (10 % en la VFC, 5 % en el pulso,
+//   lo habitual de un día a otro), que es también el mínimo para que un día tranquilo no salte de golpe.
+//   Con menos de 14 días de historia, la diferencia cuenta en proporción (7 días, la mitad): con un reloj
+//   recién conectado aún no sabemos qué es lo normal en ti.
+// - Sueño de anoche frente a tu objetivo: llegar da 90; por cada 10 % que falta, 15 menos.
+// Pesos 40 (sueño) / 35 (VFC) / 25 (pulso); si falta alguna, las demás se reparten su peso. Hace falta
+// el sueño de anoche o el pulso de hoy. Pendiente de validar con el médico.
+export function computeReadiness(series: DailySeries, now = new Date(), opts: ReadinessOptions = {}): Readiness | null {
   const today = localDayKey(now);
   const todayOf = (pts?: DailyPoint[]) => pts?.find((p) => p.date === today)?.value ?? null;
-  const baseOf = (pts?: DailyPoint[]) => {
-    const prev = (pts ?? []).filter((p) => p.date < today).slice(-14);
-    return prev.length >= 2 ? mean(prev.map((p) => p.value)) : null;
-  };
+  const prevOf = (pts?: DailyPoint[]) => (pts ?? []).filter((p) => p.date < today && p.value > 0).slice(-28).map((p) => p.value);
+  const fromZ = (z: number, n: number) => clamp(65 + 15 * z * Math.min(1, n / 14));
+  const luteal = !!opts.luteal;
 
   const lastSleep = todayOf(series.sleep_duration);
-  const hrvToday = todayOf(series.hrv);
-  const hrvBase = baseOf(series.hrv);
-  const rhrToday = todayOf(series.resting_heart_rate);
-  const rhrBase = baseOf(series.resting_heart_rate);
+  const need = opts.sleepNeedMin && opts.sleepNeedMin > 0 ? opts.sleepNeedMin : 450;
+  const sleepScore = lastSleep != null ? (lastSleep >= need ? 90 : clamp(90 - (1 - lastSleep / need) * 150)) : null;
 
-  const sleepScore = lastSleep != null ? clamp((lastSleep / 480) * 100) : null;
-  const hrvScore = hrvToday != null && hrvBase ? clamp(70 + ((hrvToday - hrvBase) / hrvBase) * 200) : null;
-  const rhrScore = rhrToday != null && rhrBase ? clamp(70 - ((rhrToday - rhrBase) / rhrBase) * 300) : null;
+  const hrvToday = todayOf(series.hrv);
+  const hrvPrev = prevOf(series.hrv).map(Math.log);
+  let hrvScore: number | null = null;
+  if (hrvToday != null && hrvToday > 0 && hrvPrev.length >= 2) {
+    const spread = Math.max(hrvPrev.length >= 5 ? sd(hrvPrev) : 0, 0.1);
+    hrvScore = fromZ((Math.log(hrvToday) + (luteal ? LUTEAL_HRV_LN : 0) - mean(hrvPrev)) / spread, hrvPrev.length);
+  }
+
+  const rhrToday = todayOf(series.resting_heart_rate);
+  const rhrPrev = prevOf(series.resting_heart_rate);
+  let rhrScore: number | null = null;
+  if (rhrToday != null && rhrPrev.length >= 2) {
+    const base = mean(rhrPrev);
+    const spread = Math.max(rhrPrev.length >= 5 ? sd(rhrPrev) : 0, base * 0.05, 2);
+    rhrScore = fromZ(-(rhrToday - (luteal ? LUTEAL_RHR_BPM : 0) - base) / spread, rhrPrev.length);
+  }
   if (sleepScore == null && rhrScore == null) return null;
 
   const parts: [ReadinessPart, number | null, number][] = [
@@ -125,6 +159,7 @@ export function computeReadiness(series: DailySeries, now = new Date()): Readine
     hrv: hrvScore,
     restingHr: rhrScore,
     missing: parts.filter(([, v]) => v == null).map(([k]) => k),
+    cycleAdjusted: luteal && (hrvScore != null || rhrScore != null),
   };
 }
 
@@ -278,6 +313,53 @@ export interface SleepNight {
   end: number | null;
   // `other`: dormido sin fase (p. ej. una siesta de una fuente que no da fases ese día)
   stages: (SleepStages & { other: number }) | null;
+}
+
+// Desde qué día entra un periodo de `days` días que acaba hoy
+export const sinceDay = (days: number, now = new Date()) => localDayKey(new Date(now.getTime() - (days - 1) * 86400000));
+
+// En 6M, por semanas de calendario que acaban hoy (la última, los 7 últimos días): la media de cada
+// una, fechada en su primer día. Solo las semanas con datos.
+export function weeklyAverages(points: DailyPoint[], now = new Date()): DailyPoint[] {
+  const today = dayNumber(localDayKey(now));
+  const buckets = new Map<number, number[]>();
+  for (const p of points) {
+    const k = Math.floor((today - dayNumber(p.date)) / 7);
+    (buckets.get(k) ?? buckets.set(k, []).get(k)!).push(p.value);
+  }
+  return [...buckets.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([k, vs]) => ({ date: localDayKey(new Date(now.getTime() - (k * 7 + 6) * 86400000)), value: mean(vs) }));
+}
+
+// Lo mismo para las noches: fases, horas y duración medias de cada semana
+export function weeklyNights(nights: SleepNight[], now = new Date()): SleepNight[] {
+  const today = dayNumber(localDayKey(now));
+  const buckets = new Map<number, SleepNight[]>();
+  for (const n of nights) {
+    const k = Math.floor((today - dayNumber(n.date)) / 7);
+    (buckets.get(k) ?? buckets.set(k, []).get(k)!).push(n);
+  }
+  const avg = (xs: (number | null | undefined)[]) => {
+    const ok = xs.filter((x): x is number => x != null);
+    return ok.length ? mean(ok) : null;
+  };
+  return [...buckets.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([k, ns]) => {
+      const staged = ns.filter((n) => n.stages);
+      const stage = (key: keyof NonNullable<SleepNight['stages']>) => mean(staged.map((n) => n.stages![key]));
+      return {
+        ...ns[ns.length - 1],
+        date: localDayKey(new Date(now.getTime() - (k * 7 + 6) * 86400000)),
+        asleep: mean(ns.map((n) => n.asleep)),
+        start: avg(ns.map((n) => n.start)),
+        end: avg(ns.map((n) => n.end)),
+        stages: staged.length
+          ? { deep: stage('deep'), light: stage('light'), rem: stage('rem'), other: stage('other'), awake: stage('awake'), outOfBed: stage('outOfBed') }
+          : null,
+      } as SleepNight;
+    });
 }
 
 export function sleepNights(series: DailySeries): SleepNight[] {

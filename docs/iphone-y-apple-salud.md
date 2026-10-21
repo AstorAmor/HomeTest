@@ -1,6 +1,6 @@
 # Kuova en iPhone y Apple Salud: qué está hecho y qué falta
 
-Actualizado: 2026-10-19
+Actualizado: 2026-10-21
 
 La mayoría de los usuarios tendrán iPhone, así que la app tiene que leer **Apple Salud** igual que en Android lee Health Connect. Apple Salud solo se puede leer desde una **app de iPhone instalada**: ni la web ni Expo Go pueden. Lo que lea el iPhone se guarda en la misma tabla de Supabase (`wearable_daily`, proveedor `apple_health`), así que la web de la app (hometest-app.vercel.app) lo enseña sin hacer nada más.
 
@@ -16,10 +16,15 @@ La mayoría de los usuarios tendrán iPhone, así que la app tiene que leer **Ap
 | Configuración de iPhone: identificador `com.kuovahealth.app`, permiso de Salud, textos de permisos en inglés y español | `app.json`, `assets/locales/es.json` |
 | Perfil de compilación `testflight` (canal `preview`: recibe los mismos `npm run release` que la APK) | `eas.json` |
 | Tests de la lógica nueva | `src/wearables/__tests__/seriesLogic.test.ts` |
+| (21/10) Fecha y hora en los registros de tensión, glucosa, peso y métricas sueltas: en iPhone la rueda va en una hoja con «Hecho» (antes se habría quedado abierta sin forma de cerrarla) | `src/components/DateTimeSheet.tsx` |
+| (21/10) Permiso para guardar en Fotos (`NSPhotoLibraryAddUsageDescription`): sin él, «Guardar imagen» al compartir una insignia cierra la app de golpe | `app.json`, `assets/locales/es.json` |
+| (21/10) Texto del permiso de Salud ampliado a peso, entrenos, tensión, glucosa, oxígeno, temperatura y respiración, para poder leerlos más adelante sin otra compilación | `app.json`, `assets/locales/es.json` |
+| (21/10) Sin audio en segundo plano (ninguna pantalla lo usa): se quita el modo `audio` de iPhone y el servicio de Android, que Apple y Google piden justificar | `app.json` (`enableBackgroundPlayback: false`) |
+| (21/10) Ajustes → Permisos y la tarjeta de Huawei hablan de Apple Salud en iPhone (Huawei Health sí escribe en Salud) | `SettingsScreen.tsx`, `WearablesScreen.tsx` |
 
 Librería: `@kingstinct/react-native-healthkit` 16.2 + `react-native-nitro-modules` 0.37.
 
-**No está probado en un iPhone real**: no se puede hasta tener la primera compilación (punto 3).
+**No está probado en un iPhone real**: no se puede hasta tener la primera compilación (punto 3). Desde Windows no se puede generar el proyecto de Xcode (`expo prebuild` para iOS solo funciona en Mac o Linux); el 21/10 se comprobó con `npx expo config --type introspect` el Info.plist resultante: identificador, permisos en los dos idiomas, entitlement de HealthKit, avisos (`aps-environment`) y sin modos en segundo plano. La comprobación de verdad es la primera compilación en EAS.
 
 ## 2. Lo que tienes que hacer tú (cuentas y decisiones)
 
@@ -60,7 +65,7 @@ Después, cada `npm run release` llega también al iPhone (mismo canal `preview`
 2. **Uso de los datos de Salud** (norma 5.1.3): no usarlos para publicidad ni cederlos a terceros, no guardarlos en iCloud, no escribir datos falsos en Salud. Kuova cumple (solo lee y guarda en Supabase, UE). La política de privacidad debe decir qué datos de Salud se leen y para qué: añádelo al revisarla con el abogado.
 3. **Etiqueta de privacidad** en App Store Connect: declarar «Salud y forma física», «Información de salud», email, fotos, etc., vinculados a la identidad, sin seguimiento publicitario.
 4. **Pagos**: los análisis en laboratorio son un servicio que se consume fuera de la app, así que se pueden cobrar con tarjeta (norma 3.1.3(e)). Pero si una suscripción desbloquea funciones **dentro** de la app (por ejemplo, leer informes), Apple puede exigir compra dentro de la app. Lo más seguro para la primera versión: en iPhone no vender nada dentro de la app (se compra en la web y en la app solo se entra con la cuenta). Esto es decisión de negocio: llévala a Curro.
-5. **Audio en segundo plano**: `expo-audio` declara reproducción en segundo plano. Si la app no la necesita en iPhone, Apple puede preguntar o rechazar; se quita con `enableBackgroundPlayback: false` en el plugin (comprobar que Android no lo necesita antes).
+5. ~~**Audio en segundo plano**~~: hecho el 21/10 (`enableBackgroundPlayback: false`; ni iPhone ni Android lo usaban). La próxima APK tampoco declara el servicio en primer plano de audio.
 6. **Capturas** de iPhone de 6,9" (1320 × 2868) y textos de la ficha en español.
 7. **Si un día se añade inicio de sesión con Google**, Apple obliga a ofrecer también «Iniciar sesión con Apple» (norma 4.8). Hoy solo hay email: no hace falta.
 
