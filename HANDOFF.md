@@ -1430,7 +1430,7 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
 
 **Publicado ee21efa** (2026-10-21, OK del fundador «Haz commit de todo y publica con npm run release»): EAS Update grupo `e41021c1-99c8-495d-a15c-48e05acfed8b` (preview, android + ios) y las dos webs a la primera (`npm run release` entero, 1,7 GB libres).
 
-## 2026-10-21 (tarde) — Tutorial guiado (sin commit)
+## 2026-10-21 (tarde) — Tutorial guiado
 
 - **Qué es**: pantalla oscurecida con un hueco sobre cada parte principal y un bocadillo («3 de 9», título, texto,
   Saltar / Siguiente); tocar el hueco también avanza. 9 pasos: pestaña Hoy, check-in, «Tu estado de hoy», Tu plan,
@@ -1449,7 +1449,7 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
   vuelven arriba y el aviso del perfil genético sale al acabar. En el móvil sin probar (coordenadas con
   statusBarTranslucent y edge-to-edge).
 
-## 2026-10-21 (noche) — Cuentas reales por defecto, ciclo tipo Flo, IMC, temperatura con ruedas, contraseña (sin commit)
+## 2026-10-21 (noche) — Cuentas reales por defecto, ciclo tipo Flo, IMC, temperatura con ruedas, contraseña
 
 - **Cuentas**: toda cuenta es real (sin selector «developer», sin datos de ejemplo, directa a los cuestionarios).
   Solo los probadores pueden tener cuenta de prueba: `is_tester()` en Supabase (admins y los «+alias» del email de un
@@ -1478,3 +1478,5 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
 - **Correo desde hello@kuovahealth.com**: se configura en el panel de Supabase (SMTP de M365 con la contraseña del
   buzón: lo hace el fundador; tarea en next-actions). Plantilla en español lista para pegar:
   `supabase/templates/confirmar-cuenta.html`.
+
+**Publicado 46f2578** (2026-10-21, OK del fundador «Haz commit de todo, publica con npm run release y aplica la migración de probadores en Supabase»): migración 20261021100000_testers aplicada antes (db query --linked en una transacción + migration repair; comprobada con claims simulados: alias «+» de un admin = true, otro email = false). EAS Update grupo `06f0cbd1-ac80-448e-8eb9-25efcf679c3e` (preview, android + ios) y las dos webs a la primera. Incluye el tutorial guiado. Sin migraciones pendientes. Falta (fundador): SMTP de hello@kuovahealth.com y «Confirm email» en Supabase.
