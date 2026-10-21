@@ -5,7 +5,7 @@ import type { Session } from '@supabase/supabase-js';
 import { AuthUser } from '@/types';
 import { mockPatient } from '@/data/mockData';
 import { isSupabaseConfigured, setCurrentUserId, supabase } from '@/lib/supabase';
-import { loadDataMode, resetDataMode } from '@/data/dataMode';
+import { amITester, loadDataMode, resetDataMode } from '@/data/dataMode';
 import {
   amIAdmin,
   getMyProfessionalAccount,
@@ -41,12 +41,15 @@ interface AuthContextType {
   refreshProfessional: () => Promise<void>;
   // Administrador de HomeTest (verifica profesionales y aprueba tarifas)
   isAdmin: boolean;
+  // Admins y sus «+alias»: los únicos con cuentas de prueba (selector developer, casos de prueba, Cuenta real)
+  isTester: boolean;
   // Cuenta de Soporte KUOVA (lee datos de quien le da permiso, con motivo y registro)
   isSupportAgent: boolean;
   // Cuenta real: sin datos de ejemplo ni selector "developer" (src/data/dataMode.ts)
   realAccount: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, nombre: string, professional?: ProfessionalSignup) => Promise<void>;
+  // 'confirm_email' = cuenta creada, falta abrir el correo de confirmación para poder entrar
+  signup: (email: string, password: string, nombre: string, professional?: ProfessionalSignup) => Promise<'signed_in' | 'confirm_email'>;
   // Alias con el que te saluda la app ("¡Hola, Astor!"). Sin alias, la parte del email antes de la @
   updateDisplayName: (nombre: string) => Promise<void>;
   logout: () => void;
@@ -101,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
   const [professional, setProfessional] = useState<ProfessionalAccount | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTester, setIsTester] = useState(false);
   const [isSupportAgent, setIsSupportAgent] = useState(false);
   const [realAccount, setRealAccount] = useState(false);
   // Durante el alta de un profesional, la ficha aún no existe: no consultarla en paralelo
@@ -122,14 +126,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!session) {
         setProfessional(null);
         setIsAdmin(false);
+        setIsTester(false);
         setIsSupportAgent(false);
         resetDataMode();
       } else {
         if (!creatingProfessional.current) await refreshProfessional();
-        setIsAdmin(await amIAdmin());
+        const admin = await amIAdmin();
+        setIsAdmin(admin);
+        const tester = await amITester(admin);
+        setIsTester(tester);
         setIsSupportAgent(await amISupportAgent());
-        // Cuenta real (sin datos de ejemplo) o de prueba: antes de pintar ninguna pantalla
-        setRealAccount(await loadDataMode());
+        // Cuenta real (sin datos de ejemplo) o de prueba, antes de pintar ninguna pantalla. Solo un
+        // probador puede tener cuenta de prueba: las demás entran directas a los cuestionarios
+        setRealAccount(await loadDataMode(tester));
       }
       setUser(userFromSession(session));
     };
@@ -159,7 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     password: string,
     nombre: string,
     professionalSignup?: ProfessionalSignup
-  ) => {
+  ): Promise<'signed_in' | 'confirm_email'> => {
     if (supabase) {
       creatingProfessional.current = !!professionalSignup;
       try {
@@ -169,9 +178,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           options: { data: { display_name: nombre.trim() } },
         });
         if (error) throw new Error(error.message);
-        if (!data.session) {
-          throw new Error('Account created. Check your email to confirm it, then sign in.');
-        }
+        // Con «Confirm email» activado en Supabase no hay sesión hasta abrir el correo
+        if (!data.session) return 'confirm_email';
         if (professionalSignup) {
           setCurrentUserId(data.session.user.id);
           await registerAsProfessional({ displayName: nombre.trim(), ...professionalSignup });
@@ -180,9 +188,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } finally {
         creatingProfessional.current = false;
       }
-      return;
+      return 'signed_in';
     }
     setDemoUser({ id: mockPatient.id, email, nombre });
+    return 'signed_in';
   };
 
   const updateDisplayName = async (nombre: string) => {
@@ -220,6 +229,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         professional,
         refreshProfessional,
         isAdmin,
+        isTester,
         isSupportAgent,
         realAccount,
         login,

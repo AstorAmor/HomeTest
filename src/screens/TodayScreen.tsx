@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -29,6 +29,8 @@ import { computeAchievements } from '@/data/achievements';
 import { BlobArt } from '@/components/BlobArt';
 import { KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { TourTarget } from '@/components/tour/TourTarget';
+import { makeTourScroll } from '@/components/tour/tourStore';
 import { DailyGoals, effectiveGoals, suggestedGoals } from '@/logic/dailyGoals';
 import { dailyGoalsStore } from '@/data/dailyGoals';
 import { weightRepository } from '@/data/weightRepository';
@@ -56,6 +58,7 @@ import { checkInRepository, dailyCheckInSeries, sampleCheckInSeries, DailyCheckI
 import { CheckInEntry, MOOD_OPTIONS, MOMENT_OPTIONS } from '@/types/checkIn';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
+import { cycleGoalStore } from '@/data/cycleGoal';
 import {
   buildPlan,
   mealRepository,
@@ -142,6 +145,8 @@ export const TodayScreen = () => {
   const [biomarkers, setBiomarkers] = useDeepState<Biomarker[]>(initialBiomarkers());
   const [profile, setProfile] = useDeepState<UserProfile | null>(null);
   const [savedGoals, setSavedGoals] = useDeepState<Partial<DailyGoals> | null>(null);
+  // Para que el tutorial pueda bajar hasta lo que señala
+  const tourScroll = useMemo(makeTourScroll, []);
   // Hay resultados (informe o analítica subida): el plan ya se apoya en ellos
   const [hasResults, setHasResults] = useState(labReports().length > 0);
   const [achievementData, setAchievementData] = useDeepState<{
@@ -271,7 +276,8 @@ export const TodayScreen = () => {
           ? { points: sampleCheckInSeries(), sample: true }
           : { points: [], sample: false },
     );
-    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
+    const cycleGoal = p.sex === 'female' ? await cycleGoalStore.get().catch(() => null) : null;
+    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
   }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, setBathroomToday, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);
@@ -323,7 +329,7 @@ export const TodayScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Today')} showAvatar />
 
         <View style={styles.greeting}>
@@ -391,6 +397,7 @@ export const TodayScreen = () => {
         {show('checkin') && (
           <>
             <View style={styles.checkInWrap}>
+              <TourTarget id="today.checkin" scroll={tourScroll}>
               <TouchableOpacity style={styles.checkInRow} onPress={() => router.push('/check-in')} activeOpacity={0.85}>
                 <CheckInOrb />
                 <View style={{ flex: 1 }}>
@@ -405,6 +412,7 @@ export const TodayScreen = () => {
                   <Text style={styles.checkInButtonText}>{t('Check in')}</Text>
                 </View>
               </TouchableOpacity>
+              </TourTarget>
 
               <TouchableOpacity
                 style={styles.weekToggle}
@@ -513,6 +521,7 @@ export const TodayScreen = () => {
               <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>{t('Daily readiness')}</Text>
               <InfoButton topic="readiness" />
             </View>
+            <TourTarget id="today.readiness" scroll={tourScroll} inset={20}>
             <View style={[styles.card, styles.readinessCard]}>
               {readiness ? (
                 <ProgressRing
@@ -592,6 +601,7 @@ export const TodayScreen = () => {
                 </Text>
               </Text>
             </View>
+            </TourTarget>
           </>
         )}
 
@@ -754,6 +764,7 @@ export const TodayScreen = () => {
           <>
             <Text style={styles.sectionTitle}>{t('Your plan')}</Text>
             {/* El plan completo, como bloque (antes era un enlace aquí y una tarjeta en Lab) */}
+            <TourTarget id="today.plan" scroll={tourScroll} inset={20}>
             <TouchableOpacity style={styles.planHero} onPress={() => router.push('/action-plan')} activeOpacity={0.85}>
               <View style={styles.planHeroIcon}>
                 <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
@@ -764,6 +775,7 @@ export const TodayScreen = () => {
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
             </TouchableOpacity>
+            </TourTarget>
             <View style={styles.planList}>
               {plan.map((item) => {
                 const color = PLAN_COLOR[item.kind];

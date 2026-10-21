@@ -1,4 +1,4 @@
-import { isPublicDemo, isRemoteActive } from '@/lib/supabase';
+import { isPublicDemo, isRemoteActive, supabase } from '@/lib/supabase';
 import { userFlags } from './userFlags';
 
 // Cuenta real o cuenta de prueba.
@@ -7,10 +7,11 @@ import { userFlags } from './userFlags';
 // mentira, lecturas de tensión de muestra…) para que la demo nunca saliera vacía. En una CUENTA REAL
 // no se simula nada: lo que no has medido sale vacío y te dice cómo conseguirlo.
 //
-// - Se marca por cuenta en user_flags, clave `real_account` (true = real). Vale en todos sus
-//   dispositivos. Se cambia en Ajustes → "Cuenta real".
-// - Sin marca, las cuentas siguen como cuentas de prueba (con ejemplos), igual que antes.
-//   ANTES DEL LANZAMIENTO: invertir el valor por defecto (cuenta nueva = real).
+// - Desde el 2026-10-21 (el fundador): toda cuenta es real. Solo los probadores (los admins y los
+//   «+alias» del email de un admin: is_tester() en Supabase, migración 20261021100000_testers.sql)
+//   pueden tener cuentas de prueba (con ejemplos, el selector «developer» y los casos de prueba).
+// - Un probador elige con user_flags `real_account` (true = real), en Ajustes → "Cuenta real"; sin
+//   marca, su cuenta es de prueba, como antes.
 // - Sin Supabase (demo en el móvil / web de demo) siempre hay ejemplos.
 //
 // Se lee al iniciar sesión (AuthContext), antes de pintar ninguna pantalla, así que las pantallas
@@ -28,11 +29,28 @@ export const isRealAccount = () => FORCE_REAL || (real && isRemoteActive() && !i
 // ¿Se pueden enseñar datos de ejemplo cuando faltan los de verdad?
 export const showSamples = () => !isRealAccount();
 
-export async function loadDataMode(): Promise<boolean> {
-  try {
-    real = isRemoteActive() && (await userFlags.get(REAL_ACCOUNT_FLAG)) === true;
-  } catch {
+// ¿Puede esta cuenta ser de prueba? Sin la función en Supabase todavía, solo los admins.
+export async function amITester(isAdmin: boolean): Promise<boolean> {
+  if (!isRemoteActive() || !supabase) return false;
+  const { data, error } = await supabase.rpc('is_tester');
+  if (error) return isAdmin;
+  return data === true;
+}
+
+export async function loadDataMode(tester: boolean): Promise<boolean> {
+  if (!isRemoteActive()) {
     real = false;
+    return real;
+  }
+  if (!tester) {
+    real = true;
+    return real;
+  }
+  try {
+    real = (await userFlags.get(REAL_ACCOUNT_FLAG)) === true;
+  } catch {
+    // Probador sin conexión: mejor sin datos de ejemplo que mezclarlos con los suyos
+    real = true;
   }
   return real;
 }

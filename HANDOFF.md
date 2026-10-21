@@ -1429,3 +1429,52 @@ Incluye el timbre del entrenamiento (3ef2529): en los APK 1.0 solo se degrada; e
   instalación (AsyncStorage `permissionsIntro.v1`); quien ya tenía la app también la ve una vez.
 
 **Publicado ee21efa** (2026-10-21, OK del fundador «Haz commit de todo y publica con npm run release»): EAS Update grupo `e41021c1-99c8-495d-a15c-48e05acfed8b` (preview, android + ios) y las dos webs a la primera (`npm run release` entero, 1,7 GB libres).
+
+## 2026-10-21 (tarde) — Tutorial guiado (sin commit)
+
+- **Qué es**: pantalla oscurecida con un hueco sobre cada parte principal y un bocadillo («3 de 9», título, texto,
+  Saltar / Siguiente); tocar el hueco también avanza. 9 pasos: pestaña Hoy, check-in, «Tu estado de hoy», Tu plan,
+  pestaña Mis datos, Edad KUOVA, Subir un informe (Laboratorio), pestaña Agenda y la fila «Tutorial» de Más. Cambia de
+  pestaña con el deslizamiento normal y baja hasta el elemento si está más abajo (nativo: measureLayout contra
+  `innerViewRef` + scrollTo; web: scrollIntoView sin «smooth», que con la ventana abierta no bajaba). Al irse de una
+  pestaña, la deja otra vez arriba. Vuelve a medir cada 0,5 s por si algo carga tarde y mueve el elemento.
+- **Código**: `src/components/tour/` (tourStore: pasos, registro de elementos, empezar, «en marcha»; TourTarget;
+  TourOverlay, montado en MainTabsScreen y su variante web, apagado en la web de escritorio). Los pasos cuyo elemento
+  no está (sección apagada en Configura tu experiencia) se saltan. `inset` ajusta el hueco a la tarjeta cuando el
+  View ocupa todo el ancho.
+- **Cuándo sale**: al terminar los cuestionarios del inicio (también con «Omitir»; flag AsyncStorage
+  `tour.pending.v1`, también si antes pasa por la presentación del plan) y desde Más → Tutorial. Los avisos de
+  bienvenida de Hoy (perfil genético, ciclo) esperan a que acabe (`useTourActive`).
+- Probado en la web (demo, 375 × 812): sale tras los cuestionarios, los 9 huecos caen sobre su elemento, las pantallas
+  vuelven arriba y el aviso del perfil genético sale al acabar. En el móvil sin probar (coordenadas con
+  statusBarTranslucent y edge-to-edge).
+
+## 2026-10-21 (noche) — Cuentas reales por defecto, ciclo tipo Flo, IMC, temperatura con ruedas, contraseña (sin commit)
+
+- **Cuentas**: toda cuenta es real (sin selector «developer», sin datos de ejemplo, directa a los cuestionarios).
+  Solo los probadores pueden tener cuenta de prueba: `is_tester()` en Supabase (admins y los «+alias» del email de un
+  admin; sin emails en el código), migración `20261021100000_testers.sql` (aplicada el 2026-10-21, ver abajo). Sin ella, la app
+  trata como probadores solo a los admins (`amITester` en data/dataMode.ts). «Cuenta real» y «Casos de prueba» en
+  Ajustes, solo para probadores (`isTester` en AuthContext).
+- **Primer arranque**: fuera la pantalla «Construyendo tu plan…» y las de presentación del plan (/plan-intro sigue
+  existiendo pero ya no se llega desde los cuestionarios) y el bloque «Tu plan de partida» de «¿Qué quieres
+  conseguir?». Al acabar: Hoy y el tutorial.
+- **Encuesta del ciclo** (CycleGoalScreen): empieza vacía (no carga respuestas guardadas), «¿Qué quieres hacer?» con
+  varias a la vez (`goals`; `goal` = la principal para lo que ya lo usaba), y preguntas nuevas: última regla
+  (calendario; se apunta como primer ciclo si no hay uno esos días), duración del ciclo y de la regla (ruedas, «No lo
+  sé»), regularidad y sangrado, dolor y síntomas (multi), anticonceptivo (lista completa; `hormonalContraception` se
+  deduce), diagnósticos (multi) y, si busca embarazo, lo de antes. Con sangrado muy abundante o dolor fuerte, una nota
+  neutra para comentarlo con la ginecóloga. La predicción usa la duración que dijo mientras no haya dos reglas
+  apuntadas (`currentCyclePhase(…, typicalLength)`). Todo en español. Las preguntas de Flo que pasó el fundador no
+  estaban guardadas en ningún sitio (eran capturas): hecho con las habituales de Flo.
+- **Temperatura** (LogTemperatureScreen): ruedas (grados + centésimas de 5 en 5; basal 35–38, termómetro hasta 41) y
+  textos en español.
+- **Peso** (WeightInfo): IMC con la altura del perfil y el último peso (barra de rango 18,5–24,9 de la OMS, textos
+  neutros, en menores de 18 solo orientativo) con «Qué dice y qué no»; composición en donut (kg de grasa, músculo,
+  hueso y resto; el agua aparte). `bmi`, `bmiBand`, `compositionSlices` en logic/weight.ts con tests.
+- **Entrar / crear cuenta**: ojo para ver la contraseña (components/PasswordInput.tsx), «Repite la contraseña» al
+  crearla, errores de Supabase en español y, con «Confirm email» activado, aviso de que te hemos enviado el correo
+  (signup devuelve 'confirm_email' en vez de lanzar un error).
+- **Correo desde hello@kuovahealth.com**: se configura en el panel de Supabase (SMTP de M365 con la contraseña del
+  buzón: lo hace el fundador; tarea en next-actions). Plantilla en español lista para pegar:
+  `supabase/templates/confirmar-cuenta.html`.

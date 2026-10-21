@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { TourTarget } from '@/components/tour/TourTarget';
+import { makeTourScroll } from '@/components/tour/tourStore';
+import { startTour } from '@/components/tour/tourStore';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -86,6 +89,13 @@ const menuItems: MenuItem[] = [
     iconFamily: 'ionicons',
     icon: 'information-circle-outline',
   },
+  {
+    id: 'tutorial',
+    title: 'Tutorial',
+    subtitle: 'A quick tour of the main parts of the app',
+    iconFamily: 'ionicons',
+    icon: 'school-outline',
+  },
 ];
 
 // Solo para administradores de Kuova
@@ -120,6 +130,7 @@ const SUPPORT_ITEMS: MenuItem[] = [
 export const MoreScreen = () => {
   const { isAdmin, isSupportAgent } = useAuth();
   const router = useRouter();
+  const tourScroll = useMemo(makeTourScroll, []);
   // Los de administración y soporte van justo antes de Settings
   const settingsAt = menuItems.findIndex((m) => m.id === 'settings');
   const extra = [...(isAdmin ? ADMIN_ITEMS : []), ...(isSupportAgent ? SUPPORT_ITEMS : [])];
@@ -138,17 +149,18 @@ export const MoreScreen = () => {
     if (id === 'track') return router.push('/track-tests');
     if (id === 'catalog') return router.push('/catalogo');
     if (id === 'wearables') return router.push('/wearables');
+    if (id === 'tutorial') return startTour();
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('More')} />
 
         <View style={styles.list}>
           {items.map((item) => (
+            <TourTarget key={item.id} id={`more.${item.id}`} scroll={tourScroll}>
             <TouchableOpacity
-              key={item.id}
               style={styles.card}
               onPress={() => handlePress(item.id)}
             >
@@ -169,6 +181,7 @@ export const MoreScreen = () => {
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
             </TouchableOpacity>
+            </TourTarget>
           ))}
         </View>
       </ScrollView>

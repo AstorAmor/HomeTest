@@ -9,6 +9,7 @@ import { LabScreen } from './LabScreen';
 import { MoreScreen } from './MoreScreen';
 import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
+import { TourOverlay } from '@/components/tour/TourOverlay';
 
 // Pestañas con deslizamiento lateral (también al tocarlas). Las cinco se quedan preparadas
 // (offscreenPageLimit): sin eso, Android suelta las que no se ven y al volver a Hoy la tenía que pintar
@@ -50,6 +51,7 @@ export const MainTabsScreen = () => {
       </PagerView>
 
       <BottomTabBar currentIndex={currentPage} onTabPress={handleTabPress} />
+      <TourOverlay goToTab={handleTabPress} />
     </View>
   );
 };

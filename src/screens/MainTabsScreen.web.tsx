@@ -9,6 +9,7 @@ import { MoreScreen } from './MoreScreen';
 import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
 import { useWebShell } from '@/web/webMode';
+import { TourOverlay } from '@/components/tour/TourOverlay';
 
 const LAST = TABS.length - 1;
 
@@ -56,6 +57,8 @@ export const MainTabsScreen = () => {
         ))}
       </View>
       {!shell && <BottomTabBar currentIndex={currentPage} onTabPress={select} />}
+      {/* En la web de escritorio no hay barra de pestañas: el tutorial es para el móvil */}
+      <TourOverlay goToTab={select} enabled={!shell} />
     </View>
   );
 };

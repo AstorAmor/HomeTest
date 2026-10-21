@@ -1,10 +1,12 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { labUploadRepository } from '@/data/labUploads';
 import { rememberKuovaAge } from '@/data/kuovaAgeCache';
+import { TourTarget } from '@/components/tour/TourTarget';
+import { makeTourScroll } from '@/components/tour/tourStore';
 import { labValuesFrom } from '@/data/labUploadValues';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart, TrendSeries } from '@/components/TrendChart';
@@ -24,6 +26,7 @@ import { baselineReport, currentReport } from '@/data/reportRepository';
 import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
+import { cycleGoalStore } from '@/data/cycleGoal';
 import { CycleStrip } from '@/components/CycleStrip';
 import { useSections } from '@/data/appPrefs';
 import { dateLocale, num, t } from '@/i18n';
@@ -109,13 +112,16 @@ export const MyDataScreen = () => {
   const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
   // Edad KUOVA de la cuenta real: con sus analíticas subidas y su fecha de nacimiento (o qué falta)
   const [kres, setKres] = useDeepState<KuovaAgeResult | null>(null);
+  const tourScroll = useMemo(makeTourScroll, []);
 
   const load = useCallback(async () => {
     profileRepository
       .get()
       .then(async (p) => {
         setSex(p.sex);
-        setCycle(p.sex === 'female' ? currentCyclePhase(await cycleRepository.getAll()) : null);
+        if (p.sex !== 'female') return setCycle(null);
+        const [entries, cycleGoal] = await Promise.all([cycleRepository.getAll(), cycleGoalStore.get().catch(() => null)]);
+        setCycle(currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength));
       })
       .catch(() => undefined);
     const [g, bpEntries, chol, cort, vo, uploads, prof] = await Promise.all([
@@ -210,16 +216,19 @@ export const MyDataScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('My Data')} />
 
         {/* Edad KUOVA (PhenoAge) de la última analítica completa: lo primero que se ve */}
         {!showSamples() && kres?.status === 'ok' && (
-          <KuovaAgeHero k={kres.k} previous={kres.previous} onPress={() => router.push('/biological-age')} />
+          <TourTarget id="mydata.age" scroll={tourScroll}>
+            <KuovaAgeHero k={kres.k} previous={kres.previous} onPress={() => router.push('/biological-age')} />
+          </TourTarget>
         )}
         {!showSamples() && kres && kres.status !== 'ok' && (
           // Cuenta real sin Edad KUOVA todavía: la insignia difuminada, sin cifra, y en pequeño qué
           // falta (valores, fecha de nacimiento…); al tocarla, el detalle con los 9
+          <TourTarget id="mydata.age" scroll={tourScroll}>
           <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.9}>
             <Text style={styles.bioAgeKicker}>{t('Your KUOVA age')}</Text>
             <KuovaAgeBadge size={180} locked />
@@ -235,14 +244,17 @@ export const MyDataScreen = () => {
               </TouchableOpacity>
             )}
           </TouchableOpacity>
+          </TourTarget>
         )}
         {showSamples() && currentReport.summary.phenoage.available && (
-          <KuovaAgeHero
-            sample
-            k={kuovaAge(currentReport.summary.phenoage)}
-            previous={baselineReport.summary.phenoage.available ? kuovaAge(baselineReport.summary.phenoage) : null}
-            onPress={() => router.push('/biological-age')}
-          />
+          <TourTarget id="mydata.age" scroll={tourScroll}>
+            <KuovaAgeHero
+              sample
+              k={kuovaAge(currentReport.summary.phenoage)}
+              previous={baselineReport.summary.phenoage.available ? kuovaAge(baselineReport.summary.phenoage) : null}
+              onPress={() => router.push('/biological-age')}
+            />
+          </TourTarget>
         )}
 
         {sex === 'female' && cycle && show('cycle') && (

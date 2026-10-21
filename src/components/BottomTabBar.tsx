@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
+import { TourTarget } from '@/components/tour/TourTarget';
 
 interface TabConfig {
   label: string;
@@ -39,15 +40,12 @@ export const BottomTabBar = ({ currentIndex, onTabPress }: BottomTabBarProps) =>
           const color = isActive ? Colors.tabBarActive : Colors.tabBarInactive;
 
           return (
-            <TouchableOpacity
-              key={tab.label}
-              style={styles.tabButton}
-              onPress={() => onTabPress(index)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name={isActive ? tab.activeIcon : tab.icon} size={24} color={color} />
-              <Text style={[styles.label, { color }]}>{t(tab.label)}</Text>
-            </TouchableOpacity>
+            <TourTarget key={tab.label} id={`tab.${index}`} style={styles.tabSlot}>
+              <TouchableOpacity style={styles.tabButton} onPress={() => onTabPress(index)} activeOpacity={0.7}>
+                <Ionicons name={isActive ? tab.activeIcon : tab.icon} size={24} color={color} />
+                <Text style={[styles.label, { color }]}>{t(tab.label)}</Text>
+              </TouchableOpacity>
+            </TourTarget>
           );
         })}
       </View>
@@ -66,6 +64,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tabBarBackground,
     paddingTop: 8,
   },
+  tabSlot: { flex: 1 },
   tabButton: {
     flex: 1,
     alignItems: 'center',

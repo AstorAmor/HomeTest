@@ -33,14 +33,14 @@ export function phaseBoundaries(length: number) {
 }
 
 // Día y fase del ciclo a partir de los registros de inicio de regla. Longitud =
-// mediana de los últimos ciclos (28 si no hay suficientes). Sin registros, se usa
-// un ejemplo para la demo.
-export function currentCyclePhase(entries: CycleEntry[], today = new Date()): CyclePhaseInfo {
+// mediana de los últimos ciclos; si no hay suficientes, la que dijo en la encuesta del ciclo
+// (`typicalLength`) o 28. Sin registros, se usa un ejemplo para la demo.
+export function currentCyclePhase(entries: CycleEntry[], today = new Date(), typicalLength?: number | null): CyclePhaseInfo {
   const starts = entries.map((e) => new Date(e.fecha).getTime()).sort((a, b) => a - b);
   const isSample = starts.length === 0;
   const lastStart = isSample ? today.getTime() - 11 * 24 * 3600 * 1000 : starts[starts.length - 1];
 
-  let length = 28;
+  let length = typicalLength && typicalLength >= 15 && typicalLength <= 60 ? typicalLength : 28;
   if (starts.length >= 2) {
     const gaps = starts.slice(1).map((s, i) => Math.round((s - starts[i]) / (24 * 3600 * 1000)));
     const sorted = gaps.slice(-6).sort((a, b) => a - b);

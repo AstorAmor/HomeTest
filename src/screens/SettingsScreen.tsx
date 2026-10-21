@@ -26,7 +26,7 @@ const PERMISSIONS: { icon: string; title: string; why: string }[] = [
 export const SettingsScreen = () => {
   const router = useRouter();
   const exit = useLogout();
-  const { authMode, user } = useAuth();
+  const { authMode, user, isTester } = useAuth();
   const [real, setReal] = useState(isRealAccount());
   // Cuenta real ↔ de prueba: cambia lo que se enseña en toda la app, así que recarga (vuelve aquí)
   const toggleReal = async (v: boolean) => {
@@ -90,6 +90,8 @@ export const SettingsScreen = () => {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
               </TouchableOpacity>
+              {/* Cuenta real ↔ de prueba y casos de prueba: solo probadores (admins y sus «+alias») */}
+              {isTester && (
               <View style={[styles.row, styles.divider]}>
                 <Ionicons name="shield-checkmark-outline" size={22} color={Colors.accent} />
                 <View style={{ flex: 1 }}>
@@ -102,8 +104,9 @@ export const SettingsScreen = () => {
                 </View>
                 <Switch value={real} onValueChange={toggleReal} trackColor={{ true: Colors.accent, false: Colors.cardBorder }} />
               </View>
+              )}
               {/* Solo cuentas de prueba: cargar un caso (tensión alta, energía baja…) o vaciarla */}
-              {!real && (
+              {isTester && !real && (
                 <TouchableOpacity style={[styles.row, styles.divider]} onPress={() => router.push('/simulation')}>
                   <Ionicons name="flask-outline" size={22} color={Colors.gold} />
                   <View style={{ flex: 1 }}>

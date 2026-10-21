@@ -1,4 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { TourTarget } from '@/components/tour/TourTarget';
+import { makeTourScroll } from '@/components/tour/tourStore';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,6 +52,7 @@ const uploadCounts = (u: LabUpload) => {
 };
 
 export const LabScreen = () => {
+  const tourScroll = useMemo(makeTourScroll, []);
   const router = useRouter();
   const [uploads, setUploads] = useDeepState<LabUpload[]>([]);
   // Citas de extracción reservadas (las de verdad; en las cuentas de prueba, además, las de ejemplo)
@@ -73,7 +76,7 @@ export const LabScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Lab')} />
 
         {/* El plan personalizado vive en Today ("Tu plan"), no en Lab (fundador, 2026-10-17) */}
@@ -260,10 +263,12 @@ export const LabScreen = () => {
         </TouchableOpacity>
 
 
-        <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
-          <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
-          <Text style={styles.uploadButtonText}>{samples ? t('Upload lab report (test)') : t('Upload a lab report you already have')}</Text>
-        </TouchableOpacity>
+        <TourTarget id="lab.upload" scroll={tourScroll} inset={20}>
+          <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
+            <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
+            <Text style={styles.uploadButtonText}>{samples ? t('Upload lab report (test)') : t('Upload a lab report you already have')}</Text>
+          </TouchableOpacity>
+        </TourTarget>
       </ScrollView>
     </SafeAreaView>
   );

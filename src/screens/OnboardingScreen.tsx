@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -18,10 +18,11 @@ import {
   UserProfile,
   profileRepository,
 } from '@/data/profileRepository';
-import { AppPurpose, appPrefs, PURPOSE_OPTIONS, wantsPlan } from '@/data/appPrefs';
-import { answersPreview, sectionsFromAnswers } from '@/data/goalEffects';
+import { AppPurpose, appPrefs, PURPOSE_OPTIONS } from '@/data/appPrefs';
+import { sectionsFromAnswers } from '@/data/goalEffects';
 import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { requestTourAfterOnboarding } from '@/components/tour/tourStore';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -71,7 +72,6 @@ function ChipGroup<T extends string>({
 export const OnboardingScreen = () => {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
-  const [phase, setPhase] = useState<'questions' | 'building'>('questions');
 
   const [day, setDay] = useState(14);
   const [month, setMonth] = useState(5);
@@ -90,7 +90,6 @@ export const OnboardingScreen = () => {
   const [conditionsOther, setConditionsOther] = useState('');
   const [purposes, setPurposes] = useState<AppPurpose[]>([]);
   // Sin plan (solo historial, o entender sin plan) no se "construye" ningún plan al final
-  const buildsPlan = wantsPlan(purposes);
 
   // Al editar el perfil, el cuestionario parte de las respuestas ya guardadas
   useEffect(() => {
@@ -159,6 +158,7 @@ export const OnboardingScreen = () => {
     const profile = await buildProfile();
     await profileRepository.save(profile);
     await applySections(profile);
+    await requestTourAfterOnboarding();
     router.replace('/(tabs)');
   };
 
@@ -173,25 +173,11 @@ export const OnboardingScreen = () => {
     profile.completedAt = new Date().toISOString();
     await profileRepository.save(profile);
     await applySections(profile);
-    if (buildsPlan) setPhase('building');
-    else router.replace('/(tabs)');
+    // Directo a Hoy, donde empieza el tutorial. Sin las pantallas de presentación del plan (el
+    // fundador las quitó el 2026-10-21: no se veían bien ni tienen sentido sin la suscripción completa)
+    await requestTourAfterOnboarding();
+    router.replace('/(tabs)');
   };
-
-  useEffect(() => {
-    if (phase !== 'building') return;
-    // Recibir el plan no se celebra (ni insignia ni confeti): eso queda para lo que el usuario consigue
-    const t = setTimeout(() => router.replace('/plan-intro'), 1600);
-    return () => clearTimeout(t);
-  }, [phase]);
-
-  if (phase === 'building') {
-    return (
-      <SafeAreaView style={[styles.safeArea, styles.centered]}>
-        <ActivityIndicator size="large" color={Colors.accent} />
-        <Text style={styles.buildingText}>{tr('Building your personalised plan…')}</Text>
-      </SafeAreaView>
-    );
-  }
 
   const toggleCondition = (id: ConditionId) =>
     setConditions((prev) => {
@@ -204,19 +190,6 @@ export const OnboardingScreen = () => {
     setGoals((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
   const togglePurpose = (id: AppPurpose) =>
     setPurposes((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
-
-  // Vista previa de lo que cambia con lo elegido (plan de partida y secciones que se encienden)
-  const preview = answersPreview({
-    goals,
-    sex,
-    activity,
-    sleep,
-    smoking,
-    alcohol,
-    conditions,
-    takesMedication,
-    dateOfBirth: answered.has('dob') ? `${YEARS[year]}-${String(month + 1).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}` : undefined,
-  });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -454,27 +427,13 @@ export const OnboardingScreen = () => {
                 );
               })}
             </View>
-            {buildsPlan && (
-              <View style={styles.preview}>
-                <Text style={styles.previewTitle}>{tr('Your starting plan')}</Text>
-                {preview.plan.map((t, i) => (
-                  <Text key={t} style={styles.previewItem}>
-                    {i + 1}. {t}
-                  </Text>
-                ))}
-                {preview.sections.length > 0 && (
-                  <Text style={styles.previewNote}>Also switched on for you: {preview.sections.join(', ')}.</Text>
-                )}
-                <Text style={styles.previewNote}>{tr('It changes as you choose, and again when your results arrive.')}</Text>
-              </View>
-            )}
           </>
         )}
       </KeyboardAwareScrollView>
 
       <TouchableOpacity style={styles.cta} onPress={next} activeOpacity={0.85}>
         <Text style={styles.ctaText}>
-          {stepIndex < STEPS.length - 1 ? tr('Continue') : buildsPlan ? tr('Create my plan') : tr('Done')}
+          {stepIndex < STEPS.length - 1 ? tr('Continue') : tr('Done')}
         </Text>
       </TouchableOpacity>
     </SafeAreaView>

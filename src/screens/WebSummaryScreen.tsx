@@ -17,6 +17,7 @@ import { CheckInEntry, MOOD_OPTIONS } from '@/types/checkIn';
 import { profileRepository } from '@/data/profileRepository';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
+import { cycleGoalStore } from '@/data/cycleGoal';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { hydrationFromUrine } from '@/logic/bathroom';
 import { BowelEntry, UrineEntry } from '@/types/bathroom';
@@ -134,7 +135,8 @@ export const WebSummaryScreen = () => {
       .catch(() => undefined);
     const [p, checkIns, cycleEntries] = await Promise.all([profileRepository.get(), checkInRepository.getAll(), cycleRepository.getAll()]);
     setLastCheckIn(checkIns.length ? checkIns[0] : null);
-    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries) : null);
+    const cycleGoal = p.sex === 'female' ? await cycleGoalStore.get().catch(() => null) : null;
+    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength) : null);
   }, [setLastCheckIn, setCycle, setBathroom, setDoses, setUpcoming]);
   useReloadOnFocus(load);
 

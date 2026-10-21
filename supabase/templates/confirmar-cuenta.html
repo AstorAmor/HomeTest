@@ -1,0 +1,22 @@
+<!--
+  Correo «Confirma tu cuenta» de Kuova (Supabase → Authentication → Emails → Templates → Confirm signup).
+  Asunto: Confirma tu cuenta de Kuova
+  Se pega tal cual en el panel; {{ .ConfirmationURL }} lo rellena Supabase. Remitente
+  hello@kuovahealth.com: se configura en Authentication → Emails → SMTP Settings (ver HANDOFF 2026-10-21).
+-->
+<div style="margin:0;padding:32px 16px;background:#FAF8F3;font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;color:#2A2A2A">
+  <div style="max-width:480px;margin:0 auto;background:#FFFFFF;border:1px solid #E5DDD0;border-radius:16px;padding:32px 28px">
+    <p style="margin:0 0 24px;font-size:22px;font-weight:800;letter-spacing:2px;color:#0E2A24">KUOVA <span style="font-weight:600;font-size:12px;letter-spacing:3px;color:#B8904F">HEALTH</span></p>
+    <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#0E2A24">Confirma tu cuenta</h1>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#66635D">
+      Hola: gracias por crear tu cuenta en Kuova. Pulsa el botón para confirmar tu email y después vuelve a la app para iniciar sesión.
+    </p>
+    <p style="margin:0 0 28px">
+      <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#0E2A24;color:#FAF8F3;text-decoration:none;font-weight:700;font-size:15px;padding:14px 26px;border-radius:24px">Confirmar mi email</a>
+    </p>
+    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#9A958C">
+      Si no has creado tú esta cuenta, ignora este correo: no pasará nada.
+    </p>
+    <p style="margin:0;font-size:13px;line-height:1.6;color:#9A958C">Conócete más. Vive mejor.</p>
+  </div>
+</div>

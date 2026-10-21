@@ -92,3 +92,44 @@ export function parseComp(kind: BodyCompKind, raw: string): number | null {
   if (!raw.trim() || !Number.isFinite(v) || v < spec.min || v > spec.max) return null;
   return Math.round(v * 10) / 10;
 }
+
+// --- IMC ---------------------------------------------------------------------------------------
+// Índice de masa corporal = kg / m². Rangos de la OMS para adultos: < 18,5 bajo peso, 18,5–24,9
+// normal, 25–29,9 sobrepeso, ≥ 30 obesidad. Es una referencia de población: no distingue músculo de
+// grasa (por eso va junto a la composición corporal). En menores de 18 se mira por percentiles de edad.
+export const BMI_RANGE = { min: 18.5, max: 24.9 };
+
+export function bmi(weightKg?: number | null, heightCm?: number | null): number | null {
+  if (!weightKg || !heightCm || heightCm < 100 || heightCm > 250 || weightKg < 25) return null;
+  const m = heightCm / 100;
+  return Math.round((weightKg / (m * m)) * 10) / 10;
+}
+
+export type BmiBand = 'under' | 'normal' | 'over' | 'obese';
+export const bmiBand = (v: number): BmiBand => (v < 18.5 ? 'under' : v < 25 ? 'normal' : v < 30 ? 'over' : 'obese');
+
+// --- Composición en el donut -------------------------------------------------------------------
+// De la báscula: grasa en %, músculo y hueso en kg. Se pasa todo a kg sobre el peso de ese día; lo que
+// falta hasta el peso es «el resto» (órganos, piel…). El agua va aparte: está repartida en todo lo demás.
+export interface CompSlice {
+  kind: 'fat' | 'muscle' | 'bone' | 'rest';
+  kg: number;
+}
+
+export function compositionSlices(weightKg: number, comp: { body_fat?: number; muscle_mass?: number; bone_mass?: number }): CompSlice[] | null {
+  const fat = comp.body_fat != null ? (weightKg * comp.body_fat) / 100 : null;
+  const muscle = comp.muscle_mass ?? null;
+  const bone = comp.bone_mass ?? null;
+  if (fat == null && muscle == null && bone == null) return null;
+  const known = (fat ?? 0) + (muscle ?? 0) + (bone ?? 0);
+  // Si la báscula da más que el peso (cada una estima a su manera), se reparte en proporción
+  const scale = known > weightKg ? weightKg / known : 1;
+  const round = (v: number) => Math.round(v * scale * 10) / 10;
+  const out: CompSlice[] = [];
+  if (fat != null) out.push({ kind: 'fat', kg: round(fat) });
+  if (muscle != null) out.push({ kind: 'muscle', kg: round(muscle) });
+  if (bone != null) out.push({ kind: 'bone', kg: round(bone) });
+  const rest = weightKg - known * scale; // antes de redondear: si la báscula se pasa, es 0
+  if (rest > 0.05) out.push({ kind: 'rest', kg: Math.round(rest * 10) / 10 });
+  return out;
+}

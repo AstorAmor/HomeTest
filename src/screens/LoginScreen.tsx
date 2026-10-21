@@ -18,10 +18,25 @@ import { KuovaWordmark } from '@/components/KuovaLogo';
 import { Ionicons } from '@expo/vector-icons';
 import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
 import { t } from '@/i18n';
+import { PasswordInput } from '@/components/PasswordInput';
+
+// Los errores de Supabase llegan en inglés: los más comunes, en el idioma de la app
+const authMessage = (m: string) =>
+  /invalid login credentials/i.test(m)
+    ? t('Wrong email or password.')
+    : /email not confirmed/i.test(m)
+      ? t('Confirm your email first: open the message we sent you.')
+      : /already registered|already exists/i.test(m)
+        ? t('There is already an account with this email. Sign in instead.')
+        : /password should be at least/i.test(m)
+          ? t('The password needs at least 6 characters.')
+          : m;
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState(''); // al crear la cuenta: repetirla
+  const [sentTo, setSentTo] = useState<string | null>(null); // correo de confirmación enviado
   const [isSignUp, setIsSignUp] = useState(false);
   const [nombre, setNombre] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,11 +56,16 @@ export const LoginScreen = () => {
     try {
       if (isSignUp) {
         if (!nombre.trim()) {
-          setError('Please enter your name');
+          setError(t('Please enter your name'));
           setLoading(false);
           return;
         }
-        await signup(
+        if (password !== password2) {
+          setError(t('The two passwords do not match.'));
+          setLoading(false);
+          return;
+        }
+        const result = await signup(
           email,
           password,
           nombre,
@@ -53,17 +73,24 @@ export const LoginScreen = () => {
             ? { role: proRole, specialty: specialty.trim(), licenseNumber: licenseNumber.trim() }
             : undefined
         );
+        if (result === 'confirm_email') {
+          // Cuenta creada: a iniciar sesión cuando confirme el correo
+          setSentTo(email.trim());
+          setIsSignUp(false);
+          setPassword('');
+          setPassword2('');
+        }
       } else {
         await login(email, password);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication error');
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
     } finally {
       setLoading(false);
     }
   };
 
-  const isFormValid = email && password && (!isSignUp || nombre);
+  const isFormValid = email && password && (!isSignUp || (nombre && password2));
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -164,15 +191,38 @@ export const LoginScreen = () => {
             />
 
             <Text style={styles.label}>{t('Password')}</Text>
-            <TextInput
+            <PasswordInput
               style={styles.input}
               placeholder="••••••••"
               placeholderTextColor={Colors.textMuted}
-              secureTextEntry
               value={password}
               onChangeText={setPassword}
               editable={!loading}
+              textContentType={isSignUp ? 'newPassword' : 'password'}
             />
+            {isSignUp && (
+              <>
+                <Text style={styles.label}>{t('Repeat your password')}</Text>
+                <PasswordInput
+                  style={styles.input}
+                  placeholder="••••••••"
+                  placeholderTextColor={Colors.textMuted}
+                  value={password2}
+                  onChangeText={setPassword2}
+                  editable={!loading}
+                  textContentType="newPassword"
+                />
+              </>
+            )}
+
+            {sentTo && !isSignUp ? (
+              <View style={styles.sent}>
+                <Ionicons name="mail-outline" size={18} color={Colors.ok} />
+                <Text style={styles.sentText}>
+                  {t('We have sent an email to {email}. Open it to confirm your account, then sign in here.', { email: sentTo })}
+                </Text>
+              </View>
+            ) : null}
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -194,6 +244,7 @@ export const LoginScreen = () => {
               onPress={() => {
                 setIsSignUp(!isSignUp);
                 setError('');
+                setSentTo(null);
               }}
               disabled={loading}
             >
@@ -267,6 +318,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 16,
   },
+  sent: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: withAlpha(Colors.ok, 0.12), borderRadius: 10, padding: 12, marginTop: 14 },
+  sentText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
