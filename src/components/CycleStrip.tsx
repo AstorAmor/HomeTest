@@ -10,7 +10,8 @@ interface CycleStripProps {
   onPress?: () => void;
 }
 
-// Barra del ciclo con sus fases y un marcador en el día actual.
+// Barra del ciclo con sus fases, un marcador en el día actual y, con datos suyos, cuándo llegaría la
+// próxima regla. Si se retrasa, el marcador se queda al final y el día sigue contando (día 31).
 export const CycleStrip = ({ info, onPress }: CycleStripProps) => {
   const { menstrualEnd, ovulationStart, ovulationEnd } = phaseBoundaries(info.length);
   const segments = [
@@ -19,17 +20,17 @@ export const CycleStrip = ({ info, onPress }: CycleStripProps) => {
     { color: PHASE_COLORS.ovulation, days: ovulationEnd - ovulationStart + 1 },
     { color: PHASE_COLORS.luteal, days: info.length - ovulationEnd },
   ];
-  const markerPct = ((info.day - 0.5) / info.length) * 100;
+  const markerPct = ((Math.min(info.day, info.length) - 0.5) / info.length) * 100;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={styles.card} onPress={onPress} disabled={!onPress} activeOpacity={0.85}>
       <View style={styles.header}>
         <View style={styles.phaseRow}>
           <Ionicons name="rose-outline" size={16} color={Colors.pulseAccent} />
           <Text style={[styles.phase, { color: PHASE_COLORS[info.phase] }]}>{t(info.label)}</Text>
         </View>
         <Text style={styles.day}>
-          {t('Day {n} of {total}', { n: info.day, total: info.length })}
+          {cycleDayLabel(info)}
           {info.isSample ? ` · ${t('sample')}` : ''}
         </Text>
       </View>
@@ -39,10 +40,20 @@ export const CycleStrip = ({ info, onPress }: CycleStripProps) => {
         ))}
         <View style={[styles.marker, { left: `${markerPct}%` }]} />
       </View>
+      {info.next && (
+        <Text style={styles.next}>
+          {t(info.next.text, info.next.vars)}
+          {info.next.note ? <Text style={styles.note}>{` ${t(info.next.note, info.next.noteVars)}`}</Text> : null}
+        </Text>
+      )}
       <Text style={styles.hint}>{t(info.hint)}</Text>
     </TouchableOpacity>
   );
 };
+
+// «Día 9 de 28»; pasada la duración habitual, solo «Día 31»
+export const cycleDayLabel = (info: CyclePhaseInfo) =>
+  info.day > info.length ? t('Day {n}', { n: info.day }) : t('Day {n} of {total}', { n: info.day, total: info.length });
 
 const styles = StyleSheet.create({
   card: {
@@ -86,6 +97,15 @@ const styles = StyleSheet.create({
     marginLeft: -2,
     borderRadius: 2,
     backgroundColor: Colors.textPrimary,
+  },
+  next: {
+    color: Colors.textPrimary,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 12,
+  },
+  note: {
+    color: Colors.textMuted,
   },
   hint: {
     color: Colors.textSecondary,

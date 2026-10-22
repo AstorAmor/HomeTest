@@ -121,7 +121,7 @@ export const MyDataScreen = () => {
         setSex(p.sex);
         if (p.sex !== 'female') return setCycle(null);
         const [entries, cycleGoal] = await Promise.all([cycleRepository.getAll(), cycleGoalStore.get().catch(() => null)]);
-        setCycle(currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength));
+        setCycle(currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength, cycleGoal));
       })
       .catch(() => undefined);
     const [g, bpEntries, chol, cort, vo, uploads, prof] = await Promise.all([

@@ -6,11 +6,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { CycleGoalPanel } from '@/components/CycleGoalPanel';
+import { CycleStrip } from '@/components/CycleStrip';
+import { toDayKey } from '@/components/MonthCalendar';
 import { InfoButton } from '@/components/InfoButton';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { CycleEntry, CyclePrediction } from '@/types/cycle';
 import { cycleRepository } from '@/data/cycleRepository';
+import { cycleGoalStore } from '@/data/cycleGoal';
+import { CycleGoalAnswers } from '@/types/cycleGoal';
+import { currentCyclePhase } from '@/utils/cyclePhase';
 import { postAi } from '@/utils/apiBaseUrl';
 
 const formatListDate = (iso: string) => {
@@ -32,6 +37,7 @@ const CONFIDENCE_LABEL: Record<string, string> = {
 export const CycleDetailScreen = () => {
   const router = useRouter();
   const [entries, setEntries] = useState<CycleEntry[]>([]);
+  const [cycleGoal, setCycleGoal] = useState<CycleGoalAnswers | null>(null);
   const [prediction, setPrediction] = useState<CyclePrediction | null>(null);
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [predictionError, setPredictionError] = useState('');
@@ -46,7 +52,8 @@ export const CycleDetailScreen = () => {
     try {
       const response = await postAi(
         'predict-cycle',
-        { cycle_starts: cycleEntries.map((e) => e.fecha.slice(0, 10)) },
+        // Día local, como la estimación de la tarjeta de arriba (el ISO en UTC puede ser el día anterior)
+        { cycle_starts: cycleEntries.map((e) => toDayKey(new Date(e.fecha))) },
         30000
       );
       const data = await response.json();
@@ -69,6 +76,7 @@ export const CycleDetailScreen = () => {
       setEntries(data);
       loadPrediction(data);
     });
+    cycleGoalStore.get().then(setCycleGoal).catch(() => setCycleGoal(null));
   };
 
   const refreshRef = useRef(refresh);
@@ -89,11 +97,18 @@ export const CycleDetailScreen = () => {
       : null;
   const durations = entries.map(periodDays).filter((d): d is number => d != null);
   const avgPeriod = durations.length ? Math.round((durations.reduce((a, b) => a + b, 0) / durations.length) * 10) / 10 : null;
+  // Día, fase y cuándo llegaría la próxima regla, como en Hoy (solo con reglas suyas, sin el ejemplo)
+  const cycle = entries.length ? currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Menstrual Cycle')} showBack />
+        {cycle && (
+          <View style={styles.stripBlock}>
+            <CycleStrip info={cycle} />
+          </View>
+        )}
         <CycleGoalPanel />
 
         {loadingPrediction && (
@@ -145,7 +160,7 @@ export const CycleDetailScreen = () => {
           </View>
         )}
 
-        {entries.length < 2 && !loadingPrediction && (
+        {entries.length < 2 && !loadingPrediction && !cycle?.next && (
           <View style={styles.emptyPredictionCard}>
             <Text style={styles.emptyText}>
               {t('Log at least 2 periods to get a prediction.')}
@@ -192,6 +207,10 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: 40,
+  },
+  stripBlock: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
   statusRow: {
     flexDirection: 'row',

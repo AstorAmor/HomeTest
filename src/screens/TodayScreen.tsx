@@ -290,7 +290,7 @@ export const TodayScreen = () => {
           : { points: [], sample: false },
     );
     const cycleGoal = p.sex === 'female' ? await cycleGoalStore.get().catch(() => null) : null;
-    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength) : null);
+    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
   }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, reloadBathroom, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);

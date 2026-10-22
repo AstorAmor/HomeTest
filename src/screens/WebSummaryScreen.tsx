@@ -17,6 +17,7 @@ import { CheckInEntry, MOOD_OPTIONS } from '@/types/checkIn';
 import { profileRepository } from '@/data/profileRepository';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
+import { cycleDayLabel } from '@/components/CycleStrip';
 import { cycleGoalStore } from '@/data/cycleGoal';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { hydrationFromUrine } from '@/logic/bathroom';
@@ -136,7 +137,7 @@ export const WebSummaryScreen = () => {
     const [p, checkIns, cycleEntries] = await Promise.all([profileRepository.get(), checkInRepository.getAll(), cycleRepository.getAll()]);
     setLastCheckIn(checkIns.length ? checkIns[0] : null);
     const cycleGoal = p.sex === 'female' ? await cycleGoalStore.get().catch(() => null) : null;
-    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength) : null);
+    setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null);
   }, [setLastCheckIn, setCycle, setBathroom, setDoses, setUpcoming]);
   useReloadOnFocus(load);
 
@@ -287,8 +288,9 @@ export const WebSummaryScreen = () => {
       title: t('Cycle'),
       color: Colors.pinkSoft,
       icon: icon('rose-outline', Colors.pinkSoft),
-      when: t('Day {n} of {total}', { n: cycle.day, total: cycle.length }),
-      caption: t(cycle.hint),
+      when: cycleDayLabel(cycle),
+      // Con datos suyos, cuándo llegaría la próxima regla; si no, el consejo de la fase
+      caption: cycle.next ? t(cycle.next.text, cycle.next.vars) : t(cycle.hint),
       value: t(cycle.label),
       onPress: () => go('/cycle-detail'),
     });
