@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { buildPlan } from '@/logic/plan';
 import { hydrationFromUrine, urineAdvice } from '@/logic/bathroom';
+import { UrineEntry } from '@/types/bathroom';
+
+// El apunte del día tal cual (con sus veces), como lo pasan las pantallas
+const day = (e: Partial<UrineEntry>) => e;
 
 // El plan de partida sale de las respuestas del onboarding, y la orina da hidratación y consejo.
 describe('plan de partida', () => {
@@ -45,27 +49,37 @@ describe('hidratación por la orina', () => {
     expect(hydrationFromUrine(null).position).toBeNull();
   });
   it('amarillo oscuro: podría beber un poco más; ámbar: signos de deshidratación (tono suave)', () => {
-    expect(hydrationFromUrine({ color: 'dark', count: 6 }).label).toBe('Could drink a bit more');
-    expect(hydrationFromUrine({ color: 'amber', count: 6 })).toMatchObject({ level: 'low', label: 'Signs of dehydration' });
+    expect(hydrationFromUrine(day({ color: 'dark', count: 6 })).label).toBe('Could drink a bit more');
+    expect(hydrationFromUrine(day({ color: 'amber', count: 6 }))).toMatchObject({ level: 'low', label: 'Signs of dehydration' });
   });
-  it('pocas veces al día empuja hacia deshidratado', () => {
-    expect(hydrationFromUrine({ color: 'yellow', count: 3 }).position).toBe(3);
+  it('las veces de hoy no cuentan (el día no ha terminado): solo el color', () => {
+    expect(hydrationFromUrine(day({ color: 'yellow', count: 2 }))).toMatchObject({ position: 2, label: 'Hydrated', level: 'good' });
+    expect(hydrationFromUrine(day({ color: 'yellow', count: 2 }))).toEqual(hydrationFromUrine(day({ color: 'yellow', count: 8 })));
+    expect(hydrationFromUrine(day({ count: 1 }))).toMatchObject({ position: null, label: 'Add the colour' });
   });
   it('marrón no es cuestión de hidratación', () => {
-    expect(hydrationFromUrine({ color: 'brown', count: 5 }).level).toBe('check');
+    expect(hydrationFromUrine(day({ color: 'brown', count: 5 })).level).toBe('check');
   });
 });
 
 describe('consejo al guardar la orina', () => {
   it('ámbar: puede que estés deshidratado', () => {
-    expect(urineAdvice({ color: 'amber', count: 6 })?.title).toBe('You may be dehydrated');
+    expect(urineAdvice(day({ color: 'amber', count: 6 }))?.title).toBe('You may be dehydrated');
   });
   it('rojo sin explicación: al médico; con explicación (remolacha), nada', () => {
-    expect(urineAdvice({ color: 'red', count: 6 })?.level).toBe('see_doctor');
-    expect(urineAdvice({ color: 'red', count: 6, explainedBy: 'Beetroot' })).toBeNull();
+    expect(urineAdvice(day({ color: 'red', count: 6 }))?.level).toBe('see_doctor');
+    expect(urineAdvice(day({ color: 'red', count: 6, explainedBy: 'Beetroot' }))).toBeNull();
   });
   it('color normal y veces normales: se guarda sin más', () => {
-    expect(urineAdvice({ color: 'pale', count: 6 })).toBeNull();
+    expect(urineAdvice(day({ color: 'pale', count: 6 }))).toBeNull();
+  });
+  it('pocas veces hoy no da aviso: el día no ha terminado (el color y el escozor, sí)', () => {
+    for (const count of [0, 1, 2, 3]) {
+      expect(urineAdvice(day({ color: 'pale', count }))).toBeNull();
+      expect(urineAdvice(day({ count }))).toBeNull();
+    }
+    expect(urineAdvice(day({ color: 'dark', count: 2 }))?.title).toBe('You could drink a bit more');
+    expect(urineAdvice(day({ color: 'pale', count: 2, burning: true }))?.level).toBe('see_doctor');
   });
 });
 

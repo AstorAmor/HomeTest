@@ -80,8 +80,8 @@ export const LogUrineScreen = () => {
     try {
       if (existing) await urineRepository.update(existing.id, values);
       else await urineRepository.save({ id: `${Date.now()}`, fecha: noonOf(day), createdAt: new Date().toISOString(), ...values });
-      // Sobre la marcha, el día no ha terminado: el aviso de "pocas veces" no aplica (el color y el escozor, sí)
-      const a = urineAdvice(quick ? { ...values, count: undefined } : values);
+      // Solo por el color y el escozor: las veces del día no dan aviso
+      const a = urineAdvice(values);
       if (a) setAdvice(a);
       else router.back();
     } finally {

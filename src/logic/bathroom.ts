@@ -209,7 +209,8 @@ export function urineObservations(entries: UrineEntry[], now = new Date()): Obse
     });
   }
 
-  const counted = week.filter((e) => e.count != null);
+  // Veces al día: solo los días ya terminados (las de hoy aún pueden subir)
+  const counted = week.filter((e) => e.count != null && new Date(e.fecha).toDateString() !== now.toDateString());
   if (counted.length >= 3) {
     const avg = counted.reduce((a, e) => a + (e.count ?? 0), 0) / counted.length;
     if (avg > 10) {
@@ -309,17 +310,13 @@ export interface Hydration {
   level: 'good' | 'tip' | 'low' | 'check' | 'unknown';
 }
 
-export function hydrationFromUrine(e?: Pick<UrineEntry, 'color' | 'count'> | null): Hydration {
+// Solo por el color. Las veces de hoy no cuentan: el día no ha terminado y «has orinado poco hoy» no
+// aporta nada (pidió el fundador el 2026-10-22). La frecuencia sale en la revisión semanal.
+export function hydrationFromUrine(e?: Pick<UrineEntry, 'color'> | null): Hydration {
   if (!e) return { position: null, label: 'Tap to log', level: 'unknown' };
-  const fewTimes = e.count != null && e.count <= 3;
   if (e.color && !HYDRATION_SCALE.includes(e.color)) return { position: null, label: 'See note', level: 'check' };
-  if (!e.color) {
-    return fewTimes
-      ? { position: 3, label: 'Could drink a bit more', level: 'tip' }
-      : { position: null, label: 'Add the colour', level: 'unknown' };
-  }
-  // Pocas veces al día empuja un punto hacia "deshidratado"
-  const position = Math.min(4, HYDRATION_SCALE.indexOf(e.color) + (fewTimes ? 1 : 0));
+  if (!e.color) return { position: null, label: 'Add the colour', level: 'unknown' };
+  const position = HYDRATION_SCALE.indexOf(e.color);
   const labels: Record<number, Hydration> = {
     0: { position: 0, label: 'Very well hydrated', level: 'good' },
     1: { position: 1, label: 'Well hydrated', level: 'good' },
@@ -337,9 +334,10 @@ export interface UrineAdvice {
   body: string;
 }
 
-// Lo que se le dice al guardar el apunte del día (null = nada que decir, se cierra sin más).
+// Lo que se le dice al guardar el apunte del día (null = nada que decir, se cierra sin más). Por el color
+// y el escozor; nunca por las veces del día, que aún no ha terminado (ver hydrationFromUrine).
 // Textos orientativos; PENDIENTES DE VALIDACIÓN CLÍNICA.
-export function urineAdvice(e: Pick<UrineEntry, 'color' | 'count' | 'burning' | 'explainedBy'>): UrineAdvice | null {
+export function urineAdvice(e: Pick<UrineEntry, 'color' | 'burning' | 'explainedBy'>): UrineAdvice | null {
   if (e.color === 'red' && !e.explainedBy)
     return {
       level: 'see_doctor',
@@ -369,12 +367,6 @@ export function urineAdvice(e: Pick<UrineEntry, 'color' | 'count' | 'burning' | 
       level: 'tip',
       title: t('You could drink a bit more'),
       body: t('Dark yellow is an early sign of mild dehydration. A glass of water and a bottle nearby today usually help. Heat, exercise and coffee all add to it.'),
-    };
-  if (e.count != null && e.count <= 3)
-    return {
-      level: 'tip',
-      title: t('Not many times today'),
-      body: t('Going 3 times or fewer in a day often means you are not drinking enough. It is probably worth drinking a bit more today and seeing how you are tomorrow.'),
     };
   if (e.color === 'cloudy')
     return {

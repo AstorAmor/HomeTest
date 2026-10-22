@@ -39,6 +39,13 @@ describe('observaciones urinarias', () => {
     const week = [0, 1, 2, 3].map((n) => urine(n, { color: n < 2 ? 'dark' : 'pale', count: 6 }));
     expect(urineObservations(week, now).map((o) => o.id)).toContain('urine_dark');
   });
+  it('pocas veces al día: lo dice la revisión semanal con los días ya terminados, no con las veces de hoy', () => {
+    const ids = (week: UrineEntry[]) => urineObservations(week, now).map((o) => o.id);
+    // Hoy solo 1 vez (el día sigue): con los días de antes, 4 al día, nada que decir
+    expect(ids([0, 1, 2, 3].map((n) => urine(n, { color: 'pale', count: n === 0 ? 1 : 4 })))).toEqual(['urine_ok']);
+    // Varios días terminados con 2 veces: la revisión semanal sí lo dice
+    expect(ids([0, 1, 2, 3].map((n) => urine(n, { color: 'pale', count: 2 })))).toContain('urine_infrequent');
+  });
   it('prueba de volumen: primera vez, repetir y bote de 24 h', () => {
     expect(volumeCheckSuggestion([urine(1, {})], now)).toEqual({ kind: 'first' });
     expect(volumeCheckSuggestion([urine(1, { voidVolume: 'quarter', volumeUsual: 'no' })], now)).toEqual({ kind: 'repeat' });

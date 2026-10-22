@@ -1082,9 +1082,6 @@ export const es: Record<string, string> = {
   'You could drink a bit more': 'Podrías beber un poco más',
   'Dark yellow is an early sign of mild dehydration. A glass of water and a bottle nearby today usually help. Heat, exercise and coffee all add to it.':
     'El amarillo oscuro es una señal temprana de deshidratación leve. Suele ayudar un vaso de agua y tener una botella cerca hoy. El calor, el ejercicio y el café influyen.',
-  'Not many times today': 'Pocas veces hoy',
-  'Going 3 times or fewer in a day often means you are not drinking enough. It is probably worth drinking a bit more today and seeing how you are tomorrow.':
-    'Ir 3 veces o menos en un día suele indicar que no bebes lo suficiente. Probablemente merezca la pena beber un poco más hoy y ver cómo estás mañana.',
   'Cloudy urine': 'Orina turbia',
   'It is often harmless, for example after a meal. If it keeps happening, or comes with burning, a strong smell or fever, talk to a doctor.':
     'Suele no tener importancia, por ejemplo después de comer. Si se repite, o viene con escozor, olor fuerte o fiebre, consúltalo con un médico.',
