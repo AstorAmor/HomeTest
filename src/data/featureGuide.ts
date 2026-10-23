@@ -62,7 +62,7 @@ export const FEATURE_GUIDE: Record<AppSection, FeatureGuide> = {
   medication: {
     what: 'What you take regularly and short courses when you are ill, with reminders if you want them.',
     youDo: 'Write what you take ("vitamin D 1000 IU once a day") and mark each dose.',
-    youGet: 'A clear record for you and your doctor, and tips such as when to take it.',
+    youGet: 'A clear record for you and your doctor, a day-by-day history you can correct, and tips such as when to take it.',
     notifications: 'A reminder for each dose, only if you ask for it. Each one can be muted on its own.',
     evidenceTopic: 'medication',
   },

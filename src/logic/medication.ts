@@ -147,6 +147,8 @@ export function courseProgress(item: MedicationItem, now = new Date()): { day: n
   return { day: Math.min(Math.max(day, 1), item.course.days), total: item.course.days };
 }
 
+const sameDay = (a: Date, b: Date) => dayStart(a).getTime() === dayStart(b).getTime();
+
 // Tomas programadas de un día, con lo ya marcado (tomada u omitida)
 export function dosesForDay(items: MedicationItem[], day: Date, logs: DoseLog[]): ScheduledDose[] {
   const out: ScheduledDose[] = [];
@@ -165,19 +167,71 @@ export function dosesForDay(items: MedicationItem[], day: Date, logs: DoseLog[])
         return at(day, `${String(hour).padStart(2, '0')}:${String(m || 0).padStart(2, '0')}`);
       });
     }
-    for (const time of times) {
-      out.push({
-        medId: item.id,
-        name: item.name,
-        kind: item.kind,
-        dose: item.dose,
-        at: time,
-        log: logs.find((l) => l.medId === item.id && new Date(l.scheduledFor).getTime() === time.getTime()),
-      });
+    if (!times.length) continue;
+    const mine = logs.filter((l) => l.medId === item.id && sameDay(new Date(l.scheduledFor), day));
+    const doses: ScheduledDose[] = times.map((time) => ({
+      medId: item.id,
+      name: item.name,
+      kind: item.kind,
+      dose: item.dose,
+      at: time,
+      log: mine.find((l) => new Date(l.scheduledFor).getTime() === time.getTime()),
+    }));
+    // Si se cambió la hora (o la zona horaria), lo marcado ese día a la hora antigua ya no coincide:
+    // se reparte, por orden, entre las tomas que quedan sin marcar. Solo lo de horas que ya no están en
+    // la pauta (un doble toque en las 08:00 no cuenta como la toma de las 20:00) y una vez por hora.
+    const orphans: DoseLog[] = [];
+    for (const l of mine) {
+      const ms = new Date(l.scheduledFor).getTime();
+      if (times.some((x) => x.getTime() === ms) || orphans.some((o) => new Date(o.scheduledFor).getTime() === ms)) continue;
+      orphans.push(l);
     }
+    orphans.sort((a, b) => new Date(a.scheduledFor).getTime() - new Date(b.scheduledFor).getTime());
+    for (const d of doses) if (!d.log && orphans.length) d.log = orphans.shift();
+    out.push(...doses);
   }
   return out.sort((a, b) => a.at.getTime() - b.at.getTime());
 }
+
+// --- Historial --------------------------------------------------------------------------------
+// Cada día desde el primero con algo que tomar hasta hoy. Los días pasados se calculan con la pauta
+// de ahora (no se guarda cómo era antes).
+
+// Días del historial, de hoy hacia atrás (a mediodía, para que no bailen con la hora)
+export function historyDays(items: MedicationItem[], now = new Date()): Date[] {
+  if (!items.length) return [];
+  const first = Math.min(
+    ...items.map((i) => dayStart(new Date(i.course.type === 'short' ? i.course.startDate : i.createdAt)).getTime()),
+  );
+  const out: Date[] = [];
+  for (let d = dayStart(now); d.getTime() >= first; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1)) {
+    out.push(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12));
+  }
+  return out;
+}
+
+export interface DaySummary {
+  total: number;
+  taken: number;
+  skipped: number;
+  unmarked: number; // ya pasó la hora y no está marcada
+  later: number; // hoy, aún no es la hora
+}
+
+export function daySummary(doses: ScheduledDose[], now = new Date()): DaySummary {
+  const open = doses.filter((d) => !d.log);
+  return {
+    total: doses.length,
+    taken: doses.filter((d) => d.log?.status === 'taken').length,
+    skipped: doses.filter((d) => d.log?.status === 'skipped').length,
+    unmarked: open.filter((d) => d.at <= now).length,
+    later: open.filter((d) => d.at > now).length,
+  };
+}
+
+// Lo de "solo cuando haga falta" apuntado un día (cada "He tomado una")
+export const asNeededLogsOn = (item: MedicationItem, day: Date, logs: DoseLog[]): DoseLog[] =>
+  logs.filter((l) => l.medId === item.id && l.status === 'taken' && sameDay(new Date(l.scheduledFor), day));
 
 export function scheduleText(s: MedSchedule): string {
   if (s.type === 'as_needed') return t('Only when needed');

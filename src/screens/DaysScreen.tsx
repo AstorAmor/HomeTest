@@ -140,12 +140,22 @@ export const DaysScreen = () => {
     }
   };
 
-  const Line = ({ icon, color, children }: { icon: keyof typeof Ionicons.glyphMap; color: string; children: React.ReactNode }) => (
-    <View style={styles.line}>
-      <Ionicons name={icon} size={15} color={color} style={styles.lineIcon} />
-      <Text style={styles.lineText}>{children}</Text>
-    </View>
-  );
+  const Line = ({ icon, color, children, onPress }: { icon: keyof typeof Ionicons.glyphMap; color: string; children: React.ReactNode; onPress?: () => void }) => {
+    const body = (
+      <>
+        <Ionicons name={icon} size={15} color={color} style={styles.lineIcon} />
+        <Text style={styles.lineText}>{children}</Text>
+        {onPress && <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} style={styles.lineIcon} />}
+      </>
+    );
+    return onPress ? (
+      <TouchableOpacity style={styles.line} onPress={onPress} activeOpacity={0.7} accessibilityRole="button">
+        {body}
+      </TouchableOpacity>
+    ) : (
+      <View style={styles.line}>{body}</View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -254,7 +264,11 @@ export const DaysScreen = () => {
               )}
 
               {d.doses.length > 0 && (
-                <Line icon="medical-outline" color={skipped.length ? Colors.attention : Colors.accent}>
+                <Line
+                  icon="medical-outline"
+                  color={skipped.length ? Colors.attention : Colors.accent}
+                  onPress={() => router.push({ pathname: '/medication-history', params: { date: d.key } })}
+                >
                   {t('Medication {done}/{total} taken', { done: taken, total: d.doses.length })}
                   {skipped.length ? ` · ${t('skipped: {names}', { names: skipped.map((x) => x.name).join(', ') })}` : ''}
                 </Line>

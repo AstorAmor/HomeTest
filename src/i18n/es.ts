@@ -1506,7 +1506,8 @@ export const es: Record<string, string> = {
   'A note if your urine has been dark for a few days, and a weekly summary.': 'Un aviso si tu orina lleva unos días oscura, y un resumen semanal.',
   'What you take regularly and short courses when you are ill, with reminders if you want them.': 'Lo que tomas a diario y los tratamientos cortos cuando estás enfermo, con recordatorios si los quieres.',
   'Write what you take ("vitamin D 1000 IU once a day") and mark each dose.': 'Escribe lo que tomas («vitamina D 1000 UI una vez al día») y marca cada toma.',
-  'A clear record for you and your doctor, and tips such as when to take it.': 'Un registro claro para ti y tu médico, y consejos como cuándo tomarlo.',
+  'A clear record for you and your doctor, a day-by-day history you can correct, and tips such as when to take it.':
+    'Un registro claro para ti y tu médico, un historial de cada día que puedes corregir y consejos como cuándo tomarlo.',
   'A reminder for each dose, only if you ask for it. Each one can be muted on its own.': 'Un recordatorio para cada toma, solo si lo pides. Cada uno se puede silenciar por separado.',
   'Achievements for what you actually do: streaks, steps, sessions.': 'Logros por lo que de verdad haces: rachas, pasos, sesiones.',
   'Nothing extra.': 'Nada más.',
@@ -3971,4 +3972,27 @@ export const es: Record<string, string> = {
     'Distancia: tus pasos por tu zancada, calculada con tu altura (más o menos el 41 %).',
   'If your plan has a steps or sleep target, we use that one. You can change any goal, and the circles fill up with yours.':
     'Si tu plan tiene un objetivo de pasos o de sueño, usamos ese. Puedes cambiar cualquiera y los círculos se completan con el tuyo.',
+  // Historial de medicación (MedicationHistoryScreen)
+  'Medication history': 'Historial de medicación',
+  'See each day and fix what you forgot to mark': 'Mira cada día y corrige lo que olvidaste marcar',
+  'Tap a day to see it and fix it. Tap the chosen option again to leave it unmarked.':
+    'Toca un día para verlo y corregirlo. Si vuelves a tocar la opción marcada, se queda sin marcar.',
+  'Nothing here yet. Add what you take and each day will show up here.': 'Aún no hay nada. Añade lo que tomas y aquí irá apareciendo cada día.',
+  'Last 7 days, up to yesterday': 'Últimos 7 días, hasta ayer',
+  '{full} of {n} day with everything taken': '{full} de {n} día con todo tomado',
+  '{full} of {n} days with everything taken': '{full} de {n} días con todo tomado',
+  'You took {taken} of {total} doses': 'Tomaste {taken} de {total} tomas',
+  '{n} dose not taken': '{n} sin tomar',
+  '{n} doses not taken': '{n} sin tomar',
+  'All taken': 'Todo tomado',
+  '{taken} of {total} taken': '{taken} de {total} tomadas',
+  '{n} unmarked': '{n} sin marcar',
+  '{n} later today': '{n} más tarde',
+  'When needed: {n}': 'Cuando hizo falta: {n}',
+  'Nothing scheduled': 'Nada previsto',
+  'Not taken': 'No tomada',
+  'One less': 'Una menos',
+  'One more': 'Una más',
+  'Show {n} more day': 'Ver {n} día más',
+  'Show {n} more days': 'Ver {n} días más',
 };

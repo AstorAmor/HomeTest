@@ -186,6 +186,16 @@ export const MedicationsScreen = () => {
             ))}
           </View>
         )}
+        {items.length > 0 && (
+          <TouchableOpacity style={styles.history} onPress={() => router.push('/medication-history')} activeOpacity={0.85}>
+            <Ionicons name="calendar-outline" size={18} color={Colors.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.historyTitle}>{t('History')}</Text>
+              <Text style={styles.itemSub}>{t('See each day and fix what you forgot to mark')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.sectionTitle}>{t('What I take regularly')}</Text>
         {regular.length ? regular.map(renderItem) : <Text style={styles.empty}>{t('Nothing yet.')}</Text>}
@@ -236,6 +246,8 @@ const styles = StyleSheet.create({
   skipText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
   doneTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   doneText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  history: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginTop: 10, paddingHorizontal: 14, paddingVertical: 10 },
+  historyTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   item: {
     backgroundColor: Colors.card,
     borderWidth: 1,

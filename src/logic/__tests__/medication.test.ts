@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { courseProgress, dosesForDay, findKnownMed, isActiveOn, parseMedicationText, shiftSchedule, shiftTime, zoneChange } from '@/logic/medication';
+import { asNeededLogsOn, courseProgress, daySummary, dosesForDay, findKnownMed, historyDays, isActiveOn, parseMedicationText, shiftSchedule, shiftTime, zoneChange } from '@/logic/medication';
 import { MedicationItem } from '@/types/medication';
 
 describe('parseMedicationText', () => {
@@ -71,6 +71,54 @@ describe('tomas del día', () => {
       { id: 'l', fecha: at.toISOString(), createdAt: at.toISOString(), medId: 'm1', scheduledFor: at.toISOString(), status: 'taken' },
     ]);
     expect(doses[0].log?.status).toBe('taken');
+  });
+  const log = (id: string, iso: string, status: 'taken' | 'skipped' = 'taken') => {
+    const at = new Date(iso).toISOString();
+    return { id, fecha: at, createdAt: at, medId: 'm1', scheduledFor: at, status };
+  };
+  it('si se cambió la hora, lo marcado a la hora antigua cuenta para ese día', () => {
+    const doses = dosesForDay([base({ schedule: { type: 'times', times: ['09:00', '21:00'] } })], day, [log('a', '2026-10-08T08:00:00')]);
+    expect(doses.map((d) => d.log?.id)).toEqual(['a', undefined]);
+  });
+  it('un doble toque en una hora de la pauta no marca la siguiente toma', () => {
+    const doses = dosesForDay([base({ schedule: { type: 'times', times: ['08:00', '20:00'] } })], day, [
+      log('a', '2026-10-08T08:00:00'),
+      log('b', '2026-10-08T08:00:00'),
+    ]);
+    expect(doses[0].log?.id).toBe('a');
+    expect(doses[1].log).toBeUndefined();
+  });
+  it('lo marcado otro día no cuenta', () => {
+    const doses = dosesForDay([base({})], day, [log('a', '2026-10-07T09:00:00')]);
+    expect(doses[0].log).toBeUndefined();
+  });
+});
+
+describe('historial', () => {
+  const now = new Date('2026-10-08T10:00:00');
+  it('días desde el primer alta hasta hoy, de hoy hacia atrás', () => {
+    const days = historyDays([base({ createdAt: '2026-10-06T18:00:00' }), base({ id: 'm2', course: { type: 'short', startDate: '2026-10-07', days: 3 } })], now);
+    expect(days.map((d) => d.getDate())).toEqual([8, 7, 6]);
+    expect(historyDays([], now)).toEqual([]);
+  });
+  it('resumen del día: tomadas, omitidas, sin marcar y lo que falta hoy', () => {
+    const item = base({ schedule: { type: 'times', times: ['08:00', '09:00', '14:00', '20:00'] } });
+    const at = (h: string, status: 'taken' | 'skipped') => {
+      const iso = new Date(`2026-10-08T${h}:00`).toISOString();
+      return { id: h, fecha: iso, createdAt: iso, medId: 'm1', scheduledFor: iso, status };
+    };
+    const doses = dosesForDay([item], now, [at('08:00', 'taken'), at('09:00', 'skipped')]);
+    expect(daySummary(doses, now)).toEqual({ total: 4, taken: 1, skipped: 1, unmarked: 0, later: 2 });
+    expect(daySummary(doses, new Date('2026-10-08T23:00:00'))).toEqual({ total: 4, taken: 1, skipped: 1, unmarked: 2, later: 0 });
+  });
+  it('«cuando lo necesito»: lo tomado ese día', () => {
+    const item = base({ schedule: { type: 'as_needed' } });
+    const iso = (s: string) => new Date(s).toISOString();
+    const logs = [
+      { id: 'a', fecha: iso('2026-10-08T09:00:00'), createdAt: iso('2026-10-08T09:00:00'), medId: 'm1', scheduledFor: iso('2026-10-08T09:00:00'), status: 'taken' as const },
+      { id: 'b', fecha: iso('2026-10-07T12:00:00'), createdAt: iso('2026-10-08T09:00:00'), medId: 'm1', scheduledFor: iso('2026-10-07T12:00:00'), status: 'taken' as const },
+    ];
+    expect(asNeededLogsOn(item, now, logs).map((l) => l.id)).toEqual(['a']);
   });
 });
 
