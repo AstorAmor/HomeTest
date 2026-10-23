@@ -1617,7 +1617,7 @@ prueba (ayer marcada → «Todo tomado»). `npm run release` a la primera con ~4
 `de7d6b9c-c2f3-4c7b-9a17-22ef418b4daa` (preview, android + ios) y las dos webs; los bundles publicados llevan las tres cosas.
 Sin dependencias nativas ni migraciones nuevas: no hace falta APK. Con la cuenta real no se ha probado el guardado en Supabase.
 
-## 2026-10-23 (tarde) — Entrenamientos: la sesión, como Hevy, y el «se queda atascado» al deslizar (rama `entreno-hevy`, sin commit)
+## 2026-10-23 (tarde) — Entrenamientos: la sesión, como Hevy, y el «se queda atascado» al deslizar (rama `entreno-hevy`, publicado 5d8288e)
 
 Nota del fundador (pasada por otra sesión, con captura de Hevy en Android): «los entrenos no me gustan, quiero que sea como
 hevy (… que se vea todo, poner fácilmente el peso de cada uno… una interfaz fácil y sencilla)» y «da algo de fallo cuando
@@ -1651,4 +1651,14 @@ quieres deslizar hacia abajo la ventana, se queda atascado». Worktree `hometest
   - «Cambiar ejercicio»: además de los del mismo tipo y con tu material, **«Ver todos los ejercicios»** (toda la biblioteca
     con sus filtros; antes podían salir solo 2).
   - Los 25 ejercicios de gimnasio que añadió la otra sesión (fondos para pecho y para tríceps, press inclinado con barra…)
-    están en la carpeta principal sin commit: no en esta rama.
+    están en la carpeta principal sin commit: no en esta rama. (Después: commit c353b65 en master, juntado en esta rama
+    con 5d8288e.)
+
+**Publicado 5d8288e** (2026-10-23 tarde, OK del fundador «todo con master, commit, publish y tal»): master avanzó sin
+merge hasta `entreno-hevy` (0fd75a7 sesión tipo Hevy + c353b65, 25 ejercicios más, 151 en total). tsc limpio y 418 tests.
+Probado en la demo web (8082, 471 px): la sesión enseña Duración / Volumen / Series arriba, «Anterior» con lo de la última
+vez, cajas grandes de kg y reps; al marcar 14 kg × 10, volumen 140 kg y 1/6 series, barra de descanso; terminar → resumen
+«Más peso que la última vez» → guardar vuelve a la lista con las series en `completions`; la biblioteca dice 151 ejercicios.
+El atasco al deslizar en Android sigue sin probar en un móvil. `npm run release` a la primera con ~3 GB libres: EAS Update
+grupo `0151dcca-38b4-4a59-95a6-351392ffddfa` (preview, android + ios) y las dos webs; los bundles publicados llevan la
+sesión nueva. Sin dependencias nativas ni migraciones: no hace falta APK.
