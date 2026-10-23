@@ -24,6 +24,12 @@
       "extends": "production",
       "channel": "preview",
       "distribution": "store"
+    },
+    "simulator": {
+      "channel": "preview",
+      "ios": {
+        "simulator": true
+      }
     }
   },
   "submit": {
