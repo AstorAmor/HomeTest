@@ -1120,6 +1120,12 @@ porque `master` tenía cambios de la sesión de Apple Salud. Commiteado (9ac1182
   `has_share(patient_id, 'activity')` a su política de lectura.
 - Textos en español en `src/i18n/workoutsEs.ts` (se junta con es.ts en `src/i18n/index.ts`).
 - Probar: `preview_start expo-web-workouts` (puerto 8086, desde `proyectos/.claude/launch.json`).
+- **2026-10-23, «Seguir este programa» y atrás**: al seguir otro, la lista vuelve arriba (antes en el hueco pulsado
+  salía el anterior con el mismo botón y parecía que no hacía nada). Con cuenta, el ejemplo vive en el móvil y el
+  resto en Supabase: `save` ahora deja de seguir los de los dos sitios, y `onlyOneActive` en `list()` enseña uno
+  solo como el tuyo (el del entrenador llega ya activo y antes escondía el otro). Al crear un programa o acabar una
+  sesión, `router.dismissTo('/workouts')` en vez de `replace` (quedaban dos listas y «atrás» volvía a la misma).
+  Test: `src/logic/__tests__/workoutPrograms.test.ts`.
 
 ## 2026-10-19 — Menús semanales: recetario con datos públicos, generador sin IA y vista del dietista (rama `dietas`, juntada con master el 2026-10-19)
 

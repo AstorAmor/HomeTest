@@ -24,6 +24,7 @@ export const workoutsEs: Record<string, string> = {
   'last done {date}': 'última vez el {date}',
   'How to progress': 'Cómo progresar',
   'Follow this programme': 'Seguir este programa',
+  'The programme could not be changed. Check your connection and try again.': 'No se ha podido cambiar el programa. Revisa la conexión y vuelve a intentarlo.',
   'See sessions': 'Ver las sesiones',
   'Delete this programme?': '¿Borrar este programa?',
   'Its sessions and what you logged in it will disappear from this list. Workouts already counted in your plan stay.':

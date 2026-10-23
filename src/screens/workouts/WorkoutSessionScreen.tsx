@@ -236,7 +236,8 @@ export const WorkoutSessionScreen = () => {
     const now = new Date().toISOString();
     await programRepository.logCompletion(program.id, { sessionId: session.id, at: now, minutes });
     await workoutRepository.save({ id: `workout-${Date.now()}`, fecha: now, createdAt: now, type: workoutType(session), minutes, intensity });
-    router.replace('/workouts');
+    // Vuelve a la lista que ya estaba abierta (si no, quedaban dos y «atrás» volvía a la misma)
+    router.dismissTo('/workouts');
   };
 
   if (!program || !session) {

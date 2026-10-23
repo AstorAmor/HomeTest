@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -138,10 +138,28 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
 
 export const WorkoutsScreen = () => {
   const router = useRouter();
+  const scroll = useRef<ScrollView>(null);
   const [programs, setPrograms] = useState<WorkoutProgram[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const followed = useRef<string | null | undefined>(undefined); // el que sigues (undefined: aún sin cargar)
+  const toTop = useRef(false);
 
-  const load = useCallback(async () => setPrograms(await programRepository.list()), []);
+  // Si cambia el programa que sigues (has elegido otro o acabas de crear uno), se vuelve arriba, donde
+  // está: si no, en el hueco que pulsaste aparece el que seguías antes, con el mismo botón, y parece
+  // que no ha hecho nada
+  const load = useCallback(async () => {
+    const list = await programRepository.list();
+    const now = list.find((p) => p.active)?.id ?? null;
+    toTop.current = followed.current !== undefined && followed.current !== now;
+    followed.current = now;
+    setPrograms(list);
+  }, []);
   useReloadOnFocus(load);
+  useEffect(() => {
+    if (!toTop.current) return;
+    toTop.current = false;
+    scroll.current?.scrollTo({ y: 0, animated: true });
+  }, [programs]);
 
   const remove = async (p: WorkoutProgram) => {
     const ok = await confirmAsk(t('Delete this programme?'), t('Its sessions and what you logged in it will disappear from this list. Workouts already counted in your plan stay.'), t('Delete'));
@@ -150,7 +168,13 @@ export const WorkoutsScreen = () => {
     load();
   };
   const use = async (p: WorkoutProgram) => {
-    await programRepository.setActive(p.id);
+    setFailed(false);
+    try {
+      await programRepository.setActive(p.id);
+    } catch {
+      setFailed(true);
+      return;
+    }
     load();
   };
 
@@ -160,7 +184,8 @@ export const WorkoutsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScreenHeader title={t('Workouts')} showBack backFallback="/" />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {failed && <Text style={styles.failed}>{t('The programme could not be changed. Check your connection and try again.')}</Text>}
         {!active && (
           <View style={styles.hero}>
             <MaterialCommunityIcons name="dumbbell" size={28} color={Colors.accent} />
@@ -249,4 +274,5 @@ const styles = StyleSheet.create({
   library: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginHorizontal: 20, marginTop: 4 },
   libraryTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
   safety: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 18 },
+  failed: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginBottom: 12 },
 });

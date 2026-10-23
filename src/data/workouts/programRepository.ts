@@ -85,6 +85,14 @@ function sampleProgram(): WorkoutProgram {
 }
 export const isSampleProgram = (p: Pick<WorkoutProgram, 'id'>) => p.id === SAMPLE_PROGRAM_ID;
 
+// Se sigue un solo programa. Si llegan varios marcados (el del entrenador entra ya activo, o el ejemplo
+// del móvil y uno de la cuenta), cuenta el primero de la lista y los demás salen con «Seguir este
+// programa»; antes quedaban escondidos y no había forma de elegirlos.
+export const onlyOneActive = (sorted: WorkoutProgram[]): WorkoutProgram[] => {
+  const first = sorted.find((p) => p.active);
+  return sorted.map((p) => (p.active && p !== first ? { ...p, active: false } : p));
+};
+
 async function listRemote(): Promise<WorkoutProgram[]> {
   const { data, error } = await supabase!.from('workout_programs').select('*').eq('patient_id', getCurrentUserId()).order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
@@ -115,26 +123,33 @@ export const programRepository = {
       list = [...list, sampleProgram()];
     }
     // El activo primero; luego los más nuevos
-    return list.sort((a, b) => Number(b.active) - Number(a.active) || b.createdAt.localeCompare(a.createdAt));
+    return onlyOneActive(list.sort((a, b) => Number(b.active) - Number(a.active) || b.createdAt.localeCompare(a.createdAt)));
   },
 
   async get(id: string): Promise<WorkoutProgram | null> {
     return (await this.list()).find((p) => p.id === id) ?? null;
   },
 
-  // Guardar (nuevo o cambiado). Solo puede quedar uno activo.
+  // Guardar (nuevo o cambiado). Solo puede quedar uno activo: con cuenta, el ejemplo vive en el móvil y
+  // el resto en Supabase, así que al seguir uno se dejan de seguir los de los dos sitios.
   async save(program: WorkoutProgram): Promise<void> {
     if (remote() && !isSampleProgram(program)) {
       const { error } = await supabase!.from('workout_programs').upsert({ ...toRow(program), patient_id: getCurrentUserId() }, { onConflict: 'patient_id,id' });
       if (error) throw new Error(error.message);
       if (program.active) {
         await supabase!.from('workout_programs').update({ active: false }).eq('patient_id', getCurrentUserId()).neq('id', program.id).eq('active', true);
+        const local = await readLocal();
+        if (local.some((p) => p.active)) await writeLocal(local.map((p) => ({ ...p, active: false })));
       }
       return;
     }
     const list = await readLocal();
     const next = list.filter((p) => p.id !== program.id).map((p) => (program.active ? { ...p, active: false } : p));
     await writeLocal([program, ...next]);
+    if (program.active && remote()) {
+      const { error } = await supabase!.from('workout_programs').update({ active: false }).eq('patient_id', getCurrentUserId()).eq('active', true);
+      if (error) throw new Error(error.message);
+    }
   },
 
   async setActive(id: string): Promise<void> {

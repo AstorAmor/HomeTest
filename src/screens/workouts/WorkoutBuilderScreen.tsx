@@ -72,7 +72,8 @@ export const WorkoutBuilderScreen = () => {
     setSaving(true);
     const title = `${goalLabel(full.goal)} · ${t('{n} days', { n: full.daysPerWeek })}`;
     await programRepository.save({ ...newProgram(full, { title }), sessions });
-    router.replace('/workouts');
+    // Vuelve a la lista que ya estaba abierta (si no, quedaban dos y «atrás» volvía a la misma)
+    router.dismissTo('/workouts');
   };
 
   if (step === 'preview') {
