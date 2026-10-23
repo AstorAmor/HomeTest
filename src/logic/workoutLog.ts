@@ -1,5 +1,6 @@
 import type { SetLog, WorkoutExercise, WorkoutProgram } from '@/data/workouts/types';
-import { isTimedReps, timedSeconds } from './workoutTimer';
+import { isTimedReps } from './workoutTimer';
+import { plannedSet, plannedSets, setSeconds } from './setPlan';
 
 // Registro de series durante la sesión, como en Hevy o Strong: en cada ejercicio una fila por serie con
 // el peso y las repeticiones que se hacen de verdad y, al lado, lo que se hizo la última vez en ese
@@ -53,20 +54,23 @@ export function lastTimes(programs: Pick<WorkoutProgram, 'completions'>[], befor
   return out;
 }
 
-// Lo que sale en gris en cada casilla y se guarda si se marca sin escribir: lo de esa misma serie la
-// última vez; si entonces hubo menos series, la última de ellas; si no hay nada, lo que dice la rutina.
-// El peso, si esa serie no se hizo la última vez, sigue al de la fila de arriba (`aboveKg`, el de hoy):
-// quien pone 16 kg en la primera no tiene que repetirlo en cada serie. Por tiempo, siempre el tiempo de
-// la rutina (es lo que cuenta el temporizador).
-export function setHint(item: Pick<WorkoutExercise, 'reps' | 'weightKg'>, last: SetLog[] | undefined, index: number, aboveKg?: number): Hint {
-  if (isTimedReps(item.reps)) return { reps: timedSeconds(item.reps) };
-  const same = last?.[index];
-  const prev = same ?? last?.[last.length - 1];
-  return { kg: same?.kg ?? aboveKg ?? prev?.kg ?? item.weightKg, reps: prev?.reps ?? targetReps(item.reps) };
+type Planned = Pick<WorkoutExercise, 'sets' | 'reps' | 'weightKg' | 'setPlan'>;
+
+// Lo que sale en gris en cada casilla y se guarda si se marca sin escribir. Manda la rutina, serie a
+// serie (es el objetivo, como en Hevy; lo de la última vez se ve al lado, en «Anterior»):
+// - repeticiones: las de esa serie en la rutina ("8–10" → 8); por tiempo, sus segundos (los del
+//   temporizador);
+// - peso: el de esa serie en la rutina; si la rutina no lo dice, lo de esa misma serie la última vez;
+//   si entonces no se hizo, el de la fila de arriba hoy (`aboveKg`: quien pone 16 kg en la primera no
+//   tiene que repetirlo en cada serie); si no, la última serie de la última vez.
+export function setHint(item: Planned, last: SetLog[] | undefined, index: number, aboveKg?: number): Hint {
+  if (isTimedReps(item.reps)) return { reps: setSeconds(item, index) };
+  const plan = plannedSet(item, index);
+  return { kg: plan.kg ?? last?.[index]?.kg ?? aboveKg ?? last?.[last.length - 1]?.kg, reps: targetReps(plan.reps) };
 }
 
 // Las pistas de todas las filas de un ejercicio, de arriba abajo (el peso de cada una pasa a la siguiente)
-export function rowHints(item: Pick<WorkoutExercise, 'reps' | 'weightKg'>, last: SetLog[] | undefined, rows: SetRow[]): Hint[] {
+export function rowHints(item: Planned, last: SetLog[] | undefined, rows: SetRow[]): Hint[] {
   const out: Hint[] = [];
   rows.forEach((_, i) => {
     const aboveKg = i ? (parseKg(rows[i - 1].kg) ?? out[i - 1].kg) : undefined;
@@ -75,8 +79,7 @@ export function rowHints(item: Pick<WorkoutExercise, 'reps' | 'weightKg'>, last:
   return out;
 }
 
-export const startRows = (item: Pick<WorkoutExercise, 'sets'>): SetRow[] =>
-  Array.from({ length: Math.max(1, item.sets) }, () => ({ kg: '', reps: '', done: false }));
+export const startRows = (item: Planned): SetRow[] => plannedSets(item).map(() => ({ kg: '', reps: '', done: false }));
 
 // Marcar una serie: lo escrito o, si se dejó vacío, la pista. Se escribe en la fila para que se vea lo
 // que se guarda. `fmt` pone el número como en el idioma (22,5).

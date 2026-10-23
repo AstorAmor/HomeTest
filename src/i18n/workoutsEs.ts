@@ -356,4 +356,16 @@ export const workoutsEs: Record<string, string> = {
   'Only today: your routine does not change.': 'Solo hoy: tu rutina no cambia.',
   'Any exercise from the library.': 'Cualquier ejercicio de la biblioteca.',
   'Only the same type of movement': 'Solo los del mismo tipo de movimiento',
+  // 2026-10-23: editar la rutina serie a serie, como en Hevy
+  'Clear the name': 'Borrar el nombre',
+  'More options': 'Más opciones',
+  Replace: 'Cambiar por otro',
+  'Add a note': 'Añade una nota',
+  Seconds: 'Segundos',
+  'Count by reps': 'Contar por repeticiones',
+  'Count by time': 'Contar por tiempo',
+  'Set {n}: seconds': 'Serie {n}: segundos',
+  'Remove {name}?': '¿Quitar {name}?',
+  'You can add it again from the library.': 'Puedes volver a añadirlo desde la biblioteca.',
+  'Your changes will be lost.': 'Se perderán los cambios.',
 };

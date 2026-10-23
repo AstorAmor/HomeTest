@@ -1662,3 +1662,32 @@ vez, cajas grandes de kg y reps; al marcar 14 kg × 10, volumen 140 kg y 1/6 ser
 El atasco al deslizar en Android sigue sin probar en un móvil. `npm run release` a la primera con ~3 GB libres: EAS Update
 grupo `0151dcca-38b4-4a59-95a6-351392ffddfa` (preview, android + ios) y las dos webs; los bundles publicados llevan la
 sesión nueva. Sin dependencias nativas ni migraciones: no hace falta APK.
+
+## 2026-10-23 (tarde, 2) — Editar la rutina serie a serie, como Hevy, y el teclado que tapaba la casilla (rama `rutina-series`, juntada con master el 2026-10-23)
+
+Nota del fundador (pasada por la sesión principal, con captura de «Edit Routine» de Hevy): «tienes que ir ejercicio a ejercicio
+y se me complica más… que te aparezca para un ejercicio cada una de las series, peso y reps… el teclado tapa el input».
+Worktree `hometest-app-rutinas`, rama `rutina-series` desde a893b6c.
+- **Editor como Hevy** (`CustomRoutineScreen`, crear y «Editar» cualquier programa): arriba Cancelar · título · Guardar; el
+  nombre grande con ✕; los días; y todos los ejercicios del día a la vista (`components/workouts/RoutineExerciseCard.tsx`):
+  miniatura y nombre (tocar = cómo se hace), ⋮ (subir, bajar, cambiar por otro, quitar), chips «Descanso» y «Nota», y la tabla
+  **Serie · kg · Reps** con una fila por serie (tocar «Reps ▾» lo pasa a segundos y al revés; tocar el número quita la serie;
+  «Añadir serie» copia la última). Sin lápiz ni ruedas. Salir con cambios sin guardar pregunta.
+- **Datos**: `WorkoutExercise.setPlan?: { kg?, reps }[]` (en el jsonb `sessions`, sin migración). Solo se guarda si las series
+  no son todas iguales; siempre se guarda también el resumen (`sets`, `reps` «8–12», `weightKg` de la primera), que es lo que leen
+  el generador, el portal y lo guardado antes. Lógica en `src/logic/setPlan.ts` (`plannedSets`, `withPlan`, `applyDose`) y en
+  `customRoutine.ts` (`toDraft`, `fromDraft`, `switchTimed`). El lápiz de la vista previa y el portal (cambiar series o reps)
+  vuelven a series iguales; si solo cambia el descanso, se respetan.
+- **Sesión**: lo que sale en gris en cada serie es el objetivo de la rutina para esa serie (peso y reps; por tiempo, sus
+  segundos y su temporizador); «Anterior» sigue mostrando la última vez. Cambio de criterio: antes el peso salía de la última
+  vez antes que de la rutina; ahora manda la rutina si dice peso (si no, la última vez, como antes) y las reps son siempre las
+  de la rutina. «Objetivo: 4 × 8–12 · 17,5–20 kg».
+- **Teclado** (`components/KeyboardAwareScroll.tsx`, sin dependencias nativas): con Expo 57 la app va de borde a borde y en
+  Android la ventana no encoge con el teclado. Con el teclado fuera se deja su alto de hueco debajo y se sube lo justo para ver la
+  casilla enfocada (`measureInWindow` frente a `keyboardDidShow.screenY`; el `scrollResponderScrollNativeHandleToKeyboard` de RN
+  da por hecho que el ScrollView empieza arriba de la pantalla); en la web, `scrollIntoView` al centro. Lo usan el editor y la
+  sesión (lista y guiado). **No probado en un Android de verdad.**
+- tsc + 424 tests (`setPlan.test.ts` nuevo, `workoutLog.test.ts` con el nuevo criterio). Probado en la web móvil (375 px): poner
+  20 × 8, 20 × 8–10, 17,5 × 12 y añadir una 4.ª serie, guardar (setPlan en el jsonb; la sentadilla, sin tocar, sigue sin él), la
+  sesión con esos objetivos por serie y «Anterior», y que al tocar una casilla de abajo sube al centro (737 → 448 en la sesión,
+  745 → 413 en el editor).

@@ -1,6 +1,9 @@
 import { getExercise } from '@/data/workouts/catalog';
-import type { WorkoutPrefs, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
+import type { WorkoutExercise, WorkoutPrefs, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
 import { DEFAULT_PREFS, defaultDose, newProgram } from './workoutGenerator';
+import { plannedSet, plannedSets, withPlan } from './setPlan';
+import { parseCount, parseKg } from './workoutLog';
+import { isTimedReps, timedSeconds, timeText } from './workoutTimer';
 
 // "Crear mi propia rutina" (como en Hevy o Strong): un nombre, uno o varios días (A, B, C…) y en cada
 // uno los ejercicios que se eligen de la biblioteca, en el orden que se quiera, con series,
@@ -61,4 +64,40 @@ export function customProgram(title: string, days: WorkoutSession[], opts: { bas
   if (opts.base) return { ...opts.base, title: name || opts.base.title, sessions: cleanDays(days, !isCustomProgram(opts.base)) };
   const sessions = cleanDays(days);
   return newProgram(CUSTOM_PREFS, { title: name || 'My routine', sessions, active: opts.follow ?? true });
+}
+
+// ── Editar serie a serie, como en Hevy ──
+// En el editor cada serie es una fila con su peso y sus repeticiones (o sus segundos, si va por
+// tiempo), escritos como texto para poder dejar "22," a medias. Al guardar se pasan a la rutina.
+export type DraftSet = { kg: string; reps: string };
+
+export function toDraft(it: WorkoutExercise, fmt: (n: number) => string = String): DraftSet[] {
+  const timed = isTimedReps(it.reps);
+  return plannedSets(it).map((p) => ({ kg: !timed && p.kg !== undefined ? fmt(p.kg) : '', reps: timed ? String(timedSeconds(p.reps)) : p.reps }));
+}
+
+// Repeticiones válidas: "8" o un rango "8-10" (se guarda con raya, "8–10"); si no, se queda la de antes
+const repsText = (s: string) => {
+  const n = s.replace(/\s/g, '').replace(/[-‐-―]/g, '–');
+  return /^\d{1,3}(–\d{1,3})?$/.test(n) ? n : null;
+};
+
+export function fromDraft(it: WorkoutExercise, draft: DraftSet[]): WorkoutExercise {
+  const timed = isTimedReps(it.reps);
+  const plan = draft.map((d, i) => {
+    const before = plannedSet(it, i).reps;
+    if (timed) return { reps: timeText(Math.max(5, Math.min(3600, parseCount(d.reps) ?? timedSeconds(before)))) };
+    const kg = parseKg(d.kg);
+    return { ...(kg ? { kg } : {}), reps: repsText(d.reps) ?? (isTimedReps(before) ? '10' : before) };
+  });
+  return withPlan(it, plan);
+}
+
+// Pasar un ejercicio de repeticiones a tiempo o al revés (con valores de partida: 10 repeticiones o 30 s)
+export function switchTimed(it: WorkoutExercise, draft: DraftSet[], toTimed: boolean): { item: WorkoutExercise; draft: DraftSet[] } {
+  const reps = toTimed ? '30 s' : '10';
+  const item: WorkoutExercise = { ...it, reps };
+  delete item.setPlan;
+  delete item.weightKg;
+  return { item, draft: draft.map(() => ({ kg: '', reps: toTimed ? '30' : '10' })) };
 }

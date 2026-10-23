@@ -92,7 +92,9 @@ export const ProWorkoutScreen = () => {
     setSessions((all) => all.map((s, i) => (i === current ? { ...s, exercises: fn(s.exercises) } : s)));
     setEdited(true);
   };
-  const updateItem = (index: number, patch: Partial<WorkoutExercise>) => updateItems((items) => items.map((it, j) => (j === index ? { ...it, ...patch } : it)));
+  // Cambiar series o repeticiones aquí las deja todas iguales (si el paciente las tenía serie a serie)
+  const updateItem = (index: number, patch: Partial<WorkoutExercise>) =>
+    updateItems((items) => items.map((it, j) => (j === index ? { ...it, ...patch, ...('sets' in patch || 'reps' in patch ? { setPlan: undefined } : {}) } : it)));
   const move = (index: number, dir: -1 | 1) =>
     updateItems((items) => {
       const j = index + dir;

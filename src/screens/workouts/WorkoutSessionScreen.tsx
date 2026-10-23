@@ -15,6 +15,8 @@ import type { WorkoutExercise, WorkoutProgram, WorkoutSession } from '@/data/wor
 import { workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
 import { defaultDose, estimateMinutes } from '@/logic/workoutGenerator';
 import { addExercises } from '@/logic/customRoutine';
+import { applyDose, plannedSet, setSeconds } from '@/logic/setPlan';
+import { KeyboardAwareScroll } from '@/components/KeyboardAwareScroll';
 import { WorkoutModal } from '@/components/workouts/WorkoutModal';
 import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
 import type { CatalogExercise } from '@/data/workouts/types';
@@ -33,7 +35,7 @@ import {
   scheduleBellAlarms,
   useBellPrefs,
 } from '@/data/workouts/bell';
-import { isTimedReps, secondsLeft, timedSeconds, upcomingEnds } from '@/logic/workoutTimer';
+import { isTimedReps, secondsLeft, upcomingEnds } from '@/logic/workoutTimer';
 import { allSteps, checkRow, lastTimes, nextPending, rowHints, setLogs, startRows, summarize, type Change, type LastTime, type SetRow, type Step } from '@/logic/workoutLog';
 import { DoseEditor } from '@/components/workouts/DoseEditor';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
@@ -135,11 +137,11 @@ export const WorkoutSessionScreen = () => {
   const item = items[at.item];
   const ex = item ? getExercise(item.exerciseId) : undefined;
   const timed = !!item && isTimed(item);
-  const total = item && timed ? timedSeconds(item.reps) * (ex?.perSide ? 2 : 1) : 0;
+  const total = item && timed ? setSeconds(item, at.set - 1) * (ex?.perSide ? 2 : 1) : 0;
   // La serie por tiempo en marcha (en cualquiera de las dos vistas)
   const tItem = timerAt ? items[timerAt.item] : undefined;
   const tEx = tItem ? getExercise(tItem.exerciseId) : undefined;
-  const tTotal = tItem && isTimed(tItem) ? timedSeconds(tItem.reps) * (tEx?.perSide ? 2 : 1) : 0;
+  const tTotal = tItem && timerAt && isTimed(tItem) ? setSeconds(tItem, timerAt.set - 1) * (tEx?.perSide ? 2 : 1) : 0;
 
   // Cuentas atrás, por la hora: con la pantalla bloqueada no hay tics y al volver tiene que marcar lo
   // que de verdad queda. Solo hay tic mientras hay una en marcha.
@@ -184,7 +186,7 @@ export const WorkoutSessionScreen = () => {
     (s: Step) => {
       const it = items[s.item];
       if (!it) return;
-      const sec = timedSeconds(it.reps) * (getExercise(it.exerciseId)?.perSide ? 2 : 1);
+      const sec = setSeconds(it, s.set - 1) * (getExercise(it.exerciseId)?.perSide ? 2 : 1); // cada serie, su tiempo
       sideRung.current = false;
       setPhase('work');
       setTimerAt(s);
@@ -285,7 +287,7 @@ export const WorkoutSessionScreen = () => {
       const upcoming = view !== 'guided' ? null : phase === 'rest' ? at : nextPending(rows, at);
       const upEx = upcoming ? getExercise(items[upcoming.item]?.exerciseId ?? '') : undefined;
       const next = upEx ? exerciseName(upEx) : '';
-      const sec = it && isTimed(it) ? timedSeconds(it.reps) * (e?.perSide ? 2 : 1) : 0;
+      const sec = it && s && isTimed(it) ? setSeconds(it, s.set - 1) * (e?.perSide ? 2 : 1) : 0;
       const more = rows.some((r, i) => r.some((x, j) => !x.done && !sameStep({ item: i, set: j + 1 }, s))); // queda algo más por hacer
       return upcomingEnds({
         now: Date.now(),
@@ -578,7 +580,7 @@ export const WorkoutSessionScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.runBody} keyboardShouldPersistTaps="handled">
+        <KeyboardAwareScroll contentContainerStyle={styles.runBody}>
           {phase === 'rest' ? (
             <>
               <Text style={styles.blockTag}>{t('Rest')}</Text>
@@ -600,7 +602,7 @@ export const WorkoutSessionScreen = () => {
                   <Text style={styles.nextLabel}>{t('Next')}</Text>
                   <Text style={styles.upNextName}>{exerciseName(ex)}</Text>
                   <Text style={styles.muted}>
-                    {t('Set {a} of {b}', { a: at.set, b: setsHere })} · {timed ? item.reps : setText(hintFor(at))}
+                    {t('Set {a} of {b}', { a: at.set, b: setsHere })} · {timed ? plannedSet(item, at.set - 1).reps : setText(hintFor(at))}
                     {ex.perSide ? ` ${t('per side')}` : ''}
                   </Text>
                 </View>
@@ -615,7 +617,7 @@ export const WorkoutSessionScreen = () => {
               <Text style={styles.runName}>{exerciseName(ex)}</Text>
               <Text style={styles.runSet}>
                 {t('Set {a} of {b}', { a: at.set, b: setsHere })}
-                {timed ? '' : ` · ${item.reps} ${t('reps')}${ex.perSide ? ` ${t('per side')}` : ''}`}
+                {timed ? '' : ` · ${plannedSet(item, at.set - 1).reps} ${t('reps')}${ex.perSide ? ` ${t('per side')}` : ''}`}
               </Text>
               {item.note ? <Text style={styles.proNote}>“{item.note}”</Text> : null}
               {timed && (
@@ -640,7 +642,7 @@ export const WorkoutSessionScreen = () => {
               </View>
             </>
           )}
-        </ScrollView>
+        </KeyboardAwareScroll>
 
         {phase === 'work' && (
           <View style={styles.runBottom}>
@@ -707,7 +709,7 @@ export const WorkoutSessionScreen = () => {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.hevyList} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScroll contentContainerStyle={styles.hevyList} showsVerticalScrollIndicator={false}>
           {items.map((it, i) => {
             const e = getExercise(it.exerciseId);
             if (!e || !rows[i]) return null;
@@ -741,7 +743,7 @@ export const WorkoutSessionScreen = () => {
           <TouchableOpacity style={styles.discard} onPress={quit}>
             <Text style={styles.discardText}>{t('Discard workout')}</Text>
           </TouchableOpacity>
-        </ScrollView>
+        </KeyboardAwareScroll>
 
         {phase === 'rest' && (
           <View style={styles.restBar}>
@@ -813,7 +815,7 @@ export const WorkoutSessionScreen = () => {
     if (editAt === null) return;
     const next: WorkoutProgram = {
       ...program,
-      sessions: program.sessions.map((s) => (s.id !== session.id ? s : { ...s, exercises: s.exercises.map((it, j) => (j === editAt ? { ...it, ...change } : it)) })),
+      sessions: program.sessions.map((s) => (s.id !== session.id ? s : { ...s, exercises: s.exercises.map((it, j) => (j === editAt ? applyDose(it, change) : it)) })),
     };
     setEditAt(null);
     setProgram(next);

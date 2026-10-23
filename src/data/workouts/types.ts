@@ -64,6 +64,12 @@ export interface WorkoutPrefs {
 
 export type WorkoutBlock = 'warmup' | 'main' | 'finisher' | 'cooldown';
 
+// Una serie de la rutina, como en Hevy: su peso y sus repeticiones ("6", "8–10") o su tiempo ("30 s")
+export interface PlannedSet {
+  kg?: number;
+  reps: string;
+}
+
 export interface WorkoutExercise {
   exerciseId: string;
   block: WorkoutBlock;
@@ -71,6 +77,10 @@ export interface WorkoutExercise {
   reps: string; // "8–10", "12" o "30 s" (por tiempo); "por lado" lo añade la pantalla si perSide
   restSec: number;
   weightKg?: number; // peso de partida por serie (lo fija quien hace la rutina; si no, sale de la última vez)
+  // Serie a serie, cuando no son todas iguales (100 × 6, 100 × 6, 90 × 7…). Si está, manda sobre sets,
+  // reps y weightKg, que se guardan igualmente como resumen (los leen el generador, el portal y lo
+  // guardado antes del 2026-10-23). En el jsonb `sessions`: sin migración.
+  setPlan?: PlannedSet[];
   note?: string; // indicación del entrenador
 }
 

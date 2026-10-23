@@ -7,6 +7,7 @@ import { setText } from '@/data/workouts/labels';
 import type { CatalogExercise, SetLog, WorkoutExercise } from '@/data/workouts/types';
 import { isTimedReps } from '@/logic/workoutTimer';
 import { rowHints, type SetRow } from '@/logic/workoutLog';
+import { useRevealOnFocus } from '@/components/KeyboardAwareScroll';
 import { num, t } from '@/i18n';
 
 // Las series de un ejercicio durante la sesión, como en Hevy: Serie · Anterior · kg · Reps · ✓, con
@@ -47,6 +48,7 @@ export const SetTable = ({
   const timed = isTimedReps(item.reps);
   const withKg = !timed && (isLoadable(ex) || !!item.weightKg || !!last?.some((s) => s.kg));
   const hints = rowHints(item, last, rows);
+  const reveal = useRevealOnFocus(); // que el teclado no tape la casilla
 
   return (
     <View>
@@ -106,6 +108,7 @@ export const SetTable = ({
                     placeholderTextColor={Colors.textMuted}
                     keyboardType="decimal-pad"
                     selectTextOnFocus
+                    onFocus={reveal}
                     accessibilityLabel={t('Set {n}: weight in kg', { n: i + 1 })}
                   />
                 )}
@@ -117,6 +120,7 @@ export const SetTable = ({
                   placeholderTextColor={Colors.textMuted}
                   keyboardType="number-pad"
                   selectTextOnFocus
+                  onFocus={reveal}
                   accessibilityLabel={t('Set {n}: reps', { n: i + 1 })}
                 />
               </>

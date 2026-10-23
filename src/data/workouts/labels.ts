@@ -1,5 +1,6 @@
 import { num, t, tn } from '@/i18n';
 import { getExercise } from './catalog';
+import { plannedSets } from '@/logic/setPlan';
 import type { Level, SetLog, TrainingPlace, WorkoutBlock, WorkoutExercise, WorkoutGoal, WorkoutSession } from './types';
 
 // Textos de los entrenamientos que comparten la app y el portal (fuente en inglés, ver workoutsEs.ts)
@@ -52,11 +53,15 @@ export const sessionName = (s: Pick<WorkoutSession, 'title' | 'id'>) => (s.title
 
 export const kgText = (kg: number) => `${num(kg)} kg`;
 
-// "3 × 10–12 por lado" / "1 × 30 s" / "3 × 10 · 20 kg"
-export function doseText(it: Pick<WorkoutExercise, 'sets' | 'reps' | 'exerciseId' | 'weightKg'>) {
+// "3 × 10–12 por lado" / "1 × 30 s" / "3 × 10 · 20 kg" / serie a serie "4 × 6–7 · 90–100 kg"
+export function doseText(it: Pick<WorkoutExercise, 'sets' | 'reps' | 'exerciseId' | 'weightKg' | 'setPlan'>) {
   const ex = getExercise(it.exerciseId);
   const side = ex?.perSide ? ` ${t('per side')}` : '';
-  return `${it.sets} × ${it.reps}${side}${it.weightKg ? ` · ${kgText(it.weightKg)}` : ''}`;
+  const kgs = plannedSets(it).flatMap((p) => (p.kg ? [p.kg] : []));
+  const lo = Math.min(...kgs);
+  const hi = Math.max(...kgs);
+  const kg = !kgs.length ? '' : lo === hi ? ` · ${kgText(lo)}` : ` · ${num(lo)}–${kgText(hi)}`;
+  return `${plannedSets(it).length} × ${it.reps}${side}${kg}`;
 }
 
 // Una serie hecha: "20 kg × 10", "× 12" (sin peso), "0:30"

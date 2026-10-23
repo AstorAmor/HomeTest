@@ -40,29 +40,57 @@ describe('Registro de series', () => {
     expect(lastTimes(programs, '2026-10-12T00:00:00Z').get('Goblet_Squat')?.sets[0].kg).toBe(16);
   });
 
-  it('la pista de cada serie: la misma serie la última vez, si no la última de entonces, si no la rutina', () => {
-    const item = { reps: '8–10', weightKg: 12 };
+  it('la pista de cada serie: manda la rutina; si no dice peso, lo de esa serie la última vez', () => {
     const last = [
       { exerciseId: 'x', kg: 20, reps: 10 },
       { exerciseId: 'x', kg: 22.5, reps: 8 },
     ];
-    expect(setHint(item, last, 1)).toEqual({ kg: 22.5, reps: 8 });
-    expect(setHint(item, last, 3)).toEqual({ kg: 22.5, reps: 8 });
-    expect(setHint(item, undefined, 0)).toEqual({ kg: 12, reps: 8 });
-    // El peso sigue al de la fila de arriba si esa serie no se hizo la última vez
-    expect(setHint(item, undefined, 1, 16)).toEqual({ kg: 16, reps: 8 });
-    expect(setHint(item, last, 2, 25)).toEqual({ kg: 25, reps: 8 });
-    expect(setHint(item, last, 1, 25)).toEqual({ kg: 22.5, reps: 8 });
+    // Con peso en la rutina: el de la rutina (la última vez sale en «Anterior»); reps, el objetivo
+    const withKg = { sets: 3, reps: '8–10', weightKg: 12 };
+    expect(setHint(withKg, last, 1)).toEqual({ kg: 12, reps: 8 });
+    expect(setHint(withKg, undefined, 0)).toEqual({ kg: 12, reps: 8 });
+    // Sin peso en la rutina: la misma serie la última vez, si no la de arriba hoy, si no la última de entonces
+    const noKg = { sets: 3, reps: '8–10' };
+    expect(setHint(noKg, last, 1)).toEqual({ kg: 22.5, reps: 8 });
+    expect(setHint(noKg, last, 1, 25)).toEqual({ kg: 22.5, reps: 8 });
+    expect(setHint(noKg, last, 2, 25)).toEqual({ kg: 25, reps: 8 });
+    expect(setHint(noKg, last, 3)).toEqual({ kg: 22.5, reps: 8 });
+    expect(setHint(noKg, undefined, 1, 16)).toEqual({ kg: 16, reps: 8 });
+  });
+
+  it('con la rutina serie a serie (como en Hevy), cada fila lleva su peso y sus repeticiones', () => {
+    const item = {
+      sets: 4,
+      reps: '6–7',
+      weightKg: 100,
+      setPlan: [
+        { kg: 100, reps: '6' },
+        { kg: 100, reps: '6' },
+        { kg: 90, reps: '7' },
+        { kg: 90, reps: '7' },
+      ],
+    };
+    const hints = rowHints(item, [{ exerciseId: 'x', kg: 95, reps: 6 }], startRows(item));
+    expect(hints).toEqual([
+      { kg: 100, reps: 6 },
+      { kg: 100, reps: 6 },
+      { kg: 90, reps: 7 },
+      { kg: 90, reps: 7 },
+    ]);
+    // Una serie añadida en la sesión copia la última de la rutina
+    expect(setHint(item, undefined, 4)).toEqual({ kg: 90, reps: 7 });
+    // Por tiempo, los segundos de cada serie
+    expect(setHint({ sets: 2, reps: '30 s', setPlan: [{ reps: '30 s' }, { reps: '45 s' }] }, undefined, 1)).toEqual({ reps: 45 });
   });
 
   it('el peso escrito en una serie pasa como pista a las de abajo, aunque aún no estén marcadas', () => {
     const rows = [row('16', '10', true), row('', ''), row('', ''), row('18', '')];
-    expect(rowHints({ reps: '10–12' }, undefined, rows).map((h) => h.kg)).toEqual([undefined, 16, 16, 16]);
-    expect(rowHints({ reps: '10–12' }, undefined, [...rows, row('', '')])[4].kg).toBe(18);
+    expect(rowHints({ sets: 4, reps: '10–12' }, undefined, rows).map((h) => h.kg)).toEqual([undefined, 16, 16, 16]);
+    expect(rowHints({ sets: 4, reps: '10–12' }, undefined, [...rows, row('', '')])[4].kg).toBe(18);
     // Sin nada escrito, la de la rutina en todas
-    expect(rowHints({ reps: '10', weightKg: 20 }, undefined, startRows({ sets: 3 })).map((h) => h.kg)).toEqual([20, 20, 20]);
+    expect(rowHints({ sets: 3, reps: '10', weightKg: 20 }, undefined, startRows({ sets: 3, reps: '10' })).map((h) => h.kg)).toEqual([20, 20, 20]);
     // Por tiempo: los segundos de la rutina
-    expect(setHint({ reps: '45 s' }, [{ exerciseId: 'x', sec: 30 }], 0)).toEqual({ reps: 45 });
+    expect(setHint({ sets: 1, reps: '45 s' }, [{ exerciseId: 'x', sec: 30 }], 0)).toEqual({ reps: 45 });
   });
 
   it('al marcar una serie sin escribir se queda con la pista; lo escrito manda', () => {
@@ -87,7 +115,7 @@ describe('Registro de series', () => {
   });
 
   it('el modo guiado sigue por la siguiente serie sin hacer y se salta las marcadas en la lista', () => {
-    const rows = [startRows({ sets: 2 }), startRows({ sets: 2 })];
+    const rows = [startRows({ sets: 2, reps: '10' }), startRows({ sets: 2, reps: '10' })];
     expect(nextPending(rows)).toEqual({ item: 0, set: 1 });
     rows[0][1].done = true;
     rows[1][0].done = true;
