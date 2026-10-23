@@ -8,10 +8,11 @@ import { confirmAsk } from '@/components/dev/confirmAsk';
 import { Colors } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getExercise } from '@/data/workouts/catalog';
-import { programFacts, sessionTitle } from '@/data/workouts/labels';
+import { programFacts, sessionName, sessionTitle } from '@/data/workouts/labels';
 import { isSampleProgram, programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutProgram } from '@/data/workouts/types';
 import { estimateMinutes, nextSessionId, progressionText } from '@/logic/workoutGenerator';
+import { isCustomProgram } from '@/logic/customRoutine';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
 import { dateLocale, t, tn } from '@/i18n';
 
@@ -97,7 +98,7 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
                     <Text style={styles.letterText}>{s.id}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.sessionTitle}>{t(s.title)}</Text>
+                    <Text style={styles.sessionTitle}>{sessionName(s)}</Text>
                     <Text style={styles.sessionSub}>
                       ~{estimateMinutes(s)} min{last ? ` · ${t('last done {date}', { date: dayMonth(last.at) })}` : ''}
                     </Text>
@@ -128,6 +129,12 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
           </TouchableOpacity>
         )}
         <View style={{ flex: 1 }} />
+        {isCustomProgram(p) && (
+          <TouchableOpacity style={styles.edit} onPress={() => router.push({ pathname: '/workout-custom', params: { program: p.id } })} hitSlop={8}>
+            <Ionicons name="pencil" size={14} color={Colors.accent} />
+            <Text style={styles.editText}>{t('Edit')}</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity onPress={onDelete} hitSlop={8} accessibilityLabel={t('Delete')}>
           <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
         </TouchableOpacity>
@@ -203,6 +210,10 @@ export const WorkoutsScreen = () => {
             <Ionicons name="sparkles-outline" size={18} color={Colors.background} />
             <Text style={styles.primaryText}>{active ? t('Create another workout') : t('Create my workout')}</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.secondary} onPress={() => router.push('/workout-custom')}>
+            <Ionicons name="list-outline" size={18} color={Colors.accent} />
+            <Text style={styles.secondaryText}>{t('Create my own routine')}</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/log-workout')}>
             <Ionicons name="add-circle-outline" size={18} color={Colors.accent} />
             <Text style={styles.secondaryText}>{t('Log a workout you did')}</Text>
@@ -265,6 +276,8 @@ const styles = StyleSheet.create({
   useText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
   ghost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8 },
   ghostText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  edit: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 4 },
+  editText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
   buttons: { marginHorizontal: 20, gap: 10, marginBottom: 16 },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13 },
   primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },

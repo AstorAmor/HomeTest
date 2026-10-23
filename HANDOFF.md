@@ -1569,3 +1569,38 @@ Petición del fundador: un histórico que no se vea de entrada; al pulsar, cada 
 - `DoseRows`: un doble toque en «Tomada» apuntaba la toma dos veces; ahora se ve marcada al momento y no se puede repetir.
 - Limitación: la pauta no se versiona, así que los días pasados se juzgan con la pauta de ahora (si pasa de 2 tomas a 1, los días anteriores salen con 1).
 - Tests: `medication.test.ts` (hora cambiada, doble toque, otro día, días del historial, resumen del día, «cuando haga falta»). tsc + 401 tests. Probado en la web local (8084, datos de prueba en el navegador): marcar ayer, cambiar a «No tomada», dejar sin marcar, + de ibuprofeno, corregir una toma apuntada a la hora antigua y el enlace desde Tus últimos días.
+
+## 2026-10-23 — Entrenamientos: «Crear mi propia rutina» y sesión tipo Hevy (rama `rutina-propia`, 164d1b6, juntada con master el 2026-10-23)
+
+Petición del fundador: crear una rutina a mano como en Hevy o Strong y acercar la sesión a esas apps. Eligió «las dos» vistas
+de sesión (lista tipo Hevy por defecto y modo guiado a un toque). Worktree `C:\Users\Astor\proyectos\hometest-app-rutinas`,
+sale de eb3dd7c; probar con `preview_start expo-web-rutinas` (puerto 8090, demo sin Supabase, en `proyectos/.claude/launch.json`).
+- **Rutina propia** (`/workout-custom`, `CustomRoutineScreen`; con `?program=` se edita): nombre, días A–G (añadir, quitar,
+  nombre opcional; sin nombre se llama «Día A»), «Añadir ejercicios» con la biblioteca en modo de elegir varios
+  (`ExerciseLibrary selectedIds`, pie fijo «Añadir N ejercicios» con `WorkoutModal footer`), ↑↓, quitar y el lápiz de siempre
+  (`DoseEditor`) con **peso por serie** (`withWeight`, solo si el ejercicio lleva mancuernas, pesa rusa, barra o máquina:
+  `isLoadable` en catalog.ts). Se guarda como un `WorkoutProgram` más: `source 'self'`, `prefs.custom = true`,
+  `WorkoutExercise.weightKg` (lógica en `src/logic/customRoutine.ts`). En Entrenamientos: botón «Crear mi propia rutina» y
+  «Editar» en la tarjeta de las rutinas propias; el generador ya no parte de las respuestas de una rutina propia.
+- **Biblioteca**: desplegables «Músculo» y «Material» (también «Sin material») además de los grupos; salen en la app, al elegir
+  ejercicios y en el portal (no en «Cambiar ejercicio», que ya filtra por patrón).
+- **Sesión** (`WorkoutSessionScreen`): la vista previa enseña «La última vez: 20 kg × 10, 10, 8» en cada ejercicio y dos
+  botones, «Empezar» (lista) y «Modo guiado». Lista tipo Hevy: cada ejercicio con su tabla (`SetTable`: Serie · Anterior ·
+  kg · Reps · ✓; por tiempo, Duración con ▶ y su cuenta atrás); al marcar empieza el descanso en una barra abajo (−15/+15/Omitir);
+  «+ Añadir serie», «Quitar serie»; «Terminar» (pregunta si quedan series sin marcar). Modo guiado: el de antes (vídeo,
+  timbre, avisos con la pantalla bloqueada) con la tabla del ejercicio debajo y la fila en curso marcada; se cambia de una
+  vista a otra sin perder nada (el descanso sigue). En gris, lo que se guarda si se marca sin escribir: la misma serie la
+  última vez; si no, el peso de la fila de arriba; si no, la rutina (`rowHints`). «Omitir» en el guiado ya no abre descanso.
+- **Resumen**: minutos, series, «N kg en total» (peso × reps) y por ejercicio la mejor serie frente a la mejor de la última
+  vez («Más peso / Más repeticiones / Igual que la última vez», «Primera vez que lo apuntas»; si baja, solo «La última vez: …»).
+- **Datos**: cada serie va en `completions[].sets` (`{ exerciseId, kg?, reps?, sec? }`) dentro del jsonb que ya existe; el peso
+  de la rutina, en `sessions`. **Sin migración.** «La última vez» se busca en todos los programas (`lastTimes`).
+- Tests: `workoutLog.test.ts` y `customRoutine.test.ts` (14). tsc + 409 tests. Probado en la web (demo, 375 px): crear,
+  filtrar, elegir varios, ordenar, peso, dos días, guardar, entrenar en lista y en guiado, plancha por tiempo, resumen,
+  segunda sesión con comparación, editar.
+- **Al juntar con master**: otra sesión cambió a la vez `router.replace('/workouts')` por `router.dismissTo('/workouts')` y
+  arregló «Seguir este programa» (`programRepository.onlyOneActive`, `WorkoutsScreen.use`). Esta rama ya usa `dismissTo` en la
+  sesión y en la rutina; en `WorkoutSessionScreen` vale la versión de esta rama (lleva su cambio). Choques esperables: final de
+  `workoutsEs.ts` y de HANDOFF (los dos añaden).
+- Pendiente: el portal no deja poner peso ni ve las series apuntadas (están en `completions`); la sesión en marcha no
+  sobrevive a cerrar la app; al cambiar series en la sesión no se ofrece actualizar la rutina (Hevy lo pregunta).
