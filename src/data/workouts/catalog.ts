@@ -2,7 +2,7 @@ import { getLang, t } from '@/i18n';
 import { EXERCISE_DATA, EXERCISE_DATA_COMMIT } from './exerciseData';
 import type { CatalogExercise, Equipment, Level, MovementPattern } from './types';
 
-// Catálogo de ejercicios para los entrenamientos. Base provisional (free-exercise-db): ~150 ejercicios
+// Catálogo de ejercicios para los entrenamientos. Base provisional (free-exercise-db): ~180 ejercicios
 // con dos fotos cada uno (inicio y final), que ExerciseLoop alterna como un GIF.
 
 export const EXERCISES: Record<string, CatalogExercise> = Object.fromEntries(EXERCISE_DATA.map((e) => [e.id, e]));
@@ -28,9 +28,12 @@ export const canDo = (ex: CatalogExercise, have: Equipment[]) =>
   ex.needs.every((n) => have.includes(n)) && (!ex.anyOf?.length || ex.anyOf.some((n) => have.includes(n)));
 
 // ¿Lleva peso que se apunte en kilos? (mancuernas, pesa rusa, barra o máquina). Con bandas, barra de
-// dominadas o el propio cuerpo, solo repeticiones
+// dominadas o el propio cuerpo, solo repeticiones; los lastrados, siempre (el lastre)
 const LOADS: Equipment[] = ['dumbbells', 'kettlebell', 'barbell', 'machines'];
-export const isLoadable = (ex: CatalogExercise) => !ex.timed && [...ex.needs, ...(ex.anyOf ?? [])].some((e) => LOADS.includes(e));
+export const isLoadable = (ex: CatalogExercise) =>
+  ex.load === 'added' || (ex.load !== 'none' && !ex.timed && [...ex.needs, ...(ex.anyOf ?? [])].some((e) => LOADS.includes(e)));
+// Cabecera de la columna de peso: en los lastrados, "+kg" (lo que llevas encima de tu peso)
+export const kgHead = (ex: CatalogExercise) => (ex.load === 'added' ? '+kg' : 'kg');
 
 const LEVEL_RANK: Record<Level, number> = { beginner: 0, intermediate: 1, advanced: 2 };
 export const levelAllows = (user: Level, ex: Level) => LEVEL_RANK[ex] <= LEVEL_RANK[user];

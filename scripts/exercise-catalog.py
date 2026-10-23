@@ -1,7 +1,7 @@
 """Catálogo provisional de ejercicios para los entrenamientos (src/data/workouts/exerciseData.ts).
 Base: free-exercise-db (github.com/yuhonas/free-exercise-db, fijado a un commit): nombre, músculos, nivel,
 instrucciones en inglés y dos fotos por ejercicio (inicio y final), que la app alterna como un GIF.
-Aquí se elige un subconjunto útil para programar (~150) y se le añade lo que la base no trae: patrón de
+Aquí se elige un subconjunto útil para programar (~180) y se le añade lo que la base no trae: patrón de
 movimiento, material que hace falta, si va por tiempo o por lado, si tiene impacto, y el nombre y unas
 indicaciones cortas en español (redactadas aquí, no traducidas a máquina).
 
@@ -24,7 +24,8 @@ OUT = Path(__file__).resolve().parent.parent / 'src' / 'data' / 'workouts' / 'ex
 # Material (ids de src/data/workouts/types.ts):
 # dumbbells mancuernas · kettlebell pesa rusa · bands bandas elásticas · bench banco o escalón ·
 # bar barra de dominadas · barbell barra y discos (con rack) · machines máquinas y poleas · cardio máquinas de cardio
-# Banderas: time = va por tiempo · side = por lado · impact = con saltos
+# Banderas: time = va por tiempo · side = por lado · impact = con saltos · plus = lastrado (se apunta el
+# lastre, «+kg») · bw = peso corporal aunque el material sea de cargar (fondos en paralelas, remo invertido)
 D, K, BA, BE, BAR, BB, M, C = 'dumbbells', 'kettlebell', 'bands', 'bench', 'bar', 'barbell', 'machines', 'cardio'
 
 # (id, patrón, necesita todo, necesita uno de, nivel, banderas, nombre en inglés si el de la base no sirve,
@@ -151,6 +152,14 @@ ROWS = [
         'Apoya la parte alta de la espalda en un banco, con la barra sobre la cadera (mejor con almohadilla).',
         'Pies apoyados y rodillas dobladas.',
         'Sube la cadera hasta alinear hombros, cadera y rodillas, aprieta los glúteos y baja con control.']),
+    ('Trap_Bar_Deadlift', 'hinge', [BB], [], 'b', '', None, 'Peso muerto con barra hexagonal', [
+        'Colócate dentro de la barra hexagonal y coge las asas.',
+        'Baja la cadera con el pecho alto y la espalda recta.',
+        'Sube empujando el suelo hasta quedar de pie y baja con el mismo control.']),
+    ('Barbell_Glute_Bridge', 'hinge', [BB], [], 'i', '', None, 'Puente de glúteos con barra', [
+        'Túmbate boca arriba con las rodillas dobladas y la barra sobre la cadera (mejor con almohadilla).',
+        'Sube la cadera apretando los glúteos hasta alinear hombros, cadera y rodillas.',
+        'Baja con control.']),
 
     # ── Espalda baja (también sustituye al tirón cuando no hay con qué tirar) ──
     ('Superman', 'back', [], [], 'b', '', None, 'Superman', [
@@ -207,6 +216,10 @@ ROWS = [
         'Siéntate con la parte delantera de los pies en la plataforma y las almohadillas sobre los muslos.',
         'Sube los talones lo más alto que puedas y aguanta un segundo.',
         'Baja despacio hasta notar el estiramiento en la pantorrilla.']),
+    ('Calf_Press_On_The_Leg_Press_Machine', 'calves', [M], [], 'b', '', 'Leg press calf raise', 'Gemelos en prensa', [
+        'En la prensa, con la parte delantera de los pies en el borde de la plataforma y las piernas casi estiradas.',
+        'Empuja con las puntas de los pies hasta estirar los tobillos.',
+        'Vuelve despacio hasta notar el estiramiento en la pantorrilla.']),
 
     # ── Empuje horizontal ──
     ('Incline_Push-Up', 'push_h', [], [], 'b', '', 'Incline push-up', 'Flexiones inclinadas', [
@@ -249,6 +262,18 @@ ROWS = [
         'Sujeta bien las piernas al final del banco declinado y túmbate.',
         'Baja la barra con control hasta la parte baja del pecho.',
         'Empuja hasta estirar los brazos. Mejor con alguien que te ayude.']),
+    ('Wide-Grip_Barbell_Bench_Press', 'push_h', [BB, BE], [], 'i', '', 'Wide-grip bench press', 'Press de banca con agarre abierto', [
+        'Túmbate con los ojos bajo la barra y agárrala bastante más abierta que los hombros.',
+        'Baja la barra con control hasta la mitad del pecho.',
+        'Empuja hasta estirar los brazos. Mejor con alguien que te ayude o con topes de seguridad.']),
+    ('Smith_Machine_Bench_Press', 'push_h', [M], [], 'b', '', None, 'Press de banca en máquina Smith', [
+        'Túmbate en el banco con la barra sobre la mitad del pecho y agárrala algo más abierta que los hombros.',
+        'Desbloquea la barra y bájala con control hasta el pecho.',
+        'Empuja hasta estirar los brazos y bloquéala al terminar.']),
+    ('Leverage_Incline_Chest_Press', 'push_h', [M], [], 'b', '', 'Incline machine chest press', 'Press inclinado en máquina', [
+        'Ajusta el asiento para que las asas queden a la altura de la parte alta del pecho.',
+        'Empuja hasta casi estirar los brazos.',
+        'Vuelve despacio sin dejar que el peso choque.']),
     ('Machine_Bench_Press', 'push_h', [M], [], 'b', '', 'Machine chest press', 'Press de pecho en máquina', [
         'Ajusta el asiento para que las asas queden a la altura del pecho.',
         'Empuja hasta casi estirar los brazos.',
@@ -263,6 +288,10 @@ ROWS = [
         'Túmbate en el banco con las mancuernas arriba y los codos un poco doblados.',
         'Abre los brazos en arco hasta notar el estiramiento en el pecho.',
         'Vuelve a cerrar con el mismo recorrido.']),
+    ('Incline_Dumbbell_Flyes', 'chest', [D, BE], [], 'b', '', 'Incline dumbbell fly', 'Aperturas inclinadas con mancuernas', [
+        'Banco inclinado unos 30 grados, con las mancuernas arriba y los codos un poco doblados.',
+        'Abre los brazos en arco hasta notar el estiramiento en el pecho.',
+        'Vuelve a cerrar con el mismo recorrido.']),
     ('Cross_Over_-_With_Bands', 'chest', [BA], [], 'b', '', 'Band chest fly', 'Cruce de pecho con banda', [
         'Ancla la banda a un punto firme a la altura del pecho y ponte de espaldas.',
         'Con los brazos abiertos y los codos un poco doblados, junta las manos por delante.',
@@ -275,7 +304,7 @@ ROWS = [
         'Poleas altas, un asa en cada mano y un paso al frente con el tronco un poco inclinado.',
         'Con los codos algo doblados, junta las manos delante del cuerpo dibujando un arco.',
         'Vuelve a abrir despacio hasta notar el estiramiento en el pecho.']),
-    ('Dips_-_Chest_Version', 'chest', [M], [], 'i', '', 'Chest dip', 'Fondos en paralelas para pecho', [
+    ('Dips_-_Chest_Version', 'chest', [M], [], 'i', 'bw', 'Chest dip', 'Fondos en paralelas para pecho', [
         'Sujétate en las paralelas con los brazos estirados.',
         'Baja con el tronco inclinado hacia delante y los codos algo abiertos, hasta notar el estiramiento en el pecho.',
         'Empuja para subir. En la máquina de fondos asistidos es más fácil.']),
@@ -309,6 +338,10 @@ ROWS = [
         'Ajusta el asiento para que las asas queden a la altura de los hombros.',
         'Empuja hacia arriba hasta casi estirar los brazos.',
         'Baja despacio.']),
+    ('Seated_Barbell_Military_Press', 'push_v', [BB, BE], [], 'i', '', 'Seated barbell overhead press', 'Press militar sentado con barra', [
+        'Sentado en un banco con respaldo, con la barra delante de los hombros.',
+        'Empuja la barra por encima de la cabeza hasta estirar los brazos.',
+        'Baja con control a la altura de los hombros.']),
 
     # ── Hombros (accesorio) ──
     ('Side_Lateral_Raise', 'shoulders', [D], [], 'b', '', 'Lateral raise', 'Elevaciones laterales', [
@@ -355,6 +388,14 @@ ROWS = [
         'Ancla la banda a la altura del codo y sujétala con la mano más lejana.',
         'Con el codo pegado al cuerpo y doblado a 90 grados, gira el antebrazo hacia fuera.',
         'Vuelve despacio. Termina las repeticiones y cambia de brazo.']),
+    ('Cable_Rear_Delt_Fly', 'shoulders', [M], [], 'b', '', None, 'Pájaros en polea', [
+        'Poleas altas: coge el asa izquierda con la mano derecha y la derecha con la izquierda, cruzadas delante de ti.',
+        'Abre los brazos hacia atrás y hacia fuera, casi estirados.',
+        'Vuelve despacio a cruzarlos.']),
+    ('Upright_Barbell_Row', 'shoulders', [BB], [], 'i', '', 'Upright row', 'Remo al mentón con barra', [
+        'De pie, con la barra delante de los muslos y las manos algo más juntas que los hombros.',
+        'Sube la barra pegada al cuerpo hasta el pecho, con los codos por encima de las manos.',
+        'Baja despacio. Si te molesta el hombro, sube menos.']),
 
     # ── Tirón horizontal ──
     ('Bent_Over_Two-Dumbbell_Row', 'pull_h', [D], [], 'b', '', 'Bent-over dumbbell row', 'Remo inclinado con mancuernas', [
@@ -373,7 +414,7 @@ ROWS = [
         'Inclínate desde la cadera con la espalda recta y una pesa en cada mano.',
         'Tira de las pesas hacia la cadera juntando las escápulas.',
         'Baja con control.']),
-    ('Inverted_Row', 'pull_h', [], [BB, M], 'b', '', None, 'Remo invertido', [
+    ('Inverted_Row', 'pull_h', [], [BB, M], 'b', 'bw', None, 'Remo invertido', [
         'Barra a la altura de la cintura en un rack o máquina Smith: cuélgate debajo con el cuerpo recto.',
         'Tira del pecho hacia la barra juntando las escápulas.',
         'Baja con control. Cuanto más vertical estés, más fácil.']),
@@ -393,6 +434,22 @@ ROWS = [
         'Ajusta el asiento para que las asas queden a la altura del pecho, con el pecho apoyado.',
         'Tira hacia atrás juntando las escápulas.',
         'Vuelve despacio.']),
+    ('Reverse_Grip_Bent-Over_Rows', 'pull_h', [BB], [], 'i', '', 'Underhand barbell row', 'Remo con barra con agarre supino', [
+        'Coge la barra con las palmas hacia arriba, a la anchura de los hombros.',
+        'Inclínate desde la cadera con la espalda recta y las rodillas un poco dobladas.',
+        'Tira de la barra hacia el ombligo con los codos pegados y baja con control.']),
+    ('Seated_One-arm_Cable_Pulley_Rows', 'pull_h', [M], [], 'b', 'side', 'Single-arm seated cable row', 'Remo en polea a una mano', [
+        'Sentado frente a la polea baja, con los pies apoyados y el asa en una mano.',
+        'Tira hacia la cintura con el pecho alto, juntando la escápula.',
+        'Vuelve despacio. Termina las repeticiones y cambia de brazo.']),
+    ('Leverage_High_Row', 'pull_h', [M], [], 'b', '', 'Machine high row', 'Remo alto en máquina', [
+        'Ajusta el asiento para llegar justo a las asas por encima de ti, con las rodillas bajo el apoyo.',
+        'Tira de las asas hacia el pecho juntando las escápulas.',
+        'Vuelve despacio hasta estirar los brazos.']),
+    ('Lying_T-Bar_Row', 'pull_h', [M], [], 'i', '', 'Chest-supported T-bar row', 'Remo en T con pecho apoyado', [
+        'Túmbate boca abajo en el apoyo, con la parte alta del pecho en el borde, y coge las asas.',
+        'Tira hacia el pecho juntando las escápulas.',
+        'Baja con control hasta estirar los brazos.']),
 
     # ── Tirón vertical ──
     ('Scapular_Pull-Up', 'pull_v', [BAR], [], 'b', '', None, 'Activación escapular en barra', [
@@ -423,6 +480,22 @@ ROWS = [
         'De pie frente a una polea alta, con la barra o la cuerda a la altura de los ojos.',
         'Con los brazos casi rectos, baja la barra en arco hasta los muslos.',
         'Vuelve despacio arriba.']),
+    ('V-Bar_Pullup', 'pull_v', [BAR], [], 'i', '', 'Neutral-grip pull-up', 'Dominadas con agarre neutro', [
+        'Coge las asas paralelas con las palmas enfrentadas; si no hay, pon un triángulo sobre la barra.',
+        'Tira hasta que el pecho se acerque a la barra, sin balancearte.',
+        'Baja con control hasta estirar los brazos.']),
+    ('Weighted_Pull_Ups', 'pull_v', [BAR], [], 'a', 'plus', 'Weighted pull-up', 'Dominadas lastradas', [
+        'Cuélgate el peso de un cinturón de lastre o sujeta una mancuerna entre los pies.',
+        'Tira hasta que la barbilla pase la barra, sin balancearte.',
+        'Baja con control hasta estirar los brazos. En «+kg» apunta solo el lastre.']),
+    ('V-Bar_Pulldown', 'pull_v', [M], [], 'b', '', 'V-bar lat pulldown', 'Jalón con triángulo', [
+        'Siéntate con los muslos bajo los apoyos y coge el triángulo con las palmas enfrentadas.',
+        'Tira hacia la parte alta del pecho con el tronco un poco inclinado atrás.',
+        'Sube despacio hasta estirar los brazos.']),
+    ('Underhand_Cable_Pulldowns', 'pull_v', [M], [], 'b', '', 'Underhand lat pulldown', 'Jalón con agarre supino', [
+        'Siéntate con los muslos bajo los apoyos y coge la barra con las palmas hacia ti, a la anchura de los hombros.',
+        'Tira hacia la parte alta del pecho llevando los codos hacia abajo.',
+        'Sube despacio hasta estirar los brazos.']),
 
     # ── Abdomen y tronco ──
     ('Plank', 'core', [], [], 'b', 'time', None, 'Plancha', [
@@ -473,6 +546,14 @@ ROWS = [
         'De rodillas bajo una polea alta, con la cuerda junto a la cara.',
         'Flexiona el tronco llevando los codos hacia los muslos, con la cadera quieta.',
         'Vuelve despacio.']),
+    ('Ab_Crunch_Machine', 'core', [M], [], 'b', '', 'Ab crunch machine', 'Crunch en máquina', [
+        'Siéntate con los pies bajo los rodillos y coge las asas de arriba.',
+        'Flexiona el tronco contrayendo el abdomen, sin tirar con los brazos.',
+        'Vuelve despacio.']),
+    ('Knee_Hip_Raise_On_Parallel_Bars', 'core', [M], [], 'b', 'bw', "Captain's chair leg raise", 'Elevación de piernas en silla romana', [
+        'Apoya los antebrazos en los cojines y la espalda en el respaldo, con las piernas colgando.',
+        'Sube las piernas hasta que queden paralelas al suelo, sin balancearte.',
+        'Baja despacio. Si cuesta, sube las rodillas dobladas.']),
 
     # ── Acarreo ──
     ('Farmers_Walk', 'carry', [], [D, K], 'b', 'time', "Farmer's walk", 'Paseo del granjero', [
@@ -555,11 +636,19 @@ ROWS = [
         'Sentado, con las piernas abiertas y el codo apoyado en la cara interna del muslo.',
         'Sube la mancuerna doblando el codo, sin mover el brazo.',
         'Baja despacio. Termina las repeticiones y cambia de brazo.']),
+    ('Reverse_Barbell_Curl', 'biceps', [BB], [], 'b', '', None, 'Curl invertido con barra', [
+        'De pie, con la barra cogida con las palmas hacia abajo, a la anchura de los hombros.',
+        'Sube la barra doblando los codos, pegados al cuerpo.',
+        'Baja despacio.']),
+    ('Cable_Hammer_Curls_-_Rope_Attachment', 'biceps', [M], [], 'b', '', 'Rope cable hammer curl', 'Curl martillo en polea con cuerda', [
+        'De pie frente a una polea baja con cuerda, con las palmas enfrentadas.',
+        'Sube la cuerda doblando los codos, pegados al cuerpo.',
+        'Baja despacio.']),
     ('Bench_Dips', 'triceps', [BE], [], 'b', '', 'Bench dip', 'Fondos en banco', [
         'Apoya las manos en el borde de un banco o una silla estable, con los dedos hacia delante.',
         'Baja doblando los codos hacia atrás hasta unos 90 grados.',
         'Empuja para subir. Con las rodillas dobladas es más fácil.']),
-    ('Dips_-_Triceps_Version', 'triceps', [M], [], 'i', '', 'Triceps dip', 'Fondos en paralelas', [
+    ('Dips_-_Triceps_Version', 'triceps', [M], [], 'i', 'bw', 'Triceps dip', 'Fondos en paralelas', [
         'Sujétate en las paralelas con los brazos estirados y el tronco erguido.',
         'Baja doblando los codos, pegados al cuerpo, hasta unos 90 grados.',
         'Empuja para subir. En la máquina de fondos asistidos es más fácil.']),
@@ -571,6 +660,22 @@ ROWS = [
         'Túmbate en el banco con la barra Z sobre el pecho y los brazos estirados hacia el techo.',
         'Baja la barra hacia la frente doblando solo los codos.',
         'Estira los brazos para volver, sin abrir los codos.']),
+    ('Parallel_Bar_Dip', 'triceps', [M], [], 'a', 'plus', 'Weighted dip', 'Fondos lastrados', [
+        'Cuélgate el peso de un cinturón de lastre y sujétate en las paralelas con los brazos estirados.',
+        'Baja doblando los codos hasta unos 90 grados, sin balancearte.',
+        'Empuja para subir. En «+kg» apunta solo el lastre.']),
+    ('Dip_Machine', 'triceps', [M], [], 'b', '', 'Seated dip machine', 'Fondos en máquina', [
+        'Siéntate en la máquina y coge las asas con los codos pegados al cuerpo.',
+        'Empuja hacia abajo hasta casi estirar los brazos.',
+        'Sube despacio sin soltar la tensión.']),
+    ('Triceps_Pushdown', 'triceps', [M], [], 'b', '', 'Bar triceps pushdown', 'Extensión de tríceps en polea con barra', [
+        'De pie frente a una polea alta con barra, con los codos pegados al cuerpo.',
+        'Empuja la barra hacia abajo hasta estirar los brazos.',
+        'Vuelve despacio sin mover los codos.']),
+    ('Cable_Rope_Overhead_Triceps_Extension', 'triceps', [M], [], 'b', '', 'Overhead cable triceps extension', 'Extensión de tríceps sobre la cabeza en polea', [
+        'De espaldas a una polea baja, sujeta la cuerda con las dos manos por encima de la cabeza.',
+        'Baja la cuerda detrás de la cabeza doblando los codos, que apuntan al techo.',
+        'Estira los brazos para volver.']),
     ('Tricep_Dumbbell_Kickback', 'triceps', [D], [], 'b', '', 'Triceps kickback', 'Patada de tríceps', [
         'Inclínate hacia delante con la espalda recta y el brazo pegado al cuerpo, codo doblado.',
         'Estira el codo llevando la mancuerna hacia atrás.',
@@ -729,6 +834,7 @@ def main():
             **({'timed': True} if 'time' in f else {}),
             **({'perSide': True} if 'side' in f else {}),
             **({'impact': True} if 'impact' in f else {}),
+            **({'load': 'added'} if 'plus' in f else {'load': 'none'} if 'bw' in f else {}),
             'compound': d.get('mechanic') == 'compound',
             'primary': d['primaryMuscles'],
             'secondary': d['secondaryMuscles'],

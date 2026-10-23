@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
-import { exerciseName, isLoadable } from '@/data/workouts/catalog';
+import { exerciseName, isLoadable, kgHead } from '@/data/workouts/catalog';
 import { blockLabel } from '@/data/workouts/labels';
 import type { CatalogExercise, WorkoutExercise } from '@/data/workouts/types';
 import type { DraftSet } from '@/logic/customRoutine';
@@ -129,7 +129,7 @@ export const RoutineExerciseCard = ({
 
       <View style={styles.tableHead}>
         <Text style={[styles.h, styles.colSet]}>{t('Set')}</Text>
-        {withKg && <Text style={[styles.h, styles.colBox]}>kg</Text>}
+        {withKg && <Text style={[styles.h, styles.colBox]}>{kgHead(ex)}</Text>}
         <TouchableOpacity style={[styles.colBox, styles.repsHead]} onPress={onToggleTimed} accessibilityLabel={timed ? t('Count by reps') : t('Count by time')}>
           <Text style={styles.h}>{timed ? t('Seconds') : 'Reps'}</Text>
           <Ionicons name="caret-down" size={12} color={Colors.textMuted} />

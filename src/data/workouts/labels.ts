@@ -53,14 +53,15 @@ export const sessionName = (s: Pick<WorkoutSession, 'title' | 'id'>) => (s.title
 
 export const kgText = (kg: number) => `${num(kg)} kg`;
 
-// "3 × 10–12 por lado" / "1 × 30 s" / "3 × 10 · 20 kg" / serie a serie "4 × 6–7 · 90–100 kg"
+// "3 × 10–12 por lado" / "1 × 30 s" / "3 × 10 · 20 kg" / serie a serie "4 × 6–7 · 90–100 kg" / lastrado "3 × 8 · +10 kg"
 export function doseText(it: Pick<WorkoutExercise, 'sets' | 'reps' | 'exerciseId' | 'weightKg' | 'setPlan'>) {
   const ex = getExercise(it.exerciseId);
   const side = ex?.perSide ? ` ${t('per side')}` : '';
   const kgs = plannedSets(it).flatMap((p) => (p.kg ? [p.kg] : []));
   const lo = Math.min(...kgs);
   const hi = Math.max(...kgs);
-  const kg = !kgs.length ? '' : lo === hi ? ` · ${kgText(lo)}` : ` · ${num(lo)}–${kgText(hi)}`;
+  const plus = ex?.load === 'added' ? '+' : '';
+  const kg = !kgs.length ? '' : lo === hi ? ` · ${plus}${kgText(lo)}` : ` · ${plus}${num(lo)}–${kgText(hi)}`;
   return `${plannedSets(it).length} × ${it.reps}${side}${kg}`;
 }
 

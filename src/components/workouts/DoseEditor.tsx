@@ -28,12 +28,14 @@ export const DoseEditor = ({
   item,
   perSide,
   withWeight,
+  kgUnit = 'kg',
   onSave,
   onCancel,
 }: {
   item: WorkoutExercise;
   perSide?: boolean;
   withWeight?: boolean; // ejercicios con mancuernas, pesa rusa, barra o máquina
+  kgUnit?: string; // "+kg" en los lastrados
   onSave: (change: Dose) => void;
   onCancel: () => void;
 }) => {
@@ -124,7 +126,7 @@ export const DoseEditor = ({
             accessibilityLabel={t('Weight per set')}
             selectTextOnFocus
           />
-          <Text style={styles.unit}>kg</Text>
+          <Text style={styles.unit}>{kgUnit}</Text>
         </View>
       ) : null}
 

@@ -8,7 +8,7 @@ import { ChoiceChips } from '@/components/ChoiceChips';
 import { Confetti } from '@/components/Confetti';
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { Colors } from '@/constants/colors';
-import { exerciseName, getExercise, isLoadable } from '@/data/workouts/catalog';
+import { exerciseName, getExercise, isLoadable, kgHead } from '@/data/workouts/catalog';
 import { BLOCK_ORDER, blockLabel, doseText, restText, sessionTitle, setText, setsText } from '@/data/workouts/labels';
 import { programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutExercise, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
@@ -939,7 +939,14 @@ export const WorkoutSessionScreen = () => {
             {program.source === 'professional' && (
               <Text style={styles.swapHint}>{t('{name} will see the change.', { name: program.professionalName || t('Your trainer') })}</Text>
             )}
-            <DoseEditor item={editing} perSide={editingEx?.perSide} withWeight={!!editingEx && isLoadable(editingEx)} onSave={saveDose} onCancel={() => setEditAt(null)} />
+            <DoseEditor
+              item={editing}
+              perSide={editingEx?.perSide}
+              withWeight={!!editingEx && isLoadable(editingEx)}
+              kgUnit={editingEx ? kgHead(editingEx) : 'kg'}
+              onSave={saveDose}
+              onCancel={() => setEditAt(null)}
+            />
           </>
         )}
       </WorkoutModal>

@@ -39,6 +39,9 @@ export interface CatalogExercise {
   timed?: boolean; // se hace por tiempo (plancha, estiramientos, cardio)
   perSide?: boolean; // las repeticiones o el tiempo son por lado
   impact?: boolean; // con saltos: fuera si se pide "sin saltos"
+  // Peso: 'added' = lastrado, se apunta solo el lastre ("+kg", como en Hevy); 'none' = peso corporal
+  // aunque el material sea de cargar (fondos en paralelas, remo invertido). Sin nada, lo dice el material.
+  load?: 'added' | 'none';
   compound: boolean;
   primary: string[]; // músculos (nombres de la base, en inglés: ver MUSCLE_LABEL)
   secondary: string[];

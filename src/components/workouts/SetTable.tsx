@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
-import { isLoadable } from '@/data/workouts/catalog';
+import { isLoadable, kgHead } from '@/data/workouts/catalog';
 import { setText } from '@/data/workouts/labels';
 import type { CatalogExercise, SetLog, WorkoutExercise } from '@/data/workouts/types';
 import { isTimedReps } from '@/logic/workoutTimer';
@@ -59,7 +59,7 @@ export const SetTable = ({
           <Text style={[styles.h, styles.colTime]}>{t('Duration')}</Text>
         ) : (
           <>
-            {withKg && <Text style={[styles.h, styles.colBox]}>kg</Text>}
+            {withKg && <Text style={[styles.h, styles.colBox]}>{kgHead(ex)}</Text>}
             <Text style={[styles.h, styles.colBox]}>{REPS_HEAD}</Text>
           </>
         )}
@@ -83,7 +83,7 @@ export const SetTable = ({
               <Text style={styles.setNoText}>{i + 1}</Text>
             </TouchableOpacity>
             <Text style={[styles.colPrev, styles.prev]} numberOfLines={1}>
-              {prev ? setText(prev) : '–'}
+              {prev ? `${ex.load === 'added' && prev.kg ? '+' : ''}${setText(prev)}` : '–'}
             </Text>
             {timed ? (
               <TouchableOpacity

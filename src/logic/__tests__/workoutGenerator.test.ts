@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { EXERCISE_LIST, canDo, getExercise } from '@/data/workouts/catalog';
+import { EXERCISE_LIST, canDo, getExercise, isLoadable, kgHead } from '@/data/workouts/catalog';
+import { doseText } from '@/data/workouts/labels';
 import type { WorkoutPrefs } from '@/data/workouts/types';
 import {
   DEFAULT_PREFS,
@@ -30,6 +31,19 @@ describe('Catálogo de ejercicios', () => {
     expect(canDo(getExercise('Pushups')!, [])).toBe(true);
     expect(canDo(getExercise('Dumbbell_Bench_Press')!, ['dumbbells'])).toBe(false); // falta el banco
     expect(canDo(getExercise('Goblet_Squat')!, ['dumbbells'])).toBe(true); // pesa rusa o mancuerna
+  });
+
+  it('el peso se apunta con material de cargar y en los lastrados ("+kg"), no en fondos ni remo invertido', () => {
+    expect(isLoadable(getExercise('Barbell_Bench_Press_-_Medium_Grip')!)).toBe(true);
+    expect(isLoadable(getExercise('Pullups')!)).toBe(false);
+    for (const id of ['Weighted_Pull_Ups', 'Parallel_Bar_Dip']) {
+      expect(isLoadable(getExercise(id)!), id).toBe(true);
+      expect(kgHead(getExercise(id)!), id).toBe('+kg');
+    }
+    for (const id of ['Dips_-_Triceps_Version', 'Dips_-_Chest_Version', 'Inverted_Row']) expect(isLoadable(getExercise(id)!), id).toBe(false);
+    expect(kgHead(getExercise('Leg_Press')!)).toBe('kg');
+    expect(doseText({ exerciseId: 'Parallel_Bar_Dip', sets: 3, reps: '8', weightKg: 10 })).toBe('3 × 8 · +10 kg');
+    expect(doseText({ exerciseId: 'Leg_Press', sets: 3, reps: '8', weightKg: 100 })).toBe('3 × 8 · 100 kg');
   });
 });
 
