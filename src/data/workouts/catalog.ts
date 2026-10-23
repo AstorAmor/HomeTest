@@ -2,7 +2,7 @@ import { getLang, t } from '@/i18n';
 import { EXERCISE_DATA, EXERCISE_DATA_COMMIT } from './exerciseData';
 import type { CatalogExercise, Equipment, Level, MovementPattern } from './types';
 
-// Catálogo de ejercicios para los entrenamientos. Base provisional (free-exercise-db): ~130 ejercicios
+// Catálogo de ejercicios para los entrenamientos. Base provisional (free-exercise-db): ~150 ejercicios
 // con dos fotos cada uno (inicio y final), que ExerciseLoop alterna como un GIF.
 
 export const EXERCISES: Record<string, CatalogExercise> = Object.fromEntries(EXERCISE_DATA.map((e) => [e.id, e]));
