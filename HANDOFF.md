@@ -1663,7 +1663,7 @@ El atasco al deslizar en Android sigue sin probar en un móvil. `npm run release
 grupo `0151dcca-38b4-4a59-95a6-351392ffddfa` (preview, android + ios) y las dos webs; los bundles publicados llevan la
 sesión nueva. Sin dependencias nativas ni migraciones: no hace falta APK.
 
-## 2026-10-23 (tarde, 2) — Editar la rutina serie a serie, como Hevy, y el teclado que tapaba la casilla (rama `rutina-series`, juntada con master el 2026-10-23)
+## 2026-10-23 (tarde, 2) — Editar la rutina serie a serie, como Hevy, y el teclado que tapaba la casilla (rama `rutina-series`, e5bfd15; publicado e283f0c)
 
 Nota del fundador (pasada por la sesión principal, con captura de «Edit Routine» de Hevy): «tienes que ir ejercicio a ejercicio
 y se me complica más… que te aparezca para un ejercicio cada una de las series, peso y reps… el teclado tapa el input».
@@ -1691,3 +1691,12 @@ Worktree `hometest-app-rutinas`, rama `rutina-series` desde a893b6c.
   20 × 8, 20 × 8–10, 17,5 × 12 y añadir una 4.ª serie, guardar (setPlan en el jsonb; la sentadilla, sin tocar, sigue sin él), la
   sesión con esos objetivos por serie y «Anterior», y que al tocar una casilla de abajo sube al centro (737 → 448 en la sesión,
   745 → 413 en el editor).
+
+**Publicado e283f0c** (2026-10-23 tarde, OK del fundador «haz commit de los 26 ejercicios con «+kg», pasa tipos y tests,
+compruébalo en la web y publica todo»): editor de rutina serie a serie y teclado (e5bfd15, rama `rutina-series` juntada sin
+merge con su OK) + 26 ejercicios más y lastrados con «+kg» (e283f0c, commit de la sesión del catálogo: `CatalogExercise.load`
+'added' / 'none', `isLoadable` y `kgHead` en catalog.ts; 177 en total). tsc limpio y 425 tests. Probado en la demo web: la
+biblioteca dice 177; en «Crear mi propia rutina», «Dominadas lastradas» sale con columna «+KG» y el press Arnold con «KG», una
+fila por serie. `npm run release` a la primera con ~3 GB libres: EAS Update grupo `2cfab6cb-4aee-46db-bf71-530718fa5842`
+(preview, android + ios) y las dos webs; los bundles publicados llevan «+kg», `Weighted_Pull_Ups` y el editor. Sin dependencias
+nativas ni migraciones. El teclado en Android y el atasco al deslizar siguen sin probar en un móvil.
