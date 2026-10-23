@@ -1538,6 +1538,8 @@ publicado junto con lo del iPhone de la sección anterior. Detalle de cada ronda
 - tsc + 380 tests. Sin migraciones pendientes de la app (la `20261021180000_newsletter.sql` es de la newsletter de la web,
   de otra sesión: ni aplicada ni en este commit).
 
+**Publicado 9317547** (2026-10-21 noche, OK del fundador «publica ya 9317547 (EAS Update y las dos webs) con los pasos a mano»; el fundador había vuelto a perder la barra de abajo en Android, que es el fallo de 46f2578 arreglado en este commit). `npm run release` no valía por la migración de la newsletter sin commitear, así que a mano con 1,2 GB de RAM libres: `expo export --clear --platform android --platform ios --max-workers 1` a la primera, `eas-cli update --skip-bundler` → grupo `38f8c912-ae08-46f7-89e0-865d49dbf259` (preview, android + ios) y las dos webs con `deploy-web.mjs` a la primera.
+
 ## 2026-10-22 — Próxima regla estimada en la tarjeta del ciclo (publicado 6dd588a)
 
 Petición del fundador al revisar «La app, por dentro» de la web: «según tus registros, te debería venir la regla en X días» también en la app.
