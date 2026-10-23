@@ -59,6 +59,7 @@ export interface WorkoutPrefs {
   equipment: Equipment[]; // lo que tiene a mano (en el gimnasio, todo)
   lowImpact: boolean; // sin saltos
   seed: number; // misma semilla, mismo programa; "otra variación" cambia la semilla
+  custom?: boolean; // rutina hecha a mano ("Crear mi propia rutina"): sin generador, el resto da igual
 }
 
 export type WorkoutBlock = 'warmup' | 'main' | 'finisher' | 'cooldown';
@@ -69,6 +70,7 @@ export interface WorkoutExercise {
   sets: number;
   reps: string; // "8–10", "12" o "30 s" (por tiempo); "por lado" lo añade la pantalla si perSide
   restSec: number;
+  weightKg?: number; // peso de partida por serie (lo fija quien hace la rutina; si no, sale de la última vez)
   note?: string; // indicación del entrenador
 }
 
@@ -79,10 +81,20 @@ export interface WorkoutSession {
   exercises: WorkoutExercise[];
 }
 
+// Una serie hecha: el peso y las repeticiones de verdad, o los segundos si va por tiempo. Van en el
+// orden en que se hicieron; las de un mismo ejercicio, en orden, son su serie 1, 2, 3…
+export interface SetLog {
+  exerciseId: string;
+  kg?: number;
+  reps?: number;
+  sec?: number;
+}
+
 export interface WorkoutCompletion {
   sessionId: string;
   at: string; // ISO
   minutes: number;
+  sets?: SetLog[]; // desde el 2026-10-23 (antes solo la fecha y los minutos); va en el jsonb `completions`
 }
 
 export interface WorkoutProgram {

@@ -4,8 +4,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
 
-// Hoja centrada para el portal: ficha de un ejercicio o la biblioteca para elegir uno
-export const WorkoutModal = ({ visible, title, onClose, children }: { visible: boolean; title: string; onClose: () => void; children: React.ReactNode }) => (
+// Hoja centrada para el portal: ficha de un ejercicio o la biblioteca para elegir uno. `footer` queda
+// fijo abajo (p. ej. "Añadir 3 ejercicios" al elegir varios).
+export const WorkoutModal = ({
+  visible,
+  title,
+  onClose,
+  children,
+  footer,
+}: {
+  visible: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+}) => (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
     <Pressable style={styles.backdrop} onPress={onClose}>
       <Pressable style={styles.sheet} onPress={() => undefined}>
@@ -20,6 +33,7 @@ export const WorkoutModal = ({ visible, title, onClose, children }: { visible: b
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
       </Pressable>
     </Pressable>
   </Modal>
@@ -31,4 +45,5 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.divider },
   title: { flex: 1, color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
   body: { padding: 18 },
+  footer: { paddingHorizontal: 18, paddingVertical: 12, borderTopWidth: 1, borderTopColor: Colors.divider },
 });

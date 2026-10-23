@@ -55,7 +55,7 @@ export const WorkoutBuilderScreen = () => {
   // Se parte de lo que eligió la última vez
   useEffect(() => {
     programRepository.list().then((list) => {
-      const mine = list.find((p) => p.source === 'self');
+      const mine = list.find((p) => p.source === 'self' && !p.prefs.custom); // las rutinas a mano no tienen respuestas
       if (mine) {
         setPrefs({ ...mine.prefs, seed: mine.prefs.seed + 1 });
         if (mine.prefs.place === 'home_kit') setKit(mine.prefs.equipment);

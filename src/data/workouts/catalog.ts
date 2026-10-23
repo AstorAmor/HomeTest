@@ -27,6 +27,11 @@ export const MEDIA_ASPECT = 850 / 569; // las fotos de la base son 850 × 569
 export const canDo = (ex: CatalogExercise, have: Equipment[]) =>
   ex.needs.every((n) => have.includes(n)) && (!ex.anyOf?.length || ex.anyOf.some((n) => have.includes(n)));
 
+// ¿Lleva peso que se apunte en kilos? (mancuernas, pesa rusa, barra o máquina). Con bandas, barra de
+// dominadas o el propio cuerpo, solo repeticiones
+const LOADS: Equipment[] = ['dumbbells', 'kettlebell', 'barbell', 'machines'];
+export const isLoadable = (ex: CatalogExercise) => !ex.timed && [...ex.needs, ...(ex.anyOf ?? [])].some((e) => LOADS.includes(e));
+
 const LEVEL_RANK: Record<Level, number> = { beginner: 0, intermediate: 1, advanced: 2 };
 export const levelAllows = (user: Level, ex: Level) => LEVEL_RANK[ex] <= LEVEL_RANK[user];
 
