@@ -5,7 +5,8 @@ import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
 
 // Hoja centrada para el portal: ficha de un ejercicio o la biblioteca para elegir uno. `footer` queda
-// fijo abajo (p. ej. "Añadir 3 ejercicios" al elegir varios).
+// fijo abajo (p. ej. "Añadir 3 ejercicios" al elegir varios). El fondo que cierra va detrás de la
+// hoja y no la envuelve: envolver el ScrollView en un Pressable atascaba el deslizar en Android.
 export const WorkoutModal = ({
   visible,
   title,
@@ -20,8 +21,9 @@ export const WorkoutModal = ({
   footer?: React.ReactNode;
 }) => (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <Pressable style={styles.backdrop} onPress={onClose}>
-      <Pressable style={styles.sheet} onPress={() => undefined}>
+    <View style={styles.backdrop}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('Close')} />
+      <View style={styles.sheet}>
         <View style={styles.head}>
           <Text style={styles.title} numberOfLines={1}>
             {title}
@@ -30,12 +32,12 @@ export const WorkoutModal = ({
             <Ionicons name="close" size={24} color={Colors.textSecondary} />
           </TouchableOpacity>
         </View>
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
           {children}
         </ScrollView>
         {footer ? <View style={styles.footer}>{footer}</View> : null}
-      </Pressable>
-    </Pressable>
+      </View>
+    </View>
   </Modal>
 );
 

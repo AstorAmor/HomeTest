@@ -12,7 +12,6 @@ import { programFacts, sessionName, sessionTitle } from '@/data/workouts/labels'
 import { isSampleProgram, programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutProgram } from '@/data/workouts/types';
 import { estimateMinutes, nextSessionId, progressionText } from '@/logic/workoutGenerator';
-import { isCustomProgram } from '@/logic/customRoutine';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
 import { dateLocale, t, tn } from '@/i18n';
 
@@ -74,9 +73,15 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
               {tn(nextSession.exercises.filter((e) => e.block !== 'warmup' && e.block !== 'cooldown').length, '{n} exercise', '{n} exercises')} · ~{estimateMinutes(nextSession)} min
             </Text>
           </View>
-          <View style={styles.play}>
+          {/* ▶ empieza ya, como «Empezar rutina» en Hevy; el resto de la tarjeta abre la sesión para verla */}
+          <TouchableOpacity
+            style={styles.play}
+            onPress={() => router.push({ pathname: '/workout-session', params: { program: p.id, session: nextSession.id, start: 'list' } })}
+            hitSlop={8}
+            accessibilityLabel={t('Start')}
+          >
             <Ionicons name="play" size={18} color={Colors.background} />
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       )}
 
@@ -129,12 +134,11 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
           </TouchableOpacity>
         )}
         <View style={{ flex: 1 }} />
-        {isCustomProgram(p) && (
-          <TouchableOpacity style={styles.edit} onPress={() => router.push({ pathname: '/workout-custom', params: { program: p.id } })} hitSlop={8}>
-            <Ionicons name="pencil" size={14} color={Colors.accent} />
-            <Text style={styles.editText}>{t('Edit')}</Text>
-          </TouchableOpacity>
-        )}
+        {/* Cualquier programa se puede cambiar: quitar, añadir y ordenar ejercicios (el editor de rutinas) */}
+        <TouchableOpacity style={styles.edit} onPress={() => router.push({ pathname: '/workout-custom', params: { program: p.id } })} hitSlop={8}>
+          <Ionicons name="pencil" size={14} color={Colors.accent} />
+          <Text style={styles.editText}>{t('Edit')}</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={onDelete} hitSlop={8} accessibilityLabel={t('Delete')}>
           <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
         </TouchableOpacity>

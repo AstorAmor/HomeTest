@@ -1616,3 +1616,39 @@ atrás desde la lista va a Inicio, «Seguir este programa» en el ejemplo, y el 
 prueba (ayer marcada → «Todo tomado»). `npm run release` a la primera con ~4,2 GB libres: EAS Update grupo
 `de7d6b9c-c2f3-4c7b-9a17-22ef418b4daa` (preview, android + ios) y las dos webs; los bundles publicados llevan las tres cosas.
 Sin dependencias nativas ni migraciones nuevas: no hace falta APK. Con la cuenta real no se ha probado el guardado en Supabase.
+
+## 2026-10-23 (tarde) — Entrenamientos: la sesión, como Hevy, y el «se queda atascado» al deslizar (rama `entreno-hevy`, sin commit)
+
+Nota del fundador (pasada por otra sesión, con captura de Hevy en Android): «los entrenos no me gustan, quiero que sea como
+hevy (… que se vea todo, poner fácilmente el peso de cada uno… una interfaz fácil y sencilla)» y «da algo de fallo cuando
+quieres deslizar hacia abajo la ventana, se queda atascado». Worktree `hometest-app-rutinas`, rama `entreno-hevy` desde faa7500.
+- **Sesión como Hevy** (`WorkoutSessionScreen`, vista por defecto): arriba ✕, nombre, modo guiado (cámara), timbre y
+  «Terminar»; debajo **Duración · Volumen · Series** en vivo. Cada ejercicio (`components/workouts/ExerciseBlock.tsx`):
+  miniatura redonda y nombre en color (tocar = cómo se hace), «Objetivo: 3 × 8–10 · 20 kg», chip **«Descanso: 1 min 30 s»**
+  que se cambia ahí (no, 30 s … 3 min; solo para hoy) y la tabla (`SetTable`, rehecha): número de serie en su casilla (tocarlo
+  quita la serie si no está hecha, con confirmación), Anterior, **casillas grandes** de kg y reps (42 px), ✓ grande y
+  **«+ Añadir serie» a todo el ancho**. Al final, **«+ Añadir ejercicio»** (biblioteca, elegir varios; dosis de partida de
+  `addExercises`) y «Descartar el entrenamiento». El ▶ de la tarjeta de Entrenamientos empieza ya (`?start=list`); tocar el
+  resto de la tarjeta abre la vista previa como antes. Modo guiado y resumen, igual (con la tabla nueva).
+- **Atascos al deslizar**, tres arreglos: (1) el lápiz (`DoseEditor`) ponía tres ruedas de 200 px una debajo de otra en una
+  ventana más alta que el móvil: para bajar había que arrastrar sobre una rueda y la rueda se llevaba el gesto. Ahora series,
+  reps (o min y s) y descanso van en una fila y el peso debajo: cabe sin deslizar. (2) `WorkoutModal` envolvía el ScrollView en
+  un Pressable (el fondo que cierra): ahora el fondo va detrás, como capa aparte, y el ScrollView lleva `nestedScrollEnabled`.
+  (3) el reloj de la sesión repintaba toda la lista cada segundo: ahora cuenta en su propio componente (`Elapsed`) y los
+  bloques son `memo` con acciones estables. No probado en un Android de verdad: confirmar con el fundador en qué pantalla le
+  pasaba.
+- «Atrás» (o el gesto) a mitad de la sesión pregunta «¿Parar la sesión?» (`beforeRemove`); en el resumen, «¿Salir sin guardar?».
+- En la web, las casillas de texto no encogían por debajo de su ancho natural y se comían «Anterior»: `minWidth: 0`.
+- tsc + 417 tests. Probado en la web demo a 375 px: empezar desde ▶, cambiar el descanso, apuntar 22,5 × 10 (volumen 225 kg,
+  1/10), quitar una serie, añadir un ejercicio, el lápiz sin deslizar, el modo guiado y el «atrás» que pregunta.
+- **Quitar ejercicios y ver más** (nota del fundador: «necesito poder ver más… no puedo eliminar ejercicios»):
+  - «Editar» en la tarjeta de **cualquier** programa y en la vista previa de la sesión (abre ese día): es el editor de rutinas
+    (`CustomRoutineScreen`), que ahora cambia también los del generador y los del entrenador («Álex verá el cambio»): quitar
+    (✕), añadir (antes de los estiramientos), ordenar y el lápiz. Etiqueta «Calentamiento · …» / «Vuelta a la calma · …» en
+    esos ejercicios. Un programa del generador sigue siéndolo al guardarlo (mismas respuestas, mismo tipo de día):
+    `customProgram` con `base` ya no lo marca como rutina propia y `cleanDays(days, keepFocus)`.
+  - En la sesión tipo Hevy, papelera en cada ejercicio: lo quita de la sesión de hoy (la rutina no cambia).
+  - «Cambiar ejercicio»: además de los del mismo tipo y con tu material, **«Ver todos los ejercicios»** (toda la biblioteca
+    con sus filtros; antes podían salir solo 2).
+  - Los 25 ejercicios de gimnasio que añadió la otra sesión (fondos para pecho y para tríceps, press inclinado con barra…)
+    están en la carpeta principal sin commit: no en esta rama.

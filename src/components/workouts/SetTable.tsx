@@ -9,9 +9,11 @@ import { isTimedReps } from '@/logic/workoutTimer';
 import { rowHints, type SetRow } from '@/logic/workoutLog';
 import { num, t } from '@/i18n';
 
-// Las series de un ejercicio durante la sesión, como en Hevy: Serie · Anterior · kg · Reps · ✓. En
-// gris, lo que se guarda si se marca sin escribir (lo de la última vez o lo que pide la rutina). Por
-// tiempo, en vez de kg y reps, el tiempo con su botón para empezar la cuenta atrás.
+// Las series de un ejercicio durante la sesión, como en Hevy: Serie · Anterior · kg · Reps · ✓, con
+// casillas grandes para escribir el peso y las repeticiones con el pulgar. En gris, lo que se guarda si
+// se marca sin escribir (lo de la última vez, el peso de la fila de arriba o lo que pide la rutina).
+// Por tiempo, en vez de kg y reps, el tiempo con su botón para empezar la cuenta atrás. Tocar el número
+// de una serie la quita (si no está hecha).
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
 // En la cabecera, "Reps" también en español (como en Hevy): "Repeticiones" no cabe en la columna
@@ -24,7 +26,6 @@ export const SetTable = ({
   last,
   current,
   timer,
-  canRemove = true,
   onChange,
   onCheck,
   onStartTimer,
@@ -37,16 +38,14 @@ export const SetTable = ({
   last?: SetLog[]; // la última vez que se hizo este ejercicio
   current?: number; // modo guiado: la fila en curso
   timer?: { row: number; left: number } | null; // por tiempo: la fila con la cuenta atrás en marcha
-  canRemove?: boolean;
   onChange: (row: number, patch: Partial<SetRow>) => void;
   onCheck: (row: number) => void; // marcar o desmarcar
   onStartTimer?: (row: number) => void;
   onAddSet: () => void;
-  onRemoveSet: () => void;
+  onRemoveSet?: (row: number) => void; // al tocar el número de la serie
 }) => {
   const timed = isTimedReps(item.reps);
   const withKg = !timed && (isLoadable(ex) || !!item.weightKg || !!last?.some((s) => s.kg));
-  const lastRow = rows[rows.length - 1];
   const hints = rowHints(item, last, rows);
 
   return (
@@ -54,116 +53,120 @@ export const SetTable = ({
       <View style={styles.head}>
         <Text style={[styles.h, styles.colSet]}>{t('Set')}</Text>
         <Text style={[styles.h, styles.colPrev]}>{t('Previous')}</Text>
-        {withKg && <Text style={[styles.h, styles.colKg]}>kg</Text>}
-        <Text style={[styles.h, timed ? styles.colTime : styles.colReps]}>{timed ? t('Duration') : REPS_HEAD}</Text>
-        <View style={styles.colCheck} />
+        {timed ? (
+          <Text style={[styles.h, styles.colTime]}>{t('Duration')}</Text>
+        ) : (
+          <>
+            {withKg && <Text style={[styles.h, styles.colBox]}>kg</Text>}
+            <Text style={[styles.h, styles.colBox]}>{REPS_HEAD}</Text>
+          </>
+        )}
+        <View style={styles.colCheck}>
+          <Ionicons name="checkmark" size={16} color={Colors.textMuted} />
+        </View>
       </View>
       {rows.map((r, i) => {
         const hint = hints[i];
         const prev = last?.[i];
         const running = timer?.row === i;
+        const canRemove = !!onRemoveSet && rows.length > 1 && !r.done;
         return (
           <View key={i} style={[styles.row, r.done && styles.rowDone, current === i && !r.done && styles.rowCurrent]}>
-            <Text style={[styles.cell, styles.colSet, styles.setNo]}>{i + 1}</Text>
-            <Text style={[styles.cell, styles.colPrev, styles.prev]} numberOfLines={1}>
-              {prev ? setText(prev) : '—'}
+            <TouchableOpacity
+              style={[styles.colSet, styles.setNo, r.done && styles.setNoDone]}
+              onPress={canRemove ? () => onRemoveSet!(i) : undefined}
+              disabled={!canRemove}
+              accessibilityLabel={canRemove ? t('Remove set {n}', { n: i + 1 }) : t('Set {n}', { n: i + 1 })}
+            >
+              <Text style={styles.setNoText}>{i + 1}</Text>
+            </TouchableOpacity>
+            <Text style={[styles.colPrev, styles.prev]} numberOfLines={1}>
+              {prev ? setText(prev) : '–'}
             </Text>
-            {withKg && (
-              <TextInput
-                style={[styles.input, styles.colKg]}
-                value={r.kg}
-                onChangeText={(v) => onChange(i, { kg: v.replace(/[^\d.,]/g, '').slice(0, 6) })}
-                placeholder={hint.kg !== undefined ? num(hint.kg) : '–'}
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="decimal-pad"
-                selectTextOnFocus
-                accessibilityLabel={t('Set {n}: weight in kg', { n: i + 1 })}
-              />
-            )}
             {timed ? (
-              <View style={[styles.colTime, styles.timeCell]}>
-                <Text style={[styles.time, running && { color: Colors.accent }]}>
+              <TouchableOpacity
+                style={[styles.colTime, styles.box, styles.timeBox, running && styles.boxOn]}
+                onPress={!r.done && !running && onStartTimer ? () => onStartTimer(i) : undefined}
+                disabled={r.done || running || !onStartTimer}
+                accessibilityLabel={t('Start timer')}
+              >
+                <Text style={[styles.boxText, running && { color: Colors.accent }]}>
                   {running ? clock(timer!.left) : clock(r.done && r.reps ? Number(r.reps) : (hint.reps ?? 0))}
                 </Text>
-                {!r.done && !running && onStartTimer && (
-                  <TouchableOpacity onPress={() => onStartTimer(i)} hitSlop={8} accessibilityLabel={t('Start timer')}>
-                    <Ionicons name="play-circle" size={24} color={Colors.accent} />
-                  </TouchableOpacity>
-                )}
-              </View>
+                {!r.done && !running && onStartTimer ? <Ionicons name="play" size={16} color={Colors.accent} /> : null}
+              </TouchableOpacity>
             ) : (
-              <TextInput
-                style={[styles.input, styles.colReps]}
-                value={r.reps}
-                onChangeText={(v) => onChange(i, { reps: v.replace(/\D/g, '').slice(0, 4) })}
-                placeholder={hint.reps !== undefined ? String(hint.reps) : '–'}
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="number-pad"
-                selectTextOnFocus
-                accessibilityLabel={t('Set {n}: reps', { n: i + 1 })}
-              />
+              <>
+                {withKg && (
+                  <TextInput
+                    style={[styles.colBox, styles.box, styles.boxText]}
+                    value={r.kg}
+                    onChangeText={(v) => onChange(i, { kg: v.replace(/[^\d.,]/g, '').slice(0, 6) })}
+                    placeholder={hint.kg !== undefined ? num(hint.kg) : '–'}
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="decimal-pad"
+                    selectTextOnFocus
+                    accessibilityLabel={t('Set {n}: weight in kg', { n: i + 1 })}
+                  />
+                )}
+                <TextInput
+                  style={[styles.colBox, styles.box, styles.boxText]}
+                  value={r.reps}
+                  onChangeText={(v) => onChange(i, { reps: v.replace(/\D/g, '').slice(0, 4) })}
+                  placeholder={hint.reps !== undefined ? String(hint.reps) : '–'}
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="number-pad"
+                  selectTextOnFocus
+                  accessibilityLabel={t('Set {n}: reps', { n: i + 1 })}
+                />
+              </>
             )}
             <TouchableOpacity
               style={[styles.colCheck, styles.check, r.done && styles.checkOn]}
               onPress={() => onCheck(i)}
-              hitSlop={6}
+              hitSlop={4}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: r.done }}
               accessibilityLabel={t('Set {n} done', { n: i + 1 })}
             >
-              <Ionicons name="checkmark" size={18} color={r.done ? Colors.background : Colors.textMuted} />
+              <Ionicons name="checkmark" size={22} color={r.done ? Colors.background : Colors.textMuted} />
             </TouchableOpacity>
           </View>
         );
       })}
-      <View style={styles.tools}>
-        <TouchableOpacity style={styles.tool} onPress={onAddSet}>
-          <Ionicons name="add" size={16} color={Colors.accent} />
-          <Text style={styles.toolText}>{t('Add set')}</Text>
-        </TouchableOpacity>
-        {rows.length > 1 && canRemove && lastRow && !lastRow.done && (
-          <TouchableOpacity style={styles.tool} onPress={onRemoveSet}>
-            <Ionicons name="remove" size={16} color={Colors.textSecondary} />
-            <Text style={[styles.toolText, { color: Colors.textSecondary }]}>{t('Remove set')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <TouchableOpacity style={styles.addSet} onPress={onAddSet}>
+        <Ionicons name="add" size={18} color={Colors.textPrimary} />
+        <Text style={styles.addSetText}>{t('Add set')}</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
+const H = 42; // alto de las casillas: cómodas para el pulgar
+
 const styles = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 6, marginBottom: 2 },
-  h: { color: Colors.textMuted, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 10 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4, marginBottom: 4 },
+  h: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', textAlign: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4, paddingVertical: 4, borderRadius: 10 },
   rowDone: { backgroundColor: Colors.accentSoft },
-  rowCurrent: { borderWidth: 1, borderColor: Colors.accent, paddingVertical: 3, paddingHorizontal: 5 },
-  colSet: { width: 34, textAlign: 'center' },
-  colPrev: { flex: 1 },
-  colKg: { width: 62 },
-  colReps: { width: 54 },
-  colTime: { width: 92 },
-  colCheck: { width: 36 },
-  cell: { color: Colors.textPrimary, fontSize: 14 },
-  setNo: { fontWeight: '800' },
-  prev: { color: Colors.textSecondary, fontSize: 13 },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  timeCell: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6 },
-  time: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  check: { height: 32, borderRadius: 8, borderWidth: 1, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
-  checkOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  tools: { flexDirection: 'row', gap: 16, paddingHorizontal: 6, paddingTop: 6 },
-  tool: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 4 },
-  toolText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  rowCurrent: { borderWidth: 1, borderColor: Colors.accent, paddingVertical: 3, paddingHorizontal: 3 },
+  colSet: { width: 36 },
+  // minWidth 0: en la web una casilla de texto no encoge por debajo de su ancho natural y se comía la
+  // columna "Anterior"
+  colPrev: { flex: 1.15, minWidth: 0 },
+  colBox: { flex: 1, minWidth: 0 },
+  colTime: { flex: 2.1, minWidth: 0 },
+  colCheck: { width: H, alignItems: 'center' },
+  setNo: { height: H, borderRadius: 8, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
+  setNoDone: { backgroundColor: 'transparent' },
+  setNoText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  prev: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center' },
+  box: { height: H, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 8, backgroundColor: Colors.background },
+  boxOn: { borderColor: Colors.accent },
+  boxText: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', textAlign: 'center', paddingHorizontal: 4, fontVariant: ['tabular-nums'] },
+  timeBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  check: { height: H, borderRadius: 8, backgroundColor: Colors.card, justifyContent: 'center' },
+  checkOn: { backgroundColor: Colors.accent },
+  addSet: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 10, backgroundColor: Colors.card, marginTop: 8 },
+  addSetText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
 });

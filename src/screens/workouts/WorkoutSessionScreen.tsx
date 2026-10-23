@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { AppState, View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, type StyleProp, type TextStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { Confetti } from '@/components/Confetti';
@@ -14,10 +14,12 @@ import { programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutExercise, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
 import { workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
 import { defaultDose, estimateMinutes } from '@/logic/workoutGenerator';
+import { addExercises } from '@/logic/customRoutine';
 import { WorkoutModal } from '@/components/workouts/WorkoutModal';
 import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
 import type { CatalogExercise } from '@/data/workouts/types';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
+import { ExerciseBlock, type BlockActions } from '@/components/workouts/ExerciseBlock';
 import { BellSheet } from '@/components/workouts/BellSheet';
 import { SetTable } from '@/components/workouts/SetTable';
 import {
@@ -38,17 +40,21 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { dateLocale, num, t, tn } from '@/i18n';
 
 // Una sesión del programa. Primero la lista (calentamiento, ejercicios, remate y estiramientos) con lo
-// que se hizo la última vez en cada ejercicio. Al empezar, dos formas de hacerla (src/logic/workoutLog.ts):
-// - Lista, como Hevy o Strong (por defecto): todos los ejercicios con su tabla de series; se marca cada
-//   serie con su peso y sus repeticiones y empieza el descanso, en una barra abajo.
+// que se hizo la última vez en cada ejercicio; con ?start=list (el ▶ de Entrenamientos) se empieza sin
+// pasar por ella. Al empezar, dos formas de hacerla (src/logic/workoutLog.ts):
+// - Como Hevy (por defecto): arriba la duración, los kilos y las series; debajo todos los ejercicios
+//   con su tabla de series (casillas grandes para el peso y las reps); al marcar una serie empieza el
+//   descanso en una barra abajo. Se pueden añadir series y ejercicios, y cambiar el descanso de cada uno.
 // - Modo guiado: un ejercicio cada vez con su vídeo, la serie en la que vas y su tabla, el temporizador
 //   si va por tiempo y el descanso a pantalla completa.
 // Se cambia de una a otra sin perder nada. Al acabar cada cuenta atrás suena el timbre elegido, también
 // con la pantalla bloqueada (src/data/workouts/bell.ts). Al terminar, un resumen (series, kilos y la mejor
 // serie de cada ejercicio frente a la última vez); se guarda como sesión hecha del programa, con cada
-// serie, y como entrenamiento del plan (cuenta para las 3 de fuerza a la semana).
+// serie, y como entrenamiento del plan (cuenta para las 3 de fuerza a la semana). Salir con «atrás» a
+// mitad de la sesión pregunta antes.
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
+const fmtLong = (s: number) => (s >= 3600 ? `${Math.floor(s / 3600)}:${fmt(s % 3600).padStart(5, '0')}` : fmt(s));
 
 const isTimed = (it: WorkoutExercise) => isTimedReps(it.reps);
 const sameStep = (a: Step | null, b: Step | null) => !!a && !!b && a.item === b.item && a.set === b.set;
@@ -63,30 +69,49 @@ const CHANGE_TEXT: Record<Exclude<Change, 'less'>, string> = {
   same: 'Same as last time',
 };
 
+// El reloj de la sesión cuenta por su cuenta: así la lista de ejercicios no se vuelve a pintar cada
+// segundo (en Android eso hacía que el deslizar fuera a tirones)
+const Elapsed = ({ since, style }: { since: number; style: StyleProp<TextStyle> }) => {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <Text style={style}>{fmtLong(Math.max(0, Math.round((now - since) / 1000)))}</Text>;
+};
+
 export const WorkoutSessionScreen = () => {
   const router = useRouter();
+  const navigation = useNavigation();
   const { width } = useWindowDimensions();
-  const { program: programId, session: sessionParam } = useLocalSearchParams<{ program: string; session?: string }>();
+  const { program: programId, session: sessionParam, start: startParam } = useLocalSearchParams<{ program: string; session?: string; start?: string }>();
   const [program, setProgram] = useState<WorkoutProgram | null | undefined>(undefined); // undefined = cargando
   const [last, setLast] = useState<Map<string, LastTime>>(new Map()); // la última vez de cada ejercicio
   const [sessionId, setSessionId] = useState(sessionParam ?? 'A');
   const [mode, setMode] = useState<'overview' | 'run' | 'done'>('overview');
   const [view, setView] = useState<'list' | 'guided'>('list');
-  const [rows, setRows] = useState<SetRow[][]>([]); // una tabla de series por ejercicio de la sesión
+  const [runItems, setRunItems] = useState<WorkoutExercise[]>([]); // los ejercicios de hoy (se pueden añadir y cambiar el descanso)
+  const [rows, setRows] = useState<SetRow[][]>([]); // una tabla de series por ejercicio
   const [at, setAt] = useState<Step>({ item: 0, set: 1 }); // modo guiado: la serie en curso (en el descanso, la siguiente)
   const [phase, setPhase] = useState<'work' | 'rest'>('work');
   const [left, setLeft] = useState(0); // segundos que quedan del descanso o del ejercicio por tiempo
   const [restTotal, setRestTotal] = useState(0);
   const [timerOn, setTimerOn] = useState(false);
   const [timerAt, setTimerAt] = useState<Step | null>(null); // la serie por tiempo con la cuenta atrás en marcha
-  const [elapsed, setElapsed] = useState(0);
+  const [restMenu, setRestMenu] = useState<number | null>(null); // ejercicio con el menú del descanso abierto
+  const [picking, setPicking] = useState(false); // añadir ejercicios a la sesión de hoy
+  const [chosen, setChosen] = useState<string[]>([]);
+  const [finishedAt, setFinishedAt] = useState(0);
   const [intensity, setIntensity] = useState<WorkoutEntry['intensity']>('moderate');
   const [saved, setSaved] = useState(false);
   const [swapAt, setSwapAt] = useState<number | null>(null); // índice en session.exercises
+  const [swapAll, setSwapAll] = useState(false); // al cambiar: todos los ejercicios, no solo los del mismo tipo
   const [editAt, setEditAt] = useState<number | null>(null); // ídem, para cambiar series, reps o tiempo, peso y descanso
   const startedAt = useRef<number>(0);
   const endsAt = useRef(0); // cuándo acaba la cuenta atrás en marcha (hora del reloj, en ms)
   const sideRung = useRef(false); // ya sonó el cambio de lado de este ejercicio
+  const autoStarted = useRef(false);
+  const leaving = useRef(false); // al guardar se sale sin preguntar
   const [bell, setBell] = useBellPrefs();
   const [bellOpen, setBellOpen] = useState(false);
 
@@ -98,7 +123,7 @@ export const WorkoutSessionScreen = () => {
   }, [programId]);
 
   const session = program?.sessions.find((s) => s.id === sessionId) ?? program?.sessions[0];
-  const items = useMemo(() => session?.exercises ?? [], [session]);
+  const items = useMemo(() => (mode === 'overview' ? (session?.exercises ?? []) : runItems), [mode, session, runItems]);
   const steps = useMemo(() => allSteps(rows), [rows]);
   const doneCount = rows.reduce((n, r) => n + r.filter((x) => x.done).length, 0);
   const hintFor = useCallback(
@@ -116,14 +141,11 @@ export const WorkoutSessionScreen = () => {
   const tEx = tItem ? getExercise(tItem.exerciseId) : undefined;
   const tTotal = tItem && isTimed(tItem) ? timedSeconds(tItem.reps) * (tEx?.perSide ? 2 : 1) : 0;
 
-  // Reloj general y cuentas atrás, por la hora: con la pantalla bloqueada no hay tics y al volver
-  // tiene que marcar lo que de verdad queda
+  // Cuentas atrás, por la hora: con la pantalla bloqueada no hay tics y al volver tiene que marcar lo
+  // que de verdad queda. Solo hay tic mientras hay una en marcha.
   useEffect(() => {
-    if (mode !== 'run') return;
-    const id = setInterval(() => {
-      setElapsed(Math.round((Date.now() - startedAt.current) / 1000));
-      if (phase === 'rest' || timerOn) setLeft(secondsLeft(endsAt.current, Date.now()));
-    }, 250);
+    if (mode !== 'run' || !(phase === 'rest' || timerOn)) return;
+    const id = setInterval(() => setLeft(secondsLeft(endsAt.current, Date.now())), 250);
     return () => clearInterval(id);
   }, [mode, phase, timerOn]);
 
@@ -172,6 +194,14 @@ export const WorkoutSessionScreen = () => {
     [items, countTo],
   );
 
+  const toDone = useCallback(() => {
+    setFinishedAt(Date.now());
+    setTimerOn(false);
+    setTimerAt(null);
+    setPhase('work');
+    setMode('done');
+  }, []);
+
   // Marca la serie con lo escrito o, si no, con la pista
   const markDone = useCallback(
     (s: Step, base: SetRow[][]) => base.map((r, i) => (i !== s.item ? r : r.map((row, j) => (j !== s.set - 1 ? row : checkRow(row, hintFor(s, base), num))))),
@@ -179,7 +209,7 @@ export const WorkoutSessionScreen = () => {
   );
 
   // Lista: marcar o desmarcar una serie. Al marcarla empieza su descanso (si queda algo por hacer).
-  // at = cuándo acabó (el final de su cuenta atrás, aunque se note al volver de la pantalla bloqueada)
+  // end = cuándo acabó (el final de su cuenta atrás, aunque se note al volver de la pantalla bloqueada)
   const toggleRow = useCallback(
     (s: Step, withRest = true, end = Date.now()) => {
       const row = rows[s.item]?.[s.set - 1];
@@ -198,7 +228,6 @@ export const WorkoutSessionScreen = () => {
       const more = next.some((r) => r.some((x) => !x.done));
       if (withRest && sec > 0 && more) rest(sec, end);
       else if (!more) setPhase('work'); // todo hecho: sin descanso pendiente
-
     },
     [rows, timerAt, markDone, items, rest],
   );
@@ -212,8 +241,7 @@ export const WorkoutSessionScreen = () => {
       setTimerAt(null);
       const upcoming = nextPending(next, at);
       if (!upcoming) {
-        setPhase('work');
-        setMode('done');
+        toDone();
         return;
       }
       setAt(upcoming);
@@ -221,7 +249,7 @@ export const WorkoutSessionScreen = () => {
       if (sec > 0) rest(sec, end);
       else startStep(upcoming);
     },
-    [at, rows, markDone, items, rest, startStep],
+    [at, rows, markDone, items, rest, startStep, toDone],
   );
 
   // Fin de la cuenta atrás: descanso → (guiado) siguiente serie; ejercicio por tiempo → hecho
@@ -301,27 +329,52 @@ export const WorkoutSessionScreen = () => {
     };
   }, [mode]);
 
-  const start = (v: 'list' | 'guided') => {
-    const fresh = items.map((it) => (getExercise(it.exerciseId) ? startRows(it) : []));
-    startedAt.current = Date.now();
-    setElapsed(0);
-    setRows(fresh);
-    setView(v);
-    setMode('run');
-    startStep(nextPending(fresh) ?? { item: 0, set: 1 });
-    if (bell.on) offerBellOnLock(bell.tone);
-  };
+  // «Atrás» (o el gesto) a mitad de la sesión: pregunta antes de perder lo apuntado
+  useEffect(() => {
+    if (mode === 'overview') return;
+    return navigation.addListener('beforeRemove', (e) => {
+      if (leaving.current) return;
+      e.preventDefault();
+      const ask = mode === 'run' ? confirmAsk(t('Stop the session?'), t('What you did so far will not be saved.'), t('Stop')) : confirmAsk(t('Leave without saving?'), t('This session will not be saved.'), t('Leave'));
+      ask.then((ok) => {
+        if (!ok) return;
+        leaving.current = true;
+        navigation.dispatch(e.data.action);
+      });
+    });
+  }, [navigation, mode]);
+
+  const start = useCallback(
+    (v: 'list' | 'guided') => {
+      if (!session) return;
+      const its = session.exercises.filter((it) => getExercise(it.exerciseId));
+      const fresh = its.map((it) => startRows(it));
+      startedAt.current = Date.now();
+      setRunItems(its);
+      setRows(fresh);
+      setRestMenu(null);
+      setView(v);
+      setMode('run');
+      startStep(nextPending(fresh) ?? { item: 0, set: 1 });
+      if (bell.on) offerBellOnLock(bell.tone);
+    },
+    [session, startStep, bell.on, bell.tone],
+  );
+
+  // Desde el ▶ de Entrenamientos: empieza directamente
+  useEffect(() => {
+    if (autoStarted.current || !session || mode !== 'overview' || (startParam !== 'list' && startParam !== 'guided')) return;
+    autoStarted.current = true;
+    start(startParam);
+  }, [session, mode, startParam, start]);
 
   // Cambiar de vista sin perder nada: el guiado sigue por la primera serie sin hacer (o por la que
   // tenga la cuenta atrás en marcha); el descanso sigue contando
   const switchView = (v: 'list' | 'guided') => {
     if (v === 'guided') {
       const s = timerAt ?? nextPending(rows);
-      if (s) setAt(s);
-      else {
-        setMode('done');
-        return;
-      }
+      if (!s) return toDone();
+      setAt(s);
     }
     setView(v);
   };
@@ -329,7 +382,68 @@ export const WorkoutSessionScreen = () => {
   const editRow = (i: number, j: number, patch: Partial<SetRow>) =>
     setRows((all) => all.map((r, a) => (a !== i ? r : r.map((x, b) => (b === j ? { ...x, ...patch } : x)))));
   const addSet = (i: number) => setRows((all) => all.map((r, a) => (a === i ? [...r, { kg: '', reps: '', done: false }] : r)));
-  const removeSet = (i: number) => setRows((all) => all.map((r, a) => (a === i && r.length > 1 && !r[r.length - 1].done ? r.slice(0, -1) : r)));
+  const removeSet = async (i: number, j: number) => {
+    if ((rows[i]?.length ?? 0) < 2 || rows[i][j]?.done) return;
+    if (view === 'guided' && at.item === i && at.set - 1 === j) return;
+    if (!(await confirmAsk(t('Remove set {n}?', { n: j + 1 }), t('You can add it again with «Add set».'), t('Remove')))) return;
+    setRows((all) => all.map((r, a) => (a === i ? r.filter((_, b) => b !== j) : r)));
+    if (view === 'guided' && at.item === i && at.set - 1 > j) setAt({ item: i, set: at.set - 1 });
+    if (timerAt?.item === i) {
+      setTimerOn(false);
+      setTimerAt(null);
+    }
+  };
+  const setRestFor = (i: number, sec: number) => {
+    setRunItems((all) => all.map((it, a) => (a === i ? { ...it, restSec: sec } : it)));
+    setRestMenu(null);
+  };
+  // Quitar un ejercicio de la sesión de hoy (la rutina no cambia; para eso, «Editar»)
+  const removeExercise = async (i: number) => {
+    const e = getExercise(items[i]?.exerciseId ?? '');
+    if (!(await confirmAsk(t('Remove {name} from this session?', { name: e ? exerciseName(e) : '' }), t('Only today: your routine does not change.'), t('Remove')))) return;
+    const shift = (s: Step | null) => (!s || s.item < i ? s : s.item === i ? null : { ...s, item: s.item - 1 });
+    const nextRows = rows.filter((_, a) => a !== i);
+    setRunItems((all) => all.filter((_, a) => a !== i));
+    setRows(nextRows);
+    setRestMenu(null);
+    if (timerAt) {
+      const moved = shift(timerAt);
+      if (!moved) {
+        setTimerOn(false);
+        setTimerAt(null);
+      } else setTimerAt(moved);
+    }
+    const guided = shift(at);
+    setAt(guided ?? nextPending(nextRows) ?? { item: 0, set: 1 });
+  };
+
+  // Las acciones de cada ejercicio, siempre las mismas (los bloques no se vuelven a pintar por ellas);
+  // por dentro llaman a la versión de este momento
+  const latest = useRef({ editRow, addSet, removeSet, setRestFor, toggleRow, startTimer, removeExercise });
+  latest.current = { editRow, addSet, removeSet, setRestFor, toggleRow, startTimer, removeExercise };
+  const actions: BlockActions = useMemo(
+    () => ({
+      open: (id) => router.push({ pathname: '/exercise-info', params: { id } }),
+      change: (i, j, patch) => latest.current.editRow(i, j, patch),
+      check: (i, j) => latest.current.toggleRow({ item: i, set: j + 1 }),
+      startTimer: (i, j) => latest.current.startTimer({ item: i, set: j + 1 }),
+      addSet: (i) => latest.current.addSet(i),
+      removeSet: (i, j) => latest.current.removeSet(i, j),
+      toggleRestMenu: (i) => setRestMenu((m) => (m === i ? null : i)),
+      setRest: (i, sec) => latest.current.setRestFor(i, sec),
+      remove: (i) => latest.current.removeExercise(i),
+    }),
+    [router],
+  );
+
+  const addChosen = () => {
+    if (!session) return;
+    const added = addExercises({ ...session, exercises: [] }, chosen).exercises;
+    setRunItems((all) => [...all, ...added]);
+    setRows((all) => [...all, ...added.map((it) => startRows(it))]);
+    setPicking(false);
+    setChosen([]);
+  };
 
   const toneLabel = t(BELL_TONES.find((x) => x.id === bell.tone)?.label ?? 'Bell');
   const bellSheet = <BellSheet visible={bellOpen} prefs={bell} onChange={setBell} onClose={() => setBellOpen(false)} />;
@@ -348,20 +462,18 @@ export const WorkoutSessionScreen = () => {
     if (!doneCount) return quit();
     const pending = steps.length - doneCount;
     if (pending && !(await confirmAsk(t('Finish the workout?'), tn(pending, '{n} set is not marked and will not be saved.', '{n} sets are not marked and will not be saved.'), t('Finish')))) return;
-    setTimerOn(false);
-    setTimerAt(null);
-    setPhase('work');
-    setMode('done');
+    toDone();
   };
 
   const save = async () => {
     if (!program || !session || saved) return;
     setSaved(true);
-    const minutes = Math.max(1, Math.round(elapsed / 60));
+    const minutes = Math.max(1, Math.round((finishedAt - startedAt.current) / 60000));
     const now = new Date().toISOString();
     const sets = setLogs(items, rows);
     await programRepository.logCompletion(program.id, { sessionId: session.id, at: now, minutes, ...(sets.length ? { sets } : {}) });
     await workoutRepository.save({ id: `workout-${Date.now()}`, fecha: now, createdAt: now, type: workoutType(session), minutes, intensity });
+    leaving.current = true;
     // Vuelve a la lista que ya estaba abierta (si no, quedaban dos y «atrás» volvía a la misma)
     router.dismissTo('/workouts');
   };
@@ -389,7 +501,7 @@ export const WorkoutSessionScreen = () => {
           <Text style={styles.doneTitle}>{t('Session complete!')}</Text>
           <Text style={styles.doneText}>
             {[
-              t('{m} min', { m: Math.max(1, Math.round(elapsed / 60)) }),
+              t('{m} min', { m: Math.max(1, Math.round((finishedAt - startedAt.current) / 60000)) }),
               tn(sum.sets, '{n} set', '{n} sets'),
               sum.volumeKg ? t('{kg} kg in total', { kg: sum.volumeKg.toLocaleString(dateLocale()) }) : null,
             ]
@@ -457,7 +569,7 @@ export const WorkoutSessionScreen = () => {
           <View style={styles.progress}>
             <View style={[styles.progressFill, { width: `${steps.length ? (doneCount / steps.length) * 100 : 0}%` }]} />
           </View>
-          <Text style={styles.clock}>{fmt(elapsed)}</Text>
+          <Elapsed since={startedAt.current} style={styles.clock} />
           <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={10} accessibilityLabel={t('Sound')}>
             <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={22} color={bell.on ? Colors.accent : Colors.textMuted} />
           </TouchableOpacity>
@@ -520,11 +632,10 @@ export const WorkoutSessionScreen = () => {
                   last={last.get(item.exerciseId)?.sets}
                   current={at.set - 1}
                   timer={timerOn && timerAt?.item === at.item ? { row: timerAt.set - 1, left: Math.max(0, left) } : null}
-                  canRemove={at.set < (rows[at.item]?.length ?? 0)}
                   onChange={(j, patch) => editRow(at.item, j, patch)}
                   onCheck={(j) => (j === at.set - 1 ? finishStep() : toggleRow({ item: at.item, set: j + 1 }, false))}
                   onAddSet={() => addSet(at.item)}
-                  onRemoveSet={() => removeSet(at.item)}
+                  onRemoveSet={(j) => removeSet(at.item, j)}
                 />
               </View>
             </>
@@ -554,80 +665,81 @@ export const WorkoutSessionScreen = () => {
     );
   }
 
-  // ── Lista, como Hevy: todos los ejercicios con su tabla de series ──
+  // ── Como Hevy: todos los ejercicios con su tabla de series ──
   if (mode === 'run') {
     const allDone = steps.length > 0 && doneCount === steps.length;
+    const volume = Math.round(setLogs(items, rows).reduce((sum, l) => sum + (l.kg ?? 0) * (l.reps ?? 0), 0));
+    const blocks = new Set(items.map((it) => it.block)).size > 1;
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <View style={styles.runTop}>
-          <TouchableOpacity onPress={quit} hitSlop={10} accessibilityLabel={t('Stop')}>
+        <View style={styles.hevyTop}>
+          <TouchableOpacity onPress={quit} hitSlop={10} accessibilityLabel={t('Discard workout')}>
             <Ionicons name="close" size={26} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.listTitle} numberOfLines={1}>
-              {sessionTitle(session)}
-            </Text>
-            <Text style={styles.listMeta}>
-              {fmt(elapsed)} · {t('{a} of {b} sets', { a: doneCount, b: steps.length })}
-            </Text>
-          </View>
-          <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={10} accessibilityLabel={t('Sound')}>
-            <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={22} color={bell.on ? Colors.accent : Colors.textMuted} />
+          <Text style={styles.hevyTitle} numberOfLines={1}>
+            {sessionTitle(session)}
+          </Text>
+          <TouchableOpacity onPress={() => switchView('guided')} hitSlop={8} accessibilityLabel={t('Guided mode')}>
+            <Ionicons name="videocam-outline" size={23} color={Colors.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={8} accessibilityLabel={t('Sound')}>
+            <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={22} color={bell.on ? Colors.textPrimary : Colors.textMuted} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.finishBtn} onPress={finish}>
             <Text style={styles.finishText}>{t('Finish')}</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.progressRow}>
-          <View style={styles.progress}>
-            <View style={[styles.progressFill, { width: `${steps.length ? (doneCount / steps.length) * 100 : 0}%` }]} />
+        <View style={styles.stats}>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>{t('Duration')}</Text>
+            <Elapsed since={startedAt.current} style={[styles.statValue, { color: Colors.accent }]} />
           </View>
-          <TouchableOpacity style={styles.guidedBtn} onPress={() => switchView('guided')}>
-            <Ionicons name="play-circle-outline" size={16} color={Colors.accent} />
-            <Text style={styles.guidedText}>{t('Guided mode')}</Text>
-          </TouchableOpacity>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>{t('Volume')}</Text>
+            <Text style={styles.statValue}>{volume.toLocaleString(dateLocale())} kg</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>{t('Sets')}</Text>
+            <Text style={styles.statValue}>
+              {doneCount}
+              <Text style={styles.statOf}> / {steps.length}</Text>
+            </Text>
+          </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.hevyList} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {items.map((it, i) => {
             const e = getExercise(it.exerciseId);
-            if (!e || !rows[i]?.length) return null;
-            const prev = last.get(it.exerciseId);
+            if (!e || !rows[i]) return null;
+            const newBlock = blocks && (i === 0 || items[i - 1].block !== it.block);
             return (
-              <View key={`${it.exerciseId}-${i}`} style={styles.exCard}>
-                <TouchableOpacity style={styles.exHead} onPress={() => router.push({ pathname: '/exercise-info', params: { id: e.id } })}>
-                  <ExerciseLoop exercise={e} size={48} radius={10} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowName} numberOfLines={2}>
-                      {exerciseName(e)}
-                    </Text>
-                    <Text style={styles.rowDose}>
-                      {doseText(it)}
-                      {it.restSec ? ` · ${restText(it.restSec)}` : ''}
-                    </Text>
-                  </View>
-                  <Ionicons name="information-circle-outline" size={20} color={Colors.textMuted} />
-                </TouchableOpacity>
-                {it.note ? <Text style={styles.rowNote}>{it.note}</Text> : null}
-                {prev ? <Text style={styles.lastLine}>{t('Last time ({date}): {sets}', { date: dayMonth(prev.at), sets: setsText(prev.sets) })}</Text> : null}
-                <SetTable
+              <React.Fragment key={`${it.exerciseId}-${i}`}>
+                {newBlock ? <Text style={styles.blockHead}>{blockLabel(it.block)}</Text> : null}
+                <ExerciseBlock
+                  index={i}
                   item={it}
                   ex={e}
                   rows={rows[i]}
-                  last={prev?.sets}
+                  last={last.get(it.exerciseId)?.sets}
                   timer={timerOn && timerAt?.item === i ? { row: timerAt.set - 1, left: Math.max(0, left) } : null}
-                  onChange={(j, patch) => editRow(i, j, patch)}
-                  onCheck={(j) => toggleRow({ item: i, set: j + 1 })}
-                  onStartTimer={(j) => startTimer({ item: i, set: j + 1 })}
-                  onAddSet={() => addSet(i)}
-                  onRemoveSet={() => removeSet(i)}
+                  restOpen={restMenu === i}
+                  actions={actions}
                 />
-              </View>
+              </React.Fragment>
             );
           })}
-          <TouchableOpacity style={[styles.primary, !allDone && styles.primaryQuiet]} onPress={finish}>
-            <Ionicons name="flag-outline" size={18} color={allDone ? Colors.background : Colors.accent} />
-            <Text style={[styles.primaryText, !allDone && { color: Colors.accent }]}>{t('Finish workout')}</Text>
+          {allDone && (
+            <TouchableOpacity style={[styles.primary, { marginTop: 16 }]} onPress={finish}>
+              <Ionicons name="flag-outline" size={18} color={Colors.background} />
+              <Text style={styles.primaryText}>{t('Finish workout')}</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.addExercise} onPress={() => setPicking(true)}>
+            <Ionicons name="add" size={20} color={Colors.background} />
+            <Text style={styles.addExerciseText}>{t('Add exercise')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.discard} onPress={quit}>
+            <Text style={styles.discardText}>{t('Discard workout')}</Text>
           </TouchableOpacity>
         </ScrollView>
 
@@ -648,6 +760,25 @@ export const WorkoutSessionScreen = () => {
             </TouchableOpacity>
           </View>
         )}
+        <WorkoutModal
+          visible={picking}
+          title={t('Add exercises')}
+          onClose={() => {
+            setPicking(false);
+            setChosen([]);
+          }}
+          footer={
+            <TouchableOpacity style={[styles.primary, !chosen.length && { opacity: 0.45 }]} onPress={addChosen} disabled={!chosen.length}>
+              <Text style={styles.primaryText}>{chosen.length ? tn(chosen.length, 'Add {n} exercise', 'Add {n} exercises') : t('Choose one or more')}</Text>
+            </TouchableOpacity>
+          }
+        >
+          <ExerciseLibrary
+            forSelf
+            selectedIds={chosen}
+            onPick={(e) => setChosen((c) => (c.includes(e.id) ? c.filter((x) => x !== e.id) : [...c, e.id]))}
+          />
+        </WorkoutModal>
         {bellSheet}
       </SafeAreaView>
     );
@@ -701,9 +832,16 @@ export const WorkoutSessionScreen = () => {
         </View>
       )}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.meta}>
-          ~{estimateMinutes(session)} min · {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
-        </Text>
+        <View style={styles.metaRow}>
+          <Text style={[styles.meta, { flex: 1 }]}>
+            ~{estimateMinutes(session)} min · {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
+          </Text>
+          {/* Quitar, añadir y ordenar ejercicios: el editor de rutinas, abierto en este día */}
+          <TouchableOpacity style={styles.editBtn} onPress={() => router.push({ pathname: '/workout-custom', params: { program: program.id, day: session.id } })}>
+            <Ionicons name="create-outline" size={16} color={Colors.accent} />
+            <Text style={styles.editText}>{t('Edit')}</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity style={styles.soundRow} onPress={() => setBellOpen(true)} accessibilityLabel={t('Sound')}>
           <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={16} color={bell.on ? Colors.accent : Colors.textMuted} />
           <Text style={styles.soundText}>{bell.on ? t('Sound: {tone}', { tone: toneLabel }) : t('No sound')}</Text>
@@ -754,15 +892,42 @@ export const WorkoutSessionScreen = () => {
           <Text style={styles.secondaryText}>{t('Guided mode')}</Text>
         </TouchableOpacity>
       </View>
-      <WorkoutModal visible={swapAt !== null} title={swapping ? t('Swap {name}', { name: exerciseName(swapping) }) : ''} onClose={() => setSwapAt(null)}>
+      <WorkoutModal
+        visible={swapAt !== null}
+        title={swapping ? t('Swap {name}', { name: exerciseName(swapping) }) : ''}
+        onClose={() => {
+          setSwapAt(null);
+          setSwapAll(false);
+        }}
+      >
         {swapping && (
           <>
+            {/* De partida, los del mismo tipo de movimiento y con su material; con un toque, toda la biblioteca */}
             <Text style={styles.swapHint}>
-              {program.source === 'professional'
-                ? t('Same type of movement, with your equipment. {name} will see the change.', { name: program.professionalName || t('Your trainer') })
-                : t('Same type of movement, with your equipment.')}
+              {swapAll
+                ? program.source === 'professional'
+                  ? t('{name} will see the change.', { name: program.professionalName || t('Your trainer') })
+                  : t('Any exercise from the library.')
+                : program.source === 'professional'
+                  ? t('Same type of movement, with your equipment. {name} will see the change.', { name: program.professionalName || t('Your trainer') })
+                  : t('Same type of movement, with your equipment.')}
             </Text>
-            <ExerciseLibrary forSelf onPick={swap} pickLabel={t('Use this one')} equipment={program.prefs.equipment} onlyPatterns={[swapping.pattern]} excludeId={swapping.id} />
+            <TouchableOpacity style={styles.swapAll} onPress={() => setSwapAll((v) => !v)}>
+              <Ionicons name={swapAll ? 'funnel-outline' : 'albums-outline'} size={16} color={Colors.accent} />
+              <Text style={styles.secondaryText}>{swapAll ? t('Only the same type of movement') : t('See all exercises')}</Text>
+            </TouchableOpacity>
+            <ExerciseLibrary
+              key={swapAll ? 'all' : 'same'}
+              forSelf
+              onPick={(e) => {
+                setSwapAll(false);
+                swap(e);
+              }}
+              pickLabel={t('Use this one')}
+              equipment={swapAll ? undefined : program.prefs.equipment}
+              onlyPatterns={swapAll ? undefined : [swapping.pattern]}
+              excludeId={swapping.id}
+            />
           </>
         )}
       </WorkoutModal>
@@ -781,8 +946,6 @@ export const WorkoutSessionScreen = () => {
   );
 };
 
-const dayMonth = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
-
 const styles = StyleSheet.create({
   swap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
   swapHint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 10 },
@@ -790,6 +953,10 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 24 },
   muted: { color: Colors.textSecondary, fontSize: 13, marginHorizontal: 0 },
   meta: { color: Colors.textSecondary, fontSize: 14, marginBottom: 6 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 6 },
+  editText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  swapAll: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4, marginBottom: 8 },
   soundRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4, marginBottom: 4 },
   soundText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
   section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 10, marginBottom: 8 },
@@ -804,7 +971,6 @@ const styles = StyleSheet.create({
   tabText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '800' },
   tabTextOn: { color: Colors.textPrimary },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14 },
-  primaryQuiet: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.accent },
   primaryText: { color: Colors.background, fontSize: 16, fontWeight: '800' },
   secondary: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 22, paddingHorizontal: 18, paddingVertical: 10 },
   secondaryText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
@@ -815,17 +981,22 @@ const styles = StyleSheet.create({
   runTop: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
   progress: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.cardBorder, overflow: 'hidden' },
   progressFill: { height: 6, backgroundColor: Colors.accent },
-  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 10 },
-  guidedBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
-  guidedText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
   clock: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700', minWidth: 44, textAlign: 'right' },
-  listTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  listMeta: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  finishBtn: { backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7 },
-  finishText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
-  exCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 10, marginBottom: 12, gap: 6 },
-  exHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  lastLine: { color: Colors.textMuted, fontSize: 12 },
+  hevyTop: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 10 },
+  hevyTitle: { flex: 1, color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  finishBtn: { backgroundColor: Colors.accent, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
+  finishText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  stats: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: Colors.divider },
+  stat: { flex: 1, gap: 2 },
+  statLabel: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
+  statValue: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  statOf: { color: Colors.textMuted, fontSize: 14, fontWeight: '700' },
+  hevyList: { paddingHorizontal: 16, paddingBottom: 32 },
+  blockHead: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 16 },
+  addExercise: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: Colors.accent, borderRadius: 12, paddingVertical: 13, marginTop: 18 },
+  addExerciseText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  discard: { alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card, borderRadius: 12, paddingVertical: 13, marginTop: 10 },
+  discardText: { color: Colors.danger, fontSize: 15, fontWeight: '700' },
   restBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 12, marginBottom: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.accent, overflow: 'hidden' },
   restFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: Colors.accentSoft },
   restLabel: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },

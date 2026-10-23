@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addExercises, cleanDays, customProgram, emptyDay, focusFor, isCustomProgram, moveExercise } from '@/logic/customRoutine';
-import { nextSessionId } from '@/logic/workoutGenerator';
+import { DEFAULT_PREFS, equipmentForPlace, newProgram, nextSessionId } from '@/logic/workoutGenerator';
 
 const ids = (d: { exercises: { exerciseId: string }[] }) => d.exercises.map((e) => e.exerciseId);
 
@@ -50,5 +50,21 @@ describe('Crear mi propia rutina', () => {
     const edited = customProgram('Mía 2', [addExercises(emptyDay(0), ['Pushups', 'Plank'])], { base });
     expect(edited).toMatchObject({ id: base.id, createdAt: base.createdAt, active: false, completions: base.completions, title: 'Mía 2' });
     expect(ids(edited.sessions[0])).toEqual(['Pushups', 'Plank']);
+  });
+
+  it('en un programa del generador: lo añadido va antes de los estiramientos y se conservan su tipo y sus respuestas', () => {
+    const generated = newProgram({ ...DEFAULT_PREFS, goal: 'muscle', daysPerWeek: 4, place: 'gym', equipment: equipmentForPlace('gym', []) });
+    const upper = generated.sessions[0];
+    expect(upper.focus).toBe('upper');
+    const day = addExercises(upper, ['Dumbbell_Bench_Press']);
+    const cooldownAt = day.exercises.findIndex((e) => e.block === 'cooldown');
+    expect(day.exercises[cooldownAt - 1].exerciseId).toBe('Dumbbell_Bench_Press');
+    // Quitar el primer ejercicio principal y guardar
+    const main = day.exercises.findIndex((e) => e.block === 'main');
+    const edited = customProgram(generated.title, [{ ...day, exercises: day.exercises.filter((_, i) => i !== main) }, ...generated.sessions.slice(1)], { base: generated });
+    expect(edited.sessions[0].focus).toBe('upper');
+    expect(edited.sessions[0].exercises).toHaveLength(day.exercises.length - 1);
+    expect(isCustomProgram(edited)).toBe(false);
+    expect(edited.prefs).toEqual(generated.prefs);
   });
 });

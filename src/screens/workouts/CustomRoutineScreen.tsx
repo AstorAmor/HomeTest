@@ -7,10 +7,10 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { Colors } from '@/constants/colors';
 import { exerciseName, getExercise, isLoadable } from '@/data/workouts/catalog';
-import { doseText, restText } from '@/data/workouts/labels';
+import { blockLabel, doseText, restText } from '@/data/workouts/labels';
 import { programRepository } from '@/data/workouts/programRepository';
 import type { CatalogExercise, WorkoutExercise, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
-import { addExercises, customProgram, dayLetter, emptyDay, moveExercise } from '@/logic/customRoutine';
+import { addExercises, customProgram, dayLetter, emptyDay, isCustomProgram, moveExercise } from '@/logic/customRoutine';
 import { estimateMinutes } from '@/logic/workoutGenerator';
 import { DoseEditor } from '@/components/workouts/DoseEditor';
 import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
@@ -22,13 +22,15 @@ import { t, tn } from '@/i18n';
 // "Crear mi propia rutina", como en Hevy o Strong: nombre, uno o varios días (A, B, C…) y, en cada uno,
 // los ejercicios de la biblioteca (buscador y filtros por músculo y material, se eligen varios a la
 // vez), en el orden que se quiera y con series, repeticiones o tiempo, peso y descanso. Se guarda como
-// un programa más (src/logic/customRoutine.ts). Con ?program= se cambia una que ya existe.
+// un programa más (src/logic/customRoutine.ts). Con ?program= se cambia uno que ya existe: una rutina
+// propia o cualquier otro programa (del generador o del entrenador: quitar, añadir, ordenar); ?day=B abre
+// ese día.
 
 const MAX_DAYS = 7;
 
 export const CustomRoutineScreen = () => {
   const router = useRouter();
-  const { program: programId } = useLocalSearchParams<{ program?: string }>();
+  const { program: programId, day: dayParam } = useLocalSearchParams<{ program?: string; day?: string }>();
   const [base, setBase] = useState<WorkoutProgram | null>(null);
   const [loaded, setLoaded] = useState(!programId);
   const [title, setTitle] = useState('');
@@ -47,11 +49,13 @@ export const CustomRoutineScreen = () => {
       if (p) {
         setBase(p);
         setTitle(t(p.title));
-        setDays(p.sessions.length ? p.sessions : [emptyDay(0)]);
+        // Los títulos del generador están en inglés ("Full body"): en la casilla, ya traducidos
+        setDays(p.sessions.length ? p.sessions.map((d) => ({ ...d, title: d.title ? t(d.title) : '' })) : [emptyDay(0)]);
+        setCurrent(Math.max(0, p.sessions.findIndex((d) => d.id === dayParam)));
       }
       setLoaded(true);
     });
-  }, [programId]);
+  }, [programId, dayParam]);
 
   const day = days[current] ?? days[0];
   const updateDay = (fn: (d: WorkoutSession) => WorkoutSession) => setDays((all) => all.map((d, i) => (i === current ? fn(d) : d)));
@@ -100,15 +104,19 @@ export const CustomRoutineScreen = () => {
   const editing = editAt !== null ? day.exercises[editAt] : undefined;
   const editingEx = editing ? getExercise(editing.exerciseId) : undefined;
   const count = day.exercises.length;
+  const routine = !base || isCustomProgram(base); // rutina propia (si no, un programa del generador o del entrenador)
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScreenHeader title={base ? t('Edit routine') : t('Create my own routine')} showBack backFallback="/workouts" />
+      <ScreenHeader title={!base ? t('Create my own routine') : routine ? t('Edit routine') : t('Edit programme')} showBack backFallback="/workouts" />
       {!loaded ? (
         <ActivityIndicator color={Colors.accent} style={{ marginTop: 40 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <Text style={styles.label}>{t('Routine name')}</Text>
+          {base?.source === 'professional' && (
+            <Text style={styles.proHint}>{t('{name} will see the change.', { name: base.professionalName || t('Your trainer') })}</Text>
+          )}
+          <Text style={styles.label}>{routine ? t('Routine name') : t('Programme name')}</Text>
           <TextInput
             style={styles.input}
             value={title}
@@ -161,6 +169,7 @@ export const CustomRoutineScreen = () => {
                     {exerciseName(ex)}
                   </Text>
                   <Text style={styles.itemDose}>
+                    {it.block !== 'main' ? `${blockLabel(it.block)} · ` : ''}
                     {doseText(it)}
                     {it.restSec ? ` · ${restText(it.restSec)}` : ''}
                   </Text>
@@ -270,6 +279,7 @@ const styles = StyleSheet.create({
   add: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.accent, borderRadius: 14, paddingVertical: 14, marginTop: 4 },
   addText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
   error: { color: Colors.danger, fontSize: 13, marginTop: 12 },
+  proHint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 8 },
   bottom: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, borderTopWidth: 1, borderTopColor: Colors.divider },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14 },
   primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
