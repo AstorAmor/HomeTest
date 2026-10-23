@@ -1562,7 +1562,7 @@ Nota del fundador: al marcar 2 veces, la app le decía que había orinado poco h
 - Tests: `planAndHydration.test.ts` (las veces de hoy no cambian la hidratación ni dan aviso; el color y el escozor, sí) y `bathroomFertility.test.ts` (la semana sin el día de hoy). tsc + 395 tests.
 - **Publicado ce6506c** (2026-10-22, OK del fundador «OK, release ce6506c (EAS Update and both webs)»): EAS Update grupo `6c06b671-bed7-4239-9c0b-50e78b29b3ae` (preview, android + ios) y las dos webs a la primera; el texto «Pocas veces hoy» ya no está en los bundles publicados. Mismos pasos a mano que 6dd588a (la nota de 9317547 de otra sesión sigue sin commitear), con ~1,4 GB de RAM libres. Sin dependencias nativas nuevas: no hace falta APK.
 
-## 2026-10-23 — Historial de medicación editable (master, sin publicar)
+## 2026-10-23 — Historial de medicación editable (publicado 258bf6b)
 
 Petición del fundador: un histórico que no se vea de entrada; al pulsar, cada día con lo que tocaba, editable («ayer se me olvidó marcar la medicación, pero la tomé»), para ver si cada día tomó lo que corresponde.
 - Pantalla nueva `/medication-history` (`MedicationHistoryScreen`). Se entra desde Medicación y suplementos (fila «Historial» bajo las tomas de hoy) y desde Tus últimos días (la línea «Medicación: x de y tomas» abre ese día con `?date=`). Arriba, los 7 días hasta ayer («4 de 7 días con todo tomado · Tomaste 18 de 21 tomas · 1 sin tomar · 2 sin marcar»); debajo, cada día plegado con un punto por toma y «Todo tomado» / «2 de 3 tomadas · 1 sin marcar» / «Nada previsto». Al tocarlo se despliega: cada toma con «Tomada / No tomada» (tocar la marcada la deja sin marcar) y lo de «solo cuando haga falta» con − n +. 14 días por página, desde el primer alta.
@@ -1606,3 +1606,13 @@ sale de eb3dd7c; probar con `preview_start expo-web-rutinas` (puerto 8090, demo 
   `workoutsEs.ts` y de HANDOFF (los dos añaden).
 - Pendiente: el portal no deja poner peso ni ve las series apuntadas (están en `completions`); la sesión en marcha no
   sobrevive a cerrar la app; al cambiar series en la sesión no se ofrece actualizar la rutina (Hevy lo pregunta).
+
+**Publicado 258bf6b** (2026-10-23, OK del fundador «junta la rama rutina-propia con master, pasa tipos y tests, compruébalo
+en la web y publica todo»): historial de medicación (fcfa8c9), «Seguir este programa» y atrás (0ee9fd6) y la rutina propia
+tipo Hevy (164d1b6, juntada en 7b6a0cb; solo chocó el final de HANDOFF). tsc limpio (tras regenerar los tipos de rutas con el
+servidor de Expo: `.expo/types/router.d.ts` no tenía `/workout-custom`) y 417 tests. Probado en la demo web (8082): crear una
+rutina con dos ejercicios, entrenarla en lista marcando 12 kg × 10, terminar y guardar (las series quedan en `completions`),
+atrás desde la lista va a Inicio, «Seguir este programa» en el ejemplo, y el historial de medicación con una vitamina D de
+prueba (ayer marcada → «Todo tomado»). `npm run release` a la primera con ~4,2 GB libres: EAS Update grupo
+`de7d6b9c-c2f3-4c7b-9a17-22ef418b4daa` (preview, android + ios) y las dos webs; los bundles publicados llevan las tres cosas.
+Sin dependencias nativas ni migraciones nuevas: no hace falta APK. Con la cuenta real no se ha probado el guardado en Supabase.
