@@ -1,6 +1,7 @@
 {
   "ios": {
     "NSHealthShareUsageDescription": "Kuova lee de Salud tu actividad, tu sueño, tu pulso y tu variabilidad cardiaca (y, si los tienes, tu peso, tus entrenos, tu tensión, tu glucosa, tu oxígeno en sangre, tu temperatura y tu respiración) para enseñártelos junto a tus análisis y tu registro diario. Kuova nunca escribe en Salud.",
+    "NSHealthUpdateUsageDescription": "Kuova no guarda nada en Salud. Solo lee los datos que permitas para enseñártelos junto a tus análisis y tu registro diario.",
     "NSCameraUsageDescription": "Kuova usa la cámara para fotografiar tus informes de análisis y tus comidas, y para tu foto de perfil.",
     "NSPhotoLibraryUsageDescription": "Kuova abre tus fotos para que elijas un informe de análisis, una comida o tu foto de perfil.",
     "NSMicrophoneUsageDescription": "Kuova usa el micrófono para grabar notas de voz en tu registro, solo cuando pulsas grabar.",

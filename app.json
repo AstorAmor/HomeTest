@@ -79,7 +79,7 @@
         "@kingstinct/react-native-healthkit",
         {
           "NSHealthShareUsageDescription": "Kuova reads your activity, sleep, heart rate and heart rate variability from Health (and, if you have them, your weight, workouts, blood pressure, glucose, blood oxygen, temperature and breathing rate) to show them next to your lab results and your daily log. Kuova never writes to Health.",
-          "NSHealthUpdateUsageDescription": false,
+          "NSHealthUpdateUsageDescription": "Kuova does not save anything to Health. It only reads the data you allow, to show it next to your lab results and your daily log.",
           "background": false
         }
       ],

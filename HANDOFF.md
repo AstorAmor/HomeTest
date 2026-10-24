@@ -1700,3 +1700,26 @@ biblioteca dice 177; en «Crear mi propia rutina», «Dominadas lastradas» sale
 fila por serie. `npm run release` a la primera con ~3 GB libres: EAS Update grupo `2cfab6cb-4aee-46db-bf71-530718fa5842`
 (preview, android + ios) y las dos webs; los bundles publicados llevan «+kg», `Weighted_Pull_Ups` y el editor. Sin dependencias
 nativas ni migraciones. El teclado en Android y el atasco al deslizar siguen sin probar en un móvil.
+
+## 2026-10-23 (noche) — iPhone: cuenta de Apple, compilación de simulador y primera compilación de TestFlight
+
+- El fundador pagó Apple Developer **como particular** (Apple ID de Gmail; equipo «Astor Garcia», C9CLVQ3G4L) y la cuenta ya
+  está activa. Solo sirve para TestFlight: la norma 5.1.1(ix) pide que las apps de salud las publique la sociedad (Pulse Health
+  con D-U-N-S, y pasar la cuenta a organización). Detalle en `docs/iphone-y-apple-salud.md` (puntos 2, 4 y 6, al día).
+- `eas.json`: perfil `simulator` (canal `preview`, `ios.simulator`, sin credenciales de Apple) para Appetize.io. Compilación
+  c20b8d6b-8b31-4e21-910a-3abc7a60adfa terminada (la primera de iPhone: compila HealthKit y nitro-modules). Sin probar en Appetize.
+- Identificador `com.kuovahealth.app` confirmado por el fundador. Compilación de TestFlight fbe640b3-655d-418d-9df0-75376a0b9cdd
+  (perfil `testflight`, 1.1.0, compilación 2) terminada en ~7 min; EAS guardó el certificado y el perfil en sus servidores.
+- `eas submit --platform ios --id fbe640b3…` (perfil de subida `production`): registró el identificador, creó la app «Kuova» en
+  App Store Connect (ASC App ID 6826360385, ya en `submit.production.ios.ascAppId` junto a `language: "es-ES"`), el grupo de
+  TestFlight «Team (Expo)» con el Apple ID del fundador y una clave de la API de App Store Connect (rol ADMIN, guardada en EAS)
+  para que las próximas subidas no pidan contraseña. Envío 1962bd00-31f5-45bb-a9fe-4d0dd3441d49.
+- El fundador no tiene iPhone: para probar en un móvil hay que invitar a alguien como usuario de App Store Connect y probador
+  interno.
+- **2026-10-24: Apple rechazó la compilación 2 al procesarla** (correo de las 20:57, ITMS-90683): falta
+  `NSHealthUpdateUsageDescription`. El plugin de HealthKit lo quitaba porque en `app.json` estaba a `false` (solo leemos), pero la
+  librería lleva el código de escritura y Apple pide el texto igualmente. Ahora es un texto que dice que Kuova no guarda nada en
+  Salud (inglés en `app.json`, español en `assets/locales/es.json`); comprobado con `npx expo config --type introspect`. Nueva
+  compilación de TestFlight con `--auto-submit-with-profile production` (sube sola con la clave de la API guardada en EAS).
+  Compilación 3 (23c1d3d1-d7c1-439b-b740-1c36dbd7048f) terminada y subida a App Store Connect sin pedir nada (envío
+  0acf315c-7343-4f61-938a-affe56734620). Falta que Apple la procese sin rechazos.

@@ -19,6 +19,7 @@ La mayoría de los usuarios tendrán iPhone, así que la app tiene que leer **Ap
 | (21/10) Fecha y hora en los registros de tensión, glucosa, peso y métricas sueltas: en iPhone la rueda va en una hoja con «Hecho» (antes se habría quedado abierta sin forma de cerrarla) | `src/components/DateTimeSheet.tsx` |
 | (21/10) Permiso para guardar en Fotos (`NSPhotoLibraryAddUsageDescription`): sin él, «Guardar imagen» al compartir una insignia cierra la app de golpe | `app.json`, `assets/locales/es.json` |
 | (21/10) Texto del permiso de Salud ampliado a peso, entrenos, tensión, glucosa, oxígeno, temperatura y respiración, para poder leerlos más adelante sin otra compilación | `app.json`, `assets/locales/es.json` |
+| (24/10) Texto de «escribir en Salud» (`NSHealthUpdateUsageDescription`) aunque Kuova solo lee: sin él Apple rechaza la compilación al subirla (ITMS-90683, le pasó a la compilación 2), porque la librería contiene el código de escritura. El texto dice que Kuova no guarda nada en Salud; nunca se le enseña al usuario porque la app no pide ese permiso | `app.json`, `assets/locales/es.json` |
 | (21/10) Sin audio en segundo plano (ninguna pantalla lo usa): se quita el modo `audio` de iPhone y el servicio de Android, que Apple y Google piden justificar | `app.json` (`enableBackgroundPlayback: false`) |
 | (21/10) Ajustes → Permisos y la tarjeta de Huawei hablan de Apple Salud en iPhone (Huawei Health sí escribe en Salud) | `SettingsScreen.tsx`, `WearablesScreen.tsx` |
 
@@ -58,7 +59,7 @@ npx eas-cli@latest submit --platform ios --latest
 ```
 
 - Si la app no existe en App Store Connect, la crea (lo hace `ensureAppExistsAsync` en el código de eas-cli): nombre `expo.name` de `app.json` («Kuova»). Si el nombre ya está cogido, añade un sufijo al azar, por ejemplo «Kuova (a1b2c3)», y se cambia después en App Store Connect. Si existe una app con ese nombre que hayas creado tú, la reutiliza.
-- El idioma principal sale **inglés (en-US)** salvo que se diga otro: antes de lanzarlo, añadir `"ios": { "language": "es-ES" }` en `submit.production` de `eas.json`.
+- El idioma principal sería **inglés (en-US)** si no se dice otro; por eso `submit.production` de `eas.json` lleva `"ios": { "language": "es-ES" }` (desde el 23/10).
 - Sube la compilación a App Store Connect. A los 10-30 minutos sale en TestFlight. No pregunta por el cifrado: `ITSAppUsesNonExemptEncryption: false` ya está en `app.json`.
 - En App Store Connect → TestFlight: añade el Apple ID de quien vaya a probar como **probador interno** y que instale la app **TestFlight** en el iPhone. Los probadores internos (hasta 100) tienen que ser usuarios de tu equipo en App Store Connect (Usuarios y acceso → invitar) y no necesitan revisión de Apple. Como tú no tienes iPhone, es la vía más rápida con un amigo. Los **externos** (amigos con un enlace) pasan una revisión beta la primera vez; no está confirmado si Apple pone pegas a una app de salud que llega desde una cuenta de particular (norma 5.1.1(ix)).
 

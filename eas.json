@@ -33,6 +33,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "language": "es-ES",
+        "ascAppId": "6826360385"
+      }
+    }
   }
 }
