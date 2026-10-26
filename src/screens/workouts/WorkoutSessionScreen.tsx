@@ -38,6 +38,8 @@ import {
 import { isTimedReps, secondsLeft, upcomingEnds } from '@/logic/workoutTimer';
 import { allSteps, checkRow, lastTimes, nextPending, rowHints, setLogs, startRows, summarize, type Change, type LastTime, type SetRow, type Step } from '@/logic/workoutLog';
 import { DoseEditor } from '@/components/workouts/DoseEditor';
+import { UnfinishedWorkout } from '@/components/workouts/UnfinishedWorkout';
+import { type ActiveWorkout, clearActiveWorkout, loadActiveWorkout, saveActiveWorkout } from '@/data/workouts/activeWorkout';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { dateLocale, num, t, tn } from '@/i18n';
 
@@ -53,7 +55,9 @@ import { dateLocale, num, t, tn } from '@/i18n';
 // con la pantalla bloqueada (src/data/workouts/bell.ts). Al terminar, un resumen (series, kilos y la mejor
 // serie de cada ejercicio frente a la última vez); se guarda como sesión hecha del programa, con cada
 // serie, y como entrenamiento del plan (cuenta para las 3 de fuerza a la semana). Salir con «atrás» a
-// mitad de la sesión pregunta antes.
+// mitad de la sesión pregunta antes. Mientras dura, cada cambio se copia en el móvil
+// (src/data/workouts/activeWorkout.ts): si Android cierra la app con la pantalla bloqueada, al volver
+// sigue donde estaba. Si no se puede guardar (sin conexión), se avisa y se puede reintentar.
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
 const fmtLong = (s: number) => (s >= 3600 ? `${Math.floor(s / 3600)}:${fmt(s % 3600).padStart(5, '0')}` : fmt(s));
@@ -106,6 +110,8 @@ export const WorkoutSessionScreen = () => {
   const [finishedAt, setFinishedAt] = useState(0);
   const [intensity, setIntensity] = useState<WorkoutEntry['intensity']>('moderate');
   const [saved, setSaved] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const [unfinished, setUnfinished] = useState<ActiveWorkout | null>(null); // otra sesión a medias
   const [swapAt, setSwapAt] = useState<number | null>(null); // índice en session.exercises
   const [swapAll, setSwapAll] = useState(false); // al cambiar: todos los ejercicios, no solo los del mismo tipo
   const [editAt, setEditAt] = useState<number | null>(null); // ídem, para cambiar series, reps o tiempo, peso y descanso
@@ -114,15 +120,46 @@ export const WorkoutSessionScreen = () => {
   const sideRung = useRef(false); // ya sonó el cambio de lado de este ejercicio
   const autoStarted = useRef(false);
   const leaving = useRef(false); // al guardar se sale sin preguntar
+  const savedAt = useRef(''); // al reintentar el guardado, la misma hora (y sin repetir la sesión hecha)
+  const completionSaved = useRef(false);
   const [bell, setBell] = useBellPrefs();
   const [bellOpen, setBellOpen] = useState(false);
 
+  // Volver a un entreno a medias tal como estaba: series, pesos, vista y la cuenta atrás (que ha
+  // seguido corriendo por la hora). Los avisos del móvil que quedaban los da ya la app.
+  const resume = useCallback((w: ActiveWorkout) => {
+    startedAt.current = w.startedAt;
+    endsAt.current = w.endsAt;
+    autoStarted.current = true;
+    setUnfinished(null);
+    setSessionId(w.session.id);
+    setRunItems(w.items);
+    setRows(w.rows);
+    setView(w.view);
+    setAt(w.at);
+    setPhase(w.phase);
+    setRestTotal(w.restTotal);
+    setTimerOn(w.timerOn);
+    setTimerAt(w.timerAt);
+    setLeft(secondsLeft(w.endsAt, Date.now()));
+    setFinishedAt(w.finishedAt);
+    setIntensity(w.intensity);
+    setMode(w.mode);
+    cancelBellAlarms();
+  }, []);
+
   useEffect(() => {
-    programRepository.list().then((all) => {
-      setProgram(all.find((p) => p.id === programId) ?? null);
+    setUnfinished(null);
+    Promise.all([programRepository.list(), loadActiveWorkout()]).then(([all, w]) => {
+      const p = all.find((x) => x.id === programId) ?? null;
+      setProgram(p);
       setLast(lastTimes(all));
+      if (!p || !w) return;
+      // El de esta sesión sigue donde estaba; uno de otra se ofrece arriba y se avisa antes de empezar otro
+      if (w.programId === p.id && (!sessionParam || w.session.id === sessionParam)) resume(w);
+      else setUnfinished(w);
     });
-  }, [programId]);
+  }, [programId, sessionParam, resume]);
 
   const session = program?.sessions.find((s) => s.id === sessionId) ?? program?.sessions[0];
   const items = useMemo(() => (mode === 'overview' ? (session?.exercises ?? []) : runItems), [mode, session, runItems]);
@@ -341,14 +378,49 @@ export const WorkoutSessionScreen = () => {
       ask.then((ok) => {
         if (!ok) return;
         leaving.current = true;
+        clearActiveWorkout();
         navigation.dispatch(e.data.action);
       });
     });
   }, [navigation, mode]);
 
+  // Copia en el móvil de cómo va la sesión, en cada cambio (se mira tras cada pintado, pero solo se
+  // escribe si algo cambió: el descanso pinta cuatro veces por segundo sin cambiar nada guardable)
+  const draftJson = useRef('');
+  useEffect(() => {
+    if (mode === 'overview' || leaving.current || !program || !session) return;
+    const w = {
+      programId: program.id,
+      session: { id: session.id, title: session.title },
+      mode,
+      view,
+      startedAt: startedAt.current,
+      finishedAt,
+      items: runItems,
+      rows,
+      at,
+      phase,
+      endsAt: endsAt.current,
+      restTotal,
+      timerOn,
+      timerAt,
+      intensity,
+    };
+    const json = JSON.stringify(w);
+    if (json === draftJson.current) return;
+    draftJson.current = json;
+    saveActiveWorkout({ ...w, updatedAt: Date.now() });
+  });
+
   const start = useCallback(
-    (v: 'list' | 'guided') => {
+    async (v: 'list' | 'guided') => {
       if (!session) return;
+      // Solo hay un entreno a medias: el de otra sesión se pierde al empezar este
+      if (unfinished) {
+        const name = sessionTitle(unfinished.session);
+        if (!(await confirmAsk(t('Discard the unfinished workout?'), t('What you marked in {name} will be lost.', { name }), t('Discard')))) return;
+        setUnfinished(null);
+      }
       const its = session.exercises.filter((it) => getExercise(it.exerciseId));
       const fresh = its.map((it) => startRows(it));
       startedAt.current = Date.now();
@@ -360,8 +432,15 @@ export const WorkoutSessionScreen = () => {
       startStep(nextPending(fresh) ?? { item: 0, set: 1 });
       if (bell.on) offerBellOnLock(bell.tone);
     },
-    [session, startStep, bell.on, bell.tone],
+    [session, unfinished, startStep, bell.on, bell.tone],
   );
+
+  // «Seguir» en el aviso de otra sesión a medias: si es de este programa, aquí mismo
+  const continueUnfinished = () => {
+    if (!unfinished) return;
+    if (unfinished.programId === program?.id) resume(unfinished);
+    else router.replace({ pathname: '/workout-session', params: { program: unfinished.programId, session: unfinished.session.id } });
+  };
 
   // Desde el ▶ de Entrenamientos: empieza directamente
   useEffect(() => {
@@ -457,6 +536,7 @@ export const WorkoutSessionScreen = () => {
       setTimerAt(null);
       setPhase('work');
       setMode('overview');
+      clearActiveWorkout();
     }
   };
 
@@ -467,15 +547,30 @@ export const WorkoutSessionScreen = () => {
     toDone();
   };
 
+  // Guardar: la sesión hecha del programa (con cada serie) y el entrenamiento del plan, con la misma
+  // hora (así el historial los junta). Si falla (sin conexión en el gimnasio), se avisa y se puede
+  // volver a intentar: la copia del móvil sigue ahí hasta que se guarda.
   const save = async () => {
     if (!program || !session || saved) return;
     setSaved(true);
+    setSaveFailed(false);
     const minutes = Math.max(1, Math.round((finishedAt - startedAt.current) / 60000));
-    const now = new Date().toISOString();
+    if (!savedAt.current) savedAt.current = new Date().toISOString();
+    const now = savedAt.current;
     const sets = setLogs(items, rows);
-    await programRepository.logCompletion(program.id, { sessionId: session.id, at: now, minutes, ...(sets.length ? { sets } : {}) });
-    await workoutRepository.save({ id: `workout-${Date.now()}`, fecha: now, createdAt: now, type: workoutType(session), minutes, intensity });
+    try {
+      if (!completionSaved.current) {
+        await programRepository.logCompletion(program.id, { sessionId: session.id, at: now, minutes, ...(sets.length ? { sets } : {}) });
+        completionSaved.current = true;
+      }
+      await workoutRepository.save({ id: `workout-${Date.parse(now)}`, fecha: now, createdAt: now, type: workoutType(session), minutes, intensity });
+    } catch {
+      setSaved(false);
+      setSaveFailed(true);
+      return;
+    }
     leaving.current = true;
+    await clearActiveWorkout();
     // Vuelve a la lista que ya estaba abierta (si no, quedaban dos y «atrás» volvía a la misma)
     router.dismissTo('/workouts');
   };
@@ -548,8 +643,9 @@ export const WorkoutSessionScreen = () => {
           />
         </ScrollView>
         <View style={styles.runBottom}>
+          {saveFailed && <Text style={styles.saveFailed}>{t('It could not be saved. Check your connection and try again: what you did stays on this phone.')}</Text>}
           <TouchableOpacity style={styles.primary} onPress={save} disabled={saved}>
-            <Text style={styles.primaryText}>{t('Save')}</Text>
+            <Text style={styles.primaryText}>{saveFailed ? t('Try again') : t('Save')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -834,6 +930,7 @@ export const WorkoutSessionScreen = () => {
         </View>
       )}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {unfinished && <UnfinishedWorkout workout={unfinished} onContinue={continueUnfinished} />}
         <View style={styles.metaRow}>
           <Text style={[styles.meta, { flex: 1 }]}>
             ~{estimateMinutes(session)} min · {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
@@ -1034,4 +1131,5 @@ const styles = StyleSheet.create({
   resultBest: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
   resultChange: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
   q: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 24, marginBottom: 10 },
+  saveFailed: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, textAlign: 'center', marginBottom: 10 },
 });

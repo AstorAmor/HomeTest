@@ -27,8 +27,8 @@ export const workoutsEs: Record<string, string> = {
   'The programme could not be changed. Check your connection and try again.': 'No se ha podido cambiar el programa. Revisa la conexión y vuelve a intentarlo.',
   'See sessions': 'Ver las sesiones',
   'Delete this programme?': '¿Borrar este programa?',
-  'Its sessions and what you logged in it will disappear from this list. Workouts already counted in your plan stay.':
-    'Sus sesiones y lo que apuntaste en él desaparecerán de esta lista. Los entrenamientos que ya cuentan en tu plan se quedan.',
+  'Its sessions will disappear. Your history keeps the day and minutes of each workout done with it, but not the sets.':
+    'Desaparecerán sus sesiones. En tu historial se quedan el día y los minutos de cada entreno que hiciste con él, pero no las series.',
   'Exercise library': 'Biblioteca de ejercicios',
   'How to do each exercise, with its video': 'Cómo se hace cada ejercicio, con su vídeo',
   'If you have an injury, a heart condition, are pregnant or have not exercised in a long time, check with your doctor before you start. Stop if you feel sharp pain, chest pain or dizziness.':
@@ -368,4 +368,22 @@ export const workoutsEs: Record<string, string> = {
   'Remove {name}?': '¿Quitar {name}?',
   'You can add it again from the library.': 'Puedes volver a añadirlo desde la biblioteca.',
   'Your changes will be lost.': 'Se perderán los cambios.',
+  // 2026-10-26: el entreno a medias se guarda en el móvil (Android cerraba la app con la pantalla
+  // bloqueada y se perdía) y el historial
+  'Unfinished workout': 'Entreno a medias',
+  'Started at {time}': 'Empezado a las {time}',
+  'Started {date}': 'Empezado el {date}',
+  '{n} set done': '{n} serie hecha',
+  '{n} sets done': '{n} series hechas',
+  Resume: 'Seguir',
+  Discard: 'Descartar',
+  'Discard the unfinished workout?': '¿Descartar el entreno a medias?',
+  'What you marked in {name} will be lost.': 'Se perderá lo que marcaste en {name}.',
+  'It could not be saved. Check your connection and try again: what you did stays on this phone.':
+    'No se ha podido guardar. Revisa la conexión y vuelve a intentarlo: lo que has hecho sigue en el móvil.',
+  'What you trained, session by session': 'Lo que has entrenado, sesión a sesión',
+  '{n} workout': '{n} entreno',
+  'Your history could not be loaded. Check your connection and try again.': 'No se ha podido cargar tu historial. Revisa la conexión y vuelve a intentarlo.',
+  'No workouts yet. When you finish a session or log a workout, it will appear here.':
+    'Aún no hay entrenos. Cuando acabes una sesión o apuntes un entreno, aparecerá aquí.',
 };

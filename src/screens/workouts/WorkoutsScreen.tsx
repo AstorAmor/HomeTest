@@ -13,10 +13,13 @@ import { isSampleProgram, programRepository } from '@/data/workouts/programRepos
 import type { WorkoutProgram } from '@/data/workouts/types';
 import { estimateMinutes, nextSessionId, progressionText } from '@/logic/workoutGenerator';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
+import { UnfinishedWorkout } from '@/components/workouts/UnfinishedWorkout';
+import { type ActiveWorkout, clearActiveWorkout, loadActiveWorkout } from '@/data/workouts/activeWorkout';
 import { dateLocale, t, tn } from '@/i18n';
 
-// Entrenamientos: el programa que sigues (hecho por ti con el generador o mandado por tu entrenador),
-// la sesión que toca hoy, los demás programas y la biblioteca de ejercicios.
+// Entrenamientos: el entreno a medias si lo hay, el programa que sigues (hecho por ti con el generador
+// o mandado por tu entrenador), la sesión que toca hoy, los demás programas, el historial y la
+// biblioteca de ejercicios.
 
 const dayMonth = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
 
@@ -152,6 +155,7 @@ export const WorkoutsScreen = () => {
   const scroll = useRef<ScrollView>(null);
   const [programs, setPrograms] = useState<WorkoutProgram[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [unfinished, setUnfinished] = useState<ActiveWorkout | null>(null);
   const followed = useRef<string | null | undefined>(undefined); // el que sigues (undefined: aún sin cargar)
   const toTop = useRef(false);
 
@@ -159,7 +163,9 @@ export const WorkoutsScreen = () => {
   // está: si no, en el hueco que pulsaste aparece el que seguías antes, con el mismo botón, y parece
   // que no ha hecho nada
   const load = useCallback(async () => {
-    const list = await programRepository.list();
+    const [list, w] = await Promise.all([programRepository.list(), loadActiveWorkout()]);
+    // Solo si su programa sigue ahí (si no, «Seguir» no tendría adónde ir)
+    setUnfinished(w && list.some((p) => p.id === w.programId) ? w : null);
     const now = list.find((p) => p.active)?.id ?? null;
     toTop.current = followed.current !== undefined && followed.current !== now;
     followed.current = now;
@@ -172,8 +178,13 @@ export const WorkoutsScreen = () => {
     scroll.current?.scrollTo({ y: 0, animated: true });
   }, [programs]);
 
+  const discard = async () => {
+    if (!unfinished || !(await confirmAsk(t('Discard the unfinished workout?'), t('What you marked in {name} will be lost.', { name: sessionTitle(unfinished.session) }), t('Discard')))) return;
+    await clearActiveWorkout();
+    setUnfinished(null);
+  };
   const remove = async (p: WorkoutProgram) => {
-    const ok = await confirmAsk(t('Delete this programme?'), t('Its sessions and what you logged in it will disappear from this list. Workouts already counted in your plan stay.'), t('Delete'));
+    const ok = await confirmAsk(t('Delete this programme?'), t('Its sessions will disappear. Your history keeps the day and minutes of each workout done with it, but not the sets.'), t('Delete'));
     if (!ok) return;
     await programRepository.remove(p.id);
     load();
@@ -196,6 +207,15 @@ export const WorkoutsScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScreenHeader title={t('Workouts')} showBack backFallback="/" />
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {unfinished && (
+          <View style={styles.unfinished}>
+            <UnfinishedWorkout
+              workout={unfinished}
+              onContinue={() => router.push({ pathname: '/workout-session', params: { program: unfinished.programId, session: unfinished.session.id } })}
+              onDiscard={discard}
+            />
+          </View>
+        )}
         {failed && <Text style={styles.failed}>{t('The programme could not be changed. Check your connection and try again.')}</Text>}
         {!active && (
           <View style={styles.hero}>
@@ -229,7 +249,16 @@ export const WorkoutsScreen = () => {
           <ProgramCard key={p.id} p={p} onUse={() => use(p)} onDelete={() => remove(p)} />
         ))}
 
-        <TouchableOpacity style={styles.library} onPress={() => router.push('/exercise-library')}>
+        <TouchableOpacity style={styles.library} onPress={() => router.push('/workout-history')}>
+          <Ionicons name="time-outline" size={20} color={Colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.libraryTitle}>{t('History')}</Text>
+            <Text style={styles.sub}>{t('What you trained, session by session')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.library, { marginTop: 10 }]} onPress={() => router.push('/exercise-library')}>
           <Ionicons name="albums-outline" size={20} color={Colors.accent} />
           <View style={{ flex: 1 }}>
             <Text style={styles.libraryTitle}>{t('Exercise library')}</Text>
@@ -291,5 +320,6 @@ const styles = StyleSheet.create({
   library: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginHorizontal: 20, marginTop: 4 },
   libraryTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
   safety: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 18 },
+  unfinished: { marginHorizontal: 20 },
   failed: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginBottom: 12 },
 });

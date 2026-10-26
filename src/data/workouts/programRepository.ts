@@ -167,9 +167,10 @@ export const programRepository = {
     await writeLocal((await readLocal()).filter((p) => p.id !== id));
   },
 
+  // Sin el programa (sin conexión, la lista llega vacía) es un error: la sesión se queda para reintentar
   async logCompletion(id: string, completion: WorkoutCompletion): Promise<void> {
     const p = await this.get(id);
-    if (!p) return;
+    if (!p) throw new Error('Workout programme not found');
     await this.save({ ...p, completions: [...p.completions, completion] });
   },
 };
