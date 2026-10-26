@@ -1723,3 +1723,37 @@ nativas ni migraciones. El teclado en Android y el atasco al deslizar siguen sin
   compilación de TestFlight con `--auto-submit-with-profile production` (sube sola con la clave de la API guardada en EAS).
   Compilación 3 (23c1d3d1-d7c1-439b-b740-1c36dbd7048f) terminada y subida a App Store Connect sin pedir nada (envío
   0acf315c-7343-4f61-938a-affe56734620). Falta que Apple la procese sin rechazos.
+
+## 2026-10-26 — El entreno a medias ya no se pierde al bloquear el móvil, e historial de entrenos (889334b, publicado)
+
+Nota del fundador: entrenando, tras bloquear el móvil unas 4 veces entre series, la app «se reinició», le sacó del entreno y
+perdió lo marcado; y quiere un historial sencillo, sin editar, de lo entrenado.
+
+- **Causa:** la sesión en curso vivía solo en el estado de `WorkoutSessionScreen`. Con la pantalla bloqueada Android puede matar
+  el proceso para liberar memoria y, al volver, la app arranca de cero. No hay recarga propia al volver (expo-updates solo
+  aplica en arranque en frío; el tema solo recarga al cambiarlo a mano), así que la causa más probable es esa; un cierre por
+  error se arregla igual.
+- **Arreglo:** `src/data/workouts/activeWorkout.ts` copia la sesión en AsyncStorage (`workouts.active.v1`, con el id del
+  usuario) en cada cambio: ejercicios de hoy, filas, vista, serie en curso, descanso o temporizador (por la hora de fin), modo
+  resumen e intensidad. La pantalla compara el JSON tras cada pintado y solo escribe si cambió. Al abrir esa sesión se restaura
+  tal cual (la cuenta atrás sigue por la hora y se cancelan los avisos del móvil pendientes); `src/app/index.tsx` la abre sola
+  en el primer arranque si se tocó hace menos de 6 h; Entrenamientos y la vista previa de otra sesión muestran «Entreno a
+  medias» (`components/workouts/UnfinishedWorkout.tsx`) con Seguir y Descartar, y empezar otra sesión pregunta antes de
+  descartarla. Se borra al guardar, al descartar o al salir confirmando.
+- **Guardar sin conexión:** antes, si `logCompletion` fallaba, el botón se quedaba desactivado y se perdía la sesión. Ahora
+  avisa, el botón pasa a «Reintentar» y la copia del móvil se queda; al reintentar usa la misma hora y no repite la sesión si ya
+  se guardó. `programRepository.logCompletion` lanza un error si no encuentra el programa (antes volvía sin guardar nada).
+- **Historial** (`/workout-history`, `screens/workouts/WorkoutHistoryScreen.tsx`, lógica en `src/logic/workoutHistory.ts`): por
+  meses, más reciente arriba; cada sesión de programa con día, minutos, series, kilos y las series de cada ejercicio
+  (`setsText`), y los entrenos de la tabla `workouts` apuntados a mano. El de `workouts` que se guarda con cada sesión (misma
+  hora, margen de 2 s) no se repite. Si se borra un programa, sus sesiones siguen en el historial por ese registro (día, tipo
+  y minutos, sin series); el aviso de borrar programa lo dice. Guardarlas siempre pediría una tabla propia (migración).
+- tsc limpio y 433 tests (nuevo `workoutHistory.test.ts`). Probado en la demo web (recargar = proceso muerto): con 2 series
+  marcadas (22 kg) y el descanso en marcha, recargar desde «/» vuelve a la sesión con la duración y el descanso siguiendo
+  (0:49, no 1:00); también en el resumen antes de Guardar; el aviso de Entrenamientos y «Seguir»; Guardar sin el programa da
+  el aviso y «Reintentar» lo guarda después; el historial no duplica la sesión.
+
+**Publicado 889334b** (2026-10-26, OK del fundador «Commit it to master and publish it with npm run release»): EAS Update grupo
+`2b3b83da-1025-4169-8b94-9788e06bb193` (preview, android + ios) y las dos webs (los bundles llevan `workouts.active.v1` y
+`/workout-history` responde 200). Sin dependencias nativas ni migraciones: no hace falta APK. Falta probar en un móvil que,
+tras bloquearlo varias veces entre series, vuelve al entreno.
