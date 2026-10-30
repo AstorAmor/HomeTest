@@ -1757,3 +1757,43 @@ perdió lo marcado; y quiere un historial sencillo, sin editar, de lo entrenado.
 `2b3b83da-1025-4169-8b94-9788e06bb193` (preview, android + ios) y las dos webs (los bundles llevan `workouts.active.v1` y
 `/workout-history` responde 200). Sin dependencias nativas ni migraciones: no hace falta APK. Falta probar en un móvil que,
 tras bloquearlo varias veces entre series, vuelve al entreno.
+
+## 2026-10-30 — «Tu plan personalizado» con tus datos, sin consejos genéricos (master, sin commit ni publicar)
+
+Nota del fundador: «Tu plan» → «Tu plan personalizado»; la tarjeta resaltada solo la primera vez; el plan completo debajo de
+fuerza, comida y caminar; y nada genérico («Mantén tu horario de sueño regular» sin más): cada acción con lo que hace ahora y
+lo recomendable, y solo si no lo cumple ya.
+
+- **Hoy:** título «Tu plan personalizado»; debajo, las acciones con una línea de dónde estás (`PlanItem.detail`), luego
+  «Ya cumples» (`planKept`) y al final «Tu plan completo» (→ /action-plan), con borde dorado solo hasta abrirlo una vez
+  (user_flag `full_plan_opened.v1`, lo pone ActionPlanScreen). El tutorial (`today.plan`) señala ahora la lista.
+- **Datos que mira el plan** (`src/logic/planHabits.ts`, pura): pasos de media de los 14 días anteriores a hoy (≥7 días) y
+  entre semana / fin de semana; sueño de las 14 últimas noches (≥5) con media y desviación típica de la hora de acostarse y
+  de levantarse (`sleep_start`/`sleep_end`); entrenos de fuerza y sesiones de calma por semana en las últimas 4 semanas (menos
+  si empezó a registrar hace poco; sin ningún registro, no se usa); estrés alto en check-ins (4-5 de 5, o ánimo estresado o
+  ansioso, ≥3 check-ins en 14 días); azúcar añadido de las comidas (≥5 en 14 días). Hoy lo calcula con la serie del reloj
+  que ya tiene; el resto de pantallas con `loadPlanHabits()` (planRepository; en cuentas de prueba sin datos, el reloj de
+  ejemplo).
+- **`buildPlan(profile, habits)`** (`src/logic/plan.ts`): con datos, manda lo medido sobre lo que contó. Pasos: «Camina 2.000
+  pasos más al día» + «Haces 5.600 de media (últimos 14 días); tu meta es de 7.500», y el bache del fin de semana en el cómo.
+  Fuerza: «Añade 1 sesión de fuerza a la semana» + «Has registrado 4 en las últimas 4 semanas (1 a la semana); lo
+  recomendable son 2 o más a la semana». Sueño: si duerme <7 h, «Duerme 40 min más cada noche» con desde qué hora adelantar;
+  si no, horarios solo si la hora varía ±45 min o más (`PLAN_LIMITS.timingSdNotable`; meta <±30 min, grupo de referencia de
+  MESA, Huang 2020), con entre semana / fin de semana y la hora de su despertador. Calma: sesiones y estrés marcado. Comida:
+  «Azúcar añadido en 3 de tus últimas 6 comidas»; si es un tercio o más y no hay condición, la acción pasa a «Reduce el azúcar
+  añadido». Lo que ya cumple sale del plan y va a «Ya cumples». Sin reloj, a quien duerme 7 h o más ya no se le pone «Mantén
+  horarios regulares». Ya no se rellena hasta 3 con acciones de 0 puntos; la cuarta entra si suma 4+ puntos o sale de un
+  hueco medido (`measured`), para que un sueño irregular no se quede fuera por tener ya pasos, fuerza y comida. Las horas se
+  redondean a 5 min y el aviso para desconectar va 30 min antes de la hora de acostarse entre semana. Los círculos de Hoy
+  siguen con las metas del plan de las respuestas (`buildPlan(profile)`), así que no cambian.
+- Hoy va en corto (fundador: «añades mucho texto de primeras»): una línea por acción (`PlanItem.short`: «6617 al día · meta
+  8000», «0,8 a la semana · meta 2», «Al acostarte: ±59 min · meta ±30», «Azúcar en 3 de 6 comidas») y «Ya cumples» igual
+  (`PlanKept.short`: «Pasos: 8800 al día · meta 8000»). La frase entera (`detail`) y el porqué van en el plan completo.
+- Plan completo: la línea de datos en negrita bajo cada acción y «Ya cumples» en su bloque. «Tus planes» usa el mismo plan.
+  Evidencia «Cómo hacemos tu plan»: dos párrafos nuevos y la fuente de MESA.
+- tsc limpio y 447 tests (nuevo `planHabits.test.ts`; el de «más de 8 h y dormir mejor» ahora espera que no salga el sueño).
+  Probado en la demo web (español, móvil): con el reloj de ejemplo, pasos y sueño salen en «Ya cumples»; con datos de prueba
+  (acostarse 23:25 entre semana y 01:30 el fin de semana, 6.617 pasos, 3 sesiones de fuerza en 4 semanas, 3 de 6 comidas con
+  azúcar) salen las 4 acciones con sus cifras; «Tu plan completo» pierde el borde dorado tras abrirlo; sin errores en consola.
+- **Pendiente:** revisión médica de umbrales (±45 min, 1/3 de check-ins con estrés, 1/3 de comidas con azúcar); probar en un
+  móvil con datos reales.

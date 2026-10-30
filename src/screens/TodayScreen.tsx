@@ -24,6 +24,7 @@ import { labAppointmentEvents } from '@/data/labAppointments';
 import { consult } from '@/data/consultations';
 import { buildSummary, summaryAppointments, SummaryLine } from '@/logic/summary';
 import { loadNutrientFocus, nutrientsDoneToday } from '@/screens/NutrientsScreen';
+import { FULL_PLAN_OPENED } from '@/screens/ActionPlanScreen';
 import { dateLocale, num, t } from '@/i18n';
 import { computeAchievements } from '@/data/achievements';
 import { BlobArt } from '@/components/BlobArt';
@@ -65,6 +66,8 @@ import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import { cycleGoalStore } from '@/data/cycleGoal';
 import {
   buildPlan,
+  HabitLogs,
+  planKept,
   mealRepository,
   mindfulRepository,
   mindfulSessionsThisWeek,
@@ -74,6 +77,7 @@ import {
   strengthSessionsThisWeek,
 } from '@/data/planRepository';
 import { computeReadiness, formatSleep, latest, shortDate, todayValue, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
+import { planHabits } from '@/logic/planHabits';
 import { useWebShell } from '@/web/webMode';
 import { TAB } from '@/constants/tabs';
 
@@ -168,6 +172,10 @@ export const TodayScreen = () => {
   const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
   const [strengthDone, setStrengthDone] = useState(0);
   const [mealsToday, setMealsToday] = useState(0);
+  // Lo que el plan mira de tus últimas semanas (con el reloj de arriba): entrenos, calma, check-ins y comidas
+  const [planLogs, setPlanLogs] = useDeepState<HabitLogs>({ workouts: [], calm: [], checkIns: [], meals: [] });
+  // «Tu plan completo» va resaltado hasta que lo abres una vez
+  const [fullPlanOpened, setFullPlanOpened] = useState(true);
   // El aviso "Your report is here!" se enseña hasta que el usuario lo abre (user_flags).
   const [reportSeen, setReportSeen] = useState(true);
   // Avisos sin leer (src/logic/nudges: se evalúan al abrir Today) y registro de baño de hoy
@@ -215,6 +223,7 @@ export const TodayScreen = () => {
       .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
       .catch(() => undefined);
     userFlags.get('today_week_open.v2').then((v) => setWeekOpen(v !== false));
+    userFlags.get(FULL_PLAN_OPENED).then((v) => setFullPlanOpened(!!v));
     Promise.all([loadNutrientFocus(), nutrientsDoneToday()])
       .then(([items, done]) => setNutrients({ done: done.filter((d) => items.some((i) => i.id === d)).length, total: items.length }))
       .catch(() => undefined);
@@ -277,6 +286,12 @@ export const TodayScreen = () => {
       checkIns: checkIns.map((c) => ({ fecha: c.fecha })),
       mindful: mindfulList.map((m) => ({ fecha: m.fecha })),
     });
+    setPlanLogs({
+      workouts: workoutList.map((w) => ({ fecha: w.fecha, type: w.type })),
+      calm: mindfulList.map((m) => ({ fecha: m.fecha })),
+      checkIns: checkIns.map((c) => ({ fecha: c.fecha, stress: c.stress, mood: c.mood })),
+      meals: mealList.map((m) => ({ fecha: m.fecha, addedSugar: m.addedSugar })),
+    });
     setMindfulWeek(mindfulThisWeek);
     setProfile(p);
     setLastCheckIn(checkIns.length ? checkIns[0] : null);
@@ -293,7 +308,7 @@ export const TodayScreen = () => {
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null);
     setStrengthDone(strength);
     setMealsToday(meals);
-  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setUnread, reloadBathroom, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setPlanLogs, setUnread, reloadBathroom, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);
 
   useReloadOnFocus(load);
 
@@ -319,9 +334,13 @@ export const TodayScreen = () => {
   const lastMood = lastCheckIn?.mood ? MOOD_OPTIONS.find((m) => m.id === lastCheckIn.mood) : null;
   const lastMoment = lastCheckIn ? MOMENT_OPTIONS.find((m) => m.id === lastCheckIn.moment) : null;
 
-  const plan = buildPlan(profile);
-  // Objetivos de los círculos de «Tu estado de hoy»: los del plan o los que haya puesto el usuario
-  const goals = effectiveGoals(suggestedGoals(plan, profile).goals, savedGoals);
+  // Tu plan con tus datos: dónde estás frente a lo recomendable, y fuera lo que ya cumples
+  const habits = useMemo(() => planHabits(series, planLogs), [series, planLogs]);
+  const plan = buildPlan(profile, habits);
+  const kept = planKept(profile, habits);
+  // Objetivos de los círculos de «Tu estado de hoy»: los del plan de tus respuestas (los mismos
+  // aunque ya cumplas alguno) o los que haya puesto el usuario
+  const goals = effectiveGoals(suggestedGoals(buildPlan(profile), profile).goals, savedGoals);
   // Frente a su objetivo de sueño y, en la fase lútea (con reglas apuntadas), sin restar lo propio del ciclo
   const readiness = computeReadiness(series, new Date(), { sleepNeedMin: goals.sleepMin, luteal: !!cycle && !cycle.isSample && cycle.phase === 'luteal' });
   // Los círculos que ha elegido (Tus objetivos del día). Si el reloj no da kcal y la distancia no está,
@@ -792,23 +811,11 @@ export const TodayScreen = () => {
         </>
         )}
 
-        {/* Your plan */}
+        {/* Tu plan personalizado: las acciones con tus datos, lo que ya cumples y, debajo, el plan completo */}
         {show('plan') && (
           <>
-            <Text style={styles.sectionTitle}>{t('Your plan')}</Text>
-            {/* El plan completo, como bloque (antes era un enlace aquí y una tarjeta en Lab) */}
-            <TourTarget id="today.plan" scroll={tourScroll} inset={20}>
-            <TouchableOpacity style={styles.planHero} onPress={() => router.push('/action-plan')} activeOpacity={0.85}>
-              <View style={styles.planHeroIcon}>
-                <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.planHeroTitle}>{t('Your personalised plan')}</Text>
-                <Text style={styles.fullPlanSub}>{hasResults ? t('Based on your latest results') : t('Based on your goals for now')}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-            </TouchableOpacity>
-            </TourTarget>
+            <Text style={styles.sectionTitle}>{t('Your personalised plan')}</Text>
+            <TourTarget id="today.plan" scroll={tourScroll}>
             <View style={styles.planList}>
               {plan.map((item) => {
                 const color = PLAN_COLOR[item.kind];
@@ -823,7 +830,11 @@ export const TodayScreen = () => {
                     <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={50} radius={14} iconSize={24} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.planCategory}>{t(PLAN_CATEGORIES.find((c) => c.id === KIND_CATEGORY[item.kind])!.title)}</Text>
-                      <Text style={styles.planTitle}>{item.kind === 'nutrition' ? t('Tick off what you eat well today') : planItemTitle(item, t)}</Text>
+                      <Text style={[styles.planTitle, !!item.short && styles.planTitleTight]}>
+                        {item.kind === 'nutrition' ? t('Tick off what you eat well today') : planItemTitle(item, t)}
+                      </Text>
+                      {/* Dónde estás frente a tu meta, en corto: el porqué entero va en el plan completo */}
+                      {item.short ? <Text style={styles.planDetail} numberOfLines={2}>{item.short}</Text> : null}
                       <View style={styles.planBarTrack}>
                         <View
                           style={[
@@ -850,7 +861,38 @@ export const TodayScreen = () => {
                 );
               })}
             </View>
-            <Text style={styles.planNote}>{t('Built from your answers. Your results will add to it when they arrive.')}</Text>
+            </TourTarget>
+            {kept.length > 0 && (
+              <View style={styles.keptBox}>
+                <Text style={styles.keptTitle}>{t('Already on track')}</Text>
+                {kept.map((k) => (
+                  <View key={k.kind} style={styles.keptRow}>
+                    <Ionicons name="checkmark-circle" size={16} color={Colors.ok} />
+                    <Text style={styles.keptText}>{k.short}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            {/* El plan completo, debajo de las acciones; resaltado solo hasta que lo abres una vez */}
+            <TouchableOpacity
+              style={[styles.planHero, !fullPlanOpened && styles.planHeroNew]}
+              onPress={() => router.push('/action-plan')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.planHeroIcon}>
+                <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.planHeroTitle}>{t('Your full plan')}</Text>
+                <Text style={styles.fullPlanSub}>{hasResults ? t('Based on your latest results') : t('Based on your goals for now')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            </TouchableOpacity>
+            <Text style={styles.planNote}>
+              {Object.keys(habits).length > 0
+                ? t('Built from your answers and your data from the last weeks: it changes as you do.')
+                : t('Built from your answers. Your results will add to it when they arrive.')}
+            </Text>
             <TouchableOpacity style={styles.fullPlanLink} onPress={() => router.push('/plans')} activeOpacity={0.8}>
               <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
               <Text style={styles.fullPlanLinkText}>{t('Earlier plans')}</Text>
@@ -1067,12 +1109,17 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: Colors.gold,
+    borderColor: Colors.cardBorder,
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 20,
-    marginBottom: 12,
+    marginTop: 12,
   },
+  planHeroNew: { borderColor: Colors.gold },
+  keptBox: { marginHorizontal: 20, marginTop: 12, gap: 6 },
+  keptTitle: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
+  keptRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  keptText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, flex: 1 },
   planHeroIcon: {
     width: 40,
     height: 40,
@@ -1413,6 +1460,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
   },
+  planTitleTight: { marginBottom: 2 },
+  planDetail: { color: Colors.textSecondary, fontSize: 12, lineHeight: 16, marginBottom: 8 },
   planBarTrack: {
     height: 6,
     borderRadius: 3,

@@ -12,7 +12,8 @@ import { IconBadge } from '@/components/HealthIcons';
 import { Colors } from '@/constants/colors';
 import { currentReport } from '@/data/reportRepository';
 import { PlanVersion, planVersionRepository } from '@/data/planVersions';
-import { buildPlan, PlanItem } from '@/data/planRepository';
+import { buildPlan, loadPlanHabits, PlanItem, planKept, PlanKept } from '@/data/planRepository';
+import { userFlags } from '@/data/userFlags';
 import { profileRepository } from '@/data/profileRepository';
 import { actionCategory, KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { STATUS_LABEL } from '@/utils/planUpdate';
@@ -42,25 +43,33 @@ const groupProjections = (list: MarkerProjection[]) => {
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
-// "Plan completo" desde Today → Tu plan: el plan entero en tres bloques (hábitos, actividad física,
-// nutrición y suplementación). Cada bloque trae primero las acciones del día a día (las mismas que
-// el avance de Today, con su porqué y cómo hacerlo) y después lo que dice la última analítica.
+// Ya lo ha abierto alguna vez: en Hoy, «Tu plan completo» deja de ir resaltado
+export const FULL_PLAN_OPENED = 'full_plan_opened.v1';
+
+// "Plan completo" desde Today → Tu plan personalizado: el plan entero en tres bloques (hábitos,
+// actividad física, nutrición y suplementación). Cada bloque trae primero las acciones del día a día
+// (las mismas que el avance de Today, con dónde estás según tus datos, su porqué y cómo hacerlo), lo
+// que ya cumples y después lo que dice la última analítica.
 export const ActionPlanScreen = () => {
   const show = useSections();
   const router = useRouter();
   const [latest, setLatest] = useDeepState<PlanVersion | null>(null);
   const [plan, setPlan] = useDeepState<PlanItem[]>([]);
+  const [kept, setKept] = useDeepState<PlanKept[]>([]);
   // Gráficas "cómo podrían cambiar" a partir de la última analítica subida (en las cuentas de prueba,
   // solo si es más reciente que el informe de ejemplo, que ya trae las suyas en cada bloque)
   const [projections, setProjections] = useDeepState<MarkerProjection[]>([]);
   useReloadOnFocus(
     useCallback(async () => {
+      userFlags.set(FULL_PLAN_OPENED);
       setLatest(await planVersionRepository.latest().catch(() => null));
-      setPlan(buildPlan(await profileRepository.get().catch(() => null)));
+      const [profile, habits] = await Promise.all([profileRepository.get().catch(() => null), loadPlanHabits().catch(() => ({}))]);
+      setPlan(buildPlan(profile, habits));
+      setKept(planKept(profile, habits));
       const last = latestUpload(await labUploadRepository.getAll().catch(() => []));
       const newer = last && (!showSamples() || (last.testDate ?? last.createdAt) > currentReport.test_date);
       setProjections(newer ? projectMarkers(last) : []);
-    }, [setLatest, setPlan, setProjections]),
+    }, [setLatest, setPlan, setKept, setProjections]),
   );
 
   return (
@@ -146,8 +155,9 @@ export const ActionPlanScreen = () => {
 
         {PLAN_CATEGORIES.map((c) => {
           const items = plan.filter((i) => KIND_CATEGORY[i.kind] === c.id);
+          const done = kept.filter((k) => KIND_CATEGORY[k.kind] === c.id);
           const fromTest = showSamples() && currentReport.action_plan.some((a) => actionCategory(a.action_id) === c.id);
-          if (!items.length && !fromTest) return null;
+          if (!items.length && !done.length && !fromTest) return null;
           return (
             <View key={c.id} style={styles.block}>
               <View style={styles.blockHeader}>
@@ -164,10 +174,16 @@ export const ActionPlanScreen = () => {
                     <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={44} radius={12} iconSize={22} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.itemTitle}>{planItemTitle(item, t)}</Text>
-                      <Text style={styles.itemSub}>{item.kind === 'nutrition' ? t(item.title) : t(item.subtitle)}</Text>
+                      {item.kind === 'nutrition' ? (
+                        <Text style={styles.itemSub}>{t(item.title)}</Text>
+                      ) : !item.detail ? (
+                        <Text style={styles.itemSub}>{t(item.subtitle)}</Text>
+                      ) : null}
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
                   </View>
+                  {/* Dónde estás frente a lo recomendable, con tus datos */}
+                  {item.detail && item.detail !== item.title ? <Text style={styles.itemNow}>{item.detail}</Text> : null}
                   <Text style={styles.itemWhy}>{item.why}</Text>
                   {item.how.map((h) => (
                     <View key={h} style={styles.howRow}>
@@ -177,6 +193,18 @@ export const ActionPlanScreen = () => {
                   ))}
                 </TouchableOpacity>
               ))}
+
+              {done.length > 0 && (
+                <View style={styles.kept}>
+                  <Text style={styles.keptTitle}>{t('Already on track')}</Text>
+                  {done.map((k) => (
+                    <View key={k.kind} style={styles.howRow}>
+                      <Ionicons name="checkmark-circle" size={15} color={Colors.ok} />
+                      <Text style={styles.howText}>{k.text}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
 
               {fromTest && <Text style={styles.fromTest}>{t('From your blood test')}</Text>}
               <ActionPlanList category={c.id} compact />
@@ -262,7 +290,10 @@ const styles = StyleSheet.create({
   itemHead: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
   itemTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
   itemSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  itemNow: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, fontWeight: '700' },
   itemWhy: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  kept: { marginHorizontal: 20, marginBottom: 10, gap: 6 },
+  keptTitle: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
   howRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   howText: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, flex: 1 },
   fromTest: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4, marginHorizontal: 20, marginTop: 4, marginBottom: 8 },

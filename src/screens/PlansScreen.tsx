@@ -14,7 +14,7 @@ import { PlanVersion, planVersionRepository } from '@/data/planVersions';
 import { ruleWhyForItem, STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { buildPlan, PlanItem } from '@/data/planRepository';
+import { buildPlan, loadPlanHabits, PlanItem } from '@/data/planRepository';
 import { profileRepository } from '@/data/profileRepository';
 import { labUploadRepository } from '@/data/labUploads';
 
@@ -98,7 +98,8 @@ export const PlansScreen = () => {
       const v = await planVersionRepository.getAll().catch(() => []);
       setVersions(v);
       if (v.length) setOpenId((cur) => cur ?? v[0].id);
-      setGoalsPlan(buildPlan(await profileRepository.get().catch(() => null)));
+      const [profile, habits] = await Promise.all([profileRepository.get().catch(() => null), loadPlanHabits().catch(() => ({}))]);
+      setGoalsPlan(buildPlan(profile, habits));
       labUploadRepository
         .getAll()
         .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
@@ -146,7 +147,7 @@ export const PlansScreen = () => {
               {goalsPlan.map((it) => (
                 <View key={it.kind} style={styles.item}>
                   <Text style={styles.itemTitle}>{it.title}</Text>
-                  <Text style={styles.itemWhy}>{it.why}</Text>
+                  <Text style={styles.itemWhy}>{it.detail && it.detail !== it.title ? `${it.detail} ${it.why}` : it.why}</Text>
                 </View>
               ))}
             </View>

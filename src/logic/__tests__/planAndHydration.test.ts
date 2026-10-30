@@ -84,10 +84,9 @@ describe('consejo al guardar la orina', () => {
 });
 
 describe('sueño: quien ya duerme bastante', () => {
-  it('más de 8 h y quiere dormir mejor: horarios regulares, no "duerme más"', () => {
-    const sleep = buildPlan({ sleep: 'gt8', goals: ['sleep_better'] }).find((p) => p.kind === 'sleep');
-    expect(sleep?.title).toBe('Keep regular sleep times');
-    expect(sleep?.why).not.toMatch(/need 7 hours/);
+  it('más de 8 h y quiere dormir mejor, sin reloj: nada de un «mantén horarios regulares» genérico', () => {
+    // Los horarios solo entran si el reloj dice que varían (src/logic/__tests__/planHabits.test.ts)
+    expect(buildPlan({ sleep: 'gt8', goals: ['sleep_better'] }).some((p) => p.kind === 'sleep')).toBe(false);
   });
   it('más de 8 h sin objetivo de sueño: el sueño no entra', () => {
     expect(buildPlan({ sleep: 'gt8' }).some((p) => p.kind === 'sleep')).toBe(false);

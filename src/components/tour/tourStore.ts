@@ -35,7 +35,7 @@ export const TOUR_STEPS: TourStep[] = [
   { target: 'today.hydration', tab: 0, title: 'Hydration', text: 'Two parts too: + for each drink (a glass, or your own amount) and + each time you pee. Tap the card for the colour and more.' },
   { target: 'digestive.water', tab: 0, route: BLADDER, title: 'Water', text: 'Your day and your week. With “Other amount” you choose any amount and can make it your usual one, like your water bottle.' },
   { target: 'digestive.urine', tab: 0, route: BLADDER, title: 'Urine', text: 'Add the colour of each time, or a whole day at once. Each week we tell you what we notice.' },
-  { target: 'today.plan', tab: 0, title: 'Your plan', text: 'The actions that can help you most, with their targets. Tap to see the full plan.' },
+  { target: 'today.plan', tab: 0, title: 'Your personalised plan', text: 'The actions that can help you most, with where you are now and your target. Your full plan is just below.' },
   { target: 'today.plan.strength', tab: 0, title: 'Physical activity', text: 'Your strength workouts: each exercise explained, a timer for the rests and what you have done this week. Tap to start one.' },
   { target: 'today.learning', tab: 0, title: 'Keep learning', text: 'Short guides on training, sleep, nutrition, stress, heart health and more. Swipe through them or tap More for every topic.' },
   { target: 'tab.1', tab: 1, title: 'My Data', text: 'Your biomarkers, your measurements and your wearable, with how they change over time.' },
