@@ -15,6 +15,7 @@ import {
   Sex,
   SleepHabit,
   Smoking,
+  StepsBand,
   UserProfile,
   profileRepository,
 } from '@/data/profileRepository';
@@ -30,12 +31,20 @@ const YEARS = Array.from({ length: 81 }, (_, i) => String(1930 + i));
 const HEIGHTS = Array.from({ length: 71 }, (_, i) => String(140 + i));
 const WEIGHTS = Array.from({ length: 111 }, (_, i) => String(40 + i));
 
-type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'habits' | 'health' | 'goals';
+type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'activity' | 'habits' | 'health' | 'goals';
 
 // Mismos pasos para todos (la barra de avance no cambia según lo que elija). Lo que se ve en la
 // app no se pregunta: sale de estas respuestas (src/data/goalEffects.ts) y se ajusta luego en
 // More → Configure my experience.
-const STEPS: Step[] = ['purpose', 'dob', 'sex', 'body', 'habits', 'health', 'goals'];
+const STEPS: Step[] = ['purpose', 'dob', 'sex', 'body', 'activity', 'habits', 'health', 'goals'];
+
+// Días a la semana de fuerza y de cardio («3» = 3 o más): sin entrenos registrados, el plan parte de aquí
+const DAYS_OPTIONS = [
+  { id: '0', label: 'None' },
+  { id: '1', label: '1 day' },
+  { id: '2', label: '2 days' },
+  { id: '3', label: '3 or more' },
+];
 
 interface ChipOption<T extends string> {
   id: T;
@@ -80,6 +89,9 @@ export const OnboardingScreen = () => {
   const [height, setHeight] = useState(HEIGHTS.indexOf('175'));
   const [weight, setWeight] = useState(WEIGHTS.indexOf('75'));
   const [activity, setActivity] = useState<ActivityLevel>();
+  const [strengthDays, setStrengthDays] = useState<number>();
+  const [cardioDays, setCardioDays] = useState<number>();
+  const [stepsBand, setStepsBand] = useState<StepsBand>();
   const [sleep, setSleep] = useState<SleepHabit>();
   const [smoking, setSmoking] = useState<Smoking>();
   const [alcohol, setAlcohol] = useState<Alcohol>();
@@ -110,6 +122,9 @@ export const OnboardingScreen = () => {
         if (p.heightCm && HEIGHTS.includes(String(p.heightCm))) setHeight(HEIGHTS.indexOf(String(p.heightCm)));
         if (p.weightKg && WEIGHTS.includes(String(Math.round(p.weightKg)))) setWeight(WEIGHTS.indexOf(String(Math.round(p.weightKg))));
         setActivity(p.activity);
+        setStrengthDays(p.strengthDays);
+        setCardioDays(p.cardioDays);
+        setStepsBand(p.stepsBand);
         setSleep(p.sleep);
         setSmoking(p.smoking);
         setAlcohol(p.alcohol);
@@ -137,7 +152,7 @@ export const OnboardingScreen = () => {
       profile.heightCm = Number(HEIGHTS[height]);
       profile.weightKg = Number(WEIGHTS[weight]);
     }
-    Object.assign(profile, { activity, sleep, smoking, alcohol });
+    Object.assign(profile, { activity, strengthDays, cardioDays, stepsBand, sleep, smoking, alcohol });
     if (answered.has('health') || takesMedication !== undefined || conditions.length) {
       profile.takesMedication = takesMedication;
       profile.medications = takesMedication ? medications.trim() : undefined;
@@ -300,10 +315,12 @@ export const OnboardingScreen = () => {
           </>
         )}
 
-        {step === 'habits' && (
+        {step === 'activity' && (
           <>
-            <Text style={styles.title}>{tr('Your habits')}</Text>
-            <Text style={styles.subtitle}>{tr('Knowing where you start from helps us build a plan that fits you.')}</Text>
+            <Text style={styles.title}>{tr('Your activity')}</Text>
+            <Text style={styles.subtitle}>
+              {tr('Roughly is fine. If you log your workouts or connect a watch, your plan will use that instead.')}
+            </Text>
             <Text style={styles.question}>{tr('How active are you?')}</Text>
             <ChipGroup
               value={activity}
@@ -315,6 +332,29 @@ export const OnboardingScreen = () => {
                 { id: 'very_active', label: 'Very active' },
               ]}
             />
+            <Text style={styles.question}>{tr('How many days a week do you do strength training?')}</Text>
+            <ChipGroup value={strengthDays != null ? String(strengthDays) : undefined} onChange={(v) => setStrengthDays(Number(v))} options={DAYS_OPTIONS} />
+            <Text style={styles.question}>{tr('And cardio (running, cycling, swimming…)?')}</Text>
+            <ChipGroup value={cardioDays != null ? String(cardioDays) : undefined} onChange={(v) => setCardioDays(Number(v))} options={DAYS_OPTIONS} />
+            <Text style={styles.question}>{tr('How many steps do you walk a day?')}</Text>
+            <ChipGroup
+              value={stepsBand}
+              onChange={setStepsBand}
+              options={[
+                { id: 'lt5k', label: 'Fewer than 5,000' },
+                { id: '5to7k', label: '5,000-7,500' },
+                { id: '7to10k', label: '7,500-10,000' },
+                { id: 'gt10k', label: 'More than 10,000' },
+                { id: 'unknown', label: "I don't know" },
+              ]}
+            />
+          </>
+        )}
+
+        {step === 'habits' && (
+          <>
+            <Text style={styles.title}>{tr('Your habits')}</Text>
+            <Text style={styles.subtitle}>{tr('Knowing where you start from helps us build a plan that fits you.')}</Text>
             <Text style={styles.question}>{tr('How much do you usually sleep?')}</Text>
             <ChipGroup
               value={sleep}

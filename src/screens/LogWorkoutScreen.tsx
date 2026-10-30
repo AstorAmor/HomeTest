@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { strengthSessionsThisWeek, workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
@@ -22,10 +22,12 @@ const INTENSITIES: { id: WorkoutEntry['intensity']; label: string }[] = [
 ];
 
 // Se pueden marcar varios tipos (p. ej. fuerza + cardio en la misma sesión): se guarda un registro
-// por tipo y los minutos se reparten entre ellos, así no se cuentan dos veces.
+// por tipo y los minutos se reparten entre ellos, así no se cuentan dos veces. Desde el plan, el
+// cardio llega ya marcado (?type=cardio).
 export const LogWorkoutScreen = () => {
   const router = useRouter();
-  const [types, setTypes] = useState<WorkoutType[]>(['strength']);
+  const { type } = useLocalSearchParams<{ type?: string }>();
+  const [types, setTypes] = useState<WorkoutType[]>([TYPES.find((x) => x.id === type)?.id ?? 'strength']);
   const [minutes, setMinutes] = useState(45);
   const [intensity, setIntensity] = useState<WorkoutEntry['intensity']>('moderate');
   const [savedCount, setSavedCount] = useState<number | null>(null);

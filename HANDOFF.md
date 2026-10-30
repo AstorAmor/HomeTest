@@ -1800,3 +1800,47 @@ lo recomendable, y solo si no lo cumple ya.
   migraciones ni dependencias nativas.
 - **Pendiente:** revisión médica de umbrales (±45 min, 1/3 de check-ins con estrés, 1/3 de comidas con azúcar); probar en un
   móvil con datos reales.
+
+## 2026-10-30 (tarde) — El plan con metas: Hoy en corto, el plan completo como página intermedia (master, sin commit ni publicar)
+
+Nota del fundador sobre lo publicado en 02bcde7: «Añade 2 sesiones de fuerza a la semana / 1,3 a la semana · meta 3 / 3/3 esta
+semana» era un caos. Quiere la meta como título («Completa 3 sesiones de fuerza a la semana»), debajo solo «3/3 esta semana», y
+al tocar, la explicación («De acuerdo a tu información, realizas 1 día de fuerza… Las guías recomiendan…») y luego el programa.
+«Tu plan completo» es esa página intermedia. Además: preguntar fuerza, cardio y pasos en el cuestionario; en Hábitos, check-in,
+meditación y agua sin ser intrusivo; en Nutrición, las tomas de medicación que se ha saltado.
+
+- **Hoy:** cada acción es su meta (`title`) + barra + avance de la semana o del día («3/3 esta semana», «10.915 hoy», «0 L hoy»;
+  la regularidad del sueño trae su avance fijo en `PlanItem.progress`). Sin línea de datos (se quitó `PlanItem.short`). Tocar una
+  acción abre `/action-plan?focus=<kind>`. Como mucho 2 acciones del mismo bloque (antes salían 3 de actividad física); la cuarta
+  es la primera que quede con 4+ puntos o medida (antes, solo si caía justo en la posición 4).
+- **Plan completo** (`ActionPlanScreen`): todas las acciones con puntos (`buildFullPlan`), no solo las de Hoy, por bloques. Cada
+  una: meta, `detail` en negrita («Según tus registros, has hecho 4 sesiones de fuerza en las últimas 3 semanas: 1,3 a la semana
+  de media. Las guías recomiendan hacer fuerza 2 o más días a la semana; para tu objetivo, 3.» / «Nos dijiste que…» / «Según tu
+  reloj…» / «Según lo que apuntas…»), el porqué, el cómo y un botón a lo suyo (`PLAN_ITEM_ACTION`: «Ir a tu programa de fuerza»,
+  «Apuntar un entreno de cardio» → `/log-workout?type=cardio`, «Apuntar lo que bebes», «Hacer un check-in», «Ir a tu medicación»…).
+  Con `focus`, baja hasta esa acción (onLayout del bloque + de la acción, una vez cargado todo) y la marca con borde dorado.
+  «Tus planes» usa también `buildFullPlan`.
+- **Acciones nuevas** (`src/logic/plan.ts`): cardio (actividad; meta 3 días, 2 si está sentado casi todo el día; OMS 150 min/semana;
+  cuenta entrenos `cardio` y `sport`), agua (hábitos; solo si apunta lo que bebe 5+ días de 14; meta `waterForSex`; entra si bebe
+  menos del 90 %), check-in (hábitos; solo a quien lo usó y hace menos de 4 en 2 semanas; nunca en Hoy) y tomas (nutrición; tomas
+  con hora de los 14 días anteriores a hoy, desde el alta: saltadas + sin marcar; «En los últimos 10 días te has saltado 3 de tus
+  20 tomas. 1 está sin marcar…»; nunca en Hoy, que ya tiene su tarjeta de medicación). `FULL_PLAN_ONLY = ['medication', 'checkin']`.
+  Calma: «Haz 3 sesiones cortas de calma a la semana» (respiración, meditación o body scan), +1 punto si ya las probó y lo dejó.
+  `KIND_CATEGORY` vive ahora en plan.ts (planCategories lo reexporta).
+- **Cuestionario:** paso nuevo «Tu actividad» (entre cuerpo y hábitos; 8 pasos): cuánto te mueves (se movió aquí), días de fuerza
+  y de cardio (Ninguno / 1 / 2 / 3 o más) y pasos al día (5 tramos + «No lo sé»). `UserProfile.strengthDays/cardioDays/stepsBand`;
+  se ven en Perfil. Lo registrado en la app manda; lo contado se usa si no registra ese tipo de entreno (o no tiene reloj, para
+  los pasos: punto medio del tramo). Si ya llega a la meta por lo que contó, sale en «Ya cumples» («Fuerza 3 días o más a la semana,
+  según nos dijiste»).
+- **Migración NUEVA, sin aplicar:** `supabase/migrations/20261030120000_profile_activity_answers.sql` (profiles.strength_days,
+  cardio_days, steps_band con checks). Aplicarla en producción ANTES de publicar (con el OK del fundador). Por si acaso, `toRow`
+  solo manda esas columnas si están contestadas: sin la migración, guardar el perfil solo fallaría a quien conteste esas preguntas.
+- Evidencia «Cómo hacemos tu plan»: párrafos de respuestas y datos actualizados y uno nuevo (fuerza y cardio según la OMS; agua,
+  check-in y tomas solo si los apunta). Tutorial `today.plan` y `today.plan.strength` con el nuevo comportamiento. ~110 traducciones.
+- tsc limpio y 459 tests (planHabits.test.ts: 26). Probado en la demo web (español, móvil) con datos de prueba: Hoy enseña fuerza
+  «Completa 3 sesiones de fuerza a la semana · 3/3 esta semana», pasos, comida y «Bebe 1,6 L al día» (cardio pasa al plan
+  completo por el tope de 2); el plan completo trae los textos de arriba, el check-in y las tomas saltadas; sin errores en consola.
+  **Sin comprobar:** la bajada automática a la acción tocada y el paso nuevo del cuestionario (el panel del navegador estaba oculto:
+  sin pintado no hay onLayout ni clics). Probar en un móvil.
+- **Pendiente:** revisión médica (umbrales de agua 90 %, cardio 2/3 días, contar las tomas sin marcar como saltadas); en la demo,
+  el informe de ejemplo dice «Haz 2 sesiones de fuerza a la semana» y el plan de un perfil de rendimiento, 3.

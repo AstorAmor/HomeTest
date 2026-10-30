@@ -7,10 +7,12 @@ import { toDailySeries } from '@/wearables/seriesLogic';
 import { generateHuaweiDummy } from '@/wearables/providers/huaweiDummy';
 import { checkInRepository } from './checkInRepository';
 import { showSamples } from './dataMode';
+import { waterRepository } from './waterRepository';
+import { doseRepository, medicationRepository } from './medicationRepository';
 
 // El plan de partida (lógica pura, también en los tests) vive en src/logic/plan.ts, y lo que mira de
 // tus últimas semanas, en src/logic/planHabits.ts
-export { buildPlan, planKept, planSummary } from '@/logic/plan';
+export { buildFullPlan, buildPlan, FULL_PLAN_ONLY, planKept, planSummary } from '@/logic/plan';
 export type { PlanItem, PlanItemKind, PlanKept, PlanProfile } from '@/logic/plan';
 export type { HabitLogs, PlanHabits } from '@/logic/planHabits';
 
@@ -149,17 +151,20 @@ export async function mindfulSessionsThisWeek(): Promise<number> {
   return all.filter((m) => new Date(m.fecha).getTime() >= from).length;
 }
 
-// Lo que el plan mira de tus últimas semanas (reloj, entrenos, calma, check-ins y comidas), para las
-// pantallas que no lo tienen ya cargado. Como en Hoy: sin nada sincronizado, en las cuentas de
-// prueba, el reloj de ejemplo.
+// Lo que el plan mira de tus últimas semanas (reloj, entrenos, calma, check-ins, comidas, agua y
+// tomas de medicación), para las pantallas que no lo tienen ya cargado. Como en Hoy: sin nada
+// sincronizado, en las cuentas de prueba, el reloj de ejemplo.
 export async function loadPlanHabits(now = new Date()): Promise<PlanHabits> {
-  const [records, workouts, calm, checkIns, meals] = await Promise.all([
+  const [records, workouts, calm, checkIns, meals, water, medItems, doseLogs] = await Promise.all([
     wearableRepository.getRecords().catch(() => []),
     workoutRepository.getAll().catch(() => []),
     mindfulRepository.getAll().catch(() => []),
     checkInRepository.getAll().catch(() => []),
     mealRepository.getAll().catch(() => []),
+    waterRepository.getAll().catch(() => []),
+    medicationRepository.getAll().catch(() => []),
+    doseRepository.getAll().catch(() => []),
   ]);
   const series = toDailySeries(records.length ? records : showSamples() ? generateHuaweiDummy(28, now) : []);
-  return planHabits(series, { workouts, calm, checkIns, meals }, now);
+  return planHabits(series, { workouts, calm, checkIns, meals, water, meds: { items: medItems, logs: doseLogs } }, now);
 }

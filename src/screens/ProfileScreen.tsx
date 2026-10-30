@@ -37,7 +37,13 @@ const LABELS: Record<string, string> = {
   occasional: t('Occasionally'),
   weekly: t('Every week'),
   daily: t('Daily'),
+  lt5k: t('Fewer than 5,000'),
+  '5to7k': t('5,000-7,500'),
+  '7to10k': t('7,500-10,000'),
+  gt10k: t('More than 10,000'),
+  unknown: t("I don't know"),
 };
+const daysText = (n?: number) => (n == null ? undefined : n === 0 ? t('None') : n >= 3 ? t('3 or more a week') : n === 1 ? t('1 day a week') : t('{n} days a week', { n }));
 
 export const ProfileScreen = () => {
   const router = useRouter();
@@ -85,6 +91,9 @@ export const ProfileScreen = () => {
     { label: t('Height'), value: profile?.heightCm ? `${profile.heightCm} cm` : undefined },
     { label: t('Weight'), value: profile?.weightKg ? `${profile.weightKg} kg` : undefined },
     { label: t('Activity'), value: profile?.activity && LABELS[profile.activity] },
+    { label: t('Strength'), value: daysText(profile?.strengthDays) },
+    { label: t('Cardio'), value: daysText(profile?.cardioDays) },
+    { label: t('Steps a day'), value: profile?.stepsBand && LABELS[profile.stepsBand] },
     { label: t('Sleep'), value: profile?.sleep && LABELS[profile.sleep] },
     { label: t('Smoking'), value: profile?.smoking && LABELS[profile.smoking] },
     { label: t('Alcohol'), value: profile?.alcohol && LABELS[profile.alcohol] },

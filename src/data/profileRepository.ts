@@ -6,6 +6,8 @@ export type ActivityLevel = 'sedentary' | 'light' | 'active' | 'very_active';
 export type SleepHabit = 'lt6' | '6to7' | '7to8' | 'gt8';
 export type Smoking = 'never' | 'former' | 'occasional' | 'current';
 export type Alcohol = 'never' | 'occasional' | 'weekly' | 'daily';
+// Pasos al día que cree que da (sin reloj, el plan parte de aquí)
+export type StepsBand = 'lt5k' | '5to7k' | '7to10k' | 'gt10k' | 'unknown';
 export type GoalId =
   | 'general_health'
   | 'more_energy'
@@ -26,6 +28,9 @@ export interface UserProfile {
   heightCm?: number;
   weightKg?: number;
   activity?: ActivityLevel;
+  strengthDays?: number; // días de fuerza a la semana (3 = 3 o más)
+  cardioDays?: number; // días de cardio a la semana (3 = 3 o más)
+  stepsBand?: StepsBand;
   sleep?: SleepHabit;
   smoking?: Smoking;
   alcohol?: Alcohol;
@@ -92,6 +97,9 @@ const fromRow = (r: any): UserProfile => ({
   heightCm: r.height_cm != null ? Number(r.height_cm) : undefined,
   weightKg: r.weight_kg != null ? Number(r.weight_kg) : undefined,
   activity: r.activity ?? undefined,
+  strengthDays: r.strength_days ?? undefined,
+  cardioDays: r.cardio_days ?? undefined,
+  stepsBand: r.steps_band ?? undefined,
   sleep: r.sleep_habit ?? undefined,
   smoking: r.smoking ?? undefined,
   alcohol: r.alcohol ?? undefined,
@@ -104,7 +112,16 @@ const fromRow = (r: any): UserProfile => ({
   completedAt: r.onboarding_completed_at ?? undefined,
 });
 
+// Fuerza, cardio y pasos (migración 20261030120000) solo si los ha contestado: así guardar el perfil
+// no falla en una base de datos que aún no tenga esas columnas
+const activityRow = (p: UserProfile) => ({
+  ...(p.strengthDays != null ? { strength_days: p.strengthDays } : {}),
+  ...(p.cardioDays != null ? { cardio_days: p.cardioDays } : {}),
+  ...(p.stepsBand ? { steps_band: p.stepsBand } : {}),
+});
+
 const toRow = (p: UserProfile) => ({
+  ...activityRow(p),
   date_of_birth: p.dateOfBirth ?? null,
   sex: p.sex ?? null,
   height_cm: p.heightCm ?? null,

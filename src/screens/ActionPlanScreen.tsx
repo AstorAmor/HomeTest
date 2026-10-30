@@ -1,9 +1,9 @@
 import { dateLocale, num, t } from '@/i18n';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ActionPlanList } from '@/components/ActionPlanList';
 import { SharePlanButton } from '@/components/SharePlanButton';
@@ -12,10 +12,10 @@ import { IconBadge } from '@/components/HealthIcons';
 import { Colors } from '@/constants/colors';
 import { currentReport } from '@/data/reportRepository';
 import { PlanVersion, planVersionRepository } from '@/data/planVersions';
-import { buildPlan, loadPlanHabits, PlanItem, planKept, PlanKept } from '@/data/planRepository';
+import { buildFullPlan, loadPlanHabits, PlanItem, PlanItemKind, planKept, PlanKept } from '@/data/planRepository';
 import { userFlags } from '@/data/userFlags';
 import { profileRepository } from '@/data/profileRepository';
-import { actionCategory, KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemRoute, planItemTitle } from '@/data/planCategories';
+import { actionCategory, KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, PLAN_ITEM_ACTION, planItemRoute, planItemTitle } from '@/data/planCategories';
 import { STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -48,11 +48,19 @@ export const FULL_PLAN_OPENED = 'full_plan_opened.v1';
 
 // "Plan completo" desde Today → Tu plan personalizado: el plan entero en tres bloques (hábitos,
 // actividad física, nutrición y suplementación). Cada bloque trae primero las acciones del día a día
-// (las mismas que el avance de Today, con dónde estás según tus datos, su porqué y cómo hacerlo), lo
-// que ya cumples y después lo que dice la última analítica.
+// (las de Today y las que no caben allí, con dónde estás según tus datos o tus respuestas frente a lo
+// que recomiendan las guías, su porqué, cómo hacerlo y un botón a lo suyo), lo que ya cumples y
+// después lo que dice la última analítica. Es la página intermedia de Today: tocar una acción allí
+// abre esta pantalla en esa acción (?focus=strength).
 export const ActionPlanScreen = () => {
   const show = useSections();
   const router = useRouter();
+  const { focus } = useLocalSearchParams<{ focus?: PlanItemKind }>();
+  const scrollRef = useRef<ScrollView>(null);
+  const blockY = useRef<Partial<Record<string, number>>>({});
+  const [focusY, setFocusY] = useState<number | null>(null);
+  const [ready, setReady] = useState(false); // ya está todo lo de encima (las gráficas cambian la altura)
+  const scrolled = useRef(false);
   const [latest, setLatest] = useDeepState<PlanVersion | null>(null);
   const [plan, setPlan] = useDeepState<PlanItem[]>([]);
   const [kept, setKept] = useDeepState<PlanKept[]>([]);
@@ -64,17 +72,25 @@ export const ActionPlanScreen = () => {
       userFlags.set(FULL_PLAN_OPENED);
       setLatest(await planVersionRepository.latest().catch(() => null));
       const [profile, habits] = await Promise.all([profileRepository.get().catch(() => null), loadPlanHabits().catch(() => ({}))]);
-      setPlan(buildPlan(profile, habits));
+      setPlan(buildFullPlan(profile, habits));
       setKept(planKept(profile, habits));
       const last = latestUpload(await labUploadRepository.getAll().catch(() => []));
       const newer = last && (!showSamples() || (last.testDate ?? last.createdAt) > currentReport.test_date);
       setProjections(newer ? projectMarkers(last) : []);
+      setReady(true);
     }, [setLatest, setPlan, setKept, setProjections]),
   );
 
+  // Una vez colocada la acción que se tocó en Hoy, se baja hasta ella (solo la primera vez)
+  useEffect(() => {
+    if (!ready || focusY == null || scrolled.current) return;
+    scrolled.current = true;
+    scrollRef.current?.scrollTo({ y: Math.max(0, focusY - 12), animated: true });
+  }, [ready, focusY]);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your full plan')} showBack />
         <Text style={styles.intro}>
           {showSamples()
@@ -159,7 +175,7 @@ export const ActionPlanScreen = () => {
           const fromTest = showSamples() && currentReport.action_plan.some((a) => actionCategory(a.action_id) === c.id);
           if (!items.length && !done.length && !fromTest) return null;
           return (
-            <View key={c.id} style={styles.block}>
+            <View key={c.id} style={styles.block} onLayout={(e) => (blockY.current[c.id] = e.nativeEvent.layout.y)}>
               <View style={styles.blockHeader}>
                 <IconBadge name={c.icon} color={Colors[c.color]} size={36} />
                 <View style={{ flex: 1 }}>
@@ -169,7 +185,16 @@ export const ActionPlanScreen = () => {
               </View>
 
               {items.map((item) => (
-                <TouchableOpacity key={item.kind} style={styles.item} onPress={() => router.push(planItemRoute(item.kind) as any)} activeOpacity={0.85}>
+                <View
+                  key={item.kind}
+                  style={[styles.item, item.kind === focus && styles.itemFocus]}
+                  onLayout={(e) => {
+                    if (item.kind !== focus) return;
+                    const y = e.nativeEvent.layout.y;
+                    // El bloque se coloca antes o después que la acción: se espera a tener los dos
+                    setTimeout(() => blockY.current[c.id] != null && setFocusY(blockY.current[c.id]! + y), 0);
+                  }}
+                >
                   <View style={styles.itemHead}>
                     <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={44} radius={12} iconSize={22} />
                     <View style={{ flex: 1 }}>
@@ -180,18 +205,21 @@ export const ActionPlanScreen = () => {
                         <Text style={styles.itemSub}>{t(item.subtitle)}</Text>
                       ) : null}
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
                   </View>
-                  {/* Dónde estás frente a lo recomendable, con tus datos */}
+                  {/* Dónde estás frente a lo que recomiendan las guías, con tus datos o tus respuestas */}
                   {item.detail && item.detail !== item.title ? <Text style={styles.itemNow}>{item.detail}</Text> : null}
-                  <Text style={styles.itemWhy}>{item.why}</Text>
+                  {item.why ? <Text style={styles.itemWhy}>{item.why}</Text> : null}
                   {item.how.map((h) => (
                     <View key={h} style={styles.howRow}>
                       <Ionicons name="checkmark" size={14} color={Colors.accent} />
                       <Text style={styles.howText}>{h}</Text>
                     </View>
                   ))}
-                </TouchableOpacity>
+                  <TouchableOpacity style={styles.itemAction} onPress={() => router.push(planItemRoute(item.kind) as any)} activeOpacity={0.8}>
+                    <Text style={styles.itemActionText}>{t(PLAN_ITEM_ACTION[item.kind])}</Text>
+                    <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
+                  </TouchableOpacity>
+                </View>
               ))}
 
               {done.length > 0 && (
@@ -287,7 +315,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 6,
   },
+  itemFocus: { borderColor: Colors.gold },
   itemHead: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
+  itemAction: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.divider },
+  itemActionText: { color: Colors.accent, fontSize: 14, fontWeight: '700', flex: 1 },
   itemTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
   itemSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   itemNow: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, fontWeight: '700' },

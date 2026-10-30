@@ -14,7 +14,7 @@ import { PlanVersion, planVersionRepository } from '@/data/planVersions';
 import { ruleWhyForItem, STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { buildPlan, loadPlanHabits, PlanItem } from '@/data/planRepository';
+import { buildFullPlan, loadPlanHabits, PlanItem } from '@/data/planRepository';
 import { profileRepository } from '@/data/profileRepository';
 import { labUploadRepository } from '@/data/labUploads';
 
@@ -99,7 +99,7 @@ export const PlansScreen = () => {
       setVersions(v);
       if (v.length) setOpenId((cur) => cur ?? v[0].id);
       const [profile, habits] = await Promise.all([profileRepository.get().catch(() => null), loadPlanHabits().catch(() => ({}))]);
-      setGoalsPlan(buildPlan(profile, habits));
+      setGoalsPlan(buildFullPlan(profile, habits));
       labUploadRepository
         .getAll()
         .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
