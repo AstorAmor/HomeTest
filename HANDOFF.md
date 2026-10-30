@@ -1847,6 +1847,10 @@ meditación y agua sin ser intrusivo; en Nutrición, las tomas de medicación qu
   sin pintado no hay onLayout ni clics). Probar en un móvil.
 - **Publicado c5849bb** (2026-10-30, OK del fundador «Sí, migrar y publicar»): migración aplicada antes; EAS Update grupo
   `47c615f4-8037-4f44-8626-f73f838d78dc` (preview, android + ios) y las dos webs (comprobado en los bundles en vivo).
+  **Ojo:** lo publicado lleva también los cambios SIN COMMIT de la sesión «¿Para qué usas Kuova?» (sección «2026-10-30
+  (noche)»), que estaba editando esta misma carpeta mientras se exportaba (EAS marca el commit «c5849bb*»; sus textos están en
+  los bundles en vivo). `release.mjs` solo mira si el árbol está limpio al empezar. Producción = c5849bb + esos cambios hasta que
+  esa sesión los commitee.
 - **Pendiente:** revisión médica (umbrales de agua 90 %, cardio 2/3 días, contar las tomas sin marcar como saltadas); en la demo,
   el informe de ejemplo dice «Haz 2 sesiones de fuerza a la semana» y el plan de un perfil de rendimiento, 3.
 
