@@ -1801,7 +1801,7 @@ lo recomendable, y solo si no lo cumple ya.
 - **Pendiente:** revisión médica de umbrales (±45 min, 1/3 de check-ins con estrés, 1/3 de comidas con azúcar); probar en un
   móvil con datos reales.
 
-## 2026-10-30 (tarde) — El plan con metas: Hoy en corto, el plan completo como página intermedia (master, sin commit ni publicar)
+## 2026-10-30 (tarde) — El plan con metas: Hoy en corto, el plan completo como página intermedia (master, publicado c5849bb)
 
 Nota del fundador sobre lo publicado en 02bcde7: «Añade 2 sesiones de fuerza a la semana / 1,3 a la semana · meta 3 / 3/3 esta
 semana» era un caos. Quiere la meta como título («Completa 3 sesiones de fuerza a la semana»), debajo solo «3/3 esta semana», y
@@ -1832,9 +1832,12 @@ meditación y agua sin ser intrusivo; en Nutrición, las tomas de medicación qu
   se ven en Perfil. Lo registrado en la app manda; lo contado se usa si no registra ese tipo de entreno (o no tiene reloj, para
   los pasos: punto medio del tramo). Si ya llega a la meta por lo que contó, sale en «Ya cumples» («Fuerza 3 días o más a la semana,
   según nos dijiste»).
-- **Migración NUEVA, sin aplicar:** `supabase/migrations/20261030120000_profile_activity_answers.sql` (profiles.strength_days,
-  cardio_days, steps_band con checks). Aplicarla en producción ANTES de publicar (con el OK del fundador). Por si acaso, `toRow`
-  solo manda esas columnas si están contestadas: sin la migración, guardar el perfil solo fallaría a quien conteste esas preguntas.
+- **Migración `supabase/migrations/20261030120000_profile_activity_answers.sql` APLICADA el 2026-10-30** antes de publicar (OK
+  del fundador «Sí, migrar y publicar»): profiles.strength_days, cardio_days, steps_band con checks. Esta vez con
+  `npx supabase db push --linked --yes` tras un `--dry-run` que solo listaba esta (la CLI de npx ya no tiene token de acceso, así
+  que `db query --linked` falla; `db push` y `migration list` van por el rol de login). Comprobado: en el historial remoto y
+  `GET /rest/v1/profiles?select=strength_days,cardio_days,steps_band&limit=0` da 200. Por si acaso, `toRow` solo manda esas
+  columnas si están contestadas.
 - Evidencia «Cómo hacemos tu plan»: párrafos de respuestas y datos actualizados y uno nuevo (fuerza y cardio según la OMS; agua,
   check-in y tomas solo si los apunta). Tutorial `today.plan` y `today.plan.strength` con el nuevo comportamiento. ~110 traducciones.
 - tsc limpio y 459 tests (planHabits.test.ts: 26). Probado en la demo web (español, móvil) con datos de prueba: Hoy enseña fuerza
@@ -1842,5 +1845,21 @@ meditación y agua sin ser intrusivo; en Nutrición, las tomas de medicación qu
   completo por el tope de 2); el plan completo trae los textos de arriba, el check-in y las tomas saltadas; sin errores en consola.
   **Sin comprobar:** la bajada automática a la acción tocada y el paso nuevo del cuestionario (el panel del navegador estaba oculto:
   sin pintado no hay onLayout ni clics). Probar en un móvil.
+- **Publicado c5849bb** (2026-10-30, OK del fundador «Sí, migrar y publicar»): migración aplicada antes; EAS Update grupo
+  `47c615f4-8037-4f44-8626-f73f838d78dc` (preview, android + ios) y las dos webs (comprobado en los bundles en vivo).
 - **Pendiente:** revisión médica (umbrales de agua 90 %, cardio 2/3 días, contar las tomas sin marcar como saltadas); en la demo,
   el informe de ejemplo dice «Haz 2 sesiones de fuerza a la semana» y el plan de un perfil de rendimiento, 3.
+
+## 2026-10-30 (noche) — «¿Para qué usas Kuova?» deja claro que define la experiencia (master, sin commit ni publicar)
+
+El fundador quiere que en la configuración quede muy claro que la respuesta a «para qué quieres Kuova» define la experiencia y
+las opciones que aparecen (ya funcionaba así: `PURPOSE_HIDDEN` en `data/appPrefs.ts` → tarjetas de Hoy, Mis datos, avisos y menú web).
+
+- **Configura tu experiencia** (`AppSectionsScreen`): aviso bajo el título («Tu respuesta define tu experiencia: decide qué partes,
+  tarjetas y opciones aparecen en Hoy, Mis datos y el resto de la app, y qué avisos te llegan…») y un recuento que cambia al elegir
+  («Con tu respuesta ves 1 de 11 partes de la app» / «Aún no has elegido: ves 8 de 11…»). El texto de «Qué ves» dice que la lista
+  sale de esa respuesta y se vuelve a ajustar si la cambias.
+- Subtítulo de la fila en Ajustes y en Más: «Para qué usas Kuova define lo que ves y las opciones que aparecen».
+- Onboarding (paso «¿Para qué quieres Kuova?») y paso «A tu manera» del tutorial con la misma idea; el onboarding decía
+  «Configurar mi experiencia» y la pantalla se llama «Configura tu experiencia» (corregido).
+- tsc limpio. Probado en la demo web: el recuento y los interruptores cambian al tocar una opción; la demo quedó sin respuesta.
