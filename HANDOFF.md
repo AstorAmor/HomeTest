@@ -1758,7 +1758,7 @@ perdió lo marcado; y quiere un historial sencillo, sin editar, de lo entrenado.
 `/workout-history` responde 200). Sin dependencias nativas ni migraciones: no hace falta APK. Falta probar en un móvil que,
 tras bloquearlo varias veces entre series, vuelve al entreno.
 
-## 2026-10-30 — «Tu plan personalizado» con tus datos, sin consejos genéricos (master, sin commit ni publicar)
+## 2026-10-30 — «Tu plan personalizado» con tus datos, sin consejos genéricos (master, publicado 02bcde7)
 
 Nota del fundador: «Tu plan» → «Tu plan personalizado»; la tarjeta resaltada solo la primera vez; el plan completo debajo de
 fuerza, comida y caminar; y nada genérico («Mantén tu horario de sueño regular» sin más): cada acción con lo que hace ahora y
@@ -1795,5 +1795,8 @@ lo recomendable, y solo si no lo cumple ya.
   Probado en la demo web (español, móvil): con el reloj de ejemplo, pasos y sueño salen en «Ya cumples»; con datos de prueba
   (acostarse 23:25 entre semana y 01:30 el fin de semana, 6.617 pasos, 3 sesiones de fuerza en 4 semanas, 3 de 6 comidas con
   azúcar) salen las 4 acciones con sus cifras; «Tu plan completo» pierde el borde dorado tras abrirlo; sin errores en consola.
+- **Publicado 02bcde7** (2026-10-30, OK del fundador «Commit y publicar»): EAS Update grupo
+  `e33b1d04-e5ab-4470-976d-c90a30e08e28` (preview, android + ios) y las dos webs (comprobado en los bundles en vivo). Sin
+  migraciones ni dependencias nativas.
 - **Pendiente:** revisión médica de umbrales (±45 min, 1/3 de check-ins con estrés, 1/3 de comidas con azúcar); probar en un
   móvil con datos reales.
