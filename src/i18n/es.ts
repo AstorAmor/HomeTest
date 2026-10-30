@@ -47,7 +47,7 @@ export const es: Record<string, string> = {
   'Extra large': 'Muy grande',
   'Your experience': 'Tu experiencia',
   'Configure my experience': 'Configura tu experiencia',
-  'What you use Kuova for, what you see and how each part works': 'Para qué usas Kuova, qué ves y cómo funciona cada parte',
+  'What you use Kuova for sets what you see and which options appear': 'Para qué usas Kuova define lo que ves y las opciones que aparecen',
   Notifications: 'Notificaciones',
   'What we send you, and mute anything you do not want': 'Qué te enviamos, y silencia lo que no quieras',
   Permissions: 'Permisos',
@@ -1525,7 +1525,12 @@ export const es: Record<string, string> = {
   'Talk to a specialist about your plan': 'Habla con un especialista sobre tu plan',
   'What do you use Kuova for?': '¿Para qué usas Kuova?',
   'What you see': 'Qué ves',
-  'Turn on only what you want. Changing your choice above resets what you see below.': 'Activa solo lo que quieras. Si cambias tu elección de arriba, se restablece lo que ves abajo.',
+  'Your answer shapes your experience: it decides which parts, cards and options appear in Today, My Data and the rest of the app, and which reminders you get. Pick one or more.':
+    'Tu respuesta define tu experiencia: decide qué partes, tarjetas y opciones aparecen en Hoy, Mis datos y el resto de la app, y qué avisos te llegan. Puedes elegir varias.',
+  'With your answer you see {n} of {total} parts of the app.': 'Con tu respuesta ves {n} de {total} partes de la app.',
+  'No answer yet: you see {n} of {total} parts of the app.': 'Aún no has elegido: ves {n} de {total} partes de la app.',
+  'This comes from your answer above. Turn each part on or off as you like; if you change your answer, this list is set again.':
+    'Sale de tu respuesta de arriba. Enciende o apaga cada parte a tu gusto; si cambias la respuesta, esta lista se vuelve a ajustar.',
   'Your results, tests, sharing and professionals are always there.': 'Tus resultados, pruebas, lo que compartes y los profesionales siempre están disponibles.',
   'Consultation requested': 'Consulta solicitada',
   "Prototype: this specialist isn't on Kuova yet, nothing was sent.": 'Prototipo: este especialista aún no está en Kuova, no se ha enviado nada.',
@@ -1687,8 +1692,8 @@ export const es: Record<string, string> = {
   'Add a short course': 'Añadir un tratamiento corto',
   'Building your personalised plan…': 'Preparando tu plan personalizado…',
   'What do you want Kuova for?': '¿Para qué quieres Kuova?',
-  "Pick one or more. We'll only show what you need, and you can change it anytime in More → Configure my experience.":
-    'Elige una o varias. Solo te enseñaremos lo que necesitas, y puedes cambiarlo cuando quieras en Más → Configurar mi experiencia.',
+  'Pick one or more. Your answer shapes your experience: what you see in the app and which options appear. You can change it anytime in More → Configure my experience.':
+    'Elige una o varias. Tu respuesta define tu experiencia: lo que ves en la app y las opciones que te aparecen. Puedes cambiarla cuando quieras en Más → Configura tu experiencia.',
   'When were you born?': '¿Cuándo naciste?',
   'Reference ranges change with age.': 'Los rangos de referencia cambian con la edad.',
   "What's your biological sex?": '¿Cuál es tu sexo biológico?',
@@ -3722,7 +3727,8 @@ export const es: Record<string, string> = {
   // 2026-10-21: veces sueltas en Orina y Heces, tutorial (medicación, Configura tu experiencia)
   'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in More → Configure my experience.': 'Apunta lo que tomas y, si quieres, recibe un aviso en cada toma. Si no lo ves en Hoy, actívalo en Más → Configura tu experiencia.',
   'Make it yours': 'A tu manera',
-  'Your experience can be customised in More → Configure my experience: choose what you see, like the plan, digestion, hydration or medication.': 'Tu experiencia es personalizable en Más → Configura tu experiencia: elige qué ves, como el plan, la digestión, la hidratación o la medicación.',
+  'What you use Kuova for shapes your experience: it decides what you see, like the plan, the daily check-in or your wearable data. Change it, or each part, in More → Configure my experience.':
+    'Para qué usas Kuova define tu experiencia: decide qué ves, como el plan, el check-in diario o los datos de tu wearable. Cámbialo, o cada parte por separado, en Más → Configura tu experiencia.',
   'One time less': 'Una vez menos',
   'One time more': 'Una vez más',
   '{n} of them with details below': '{n} de ellas con detalle abajo',

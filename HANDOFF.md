@@ -1854,7 +1854,7 @@ meditación y agua sin ser intrusivo; en Nutrición, las tomas de medicación qu
 - **Pendiente:** revisión médica (umbrales de agua 90 %, cardio 2/3 días, contar las tomas sin marcar como saltadas); en la demo,
   el informe de ejemplo dice «Haz 2 sesiones de fuerza a la semana» y el plan de un perfil de rendimiento, 3.
 
-## 2026-10-30 (noche) — «¿Para qué usas Kuova?» deja claro que define la experiencia (master, sin commit ni publicar)
+## 2026-10-30 (noche) — «¿Para qué usas Kuova?» deja claro que define la experiencia (master; salió con la publicación de c5849bb)
 
 El fundador quiere que en la configuración quede muy claro que la respuesta a «para qué quieres Kuova» define la experiencia y
 las opciones que aparecen (ya funcionaba así: `PURPOSE_HIDDEN` en `data/appPrefs.ts` → tarjetas de Hoy, Mis datos, avisos y menú web).
@@ -1867,3 +1867,5 @@ las opciones que aparecen (ya funcionaba así: `PURPOSE_HIDDEN` en `data/appPref
 - Onboarding (paso «¿Para qué quieres Kuova?») y paso «A tu manera» del tutorial con la misma idea; el onboarding decía
   «Configurar mi experiencia» y la pantalla se llama «Configura tu experiencia» (corregido).
 - tsc limpio. Probado en la demo web: el recuento y los interruptores cambian al tocar una opción; la demo quedó sin respuesta.
+- **Ojo:** otra sesión publicó c5849bb mientras estos cambios estaban sin commit en la carpeta, y el export se los llevó: están
+  en las dos webs (comprobado en los bundles en vivo) y casi seguro en el EAS Update 47c615f4. El commit de después solo pone git al día.

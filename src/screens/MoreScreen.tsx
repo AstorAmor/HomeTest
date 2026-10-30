@@ -44,7 +44,7 @@ const menuItems: MenuItem[] = [
   {
     id: 'experience',
     title: 'Configure my experience',
-    subtitle: 'What you use Kuova for, what you see and how each part works',
+    subtitle: 'What you use Kuova for sets what you see and which options appear',
     iconFamily: 'ionicons',
     icon: 'options-outline',
   },

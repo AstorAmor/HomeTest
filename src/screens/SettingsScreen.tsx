@@ -44,7 +44,7 @@ export const SettingsScreen = () => {
         <Text style={styles.section}>{t('Your experience')}</Text>
         <View style={styles.card}>
           {[
-            { icon: 'options-outline', title: 'Configure my experience', sub: 'What you use Kuova for, what you see and how each part works', to: '/app-sections' },
+            { icon: 'options-outline', title: 'Configure my experience', sub: 'What you use Kuova for sets what you see and which options appear', to: '/app-sections' },
             { icon: 'notifications-outline', title: 'Notifications', sub: 'What we send you, and mute anything you do not want', to: '/notifications' },
           ].map((r, i) => (
             <TouchableOpacity key={r.to} style={[styles.row, i > 0 && styles.divider]} onPress={() => router.push(r.to as any)}>

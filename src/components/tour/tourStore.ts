@@ -43,7 +43,7 @@ export const TOUR_STEPS: TourStep[] = [
   { target: 'mydata.genetics', tab: 1, title: 'Your genetic profile', text: 'Know your roots: a few questions on what runs in your family, to see whether it is worth talking to a professional. Genetic test results will appear here too.' },
   { target: 'lab.upload', tab: 2, title: 'Upload a report', text: 'Take a photo or upload the PDF of any blood test: we read it and explain each value.' },
   { target: 'tab.3', tab: 3, title: 'Schedule', text: 'Your appointments, deliveries and results, and a button to add them to your calendar.' },
-  { target: 'more.experience', tab: 4, title: 'Make it yours', text: 'Your experience can be customised in More → Configure my experience: choose what you see, like the plan, digestion, hydration or medication.' },
+  { target: 'more.experience', tab: 4, title: 'Make it yours', text: 'What you use Kuova for shapes your experience: it decides what you see, like the plan, the daily check-in or your wearable data. Change it, or each part, in More → Configure my experience.' },
   { target: 'more.tutorial', tab: 4, title: 'Watch it again', text: 'Settings, professionals, your subscription… and this tutorial, whenever you want.' },
 ];
 

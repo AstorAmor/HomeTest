@@ -229,7 +229,9 @@ export const OnboardingScreen = () => {
           <>
             <Text style={styles.title}>{tr('What do you want Kuova for?')}</Text>
             <Text style={styles.subtitle}>
-              {tr("Pick one or more. We'll only show what you need, and you can change it anytime in More → Configure my experience.")}
+              {tr(
+                'Pick one or more. Your answer shapes your experience: what you see in the app and which options appear. You can change it anytime in More → Configure my experience.',
+              )}
             </Text>
             <View style={styles.goalList}>
               {PURPOSE_OPTIONS.map((o) => {
