@@ -1869,3 +1869,26 @@ las opciones que aparecen (ya funcionaba así: `PURPOSE_HIDDEN` en `data/appPref
 - tsc limpio. Probado en la demo web: el recuento y los interruptores cambian al tocar una opción; la demo quedó sin respuesta.
 - **Ojo:** otra sesión publicó c5849bb mientras estos cambios estaban sin commit en la carpeta, y el export se los llevó: están
   en las dos webs (comprobado en los bundles en vivo) y casi seguro en el EAS Update 47c615f4. El commit de después solo pone git al día.
+
+## 2026-11-02 — iPhone: la pantalla Wearables cerraba la app (master, 3340800, publicado)
+
+Primera prueba en un iPhone real (TestFlight 1.1.0 (3)): todo iba salvo Wearables («Configure» en Hoy o Conexiones en Más),
+que cerraba la app. Diagnosticado en una sesión de SecondBrain y arreglado aquí.
+
+- **Causa:** `appleHealth.ios.ts` hacía `export { APPLE_READ_TYPES, APPLE_TYPE_LABEL } from './appleHealth'`. En iOS Metro resuelve
+  `./appleHealth` al propio `.ios.ts`, y Babel lo deja como un getter que se lee a sí mismo: `RangeError: Maximum call stack size
+  exceeded` en el primer render de `WearablesScreen` (el `useMemo` de `coverage`). En Android y la web se usa el stub, por eso no
+  pasaba. Venía de 4ca4ac5 (19/10).
+- **Arreglo:** `src/wearables/providers/appleHealthShared.ts` (sin versión `.ios`) con `APPLE_READ_TYPES`, `APPLE_TYPE_LABEL` y el tipo
+  `AppleHealthRead`; el stub y la versión de iOS reexportan de ahí. **Regla:** un `x.ios/.android/.web/.native.ts(x)` nunca importa
+  con valor `./x` (los `import type` sí valen, se borran al compilar). Lo vigila `src/__tests__/platformFiles.test.ts`, que falla
+  con el código anterior. El único otro caso, `shareBadge.web.ts`, es `import type` y no da problemas.
+- **Ojo con las pruebas que leen archivos:** TypeScript 6 deja `types = []`, así que la app no ve los tipos de Node; la prueba los
+  carga con `await import('node:fs' as string)` y tipos locales en vez de tocar el tsconfig.
+- tsc limpio y 462 tests. Comprobado en un `expo export --platform ios --no-minify --no-bytecode`: el módulo de `appleHealth.ios`
+  ya no depende de sí mismo, tira de `appleHealthShared`, y ejecutado con un require como el de Metro da las 7 constantes;
+  `WearablesScreen` usa la versión de iOS (el stub no está en el bundle).
+- **Publicado 3340800** (2026-11-02, OK de Astor «Sí, pásalo»): EAS Update grupo `43615f6f-b8fd-4b0b-adfc-13022af48525` (preview,
+  android + ios, runtime `exposdk:57.0.0`) y las dos webs. Solo JavaScript: no hace falta compilación nueva.
+- **Sin comprobar en el iPhone:** abrir Wearables tras recibir la actualización, y pulsar «Conectar Apple Salud» por primera vez
+  (la pantalla de permisos de HealthKit y la lectura nunca se han probado en un dispositivo).
