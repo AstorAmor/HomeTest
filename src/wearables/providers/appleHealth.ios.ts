@@ -3,9 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DailyWearableRecord, WearableMetric } from '../types';
 import { appleSourceName, joinAppleSources } from '../sources';
 import { appleSleepSessions, summarizeSleepSessions } from '../seriesLogic';
-import type { AppleHealthRead } from './appleHealth';
+import type { AppleHealthRead } from './appleHealthShared';
 
-export { APPLE_READ_TYPES, APPLE_TYPE_LABEL } from './appleHealth';
+// Nunca de './appleHealth': en iOS es este mismo archivo (ver appleHealthShared.ts)
+export { APPLE_READ_TYPES, APPLE_TYPE_LABEL } from './appleHealthShared';
 export type { AppleHealthRead };
 
 // Adaptador de Apple Salud (HealthKit, iPhone). Traduce lo que hay en Salud al formato propio de
