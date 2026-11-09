@@ -19,13 +19,18 @@ Astor lo prueba en la app «Kuova Pruebas» y, **con su OK**, pasa a producción
 ## Base de pruebas «Kuova pruebas»
 
 - Proyecto de Supabase en Frankfurt (`eu-central-1`), en la organización gratuita «Kuova pruebas» (aparte de
-  la de `HomeTest00`: si esa pasa a Pro, esta sigue costando 0 €). Ref: ver la nota del vault
-  `Strategy/Kuova/Entorno de pruebas y seguridad de cuentas - encargo.md` o `npx supabase projects list`.
+  la de `HomeTest00`: si esa pasa a Pro, esta sigue costando 0 €). Ref **`bujbvrozmtcnnmhvkupj`**
+  (`STAGING_REF` en `scripts/supabase-target.mjs`). Creado el 2026-11-09 con las 36 migraciones y las 9
+  funciones.
 - Plan gratuito: **se pausa tras 7 días sin uso**. Se reactiva en el panel (Restore project), 1-2 minutos.
 - Solo datos inventados. Cuentas de prueba: alias `+algo` del email del admin de pruebas (así son
   «probadores» y pueden cargar Ajustes → Casos de prueba). Nada de datos reales de nadie.
-- Secretos de Edge Functions: `GEMINI_API_KEY` (la misma clave, copiada sin enseñarla); Revolut, en sandbox
-  cuando toque; Daily, sin poner (la videoconsulta responde «sin configurar»).
+- Secretos de Edge Functions: `GEMINI_API_KEY` (la misma clave, copiada sin enseñarla; **pendiente del OK de
+  Astor**: sin ella, leer analíticas con IA responde «sin configurar»); Revolut, en sandbox cuando toque;
+  Daily, sin poner (la videoconsulta responde «sin configurar»).
+- Correo: hasta que esté el SMTP de Brevo, Supabase solo envía a los miembros de la organización (2 por
+  hora) y **no deja cambiar la plantilla** del correo de confirmación (plan gratuito). Por eso
+  `config push` falla hasta entonces (ver abajo).
 
 ### Aplicar cambios a la base de pruebas
 
@@ -36,15 +41,35 @@ pruebas>`; el enlace vive en `supabase/.temp/project-ref`, que no se sube a git)
 cat supabase/.temp/project-ref      # tiene que ser la ref de PRUEBAS, nunca jpqtposdxexdvdfeorzh
 ```
 
-- Migraciones: `npx supabase db push`
-- Funciones: `npx supabase functions deploy --use-api`
+Con la CLI 3 los comandos van contra la base **local** si no se dice otra cosa: siempre `--linked` o
+`--remote=<ref>`. Sin consola interactiva (Claude Code) los que cambian algo piden además `--yes`.
+
+- Migraciones: `npx supabase db push --linked` (antes, `--dry-run` para ver la lista).
+- Funciones: `npx supabase functions deploy --use-api --remote=bujbvrozmtcnnmhvkupj`
 - Ajustes de Auth (contraseña, confirmar email, plantilla, doble factor, URLs) desde `supabase/config.toml`:
-  `KUOVA_SITE_URL=kuovapruebas:// npx supabase config push`. **Ojo:** `config.toml` no lleva el SMTP (la clave
-  no va en archivos) y `config push` enseña un diff antes de aplicar: si sale que desactiva el SMTP, cancelar
-  y cambiar ese ajuste a mano en el panel.
+  `KUOVA_SITE_URL=kuovapruebas:// npx supabase config diff --remote=<ref>` para ver qué cambia y luego
+  `config push --remote=<ref>`. Solo toca lo que declara el archivo: el SMTP (que no está en el archivo,
+  porque la clave no va en archivos) se queda como esté. El pooler y Storage vector no se declaran a
+  propósito (pisarían los del panel). Mientras no haya SMTP propio, la plantilla del correo hace fallar el
+  push entero («Email template modification is not available for free tier»): el 2026-11-09 se subió todo
+  menos la plantilla con una copia del archivo sin `[auth.email.template.confirmation]`; la plantilla se
+  sube después del paso de Brevo.
+- `site_url` = `kuovapruebas://`: el botón del correo abre «Kuova Pruebas» en el móvil. Con un `site_url`
+  sin dominio, Supabase no sabe poner el «emisor» del QR del doble factor: la app lo manda siempre
+  («Kuova Health», `src/data/mfa.ts`).
 - Tests de base de datos (sin Docker): cada archivo de `supabase/tests/database/` es una transacción que se
-  deshace al final. `npx supabase test db --linked` necesita Docker; sin él, `npx supabase db query --linked
-  -f supabase/tests/database/<archivo>.test.sql` y mirar que no haya ningún `not ok`.
+  deshace al final. `npx supabase test db` necesita Docker; sin él, `npx supabase db query --linked --yes -f
+  <archivo>`. Ojo: solo devuelve el último resultado, así que para saber si pasaron todos hay que cambiar el
+  `select * from finish();` final por `select extensions._get('plan') as planned, extensions._get('curr_test')
+  as ran, extensions.num_failed() as failed;` (en una copia) y mirar `failed = 0` y `ran = planned`.
+  2026-11-09: 109/109 (rls_sharing 28, specialist_portal 20, support_access 24, pro_templates 7, mfa_aal2 30).
+- Prueba de punta a punta con sesiones reales (contraseñas, email sin confirmar, doble factor de
+  profesional y admin, reseteo por el admin): `node scripts/staging-auth-check.mjs`. Crea cuentas
+  inventadas y las borra al final (en `mfa_resets` queda una fila por pasada: es un registro y no se
+  borra). 2026-11-09: 23/23.
+- La web de la app contra esta base, en este ordenador: `node scripts/web-pruebas.mjs` (puerto 8091) o el
+  preview «expo-web-pruebas» de Claude Code. La clave pública se pide a Supabase al arrancar; nada en
+  `.env.local`.
 
 ## App «Kuova Pruebas»
 
@@ -52,7 +77,12 @@ cat supabase/.temp/project-ref      # tiene que ser la ref de PRUEBAS, nunca jpq
   (Android e iPhone), esquema `kuovapruebas://`, iconos de `assets/images/pruebas/`
   (`python scripts/make-icons.py pruebas`). En la pantalla de entrar sale «ENTORNO DE PRUEBAS».
 - Variables: el entorno **`development`** de EAS lleva las de la base de pruebas (los entornos con nombre
-  propio son de pago en Expo). Lo usan los perfiles `staging` y `staging-ios` y `npm run release:staging`.
+  propio son de pago en Expo). Lo usan los perfiles `staging` y `staging-ios`, `npm run release:staging` y
+  las compilaciones de desarrollo. **Cuidado:** hasta el 2026-11-09, `EXPO_PUBLIC_SUPABASE_URL` y
+  `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` eran **una sola variable para development, preview y production**:
+  cambiar su valor habría pasado a pruebas a todo el mundo. Hay que quitar `development` de esas dos
+  variables (sin tocar su valor) y crear dos nuevas solo para `development` (pendiente del OK de Astor).
+  Nunca `eas env:set` sobre una variable compartida.
 - APK: `npx eas-cli build --platform android --profile staging` (una vez; con cambios nativos, otra).
 - Actualizaciones: `npm run release:staging -- "qué cambia"` (Android; `--all` para Android e iPhone). Se
   niega si el entorno `development` apunta a producción. Puede publicar cambios sin commit (para probar antes
@@ -64,7 +94,8 @@ cat supabase/.temp/project-ref      # tiene que ser la ref de PRUEBAS, nunca jpq
 
 - `npm run release` (producción) se niega si `APP_VARIANT` está puesto, si el entorno `preview` de EAS no
   apunta a producción o si la web se exportaría con otra base (`scripts/supabase-target.mjs`).
-- `npm run release:staging` se niega si el entorno `development` apunta a producción.
+- `npm run release:staging` se niega si el entorno `development` no apunta a la base de pruebas
+  (`STAGING_REF`).
 
 ## Flujo de un cambio
 

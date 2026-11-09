@@ -27,7 +27,10 @@ Migración `supabase/migrations/20261109180000_mfa_aal2.sql`:
 - `mfa_required()` se puede preguntar con aal1: la app la usa para pedir el alta o el código.
 - Tests: `supabase/tests/database/mfa_aal2.test.sql` (30), que además comprueba que **ninguna tabla con RLS se
   queda sin la política restrictiva**: una tabla nueva tiene que crearla (copiar el bloque del final de la
-  migración). Los tests antiguos usan sesiones `aal2`.
+  migración). Los tests antiguos usan sesiones `aal2`. Con sesiones reales de Supabase Auth (no simuladas):
+  `node scripts/staging-auth-check.mjs`, solo contra la base de pruebas (23 comprobaciones, 2026-11-09).
+- El alta pasa `issuer: 'Kuova Health'`: sin él Supabase lo saca del dominio de `site_url`, y con
+  `kuovapruebas://` no hay dominio y el alta falla («Error generating QR Code»).
 
 En la app: `MfaGuard` (en `src/app/_layout.tsx`) pone `MfaScreen` delante de todo mientras falte el alta o el
 código; `SecurityScreen` (`/security`) para ver, añadir o quitar apps; `src/data/mfa.ts` y `src/logic/mfa.ts`.

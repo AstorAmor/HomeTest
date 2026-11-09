@@ -60,17 +60,53 @@ def make(size, bg, k_height_ratio, color, rounded=0.0, name=""):
     print("ok", name, size)
 
 
+# Oro metalizado de la imagen de marca (05 Marca\Branding.png): champán arriba a la izquierda, bronce abajo
+# a la derecha. Las mismas paradas que la K de src/components/LaunchIntro.tsx (la entrada animada que
+# sigue a esta pantalla), para que el paso de una a otra no se note.
+GOLD_STOPS = [(0.0, (246, 230, 195)), (0.32, (221, 189, 134)), (0.58, (201, 163, 102)),
+              (0.8, (169, 130, 75)), (1.0, (126, 94, 51))]
+
+
+def _gold_at(t):
+    for (t0, c0), (t1, c1) in zip(GOLD_STOPS, GOLD_STOPS[1:]):
+        if t <= t1:
+            f = (t - t0) / (t1 - t0) if t1 > t0 else 0
+            return tuple(round(a + (b - a) * f) for a, b in zip(c0, c1))
+    return GOLD_STOPS[-1][1]
+
+
+def make_gold_splash(name="splash-icon.png"):
+    """La K de la pantalla de carga nativa (expo-splash-screen en app.json) con el degradado dorado."""
+    W, H = K_W, K_H
+    big = Image.new("L", (W * SS, H * SS), 0)
+    draw_k(ImageDraw.Draw(big), 0, 0, H * SS, 255)
+    mask = big.resize((W, H), Image.LANCZOS)
+    grad = Image.new("RGBA", (W, H))
+    px = grad.load()
+    for y in range(H):
+        for x in range(W):
+            px[x, y] = _gold_at((x / (W - 1) + y / (H - 1)) / 2) + (255,)
+    out = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    out.paste(grad, (0, 0), mask)
+    out.save(OUT / name)
+    print("ok", name, (W, H))
+
+
 import sys
 
-# python scripts/make-icons.py          → iconos de «Kuova»
+# python scripts/make-icons.py          → iconos de «Kuova» (y los de «Kuova Pruebas»)
 # python scripts/make-icons.py pruebas  → solo los de «Kuova Pruebas» (no toca los de arriba)
-ONLY_STAGING = sys.argv[1:] == ["pruebas"]
-if not ONLY_STAGING:
+# python scripts/make-icons.py splash   → solo la K dorada de la pantalla de carga
+MODE = sys.argv[1] if len(sys.argv) > 1 else ""
+if MODE == "splash":
+    make_gold_splash()
+    sys.exit(0)
+if MODE != "pruebas":
     make((1024, 1024), DEEP_GREEN, 0.46, GOLD, name="icon.png")
     make((512, 512), None, 0.36, GOLD, name="android-icon-foreground.png")
     make((512, 512), DEEP_GREEN, 0, None, name="android-icon-background.png")
     make((432, 432), None, 0.36, WHITE, name="android-icon-monochrome.png")
-    make((260, 257), None, 1.0, GOLD, name="splash-icon.png")
+    make_gold_splash()
     make((48, 48), DEEP_GREEN, 0.56, GOLD, rounded=0.22, name="favicon.png")
 
 

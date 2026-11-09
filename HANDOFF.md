@@ -26,6 +26,10 @@ más rápido que el plan de fases original.
   para publicar solo una parte.
 - **Web pública** (`../HomeTest-web`): se publica sola en Vercel con cada `git push` a `master` (conectado el
   2026-10-05; cada rama tiene además su enlace de prueba).
+- **Entorno de pruebas (desde 2026-11-09)**: app «Kuova Pruebas» (canal `staging`) contra la base «Kuova pruebas»
+  (`bujbvrozmtcnnmhvkupj`). Todo cambio de base de datos, función o ajuste de Auth va **primero ahí**:
+  `npm run release:staging -- "qué cambia"` y `docs/entorno-de-pruebas.md`. Ojo: el canal `pruebas` es la beta de
+  amigos y va contra **producción**.
 
 ## Cómo arrancar para seguir trabajando
 
@@ -1903,3 +1907,35 @@ que cerraba la app. Diagnosticado en una sesión de SecondBrain y arreglado aqu�
   android + ios, runtime `exposdk:57.0.0`) y las dos webs. Solo JavaScript: no hace falta compilación nueva.
 - **Sin comprobar en el iPhone:** abrir Wearables tras recibir la actualización, y pulsar «Conectar Apple Salud» por primera vez
   (la pantalla de permisos de HealthKit y la lectura nunca se han probado en un dispositivo).
+
+## 2026-11-09 — Entorno de pruebas, cuentas más seguras, doble factor y entrada con la marca (rama `entorno-pruebas`)
+
+Carpeta `../hometest-app-staging` (worktree desde master; la carpeta principal sigue en `metas-fase1`). Nada de esto está en
+producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, ni OTA a `preview`/`pruebas`.
+
+- **Base de pruebas «Kuova pruebas»** (`bujbvrozmtcnnmhvkupj`, Frankfurt, organización gratuita aparte), creada con el OK
+  de Astor: 36 migraciones, 9 Edge Functions, ajustes de Auth (contraseña 8+ con letras y números, confirmar email,
+  código de 6 cifras, URLs de vuelta). Falta: SMTP de Brevo (lo pone Astor) y después la plantilla del correo; la clave
+  de Gemini (pendiente de su OK). Cómo se trabaja con ella: `docs/entorno-de-pruebas.md`.
+- **App «Kuova Pruebas»**: `APP_VARIANT=staging` (`app.config.js`), `com.kuovahealth.app.pruebas`, `kuovapruebas://`,
+  icono naranja con «PRUEBAS». Perfiles `staging`/`staging-ios`, canal `staging`, entorno `development` de EAS.
+  **Bloqueado:** las dos variables de Supabase de EAS son una sola para development, preview y production; antes
+  del primer APK hay que separar `development` (OK de Astor). Aún sin APK.
+- **Guardas**: `npm run release` se niega con `APP_VARIANT`, si `preview` de EAS no apunta a producción o si la web
+  saldría con otra base; `release:staging` exige que `development` apunte a pruebas (`scripts/supabase-target.mjs`).
+- **Cuentas**: reglas de contraseña en la app (`src/logic/password.ts`, lista al crearla), panel «Revisa tu correo» con
+  código de 6 cifras, reenviar y «ya lo he confirmado» (`LoginScreen`), textos en `src/i18n/authEs.ts`.
+- **Doble factor** obligatorio para admin, profesionales y soporte (opcional para pacientes), exigido por la base
+  (migración `20261109180000_mfa_aal2`, política restrictiva en todas las tablas + `aal2` en las funciones
+  `security definer`). Pantallas `MfaGuard`/`MfaScreen`, Ajustes → Verificación en dos pasos (`/security`), reseteo
+  por un admin con registro (`admin-mfa-reset`, `mfa_resets`). Detalle y orden en producción: `docs/doble-factor.md`.
+- **Probado en la base de pruebas**: 109/109 tests SQL (30 nuevos), `node scripts/staging-auth-check.mjs` 23/23 con
+  sesiones reales, la web en local contra pruebas (aviso «entorno de pruebas», lista de la contraseña). 474 tests de la
+  app, tsc limpio. **Sin probar en un móvil** (falta el APK) ni el correo real (falta Brevo).
+- **Entrada al abrir la app** (petición de Astor: «me queda un poco triste»): `src/components/LaunchIntro.tsx`, montada en
+  `index.js`. Tras la pantalla nativa, la K dorada metalizada con un destello y «KUOVA HEALTH» debajo, ~1,5 s, solo en
+  frío, se salta con un toque, sin movimiento con «reducir movimiento», no tras cambiar el tema; en la web solo con
+  `?intro=1`. Es JS (llega por OTA). La K de la pantalla nativa (`splash-icon.png`, `python scripts/make-icons.py
+  splash`) también es metalizada, pero esa solo cambia con una compilación nueva. No se puso el nombre en la pantalla
+  nativa porque Android 12+ recorta lo que no quepa en un círculo.
+

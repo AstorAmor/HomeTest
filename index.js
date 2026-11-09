@@ -5,7 +5,7 @@
 import '@expo/metro-runtime';
 
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { renderRootComponent } from 'expo-router/build/renderRootComponent';
 import { loadAppearance } from './src/theme/appearance';
@@ -13,8 +13,12 @@ import { takePendingFade, ThemeVeil } from './src/theme/transition';
 import { loadTextSize } from './src/theme/textSize';
 import { loadLanguage } from './src/i18n';
 import { Colors } from './src/constants/colors';
+import { LaunchIntro } from './src/components/LaunchIntro';
 
 SplashScreen.preventAutoHideAsync();
+
+const showIntro =
+  Platform.OS !== 'web' || (typeof window !== 'undefined' && /[?&]intro=1/.test(window.location?.search ?? ''));
 
 function Root() {
   const [App, setApp] = useState(null);
@@ -39,6 +43,8 @@ function Root() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background }}>
       {App ? <App /> : null}
+      {/* Entrada con la marca al abrir en frío (no tras cambiar el tema; en la web solo con ?intro=1) */}
+      {App && veil === null && showIntro ? <LaunchIntro /> : null}
       <ThemeVeil initial={veil} ready={!!App} />
     </View>
   );
