@@ -11,6 +11,7 @@ import {
   PhonePlanInput,
   planPhoneReminders,
   reminderData,
+  reminderKindLabel,
   resolvedPresented,
   temperatureReminders,
   usualMorningTime,
@@ -348,6 +349,61 @@ describe('historial de lo que ya saltó', () => {
   });
 });
 
+describe('con el móvil bloqueado', () => {
+  // Los dos canales son PUBLIC (src/data/phoneReminders.ts): ningún aviso puede decir un dato de salud,
+  // ni en inglés ni en español. Si uno lo necesita, su canal vuelve a ser PRIVATE.
+  const HEALTH = /pes(o|ar|arte)|weigh|kg\b|temperat|°|ovul|f[eé]rtil|regla|period|ciclo|cycle|embaraz|pregnan|medic|vitamin|suplement|supplement|gluc|tensi[oó]n|pressure|s[ií]ntoma|symptom|dolor|pain/i;
+  const DOSE = /\b(dos(e|es|is)|tomas?)\b/i; // solo el canal de las tomas puede hablar de tomas
+  const goal = { goal: 'conceive' as const, regularCycles: 'yes' as const, tryingFor: 'under_6m' as const, logTemperature: true, answeredAt: iso('2026-10-01T10:00:00') };
+  const habit = Array.from({ length: 10 }, (_, i) => ({ fecha: iso(`2026-10-${String(8 + i).padStart(2, '0')}T21:00:00`), energy: 4 }));
+  const ctx = ctxAt('2026-10-18T22:00:00', {
+    medications: [med(), med({ id: 'mg', name: 'Magnesio', schedule: { type: 'times', times: ['21:00'] } })],
+    cycleGoal: goal,
+    temperatures: [{ fecha: iso('2026-10-18T07:00:00'), celsius: 36.4, source: 'manual' as const }],
+    checkIns: habit,
+  });
+  const weighIns = [{ valor: 72, fecha: iso('2026-10-14T07:50:00') }];
+  const all = [
+    ...doseReminders(input(ctx)),
+    ...temperatureReminders(input(ctx)),
+    ...weighInReminders(input(ctx, { weighIns })),
+    ...checkinReminders(input(ctx)),
+  ];
+  const dict = es as Record<string, string>;
+
+  it('hay de los cuatro tipos', () => {
+    expect(new Set(all.map((x) => x.kind))).toEqual(new Set(['dose', 'temperature', 'weigh_in', 'checkin']));
+  });
+
+  it('ningún aviso dice un dato de salud (en inglés)', () => {
+    expect(all.filter((x) => HEALTH.test(`${x.title} ${x.body}`)).map((x) => `${x.kind}: ${x.title} / ${x.body}`)).toEqual([]);
+    expect(all.filter((x) => x.kind !== 'dose' && DOSE.test(`${x.title} ${x.body}`)).map((x) => x.title)).toEqual([]);
+  });
+
+  it('ni en español', () => {
+    const doses = ['Time for your dose', 'Time for your doses', '{time} dose: mark it in Kuova when you take it.', '{time} doses: mark them in Kuova when you take them.'];
+    const reminders = ['Time to log your data in Kuova', 'It only takes a moment.', 'How have you been?', 'You were checking in regularly. 30 seconds keeps your trends going.'];
+    // Son exactamente las claves que usan los avisos de arriba
+    const used = new Set(all.flatMap((x) => [x.title, x.body]));
+    for (const k of [...doses.slice(0, 2), ...reminders]) expect(used.has(k)).toBe(true);
+    expect([...doses, ...reminders].filter((k) => !dict[k] || HEALTH.test(dict[k]))).toEqual([]);
+    expect(reminders.filter((k) => DOSE.test(dict[k]))).toEqual([]);
+  });
+
+  it('dentro de la app, la lista de próximos avisos sí dice qué es cada uno', () => {
+    expect(all.map((x) => reminderKindLabel(reminderData(x).kind))).not.toContain(null);
+    expect(reminderKindLabel('weigh_in')).toBe('Weekly weigh-in');
+    expect(reminderKindLabel('otra cosa')).toBeNull();
+  });
+
+  it('peso y temperatura llevan el mismo texto: no se distingue cuál es', () => {
+    const temp = all.find((x) => x.kind === 'temperature')!;
+    const weigh = all.find((x) => x.kind === 'weigh_in')!;
+    expect([temp.title, temp.body]).toEqual([weigh.title, weigh.body]);
+    expect(temp.id).not.toBe(weigh.id); // abren pantallas distintas
+  });
+});
+
 describe('textos', () => {
   // Las claves nuevas tienen su español y no diagnostican ni hablan de dosis
   const KEYS = [
@@ -358,7 +414,9 @@ describe('textos', () => {
     'Time for your weekly weigh-in',
     'In the morning, after the toilet and before breakfast: that way one week compares with the next.',
     'At the time of each dose with reminders on.',
-    'Weigh-in, morning temperature and check-in.',
+    'Time to log your data in Kuova',
+    'It only takes a moment.',
+    'To log your data, and the check-in.',
     'On your phone',
     'Get your reminders even when the app is closed.',
     'Kuova notifications are off in your phone settings.',

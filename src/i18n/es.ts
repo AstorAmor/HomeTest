@@ -1381,6 +1381,9 @@ export const es: Record<string, string> = {
   'Time for your doses': 'Es la hora de tus tomas',
   '{time} dose: mark it in Kuova when you take it.': 'Toma de las {time}: márcala en Kuova cuando la tomes.',
   '{time} doses: mark them in Kuova when you take them.': 'Tomas de las {time}: márcalas en Kuova cuando las tomes.',
+  'Time to log your data in Kuova': 'Hora de apuntar tus datos en Kuova',
+  'It only takes a moment.': 'Solo te llevará un momento.',
+  'To log your data, and the check-in.': 'Para apuntar tus datos y el check-in.',
   'Time for your weekly weigh-in': 'Hoy toca pesarte',
   'In the morning, after the toilet and before breakfast: that way one week compares with the next.':
     'Por la mañana, después de ir al baño y antes de desayunar: así puedes comparar una semana con otra.',

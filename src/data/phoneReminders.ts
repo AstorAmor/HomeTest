@@ -17,6 +17,7 @@ import {
   PhoneReminderData,
   planPhoneReminders,
   reminderData,
+  reminderKindLabel,
   resolvedPresented,
 } from '@/logic/nudges/phone';
 
@@ -100,10 +101,12 @@ export async function getPhoneStatus(): Promise<PhoneStatus> {
 //   («Es la hora de tu toma», src/logic/nudges/phone.ts). Hasta el 2026-11-09 era el canal 'tomas', PRIVATE
 //   («Contenido oculto» en la pantalla bloqueada); un canal no se puede cambiar una vez creado, así que
 //   va con otro nombre y el viejo se borra para que no salgan dos en los ajustes del móvil.
-// - Recordatorios (peso, temperatura, check-in): siguen PRIVATE. La temperatura basal delata que se sigue
-//   la fertilidad; los demás, pendientes de decidir con Astor.
-const CHANNEL = { doses: 'tomas-v2', reminders: 'recordatorios' } as const;
-const OLD_CHANNELS = ['tomas'];
+// - Recordatorios (peso, temperatura, check-in): también PUBLIC desde el 2026-11-09 ('recordatorios' era
+//   PRIVATE), porque ya no dicen el dato: peso y temperatura salen como «Hora de apuntar tus datos en
+//   Kuova» y el check-in como «¿Qué tal estás?». Si algún día un aviso de estos dice algo de salud, el
+//   canal vuelve a ser PRIVATE (con otro nombre).
+const CHANNEL = { doses: 'tomas-v2', reminders: 'recordatorios-v2' } as const;
+const OLD_CHANNELS = ['tomas', 'recordatorios'];
 let channelsReady = false;
 
 async function ensureChannels(N: NotificationsModule) {
@@ -120,8 +123,9 @@ async function ensureChannels(N: NotificationsModule) {
   });
   await N.setNotificationChannelAsync(CHANNEL.reminders, {
     ...common,
+    lockscreenVisibility: N.AndroidNotificationVisibility.PUBLIC,
     name: t('Reminders'),
-    description: t('Weigh-in, morning temperature and check-in.'),
+    description: t('To log your data, and the check-in.'),
     importance: N.AndroidImportance.DEFAULT,
   });
   channelsReady = true;
@@ -339,7 +343,11 @@ export async function upcomingPhoneReminders(limit = 3): Promise<{ id: string; a
   const scheduled = await N.getAllScheduledNotificationsAsync().catch(() => []);
   return scheduled
     .filter((r) => ours(r.identifier))
-    .map((r) => ({ id: r.identifier, at: new Date(String(r.content.data?.at ?? '')), title: r.content.title ?? '' }))
+    .map((r) => ({
+      id: r.identifier,
+      at: new Date(String(r.content.data?.at ?? '')),
+      title: reminderKindLabel(r.content.data?.kind) ?? r.content.title ?? '',
+    }))
     .filter((r) => !Number.isNaN(r.at.getTime()))
     .sort((a, b) => a.at.getTime() - b.at.getTime())
     .slice(0, limit);

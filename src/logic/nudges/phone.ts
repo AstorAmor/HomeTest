@@ -15,6 +15,10 @@ import { NudgeContext, NudgeLogEntry, NudgePrefs, ReminderId } from './types';
 //   sin silenciar. Son alarmas que pide el usuario, así que no cuentan para el máximo diario.
 //   El texto nunca dice qué medicamento es (2026-11-09, «Es la hora de tu toma»): así se puede ver
 //   con el móvil bloqueado sin enseñar un dato de salud. Al tocarlo se abre /medications.
+// - Pesarse y temperatura basal llevan el mismo texto, «Hora de apuntar tus datos en Kuova» (2026-11-09):
+//   con el móvil bloqueado no se distingue cuál es (la temperatura delata que se sigue la fertilidad).
+//   Lo concreto está en la pantalla que abre. Ningún aviso del móvil dice un dato de salud: lo vigila
+//   el test «con el móvil bloqueado» de phoneReminders.test.ts.
 // - Pesarse: por la mañana, una semana después de la última pesada (WEIGH_EVERY_DAYS). Si no se
 //   pesa, se repite a la semana siguiente, y tras 4 semanas se deja de insistir.
 // - Temperatura basal: cada mañana mientras la registra, a la hora a la que suele apuntarla. Tras una
@@ -56,6 +60,9 @@ export const PHONE_REMINDERS = {
 };
 
 export const PHONE_ID_PREFIX = 'kuova-';
+
+// Peso y temperatura: el mismo texto, sin decir de qué dato se trata
+const logDataText = () => ({ title: t('Time to log your data in Kuova'), body: t('It only takes a moment.') });
 
 // Si dos avisos caen el mismo día y ya no caben, primero lo que tiene hora (la temperatura se toma
 // antes de levantarse) y lo último el check-in.
@@ -164,8 +171,7 @@ export function temperatureReminders(input: PhonePlanInput, days = PHONE_REMINDE
         kind: 'temperature',
         reminderId: 'temperature_reminder',
         at,
-        title: t('Log your morning temperature'),
-        body: t('Take it before getting up, at the same time each day. It helps us confirm when you ovulate.'),
+        ...logDataText(),
         route: '/log-temperature',
       })
     );
@@ -187,8 +193,7 @@ export function weighInReminders(input: PhonePlanInput, days = PHONE_REMINDERS.d
         kind: 'weigh_in',
         reminderId: 'weigh_in',
         at,
-        title: t('Time for your weekly weigh-in'),
-        body: t('In the morning, after the toilet and before breakfast: that way one week compares with the next.'),
+        ...logDataText(),
         route: '/log-weight',
       })
     );
@@ -272,6 +277,17 @@ export function diffPending(scheduledIds: string[], planned: PhoneReminder[]): {
 }
 
 // Lo que viaja dentro de la notificación: para abrir la pantalla y saber si ya está hecho
+// Qué es cada aviso, para la lista «Próximos recordatorios» de Ajustes → Notificaciones (con el móvil
+// desbloqueado y dentro de la app sí se dice; el aviso en sí es genérico)
+const KIND_LABEL: Record<PhoneReminderKind, string> = {
+  dose: 'Medication and supplement doses',
+  weigh_in: 'Weekly weigh-in',
+  temperature: 'Morning temperature',
+  checkin: 'Check-in',
+};
+export const reminderKindLabel = (kind: unknown): string | null =>
+  typeof kind === 'string' && kind in KIND_LABEL ? t(KIND_LABEL[kind as PhoneReminderKind]) : null;
+
 export interface PhoneReminderData {
   [key: string]: unknown;
   kind: PhoneReminderKind;
