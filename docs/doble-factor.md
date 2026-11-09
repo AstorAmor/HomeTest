@@ -37,7 +37,7 @@ código; `SecurityScreen` (`/security`) para ver, añadir o quitar apps; `src/da
 
 ## Si alguien pierde el móvil
 
-Supabase no da códigos de recuperación (hay una versión experimental que no está activada). Por eso:
+Supabase no da códigos de recuperación (hay una versión experimental que no está activada). Por eso (decidido por Astor el 2026-11-09):
 
 1. **Dos apps a la vez** (recomendado al dar de alta): por ejemplo el móvil y 1Password. Si se pierde una, la
    otra vale.
