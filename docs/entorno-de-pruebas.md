@@ -80,10 +80,16 @@ Con la CLI 3 los comandos van contra la base **local** si no se dice otra cosa: 
   propio son de pago en Expo). Lo usan los perfiles `staging` y `staging-ios`, `npm run release:staging` y
   las compilaciones de desarrollo. **Cuidado:** hasta el 2026-11-09, `EXPO_PUBLIC_SUPABASE_URL` y
   `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` eran **una sola variable para development, preview y production**:
-  cambiar su valor habría pasado a pruebas a todo el mundo. Hay que quitar `development` de esas dos
-  variables (sin tocar su valor) y crear dos nuevas solo para `development` (pendiente del OK de Astor).
-  Nunca `eas env:set` sobre una variable compartida.
-- APK: `npx eas-cli build --platform android --profile staging` (una vez; con cambios nativos, otra).
+  cambiar su valor habría pasado a pruebas a todo el mundo. **Separadas el 2026-11-09 (OK de Astor):** las
+  de producción quedan solo en preview y production, con el mismo valor; `development` tiene dos variables
+  propias con la base de pruebas. Antes de tocar una variable, mira en qué entornos está
+  (`npx eas-cli env:list <entorno>`) y nunca `eas env:set` sobre una que esté en más de uno.
+- Secretos de la base de pruebas: `GEMINI_API_KEY` (la misma clave que producción, copiada el 2026-11-09 con
+  el OK de Astor) para leer analíticas con IA.
+- APK: `npx eas-cli build --platform android --profile staging` (una vez; con cambios nativos, otra). El
+  primero, el 2026-11-09 (build `16edc92f`, versionCode 1, llave de firma creada por EAS en la nube).
+  Ojo al juntar con `metas-fase1`: si el código juntado usa un módulo nativo que este APK no tiene (por
+  ejemplo `modules/kuova-wallpaper`), hace falta otro APK antes de mandar esa actualización a `staging`.
 - Actualizaciones: `npm run release:staging -- "qué cambia"` (Android; `--all` para Android e iPhone). Se
   niega si el entorno `development` apunta a producción. Puede publicar cambios sin commit (para probar antes
   de juntar) y lo dice en el mensaje.
