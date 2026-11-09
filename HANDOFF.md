@@ -587,6 +587,11 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
   nativa no pasa por ahí. **No** poner un `robots.txt` con `Disallow`: el buscador no entraría y no vería el noindex.
   Comprobado sin exportar (poca RAM): con la exportación web de 3340800, la salida solo cambia en esas dos cosas, y
   `vercel build` local genera la ruta de la cabecera para todo. Si se republica sin esta rama, el noindex desaparece.
+  **Publicado el 2026-11-09 solo en la web** (OK de Astor «Sí, publícalo»), sin `npm run release` ni compilar: copia de
+  `deploy/hometest-app` y `deploy/hometest-demo` (lo que estaba en vivo, de 3340800) con solo la meta y la cabecera, y
+  `npx vercel deploy --prod --yes` en cada una. Mismos bundles (`index-c929cdf8…` app, `index-3325658b…` demo); `curl -sI`
+  da `X-Robots-Tag: noindex, nofollow` en `/`, en rutas internas y en los JS de las dos. La carpeta `deploy/` de la
+  copia principal no se tocó (sigue sin el noindex hasta la próxima publicación con esta rama).
 
 ## 2026-09-30 (tarde) — Vídeo real, búsqueda de especialistas, notas de voz, Keep learning
 - **Videoconsulta real con Daily** (dominio hometest.daily.co; secreto `DAILY_API_KEY` en Supabase). Edge Function
