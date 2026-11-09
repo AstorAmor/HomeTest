@@ -581,6 +581,12 @@ Proyecto `HomeTest00` (ref `jpqtposdxexdvdfeorzh`, eu-central-1, plan gratuito).
   `app.config.js` cambia la salida web a SPA solo para esta exportación; el desarrollo local sigue en modo "server".
 - En la web no hay modo demo de IA local: la extracción usa las Edge Functions (requiere sesión).
 - Vídeo con Daily: decidido, se deja para más adelante (requiere APK nuevo).
+- **Fuera de los buscadores (2026-11-09, rama `web-noindex`)**: la web de Kuova es kuovahealth.com; la app y la demo no
+  deben indexarse. `scripts/deploy-web.mjs` añade en las dos `X-Robots-Tag: noindex, nofollow` en todas las rutas
+  (`headers` de `vercel.json`) y `<meta name="robots" content="noindex, nofollow">` en `index.html`. Solo web: la app
+  nativa no pasa por ahí. **No** poner un `robots.txt` con `Disallow`: el buscador no entraría y no vería el noindex.
+  Comprobado sin exportar (poca RAM): con la exportación web de 3340800, la salida solo cambia en esas dos cosas, y
+  `vercel build` local genera la ruta de la cabecera para todo. Si se republica sin esta rama, el noindex desaparece.
 
 ## 2026-09-30 (tarde) — Vídeo real, búsqueda de especialistas, notas de voz, Keep learning
 - **Videoconsulta real con Daily** (dominio hometest.daily.co; secreto `DAILY_API_KEY` en Supabase). Edge Function

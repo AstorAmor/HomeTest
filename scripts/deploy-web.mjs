@@ -5,7 +5,8 @@
 // 1. Exporta la web como SPA estática (WEB_OUTPUT=single, ver app.config.js).
 // 2. Renombra assets/node_modules → assets/nm: Vercel descarta al subir cualquier carpeta
 //    llamada node_modules, y ahí Expo deja las fuentes de iconos (salían cuadrados).
-// 3. Añade la regla para que cualquier ruta cargue index.html y publica en producción.
+// 3. Añade la regla para que cualquier ruta cargue index.html, la deja fuera de los buscadores y publica en
+//    producción.
 import { execSync } from 'node:child_process';
 import { cpSync, existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -49,8 +50,17 @@ console.log(`Patched asset paths in ${patched} file(s)`);
 // cambiar de tema; la preferencia la guarda src/theme/appearance.ts). Solo en la web publicada: en
 // desarrollo Expo sirve su propia plantilla.
 const THEME_BG = `<script>try{var p=localStorage.getItem('appearance.v1');var l=p==='light'||(p!=='dark'&&window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches);var b=localStorage.getItem('appearance.fade.v1')||(l?'#FAF8F3':'#0A1D19');document.documentElement.style.background=b;document.addEventListener('DOMContentLoaded',function(){document.body.style.background=b;});}catch(e){}</script>`;
+// Fuera de los buscadores: la web de Kuova es kuovahealth.com, y estas dos (la app y la demo con datos
+// inventados) no deben salir en Google ni en Bing. Cabecera X-Robots-Tag en todas las rutas (vercel.json)
+// y la meta en index.html por si se sirve sin ella. Nada de robots.txt con Disallow: el buscador ya no
+// entraría y no vería el noindex.
+const NOINDEX = '<meta name="robots" content="noindex, nofollow">';
 const indexHtml = join(DEPLOY, 'index.html');
-writeFileSync(indexHtml, readFileSync(indexHtml, 'utf8').replace('</head>', `${THEME_BG}</head>`));
+writeFileSync(indexHtml, readFileSync(indexHtml, 'utf8').replace('</head>', `${NOINDEX}${THEME_BG}</head>`));
 
-writeFileSync(join(DEPLOY, 'vercel.json'), JSON.stringify({ rewrites: [{ source: '/(.*)', destination: '/index.html' }] }, null, 2));
+const vercelJson = {
+  rewrites: [{ source: '/(.*)', destination: '/index.html' }],
+  headers: [{ source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }],
+};
+writeFileSync(join(DEPLOY, 'vercel.json'), JSON.stringify(vercelJson, null, 2));
 run('npx -y vercel@latest deploy --prod --yes', {}, DEPLOY);
