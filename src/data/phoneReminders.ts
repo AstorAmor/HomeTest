@@ -95,16 +95,24 @@ export async function getPhoneStatus(): Promise<PhoneStatus> {
   return p === 'granted' && (await isOptedIn()) ? 'on' : 'off';
 }
 
-// Dos canales para que en Android se puedan ajustar por separado. En pantalla bloqueada se ve que
-// hay un aviso de Kuova, pero no el texto (el nombre de un medicamento es un dato de salud).
-const CHANNEL = { doses: 'tomas', reminders: 'recordatorios' } as const;
+// Dos canales para que en Android se puedan ajustar por separado.
+// - Tomas: se ven enteras con el móvil bloqueado (PUBLIC), porque el texto no dice qué medicamento es
+//   («Es la hora de tu toma», src/logic/nudges/phone.ts). Hasta el 2026-11-09 era el canal 'tomas', PRIVATE
+//   («Contenido oculto» en la pantalla bloqueada); un canal no se puede cambiar una vez creado, así que
+//   va con otro nombre y el viejo se borra para que no salgan dos en los ajustes del móvil.
+// - Recordatorios (peso, temperatura, check-in): siguen PRIVATE. La temperatura basal delata que se sigue
+//   la fertilidad; los demás, pendientes de decidir con Astor.
+const CHANNEL = { doses: 'tomas-v2', reminders: 'recordatorios' } as const;
+const OLD_CHANNELS = ['tomas'];
 let channelsReady = false;
 
 async function ensureChannels(N: NotificationsModule) {
   if (Platform.OS !== 'android' || channelsReady) return;
+  for (const id of OLD_CHANNELS) await N.deleteNotificationChannelAsync(id).catch(() => undefined);
   const common = { lockscreenVisibility: N.AndroidNotificationVisibility.PRIVATE, showBadge: false, lightColor: '#2E7D5B' };
   await N.setNotificationChannelAsync(CHANNEL.doses, {
     ...common,
+    lockscreenVisibility: N.AndroidNotificationVisibility.PUBLIC,
     name: t('Medication & supplements'),
     description: t('At the time of each dose with reminders on.'),
     importance: N.AndroidImportance.HIGH,

@@ -1377,10 +1377,10 @@ export const es: Record<string, string> = {
   'Blood pressure running high for several weeks.': 'Tensión alta durante varias semanas.',
   'Several high glucose readings over a few weeks.': 'Varias mediciones altas de glucosa en unas semanas.',
   // Recordatorios en el móvil con la app cerrada (src/logic/nudges/phone.ts, src/data/phoneReminders.ts)
-  '{name}: your {time} dose': '{name}: tu toma de las {time}',
-  'Your {time} doses': 'Tus tomas de las {time}',
-  'Mark it in Kuova when you take it.': 'Cuando la tomes, márcala en Kuova.',
-  '{names}. Mark them in Kuova when you take them.': '{names}. Cuando las tomes, márcalas en Kuova.',
+  'Time for your dose': 'Es la hora de tu toma',
+  'Time for your doses': 'Es la hora de tus tomas',
+  '{time} dose: mark it in Kuova when you take it.': 'Toma de las {time}: márcala en Kuova cuando la tomes.',
+  '{time} doses: mark them in Kuova when you take them.': 'Tomas de las {time}: márcalas en Kuova cuando las tomes.',
   'Time for your weekly weigh-in': 'Hoy toca pesarte',
   'In the morning, after the toilet and before breakfast: that way one week compares with the next.':
     'Por la mañana, después de ir al baño y antes de desayunar: así puedes comparar una semana con otra.',

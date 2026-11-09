@@ -13,6 +13,8 @@ import { NudgeContext, NudgeLogEntry, NudgePrefs, ReminderId } from './types';
 //
 // - Tomas de medicación y suplementos: a su hora, solo las que tienen el recordatorio encendido y
 //   sin silenciar. Son alarmas que pide el usuario, así que no cuentan para el máximo diario.
+//   El texto nunca dice qué medicamento es (2026-11-09, «Es la hora de tu toma»): así se puede ver
+//   con el móvil bloqueado sin enseñar un dato de salud. Al tocarlo se abre /medications.
 // - Pesarse: por la mañana, una semana después de la última pesada (WEIGH_EVERY_DAYS). Si no se
 //   pesa, se repite a la semana siguiente, y tras 4 semanas se deja de insistir.
 // - Temperatura basal: cada mañana mientras la registra, a la hora a la que suele apuntarla. Tras una
@@ -121,16 +123,15 @@ export function doseReminders(input: PhonePlanInput, days = PHONE_REMINDERS.days
     for (const d of due) groups.set(d.at.getTime(), [...(groups.get(d.at.getTime()) ?? []), d]);
     for (const list of groups.values()) {
       const time = hhmm(list[0].at);
-      const names = [...new Set(list.map((d) => d.name))];
       out.push(
         make({
           kind: 'dose',
           at: list[0].at,
-          title: list.length === 1 ? t('{name}: your {time} dose', { name: names[0], time }) : t('Your {time} doses', { time }),
+          title: list.length === 1 ? t('Time for your dose') : t('Time for your doses'),
           body:
             list.length === 1
-              ? t('Mark it in Kuova when you take it.')
-              : t('{names}. Mark them in Kuova when you take them.', { names: names.join(', ') }),
+              ? t('{time} dose: mark it in Kuova when you take it.', { time })
+              : t('{time} doses: mark them in Kuova when you take them.', { time }),
           route: '/medications',
           medIds: [...new Set(list.map((d) => d.medId))],
         })

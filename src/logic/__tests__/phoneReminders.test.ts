@@ -129,9 +129,24 @@ describe('tomas de medicación y suplementos', () => {
       input(ctxAt('2026-10-20T10:00:00', { medications: [med({ schedule: { type: 'times', times: ['21:00'] } }), med({ id: 'mg', name: 'Magnesio', schedule: { type: 'times', times: ['21:00'] } })] }))
     );
     expect(r[0].medIds).toEqual(['vitd', 'mg']);
-    expect(r[0].title).toBe('Your 21:00 doses');
-    expect(r[0].body).toContain('Vitamina D, Magnesio');
+    expect(r[0].title).toBe('Time for your doses');
+    expect(r[0].body).toBe('21:00 doses: mark them in Kuova when you take them.');
     expect(r).toHaveLength(7);
+  });
+
+  it('el aviso nunca dice qué medicamento es: se ve con el móvil bloqueado', () => {
+    const meds = [
+      med({ schedule: { type: 'times', times: ['09:00', '21:00'] } }),
+      med({ id: 'mg', name: 'Magnesio', schedule: { type: 'times', times: ['21:00'] } }),
+    ];
+    const r = doseReminders(input(ctxAt('2026-10-20T10:00:00', { medications: meds })));
+    expect(r.length).toBeGreaterThan(0);
+    for (const x of r) {
+      for (const name of ['Vitamina D', 'Magnesio']) expect(`${x.title} ${x.body}`).not.toContain(name);
+    }
+    const single = r.find((x) => x.medIds?.length === 1)!;
+    expect(single.title).toBe('Time for your dose');
+    expect(single.body).toBe('09:00 dose: mark it in Kuova when you take it.');
   });
 });
 
@@ -285,8 +300,11 @@ describe('ids estables y reprogramar', () => {
     const a = planPhoneReminders(input(ctx));
     const b = planPhoneReminders(input({ ...ctx, now: at('2026-10-20T10:05:00') }));
     expect(diffPending(a.map((x) => x.id), b)).toEqual({ cancel: [], add: [] });
+    // El nombre no sale en el aviso: cambiarlo no reprograma nada; otro medicamento, sí
     const renamed = planPhoneReminders(input({ ...ctx, medications: [med({ name: 'Vitamina D3' })] }));
-    expect(diffPending(a.map((x) => x.id), renamed).cancel).toHaveLength(a.length);
+    expect(diffPending(a.map((x) => x.id), renamed)).toEqual({ cancel: [], add: [] });
+    const other = planPhoneReminders(input({ ...ctx, medications: [med({ id: 'otra', name: 'Vitamina D' })] }));
+    expect(diffPending(a.map((x) => x.id), other).cancel).toHaveLength(a.length);
     expect(a.every((x) => x.id.startsWith(PHONE_ID_PREFIX))).toBe(true);
   });
 
@@ -333,10 +351,10 @@ describe('historial de lo que ya saltó', () => {
 describe('textos', () => {
   // Las claves nuevas tienen su español y no diagnostican ni hablan de dosis
   const KEYS = [
-    '{name}: your {time} dose',
-    'Your {time} doses',
-    'Mark it in Kuova when you take it.',
-    '{names}. Mark them in Kuova when you take them.',
+    'Time for your dose',
+    'Time for your doses',
+    '{time} dose: mark it in Kuova when you take it.',
+    '{time} doses: mark them in Kuova when you take them.',
     'Time for your weekly weigh-in',
     'In the morning, after the toilet and before breakfast: that way one week compares with the next.',
     'At the time of each dose with reminders on.',
