@@ -1938,4 +1938,13 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   `?intro=1`. Es JS (llega por OTA). La K de la pantalla nativa (`splash-icon.png`, `python scripts/make-icons.py
   splash`) también es metalizada, pero esa solo cambia con una compilación nueva. No se puso el nombre en la pantalla
   nativa porque Android 12+ recorta lo que no quepa en un círculo.
+- **Avisos del móvil** (Astor, Xiaomi: «a veces sí, a veces no»; c7a7aaf, a73aab7, 5e5888f, todo JS/OTA): las tomas dicen
+  «Es la hora de tu toma» sin el medicamento y peso/temperatura «Hora de apuntar tus datos en Kuova»; los dos canales
+  pasan a PUBLIC con id nuevo (`tomas-v2`, `recordatorios-v2`, se borran los viejos) para que salgan con el móvil
+  bloqueado; el test «con el móvil bloqueado» vigila que ningún aviso diga un dato de salud. En Ajustes →
+  Notificaciones (Android, avisos activados) el bloque «Para que los avisos lleguen» (`DeliveryHelp`,
+  `src/logic/deliveryHelp.ts`): botones a «Alarmas y recordatorios», Batería y notificaciones de Kuova
+  (`Linking.sendIntent`), pasos a mano para Xiaomi/Samsung y un aviso de prueba en 1 minuto. Pendiente para el lote
+  nativo: pedir/comprobar la alarma exacta desde la app y un servicio en primer plano para el descanso del
+  entrenamiento. Para publicarlo hay que juntarlo en `metas-fase1` (se aplica limpio) y OTA con el OK de Astor.
 
