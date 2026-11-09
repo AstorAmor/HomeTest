@@ -5,6 +5,7 @@
 // 3. Web de la app (https://hometest-app.vercel.app) y web de demo (https://hometest-demo.vercel.app).
 // Opciones: --skip-app, --skip-web (por si solo quieres publicar una parte).
 import { execSync } from "node:child_process";
+import { PROD_REF, easSupabaseRef, localSupabaseRef } from "./supabase-target.mjs";
 
 const args = process.argv.slice(2);
 const skipApp = args.includes("--skip-app");
@@ -25,6 +26,21 @@ if (branch !== "master") fail(`Estás en la rama "${branch}". Publica desde mast
 sh("git fetch -q origin");
 if (sh("git rev-parse HEAD") !== sh("git rev-parse origin/master"))
   fail("master no coincide con GitHub. Haz git push (o git pull) antes de publicar.");
+
+// Nunca con la base de pruebas: una OTA lleva dentro la base a la que apunta y cambiaría de base a todos
+// los móviles del canal (ver docs/entorno-de-pruebas.md)
+if (process.env.APP_VARIANT)
+  fail(`APP_VARIANT=${process.env.APP_VARIANT} está puesto: esto publica «Kuova» (producción). Para «Kuova Pruebas»: npm run release:staging`);
+if (!skipApp) {
+  const ref = easSupabaseRef("preview");
+  if (ref !== PROD_REF)
+    fail(`El entorno preview de EAS apunta a ${ref ?? "ninguna base"} y no a producción (${PROD_REF}). No publico.`);
+}
+if (!skipWeb) {
+  const ref = localSupabaseRef();
+  if (ref !== PROD_REF)
+    fail(`EXPO_PUBLIC_SUPABASE_URL (.env.local o el entorno) apunta a ${ref ?? "ninguna base"} y no a producción (${PROD_REF}). No publico la web.`);
+}
 
 const commit = sh("git rev-parse --short HEAD");
 console.log(`\nPublicando ${commit}: ${message}\n`);

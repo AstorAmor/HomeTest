@@ -81,4 +81,4 @@ export const adminClient = () =>
 // Tras pagar, Revolut vuelve a checkout-return, que redirige a la app. Solo se permiten
 // esquemas de la app (instalada o Expo Go) y localhost en desarrollo: nada de webs externas.
 export const isAppReturnUrl = (url: string) =>
-  /^(apptestsmedicos|exp|exps):\/\/[^\s]+$/.test(url) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/[^\s]*$/.test(url);
+  /^(apptestsmedicos|kuovapruebas|exp|exps):\/\/[^\s]+$/.test(url) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/[^\s]*$/.test(url);

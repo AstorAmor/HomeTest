@@ -13,6 +13,8 @@ import {
   ProfessionalAccount,
   roleLabel,
 } from '@/data/sharing';
+import { adminResetMfa } from '@/data/mfa';
+import { confirmAsk } from '@/components/dev/confirmAsk';
 
 // Panel de Kuova: verificar profesionales y aprobar/rechazar su tarifa.
 // Solo funciona para admins (la base de datos lo comprueba en cada llamada).
@@ -21,6 +23,7 @@ export const AdminReviewScreen = () => {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [done, setDone] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -40,6 +43,32 @@ export const AdminReviewScreen = () => {
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save the review');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // Móvil perdido: quitar su doble factor (Edge Function admin-mfa-reset). El motivo es la nota de la tarjeta
+  // y queda en mfa_resets. Antes, comprobar que es quien dice ser (docs/doble-factor.md).
+  const resetMfa = async (p: ProfessionalAccount) => {
+    const reason = notes[p.id]?.trim() ?? '';
+    if (reason.length < 10) {
+      setError('Write the reason in the note field (at least 10 characters): it is recorded.');
+      return;
+    }
+    const ok = await confirmAsk(
+      'Remove two-step verification?',
+      `${p.displayName} will sign in with the password only and add a new authenticator app. Only after checking it is them (video call with ID and licence number).`,
+      'Remove'
+    );
+    if (!ok) return;
+    setBusyId(p.id);
+    setError('');
+    try {
+      const removed = await adminResetMfa(p.id, reason);
+      setDone((prev) => ({ ...prev, [p.id]: `Two-step verification removed (${removed}). Recorded with your reason.` }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not remove it');
     } finally {
       setBusyId(null);
     }
@@ -137,8 +166,12 @@ export const AdminReviewScreen = () => {
                     </TouchableOpacity>
                   </>
                 )}
+                <TouchableOpacity style={[styles.action, styles.actionNeutral]} disabled={busy} onPress={() => resetMfa(p)}>
+                  <Text style={styles.actionText}>Lost phone: remove 2-step</Text>
+                </TouchableOpacity>
                 {busy ? <ActivityIndicator color={Colors.accent} /> : null}
               </View>
+              {done[p.id] ? <Text style={[styles.detail, { color: Colors.ok }]}>{done[p.id]}</Text> : null}
             </View>
           );
         })}

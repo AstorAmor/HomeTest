@@ -68,6 +68,7 @@
     "deploy:web": "node scripts/deploy-web.mjs",
     "deploy:demo": "node scripts/deploy-web.mjs demo",
     "release": "node scripts/release.mjs",
+    "release:staging": "node scripts/release-staging.mjs",
     "simulate": "node scripts/simulate.mjs",
     "test": "vitest run"
   },

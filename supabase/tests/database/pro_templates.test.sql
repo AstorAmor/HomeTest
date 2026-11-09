@@ -15,7 +15,7 @@ insert into public.professionals (id, display_name, role, verified_at) values
 set local role authenticated;
 
 -- Dra. T crea una plantilla
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c2","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c2","role":"authenticated","aal":"aal2"}';
 select lives_ok(
   $$ insert into public.pro_templates (id, title, topic, body)
      values ('eeeeeeee-0000-0000-0000-000000000001', 'Ferritina baja', 'energy', 'Hola [name], tu ferritina es [value]...') $$,
@@ -27,13 +27,13 @@ select throws_ok(
   '42501', null, 'no puede crear plantillas a nombre de otro');
 
 -- Dr. U no ve ni toca las de T
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.pro_templates), 0::bigint, 'otro profesional no ve las plantillas de T');
 update public.pro_templates set body = 'cambiado' where id = 'eeeeeeee-0000-0000-0000-000000000001';
 delete from public.pro_templates where id = 'eeeeeeee-0000-0000-0000-000000000001';
 
 -- Un paciente no puede crear plantillas ni ver ninguna
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
 select throws_ok(
   $$ insert into public.pro_templates (title, body) values ('Paciente', 'x') $$,
   '42501', null, 'un paciente no puede crear plantillas');

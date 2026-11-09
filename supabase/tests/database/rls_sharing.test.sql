@@ -27,7 +27,7 @@ select is(
 
 -- ---------------------------------------------------------------- Paciente A
 set local role authenticated;
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
 
 insert into public.glucose_readings (id, value, unit, measured_at) values ('g-a', 95, 'mg/dL', now());
 insert into public.blood_pressure_readings (id, systolic, diastolic, measured_at) values ('bp-a', 120, 80, now());
@@ -38,7 +38,7 @@ select throws_ok(
   '42501', null, 'A no puede crear filas a nombre de B');
 
 -- ---------------------------------------------------------------- Paciente B
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated","aal":"aal2"}';
 insert into public.glucose_readings (id, value, unit, measured_at) values ('g-b', 110, 'mg/dL', now());
 
 select is((select count(*) from public.glucose_readings), 1::bigint, 'B solo ve su propia glucosa');
@@ -47,7 +47,7 @@ select is(
   0::bigint, 'B no ve el perfil de A');
 
 -- ---------------------------------------------------------------- Profesional P, sin permiso
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.glucose_readings), 0::bigint, 'P sin permiso no ve datos de nadie');
 
 select throws_ok(
@@ -55,7 +55,7 @@ select throws_ok(
   '42501', null, 'un profesional no puede marcarse como verificado');
 
 -- ---------------------------------------------------------------- A comparte glucosa con P y con Q
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
 insert into public.data_shares (id, professional_id, scopes) values
   ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-0000000000c1', array['glucose']),
   ('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-0000000000d1', array['glucose']);
@@ -69,7 +69,7 @@ select throws_ok(
   '23514', null, 'no se puede compartir una categoría que no existe');
 
 -- ---------------------------------------------------------------- P con permiso de glucosa
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal2"}';
 select is(
   (select count(*) from public.glucose_readings where user_id = '00000000-0000-0000-0000-0000000000a1'),
   1::bigint, 'P ve la glucosa que A le comparte');
@@ -86,12 +86,12 @@ select is((select count(*) from public.my_shared_patients()), 1::bigint,
   'P ve a A en su lista de pacientes (1 permiso activo)');
 
 -- ---------------------------------------------------------------- Q sin verificar
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.glucose_readings), 0::bigint,
   'un profesional sin verificar no ve nada aunque tenga permiso');
 
 -- ---------------------------------------------------------------- Ficha y tarifa del profesional
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal2"}';
 update public.professionals
   set hourly_rate_requested_eur = 90, city = 'Madrid', languages = array['Spanish', 'English']
   where id = '00000000-0000-0000-0000-0000000000c1';
@@ -104,25 +104,25 @@ select throws_ok(
   $$ select public.admin_review_professional('00000000-0000-0000-0000-0000000000c1', null, 'approve', null) $$,
   '42501', null, 'un profesional no puede usar el panel de admin');
 
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated","aal":"aal2"}';
 select throws_ok(
   $$ select hourly_rate_requested_eur from public.professionals $$,
   '42501', null, 'un paciente no ve la tarifa propuesta (solo la aprobada)');
 select is((select count(*) from public.professionals), 1::bigint,
   'el directorio solo muestra profesionales verificados');
 
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.admin_list_professionals()), 2::bigint,
   'la admin ve a todos los profesionales, verificados o no');
 select public.admin_review_professional('00000000-0000-0000-0000-0000000000c1', null, 'approve', 'OK');
 
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated","aal":"aal2"}';
 select is((select hourly_rate_eur from public.professionals where id = '00000000-0000-0000-0000-0000000000c1'),
   90::numeric, 'tras la aprobación, los pacientes ven la tarifa aprobada');
 select is((select public.is_admin()), false, 'un paciente normal no es admin');
 
 -- ---------------------------------------------------------------- A gestiona sus permisos
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
 select is((select value from public.glucose_readings where id = 'g-a'), 95::numeric,
   'P no pudo modificar la glucosa de A (solo lectura)');
 select throws_ok(
@@ -135,13 +135,13 @@ select throws_ok(
 update public.data_shares set revoked_at = now() where id = '11111111-1111-1111-1111-111111111111';
 
 -- ---------------------------------------------------------------- P tras la revocación
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.glucose_readings), 0::bigint, 'tras revocar, P ya no ve la glucosa de A');
 select is((select count(*) from public.data_shares where revoked_at is not null), 1::bigint,
   'el permiso revocado sigue existiendo como historial');
 
 -- ---------------------------------------------------------------- B no ve permisos ajenos
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.data_shares), 0::bigint, 'B no ve los permisos de A');
 
 -- ---------------------------------------------------------------- Anónimo

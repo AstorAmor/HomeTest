@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -20,18 +20,30 @@ import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
 import { isPublicDemo } from '@/lib/supabase';
 import { t } from '@/i18n';
 import { PasswordInput } from '@/components/PasswordInput';
+import { isStagingApp, isTestDatabase } from '@/lib/appVariant';
+import { cleanTotpCode, isTotpCodeComplete } from '@/logic/mfa';
+import { PASSWORD_RULES, isPasswordStrongEnough, passwordRuleFromAuthError, passwordRuleMet, type PasswordRule } from '@/logic/password';
+
+// Reglas de la contraseña (las mismas que Supabase: config.toml y logic/password.ts)
+const RULE_LABEL: Record<PasswordRule, string> = {
+  length: 'At least 8 characters',
+  letter: 'One letter (a-z)',
+  digit: 'One number',
+};
 
 // Los errores de Supabase llegan en inglés: los más comunes, en el idioma de la app
-const authMessage = (m: string) =>
-  /invalid login credentials/i.test(m)
-    ? t('Wrong email or password.')
-    : /email not confirmed/i.test(m)
-      ? t('Confirm your email first: open the message we sent you.')
-      : /already registered|already exists/i.test(m)
-        ? t('There is already an account with this email. Sign in instead.')
-        : /password should be at least/i.test(m)
-          ? t('The password needs at least 6 characters.')
-          : m;
+const authMessage = (m: string) => {
+  if (/invalid login credentials/i.test(m)) return t('Wrong email or password.');
+  if (/email not confirmed/i.test(m)) return t('Confirm your email first: open the message we sent you.');
+  if (/already registered|already exists/i.test(m)) return t('There is already an account with this email. Sign in instead.');
+  if (passwordRuleFromAuthError(m)) return t('The password needs at least 8 characters, with letters (a-z) and numbers.');
+  if (/only request this after|rate limit|too many/i.test(m)) return t('Wait a minute before asking for another email.');
+  if (/token has expired|otp.*(invalid|expired)|invalid.*otp/i.test(m))
+    return t('That code is not right or has expired. Check the latest email or ask for a new one.');
+  return m;
+};
+
+const RESEND_SECONDS = 60;
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -49,8 +61,51 @@ export const LoginScreen = () => {
   const [specialty, setSpecialty] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
 
-  const { login, signup, authMode, setDemoMode } = useAuth();
+  const { login, signup, authMode, setDemoMode, verifySignupCode, resendSignupEmail } = useAuth();
   const isProfessional = proAccess && authMode === 'supabase';
+  // «Revisa tu correo»: código de 6 cifras del correo y reenvío (con espera de 1 minuto, como Supabase)
+  const [code, setCode] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+  const [info, setInfo] = useState('');
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
+  const showConfirm = (to: string) => {
+    setSentTo(to);
+    setCode('');
+    setInfo('');
+    setError('');
+  };
+
+  const confirmCode = async () => {
+    if (!sentTo) return;
+    setError('');
+    setLoading(true);
+    try {
+      // Con el código bueno queda la sesión iniciada: AuthContext lleva a la app
+      await verifySignupCode(sentTo, code);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resend = async () => {
+    if (!sentTo || cooldown > 0) return;
+    setError('');
+    setInfo('');
+    try {
+      await resendSignupEmail(sentTo);
+      setInfo(t('Sent again. It can take a minute; look in spam or promotions too.'));
+      setCooldown(RESEND_SECONDS);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+    }
+  };
 
   const handleSubmit = async () => {
     setError('');
@@ -62,6 +117,11 @@ export const LoginScreen = () => {
       if (isSignUp) {
         if (!nombre.trim()) {
           setError(t('Please enter your name'));
+          setLoading(false);
+          return;
+        }
+        if (authMode === 'supabase' && !isPasswordStrongEnough(password)) {
+          setError(t('The password needs at least 8 characters, with letters (a-z) and numbers.'));
           setLoading(false);
           return;
         }
@@ -79,23 +139,31 @@ export const LoginScreen = () => {
             : undefined
         );
         if (result === 'confirm_email') {
-          // Cuenta creada: a iniciar sesión cuando confirme el correo
-          setSentTo(email.trim());
+          // Cuenta creada: falta confirmar el correo (código de 6 cifras o el botón del correo)
           setIsSignUp(false);
           setPassword('');
           setPassword2('');
+          showConfirm(email.trim());
+          setCooldown(RESEND_SECONDS);
         }
       } else {
         await login(email, password);
       }
     } catch (err) {
-      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+      const message = err instanceof Error ? err.message : '';
+      // Cuenta sin confirmar: directamente a «Revisa tu correo», con el reenvío a mano
+      if (/email not confirmed/i.test(message)) {
+        showConfirm(email.trim());
+        return;
+      }
+      setError(message ? authMessage(message) : t('Authentication error'));
     } finally {
       setLoading(false);
     }
   };
 
   const isFormValid = email && password && (!isSignUp || (nombre && password2));
+  const showRules = isSignUp && authMode === 'supabase';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -111,6 +179,12 @@ export const LoginScreen = () => {
             </View>
             <Text style={styles.health}>{t('HEALTH')}</Text>
             <Text style={styles.subtitle}>{proAccess ? t('Professional access') : t('Know more. Live better.')}</Text>
+            {(isStagingApp || isTestDatabase) && (
+              <View style={styles.testBadge}>
+                <Ionicons name="flask-outline" size={14} color="#FFFFFF" />
+                <Text style={styles.testBadgeText}>{t('TEST ENVIRONMENT · invented data only')}</Text>
+              </View>
+            )}
             {proAccess && (
               <Text style={styles.proIntro}>
                 {t('For doctors, nutritionists and other health professionals: see what your patients choose to share with you.')}
@@ -118,6 +192,58 @@ export const LoginScreen = () => {
             )}
           </View>
 
+          {sentTo ? (
+            <View style={styles.form}>
+              <View style={styles.sent}>
+                <Ionicons name="mail-outline" size={20} color={Colors.ok} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sentTitle}>{t('Check your email')}</Text>
+                  <Text style={styles.sentText}>
+                    {t('We have sent an email to {email}. Type the 6-digit code from the email here, or tap «Confirm my email» in it and then sign in.', { email: sentTo })}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.label}>{t('Code from the email')}</Text>
+              <TextInput
+                style={[styles.input, styles.codeInput]}
+                value={code}
+                onChangeText={(v) => setCode(cleanTotpCode(v))}
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                textContentType="oneTimeCode"
+                placeholder="123456"
+                placeholderTextColor={Colors.textMuted}
+                maxLength={7}
+                editable={!loading}
+                onSubmitEditing={() => isTotpCodeComplete(code) && confirmCode()}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {info ? <Text style={styles.info}>{info}</Text> : null}
+              <TouchableOpacity
+                style={[styles.button, (!isTotpCodeComplete(code) || loading) && styles.buttonDisabled]}
+                onPress={confirmCode}
+                disabled={!isTotpCodeComplete(code) || loading}
+              >
+                {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Confirm')}</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={resend} disabled={cooldown > 0}>
+                <Text style={[styles.toggleText, cooldown > 0 && styles.toggleTextWaiting]}>
+                  {cooldown > 0 ? t('You can ask for another email in {s} s.', { s: cooldown }) : t('Send the email again')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setEmail(sentTo);
+                  setSentTo(null);
+                  setError('');
+                  setInfo('');
+                }}
+              >
+                <Text style={styles.toggleText}>{t('I have confirmed it: sign in')}</Text>
+              </TouchableOpacity>
+              <Text style={styles.proNote}>{t('Not arriving? Look in spam or promotions.')}</Text>
+            </View>
+          ) : (
           <View style={styles.form}>
             {isSignUp && (
               <>
@@ -180,6 +306,8 @@ export const LoginScreen = () => {
               placeholderTextColor={Colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoComplete="email"
+              textContentType={isSignUp ? 'emailAddress' : 'username'}
               value={email}
               onChangeText={setEmail}
               editable={!loading}
@@ -194,7 +322,21 @@ export const LoginScreen = () => {
               onChangeText={setPassword}
               editable={!loading}
               textContentType={isSignUp ? 'newPassword' : 'password'}
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
             />
+            {showRules && (
+              <View style={styles.rules}>
+                {PASSWORD_RULES.map((r) => {
+                  const ok = passwordRuleMet(r, password);
+                  return (
+                    <View key={r} style={styles.rule}>
+                      <Ionicons name={ok ? 'checkmark-circle' : 'ellipse-outline'} size={15} color={ok ? Colors.ok : Colors.textMuted} />
+                      <Text style={[styles.ruleText, ok && styles.ruleTextOk]}>{t(RULE_LABEL[r])}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
             {isSignUp && (
               <>
                 <Text style={styles.label}>{t('Repeat your password')}</Text>
@@ -206,18 +348,10 @@ export const LoginScreen = () => {
                   onChangeText={setPassword2}
                   editable={!loading}
                   textContentType="newPassword"
+                  autoComplete="new-password"
                 />
               </>
             )}
-
-            {sentTo && !isSignUp ? (
-              <View style={styles.sent}>
-                <Ionicons name="mail-outline" size={18} color={Colors.ok} />
-                <Text style={styles.sentText}>
-                  {t('We have sent an email to {email}. Open it to confirm your account, then sign in here.', { email: sentTo })}
-                </Text>
-              </View>
-            ) : null}
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -267,6 +401,7 @@ export const LoginScreen = () => {
               </TouchableOpacity>
             )}
           </View>
+          )}
 
           <View style={[styles.demoHint, authMode !== 'demo' && styles.privacyHint]}>
             <Ionicons
@@ -332,6 +467,25 @@ const styles = StyleSheet.create({
   },
   sent: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: withAlpha(Colors.ok, 0.12), borderRadius: 10, padding: 12, marginTop: 14 },
   sentText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
+  sentTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  codeInput: { fontSize: 22, letterSpacing: 8, textAlign: 'center' },
+  info: { color: Colors.ok, fontSize: 13, marginTop: 10, paddingHorizontal: 8, lineHeight: 19 },
+  rules: { marginTop: 8, gap: 4, paddingHorizontal: 4 },
+  rule: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  ruleText: { color: Colors.textMuted, fontSize: 13 },
+  ruleTextOk: { color: Colors.textPrimary },
+  toggleTextWaiting: { color: Colors.textMuted, textDecorationLine: 'none' },
+  testBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: '#D6621E',
+  },
+  testBadgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,

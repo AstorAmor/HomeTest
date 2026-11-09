@@ -90,6 +90,14 @@ export const SettingsScreen = () => {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
               </TouchableOpacity>
+              <TouchableOpacity style={[styles.row, styles.divider]} onPress={() => router.push('/security' as any)}>
+                <Ionicons name="key-outline" size={22} color={Colors.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowTitle}>{t('Two-step verification')}</Text>
+                  <Text style={styles.rowSub}>{t('A code from an authenticator app when you sign in')}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              </TouchableOpacity>
               {/* Cuenta real ↔ de prueba y casos de prueba: solo probadores (admins y sus «+alias») */}
               {isTester && (
               <View style={[styles.row, styles.divider]}>

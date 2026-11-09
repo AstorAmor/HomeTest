@@ -14,6 +14,8 @@ import {
   registerAsProfessional,
 } from '@/data/sharing';
 import { amISupportAgent } from '@/data/support';
+import { currentMfaGate } from '@/data/mfa';
+import { cleanTotpCode, type MfaGate } from '@/logic/mfa';
 
 export interface ProfessionalSignup {
   role: ProfessionalRole;
@@ -47,9 +49,16 @@ interface AuthContextType {
   isSupportAgent: boolean;
   // Cuenta real: sin datos de ejemplo ni selector "developer" (src/data/dataMode.ts)
   realAccount: boolean;
+  // Doble factor pendiente: 'enroll' (su cuenta lo exige y no tiene app de autenticación) o 'verify' (falta
+  // el código de esta sesión). Mientras tanto la base de datos no le enseña nada (ver logic/mfa.ts)
+  mfaGate: MfaGate;
+  refreshMfa: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   // 'confirm_email' = cuenta creada, falta abrir el correo de confirmación para poder entrar
   signup: (email: string, password: string, nombre: string, professional?: ProfessionalSignup) => Promise<'signed_in' | 'confirm_email'>;
+  // Código de 6 cifras del correo «Confirma tu cuenta»: confirma el email y deja la sesión iniciada
+  verifySignupCode: (email: string, code: string) => Promise<void>;
+  resendSignupEmail: (email: string) => Promise<void>;
   // Alias con el que te saluda la app ("¡Hola, Astor!"). Sin alias, la parte del email antes de la @
   updateDisplayName: (nombre: string) => Promise<void>;
   logout: () => void;
@@ -107,8 +116,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isTester, setIsTester] = useState(false);
   const [isSupportAgent, setIsSupportAgent] = useState(false);
   const [realAccount, setRealAccount] = useState(false);
+  const [mfaGate, setMfaGate] = useState<MfaGate>(null);
   // Durante el alta de un profesional, la ficha aún no existe: no consultarla en paralelo
   const creatingProfessional = useRef(false);
+
+  const refreshMfa = async () => {
+    try {
+      setMfaGate(await currentMfaGate());
+    } catch {
+      setMfaGate(null);
+    }
+  };
 
   const refreshProfessional = async () => {
     try {
@@ -143,8 +161,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAdmin(false);
         setIsTester(false);
         setIsSupportAgent(false);
+        setMfaGate(null);
         resetDataMode();
       } else {
+        // Primero el doble factor: sin él, un admin o un profesional no lee nada de lo de abajo
+        await refreshMfa();
         if (!creatingProfessional.current) {
           await finishPendingProfessional(session);
           await refreshProfessional();
@@ -214,6 +235,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return 'signed_in';
   };
 
+  const verifySignupCode = async (email: string, code: string) => {
+    if (!supabase) return;
+    const token = cleanTotpCode(code);
+    // 'email' es el tipo actual para el código del correo de alta; 'signup', el antiguo (por si acaso)
+    let { error } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: 'email' });
+    if (error) ({ error } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: 'signup' }));
+    if (error) throw new Error(error.message);
+  };
+
+  const resendSignupEmail = async (email: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+    if (error) throw new Error(error.message);
+  };
+
   const updateDisplayName = async (nombre: string) => {
     const name = nombre.trim();
     if (!name) return;
@@ -240,6 +276,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsTester(false);
       setIsSupportAgent(false);
       setRealAccount(false);
+      setMfaGate(null);
       resetDataMode();
       supabase.auth.signOut().catch(() => undefined);
       return;
@@ -262,8 +299,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isTester,
         isSupportAgent,
         realAccount,
+        mfaGate,
+        refreshMfa,
         login,
         signup,
+        verifySignupCode,
+        resendSignupEmail,
         updateDisplayName,
         logout,
       }}

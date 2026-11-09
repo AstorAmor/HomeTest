@@ -99,6 +99,12 @@ export const ProSettingsScreen = () => {
           <Ionicons name="create-outline" size={16} color={Colors.accent} />
           <Text style={styles.linkText}>{t('Edit public profile: photo, specialty, licence no., bio, languages, rate')}</Text>
         </TouchableOpacity>
+      ) : null}
+      {!demo ? (
+        <TouchableOpacity style={styles.linkBtn} onPress={() => router.push('/security' as any)}>
+          <Ionicons name="key-outline" size={16} color={Colors.accent} />
+          <Text style={styles.linkText}>{t('Two-step verification: your authenticator apps')}</Text>
+        </TouchableOpacity>
       ) : (
         <Text style={styles.muted}>{t("In the demo the public profile can't be edited.")}</Text>
       )}
