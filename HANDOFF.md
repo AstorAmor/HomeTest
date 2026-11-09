@@ -1931,7 +1931,10 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   por un admin con registro (`admin-mfa-reset`, `mfa_resets`). Detalle y orden en producción: `docs/doble-factor.md`.
 - **Probado en la base de pruebas**: 109/109 tests SQL (30 nuevos), `node scripts/staging-auth-check.mjs` 23/23 con
   sesiones reales, la web en local contra pruebas (aviso «entorno de pruebas», lista de la contraseña). 474 tests de la
-  app, tsc limpio. **Sin probar en un móvil** (falta el APK) ni el correo real (falta Brevo).
+  app, tsc limpio. **Sin probar en un móvil** ni el correo real (falta Brevo).
+- **Variables de EAS separadas** (2026-11-09, OK de Astor): `development` → base de pruebas; preview y production
+  → producción, sin cambios. `GEMINI_API_KEY` copiada a pruebas (`node scripts/staging-ai-check.mjs`: OK). Primer
+  APK de «Kuova Pruebas»: build `16edc92f` (EAS), para instalar en el móvil de Astor.
 - **Entrada al abrir la app** (petición de Astor: «me queda un poco triste»): `src/components/LaunchIntro.tsx`, montada en
   `index.js`. Tras la pantalla nativa, la K dorada metalizada con un destello y «KUOVA HEALTH» debajo, ~1,5 s, solo en
   frío, se salta con un toque, sin movimiento con «reducir movimiento», no tras cambiar el tema; en la web solo con
