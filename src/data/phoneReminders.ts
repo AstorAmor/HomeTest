@@ -20,6 +20,7 @@ import {
   reminderKindLabel,
   resolvedPresented,
 } from '@/logic/nudges/phone';
+import type { DeliverySetting } from '@/logic/deliveryHelp';
 
 // Recordatorios del móvil con la app cerrada: notificaciones locales programadas con
 // expo-notifications (sin servidor ni push). Qué se programa lo decide src/logic/nudges/phone.ts;
@@ -375,4 +376,51 @@ export function listenToReminderTaps(open: (route: string) => void): () => void 
     live = false;
     sub.remove();
   };
+}
+
+// --- «Para que los avisos lleguen» (Ajustes → Notificaciones, Android) ---------------------------
+// Botones a los ajustes del sistema que deciden si un aviso sale a su hora (src/logic/deliveryHelp.ts).
+// Linking.sendIntent viene con React Native: no hace falta un APK nuevo. Si el móvil no tiene esa
+// pantalla, se abre la ficha de Kuova en los ajustes.
+
+const SETTINGS_INTENT: Record<DeliverySetting, string> = {
+  exact_alarms: 'android.settings.REQUEST_SCHEDULE_EXACT_ALARM', // la lista de «Alarmas y recordatorios»
+  battery: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+  lock_screen: 'android.settings.APP_NOTIFICATION_SETTINGS',
+};
+
+const appPackage = () => requireOptionalNativeModule<{ applicationId?: string | null }>('ExpoApplication')?.applicationId ?? null;
+
+export async function openDeliverySetting(setting: DeliverySetting): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  const pkg = appPackage();
+  const extras = setting === 'lock_screen' && pkg ? [{ key: 'android.provider.extra.APP_PACKAGE', value: pkg }] : undefined;
+  try {
+    await Linking.sendIntent(SETTINGS_INTENT[setting], extras);
+  } catch {
+    await Linking.openSettings().catch(() => undefined);
+  }
+}
+
+// Un aviso de prueba dentro de un minuto, por el canal de las tomas (importancia alta, sonido y
+// vibración). Su identificador no empieza por PHONE_ID_PREFIX: si no, la próxima sincronización lo
+// borraría por no estar en el plan.
+export type TestReminderResult = 'scheduled' | 'no_permission' | 'unsupported';
+
+export async function sendTestReminder(): Promise<TestReminderResult> {
+  const N = loadNotifications();
+  if (!N) return 'unsupported';
+  await ensureChannels(N);
+  if (toPermission(N, await N.getPermissionsAsync()) !== 'granted') return 'no_permission';
+  await N.scheduleNotificationAsync({
+    identifier: `prueba-${Date.now()}`,
+    content: {
+      title: t('Kuova test notification'),
+      body: t('If you can see this with your phone locked, your reminders are getting through.'),
+      sound: 'default',
+      color: '#2E7D5B',
+    },
+    trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: new Date(Date.now() + 60_000), channelId: CHANNEL.doses },
+  });
+  return 'scheduled';
 }

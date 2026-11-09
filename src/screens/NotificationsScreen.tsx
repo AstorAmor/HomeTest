@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
+import { DeliveryHelp } from '@/components/DeliveryHelp';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -204,6 +205,7 @@ export const NotificationsScreen = () => {
             )}
           </View>
         )}
+        {phone.status === 'on' && <DeliveryHelp />}
 
         {sim && (
           <TouchableOpacity style={styles.simBanner} onPress={() => router.push('/simulation')} activeOpacity={0.85}>

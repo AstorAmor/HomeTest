@@ -1384,6 +1384,32 @@ export const es: Record<string, string> = {
   'Time to log your data in Kuova': 'Hora de apuntar tus datos en Kuova',
   'It only takes a moment.': 'Solo te llevará un momento.',
   'To log your data, and the check-in.': 'Para apuntar tus datos y el check-in.',
+  // «Para que los avisos lleguen» (Ajustes → Notificaciones, Android), 2026-11-09
+  'For your reminders to arrive': 'Para que los avisos lleguen',
+  'Some phones close Kuova in the background or delay its notifications to save battery. Check this once:':
+    'Algunos móviles cierran Kuova en segundo plano o retrasan sus avisos para ahorrar batería. Revísalo una vez:',
+  'Alarms & reminders': 'Alarmas y recordatorios',
+  'So the workout rest and your doses ring on time.': 'Para que el descanso del entrenamiento y tus tomas suenen a su hora.',
+  Battery: 'Batería',
+  'Find Kuova and choose «Unrestricted» or «Don’t optimise».': 'Busca Kuova y elige «Sin restricciones» o «No optimizar».',
+  'Lock screen': 'Pantalla de bloqueo',
+  'In Kuova’s notifications, allow them on the lock screen.': 'En las notificaciones de Kuova, permite que salgan en la pantalla de bloqueo.',
+  'On Xiaomi, Redmi and POCO, also in Kuova’s settings:': 'En Xiaomi, Redmi y POCO, además, en los ajustes de Kuova:',
+  'On Samsung, also in Kuova’s settings:': 'En Samsung, además, en los ajustes de Kuova:',
+  'Autostart: on.': 'Inicio automático: activado.',
+  'Battery saver: No restrictions.': 'Ahorro de batería: Sin restricciones.',
+  'Notifications: turn on «Lock screen» and «Floating notifications».':
+    'Notificaciones: activa «Pantalla de bloqueo» y «Notificaciones flotantes».',
+  'In recent apps, do not swipe Kuova away: lock it with the padlock.':
+    'En las apps recientes, no cierres Kuova deslizando: bloquéala con el candado.',
+  'Battery: Unrestricted.': 'Batería: Sin restricciones.',
+  'Open Kuova’s settings': 'Abrir los ajustes de Kuova',
+  'Send a test notification in 1 minute': 'Enviar un aviso de prueba en 1 minuto',
+  'Done. Lock your phone and wait a minute. If it does not arrive, or arrives late, check the steps above.':
+    'Listo. Bloquea el móvil y espera un minuto. Si no llega, o llega tarde, revisa los pasos de arriba.',
+  'Kuova test notification': 'Aviso de prueba de Kuova',
+  'If you can see this with your phone locked, your reminders are getting through.':
+    'Si lo ves con el móvil bloqueado, tus avisos están llegando.',
   'Time for your weekly weigh-in': 'Hoy toca pesarte',
   'In the morning, after the toilet and before breakfast: that way one week compares with the next.':
     'Por la mañana, después de ir al baño y antes de desayunar: así puedes comparar una semana con otra.',
