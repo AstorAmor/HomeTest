@@ -85,7 +85,7 @@ Con la CLI 3 los comandos van contra la base **local** si no se dice otra cosa: 
   propias con la base de pruebas. Antes de tocar una variable, mira en qué entornos está
   (`npx eas-cli env:list <entorno>`) y nunca `eas env:set` sobre una que esté en más de uno.
 - Secretos de la base de pruebas: `GEMINI_API_KEY` (la misma clave que producción, copiada el 2026-11-09 con
-  el OK de Astor) para leer analíticas con IA.
+  el OK de Astor) para leer analíticas con IA. Comprobar que responde: `node scripts/staging-ai-check.mjs`.
 - APK: `npx eas-cli build --platform android --profile staging` (una vez; con cambios nativos, otra). El
   primero, el 2026-11-09 (build `16edc92f`, versionCode 1, llave de firma creada por EAS en la nube).
   Ojo al juntar con `metas-fase1`: si el código juntado usa un módulo nativo que este APK no tiene (por
