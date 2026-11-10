@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Keyboard, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { EQUIPMENT, EXERCISE_LIST, canDo, equipmentLabel, exerciseEquipmentText, exerciseName, muscleLabel, patternLabel } from '@/data/workouts/catalog';
@@ -10,6 +10,10 @@ import { t, tn } from '@/i18n';
 // Biblioteca de ejercicios con buscador y filtros (tipo de movimiento, músculo y material). La usan el
 // usuario (/exercise-library y al hacer su propia rutina) y el entrenador en el portal (para consultar
 // y para añadir ejercicios a un programa).
+
+// Mientras se escribe en el buscador se esconden los filtros, para que los resultados quepan encima del teclado; al
+// buscar («Intro») o al tocar fuera, el teclado se va y vuelven. Al elegir varios, la tarjeta entera se marca (foto
+// incluida), no solo el botón (fundador, 2026-11-06).
 
 // Músculos principales del catálogo, de arriba abajo
 const MUSCLE_ORDER = ['chest', 'shoulders', 'triceps', 'biceps', 'forearms', 'lats', 'middle back', 'traps', 'lower back', 'abdominals', 'glutes', 'quadriceps', 'hamstrings', 'adductors', 'abductors', 'calves', 'neck'];
@@ -59,6 +63,8 @@ export const ExerciseLibrary = ({
   const [kit, setKit] = useState<KitFilter | null>(null);
   const [menu, setMenu] = useState<'muscle' | 'kit' | null>(null); // desplegable abierto
   const [shown, setShown] = useState(PAGE);
+  const [typing, setTyping] = useState(false); // con el buscador enfocado y algo escrito, sin filtros
+  const searching = typing && !!query;
   const cols = columns ?? (width >= 1200 ? 4 : width >= 760 ? 3 : 2);
 
   const list = useMemo(() => {
@@ -102,6 +108,10 @@ export const ExerciseLibrary = ({
           }}
           placeholder={t('Search: squat, glutes, dumbbells…')}
           placeholderTextColor={Colors.textMuted}
+          returnKeyType="search"
+          onSubmitEditing={() => Keyboard.dismiss()}
+          onFocus={() => setTyping(true)}
+          onBlur={() => setTyping(false)}
         />
         {query ? (
           <TouchableOpacity onPress={() => setQuery('')} hitSlop={8}>
@@ -110,7 +120,7 @@ export const ExerciseLibrary = ({
         ) : null}
       </View>
 
-      {!onlyPatterns && (
+      {!onlyPatterns && !searching && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {[{ id: null as string | null, label: 'All exercises' }, ...PATTERN_GROUPS].map((g) => {
             const on = group === g.id;
@@ -130,7 +140,7 @@ export const ExerciseLibrary = ({
         </ScrollView>
       )}
 
-      {!onlyPatterns && (
+      {!onlyPatterns && !searching && (
         <>
           <View style={styles.selects}>
             {(['muscle', 'kit'] as const).map((which) => {
@@ -176,34 +186,53 @@ export const ExerciseLibrary = ({
         </TouchableOpacity>
       )}
 
-      <Text style={styles.count}>{tn(list.length, '{n} exercise', '{n} exercises')}</Text>
+      <Text style={[styles.count, searching && { marginTop: 8 }]}>{tn(list.length, '{n} exercise', '{n} exercises')}</Text>
 
       <View style={styles.grid}>
-        {list.slice(0, shown).map((ex) => (
-          <View key={ex.id} style={[styles.cell, { width: `${100 / cols}%` }]}>
-            <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => (onOpen ? onOpen(ex) : onPick?.(ex))}>
-              <ExerciseLoop exercise={ex} radius={10} />
-              <Text style={styles.name} numberOfLines={2}>
-                {exerciseName(ex)}
-              </Text>
-              <Text style={styles.meta} numberOfLines={1}>
-                {patternLabel(ex.pattern)} · {exerciseEquipmentText(ex)}
-              </Text>
-              {onPick &&
-                (selectedIds?.includes(ex.id) ? (
-                  <TouchableOpacity style={[styles.pick, styles.picked]} onPress={() => onPick(ex)} accessibilityState={{ selected: true }}>
-                    <Ionicons name="checkmark" size={16} color={Colors.accent} />
-                    <Text style={[styles.pickText, { color: Colors.accent }]}>{t('Added')}</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity style={styles.pick} onPress={() => onPick(ex)}>
-                    <Ionicons name="add" size={16} color={Colors.background} />
-                    <Text style={styles.pickText}>{pickLabel ?? t('Add')}</Text>
-                  </TouchableOpacity>
-                ))}
-            </TouchableOpacity>
-          </View>
-        ))}
+        {list.slice(0, shown).map((ex) => {
+          const on = !!selectedIds?.includes(ex.id);
+          return (
+            <View key={ex.id} style={[styles.cell, { width: `${100 / cols}%` }]}>
+              <TouchableOpacity
+                style={[styles.card, on && styles.cardOn]}
+                activeOpacity={0.85}
+                onPress={() => (onOpen ? onOpen(ex) : onPick?.(ex))}
+                accessibilityState={selectedIds ? { selected: on } : undefined}
+              >
+                <View>
+                  <ExerciseLoop exercise={ex} radius={10} />
+                  {/* La marca de elegido va encima de la foto, siempre puesta, y solo cambia su opacidad. Ponerle y
+                      quitarle el borde a la propia foto la dejaba en blanco al desmarcar (fundador, 2026-11-06) */}
+                  {selectedIds && (
+                    <View style={[styles.ring, !on && styles.ringOff]}>
+                      <View style={styles.check}>
+                        <Ionicons name="checkmark" size={16} color={Colors.background} />
+                      </View>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.name} numberOfLines={2}>
+                  {exerciseName(ex)}
+                </Text>
+                <Text style={styles.meta} numberOfLines={1}>
+                  {patternLabel(ex.pattern)} · {exerciseEquipmentText(ex)}
+                </Text>
+                {onPick &&
+                  (on ? (
+                    <TouchableOpacity style={[styles.pick, styles.picked]} onPress={() => onPick(ex)} accessibilityState={{ selected: true }}>
+                      <Ionicons name="checkmark" size={16} color={Colors.accent} />
+                      <Text style={[styles.pickText, { color: Colors.accent }]}>{t('Added')}</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity style={styles.pick} onPress={() => onPick(ex)}>
+                      <Ionicons name="add" size={16} color={Colors.background} />
+                      <Text style={styles.pickText}>{pickLabel ?? t('Add')}</Text>
+                    </TouchableOpacity>
+                  ))}
+              </TouchableOpacity>
+            </View>
+          );
+        })}
       </View>
       {list.length > shown && (
         <TouchableOpacity style={styles.more} onPress={() => setShown((n) => n + PAGE)}>
@@ -239,6 +268,10 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
   cell: { padding: 5 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 8, gap: 6, flex: 1 },
+  cardOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
+  ring: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 10, borderWidth: 2, borderColor: Colors.accent, pointerEvents: 'none' },
+  ringOff: { opacity: 0 },
+  check: { position: 'absolute', top: 4, right: 4, width: 26, height: 26, borderRadius: 13, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
   name: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', minHeight: 34 },
   meta: { color: Colors.textMuted, fontSize: 11 },
   pick: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: Colors.accent, borderRadius: 14, paddingVertical: 6 },

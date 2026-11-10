@@ -10,8 +10,7 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
 import { currentReport } from '@/data/reportRepository';
-import { labUploadRepository } from '@/data/labUploads';
-import { labReports } from '@/utils/labReportView';
+import { MetasToday } from '@/components/metas/MetasToday';
 import { reportSeenKey, userFlags } from '@/data/userFlags';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
@@ -23,12 +22,8 @@ import { buildSchedule } from '@/data/schedule';
 import { labAppointmentEvents } from '@/data/labAppointments';
 import { consult } from '@/data/consultations';
 import { buildSummary, summaryAppointments, SummaryLine } from '@/logic/summary';
-import { loadNutrientFocus, nutrientsDoneToday } from '@/screens/NutrientsScreen';
-import { FULL_PLAN_OPENED } from '@/screens/ActionPlanScreen';
 import { dateLocale, num, t } from '@/i18n';
 import { computeAchievements } from '@/data/achievements';
-import { BlobArt } from '@/components/BlobArt';
-import { KIND_ART, KIND_CATEGORY, PLAN_CATEGORIES, planItemTitle } from '@/data/planCategories';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { WaterQuick } from '@/components/WaterQuick';
@@ -36,13 +31,13 @@ import { makeTourScroll, TourScroll } from '@/components/tour/tourStore';
 import { DailyGoals, effectiveGoals, goalsShown, GoalsShown, suggestedGoals } from '@/logic/dailyGoals';
 import { dailyGoalsStore, goalsShownStore } from '@/data/dailyGoals';
 import { useWaterToday } from '@/hooks/useWaterToday';
-import { litres, waterRepository } from '@/data/waterRepository';
+import { litres } from '@/data/waterRepository';
 import { TummyFaces } from '@/components/TummyFaces';
 import { weightRepository } from '@/data/weightRepository';
 import { WeighAdvice, weighAdvice } from '@/logic/weight';
 import { useSections } from '@/data/appPrefs';
 import { WelcomePrompts } from '@/components/WelcomePrompts';
-import { InboxItem, nudgeStore } from '@/data/nudgeStore';
+import { nudgeStore } from '@/data/nudgeStore';
 import { addBowelVisit, addUrineVisit, bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { hydrationFromUrine, HYDRATION_SCALE } from '@/logic/bathroom';
 import { BowelEntry, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
@@ -60,28 +55,22 @@ import { showSamples } from '@/data/dataMode';
 import { sourceLabel } from '@/wearables/sourceLabel';
 import { profileRepository, UserProfile } from '@/data/profileRepository';
 import { checkInRepository, dailyCheckInSeries, sampleCheckInSeries, DailyCheckInPoint } from '@/data/checkInRepository';
-import { CheckInEntry, MOOD_OPTIONS, MOMENT_OPTIONS } from '@/types/checkIn';
+import { CheckInEntry, MOMENT_OPTIONS } from '@/types/checkIn';
+import { CheckInButton } from '@/components/CheckInButton';
+import { Confetti } from '@/components/Confetti';
+import { checkInDayKey } from '@/logic/checkInDay';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
 import { cycleGoalStore } from '@/data/cycleGoal';
 import {
   buildPlan,
-  FULL_PLAN_ONLY,
-  HabitLogs,
-  planKept,
   mealRepository,
   mindfulRepository,
-  mindfulSessionsThisWeek,
-  PlanItem,
-  PlanItemKind,
   workoutRepository,
   mealsLoggedToday,
-  strengthSessionsThisWeek,
 } from '@/data/planRepository';
 import { computeReadiness, formatSleep, latest, shortDate, todayValue, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
-import { planHabits, sessionsThisWeek } from '@/logic/planHabits';
 import { useWebShell } from '@/web/webMode';
-import { TAB } from '@/constants/tabs';
 
 
 const statusColor = (status: Biomarker['status']) => {
@@ -98,13 +87,9 @@ const statusColor = (status: Biomarker['status']) => {
   }
 };
 
-const timeAgo = (iso: string) => {
-  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (minutes < 60) return t('{n} min ago', { n: Math.max(1, minutes) });
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return t('{n} h ago', { n: hours });
-  return t('{n} d ago', { n: Math.round(hours / 24) });
-};
+// Azúcar y tensión con datos tuyos: de cuándo es y de dónde sale, sin juicio; en la demo, el estado del ejemplo
+const ownStatus = (b: Biomarker) =>
+  b.fecha ? t(b.fromLab ? 'From your lab test · {date}' : 'Logged {date}', { date: shortDate(b.fecha) }) : t(b.statusLabel);
 
 // Estado de un valor de wearable frente a su media reciente
 const vsUsual = (points: DailyPoint[] | undefined, higherIsBetter: boolean) => {
@@ -117,25 +102,6 @@ const vsUsual = (points: DailyPoint[] | undefined, higherIsBetter: boolean) => {
   return better
     ? { label: higherIsBetter ? 'Above your usual' : 'Below your usual', color: Colors.accent }
     : { label: higherIsBetter ? 'Below your usual' : 'Above your usual', color: Colors.warning };
-};
-
-// Icono del check-in: la carita de "Mood & check-ins" sobre un círculo dorado liso (sin degradado)
-const CheckInOrb = () => (
-  <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.gold, alignItems: 'center', justifyContent: 'center' }}>
-    <Ionicons name="happy-outline" size={28} color={Colors.isLight ? '#FFFFFF' : '#0E2A24'} />
-  </View>
-);
-
-const PLAN_COLOR: Record<PlanItemKind, string> = {
-  strength: Colors.coral,
-  cardio: Colors.attention,
-  steps: Colors.sky,
-  nutrition: Colors.amber,
-  medication: Colors.gold,
-  sleep: Colors.violet,
-  mindfulness: Colors.accent,
-  water: Colors.water,
-  checkin: Colors.gold,
 };
 
 const MED_OPEN_KEY = 'today.medOpen.v1';
@@ -161,31 +127,32 @@ export const TodayScreen = () => {
   const [savedGoals, setSavedGoals] = useDeepState<Partial<DailyGoals> | null>(null);
   // Para que el tutorial pueda bajar hasta lo que señala
   const tourScroll = useMemo(makeTourScroll, []);
-  // Hay resultados (informe o analítica subida): el plan ya se apoya en ellos
-  const [hasResults, setHasResults] = useState(labReports().length > 0);
   const [achievementData, setAchievementData] = useDeepState<{
     workouts: { fecha: string; type: string }[];
     meals: { fecha: string }[];
     checkIns: { fecha: string }[];
     mindful: { fecha: string }[];
   }>({ workouts: [], meals: [], checkIns: [], mindful: [] });
-  const [mindfulWeek, setMindfulWeek] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useDeepState<CheckInEntry | null>(null);
   const [checkInSeries, setCheckInSeries] = useDeepState<{ points: DailyCheckInPoint[]; sample: boolean }>({
     points: [],
     sample: true,
   });
   const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
-  const [strengthDone, setStrengthDone] = useState(0);
   const [mealsToday, setMealsToday] = useState(0);
-  // Lo que el plan mira de tus últimas semanas (con el reloj de arriba): entrenos, calma, check-ins y comidas
-  const [planLogs, setPlanLogs] = useDeepState<HabitLogs>({ workouts: [], calm: [], checkIns: [], meals: [], water: [] });
-  // «Tu plan completo» va resaltado hasta que lo abres una vez
-  const [fullPlanOpened, setFullPlanOpened] = useState(true);
   // El aviso "Your report is here!" se enseña hasta que el usuario lo abre (user_flags).
   const [reportSeen, setReportSeen] = useState(true);
   // Avisos sin leer (src/logic/nudges: se evalúan al abrir Today) y registro de baño de hoy
-  const [unread, setUnread] = useDeepState<InboxItem[]>([]);
+  // Check-ins del día (el día de la persona: de madrugada aún cuenta el anterior)
+  const [checkInsToday, setCheckInsToday] = useState(0);
+  // Confeti al completar los 3 check-ins del día (lo dispara el botón, justo después de guardar el tercero)
+  const [confetti, setConfetti] = useState(0);
+  useEffect(() => {
+    if (!confetti) return;
+    const id = setTimeout(() => setConfetti(0), 3200);
+    return () => clearTimeout(id);
+  }, [confetti]);
+  const celebrate = useCallback(() => setConfetti(Date.now()), []);
   const [bathroomToday, setBathroomToday] = useDeepState<{ bowel: BowelEntry | null; urine: UrineEntry | null }>({
     bowel: null,
     urine: null,
@@ -208,7 +175,6 @@ export const TodayScreen = () => {
   // Los últimos 7 días cuelgan del check-in: desplegados por defecto, la flecha los pliega y se
   // recuerda (clave v2: antes empezaban plegados y la elección guardada era la contraria)
   const [weekOpen, setWeekOpen] = useState(true);
-  const [nutrients, setNutrients] = useDeepState<{ done: number; total: number }>({ done: 0, total: 0 });
 
   // Peso: el último y cuándo toca pesarse (una vez por semana)
   const [weight, setWeight] = useState<WeighAdvice | null>(null);
@@ -224,15 +190,7 @@ export const TodayScreen = () => {
   );
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
-    labUploadRepository
-      .getAll()
-      .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
-      .catch(() => undefined);
     userFlags.get('today_week_open.v2').then((v) => setWeekOpen(v !== false));
-    userFlags.get(FULL_PLAN_OPENED).then((v) => setFullPlanOpened(!!v));
-    Promise.all([loadNutrientFocus(), nutrientsDoneToday()])
-      .then(([items, done]) => setNutrients({ done: done.filter((d) => items.some((i) => i.id === d)).length, total: items.length }))
-      .catch(() => undefined);
     Promise.all([
       userFlags.get(reportSeenKey(currentReport.report_id)),
       labAppointmentEvents().catch(() => []),
@@ -248,9 +206,9 @@ export const TodayScreen = () => {
         })
       );
     });
+    // Los avisos se siguen calculando (para Notificaciones), aunque ya no salen en Hoy
     nudgeStore
       .refresh()
-      .then(({ inbox }) => setUnread(inbox.filter((i) => !i.read)))
       .catch((e) => console.warn('Notifications not refreshed', e));
     // Sin la tabla de medicación (migración pendiente) simplemente no hay tomas que enseñar
     Promise.all([medicationRepository.getAll(), doseRepository.getAll()])
@@ -274,35 +232,25 @@ export const TodayScreen = () => {
       })
       .catch(() => setThermo(null));
     reloadBathroom();
-    const [p, checkIns, cycleEntries, strength, meals, workoutList, mealList, mindfulList, mindfulThisWeek, waterList] =
-      await Promise.all([
-        profileRepository.get(),
-        checkInRepository.getAll(),
-        cycleRepository.getAll(),
-        strengthSessionsThisWeek(),
-        mealsLoggedToday(),
-        workoutRepository.getAll(),
-        mealRepository.getAll(),
-        mindfulRepository.getAll(),
-        mindfulSessionsThisWeek(),
-        waterRepository.getAll().catch(() => []),
-      ]);
+    const [p, checkIns, cycleEntries, meals, workoutList, mealList, mindfulList] = await Promise.all([
+      profileRepository.get(),
+      checkInRepository.getAll(),
+      cycleRepository.getAll(),
+      mealsLoggedToday(),
+      workoutRepository.getAll(),
+      mealRepository.getAll(),
+      mindfulRepository.getAll(),
+    ]);
     setAchievementData({
       workouts: workoutList.map((w) => ({ fecha: w.fecha, type: w.type })),
       meals: mealList.map((m) => ({ fecha: m.fecha })),
       checkIns: checkIns.map((c) => ({ fecha: c.fecha })),
       mindful: mindfulList.map((m) => ({ fecha: m.fecha })),
     });
-    setPlanLogs({
-      workouts: workoutList.map((w) => ({ fecha: w.fecha, type: w.type })),
-      calm: mindfulList.map((m) => ({ fecha: m.fecha })),
-      checkIns: checkIns.map((c) => ({ fecha: c.fecha, stress: c.stress, mood: c.mood })),
-      meals: mealList.map((m) => ({ fecha: m.fecha, addedSugar: m.addedSugar })),
-      water: waterList.map((w) => ({ fecha: w.fecha, valor: w.valor })),
-    });
-    setMindfulWeek(mindfulThisWeek);
     setProfile(p);
     setLastCheckIn(checkIns.length ? checkIns[0] : null);
+    const todayKey = checkInDayKey({ fecha: new Date().toISOString() });
+    setCheckInsToday(checkIns.filter((c) => checkInDayKey(c) === todayKey).length);
     const real = dailyCheckInSeries(checkIns);
     // Cuenta real: solo sus días (aunque sea uno); la demo rellena con un ejemplo
     setCheckInSeries(
@@ -314,9 +262,8 @@ export const TodayScreen = () => {
     );
     const cycleGoal = p.sex === 'female' ? await cycleGoalStore.get().catch(() => null) : null;
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null);
-    setStrengthDone(strength);
     setMealsToday(meals);
-  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, setPlanLogs, setUnread, reloadBathroom, setDosesToday, setReminderIds, setThermo, setSummary, setNutrients, demoMode]);
+  }, [setBiomarkers, setProfile, setLastCheckIn, setCheckInSeries, setCycle, setAchievementData, reloadBathroom, setDosesToday, setReminderIds, setThermo, setSummary, demoMode]);
 
   useReloadOnFocus(load);
 
@@ -339,14 +286,8 @@ export const TodayScreen = () => {
   const hrv = latest(series.hrv);
   const temp = thermo ?? latest(series.body_temperature);
 
-  const lastMood = lastCheckIn?.mood ? MOOD_OPTIONS.find((m) => m.id === lastCheckIn.mood) : null;
   const lastMoment = lastCheckIn ? MOMENT_OPTIONS.find((m) => m.id === lastCheckIn.moment) : null;
 
-  // Tu plan con tus datos y tus respuestas: cada acción es la meta, con su avance de la semana o del
-  // día; dónde estás y el porqué van en el plan completo. Fuera lo que ya cumples.
-  const habits = useMemo(() => planHabits(series, planLogs), [series, planLogs]);
-  const plan = buildPlan(profile, habits);
-  const kept = planKept(profile, habits).filter((k) => !FULL_PLAN_ONLY.includes(k.kind));
   // Objetivos de los círculos de «Tu estado de hoy»: los del plan de tus respuestas (los mismos
   // aunque ya cumplas alguno) o los que haya puesto el usuario
   const goals = effectiveGoals(suggestedGoals(buildPlan(profile), profile).goals, savedGoals);
@@ -384,26 +325,13 @@ export const TodayScreen = () => {
     badges: profile?.badges ?? [],
   });
 
-  const planProgress = ({ kind, target, progress }: PlanItem) => {
-    if (progress) return progress;
-    const week = (done: number) => ({ value: done / target, text: t('{done}/{target} this week', { done, target }) });
-    if (kind === 'strength') return week(strengthDone);
-    if (kind === 'cardio') return week(sessionsThisWeek(planLogs.workouts, ['cardio', 'sport']));
-    if (kind === 'mindfulness') return week(mindfulWeek);
-    if (kind === 'steps') return { value: steps / target, text: t('{n} today', { n: steps.toLocaleString(dateLocale()) }) };
-    if (kind === 'sleep') return { value: sleep / 60 / target, text: t('{v} last night', { v: formatSleep(sleep) }) };
-    if (kind === 'water') return { value: water.total / target, text: t('{v} today', { v: litres(water.total) }) };
-    return { value: nutrients.total ? nutrients.done / nutrients.total : 0, text: t('{done}/{total} done today', { done: nutrients.done, total: nutrients.total }) };
-  };
-
-  // Cada acción abre el plan completo en su sitio: dónde estás, el porqué y, desde ahí, lo suyo
-  const onPlanPress = (kind: PlanItemKind) => router.push({ pathname: '/action-plan', params: { focus: kind } });
   const medShown = medOpen ?? dosesToday.some((d) => reminderIds.includes(d.medId));
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Today')} showAvatar />
+        {/* Sin la foto de perfil arriba a la derecha (fundador, 2026-11-05) */}
+        <ScreenHeader title={t('Today')} />
 
         <View style={styles.greeting}>
           <Text style={styles.greetingTitle}>{t('Hi {name}!', { name: firstName })}</Text>
@@ -417,16 +345,13 @@ export const TodayScreen = () => {
 
         {!web && (
         <>
-        {/* Lo próximo del calendario: citas, logística y resultados (sin nombrar categorías) */}
+        {/* Lo próximo del calendario: citas, logística y resultados (sin nombrar categorías). Sin nada
+            previsto no sale (fundador, 2026-11-05): lo primero pasa a ser el check-in */}
+        {summary.length > 0 && (
+        <>
         <Text style={styles.sectionTitle}>{t('Your summary')}</Text>
         <View style={styles.summaryCard}>
-          {summary.length === 0 ? (
-            <TouchableOpacity style={styles.summaryRow} onPress={() => router.push({ pathname: '/(tabs)', params: { tab: String(TAB.schedule) } })}>
-              <Ionicons name="calendar-clear-outline" size={18} color={Colors.textMuted} />
-              <Text style={styles.summaryText}>{t('Nothing planned for the next few weeks. Your schedule is clear.')}</Text>
-            </TouchableOpacity>
-          ) : (
-            summary.map((l, i) => (
+          {summary.map((l, i) => (
               <TouchableOpacity
                 key={l.id}
                 style={[styles.summaryRow, i > 0 && styles.summaryDivider]}
@@ -445,24 +370,11 @@ export const TodayScreen = () => {
                 <Text style={[styles.summaryText, l.highlight && styles.summaryHighlight]}>{l.text}</Text>
                 <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
               </TouchableOpacity>
-            ))
-          )}
+            ))}
         </View>
-
-        {unread.length > 0 && (
-          <TouchableOpacity style={styles.inboxCard} onPress={() => router.push('/notifications')} activeOpacity={0.85}>
-            <View style={styles.inboxIcon}>
-              <Ionicons name="notifications-outline" size={20} color={Colors.gold} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.fullPlanTitle}>{unread[0].title}</Text>
-              <Text style={styles.fullPlanSub} numberOfLines={2}>
-                {unread.length > 1 ? t('And {n} more', { n: unread.length - 1 }) : unread[0].body}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-          </TouchableOpacity>
+        </>
         )}
+        {/* Los avisos ya no salen en Hoy (fundador, 2026-11-05): se ven y se ajustan en Más → Notificaciones */}
         </>
         )}
 
@@ -470,21 +382,9 @@ export const TodayScreen = () => {
         {show('checkin') && (
           <>
             <View style={styles.checkInWrap}>
+              {/* Un botón con la carita y un donut de 3 tramos: los check-ins del día (fundador, 2026-11-05) */}
               <TourTarget id="today.checkin" scroll={tourScroll}>
-              <TouchableOpacity style={styles.checkInRow} onPress={() => router.push('/check-in')} activeOpacity={0.85}>
-                <CheckInOrb />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.checkInTitle}>{t('How are you feeling?')}</Text>
-                  <Text style={styles.checkInSubtitle}>
-                    {lastCheckIn
-                      ? `${t('Last check-in {ago}', { ago: timeAgo(lastCheckIn.fecha) })}${lastMood ? ` · ${lastMood.emoji} ${t(lastMood.label)}` : ''}`
-                      : t('Sleep, energy and mood in 30 seconds')}
-                  </Text>
-                </View>
-                <View style={styles.checkInButton}>
-                  <Text style={styles.checkInButtonText}>{t('Check in')}</Text>
-                </View>
-              </TouchableOpacity>
+                <CheckInButton done={checkInsToday} onPress={() => router.push('/check-in')} onComplete={celebrate} />
               </TourTarget>
 
               <TouchableOpacity
@@ -587,6 +487,10 @@ export const TodayScreen = () => {
           </View>
         )}
 
+        {/* Cumple tus objetivos (sustituye al plan desde la fase 1 de las metas): la enhorabuena de la semana
+            y un donut por área, encima de «Tu estado de hoy» (fundador, 2026-11-05) */}
+        {show('plan') && <MetasToday tourScroll={tourScroll} />}
+
         {!web && (
         <>
         {/* Daily readiness */}
@@ -659,8 +563,10 @@ export const TodayScreen = () => {
           </>
         )}
 
-        {/* Biomarkers */}
-        <Text style={styles.sectionTitle}>{t('Biomarkers')}</Text>
+        {/* Biomarkers: lo que apuntas y lo del reloj (fundador, 2026-11-06: «todo son biomarcadores»); una línea
+            dice de dónde sale y cada tarjeta, de cuándo es lo tuyo */}
+        <Text style={[styles.sectionTitle, styles.sectionTitleTight]}>{t('Biomarkers')}</Text>
+        <Text style={styles.sectionHint}>{t('What you log and what comes from your watch. Tap one to see its history.')}</Text>
         <View style={styles.grid}>
           {sugar && (
             <BiomarkerCard
@@ -669,7 +575,7 @@ export const TodayScreen = () => {
               iconColor={Colors.accent}
               value={sugar.valor}
               unit={sugar.unidad}
-              status={t(sugar.statusLabel)}
+              status={ownStatus(sugar)}
               color={statusColor(sugar.status)}
               onPress={() => router.push('/glucose-detail')}
             />
@@ -681,7 +587,7 @@ export const TodayScreen = () => {
               iconColor={Colors.coral}
               value={bp.valor}
               unit={bp.unidad}
-              status={t(bp.statusLabel)}
+              status={ownStatus(bp)}
               color={statusColor(bp.status)}
               onPress={() => router.push('/blood-pressure-detail')}
               tourId="today.bp"
@@ -825,85 +731,6 @@ export const TodayScreen = () => {
         </>
         )}
 
-        {/* Tu plan personalizado: las acciones con tus datos, lo que ya cumples y, debajo, el plan completo */}
-        {show('plan') && (
-          <>
-            <Text style={styles.sectionTitle}>{t('Your personalised plan')}</Text>
-            <TourTarget id="today.plan" scroll={tourScroll}>
-            <View style={styles.planList}>
-              {plan.map((item) => {
-                const color = PLAN_COLOR[item.kind];
-                const progress = planProgress(item);
-                return (
-                  <TourTarget key={item.kind} id={`today.plan.${item.kind}`} scroll={tourScroll}>
-                  <TouchableOpacity
-                    style={styles.planRow}
-                    onPress={() => onPlanPress(item.kind)}
-                    activeOpacity={0.85}
-                  >
-                    <BlobArt seed={item.kind} palette={KIND_ART[item.kind].palette} icon={KIND_ART[item.kind].icon} size={50} radius={14} iconSize={24} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.planCategory}>{t(PLAN_CATEGORIES.find((c) => c.id === KIND_CATEGORY[item.kind])!.title)}</Text>
-                      {/* La meta y, debajo, su avance; dónde estás y el porqué, en el plan completo */}
-                      <Text style={styles.planTitle}>
-                        {item.kind === 'nutrition' ? t('Tick off what you eat well today') : planItemTitle(item, t)}
-                      </Text>
-                      <View style={styles.planBarTrack}>
-                        <View
-                          style={[
-                            styles.planBarFill,
-                            { width: `${Math.min(1, progress.value) * 100}%`, backgroundColor: color },
-                          ]}
-                        />
-                      </View>
-                      <Text style={styles.planProgress}>{progress.text}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-                  </TouchableOpacity>
-                  </TourTarget>
-                );
-              })}
-            </View>
-            </TourTarget>
-            {kept.length > 0 && (
-              <View style={styles.keptBox}>
-                <Text style={styles.keptTitle}>{t('Already on track')}</Text>
-                {kept.map((k) => (
-                  <View key={k.kind} style={styles.keptRow}>
-                    <Ionicons name="checkmark-circle" size={16} color={Colors.ok} />
-                    <Text style={styles.keptText}>{k.short}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-            {/* El plan completo, debajo de las acciones; resaltado solo hasta que lo abres una vez */}
-            <TouchableOpacity
-              style={[styles.planHero, !fullPlanOpened && styles.planHeroNew]}
-              onPress={() => router.push('/action-plan')}
-              activeOpacity={0.85}
-            >
-              <View style={styles.planHeroIcon}>
-                <Ionicons name="sparkles-outline" size={20} color={Colors.gold} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.planHeroTitle}>{t('Your full plan')}</Text>
-                <Text style={styles.fullPlanSub}>{hasResults ? t('Based on your latest results') : t('Based on your goals for now')}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-            </TouchableOpacity>
-            <Text style={styles.planNote}>
-              {Object.keys(habits).length > 0
-                ? t('Built from your answers and your data from the last weeks: it changes as you do.')
-                : t('Built from your answers. Your results will add to it when they arrive.')}
-            </Text>
-            <TouchableOpacity style={styles.fullPlanLink} onPress={() => router.push('/plans')} activeOpacity={0.8}>
-              <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
-              <Text style={styles.fullPlanLinkText}>{t('Earlier plans')}</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
-            </TouchableOpacity>
-          </>
-        )}
-
         {/* Your badges */}
         {show('badges') && (
           <>
@@ -933,6 +760,7 @@ export const TodayScreen = () => {
           </TourTarget>
         )}
       </ScrollView>
+      {confetti > 0 && <Confetti key={confetti} count={90} />}
       {/* Perfil genético y, a las mujeres, cuestionario de la regla: las primeras veces que entra */}
       <WelcomePrompts />
     </SafeAreaView>
@@ -1055,7 +883,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 16,
   },
-  checkInRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   weekToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.divider },
   weekToggleText: { flex: 1, color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
   safeArea: {
@@ -1247,27 +1074,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 12,
   },
-  checkInTitle: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  checkInSubtitle: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  checkInButton: {
-    backgroundColor: Colors.accent,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  checkInButtonText: {
-    color: Colors.background,
-    fontSize: 13,
-    fontWeight: '800',
-  },
   block: {
     marginHorizontal: 20,
     marginBottom: 12,
@@ -1314,6 +1120,8 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     marginTop: 16,
   },
+  sectionTitleTight: { marginBottom: 2 },
+  sectionHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, paddingHorizontal: 20, marginBottom: 12 },
   readinessCard: {
     alignItems: 'center',
     paddingVertical: 22,

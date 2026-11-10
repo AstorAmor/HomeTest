@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AuthProvider } from '@/context/AuthContext';
@@ -18,7 +19,17 @@ import { MfaGuard } from '@/components/MfaGuard';
 // animación lateral (ios_from_right), así "atrás" es el reflejo exacto de "adelante"
 // en Android e iOS. Los modales de registro suben y bajan (slide_from_bottom).
 // contentStyle con el fondo de la app evita el destello blanco durante la animación.
-const MODAL = { presentation: 'modal', animation: 'slide_from_bottom' } as const;
+//
+// Android (fundador, 2026-11-09: volver atrás desde Historia clínica iba a saltos): react-native-screens suelta
+// del todo la pantalla de debajo en cuanto otra opaca la tapa, y al volver la tiene que pintar entera otra vez
+// (las cinco pestañas y cada gráfica SVG, que tira su dibujo al soltarse) dentro de una animación de 200 ms.
+// Con las pantallas de encima en 'transparentModal' (por fuera iguales: llevan el mismo fondo opaco) la de
+// debajo se queda puesta y ya pintada, y «atrás» solo desliza la de arriba. Las de base (arranque, login,
+// pestañas, onboarding y portal del especialista) siguen en 'card' para no dejar nada viejo debajo.
+// En iOS y en la web no cambia nada.
+const OVER = Platform.OS === 'android' ? 'transparentModal' : undefined;
+const BASE = { presentation: 'card' } as const;
+const MODAL = { presentation: OVER ?? 'modal', animation: 'slide_from_bottom' } as const;
 
 export default function Layout() {
   useEffect(() => {
@@ -37,16 +48,17 @@ export default function Layout() {
           <Stack
             screenOptions={{
               headerShown: false,
+              presentation: OVER,
               animation: 'ios_from_right',
               gestureEnabled: true,
               fullScreenGestureEnabled: true,
               contentStyle: { backgroundColor: Colors.background },
             }}
           >
-            <Stack.Screen name="index" options={{ animation: 'none' }} />
-            <Stack.Screen name="login" options={{ animation: 'none' }} />
-            <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
-            <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+            <Stack.Screen name="index" options={{ ...BASE, animation: 'none' }} />
+            <Stack.Screen name="login" options={{ ...BASE, animation: 'none' }} />
+            <Stack.Screen name="(tabs)" options={{ ...BASE, animation: 'fade' }} />
+            <Stack.Screen name="onboarding" options={{ ...BASE, animation: 'fade' }} />
             <Stack.Screen name="results-ready" options={{ animation: 'fade' }} />
             <Stack.Screen name="upload-test" options={MODAL} />
             <Stack.Screen name="log-glucose" options={MODAL} />
@@ -107,11 +119,11 @@ export default function Layout() {
             <Stack.Screen name="share-new" />
             <Stack.Screen name="admin" />
             <Stack.Screen name="support" />
-            <Stack.Screen name="pro" options={{ animation: 'fade' }} />
+            <Stack.Screen name="pro" options={{ ...BASE, animation: 'fade' }} />
             <Stack.Screen name="pro-patient" />
             <Stack.Screen name="pro-profile" />
             <Stack.Screen name="plan-intro" options={{ animation: 'fade' }} />
-            <Stack.Screen name="exercise" options={{ presentation: 'modal', animation: 'fade' }} />
+            <Stack.Screen name="exercise" options={{ ...MODAL, animation: 'fade' }} />
             <Stack.Screen name="metric" />
             <Stack.Screen name="store" />
             <Stack.Screen name="test-finder" />
@@ -134,7 +146,7 @@ export default function Layout() {
             <Stack.Screen name="consult-request" />
             <Stack.Screen name="learn" />
             <Stack.Screen name="video" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
-            <Stack.Screen name="resumen" options={{ animation: 'none' }} />
+            <Stack.Screen name="resumen" options={{ ...BASE, animation: 'none' }} />
             <Stack.Screen name="security" />
           </Stack>
           </WebShell>

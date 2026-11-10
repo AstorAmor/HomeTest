@@ -61,7 +61,7 @@ describe('Consultas en la agenda', () => {
   const appt = (a: Partial<Appointment>): Appointment => ({
     id: 'local-1',
     professionalId: 'pro-1',
-    professionalName: 'Gema Martínez',
+    professionalName: 'Laura Méndez',
     patientId: 'me',
     patientName: 'Paciente',
     startsAt: new Date(2026, 9, 22, 17, 30).toISOString(),
@@ -75,7 +75,7 @@ describe('Consultas en la agenda', () => {
   it('sale en su día y a la hora del móvil, con su duración y su estado', () => {
     const e = consultationEvent(appt({}));
     expect(e).toMatchObject({ id: 'local-1', type: 'consult', date: '2026-10-22', start: '17:30', end: '18:00' });
-    expect(e.title).toContain('Gema Martínez');
+    expect(e.title).toContain('Laura Méndez');
     expect(e.detail).toContain('Waiting for confirmation');
     expect(e.action).toBeUndefined();
   });

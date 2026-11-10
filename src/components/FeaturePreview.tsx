@@ -183,6 +183,13 @@ const previews = (): Record<AppSection, React.ReactNode> => ({
       sub={t('Your average blood sugar over about 3 months. 3 min read')}
     />
   ),
+  history: (
+    <Row
+      icon={<Ionicons name="alert-circle-outline" size={16} color={Colors.coral} />}
+      title={t('Allergies')}
+      sub={t('Penicillin · Shellfish')}
+    />
+  ),
 });
 
 const styles = StyleSheet.create({

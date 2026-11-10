@@ -47,8 +47,14 @@ export const PlanComparison = () => {
                   <MaterialCommunityIcons name={testIcon(p) as any} size={20} color={premium ? Colors.amber : Colors.accent} />
                 </View>
                 <Text style={styles.planName}>{premium ? 'Premium' : 'Basic'}</Text>
-                <Text style={styles.price}>{formatPrice(p.price)}</Text>
-                <Text style={styles.per}>{t('per year')}</Text>
+                {p.price != null ? (
+                  <>
+                    <Text style={styles.price}>{formatPrice(p.price)}</Text>
+                    <Text style={styles.per}>{t('per year')}</Text>
+                  </>
+                ) : (
+                  <Text style={styles.per}>{t('Price to be confirmed')}</Text>
+                )}
                 {isCurrent ? (
                   <View style={styles.currentPill}>
                     <Text style={styles.currentText}>{t('Your current plan')}</Text>

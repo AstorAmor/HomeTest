@@ -6,12 +6,11 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TestCard } from '@/components/TestCard';
 import { Colors, withAlpha } from '@/constants/colors';
-import { CATALOG, formatPrice, localizeTest, MEMBERSHIP } from '@/data/testCatalog';
+import { CATALOG, formatPrice, localizeTest, MEMBERSHIP, totalPrice } from '@/data/testCatalog';
 import { getMySubscription } from '@/data/orders';
 import { profileRepository, Sex } from '@/data/profileRepository';
 import { getLang, t, tn } from '@/i18n';
 import {
-  COVERED_BY_PANEL,
   FINDER_STEPS,
   FinderAnswers,
   FinderOption,
@@ -22,7 +21,6 @@ import {
 } from '@/logic/testFinder';
 import { TAB, tabHref } from '@/constants/tabs';
 
-const PRICES = Object.fromEntries(CATALOG.filter((p) => p.category !== 'consultation').map((p) => [p.id, p.price]));
 const TOP = 3;
 
 const OptionIcon = ({ icon, color }: { icon: string; color: string }) =>
@@ -33,8 +31,9 @@ const OptionIcon = ({ icon, color }: { icon: string; color: string }) =>
   );
 
 // "¿Te sientes diferente y no sabes qué analítica pedir?": 4 preguntas rápidas y, al final,
-// los tests del catálogo que encajan, con la misma ficha que la tienda, para marcarlos y
-// pedirlos juntos. No es consejo médico: el aviso y el acceso al médico salen siempre.
+// las pruebas del catálogo que encajan, con la misma ficha que la tienda, para marcarlas y
+// pedirlas juntas, y lo que ya mide el análisis anual de la suscripción. No es consejo médico:
+// el aviso y el acceso al médico salen siempre.
 export const TestFinderScreen = () => {
   const router = useRouter();
   const scroll = useRef<ScrollView>(null);
@@ -55,7 +54,9 @@ export const TestFinderScreen = () => {
   const gender = genderOf(sex);
   const label = (o: FinderOption) => (getLang() === 'es' && o.es ? o.es[gender] : t(o.label));
 
-  const result = useMemo(() => (done ? recommend(answers, sex, PRICES) : null), [done, answers, sex]);
+  // Lo que se puede pedir: lo de «Añadir a tu seguimiento», solo con la suscripción
+  const available = useMemo(() => CATALOG.filter((p) => p.orderable !== false && (subscribed || !p.withFollowUp)).map((p) => p.id), [subscribed]);
+  const result = useMemo(() => (done ? recommend(answers, sex, available) : null), [done, answers, sex, available]);
   const tests = useMemo(() => new Map(CATALOG.map((p) => [p.id, localizeTest(p)])), []);
 
   const step = FINDER_STEPS[stepIndex];
@@ -64,7 +65,7 @@ export const TestFinderScreen = () => {
   const next = () => {
     if (stepIndex < FINDER_STEPS.length - 1) setStepIndex(stepIndex + 1);
     else {
-      const r = recommend(answers, sex, PRICES);
+      const r = recommend(answers, sex, available);
       setSelected(r.picks.slice(0, 1).map((p) => p.id)); // el primero ya marcado: pedir es un toque
       setOpenId(null);
       setShowMore(false);
@@ -80,7 +81,7 @@ export const TestFinderScreen = () => {
   };
 
   const toggleSelected = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-  const total = selected.reduce((sum, id) => sum + (tests.get(id)?.price ?? 0), 0);
+  const total = totalPrice(selected.map((id) => tests.get(id)!).filter(Boolean));
 
   const DoctorButton = () => (
     <TouchableOpacity style={styles.doctorBtn} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
@@ -143,7 +144,7 @@ export const TestFinderScreen = () => {
   const picks = result!.picks.filter((p) => tests.has(p.id));
   const top = picks.slice(0, TOP);
   const rest = picks.slice(TOP);
-  const covered = [...new Set(picks.filter((p) => p.id in COVERED_BY_PANEL).map((p) => t(COVERED_BY_PANEL[p.id])))];
+  const covered = result!.covered.map((c) => t(c));
   const coveredText = covered.length > 1 ? `${covered.slice(0, -1).join(', ')} ${t('and')} ${covered[covered.length - 1]}` : covered[0];
   const flags = result!.flags;
 
@@ -168,9 +169,11 @@ export const TestFinderScreen = () => {
         <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.lab)} />
 
         <View style={styles.resultHead}>
-          <Text style={styles.title}>{t('These tests could help you')}</Text>
+          <Text style={styles.title}>{picks.length ? t('These tests could help you') : t('Your yearly analysis already looks at this')}</Text>
           <Text style={styles.subtitle}>
-            {t('Based on what you told us. Tick the ones you want and order them together.')}
+            {picks.length
+              ? t('Based on what you told us. Tick the ones you want and order them together.')
+              : t('Based on what you told us, no separate test adds much: what usually explains it is already in the yearly analysis.')}
           </Text>
         </View>
 
@@ -220,27 +223,38 @@ export const TestFinderScreen = () => {
           <View style={styles.note}>
             <Ionicons name="flower-outline" size={18} color={Colors.green} />
             <Text style={[styles.noteText, { flex: 1 }]}>
-              {t("Sneezing or itching when the weather changes may be an allergy. A doctor can tell you which allergy test you need; we don't offer it yet.")}
+              {t('Being sensitised to something is not the same as being allergic: an allergist reads the allergy test together with your symptoms.')}
+            </Text>
+          </View>
+        )}
+
+        {flags.includes('stress_sleep') && (
+          <View style={styles.note}>
+            <Ionicons name="moon-outline" size={18} color={Colors.violet} />
+            <Text style={[styles.noteText, { flex: 1 }]}>
+              {t('No blood test measures stress or sleep. The yearly analysis does look at what often lies behind tiredness: iron, B12, TSH and vitamin D.')}
             </Text>
           </View>
         )}
 
         {/* La suscripción cubre la mayoría: se ofrece como alternativa, o se recuerda si ya la tiene */}
-        {covered.length >= 2 &&
+        {covered.length > 0 &&
           (subscribed ? (
             <View style={styles.note}>
               <Ionicons name="star-outline" size={18} color={Colors.amber} />
               <Text style={[styles.noteText, { flex: 1 }]}>
-                {t('Your subscription panel already measures {list}. If you would rather not wait for your next test, order them now.', {
+                {t('Your yearly analysis already measures {list}. If anything comes out of range, you can measure it again in your follow-up, 6 months later.', {
                   list: coveredText,
                 })}
               </Text>
             </View>
           ) : (
             <>
-              <Text style={styles.sectionTitle}>{t('Would you rather check everything?')}</Text>
+              <Text style={styles.sectionTitle}>{picks.length ? t('Would you rather check everything?') : t('What the subscription measures')}</Text>
               <Text style={styles.sectionSub}>
-                {t("The subscription's full panel measures {list} and much more, twice a year.", { list: coveredText })}
+                {t("The subscription's yearly Kuova Baseline analysis measures {list} and much more, and the follow-up 6 months later shows whether it changes.", {
+                  list: coveredText,
+                })}
               </Text>
               <TestCard
                 test={localizeTest(MEMBERSHIP)}
@@ -276,20 +290,22 @@ export const TestFinderScreen = () => {
         </View>
       </ScrollView>
 
-      <View style={styles.orderBar}>
-        <TouchableOpacity
-          style={[styles.orderBtn, !selected.length && styles.orderBtnOff]}
-          disabled={!selected.length}
-          onPress={() => router.push({ pathname: '/checkout', params: { ids: selected.join(',') } })}
-        >
-          <Ionicons name="bag-check-outline" size={18} color={selected.length ? Colors.background : Colors.textMuted} />
-          <Text style={[styles.orderText, !selected.length && { color: Colors.textMuted }]}>
-            {selected.length
-              ? `${tn(selected.length, 'Order {n} test', 'Order {n} tests')} · ${formatPrice(total)}`
-              : t('Tick at least one test')}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {picks.length > 0 && (
+        <View style={styles.orderBar}>
+          <TouchableOpacity
+            style={[styles.orderBtn, !selected.length && styles.orderBtnOff]}
+            disabled={!selected.length}
+            onPress={() => router.push({ pathname: '/checkout', params: { ids: selected.join(',') } })}
+          >
+            <Ionicons name="bag-check-outline" size={18} color={selected.length ? Colors.background : Colors.textMuted} />
+            <Text style={[styles.orderText, !selected.length && { color: Colors.textMuted }]}>
+              {selected.length
+                ? `${tn(selected.length, 'Order {n} test', 'Order {n} tests')}${total != null ? ` · ${formatPrice(total)}` : ''}`
+                : t('Tick at least one test')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

@@ -7,7 +7,8 @@ import { getLang, t } from '@/i18n';
 // Qué incluye cada nivel (gratis, Basic, Premium) y quién tiene acceso a qué.
 // - Las filas de "Comparar suscripciones" las edita un admin desde la app (Más → Suscripciones
 //   (admin)) y se guardan en app_config 'plan_features'. Sin nada guardado, valen las de aquí.
-// - Algunas filas además las aplica la app (`gate`): 'scan_reports' (escanear informes) y 'diet_menu' (menú semanal).
+// - Algunas filas además las aplica la app (`gate`): 'scan_reports' (escanear informes), 'diet_menu' (menú semanal) y
+//   'workouts' (Entrenamientos, desde el 2026-11-06: en modo gratis, con candado; el fundador manda códigos).
 // - Nivel efectivo (my_access() en Supabase): admin > suscripción pagada > acceso por invitación
 //   (código o dado por el admin) > gratis. Migración 20261017100000_plan_access.sql.
 // Mientras esa migración no esté aplicada, la app no bloquea nada (como antes).
@@ -29,6 +30,7 @@ export interface PlanFeatureRow {
 export const GATED_FEATURES: Record<string, LocalText> = {
   scan_reports: { en: 'Scan your lab reports', es: 'Escanear tus informes' },
   diet_menu: { en: 'Personalised weekly menu', es: 'Menú semanal personalizado' },
+  workouts: { en: 'Workouts', es: 'Entrenamientos' },
 };
 
 export const DEFAULT_PLAN_FEATURES: PlanFeatureRow[] = [
@@ -53,6 +55,11 @@ export const DEFAULT_PLAN_FEATURES: PlanFeatureRow[] = [
     values: { free: false, membership: true, premium: true },
   },
   {
+    id: 'workouts',
+    label: { en: 'Workouts: your training plan, guided sessions and your log', es: 'Entrenamientos: tu plan, sesiones guiadas y tu registro' },
+    values: { free: false, membership: true, premium: true },
+  },
+  {
     id: 'blood_tests',
     label: { en: 'Blood tests included a year', es: 'Analíticas incluidas al año' },
     values: {
@@ -63,7 +70,7 @@ export const DEFAULT_PLAN_FEATURES: PlanFeatureRow[] = [
   },
   {
     id: 'more_panels',
-    label: { en: 'More panels and tests', es: 'Más paneles y pruebas' },
+    label: { en: 'Yearly test adds full thyroid, hormones, folic acid and urine albumin', es: 'El anual añade tiroides completo, hormonas, ácido fólico y albúmina en orina' },
     values: { free: false, membership: false, premium: true },
   },
 ];

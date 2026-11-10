@@ -1908,6 +1908,900 @@ que cerraba la app. Diagnosticado en una sesión de SecondBrain y arreglado aqu�
 - **Sin comprobar en el iPhone:** abrir Wearables tras recibir la actualización, y pulsar «Conectar Apple Salud» por primera vez
   (la pantalla de permisos de HealthKit y la lectura nunca se han probado en un dispositivo).
 
+## 2026-11-05 — Fase 1 de metas: «Cumple tus objetivos» en Hoy (rama `metas-fase1`, sin commit, sin publicar)
+
+Lo del prototipo v7 (`kuova-recomendaciones.vercel.app`) pasado a la app. **No está publicado ni hay migración**: solo
+compilaciones de prueba en el canal `pruebas` (abajo).
+
+- **Hoy:** la sección del plan se sustituye por `MetasToday` (`src/components/metas/MetasToday.tsx`): la enhorabuena o el ánimo
+  de la semana cerrada (se cierra con la ×, guarda `closedWeek`), el título «Cumple tus objetivos ›» (a `/metas`) y un donut por
+  área (Ejercicio, Alimentación, Hábitos; a `/metas-area`, o a `/metas-elegir` si el área está vacía). TodayScreen ya no carga lo
+  del plan antiguo (planHabits, nutrientes, mindful, labUploads…); `show('plan')` sigue mandando.
+- **Lógica:** `src/logic/metas.ts` (catálogo de 15 metas, objetivos de laboratorio y propios, evaluación de 7 días, donut por
+  área, recomendadas, enhorabuena semanal, textos, demo). Reglas del prototipo: la semana empieza el día que firmas; «pocas» = ≤3
+  cosas fallidas; una meta cuenta en el donut desde su primer dato; máx. 3 objetivos y 3 metas por área. Tabaco solo si fumas,
+  alcohol solo si bebes. Objetivos de laboratorio: LDL, triglicéridos, glucosa/HbA1c por encima del rango y HDL por debajo (lecturas
+  de la demo o de los análisis subidos).
+- **Pantallas** (`src/screens/MetasScreens.tsx`, rutas `src/app/metas*.tsx`): Tus objetivos (`/metas`, con el enlace a «Tu plan
+  completo»), elegir objetivos (`/metas-objetivos`), un área (`/metas-area?area=`), elegir metas (`/metas-elegir?area=`), Ajustar
+  (`/metas-ajustar?id=`), Otra meta (`/metas-otra?area=`), la (i) (`/metas-info?id=`) y el compromiso (`/metas-firmar`, 4/8/12
+  semanas). Piezas comunes en `src/components/metas/MetaParts.tsx` (interruptor A mano · Reloj/Entrenamientos, «− # +» con la
+  unidad fuera, los 7 días con su ruedita, la ruedita de la meta). Guardar/Añadir vuelven atrás o, si no hay pantalla anterior
+  (enlace directo), van al área.
+- **Datos, sin migración:** la configuración va en `user_flags` clave `metas.v1`; lo marcado a mano en `metric_readings` con
+  `kind = 'meta'` e id `meta:<meta>:<YYYY-MM-DD>` (unidad base; tabaco en cigarrillos). Lo automático se calcula cada vez y no se
+  copia: pasos y horas de sueño del reloj, «a tu hora» = ±30 min de la mediana de la hora de dormir (≥3 noches), cardio y fuerza de
+  Entrenamientos, check-in de los check-ins. `src/data/sharing.ts` excluye `kind = 'meta'` de lo que ve un profesional.
+- **Textos:** claves en inglés y español en `src/i18n/metasEs.ts` (se mezcla antes de `es.ts`, que gana). `metasEs.test.ts` falla
+  si un `t('…')` de las pantallas de metas no tiene traducción. El tour: `today.plan` y `today.plan.ej` (sustituye a
+  `today.plan.strength`).
+- **Pendiente de revisión médica:** las metas que sugiere cada objetivo de laboratorio y los textos de la (i)
+  (`src/data/metasInfo.ts`).
+- tsc limpio y 486 tests. Comprobado en la demo web (375 px): Hoy, las tres áreas, Ajustar con la ruedita, Otra meta (con el aviso
+  de 3), la (i) y el compromiso firmado.
+
+### Compilaciones de prueba (canal `pruebas`)
+
+- `eas.json`: perfiles `pruebas` (APK, hereda de `preview`) y `pruebas-ios` (TestFlight, hereda de `testflight`), los dos con
+  canal `pruebas` y **`environment: preview`**. Ojo: el entorno `production` de EAS **no tiene** las variables de Supabase, y los
+  perfiles de tienda lo usan por defecto; las compilaciones de TestFlight anteriores funcionaban porque recibían la actualización
+  del canal `preview`, que se publica con `--environment preview`.
+- Al estar en otro canal, `npm run release` (canal `preview`) **no** las pisa: llevan la fase 1 tal como se compiló. Para darles
+  cambios: nueva compilación, o `eas update --channel pruebas --environment preview`.
+- Una compilación de TestFlight nueva la reciben todos los probadores internos de la app, no solo el nuevo.
+- **iPhone:** compilación de TestFlight 1.1.0 (4) `9f1fe5f8-1f67-4c7e-9dad-3eadb0c86695` (perfil `pruebas-ios`), subida a App Store
+  Connect sin pedir nada (envío `e7e97408-5f0b-4de5-b21a-1a3b4b324783`). Apple la procesó y entró sola en «Team (Expo)».
+- **Android:** APK `bd6f7b80-c057-44e8-923a-90bd48541d5a` (perfil `pruebas`), se instala desde
+  https://expo.dev/accounts/astoramor/projects/app-tests-medicos/builds/bd6f7b80-c057-44e8-923a-90bd48541d5a (misma firma que el
+  APK de siempre: se instala encima y conserva la sesión; a partir de ahí ese móvil ya no recibe lo que se publique en `preview`).
+- **Probador nuevo (2026-11-05):** ya estaba invitado como usuario de App Store Connect (rol Developer, todas las apps) sin
+  aceptar; se le reenvió la invitación. Cuando acepte, hay que añadirlo al grupo interno «Team (Expo)» de TestFlight (que tiene la
+  distribución automática: la compilación 4 ya está ahí). Hoy el grupo solo tiene la cuenta del fundador (1.1.0 (3) instalada en
+  un iPhone 11 el 2026-11-02).
+
+### Notas del fundador desde el APK de pruebas (2026-11-05, misma rama, sin commit)
+
+- **Hoy:** «Tu resumen» solo sale si hay algo previsto (sin «No tienes nada previsto»); la tarjeta de avisos ya no sale en Hoy
+  (los avisos se siguen calculando y se ven en Más → Notificaciones). Lo primero es el check-in.
+- **Check-in en Hoy:** `src/components/CheckInButton.tsx`: botón redondo con la carita sobre un degradado (ámbar → dorado) y un
+  donut de 3 tramos con los check-ins del día (`checkInDayKey`, así que de madrugada cuenta el día anterior). Sin «¿Cómo te
+  encuentras?».
+- **Textos del check-in:** «¿Qué día estás registrando?», «¿Cómo está tu energía?», «¿Cómo te sientes?», «Emocionado», «Ansioso»,
+  nuevo estado `unmotivated` «Desmotivado» (puntuación 2, negativo; `mood` es texto libre en la tabla, sin migración), y «Acabo de
+  despertarme» / «Mi día está acabando» con mayúscula.
+- **Cumple tus objetivos:** encima de «Tu estado de hoy» (también en el tutorial); sin flecha; (i) con una hoja que explica de
+  dónde salen los objetivos, los enseña y lleva a «Ver tus objetivos» / «Cambiar mis objetivos»; los tres donuts centrados en un
+  mismo bloque, sin «Toca para marcar». «Tu plan completo» ya no se enlaza desde Tus objetivos (la pantalla `/action-plan` sigue).
+- **Metas con el reloj:** un día se puede corregir a mano aunque la meta vaya por reloj/Entrenamientos/check-in: lo apuntado a
+  mano manda ese día (`valuesFor`), el panel dice «Corregido a mano (X del reloj)» con «Deshacer». La ruedita de las metas es de 3
+  filas (`WheelPicker` `visible={3}`, `fadeColor`) y la unidad va en grande.
+- **Abrir un área ya no se queda en blanco:** `useMetas` comparte lo cargado entre Hoy y las pantallas de metas (en memoria, por
+  usuario) y recarga detrás; también guarda la última serie del reloj mientras carga la nueva. En la demo web, 60 ms.
+- **Más → Notificaciones** (`/notifications`), justo antes de Ajustes.
+- **Tu historial en Mis datos** (tras la edad KUOVA): alergias (solo se editan en «Editar»: medicamentos, alimentos, otras y «Otra»),
+  grupo sanguíneo (ruedita; se guarda `O-`/`O+`, se ve 0−/0+), vacunas (una fila por dosis, mes y año opcionales), cirugías e
+  historia clínica (nombre y año), con enlaces a medicación, antecedentes familiares y archivos. Todo en `user_flags`
+  `historial.v1` (sin migración); en la demo, una persona de ejemplo inventada. Lógica `src/logic/historial.ts`, pantallas
+  `src/screens/HistorialScreens.tsx`, rutas `src/app/historial-*.tsx`, textos `src/i18n/historialEs.ts`.
+- **Mi tarjeta de emergencia** (Más, tras Mi suscripción, y desde Tu historial; `/emergency-card`): nombre, teléfono de
+  emergencia (y de quién es), grupo sanguíneo y alergias a medicamentos del historial, en una tarjeta con los colores de KUOVA y
+  un QR de **texto plano** (se lee sin internet; no se sube nada). Se comparte como imagen (`shareBadge`, 1080×1350) y se puede ver
+  el QR en grande. QR con `toqr@0.1.1` (JS puro; el mismo que usa la CLI de Expo), nivel M: comprobado que un lector distinto
+  (jsQR) lo descodifica, tildes incluidas.
+- **Fuera por ahora:** importar el historial de un PDF o una foto con IA y compartirlo con los profesionales (6 alcances nuevos,
+  necesita migración); «no tengo alergias conocidas»; que Menús y metas lean las alergias. La política de privacidad tendrá que
+  nombrar estos datos (abogado).
+- tsc limpio y 500 tests. Comprobado en la demo web a 375 px: Hoy, check-in, Cumple tus objetivos con su (i), corregir un día
+  del reloj y deshacerlo, Tu historial, editar alergias, la tarjeta y Más.
+- **Mandado al canal `pruebas`** (OK del fundador «mándalos»): EAS Update grupo `cb83a571-0bcc-43d7-9d05-00d1daef859a` (android +
+  ios), con los pasos a mano por la RAM (`expo export --clear --platform android --platform ios --max-workers 1` y
+  `EAS_SKIP_AUTO_FINGERPRINT=1 eas-cli update --channel pruebas --environment preview --skip-bundler --input-dir dist`). El
+  export coge Supabase de `.env.local`. El APK y TestFlight de pruebas lo reciben al cerrar y volver a abrir la app (a veces, dos
+  veces).
+
+### Semanas de calendario en las metas (2026-11-05, misma rama, sin commit)
+
+Fundador: «aunque empieces un miércoles, que la semana empiece el lunes/domingo (según configuración en Más) … si empiezas un
+miércoles, la semana acabe el domingo y te diga: esta semana lo has cumplido (si has hecho lo correspondiente a esa parte)».
+
+- **Ajustes → «La semana empieza el»** Lunes / Domingo (`src/components/metas/WeekStartSetting.tsx`). Se guarda en el estado de
+  las metas (`weekStart`, 1 lunes / 0 domingo, por defecto lunes; `user_flags` `metas.v1`, sin migración), así que vale igual en
+  el móvil y en la web.
+- **Lógica** (`src/logic/metas.ts`): `weekStartOf`, `weekOf(día, estado, hoy)` → `{ days, from, to, current, share }`. `from` es el
+  día en que firmaste el compromiso si cae en esa semana (sin compromiso, la semana cuenta entera); `to` es hoy en la semana en
+  curso. Los días fuera de `from..to` son `'off'` (apagados, no se tocan). `weekGoal(m, share)`: en la primera semana, las metas
+  **a la semana** van en proporción, a pasos de la meta y al menos uno (cardio 90 min empezando un miércoles → 60; fuerza 2 → 1);
+  un límite se redondea hacia arriba («menos de 1,4 raciones» = «menos de 2»), y las de cada día no cambian.
+- **Enhorabuena:** el primer día de cada semana, sobre la anterior (`closedWeek`), con `closedWeek` del estado = el primer día de
+  esa semana. Si empezaste a mitad, añade «Como empezaste a mitad de semana, contaba solo esa parte.». Fechas con `rangeText`
+  («del 2 al 8 de noviembre»).
+- **Donuts y textos:** la semana en curso hasta hoy (antes eran los últimos 7 días), así que el lunes empiezan de cero. Una meta
+  con datos en las 4 semanas anteriores sigue contando aunque esa semana aún no tenga nada (`knownBefore`), para que no salga
+  «Cuenta desde que la marques». Una meta a la semana cumplida dice «· cumplida»; un límite, «esta semana / esa semana».
+- **Pantallas:** el área tiene arriba «Esta semana · del 2 al 8 de noviembre» con flecha a «La semana pasada» (para apuntar el
+  domingo el lunes; solo si ya habías empezado entonces), sin «Hoy» en la pasada, y en tu primera semana «Tu primera semana cuenta
+  desde el miércoles 28: las metas de la semana van en proporción.». Hoy: «Esta semana: del 2 al 8 de noviembre.». El compromiso
+  explica la semana y la proporción.
+- tsc limpio y 508 tests (nuevos en `metas.test.ts`: semanas lunes/domingo, el miércoles, la proporción, días `off`, metas con
+  historia, fechas). Comprobado en la demo web a 375 px: área (esta semana y la pasada con la nota de la primera), Hoy (pie y
+  enhorabuena de la primera semana), Ajustes (cambiar a domingo → «Del 1 al 7 de noviembre» y vuelta a lunes); sin errores.
+- **Mandado al canal `pruebas`** con los mismos pasos a mano: EAS Update grupo `b108c9ab-3c02-4d62-9037-2e78d041232f`.
+- Pendiente de decidir: una meta añadida a mitad de una semana que no es la primera no va en proporción (solo cuenta el
+  compromiso); y el compromiso de 4/8/12 semanas no tiene final todavía.
+
+### Historia clínica por categorías y tarjeta de emergencia editable (2026-11-05, misma rama, sin commit, sin publicar)
+
+Fundador: historia clínica con eventos (no «problemas») en categorías; tarjeta con dirección, campos que se eligen (recomendados
+nombre, grupo, alergias y contacto), avisos como diabetes, Sintrom o embarazo más los que escribas; descargarla completa o solo con
+el QR, con KUOVA en las dos; el QR se amplía al tocarlo; «Tu historial» se oculta; en Más faltaban Entrenamientos y Plan de comidas.
+
+- **Historia clínica = eventos** (`HistoryEvent { id, cat, name, year }`, `historial.v1.events`): Cirugías, Ingresos hospitalarios,
+  Enfermedades graves, Enfermedades crónicas, Accidentes y lesiones, Otros (`EVENT_CATS`, `EVENT_CAT_NAME`, `EVENT_PLACEHOLDER`).
+  Las dos listas de antes se migran solas al leer: `surgeries` → «Cirugías», `conditions` → «Otros» (solo si no hay `events`).
+  `/historial-lista` agrupa por categoría y se añade eligiendo la categoría con chips. En Mis datos, una ficha ancha «Historia
+  clínica» («4 eventos» y los nombres con año).
+- **Tarjeta editable** (`CardData`: `fullName`, `phone`, `contact`, `address`, `notices`, `show`): cada bloque tiene su interruptor
+  «Mostrar … en la tarjeta»; los recomendados llevan la etiqueta «Recomendado» y, si se enseñan vacíos, salen «Sin indicar». Por
+  defecto se ve todo menos «Alergias a alimentos y otras». «A tener en cuenta»: lista (`NOTICE_CATALOG`: diabetes, anticoagulantes
+  (Sintrom…), embarazo, epilepsia, marcapasos, asma, corazón, lentillas, donante) más «Otra cosa» escrita, máximo 8
+  (`toggleNotice`). `cardContent(h, { lock })` decide qué sale, y el QR (`emergencyQrText`) lleva exactamente lo mismo.
+- **Tres versiones de la imagen** (`EmergencyCard` con `variant`, `cardLayout`): **Completa** (1080 de ancho y alto según lo que
+  lleve, mínimo 1350), **Compacta** (1080×1350: nombre y QR grande, «Escanéalo con la cámara de otro móvil») y **Bloqueo**
+  (1080×2340, para fondo de pantalla: el contenido baja para no quedar bajo el reloj; **sin dirección**, porque la vería cualquiera
+  que coja el móvil). Las tres con el logo KUOVA. «Guardar o compartir la imagen» usa `shareBadge` con el tamaño de cada una (en el
+  iPhone, «Guardar imagen» de la hoja de compartir; en la web descarga el PNG).
+- **El QR se amplía al tocarlo** (capa transparente encima del QR de la vista previa → modal con `BigQr`; se cierra tocando en
+  cualquier sitio). Fuera el botón «Ver el QR en grande».
+- Consejo debajo: rellenar también la Ficha médica de la app Salud (iPhone) o la información médica de Ajustes → Seguridad y
+  emergencia (Android), que se ven sin desbloquear.
+- **Tu historial se oculta:** botón «Ocultar» junto al título en Mis datos y nueva sección `history` en Configura tu experiencia
+  (`SECTION_OPTIONS`, `FEATURE_GUIDE`, `FeaturePreview`). La tarjeta sigue en Más.
+- **Más:** «Entrenamientos» (`/workouts`) y «Plan de comidas» (`/diet`), tras Mi suscripción, si la sección «Plan personalizado»
+  está visible.
+- **Textos:** `src/i18n/historialEs.ts`. Ojo con las claves que ya existen en `es.ts` con otro sentido (`Suggested` = «Sugeridas»,
+  `Full` = «A tope», `Other allergies` = «Otras»): por eso la etiqueta es `Recommended field` y las versiones `Full version`, etc.
+  `historialEs.test.ts` también lee las versiones y sus notas de `HistorialScreens.tsx`.
+- **Wallet (respuesta al fundador; descartado por ahora, 2026-11-05):** Apple Wallet necesita un certificado Pass Type ID (cuenta de Apple Developer, el
+  fundador) y firmar el pase en el servidor (Edge Function); Google Wallet necesita cuenta de emisor y el pase se guarda en
+  Google, con datos de salud: abogado antes. Guardar directo en la galería pide `expo-media-library` y un build nativo nuevo.
+- tsc limpio y 512 tests (nuevos en `historial.test.ts`: migración a eventos, tarjeta normalizada, avisos, lo oculto no sale ni
+  en el QR, la dirección nunca en el fondo). Comprobado en la demo web a 375 px: historia por categorías y añadir un ingreso, la
+  tarjeta (dirección, ocultar el grupo, aviso escrito, las tres versiones, el QR en grande y cerrarlo), ocultar Tu historial y
+  volver a enseñarlo desde Configura tu experiencia, y Más. No probado en el móvil (la hoja de compartir con cada tamaño).
+- **Mandado al canal `pruebas`** (OK del fundador «adelante con esto, sin incluir el Wallet»): EAS Update grupo
+  `c5041aec-5075-49e0-9b63-6319a5966d76` (android + ios), con los mismos pasos a mano. El Wallet queda fuera por decisión del
+  fundador.
+
+### Alergias, QR con la K, fondo de bloqueo con foto y check-in nuevo (2026-11-05, misma rama, sin commit, sin publicar)
+
+Fundador: al añadir «Metamizol» salía raro y al volver la lista tardaba; fondo de bloqueo «mucho más bonito», con la foto que
+quieras y el QR en el tercio de abajo con la K de KUOVA (todos los QR con la K y «Kuova Health»); sin contacto, nada del contacto;
+fuera «escanéalo con la cámara»; check-in en verde KUOVA con la carita dorada, donut que se llena, confeti al hacer los 3,
+historial del día en el momento, «Momento del día», días centrados y Acelerado en vez de Desmotivado.
+
+- **Alergias:** lo escrito se compara con la lista sin tildes, mayúsculas ni puntos (`catalogAllergy`, `hasAllergy`; también el
+  nombre entre paréntesis y en los dos idiomas), así «Metamizol» marca «Metamizol (Nolotil)» en vez de crear un chip duplicado, y
+  las alergias escritas antes que coinciden se pasan solas al elemento de la lista (`normalizeHistorial`). Confirmación «Marcada:
+  …, en …», fuera la etiqueta «Añadida por ti», Guardar cierra el teclado y guarda también lo que esté escrito sin añadir.
+  `useHistorial` es ahora un almacén compartido (todas las pantallas reciben el cambio al momento, y una carga que empezó antes de
+  guardar se ignora): la lista sale actualizada al volver, sin esperar a la red.
+- **QR con la K** (`src/logic/qr.ts`): corrección H y un hueco en el centro (30 % × 25 %, a 9 módulos o más del borde) con una
+  placa crema, la K y «KUOVA HEALTH» (`QrBadge` en `EmergencyCard.tsx`). Comprobado con jsQR (textos cortos, largos, borrosos y
+  el PNG de bloqueo con foto que dibuja la web): todos se leen.
+- **Fondo de bloqueo** (1080×2340): sin textos, la foto que elijas (`pickWallpaperPhoto` en `src/utils/wallpaperPhoto.ts`,
+  recortada a 1080×2340 en JPEG) o, sin foto, un degradado con ondas doradas; el QR (560 px) en el tercio de abajo con un halo
+  blanco. La foto se queda en el móvil (`src/data/cardPhoto.ts`, AsyncStorage `historial.cardPhoto.v1:<usuario>`), nunca se sube.
+  Enlaces «Elegir una foto» / «Cambiar foto» / «Quitar foto» solo en esa versión.
+- **Contacto:** si no hay contacto de emergencia no sale nada de él (ya no es recomendado ni sale «Sin indicar»). Fuera todos los
+  «Escanéalo con la cámara…».
+- **Check-in** (`CheckInButton.tsx`): en modo claro círculo verde KUOVA `#0E2A24` y carita en dorado `#C9A366`; el tramo nuevo se
+  rellena poco a poco y el donut coge color con cada check-in (`#E3CFA3` → `#D6B97F` → `#C9A366`); al completar los 3 justo
+  después de guardar (`src/logic/checkInCelebration.ts`, ventana de 2 min) el anillo se cierra, la carita sale hacia delante
+  (1,32 y se queda en 1,08) y Hoy suelta confeti (`Confetti`, 90 piezas). Al abrir la app con los 3 ya hechos no salta.
+- **Pantalla del check-in:** «Momento del día»; los momentos ya hechos ese día llevan un check verde; Hoy / Ayer / el otro día
+  centrados; Desmotivado sale del selector (`MOOD_PICKER`; los guardados se siguen viendo, `legacy`) y entra **Acelerado 😬**
+  (`wired`, puntuación 2,2, cuenta como estado negativo).
+- tsc limpio y 517 tests (nuevos: `checkInCelebration.test.ts`; en `historial.test.ts` la lista sin tildes, el contacto vacío y
+  el hueco del QR). Comprobado en la demo web a 375 px: añadir Metamizol y volver, las tres versiones de la tarjeta, la foto en el
+  PNG y su QR leído, el check-in en modo claro (colores, check de momentos, días centrados, Acelerado) y el confeti al hacer el
+  tercero. No probado en el móvil: elegir la foto, compartir la imagen con foto, las animaciones y la sombra en iOS.
+- **Mandado al canal `pruebas`** (OK del fundador «Sí, a pruebas»): EAS Update grupo `146c0197-2fa0-40b4-8e61-1d26452a174e`
+  (android + ios), con los mismos pasos a mano. La foto usa `expo-image-picker` y `expo-image-manipulator`, que ya estaban en
+  las builds de pruebas, así que no hace falta build nueva.
+
+### % ponderado, celebraciones al 100 %, Kegel con histórico y retoques (2026-11-05, misma rama, sin commit, sin publicar)
+
+Fundador: el % de hábitos bajaba al marcar (3 frutas → 100 %, 1 verdura → 80 %); placa del QR «un poco fea», K dorada y KUOVA /
+HEALTH con el logo; el check-in no enseñaba lo marcado al volver a un momento hecho; en claro, botón blanco con la carita en verde;
+alergias con un solo «Editar»; hueco del tutorial redondeado; Kegel con segundos por tramo y sin saltos del círculo; estiramientos
+ponía 5 min y duraba 8; «Registra tu micción»; confeti y «zoom y vuelta» del donut al llegar al 100 %, algo más épico con los tres;
+fuera la foto de perfil de Hoy; Kegel debajo de «Apuntar regla» con un histórico minimalista de cuándo los has hecho.
+
+- **% de metas** (`src/logic/metas.ts`): cada meta pesa igual y, en las de cada día, cuenta lo que llevas (`dayScore`: v/objetivo
+  con tope 1; en un «como mucho» pasado, objetivo/(v+paso); sí/no, 0 o 1). Las manuales cuentan desde el primer día de la
+  semana en curso (con 0 hasta que marcas; `countsInArea`), las del reloj desde que llegan datos; en una semana pasada, las que
+  no tienen datos se quedan fuera («Sin datos esa semana»). Así marcar nunca baja el % (test «marcar nunca baja el %»). Ojo: marcar
+  un día pasado que estaba vacío sí puede bajarlo (decisión anterior: los días vacíos pasados no cuentan).
+- **QR: sigue siendo texto plano**, que cualquier cámara lee sin internet (`emergencyQrText`). Se probó que abriera la tarjeta con
+  formato en una página de la web (`kuovahealth.com/e#<datos en base64url>`, HTML suelto sin servidor), pero el móvil que escanea
+  necesita conexión y el fundador prefiere que se lea sin ella (2026-11-05). Con formato y sin internet no se puede en un móvil sin
+  la app: la cámara solo abre enlaces (red) o enseña texto. Se quitó todo (ni `cardLink.ts` ni `public/e.html`; la web no se tocó).
+- **Placa del QR** (`QrBadge` en `EmergencyCard.tsx`): crema con filete dorado, K dorada, la palabra KUOVA (`KuovaMark`) en verde y
+  HEALTH debajo en dorado oscuro, centrado.
+- **Check-in:** al tocar un momento ya hecho ese día se carga lo que marcaste (título «Editar check-in», «Guardar cambios»); al
+  pasar a uno sin hacer, el formulario vuelve a vacío. En modo claro el botón es un disco blanco con sombra verde suave y la carita en
+  verde KUOVA.
+- **Otros:** alergias sin el «Editar» de arriba; Hoy sin la foto de perfil; el tutorial oscurece con un `Path` evenodd y el hueco
+  tiene esquinas de 14 (`shadeWithHole` en `TourOverlay.tsx`).
+- **Ejercicios** (`ExerciseScreen.tsx`, `exercises.ts`): el Kegel es **todo contracciones lentas** (fundador: nada de 30 s de
+  explicación con el círculo respirando): 10 × (aprieta y aguanta 6 s + suelta 6 s) = 2 min justos, «Contracción n de 10» debajo
+  y, dentro del círculo, el tramo y sus segundos 6…1; aprieta = se encoge en 1,2 s y aguanta, suelta = crece en 2 s (`to`, `move`;
+  el círculo empieza grande porque lo primero es apretar). Fuera las rápidas y los pasos de texto. Lo de cómo se hace va antes de
+  empezar (`howTo` en el ejercicio): la intro, «Cómo hacerlo» con 5 pasos numerados (postura, encontrar los músculos «como si
+  cortaras el pis… no lo practiques cortándolo de verdad», respirar, qué hacer cuando el círculo se encoge o crece, tres veces al día
+  y 3–6 meses) y el botón «Ir al ejercicio · 2 min». Pauta NHS (aguantar 5–10 s, hasta 10 veces), pendiente de revisión clínica.
+  Los pasos de texto largo de otros guiados enseñan un número grande con lo que les queda. El círculo de fondo de los guiados sigue desde donde está
+  (`resetBeforeIteration: false`): antes, al acabar de encogerse, volvía de golpe. La etiqueta de Yoga sale de
+  `EXERCISES.stretch.minutes` («Haz 8 minutos de estiramientos»). Hidratación: «Registra tu micción».
+- **Kegel en el ciclo, con histórico** (`CycleDetailScreen.tsx`): debajo de «Apuntar regla», el título «Ejercicios de Kegel» y una
+  tarjeta como el bloque de objetivos de Hoy, todo centrado: un anillo con cuántos días de los últimos 7 los hiciste («1 de 7
+  días»), 7 puntos (uno por día, del más antiguo a hoy, con la inicial; lleno si lo hiciste), «Última vez: hoy / ayer / 3 nov.» o
+  «Aún sin hacer» y «Empezar · 3 min ›»; toda la tarjeta abre el ejercicio (`src/logic/kegel.ts`, test `kegel.test.ts`). Cada Kegel terminado se
+  guarda (`logKegelSession` en `src/data/kegelRepository.ts`): en las cuentas, metric_readings con kind `kegel` (valor = minutos),
+  sin migración; no sale en la vista del profesional (`sharing.ts`, `.not('kind', 'in', '(meta,kegel)')`) y se vacía con los demás
+  registros en las cuentas de prueba (`simulation.ts`).
+- **Reloj de los ejercicios** (`ExerciseScreen.tsx`): los segundos salen de la hora real (`Date.now()` desde que empezaste, sin las
+  pausas; aviso cada 250 ms), no de sumar 1 por cada aviso de 1 s. Si el móvil retrasa o junta los avisos (segundo plano, hilo
+  ocupado), la cuenta no se adelanta ni se queda atrás. Medido en la demo: 30 s reales = 30 s en pantalla; en pausa no corre; tras
+  bloquear el hilo 3 s marca 3 s más. El «ritmo imposible» que vio el fundador en el navegador era una prueba mía que aceleraba los
+  avisos de esa pestaña; en la app no pasaba.
+- **Al 100 %** (`MetaParts.tsx`, `MetasScreens.tsx`, `MetasToday.tsx`): al marcar algo con lo que un área llega al 100 % de la
+  semana en curso, su donut crece a 1,24 y vuelve con muelle y salta confeti (70); si con ella ya están las tres, 170 piezas doradas
+  durante 4,2 s, el donut a 1,38 y la tarjeta «¡Los tres al 100 %!». Solo al marcar tú, no al abrir la pantalla ya al 100 %. Al
+  volver a Hoy, ese donut da también su saltito (`takePop`).
+- tsc limpio y 521 tests (nuevo `kegel.test.ts`; `metas.test.ts` y `historial.test.ts` al día). Comprobado en la demo web a
+  375 px: % parciales (Alimentación 92 % = (3 + 2/3)/4) que suben al marcar, confeti y saltos (el épico incluido), el check-in que
+  carga lo marcado, la placa del QR, Kegel (5→1 por tramo, círculo 0,50↔1 sin saltos), estiramientos (sin saltos, 8:00), alergias,
+  tutorial y Hoy; la tarjeta de Kegel en el ciclo (vacía, y tras hacer uno entero, hoy lleno y «1 de 7 días») y el reloj. No probado en el
+  móvil (ni guardar el Kegel en una cuenta de Supabase).
+- **Mandado al canal `pruebas`** (OK del fundador «Sí, a pruebas»): EAS Update grupo `64542308-2a21-471a-a705-2e10fa26a8c9`
+  (android + ios), con los mismos pasos a mano (`expo export --clear … --max-workers 1` y `eas-cli update --channel pruebas
+  --environment preview --skip-bundler --input-dir dist`). Sin build nueva ni cambios en la web.
+
+### Notas del fundador del 2026-11-06: peso, Analíticas, cada marcador, plan del especialista, entrenos, Bloqueo (misma rama, sin commit; OTA a `pruebas` y APK de pruebas nuevo)
+
+- **Peso en Mis datos** (`MyDataScreen.tsx`): no salía porque Mis datos nunca cargó `weightRepository`; el peso solo estaba en Hoy
+  (desde el 2026-10-19). Ahora tiene su tarjeta después de la tensión (gráfica violeta; abre `/weight-detail`, o `/log-weight` si
+  no hay ninguno; sin datos, «Pésate una vez a la semana…»). El VO2max baja a Mediciones, después de Temperatura. El título de
+  arriba es siempre «Mediciones» («De tu reloj (últimos 14 días) y lo que apuntas» / «Lo que apuntas»).
+- **«Analíticas» en Mis datos** (fundador: «lo que hace referencia a analíticas que sea "analíticas" y no biomarcadores, porque todo
+  son biomarcadores»): la sección que antes se llamaba Biomarcadores ahora es «Analíticas». Tiene las tarjetas de Glucosa, Colesterol total y Cortisol
+  (se apuntan también a mano y tienen su pantalla) y «Todos tus valores»: el último valor de cada marcador de las analíticas
+  subidas y, en las cuentas de prueba, de los dos informes de ejemplo. Van primero los que están fuera del rango, luego en rango y
+  al final sin referencia. Se ven los `max(6, fuera)` primeros con «Ver los N valores», «Última analítica: fecha · laboratorio»,
+  los recuentos y una leyenda neutra («…no es un diagnóstico; tu médico lo pone en contexto»). La lógica está en `src/logic/labMarkers.ts`
+  (pura, test `labMarkers.test.ts`): `markerKey` usa el marker_id del catálogo o, si no lo hay, `n:` + el nombre normalizado. Junta
+  laboratorios distintos.
+- **Hoy** sigue con «Biomarcadores», más la línea «Lo que apuntas y lo que viene de tu reloj…». Con datos propios, la glucosa y la
+  tensión ya no enseñan el estado y el color del ejemplo («¡Excelente!»; era un P0 de la auditoría). Enseñan de dónde y de cuándo son
+  («De tu analítica · 12 oct.» / «Apuntado el 12 oct.»), con estado neutro: `own()` en `liveBiomarkers.ts`, `fecha`/`fromLab` en
+  `Biomarker`. En la demo, sin datos propios, sigue el ejemplo.
+- **Cada marcador, con todos sus valores** (`/lab-marker?key=…&from=upload:id|report:id`, `LabMarkerScreen.tsx`). Arriba el último
+  valor con el rango del laboratorio y su barra. Debajo, «Cómo ha cambiado»: no mezcla unidades y avisa de los valores en otra
+  unidad. La franja del rango se recorta cerca de los valores (`chartBand`), porque con ferritina 30–400 y valores de 24 y 34 la
+  línea quedaba plana; vale con un solo límite (LDL < 130). Luego «Tus N resultados», donde cada uno abre su analítica y el de
+  `from` lleva «esta analítica», y una ficha de `getParameterCard`. Si el valor está fuera del rango se añade lo asociado a mejores valores (`labEvidence`) o
+  «Habla con un médico…», y «Tu objetivo para esto» cuando hay uno (`labGoalForMarker`: LDL, TG, glucosa/HbA1c, HDL bajo).
+  Se abre:
+  - desde cualquier fila de una analítica subida: `LabValueRow` ya no se despliega, ahora es un enlace (lo desplegado está en la ficha);
+  - desde las filas de los informes (`LabReportScreen`, los dos, no solo el actual);
+  - desde «Ver todos tus resultados en Mis datos» en `ReportMarkerDetailScreen`;
+  - desde la lista de Mis datos.
+  Glucosa, colesterol total y cortisol van a su propia pantalla (`markerHref` en `src/utils/markerLinks.ts`).
+- **Plan: la app ya no hace planes** (fundador, «Objetivos + plan del médico»; decisión apuntada en el vault,
+  `Strategy/Kuova/Plan personalizado - objetivos y plan del especialista.md`):
+  - `/plans` es «El plan de tu especialista»: solo las versiones con `source: 'professional'` (`specialistPlans`). Si no hay
+    ninguna, «Habla con un especialista» y «Ver tus objetivos».
+  - En Tus objetivos sale una tarjeta hacia ese plan solo si hay uno.
+  - Tras una analítica (`ProgressScreen`, `UploadTestScreen`), «Actualizar mi plan» pasa a ser «Revisar mis objetivos»
+    (`/metas-objetivos`) con «Pedir que lo revise un médico» (`/professionals`, rol médico).
+  - En el menú de la web, «Mi plan» pasa a «Tus objetivos» (`/metas`).
+  - Los textos de la sección están en `appPrefs.ts` y `featureGuide.ts`.
+  - Las pantallas del plan automático (`/action-plan`, `/plan-update`, `/report-plan`, `goalsPlan`, `planHistory`) siguen en el
+    código, pero nada las enlaza.
+  - Las versiones antiguas (upload/report) siguen en la base de datos sin enseñarse.
+  - **Pendiente:** el tema `plan` de `EvidenceScreen` aún describe el plan automático.
+- **Entrenos:**
+  - «Descartar este entrenamiento» en la propuesta de «Crear mi entrenamiento» vuelve atrás sin guardar (`/workouts` si no hay
+    atrás).
+  - En el Historial, una papelera en cada entreno, con confirmación («Desaparecerá de tu historial y dejará de contar en tus
+    metas»). `historyRemoval` en `workoutHistory.ts`:
+    - una sesión de programa sale de sus `completions` (por posición o, si cambió, por hora), y se borra el entreno del plan
+      guardado con ella (±2 s);
+    - uno apuntado se borra solo con su fila (la RLS «own rows: delete» de `workouts` ya existía).
+- **Tarjeta de emergencia, versión Bloqueo** (fundador, «Instrucciones + Android directo»): la nota dice «Solo para la pantalla de
+  bloqueo, no la de inicio» y debajo del botón salen los pasos a mano (`LockSteps` en `HistorialScreens.tsx`). Son los de iPhone en
+  iOS, los de Android en Android y los dos en la web:
+  - iPhone: Fotos → Compartir → «Usar como fondo de pantalla» → «Añadir» → «Personalizar pantalla de inicio» con otra foto o un
+    color.
+  - Android: Galería o Google Fotos → ⋮ → «Establecer como fondo de pantalla» → «Pantalla de bloqueo».
+  - En Android hay además un botón, «Ponerla en mi pantalla de bloqueo». Usa un **módulo nativo local nuevo**,
+    `modules/kuova-wallpaper` (solo Android, Kotlin, `WallpaperManager.setStream(…, FLAG_LOCK)`, permiso normal `SET_WALLPAPER` sin
+    diálogo; autolinking lo encuentra). Del lado JS, `src/utils/lockWallpaper.ts` (+ `.web.ts`) guarda el PNG en la caché y lo pone.
+  - El botón solo aparece si el módulo existe (`requireOptionalNativeModule`), así que **hace falta un APK de pruebas nuevo**. Como
+    el runtime es `exposdk:57.0.0`, el OTA llega también a los APK viejos, que siguen con los pasos a mano.
+  - **Sin probar en un móvil:** el Kotlin compila (build de EAS `b3972691`, más abajo), pero el botón no se ha pulsado en un
+    teléfono. Algunas capas de fabricante podrían ignorar `FLAG_LOCK` y cambiar también la de inicio.
+- **Placa encima del QR en Bloqueo** (fundador, a media tarea): «INFORMACIÓN DE EMERGENCIA» en dorado y «Escanea el QR con la
+  cámara de un móvil» en crema, sobre una placa verde oscura al 78 % con borde dorado, justo encima del halo del QR
+  (`EmergencyCard.tsx`, y = QR − 180). Se lee sobre cualquier foto; comprobado en la demo.
+- **Fondo de Bloqueo a elegir** (fundador: «otros patrones: claros, el verde… 2 o 3 más»): bajo la vista previa, «Fondo» con
+  cinco miniaturas: Verde (el de antes), Capas (láminas verdes), Crema (claro, con ondas doradas), Arena (láminas claras) y Tu foto
+  (si no hay, la elige). Las capas siguen el estilo de la marca: 5 láminas con curvas suaves (dos senos, sin azar, Catmull-Rom),
+  sin contornos y con una sombra tenue (`sheetPath`/`Sheets` en `EmergencyCard.tsx`). En los fondos claros el halo del QR es verde
+  suave. La elección va con la tarjeta (`CardData.lockBg`, user_flags `historial.v1`); la foto sigue solo en el móvil.
+  `lockBackground()` decide el que se pinta: «tu foto» sin foto en ese móvil = verde, y sin elegir, la foto si la hay (tarjetas de
+  antes). Los degradados llevan un id por dibujo (`idp`), porque en la web las miniaturas pisaban los del dibujo grande.
+- **Aviso del perfil genético** (`WelcomePrompts.tsx`; fundador: «¿qué diferencia hay entre Luego y Saltar?»): ahora tiene
+  «Omitir por ahora», con la línea «Te lo recordaremos dentro de 3 días.», y «No volver a mostrar este aviso» (ese aviso no vuelve).
+  Se quitan «Más tarde», «Saltar» y «Silenciar estos avisos»; quien ya los silenció sigue sin verlos.
+- **Mis datos, «Todos tus valores»**: la flecha de arriba a la derecha abre y cierra la lista entera (la de abajo también; antes
+  solo estaba al final de una lista de más de 100 valores). **El ojo**: cada valor lleva un ojo que pone o quita su gráfica en
+  Analíticas, y cada gráfica lleva el suyo para quitarla.
+  - Por defecto se ven azúcar, colesterol total y cortisol. La lista ahora los incluye también.
+  - Los demás salen como `LabChartCard`: el último valor y la línea si hay dos o más en la misma unidad, con la franja recortada;
+    con uno solo, «De momento hay un resultado…».
+  - Se guarda en user_flags `mydata_charts` (`{ keys }`; `normalizeCharts`/`toggleChart` en `labMarkers.ts`).
+  - Comprobado en la demo con clics de verdad: el ojo no abre la ficha (botones anidados en la web, sin problema).
+- **Otros:** el título «Lab Results» del informe ahora pasa por `t()` («Resultados de laboratorio»). Todos los textos nuevos están
+  en `es.ts` / `historialEs.ts`, con la prueba `notasFundador1106Es.test.ts`, que mira cada `t('…')` de las pantallas tocadas.
+- **Pruebas:** tsc limpio y 538 tests (`labMarkers.test.ts` con `chartBand` y las gráficas, `notasFundador1106Es.test.ts`, `historyRemoval` en
+  `workoutHistory.test.ts` y el fondo en `historial.test.ts`). Comprobado en la demo web a 375 px:
+  - Hoy y la línea de Biomarcadores;
+  - Mis datos: Peso, Analíticas y «Todos tus valores» con los recuentos;
+  - la ficha de LDL y la de ferritina (franja recortada), con «esta analítica» al venir del informe;
+  - el informe que se abre desde un resultado;
+  - `/plans` vacío;
+  - apuntar un entreno y borrarlo con la confirmación;
+  - Descartar, que vuelve a Entrenamientos;
+  - Bloqueo con los dos pasos y sin desbordar.
+  El localStorage de la demo quedó vacío, como estaba. No probado en el móvil, ni con una analítica subida en una cuenta real, ni
+  la pantalla de Progreso con sus botones nuevos.
+- **Publicado solo en pruebas** (con el OK del fundador, «Sí, OTA y APK»; producción sin tocar, ni `npm run release` ni submit):
+  - OTA al canal `pruebas`, grupo `92ccf010-21f6-42e1-af89-a97d0e4f0c41` (runtime `exposdk:57.0.0`, Android e iOS; export con
+    `--max-workers 1`, `EAS_SKIP_AUTO_FINGERPRINT=1`, `--environment preview`). Llega a los APK y TestFlight de pruebas que ya hay.
+  - APK de pruebas nuevo (perfil `pruebas`), build `b3972691-7748-4516-ba75-715f7fbf80a0`, **terminada** (el módulo Kotlin
+    compila), para el botón de la pantalla de bloqueo. Se descarga desde la página de la build en expo.dev. `modules/` está sin
+    seguimiento en git, pero no ignorado, así que EAS lo sube.
+
+### Después del OTA del 2026-11-06: metas debajo de los objetivos, y fumar, alcohol y cafeína en Hábitos (misma rama, sin commit; OTA a `pruebas`)
+
+- **Las metas, debajo de los objetivos** (fundador: «en "Tus objetivos" tendría directamente las metas también»):
+  - En «Tus objetivos» (`/metas-objetivos`, `GoalsPickScreen`), debajo de los objetivos, sale «Tus metas» con las tres áreas
+    (`AreaTargets` en `MetasScreens.tsx`). Cada una enseña las que tienes y las que recomiendan los objetivos que eliges, que
+    cambian al marcar uno. Se ponen y se quitan ahí mismo (hasta 3 por área), con «Ajustar» y «Ver todas» (`/metas-elegir`).
+  - Una meta que quitas sigue en la lista, sin marcar, mientras estás en la página. Si no, desaparecía y la lista saltaba.
+  - En la hoja (i) «Tus objetivos» de Hoy (`MetasToday.tsx`), debajo de los objetivos, salen tus metas de cada área.
+  - `/metas` ya tenía las metas bajo «Tus áreas de acción», y no cambia.
+- **Hábitos** (fundador: «incluiría dejar de fumar, reducir el consumo de alcohol, reducir el consumo de cafeína…»):
+  - Nueva `sinhumo`, «Sin fumar cada día» (sí / no; «Sin fumar» / «He fumado»; a la semana, «Sin fumar, 5 días a la semana»).
+  - Nueva `cafeina`, «Menos de 3 cafés al día» (límite; su (i) cuenta qué vale como un café y cita la EFSA: 400 mg al día en
+    adultos sanos, 200 en el embarazo, y la cafeína en las 6 h antes de acostarte).
+  - Tabaco (`tabaco`, reducir) y alcohol (`alcohol`, reducir) ya existían, pero solo salían a quien marcó en el cuestionario que
+    fuma o bebe. Ahora salen a todo el mundo: a quien lo marcó, primero y con su nota («Sale porque has marcado…»); a los demás,
+    al final. Se recomiendan solo a quien lo marcó, como antes.
+  - El objetivo «Dejar de fumar» recomienda «Sin fumar» y «Tabaco». «Dormir mejor» incluye la cafeína, pero va la última en el
+    orden, así que no cambian las recomendadas por empate (siguen paseo y hora). Los objetivos «Dejar de fumar» y «Beber menos
+    alcohol» siguen saliendo solo a quien lo marcó.
+  - Lógica: `pickList` (orden de la lista) y `toggleSel` (poner o quitar, hasta 3) en `metas.ts`, que usan las dos pantallas.
+- **Pruebas:** tsc limpio y 542 tests (`metas.test.ts`: orden, frases, recomendadas y poner/quitar; `metasEs.test.ts` cubre los
+  textos nuevos del catálogo y de las pantallas). Comprobado en la demo web a 375 px: las metas debajo de los objetivos, quitar
+  y volver a poner fuerza, Hábitos con las nuevas, la (i) de la cafeína y la hoja de Hoy (cabe sin desplazar con 9 metas). Se
+  dejaron el localStorage de la demo y su tamaño como estaban. Pendiente: la (i) de la cafeína y de «Sin fumar» también va a la
+  revisión médica (como el resto de `metasInfo.ts`).
+- **Publicado solo en pruebas** (OK del fundador, «Sí, OTA a pruebas»): OTA al canal `pruebas`, grupo
+  `fc87d40f-94e4-42e3-bc45-43f14fea0e2c` (Android e iOS, runtime `exposdk:57.0.0`). No hace falta APK nuevo. Producción, sin tocar.
+
+### Después del OTA fc87d40f (2026-11-06): metas sin tope y la gráfica de «Tus últimos días» (misma rama, sin commit; OTA a `pruebas`)
+
+- **Metas sin tope** (fundador: «que se puedan seleccionar tantas cuantas quieras. Pero que si te pasas de 3 aparezca arriba…»):
+  - `toggleSel` ya no devuelve null con 3 y `normalizeState` ya no recorta a 3. `METAS_MAX` (3) queda como el número a partir
+    del cual sale el aviso: `tooMany(s, area)`.
+  - El aviso (`ManyTip` en `MetasScreens.tsx`): «Está genial que te propongas muchas metas, pero a veces vale más consolidar unas
+    pocas (hasta 3 por área) antes de pasar a las siguientes». Sale arriba en «Tus metas» (`/metas-elegir`, para el área que
+    miras) y arriba de la sección «Tus metas» de «Tus objetivos» (si alguna área pasa de 3). Fuera los textos de «hasta 3» y
+    «Ya tienes 3: quita una»; «Otra meta» siempre queda marcada.
+  - `pickList` ya no sube arriba una meta al marcarla (a quien no fuma, «Sin fumar» marcada saltaba al principio). Orden estable.
+- **La gráfica de «Tus últimos días»** (`/your-days`, `DaysScreen`; fundador: «que se pueda ver también la gráfica del estado
+  anímico… que por defecto sea estado anímico y energía… y a las chicas les aparezca el eje del ciclo menstrual debajo»):
+  - Tarjeta «Cómo has estado» arriba, con 7D / 14D / 1M (`RangeTabs` admite `only`); las tarjetas de cada día siguen siendo 14.
+  - `DaysChart.tsx` + `logic/dayChart.ts`: por defecto ánimo y energía (media de los check-ins del día, `MOOD_SCORE`). Debajo,
+    una fila de chips en orden fijo para añadir o quitar: estrés, sueño (h), pasos, VFC, pulso en reposo, orina (veces),
+    deposiciones (veces) y entreno (min). Hasta 4 a la vez (con 5 ya no se lee); siempre queda una. Lo elegido se guarda en
+    user_flags `days_chart` ({ series }).
+  - Cada medida en su escala (`seriesScale`): ánimo, energía y estrés de 1 a 5; las demás, de su mínimo a su máximo del periodo
+    con un margen mínimo (pasos 6.000, sueño 3 h, VFC 30 ms, pulso 15 lpm, orina 6, deposiciones 3, entreno 60 min), sin bajar de
+    0 (pulso, de 30) y redondeado. El chip elegido enseña su escala («Pasos 5–12 mil»). Los días sin dato cortan la línea (un
+    trazo discontinuo tenue une los tramos). Tocar: fecha, fase del ciclo y el valor de cada una en su unidad.
+  - Mujeres (`sex === 'female'`): franja de la fase de cada día bajo la gráfica (`cycleByDay`: con las reglas apuntadas hasta ese
+    día; antes de la primera, nada) y su leyenda. Sin reglas apuntadas, «Apunta tu regla y verás las fases…» (→ `/log-cycle`);
+    en la demo, el ejemplo de Hoy (la última, hace 11 días).
+  - Demo sin check-ins: ánimo y energía de ejemplo (`sampleCheckInSeries`), dicho en la nota.
+- **Pruebas:** tsc limpio y 557 tests (`dayChart.test.ts` nuevo: escalas, guardado, añadir/quitar, tramos, fases; `metas.test.ts`
+  sin tope y orden estable; `notasFundador1106Es.test.ts` cubre `DaysScreen` y `DaysChart`). Comprobado en la demo web a 375 px:
+  gráfica con ánimo y energía, añadir pasos y VFC, tocar un día, 1M, franja del ciclo (con perfil de mujer puesto a mano y
+  quitado) y en español; metas: cuarta en Hábitos con el aviso arriba, en «Tus objetivos» y el donut con 4. localStorage de la
+  demo y tamaño, como estaban. Sin probar en un móvil.
+- **Publicado solo en pruebas** (OK del fundador, «Sí, OTA a pruebas»): OTA al canal `pruebas`, grupo
+  `14744197-b994-4e56-8294-0ce023dedafb` (Android e iOS, runtime `exposdk:57.0.0`). No hace falta APK nuevo. Producción, sin tocar.
+
+### Modo gratis y códigos para compartir la app (2026-11-06, misma rama, sin commit; OTA a `pruebas`)
+
+- **Qué pidió el fundador:** «modo gratis y luego yo les envío código», en Android y en iPhone. Ya existía casi todo (migración
+  `20261017100000_plan_access.sql`, aplicada el 2026-10-17): una cuenta nueva es `free`; el admin crea códigos en Más →
+  Suscripciones (admin) → «Códigos de invitación» (nivel Basic o Premium, días de acceso, usos máx., nota) y quien lo canjea en
+  `/redeem-code` (Mi suscripción → «¿Tienes un código de invitación?», o «Tengo un código» en cualquier candado) recibe ese nivel.
+  Comprobado en producción (solo lectura, `supabase db query --remote --read-only`): `my_access`, `redeem_access_code` y
+  `has_feature` existen; `app_config` no tiene `plan_features` guardado (valen las filas por defecto de `access.ts`) y aún no hay
+  ningún código creado.
+- **Nuevo, Entrenamientos con candado en gratis** (el fundador eligió «Además, Entrenamientos», como en el prototipo de Más):
+  - Fila `workouts` en `GATED_FEATURES` y `DEFAULT_PLAN_FEATURES` (gratis no; Basic y Premium sí). Sale en «Comparar
+    suscripciones». Si el admin guardó la tabla sin esa fila, `featureValue` la deja bloqueada en gratis (como cualquier fila
+    que falte).
+  - `components/FeatureGate.tsx`: `gated('workouts', Pantalla)` en las rutas `workouts`, `workout-new`, `workout-session`,
+    `workout-custom` y `workout-history`. Sin acceso: «Los entrenamientos vienen con la suscripción», «Ver suscripciones» y «Tengo
+    un código». La biblioteca y la ficha de cada ejercicio y «Apuntar un entreno» (`/log-workout`) siguen abiertos.
+  - Más: Entrenamientos y Plan de comidas llevan un candado en vez de la flecha cuando no hay acceso.
+  - Siguen bloqueados en gratis, como antes: escanear informes y el menú semanal. Lo demás, abierto (check-in, metas, historial,
+    tarjeta de emergencia, wearables, ciclo, baño, medicación…). La demo, los admins y quien tenga código o suscripción lo ven todo.
+  - Ojo: el pago sigue simulado (sin claves de Revolut). «Simular pago correcto» solo cambia la pantalla, no da acceso.
+- **Pruebas:** tsc limpio y 562 tests (`modoGratis.test.ts` nuevo; `notasFundador1106Es.test.ts` cubre `FeatureGate` y Más).
+  Comprobado en la demo web a 375 px: Entrenamientos abre (la demo lo tiene todo), la pantalla del candado (forzada un momento a
+  mano y quitado) y la fila nueva en «Comparar suscripciones». localStorage de la demo, como estaba.
+- **Publicado solo en pruebas:** OTA al canal `pruebas`, grupo `281a75f1-bf3a-4dd9-9b31-c5c3dd688440` (Android e iOS).
+- **Para compartir:** Android, el APK de pruebas b3972691 se baja sin cuenta de Expo desde
+  https://expo.dev/artifacts/eas/C_q7E8Ua5Wu3Oltwy56lqh35y-yXsFDWOVU0q-xW5YY.apk (hay que permitir instalar apps de fuera de
+  Play; recibe los OTA de `pruebas`). iPhone: hoy la compilación 1.1.0 (4) solo está en el grupo interno de TestFlight (usuarios
+  de App Store Connect). Para gente de fuera hace falta un grupo externo con enlace público, que pide la revisión beta de Apple
+  (información de prueba, contacto y una cuenta de prueba con contraseña que crea el fundador). **Sin hacer.**
+
+### «Tu historial» se pliega en vez de ocultarse (2026-11-06, misma rama, sin commit; OTA a `pruebas`)
+
+- **Qué pidió el fundador:** «Ahora mismo si lo ocultas, desaparece. Prefiero que se colapse… que no tengas que ajustarlo en
+  otro sitio», en Android y en iPhone.
+- `components/historial/HistorialBlock.tsx`: el botón «Ocultar» (que quitaba la sección y había que volver a ponerla en Configura
+  tu experiencia) ya no está. Tocar la cabecera «Tu historial» (con una flecha arriba/abajo) lo pliega y lo despliega; plegado
+  solo queda el título y «Alergias, grupo sanguíneo, vacunas y más. Tócalo para abrirlo.» Se recuerda en user_flags
+  `mydata_history_open` (abierto por defecto). Quitarlo del todo sigue en Configura tu experiencia (sección `history`); quien lo
+  ocultó antes con el botón lo vuelve a poner allí.
+- **Pruebas:** tsc limpio y 562 tests. Comprobado en la demo web a 375 px y en español: se pliega, sigue plegado al recargar y se
+  vuelve a abrir. localStorage de la demo, como estaba.
+- **Publicado solo en pruebas:** OTA al canal `pruebas`, grupo `58463ea0-b395-4576-95da-72fca8592e4f` (Android e iOS).
+
+### Entrenamientos con varias rutinas y sus días, y cinco arreglos (2026-11-06, misma rama, sin commit; OTA a `pruebas`)
+
+- **Qué pidió el fundador:** el valor centrado en «Ajustar tu meta»; en «Tus últimos días», solo curvas, sin puntos; que el
+  teclado no tape los ejercicios al buscar y que se marque la tarjeta entera al elegir; la papelera de «Otros programas» se
+  salía del recuadro; «hay un lío con rutina, día y nombres»; y «crear un entrenamiento con varias rutinas que pueden repetirse
+  varios días cada una… hazlo bien, con cabeza».
+- **Arreglos pequeños:**
+  - `components/metas/MetaParts.tsx` `TargetStepper`: el «− # +» centrado; la rueda sigue a todo el ancho.
+  - `components/DaysChart.tsx`: sin puntos; solo lleva punto un día suelto sin vecinos (si no, no se vería). El círculo al
+    tocar un día sigue.
+  - `components/workouts/WorkoutModal.tsx`: con el teclado fuera, la hoja encoge hasta encima del teclado (Android de borde a
+    borde no encoge la ventana) y deslizar la lista lo esconde. `ExerciseLibrary.tsx`: mientras se escribe en el buscador se
+    esconden los filtros, «Intro» cierra el teclado, y la tarjeta elegida se marca entera (borde y fondo dorados, borde en la
+    foto y un ✓).
+  - `screens/workouts/WorkoutsScreen.tsx`: lápiz y papelera arriba a la derecha de la tarjeta, dentro; los botones de abajo
+    pueden bajar de línea.
+- **Entrenamiento → rutinas → días** (antes «rutina» era el todo y «día A» cada rutina):
+  - Datos: `weekdays?: number[]` en cada `WorkoutSession` (0 = domingo … 6 = sábado, como getDay() y la medicación), en el jsonb
+    `sessions`: **sin migración**. Un día es de una sola rutina. Sin días en ninguna rutina, todo como antes (van en orden).
+  - `logic/workoutWeek.ts` (nuevo): `normWeekdays`, `toggleWeekday` (si el día era de otra rutina, pasa a esta), `daysText`
+    («Lun, Jue»), `sessionsPerWeek`, `nextUp` (con días: la de hoy si hoy no has entrenado; si no, la del siguiente día con
+    rutina; sin días, la siguiente en orden) y `whenText` («Hoy», «Mañana», «El jueves»).
+  - `logic/customRoutine.ts`: al guardar, las letras vuelven a ir en orden (A, B, C…) y **lo ya hecho se va con su rutina**
+    (`routineIdMap`; antes, quitar un día volvía a poner letras y el historial y «lo siguiente» apuntaban a otra rutina). Las
+    quitadas pasan a `xB` (siguen en el historial con el nombre del programa). Una rutina con nombre o días pero sin ejercicios
+    no se guarda sin avisar (`firstEmptyRoutine`). El entreno a medias sigue a su rutina (`moveActiveWorkout`). Título por
+    defecto «Mi entrenamiento».
+  - Editor (`CustomRoutineScreen.tsx`): «Crear mi propio entrenamiento» / «Editar entrenamiento»; nombre; «Tu semana» (qué
+    rutina toca cada día, tocar abre la rutina); las rutinas como fichas con letra, nombre y días a la vista (se actualizan al
+    escribir); la abierta con su nombre, sus 7 días y sus ejercicios; «Añadir ejercicios a Push».
+  - Entrenamientos: «Hoy / Mañana / El lunes» en vez de «Siguiente sesión», cada rutina con sus días, «4 días a la semana · 2
+    rutinas», «Esta semana: 0 de 4». La sesión: pestañas con letra y nombre, y sus días junto a los minutos.
+  - `labels.ts`: una rutina sin nombre es «Rutina A»; en lo hecho a mano los nombres no se traducen (antes «Push» salía
+    «Empuje» y se guardaba así al editar en español).
+  - El portal del entrenador no se ha tocado: conserva `weekdays` al editar (copia la sesión entera) pero no los enseña.
+- **Pruebas:** tsc limpio y 577 tests (`workoutWeek.test.ts` nuevo; `notasFundador1106Es.test.ts` cubre los ficheros tocados).
+  En la demo a 375 px, en inglés y en español: el editor con dos rutinas (Push lun y vie, Legs mar y jue, el jueves pasando de
+  una a otra), el aviso de rutina vacía, la tarjeta elegida, los filtros escondidos al escribir, la tarjeta del programa, la
+  sesión, el valor centrado y la papelera dentro. **No se pudo ver la gráfica sin puntos** (con el panel oculto no se dibuja) ni
+  el teclado (no hay teclado en la web). localStorage de la demo, como estaba.
+- **Publicado solo en pruebas:** OTA al canal `pruebas`, grupo `0465590d-2aae-4208-a562-26e6c6f88d7a` (Android e iOS). Sin commit.
+- **Después (OTA `pruebas` `e1c39eaf-3c4d-46a0-a713-a8ad935986bf`):** al desmarcar un ejercicio en la biblioteca la foto se
+  quedaba en blanco (fundador, en el móvil). Era el borde que se ponía y se quitaba en el propio marco de la foto (redondeado y
+  recortando lo de dentro). Ahora la foto no cambia nunca: el marco dorado y el ✓ van en una capa encima, siempre puesta, que
+  solo cambia su opacidad. Test en `workoutWeek.test.ts`; comprobado en la demo marcando y desmarcando cuatro veces (la foto
+  sigue con sus dos imágenes). 578 tests. Sin commit.
+- **Después (OTA `pruebas` `89e3d391-3ff4-4518-8272-bd74623a7972`):** tres notas del fundador sobre «Ver las sesiones» y «Editar rutina».
+  1. Las pestañas de las rutinas (A · nombre, B · nombre…) se cortaban por arriba: la tira horizontal encogía con la lista
+     larga debajo. Ahora no encoge (`tabsScroll: flexGrow 0, flexShrink 0` en `WorkoutSessionScreen.tsx`).
+  2. El lápiz de cada ejercicio en «Ver las sesiones» abría `DoseEditor`, una sola dosis para todas las series (4 × 6 ·
+     100 kg), sin pesos distintos por serie. Ahora abre el mismo editor que «Editar rutina» (`RoutineExerciseCard`): serie a
+     serie, con su peso y sus repeticiones o segundos, el descanso y la nota, con «Cancelar» y «Guardar». Se guarda con
+     `fromDraft` en el programa; cerrar o cancelar no cambia nada. Título de la hoja: «Cambiar {ejercicio}». Con programa
+     del entrenador sigue el aviso «{nombre} verá el cambio». `DoseEditor.tsx` ya no lo usa nadie; se ha dejado.
+  3. «Más condensados, a modo lista… no que aparezca todo desplegado de un principio»: en «Editar rutina» cada ejercicio
+     sale cerrado en una línea (foto, nombre y el resumen `doseText` + descanso, p. ej. «3 × 8–12 · 12–16 kg · descanso
+     1 min») con su ⋮ (subir, bajar, cambiar, quitar) para ordenar sin abrir nada. Tocarlo lo abre (tabla serie a serie);
+     solo uno abierto a la vez, y sigue abierto si se mueve. `RoutineExerciseCard` tiene `open` y `onToggle`; sin
+     `onToggle` está siempre abierto (la hoja de «Ver las sesiones»).
+  Tests en `workoutWeek.test.ts` (resumen con pesos distintos, ida y vuelta serie a serie, la lista empieza cerrada, el lápiz
+  usa el editor serie a serie, las pestañas no encogen) y `RoutineExerciseCard.tsx` en la prueba de textos en español.
+  582 tests, tsc limpio. Comprobado en la demo a 375 px (panel oculto, sin capturas): pestañas enteras dentro de su tira;
+  el lápiz de Goblet Squat abre la tabla, añadir una serie con 12/14/16 kg y 8 reps guarda «3 × 8–12 · 12–16 kg» y al
+  reabrir cada serie conserva lo suyo; en «Editar rutina» la lista empieza cerrada, se abre uno a la vez y «Subir» lo
+  mantiene abierto. localStorage de la demo, como estaba. Sin commit.
+
+### «Calorías y macros» en tu menú semanal, con el panel del dietista (2026-11-06, misma rama, sin commit; OTA a `pruebas`)
+
+Petición del fundador: «en el weekly menu quedamos que íbamos a poder editar los macros nosotros (como el dietista)».
+- **Panel compartido** `src/components/diet/MacroTargetsPanel.tsx`: lo que tenía el portal en `ProDietScreen` (kcal,
+  proteína, hidratos y grasa al día, vacío = lo calculado en gris; aviso si los macros no suman las kcal; reparto por
+  comida con % de kcal y gramos de cada macro, «Reparto por defecto» y «Menú ahora» por comida), sacado tal cual. Lo usan el
+  portal (mismo comportamiento: comprobado que las raciones se rehacen al escribir) y el paciente. `NumField` también sale
+  de ahí (lo usa la hoja del día del portal). Las casillas llevan `accessibilityLabel` y `useRevealOnFocus`.
+- **Pantalla nueva** `/diet-macros` (`src/screens/diet/DietMacrosScreen.tsx`), desde la tarjeta de arriba del menú:
+  «Ajustar calorías y macros» (o «Tus calorías y macros» si ya hay alguno puesto, `ownMacros`). Arriba, el donut y
+  «Objetivo» frente a «Tu menú» con las raciones ya rehechas a tus números; luego el panel. «Guardar»: mismos platos,
+  raciones a tus números (`fitPortions`) y objetivos y razones recalculados. «Guardar y elegir otros platos»: pregunta y
+  rehace el menú para esos números (se pierde lo cambiado a mano). «Usar los calculados» lo vacía todo. Salir con cambios
+  sin guardar pregunta antes.
+- **Límites**: solo en tus menús (el de un dietista no enseña el enlace y la pantalla dice que lo cambia él). Por debajo
+  de `selfKcalFloor` (1200 kcal, 1500 en hombres: el suelo del propio generador al perder peso) no se guarda y sugiere un
+  dietista. Si el menú tiene «Para comentar con tu médico», un aviso neutro encima. **Supuestos para el backlog
+  clínico**: el suelo y que el paciente pueda subir la proteína con un aviso de riñón (el generador la limita; lo que
+  pone el paciente manda, como lo del dietista).
+- Al cambiar las respuestas del cuestionario, los números propios se quedan (el cuestionario parte de los `prefs` del
+  último menú propio).
+- Tests: `src/logic/__tests__/dietMacros.test.ts` (6) y las tres pantallas en la prueba de textos en español. 588 tests,
+  tsc limpio. Comprobado en la demo a 375 px (panel oculto; creé un menú con el cuestionario): sin desbordar a lo ancho,
+  900 kcal → aviso y «Guardar» desactivado, 2600 kcal + 140 g → «Tu menú: 2570 kcal · 137 g» con los mismos 4 platos;
+  guardado, el menú dice «Unas 2600 kcal y 137 g de proteína» y el día pasa de 2144 a 2660 kcal; al reabrir siguen los
+  números; con hidratos y grasa sale «Tus macros suman 2295 kcal (objetivo 2600)» y «Guardar y elegir otros platos»
+  pregunta y cambia los platos. El portal (`/pro-diet?patient=p-laura`) se ve igual y rehace raciones al escribir.
+  localStorage de la demo, como estaba (sin menú). Sin commit.
+- **Publicado solo en pruebas:** OTA al canal `pruebas`, grupo `d304132e-6dee-463c-9889-1b4eef71a2b4`.
+- **Después (OTA `pruebas` `dfcc89a3`):** tres notas del fundador.
+  1. «Se ve muy mal: un espacio tremendo y luego la rueda»: la tarjeta de arriba iba en una fila (donut con su leyenda +
+     el texto «Objetivo / Tu menú»), y en el móvil el texto quedaba en una columna estrechísima, la tarjeta muy alta y el
+     donut en medio. Ahora en columna: el donut con su leyenda y debajo una tablita (Objetivo / Tu menú × kcal, P, H, G).
+  2. «Poder editar por día de la semana» y, tras una primera versión con solo kcal y macros por día, «no permite ese
+     detalle para cada día: configurar arriba lo de breakfast, lunch… para cada día, y arriba a la derecha algo rollo
+     aplicar a todos los días». La pantalla es ahora día a día: arriba los 7 días (pestañas con sus kcal; en naranja si
+     quedan por debajo del suelo; parte de hoy), el resumen del día elegido (donut + Objetivo / Tu menú) y el panel
+     entero de ese día (kcal, P, H, G y el reparto por comida: el mismo `MacroTargetsPanel`, con «Menú ahora» de ese día)
+     con su nombre y, arriba a la derecha, «Aplicar a todos los días» (copia ese día a los 7; gris si ya son iguales;
+     «Hecho: todos los días tienen ahora estos números.»). «Usar los calculados para este día» lo vacía.
+     - Modelo (`src/logic/dietDayMacros.ts`): en el editor cada día lleva su borrador completo (`dayDrafts`: lo suyo y,
+       lo que no tenga, lo de la semana). Al guardar (`saveDrafts`): si los 7 son iguales, los números van a `prefs` y los
+       días no llevan nada propio; si no, `prefs` sin números y cada día los suyos en `days[].targets` (el campo del
+       dietista, sin migración), que ahora admite también `meals` (el reparto por comida de ese día; `prefsForDay` lo
+       mezcla con la semana). Lo que se ve en el editor es lo que se guarda (test).
+     - «Guardar y elegir otros platos» genera con los números que más se repiten (`commonDraft`) y ajusta cada día.
+       «Otra versión» del menú conserva los números del día (`fitDay`). En el menú, «Unas N kcal al día» es la media de
+       la semana (`weekKcalTarget`) y el «Objetivo» de cada día, el suyo (`dayKcalTarget`). Helpers en `dietPlanner.ts`:
+       `cleanDayTargets` (también `meals`), `cleanMeals`, `dayKcalTarget`.
+  Tests: `dietMacros.test.ts` con 16; 598 tests, tsc limpio. En la demo a 375 px: jueves a 3000 kcal y 45 % en la comida
+  → su pestaña dice 3000 y «Menú ahora» de la comida pasa a 1204 kcal, el lunes sigue igual; «Aplicar a todos los días»
+  → los 7 a 3000 y el domingo con 3000 y 45 %; sábado a 2200 y guardar → cada día con sus números y la semana sin
+  ninguno; el menú dice «Unas 2890 kcal» (la media), el viernes «Objetivo: 3000 kcal» y el sábado 2200; al reabrir, el
+  sábado sigue con 2200 y 45 %. localStorage de la demo devuelto como estaba (sin menú). Sin commit.
+- **Publicado solo en pruebas:** OTA al canal `pruebas`, grupo `dfcc89a3-416a-4d79-8a38-d3f81307be1e`.
+- **Después (OTA `pruebas` `6e8d7168`): que el día y el reparto por comida siempre cuadren.** Fundador: «si pongo
+  proteínas en el día y luego per meal las edito… deja de ser coherente; algún guardrail, que una cosa bloquee a la
+  otra». Antes, lo puesto en una comida se sumaba encima: las demás seguían cogiendo su parte de todo el día. Ahora una
+  sola regla, en el día y en cada comida, con el mismo panel para el paciente y el portal (`MacroTargetsPanel`):
+  - **El día** (kcal, P, H, G; 4, 4 y 9 kcal/g): con tres casillas puestas, la cuarta sale de ellas y no se escribe
+    (`dayLock`): con los tres macros, las kcal; con las kcal y dos macros, el tercero. En `dietTargets`, lo libre que
+    falta sale como resto (con hidratos puestos, la grasa es lo que queda; con hidratos y grasa sin kcal, las kcal
+    salen de los tres). Si los macros pasan de las kcal: «Tus macros suman 2600 kcal, más que las 2400 kcal del día…»
+    (`dayIssue`). Sin nada puesto, el generador hace lo mismo que antes.
+  - **Cada columna** (% kcal, P, H, G por comida; `mealSplit` en `dietPlanner.ts`, que ahora usa `mealTargets`): las
+    comidas suman lo del día. Lo puesto se queda y las vacías se reparten lo que queda (el % en proporción a su parte
+    de siempre, los gramos a su %). La última vacía de una columna es justo lo que queda: borde discontinuo y no se
+    escribe; para cambiarla, vacía otra. Si lo puesto se pasa (o deja menos de un 5 % a cada comida vacía), la columna
+    sale en naranja, la casilla que queda dice cuánto (p. ej. −20) y «Repartir automáticamente» la vacía.
+  - **Cada comida**: con tres casillas puestas, la cuarta sale de ellas (con sus tres gramos, su %; con su % y dos
+    gramos, el tercero). Sus gramos no pueden pasar de sus kcal («Tentempié: sus gramos suman 320 kcal, más que sus
+    200 kcal (10 %)», con «Vaciar esta comida»). Las kcal de cada comida van siempre por su %.
+  - Con algo que no cuadre no se guarda: en «Calorías y macros» los dos botones quedan desactivados, ese día en
+    naranja y «Hay números que no cuadran en: viernes»; en el portal, «Enviar» desactivado con un aviso, y la hoja de
+    un día también bloquea su cuarta casilla y dice qué no cuadra. El generador, si le llega un menú así de antes, lo
+    reparte todo en proporción para que sume lo del día.
+  Tests: 10 más en `dietMacros.test.ts` (26) y `ProDietScreen.tsx` en la prueba de textos en español; 608 tests, tsc
+  limpio. En la demo a 375 px (menú hecho con el cuestionario): proteína del día 150, desayuno 40 y comida 50 → cena y
+  tentempié se reparten los 60 g (45 + 15); con la cena a 40, el tentempié queda en 20 con borde discontinuo; desayuno
+  a 80 → «Las comidas suman 170 g de proteína y el día tiene 150 g», el tentempié dice −20, «Guardar» desactivado y el
+  viernes en naranja; «Repartir automáticamente» lo vuelve a automático; 2400 kcal + 150 g + 250 g de hidratos → la
+  grasa queda en 89 g bloqueada; proteína 400 → «Tus macros suman 2600 kcal…»; guardado y reabierto, sigue igual. En
+  el portal (`/pro-diet?patient=p-laura`), 90 + 90 g con 86 g en el día → «Enviar» desactivado. localStorage de la
+  demo devuelto como estaba. Sin commit.
+- **Publicado solo en pruebas:** OTA al canal `pruebas`, grupo `6e8d7168-a188-4f91-8cb4-584eb45d8f47`.
+
+### TestFlight externo para amigos (2026-11-06, App Store Connect; sin cambios en el código)
+
+- **Qué pidió el fundador:** la invitación de iPhone para una persona concreta y el APK para amigos. Eligió grupo externo
+  (sin acceso a la cuenta de desarrollador; revisión beta de Apple, ~1 día) frente a interno.
+- **Hecho:** grupo externo «Probadores» (`f86fb346-00ec-45f6-beeb-aa9d6e21866e`) con 1 probador por correo (Apple no le
+  escribe hasta que haya una compilación aprobada en el grupo). En Información de prueba, guardados la descripción de la beta
+  (ES, la de `docs/testflight-externos.md`), el correo de comentarios support@kuovahealth.com, https://kuovahealth.com y
+  https://kuovahealth.com/privacy. Las notas para la revisión no se guardan hasta que esté el contacto.
+- **Enviado a revisión** (2026-11-06, por el propio fundador desde el diálogo): puso su contacto (el teléfono tiene que ir
+  con +34 o Apple no guarda nada de la sección) y la cuenta de Kuova para Apple, y añadió la 1.1.0 (4) al grupo con su
+  propio «Qué probar». Estado: «Waiting for Review». Cuando Apple la apruebe, TestFlight manda la invitación (está marcado
+  «Automatically notify testers»); se puede activar también el enlace público del grupo («Create Public Link»). La cuenta
+  nueva de quien pruebe empieza en gratis: el fundador le manda un código.
+- **Android:** el APK de pruebas b3972691 (enlace en «Modo gratis y códigos…») caduca en EAS el 2026-11-20; después hará
+  falta otro APK de pruebas.
+
+## 2026-11-08 — Solicitar pruebas: la tienda enseña el catálogo real de paneles (rama `metas-fase1`, sin commit; OTA a `pruebas`)
+
+- **Qué pidió el fundador:** que «Solicitar un test nuevo» enseñe el catálogo que hemos construido y no los productos de
+  ejemplo, para enseñárselo a una endocrinóloga. Fuente: `0. CatalogoMarcadoresInterno.xlsx` (hoja Matriz_paneles), la
+  guía de paneles y la «Solicitud v3» del 28/10. Toda extracción, en centro, en ayunas y por la mañana (decidido el 27/10).
+- **Niveles en `/store`** (`src/data/testCatalog.ts`, textos en `src/i18n/testCatalogEs.ts`, guía «para qué / cada cuánto»
+  en `testGuide.ts` + `testGuideEs.ts`):
+  - Suscripción: análisis anual Kuova Baseline (31 pruebas, más la Lp(a) el primer año) + seguimiento fijo a los 6 meses
+    (23 pruebas). Premium se queda como estaba (seguimiento cada 3 meses); el plan «Kuova Pro» del catálogo no está hecho.
+  - **Añadir a tu seguimiento** (`withFollowUp`, solo con suscripción, en la misma extracción): vitamina D, B12 y fólico,
+    magnesio, calcio, sodio y potasio, insulina (HOMA-IR), PSA (hombres).
+  - **Confirmar y ampliar:** tiroides, testosterona baja (hombres), andrógenos (mujeres), albúmina en orina.
+  - **Objetivos:** hormonas y fertilidad (reserva ovárica, salud hormonal de la mujer en 2 extracciones, del hombre, antes
+    de buscar un embarazo), digestivo (celiaquía, aliento SIBO/lactosa/fructosa/H. pylori), ITS (6 por PCR y completa),
+    otros (carga de entrenamiento, índice omega-3, alergias ALEX).
+  - **A petición de un médico** (`orderable: false`, sin botón). Lo de «No ofrecemos» (microbiota, cortisol para el
+    estrés, homocisteína…) no sale.
+  - Cada grupo con una línea de cuándo tiene sentido; cada ficha con «Ten en cuenta» (`notes`). Campo `only` por sexo.
+- **Precios:** solo los planes tienen precio (365 €, decidido en el business case; 700 € Premium, ya estaba en la app y no
+  sale en el business case). **Las pruebas sueltas no tienen precio decidido**: la ficha dice «Precio por confirmar» y
+  `/checkout` hace una **solicitud simulada** sin llamar a `create-checkout` (título «Tu solicitud», «Simular la
+  solicitud»). La tabla del servidor `supabase/functions/_shared/products.ts` se queda en `membership` y `premium` para que
+  ids reutilizados (thyroid, psa, coeliac, sibo, lactose, fructose, vitamin_d) no se puedan cobrar a precios viejos; solo
+  cambia en producción al desplegar la función. `npm run check:prices` OK (2 productos). Cuando el fundador decida
+  precios: `price` en `testCatalog.ts` y el mismo importe en céntimos en `products.ts`.
+- **Costes de laboratorio y nombres de laboratorios/competidores:** nunca en textos ni en comentarios (el repo puede ser
+  público). Lo vigila `src/logic/__tests__/catalogoPaneles.test.ts` (también tono sin diagnóstico, textos en español de las
+  5 pantallas y que la composición del panel exista en `knowledge/`).
+- **Cuestionario `/test-finder`:** `recommend(answers, sex, available)` devuelve `{picks, covered, flags}`; `covered` es lo
+  que el análisis anual ya mide (texto «Tu análisis anual ya mide…»), `available` = lo que se puede pedir (lo de
+  seguimiento, solo con suscripción). Andrógenos y testosterona baja se juntan con la salud hormonal; una sola ITS; aviso
+  aparte para estrés y sueño (ningún análisis los mide) y para alergias (lleva a ALEX).
+- **«Qué mide cada analítica» (`/panel-markers`):** composición en `src/data/subscriptionPanel.ts` (antes en
+  `biomarkerLabels.ts`): `PANEL_BOTH` (anual y seguimiento, más la orina básica), `PANEL_YEARLY` (TSH, vitamina D,
+  magnesio, sodio, potasio, calcio, insulina; + B12 y HOMA-IR), `PANEL_FIRST_YEAR` (Lp(a)); la microalbúmina en orina
+  queda fuera (es el módulo «Albúmina en orina»). En la demo: 68 en el anual, 58 en el seguimiento.
+- **Otros:** `gutPatterns.ts` manda H. pylori a su prueba de aliento y el intestino irritable a celiaquía.
+- **Comprobado:** tsc limpio, 618 tests. En la demo web (8082, en español): tienda por grupos con «Precio por confirmar»,
+  ficha de tiroides abierta, solicitud simulada de principio a fin, cuestionario (cansancio + digestión + entreno +
+  embarazo + tiroides + poco sol → tiroides, antes de un embarazo, carga de entrenamiento y 7 más) y `/panel-markers`.
+  Sin errores en consola. Sin probar en el móvil.
+- **Mandado al canal `pruebas`** (OK del fundador «Sí, a pruebas»): EAS Update grupo `a1c75c63-b079-4e2c-80db-6360be2c0975`
+  (android + ios), con los pasos a mano (`expo export --clear … --max-workers 1` y `eas-cli update --channel pruebas
+  --environment preview --skip-bundler --input-dir dist`). Lleva también lo que había sin publicar en la carpeta. Nada a
+  producción, sin build nueva ni cambios en la web.
+
+### Sin médicos reales en la app (2026-11-09, misma rama, sin commit, sin publicar)
+
+- Fundador: «Deja médicos aleatorios, pero quita a Gema, a Covadonga, a Alejandro Alonso...». Fuera de
+  `src/data/servicesMock.ts` las cuatro fichas de profesionales reales que se añadieron el 2026-10-10 (endocrina,
+  hematólogo, dermatóloga y asesora genética, `pro-gema-martinez`, `pro-alejandro-alonso`, `pro-covadonga-carrera`,
+  `pro-andrea-otero`) y sus textos en `src/i18n/es.ts` (nombres, bios, especialidades y huecos que solo usaban ellas).
+  Quedan los diez ficticios (`pro-1`…); genética sigue con dos (Sofía Llorente y Marta Ibáñez). El nombre del test de
+  la agenda (`workoutTimer.test.ts`) y un comentario de `specialistTypes.ts` usan ahora «Laura Méndez», que es ficticio.
+- 620 tests en verde, tsc limpio, `/professionals` revisado en la demo web: solo salen los ficticios.
+- De paso: Marta Echeverría (matrona) y Marta Ibáñez (asesora genética) tenían las dos `id: 'pro-8'` (desde e986f5a):
+  al tocar a Marta Ibáñez se abría la ficha de la matrona y la consola avisaba de claves repetidas. Marta Ibáñez pasa a
+  `pro-10`.
+
+### «Atrás» a saltos en Android: las pantallas de encima ya no sueltan la de pestañas (2026-11-09, misma rama, sin commit, sin publicar)
+
+- Fundador, en el móvil: al volver atrás desde Historia clínica la transición era muy brusca. Causa (leída en el código
+  de las librerías, sin Android a mano): react-native-screens (`ScreenStack.kt`, `visibleBottom`) quita del todo la
+  pantalla de debajo cuando la tapa otra opaca, y react-native-svg (`SvgView.onDetachedFromWindow`) tira el dibujo de
+  cada gráfica al soltarse. Al volver, las cinco pestañas (con todas sus gráficas de Mis datos, Hoy…) se pintan de cero
+  en el primer fotograma de una animación de 200 ms (`config_shortAnimTime`), que se come el salto. Pasa al volver a
+  las pestañas desde cualquier pantalla; en Historia clínica se nota porque Mis datos es la más cargada.
+- Arreglo en `src/app/_layout.tsx`, solo Android: todas las pantallas van en `presentation: 'transparentModal'` (por
+  fuera iguales: llevan el mismo fondo opaco de `contentStyle`), así la de debajo se queda puesta y ya pintada y
+  «atrás» solo desliza la de arriba (sin el pequeño desplazamiento de la de debajo). Los modales de registro, igual
+  (`MODAL`). Las de base (`index`, `login`, `(tabs)`, `onboarding`, `pro`, `resumen`) siguen en `card` para no dejar
+  nada viejo debajo. iOS y web sin cambios. Coste: las pantallas abiertas siguen montadas y dibujadas debajo (más
+  memoria y algo más de trabajo de GPU con varias apiladas); TalkBack las oculta (lo hace la librería).
+- tsc limpio, 620 tests. **Sin probar en un Android**: hay que confirmarlo en el móvil (Historia clínica, una gráfica de
+  Mis datos y un registro como el peso, y volver atrás). Si algo va raro, quitar `presentation: OVER` y los `...BASE`
+  deja todo como estaba.
+- «Compara suscripciones» (`src/data/access.ts`, fila `more_panels`, el id no cambia): en vez de «Más paneles y pruebas»
+  dice «El anual añade tiroides completo, hormonas, ácido fólico y albúmina en orina», lo mismo que la ficha de Premium
+  (ver la sección del catálogo). Revisado en la demo a ancho de móvil; 620 tests.
+
+### 2026-11-09 — Premium: «Análisis anual Kuova Premium» y comparativa de marcadores Basic / Premium / seguimiento (misma rama, sin commit, sin publicar)
+
+- **Qué pidió el fundador:** que en la ficha de Premium no diga «Kuova Baseline» sino «análisis Kuova Premium», y que al
+  tocarlo se vea la comparativa entre el anual de Basic, el anual de Premium y el seguimiento: qué marcadores añade
+  Premium, no solo que tenga más seguimientos.
+- **Composición:** el anual de Premium es el «Kuova Pro (Complete)» del catálogo del 28/10 (estado «Propuesta: validar con
+  el asesor»): todo el Baseline + T4 y T3 libres, ácido fólico, albúmina y creatinina en orina (cociente), SHBG,
+  estradiol, FSH, LH y DHEA-S, más progesterona (mujeres) o PSA total (hombres): 42 pruebas, +11 por persona. El
+  seguimiento es el mismo en los dos (23 pruebas; cada 6 meses en Basic, cada 3 en Premium). Precio de Premium, sin tocar.
+- **Ficha de Premium** (`testCatalog.ts`, `testCatalogEs.ts`, `testGuide*.ts`): «Análisis anual Kuova Premium: 42 pruebas
+  de laboratorio (más la Lp(a) el primer año)», «Además de lo de Basic: tiroides completo, tus hormonas, ácido fólico y
+  albúmina en orina», «Seguimiento cada 3 meses (3 al año): 23 pruebas, siempre las mismas»; fuera «Más paneles y pruebas
+  incluidos». Campo nuevo `markerLines` (Basic 2, Premium 3): esas primeras líneas de «Qué incluye» abren
+  `/panel-markers?plan=<id>` (`TestCard.tsx`).
+- **`/panel-markers`:** tres columnas (Basic, Premium en dorado, Seguimiento), tres cajas (68 anual Basic, 79 anual
+  Premium, 58 seguimiento) y filtros «Todos los marcadores», «Lo que añade Premium» (por donde empieza si se abre desde
+  Premium) y «Solo los del seguimiento». Datos en `subscriptionPanel.ts`: `when: 'premium'`, `only` por sexo,
+  `PANEL_PREMIUM`/`PANEL_PREMIUM_MALE`, extras ácido fólico, progesterona y cociente albúmina/creatinina,
+  `panelCounts()`; la microalbúmina en orina pasa de «fuera» a «solo Premium»; DHEA-S en Hormonas; nombres cortos
+  (FSH, LH, DHEA-S, T4/T3 libre, PSA total) para que quepan a 375 px.
+- **Comprobado:** tsc limpio, 620 tests (dos nuevos en `catalogoPaneles.test.ts`: +11 por persona, nada del Baseline como
+  «solo Premium», la ficha no dice Baseline). En la demo en español a 375 px: ficha de Premium, tocar la línea → «Lo que
+  añade Premium», y desde Basic → «Todos los marcadores». Sin errores en consola. No mandado a `pruebas` (pide el OK).
+- **Pendiente:** la tabla «Compara suscripciones» (filas en `src/data/access.ts`, de la otra sesión) sigue diciendo «Más
+  paneles y pruebas» para Premium; la composición la tiene que validar el asesor médico.
+
+### 2026-11-09 (2) — Sin precio en las suscripciones, fuera «Cada cuánto repetirlo» y comparativa más limpia (misma rama, sin commit, sin publicar)
+
+- **Qué pidió el fundador:** «quita también el precio de las suscripciones», «lo de Cada cuánto repetirlo, mejor quítalo» y
+  que en la comparativa los colores sean coherentes y todo quede equidistante.
+- **Sin precio en ningún sitio:** `MEMBERSHIP` y `PREMIUM` sin `price` (fuera el tipo `PricedTest`) y fuera «1 € al día»
+  de la descripción de Basic. La ficha dice «Precio por confirmar» (sin «/año»), el botón «Pasar a Premium» va sin
+  importe y `/checkout` de un plan es una solicitud simulada («Esta suscripción aún no tiene precio…», «Solicitud
+  simulada»). `PlanComparison` y `SubscriptionCard` solo enseñan el precio si lo hay. La tabla del servidor
+  (`supabase/functions/_shared/products.ts`) se queda vacía (eran 36500 y 70000 céntimos/año, anotado en el comentario):
+  `npm run check:prices` → «OK: 0 products». Cuando haya precios: `price` en `testCatalog.ts` y el importe en `products.ts`.
+- **«Cada cuánto repetirlo»:** fuera de las fichas (`TestCard.tsx`). Los textos `repeat` siguen en `testGuide*.ts`, sin
+  usar, por si vuelven.
+- **Comparativa `/panel-markers`:** un solo color para todas las marcas (el acento; nada de dorado mezclado), las tres
+  columnas del mismo ancho (64) con su cabecera centrada encima y el relleno de la cabecera alineado con el de las tarjetas;
+  los filtros son tres botones iguales que caben a 375 px: «Todo», «Solo Premium», «Seguimiento»; las tres cajas de
+  totales iguales; SHBG también con nombre corto. Medido en la demo: la palabra más larga («aminotransferasa», 107 px)
+  cabe en la columna de nombres (111 px) y «Seguimiento» cabe en una línea (cabecera a 10 px, y en iPhone encoge si hace
+  falta).
+- **Comprobado:** tsc limpio, 620 tests (el de precios ahora exige que nada tenga precio ni hable de €). En la demo en
+  español a 375 px: tienda, ficha de Basic y Premium, comparativa desde los dos y la solicitud de Premium. No mandado a
+  `pruebas`.
+
+### 2026-11-09 (3) — Pruebas genéticas en el catálogo (misma rama, sin commit, sin publicar)
+
+- **Qué pidió el fundador:** «añadir tests genéticos en el catálogo, también por validar precio e indicando dentro que una
+  consulta con asesoramiento genético es necesaria».
+- **Grupo nuevo «Pruebas genéticas»** (`TestCategory` `genetic`, icono `dna`, entre «Deporte, alergias y omega-3» y «Si
+  te lo pide tu médico»), con las cinco del consentimiento informado de Kuova (`00 Empresa y legal/Consentimientos`):
+  celiaquía genética (HLA-DQ2/DQ8), intolerancias genéticas (LCT/MCM6, ALDOB, AOC1, HLA), hemocromatosis (HFE C282Y y
+  H63D), trombofilia (factor V Leiden y protrombina G20210A) y APOE (ε2/ε3/ε4). Se crean con `genetic({...})` en
+  `testCatalog.ts`: sin `price` («Precio por confirmar»), `orderable: false` (no salen en el cuestionario ni se pueden
+  pedir en `/checkout`) y `counselling: true`.
+- **El aviso:** las fichas con `counselling` llevan «Con asesoramiento genético» debajo de la descripción y, al abrirlas,
+  un recuadro «Necesita una consulta de asesoramiento genético» (un médico decide contigo si tiene sentido, la pide y te
+  pide el consentimiento por escrito; una segunda consulta te explica el resultado). La primera línea de «Qué incluye» es
+  la consulta antes y después; el plazo es «Después de la primera consulta · el resultado te lo explican en la segunda».
+  Sin botón de pedir: no hay flujo de reserva de la consulta (no se construye sin preguntar).
+- **Decisiones de contenido para validar con el asesor:** MTHFR fuera (la ficha de trombofilia dice por qué, como la guía:
+  ACMG no la recomienda para trombosis); F12 fuera aunque el consentimiento lo nombra; APOE dentro con el aviso de
+  Alzheimer, aunque el catálogo del 28/10 la tenía en «No ofrecemos» (necesita consejo genético y el laboratorio no la
+  ofrece). Ojo: el encargo de la web en el vault dice «Kuova no ofrece pruebas genéticas»; la app ahora sí las enseña.
+- **Test:** `catalogoPaneles.test.ts` exige que las genéticas no se puedan pedir, no tengan precio, lleven `counselling`
+  y digan «asesoramiento genético», y que MTHFR solo aparezca para decir que no se incluye.
+- **Comprobado:** tsc limpio, 621 tests. En la demo en español a 375 px: el grupo en la tienda, las fichas cerradas y
+  abiertas de APOE y trombofilia. No mandado a `pruebas`.
+
+### 2026-11-09 (4) — Test de portadores: catálogo, Aprende y Conoce tus raíces (misma rama, sin commit, sin publicar)
+
+- **Qué pidió el fundador:** añadir el test de portadores a las genéticas, ponerlo en Aprende (salud reproductiva y
+  genética, «no pasa nada porque esté en los dos, es muy importante») y que el resultado de Conoce tus raíces diga que,
+  de cara a tener hijos, un test de portadores es muy recomendable, con la opción de contactar con un asesor genético.
+- **Catálogo:** `gen_carrier` «Test de portadores», la primera de las genéticas: panel de enfermedades recesivas y
+  ligadas al X (fibrosis quística, AME, X frágil como ejemplos; el panel depende del laboratorio), mejor los dos
+  miembros de la pareja y antes del embarazo, «1 posibilidad entre 4» si los dos llevan la misma. Como las otras: sin
+  precio, sin botón de pedir y con el aviso de asesoramiento genético.
+- **Aprende (`src/data/learning.ts`):** lección «Si piensas tener hijos» en Salud reproductiva y «El test de
+  portadores» en Genética. Cada tema tiene dos botones, «Ver el test de portadores» y «Hablar con un asesor genético»,
+  y la fuente ACMG 2021.
+- **Conoce tus raíces:** tarjeta «Si piensas tener hijos» en el resultado, para cualquier nivel de riesgo, con los
+  mismos dos botones. «Hablar con un asesor genético» abre `/professionals?role=geneticist` (los dos asesores ficticios
+  de `servicesMock.ts`).
+- **Tienda:** acepta `?category=<grupo>` (abre con ese filtro) y `?open=<id>` (esa ficha abierta). «Ver el test de
+  portadores» usa `/store?view=tests&category=genetic&open=gen_carrier`, sin las suscripciones delante.
+- **Comprobado:** tsc limpio, 621 tests. El test de las pantallas de la tienda revisa ahora también las claves de
+  `KnowYourRootsScreen.tsx`. En la demo en español a 375 px: las dos lecciones, los dos botones y la tarjeta en el
+  resultado de riesgo poblacional, que lleva a los asesores. No mandado a `pruebas`.
+- **Pendiente:** ningún asesor de `servicesMock.ts` habla de consejo genético reproductivo (es el fichero de la otra
+  sesión). La web sigue diciendo que Kuova no ofrece pruebas genéticas.
+
+- **OTA a `pruebas` (OK del fundador, «Sí, a pruebas»):** grupo `9bceb844-1ba6-41d0-8845-5532aed22bb2`, runtime
+  exposdk:57.0.0, Android e iOS. Lleva las tandas (2), (3) y (4) de hoy (sin precios, comparativa limpia, pruebas
+  genéticas y test de portadores) y todo lo que había sin commit en `metas-fase1`, también lo de las otras sesiones.
+  Nada a producción.
+
+## 2026-11-09 — Exportar el plan y el historial de entrenos (rama `metas-fase1`, sin commit, sin publicar)
+
+- **Qué pidió el fundador:** exportar el plan y el histórico de entrenamiento para compartirlo con un entrenador
+  personal o con una IA, sin APK nueva (que llegue con una actualización).
+- **Dónde:** Entrenamientos → «Exportar» (debajo de Historial) y el botón de compartir arriba a la derecha del
+  Historial (`ScreenHeader` tiene ahora la prop opcional `right`). Ruta `/workout-export` con el candado de
+  Entrenamientos (`gated('workouts', …)`), pantalla `src/screens/workouts/WorkoutExportScreen.tsx`.
+- **Qué se elige:** el plan (interruptor; si hay varios programas, cuál; por defecto el que sigues) y el historial
+  (interruptor; 1 mes / 3 meses / 6 meses / Todo, por defecto 3 meses, con cuántos entrenos entran). «Lo que vas a
+  compartir» enseña el texto tal cual (corta la vista a 60 líneas; lo compartido va entero).
+- **Formatos:** «PDF para tu entrenador» (`src/utils/workoutPdf.ts`, mismo estilo que el PDF del menú, por
+  `shareHtmlPdf`: en el móvil, fichero al menú de compartir; en la web, diálogo de imprimir) y «Texto para una IA o
+  un mensaje» (`src/utils/shareText.ts`: `Share.share` de React Native en el móvil; en la web,
+  `shareText.web.ts` lo copia al portapapeles y, si el navegador no deja, lo descarga como .txt). El texto es
+  Markdown sencillo: cabecera con las unidades («+kg» = lastre), plan por rutina y bloque (dosis, descanso, serie a
+  serie si cambian, nota), historial por meses con cada ejercicio y sus series, y «Progreso por ejercicio» (la serie
+  más pesada la primera y la última vez del periodo, y la mejor si no es la última).
+- **Lógica pura:** `src/logic/workoutExport.ts` (`buildWorkoutExport`, `workoutExportText`, `progressRows`,
+  `historyPart`). La media por semana cuenta desde el primer entreno del periodo. En los lastrados el peso sale con
+  «+» también en el historial (la pantalla de Historial no lo pone). No lleva nombre ni datos de la persona; el
+  nombre del entrenador sí, si el programa es suyo.
+- **Por qué basta con OTA:** solo JavaScript. `expo-print`, `expo-sharing` y `expo-file-system` van en las APK desde
+  la del 2026-10-15 y en los TestFlight; si faltaran, `shareHtmlPdf` comparte el texto. `Share` es de React Native.
+- **Comprobado:** tsc limpio, 630 tests (`workoutExport.test.ts` y `workoutExportEs.test.ts`, que revisa las
+  traducciones de los archivos tocados; textos en `workoutsEs.ts`, «All history» = «Todo» porque «All» ya es «Todas»).
+  En la web local (8085) en español a 375 px con un programa de prueba: pantalla, vista previa, copiar (portapapeles
+  simulado: el panel no deja escribir en él), apagar plan e historial, botón del Historial; el PDF, pintado como
+  página. Datos de prueba borrados del navegador. **Sin probar en un móvil:** el menú de compartir, el PDF real
+  (expo-print) y pegar en una IA.
+
+- **OTA a `pruebas` (OK del fundador, «Sí, a pruebas»):** grupo `bac1fd20-8fbe-4e1d-bc9a-5760a1e120d9`, runtime
+  exposdk:57.0.0, Android e iOS, con los pasos a mano (`expo export --clear … --max-workers 1` y `eas-cli update --channel
+  pruebas --environment preview --skip-bundler --input-dir dist`). Sobre la OTA `9bceb844` solo cambia la exportación
+  (el export anterior, de las 13:03, ya llevaba los médicos ficticios y el `transparentModal` de Android). Nada a
+  producción.
+- **Probado por el fundador en el móvil (2026-11-09, tras la OTA `bac1fd20`):** «eso funciona perfe».
+
+### Avisos del móvil, traídos de `entorno-pruebas` (2026-11-09, OK de Astor vía Curro: «Sí, júntalos»)
+
+- **Qué:** los tres commits de avisos de la rama `entorno-pruebas` (c7a7aaf, a73aab7, 5e5888f), aplicados aquí como
+  parche sin commit (`git diff 4ea2475 5e5888f`, 4ea2475 = padre de c7a7aaf; `git cherry-pick` no se puede con es.ts
+  cambiado). No se trajo 083d18b, que es solo su HANDOFF; lo esencial va aquí.
+- **Lo que hacen** (Astor, Xiaomi: «a veces sí, a veces no»; todo JS): las tomas dicen «Es la hora de tu toma» sin el
+  nombre del medicamento, y peso/temperatura «Hora de apuntar tus datos en Kuova»; los dos canales pasan a PUBLIC con id
+  nuevo (`tomas-v2`, `recordatorios-v2`; se borran los viejos) para que se vean con el móvil bloqueado, y un test vigila
+  que ningún aviso diga un dato de salud. En Ajustes → Notificaciones, solo en Android y con los avisos activados, el
+  bloque «Para que los avisos lleguen» (`src/components/DeliveryHelp.tsx`, `src/logic/deliveryHelp.ts`): botones a
+  «Alarmas y recordatorios», Batería y las notificaciones de Kuova, pasos a mano para Xiaomi y Samsung, y un aviso de
+  prueba en 1 minuto. Pendiente para el próximo lote nativo: pedir la alarma exacta desde la app y un servicio en
+  primer plano para el descanso del entrenamiento.
+- **Choque de textos resuelto:** el parche añade `'Lock screen': 'Pantalla de bloqueo'` a es.ts, que ganaba a la
+  pestaña «Bloqueo» de la tarjeta de emergencia; esa pestaña usa ahora la clave `'Lock screen version'`.
+- **Comprobado:** tsc limpio, 642 tests, es.ts sin claves repetidas; Notificaciones carga bien en la web (el bloque
+  nuevo no sale en la web). **Sin probar en un móvil.**
+
+### QR de la pantalla de bloqueo más pequeño, con «Datos médicos» (2026-11-09, por los probadores, vía Curro)
+
+- **Tamaño:** 380 px de lado (antes 560; Astor pidió «más pequeño» dos veces: primero quedó en 440), acabando en el
+  2130. Para que se lea a esa medida el texto del QR de bloqueo va más corto (`lockQr` en `src/logic/historial.ts`:
+  solo «EMERGENCIA» arriba, el nombre sin «Nombre:», «Llamar a»; los demás QR no cambian). Si la tarjeta lleva mucho,
+  el QR crece (`lockQrBox` en `EmergencyCard.tsx`: cada módulo ≥ 5,2 px, unos 500 px en la versión 18); pasada la
+  versión 18 se queda fuera, por orden, lo de alimentos y otras alergias, los últimos avisos o alergias a
+  medicamentos («y N más»), de quién es el teléfono (el número nunca) y se acorta el nombre; la pantalla de la tarjeta
+  lo dice.
+- **Lectura (simulada, no con móviles):** zxing-cpp sobre la pantalla fotografiada a 15-35 cm con desenfoque, reflejo y
+  giro. Con la tarjeta de ejemplo (149 bytes, versión 12): se lee de 15 a 25 cm con fotogramas de 1080 de ancho (en
+  fondo crema, seguro a 20 cm y a medias a 25) y hasta 35 cm con 4K; a 30 cm, con 1080, no. Antes (560 px) llegaba algo
+  más lejos.
+- **Encima del QR:** el asterisco rojo de seis brazos (redondeados) sobre un círculo blanco y «Datos médicos» (como se
+  llama Medical ID en un iPhone en español); nada de cruz roja ni Estrella de la Vida. Se le enseñaron una píldora
+  verde y una tarjeta crema; eligió la tarjeta y luego pidió sacarlo del cuadro, «fondo transparente para tapar
+  cuanto menos el fondo». Queda así (`LockLabel`): el asterisco, «Datos médicos» y «Escanea con la cámara» sueltos
+  encima del QR, cada texto con un contorno suave (oscuro sobre fotos y fondos oscuros, crema sobre los claros). Lo
+  único que tapa es el cuadro crema del QR, que en los fondos claros lleva un filo verde; ya no hay halo alrededor.
+- **Ojo para los probadores:** la imagen que ya tengan puesta no cambia sola; hay que volver a ponerla desde la tarjeta.
+
 ## 2026-11-09 — Entorno de pruebas, cuentas más seguras, doble factor y entrada con la marca (rama `entorno-pruebas`)
 
 Carpeta `../hometest-app-staging` (worktree desde master; la carpeta principal sigue en `metas-fase1`). Nada de esto está en

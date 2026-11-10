@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { currentReport, findMarkerInCurrentReport } from '@/data/reportRepository';
@@ -15,8 +15,10 @@ import {
 } from '@/data/reportContentEn';
 import { TIER_COLOR, FLAG_LABEL } from '@/utils/reportDisplay';
 import { t } from '@/i18n';
+import { markerHref } from '@/utils/markerLinks';
 
 export const ReportMarkerDetailScreen = () => {
+  const router = useRouter();
   const { markerId } = useLocalSearchParams<{ markerId: string }>();
   const marker = markerId ? findMarkerInCurrentReport(markerId) : undefined;
   const retest = currentReport.retest.find((r) => r.marker_id === markerId);
@@ -65,6 +67,12 @@ export const ReportMarkerDetailScreen = () => {
           </View>
         )}
 
+        <TouchableOpacity style={styles.historyLink} onPress={() => router.push(markerHref(marker.marker_id, 'report:current'))} hitSlop={8}>
+          <Ionicons name="trending-up" size={16} color={Colors.accent} />
+          <Text style={styles.historyText}>{t('See all your results in My Data')}</Text>
+          <Ionicons name="chevron-forward" size={14} color={Colors.accent} />
+        </TouchableOpacity>
+
         <Text style={styles.sectionTitle}>{t('What this means')}</Text>
         <Text style={styles.explanation}>{getMarkerExplanation(marker.marker_id)}</Text>
 
@@ -102,6 +110,8 @@ export const ReportMarkerDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  historyLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: 20, marginBottom: 6 },
+  historyText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,

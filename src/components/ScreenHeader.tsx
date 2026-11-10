@@ -14,9 +14,11 @@ interface ScreenHeaderProps {
   showAvatar?: boolean;
   // A dónde volver si no hay pantalla anterior (p. ej. tras recargar por cambiar el tema)
   backFallback?: string;
+  // Un botón a la derecha (p. ej. compartir en el Historial de entrenos)
+  right?: React.ReactNode;
 }
 
-export const ScreenHeader = ({ title, showBack = false, showAvatar = false, backFallback = '/' }: ScreenHeaderProps) => {
+export const ScreenHeader = ({ title, showBack = false, showAvatar = false, backFallback = '/', right }: ScreenHeaderProps) => {
   const router = useRouter();
   // En la web de escritorio, las entradas del menú lateral no llevan "atrás"
   const shellRoot = useIsShellRoot();
@@ -35,7 +37,7 @@ export const ScreenHeader = ({ title, showBack = false, showAvatar = false, back
       <Text style={styles.title}>{title}</Text>
 
       <View style={[styles.side, styles.sideRight]}>
-        {showAvatar && !shellRoot && <UserAvatar size={38} />}
+        {right ?? (showAvatar && !shellRoot && <UserAvatar size={38} />)}
       </View>
     </View>
   );

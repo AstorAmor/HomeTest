@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import { dateLocale, t } from '@/i18n';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { checkInDayKey, checkInRepository, MOOD_SCORE } from '@/data/checkInRepository';
+import { checkInDayKey, checkInRepository, MOOD_SCORE, sampleCheckInSeries } from '@/data/checkInRepository';
 import { CheckInEntry, MOMENT_OPTIONS, MOOD_OPTIONS } from '@/types/checkIn';
 import { bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { BowelEntry, BRISTOL_TYPES, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
@@ -18,12 +18,25 @@ import { mealRepository, MealEntry, workoutRepository, WorkoutEntry } from '@/da
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { DailyPoint, formatSleep, useDailyWearables } from '@/wearables/dailySeries';
+import { RangeId, rangeDays, RangeTabs } from '@/components/MetricDetailParts';
+import { DaysChart } from '@/components/DaysChart';
+import { cycleByDay, DAYS_CHART_FLAG, normalizeSeries, DEFAULT_SERIES, type DayValues, type SeriesId } from '@/logic/dayChart';
+import { userFlags } from '@/data/userFlags';
+import { profileRepository } from '@/data/profileRepository';
+import { cycleRepository } from '@/data/cycleRepository';
+import { cycleGoalStore } from '@/data/cycleGoal';
+import { showSamples } from '@/data/dataMode';
+import { CycleEntry } from '@/types/cycle';
 
 // "Tus últimos días" (Today → check-in → Tus últimos 7 días → tocar): todo lo apuntado y medido
 // cada día, para responder a "¿qué ha pasado estos días?" de un vistazo. Los días que se salen de
 // lo tuyo (ánimo o energía bajos, poco sueño, pulso en reposo alto) llevan una marca y el porqué.
+// Arriba, la gráfica de ánimo y energía, con lo que quieras añadir para compararlo (fundador, 2026-11-06).
 
 const DAYS = 14;
+// La gráfica llega a un mes (1M); las tarjetas de cada día, a 14
+const CHART_DAYS = 30;
+const CHART_RANGES: RangeId[] = ['7D', '14D', '1M'];
 
 interface DayData {
   key: string;
@@ -50,7 +63,11 @@ const SLOT_LABEL: Record<string, string> = { just_woke_up: 'Morning', mid_day: '
 export const DaysScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ date?: string }>();
-  const { series } = useDailyWearables(30);
+  const { series } = useDailyWearables(CHART_DAYS);
+  const [range, setRange] = useState<RangeId>('14D');
+  const [chartSel, setChartSel] = useDeepState<SeriesId[]>([...DEFAULT_SERIES]);
+  // Mujeres: sus reglas y la duración que dijo, para la franja del ciclo (null: no se pinta)
+  const [cycleSrc, setCycleSrc] = useDeepState<{ entries: CycleEntry[]; length: number | null } | null>(null);
   const scroll = useRef<ScrollView>(null);
   const positions = useRef<Record<string, number>>({});
   const scrolled = useRef(false);
@@ -67,7 +84,7 @@ export const DaysScreen = () => {
 
   const dayList = useMemo(
     () =>
-      Array.from({ length: DAYS }, (_, i) => {
+      Array.from({ length: CHART_DAYS }, (_, i) => {
         const d = new Date();
         d.setHours(12, 0, 0, 0);
         d.setDate(d.getDate() - i);
@@ -93,7 +110,16 @@ export const DaysScreen = () => {
       const doses: Record<string, ScheduledDose[]> = {};
       for (const d of dayList) doses[dayKey(d)] = dosesForDay(meds, d, logs);
       setRaw({ checkIns, bowel, urine, doses, workouts, meals, bp, glucose });
-    }, [dayList, setRaw]),
+      userFlags
+        .get(DAYS_CHART_FLAG)
+        .then((v) => setChartSel(normalizeSeries(v)))
+        .catch(() => undefined);
+      const p = await profileRepository.get().catch(() => null);
+      if (p?.sex === 'female') {
+        const [entries, goal] = await Promise.all([safe(cycleRepository.getAll()), cycleGoalStore.get().catch(() => null)]);
+        setCycleSrc({ entries, length: goal?.cycleLength ?? null });
+      } else setCycleSrc(null);
+    }, [dayList, setRaw, setChartSel, setCycleSrc]),
   );
 
   const days: DayData[] = dayList.map((d) => {
@@ -118,7 +144,7 @@ export const DaysScreen = () => {
   });
 
   // Lo tuyo de estos días, para marcar lo que se sale (no umbrales clínicos: comparación contigo)
-  const usualRhr = avg(days.map((d) => d.rhr).filter((v): v is number => v != null));
+  const usualRhr = avg(days.slice(0, DAYS).map((d) => d.rhr).filter((v): v is number => v != null));
   const reasons = (d: DayData): string[] => {
     const out: string[] = [];
     const moods = d.checkIns.filter((c) => c.mood).map((c) => MOOD_SCORE[c.mood!]);
@@ -130,6 +156,33 @@ export const DaysScreen = () => {
     if (d.doses.some((x) => x.log?.status === 'skipped')) out.push(t('Skipped a dose'));
     if (d.urine?.burning) out.push(t('Burning when peeing'));
     return out;
+  };
+
+  // La gráfica: del día más antiguo del periodo a hoy
+  const chartDays = days.slice(0, rangeDays(range)).reverse();
+  const keys = chartDays.map((d) => d.key);
+  const mean = (xs: (number | undefined)[]) => avg(xs.filter((x): x is number => typeof x === 'number'));
+  // Sin ningún check-in, en la demo, ánimo y energía de ejemplo (como la gráfica de Hoy)
+  const sampleMood = !raw.checkIns.length && showSamples() ? sampleCheckInSeries(keys.length) : null;
+  const anyWorkout = raw.workouts.length > 0;
+  const values: DayValues = {
+    mood: sampleMood ? sampleMood.map((p) => p.mood) : chartDays.map((d) => mean(d.checkIns.map((c) => (c.mood ? MOOD_SCORE[c.mood] : undefined)))),
+    energy: sampleMood ? sampleMood.map((p) => p.energy) : chartDays.map((d) => mean(d.checkIns.map((c) => c.energy))),
+    stress: chartDays.map((d) => mean(d.checkIns.map((c) => c.stress))),
+    sleep: chartDays.map((d) => d.sleep),
+    steps: chartDays.map((d) => d.steps),
+    hrv: chartDays.map((d) => d.hrv),
+    rhr: chartDays.map((d) => d.rhr),
+    // Orina: las veces que apuntó (o las visitas una a una); deposiciones: 0 si apuntó que no fue
+    urine: chartDays.map((d) => d.urine?.count ?? (d.urine?.visits?.length || null)),
+    bowel: chartDays.map((d) => (d.bowel ? d.bowel.count : null)),
+    // Entreno: con alguno apuntado, los días sin entreno cuentan 0
+    workout: chartDays.map((d) => (d.workouts.length ? d.workouts.reduce((a, w) => a + (w.minutes || 0), 0) : anyWorkout ? 0 : null)),
+  };
+  const cycle = cycleSrc ? cycleByDay(keys, cycleSrc.entries, cycleSrc.length, showSamples()) : null;
+  const onChartSel = (next: SeriesId[]) => {
+    setChartSel(next);
+    userFlags.set(DAYS_CHART_FLAG, { series: next }).catch(() => undefined);
   };
 
   const onLayoutDay = (key: string, y: number) => {
@@ -162,9 +215,24 @@ export const DaysScreen = () => {
       <ScrollView ref={scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your last days')} showBack />
         <Text style={styles.intro}>{t('Everything you logged and measured each day. Days that stand out from your usual are marked.')}</Text>
+
+        <View style={styles.chartCard}>
+          <Text style={styles.chartTitle}>{t('How you have been')}</Text>
+          <RangeTabs value={range} onChange={setRange} only={CHART_RANGES} />
+          {/* key: al cambiar de periodo, sin día tocado */}
+          <DaysChart key={range} keys={keys} values={values} selected={chartSel} onChange={onChartSel} cycle={cycle} sample={!!sampleMood} />
+          {cycleSrc && !cycle?.some(Boolean) && (
+            <TouchableOpacity onPress={() => router.push('/log-cycle')} activeOpacity={0.7}>
+              <Text style={styles.chartLink}>
+                {t('Log your period and you will see the phases of your cycle under the chart')} <Ionicons name="chevron-forward" size={12} color={Colors.accent} />
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <Text style={styles.slotsHelp}>{t('The three circles are morning, midday and night. Tap one to add that check-in or change it.')}</Text>
 
-        {days.map((d) => {
+        {days.slice(0, DAYS).map((d) => {
           const why = reasons(d);
           const focus = params.date === d.key;
           const taken = d.doses.filter((x) => x.log?.status === 'taken').length;
@@ -331,6 +399,9 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 10 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 6 },
+  chartCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginBottom: 8 },
+  chartTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginBottom: 10 },
+  chartLink: { color: Colors.accent, fontSize: 12.5, fontWeight: '700', marginTop: 10 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,

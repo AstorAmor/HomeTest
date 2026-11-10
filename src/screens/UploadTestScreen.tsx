@@ -55,7 +55,7 @@ export const UploadTestScreen = () => {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState('');
 
-  const saveAndGo = async (pathname: '/progress' | '/plan-update') => {
+  const saveAndGo = async (pathname: '/progress' | '/metas-objetivos') => {
     if (!report) return;
     setSaveError('');
     try {
@@ -69,7 +69,8 @@ export const UploadTestScreen = () => {
           console.warn('Lab upload: originals not saved', e instanceof Error ? e.message : e),
         );
       }
-      router.push({ pathname, params: pathname === '/progress' ? { upload: id, view: 'progress' } : { upload: id } });
+      if (pathname === '/progress') router.push({ pathname, params: { upload: id, view: 'progress' } });
+      else router.push(pathname);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : t('Could not save your results'));
     }
@@ -363,9 +364,9 @@ export const UploadTestScreen = () => {
                 <Text style={styles.nextPrimaryText}>{t('See my progress')}</Text>
               </TouchableOpacity>
               {show('plan') && (
-                <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/plan-update')}>
-                  <Ionicons name="sparkles-outline" size={18} color={Colors.accent} />
-                  <Text style={styles.nextSecondaryText}>{t('Update plan')}</Text>
+                <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/metas-objetivos')}>
+                  <Ionicons name="flag-outline" size={18} color={Colors.accent} />
+                  <Text style={styles.nextSecondaryText}>{t('Review my goals')}</Text>
                 </TouchableOpacity>
               )}
               {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}

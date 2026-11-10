@@ -14,8 +14,10 @@ import { usePermissionsGatePending } from '@/data/permissionsGate';
 
 // Avisos de bienvenida (fundador, 2026-10-17): al entrar en Hoy las primeras veces, una tarjeta
 // invita a hacer el perfil genético y, a las mujeres, el cuestionario de la regla. Siempre se puede
-// decidir: Empezar · Más tarde (vuelve en 3 días) · Saltar (ese no vuelve) · Silenciar estos
-// avisos (no sale ninguno más). Se guarda en user_flags, así que vale en todos los dispositivos.
+// decidir: Empezar · Omitir por ahora (vuelve en 3 días, y lo dice) · No volver a mostrar este aviso.
+// Antes eran «Más tarde», «Saltar» y «Silenciar estos avisos», y no se entendía la diferencia (fundador,
+// 2026-11-06). Quien ya los silenció sigue sin verlos (MUTED). Se guarda en user_flags, así que vale en
+// todos los dispositivos.
 
 type PromptId = 'genetics' | 'cycle';
 
@@ -99,10 +101,6 @@ export const WelcomePrompts = () => {
     userFlags.set(stateKey(current), 'skipped');
     advance();
   };
-  const mute = () => {
-    userFlags.set(MUTED, true);
-    setQueue([]);
-  };
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={later}>
@@ -118,16 +116,13 @@ export const WelcomePrompts = () => {
           <View style={styles.row}>
             <TouchableOpacity style={styles.secondary} onPress={later} activeOpacity={0.85}>
               <Ionicons name="time-outline" size={16} color={Colors.textPrimary} />
-              <Text style={styles.secondaryText}>{t('Later')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondary} onPress={skip} activeOpacity={0.85}>
-              <Ionicons name="play-skip-forward-outline" size={16} color={Colors.textPrimary} />
-              <Text style={styles.secondaryText}>{t('Skip this one')}</Text>
+              <Text style={styles.secondaryText}>{t('Skip for now')}</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={mute} style={styles.muteBtn}>
+          <Text style={styles.hint}>{t('We will remind you in {n} days.', { n: POSTPONE_DAYS })}</Text>
+          <TouchableOpacity onPress={skip} style={styles.muteBtn} hitSlop={8}>
             <Ionicons name="notifications-off-outline" size={14} color={Colors.textMuted} />
-            <Text style={styles.muteText}>{t('Mute these suggestions')}</Text>
+            <Text style={styles.muteText}>{t('Do not show this again')}</Text>
           </TouchableOpacity>
           {queue.length > 1 && <Text style={styles.count}>{t('1 of {n}', { n: queue.length })}</Text>}
         </Pressable>
@@ -185,7 +180,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   secondaryText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  muteBtn: { flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 16 },
+  hint: { color: Colors.textMuted, fontSize: 12, marginTop: 6 },
+  muteBtn: { flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 14 },
   muteText: { color: Colors.textMuted, fontSize: 13 },
   count: { color: Colors.textMuted, fontSize: 11, marginTop: 10 },
 });

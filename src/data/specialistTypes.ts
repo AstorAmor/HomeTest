@@ -157,7 +157,7 @@ export const KIND_LABEL: Record<AppointmentKind, string> = {
   results_review: t('Results review'),
 };
 
-// "Primera visita con Gema Martínez" (Hoy y Agenda)
+// "Primera visita con Laura Méndez" (Hoy y Agenda)
 export const appointmentTitle = (a: Appointment) =>
   `${t(KIND_LABEL[a.kind])}${a.professionalName ? ` ${t('with')} ${a.professionalName}` : ''}`;
 

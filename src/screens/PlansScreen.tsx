@@ -7,28 +7,22 @@ import { useRouter } from 'expo-router';
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
-import { getMarkerDisplayNameEn } from '@/data/reportContentEn';
-import { markerIn, planHistory, reportsForProgress } from '@/data/planHistory';
-import { flagColor, labReports } from '@/utils/labReportView';
 import { PlanVersion, planVersionRepository } from '@/data/planVersions';
 import { ruleWhyForItem, STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { buildFullPlan, loadPlanHabits, PlanItem } from '@/data/planRepository';
-import { profileRepository } from '@/data/profileRepository';
-import { labUploadRepository } from '@/data/labUploads';
+import { specialistPlans } from '@/logic/specialistPlan';
+
+// «El plan de tu especialista» (/plans). Desde el 2026-11-06 (fundador: «hacerlo más dependiente de médicos…
+// para eso tenemos lo de los objetivos») la app ya no hace planes sola: aquí solo salen los que manda un
+// especialista desde su portal (ProPlanScreen → versión con source «professional»). Lo del día a día va en
+// Tus objetivos (/metas). El plan automático (/action-plan, /plan-update, /report-plan) queda en el código,
+// sin enlaces.
 
 const dayMonthYear = (iso: string) =>
   new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 
-const SOURCE_LABEL: Record<PlanVersion['source'], string> = {
-  upload: 'Updated from your uploaded test',
-  report: 'From your Kuova report',
-  professional: 'Updated by your specialist',
-};
-
-// Versión del plan actualizada (subida de analítica o profesional): acciones con su estado.
-// Abierta, se puede borrar (también la vigente: entonces pasa a serlo la anterior).
+// Un plan del especialista: acciones con su estado. Abierto, se puede borrar.
 const VersionCard = ({
   v,
   current,
@@ -45,24 +39,26 @@ const VersionCard = ({
   <View style={[styles.card, current && styles.cardLatest]}>
     <TouchableOpacity style={styles.head} activeOpacity={0.85} onPress={onToggle}>
       <View style={[styles.icon, current && { backgroundColor: Colors.accent }]}>
-        <Ionicons name={current ? 'sparkles' : 'git-branch-outline'} size={20} color={current ? Colors.background : Colors.accent} />
+        <Ionicons name={current ? 'medkit' : 'medkit-outline'} size={20} color={current ? Colors.background : Colors.accent} />
       </View>
       <View style={{ flex: 1 }}>
         {current && <Text style={styles.badge}>{t('Current plan')}</Text>}
         <Text style={styles.title}>{dayMonthYear(v.createdAt)}</Text>
         <Text style={styles.sub}>
-          {t(SOURCE_LABEL[v.source])} · {t(v.items.length === 1 ? '{n} action' : '{n} actions', { n: v.items.length })}
+          {v.professionalName ? t('From {name}', { name: v.professionalName }) : t('From your specialist')} ·{' '}
+          {t(v.items.length === 1 ? '{n} action' : '{n} actions', { n: v.items.length })}
         </Text>
       </View>
       <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
     </TouchableOpacity>
     {open && (
       <View style={styles.items}>
+        {v.note ? <Text style={styles.note}>{v.note}</Text> : null}
         {v.items.map((it, i) => (
           <View key={`${it.title}-${i}`} style={styles.item}>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
               <Text style={[styles.itemTitle, { flex: 1 }]}>{it.title}</Text>
-              {it.status !== 'not_retested' && (
+              {it.status !== 'not_retested' && it.status !== 'new' && (
                 <Text style={[styles.status, { color: statusColor(it.status) }]}>{STATUS_LABEL[it.status]}</Text>
               )}
             </View>
@@ -79,86 +75,60 @@ const VersionCard = ({
   </View>
 );
 
-const monthYear = (iso: string) =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' });
-
-// "See full plan": el plan completo más reciente y los anteriores, con cómo han
-// evolucionado los marcadores que trabajaba cada acción.
 export const PlansScreen = () => {
   const router = useRouter();
-  const plans = planHistory();
   const [openId, setOpenId] = useState<string | null>(null);
-  const [versions, setVersions] = useDeepState<PlanVersion[]>([]);
-  // El plan de "Tu plan personalizado" (el de Hoy): sale aquí como plan actual mientras no haya
-  // uno más reciente de un análisis o de un profesional.
-  const [goalsPlan, setGoalsPlan] = useDeepState<PlanItem[]>([]);
-  const [hasResults, setHasResults] = useState(labReports().length > 0);
+  const [versions, setVersions] = useDeepState<PlanVersion[] | null>(null);
+  const [deleteError, setDeleteError] = useState('');
   useReloadOnFocus(
     useCallback(async () => {
-      const v = await planVersionRepository.getAll().catch(() => []);
+      const v = specialistPlans(await planVersionRepository.getAll().catch(() => []));
       setVersions(v);
       if (v.length) setOpenId((cur) => cur ?? v[0].id);
-      const [profile, habits] = await Promise.all([profileRepository.get().catch(() => null), loadPlanHabits().catch(() => ({}))]);
-      setGoalsPlan(buildFullPlan(profile, habits));
-      labUploadRepository
-        .getAll()
-        .then((u) => setHasResults(labReports().length > 0 || u.length > 0))
-        .catch(() => undefined);
-    }, [setVersions, setGoalsPlan]),
+    }, [setVersions]),
   );
-  const hasVersions = versions.length > 0;
-  const [deleteError, setDeleteError] = useState('');
   const deleteVersion = async (v: PlanVersion) => {
-    const ok = await confirmAsk(t('Delete this plan?'), `${dayMonthYear(v.createdAt)} · ${t(SOURCE_LABEL[v.source])}`, t('Delete'));
+    const ok = await confirmAsk(t('Delete this plan?'), `${dayMonthYear(v.createdAt)} · ${t('From your specialist')}`, t('Delete'));
     if (!ok) return;
     setDeleteError('');
     try {
       await planVersionRepository.remove(v.id);
-      setVersions(await planVersionRepository.getAll().catch(() => []));
+      setVersions(specialistPlans(await planVersionRepository.getAll().catch(() => [])));
     } catch {
       setDeleteError(t('This plan could not be deleted yet. Try again in a while.'));
     }
   };
-  const showGoalsPlan = !hasVersions && !plans.some((p) => p.latest) && goalsPlan.length > 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Your plans')} showBack />
-        <Text style={styles.intro}>{t("A new plan comes with every blood test. Earlier plans stay here so you can see how far you've come.")}</Text>
+        <ScreenHeader title={t('Your specialist’s plan')} showBack />
+        <Text style={styles.intro}>
+          {t('The plans a Kuova specialist sends you after looking at your results. Your day-to-day targets are in Your goals.')}
+        </Text>
 
-        {showGoalsPlan && (
-          <View style={[styles.card, styles.cardLatest]}>
-            <TouchableOpacity style={styles.head} activeOpacity={0.85} onPress={() => router.push('/action-plan')}>
-              <View style={[styles.icon, { backgroundColor: Colors.accent }]}>
-                <Ionicons name="sparkles" size={20} color={Colors.background} />
+        {versions && versions.length === 0 && (
+          <View style={styles.card}>
+            <View style={styles.head}>
+              <View style={styles.icon}>
+                <Ionicons name="medkit-outline" size={20} color={Colors.accent} />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.badge}>{t('Current plan')}</Text>
-                <Text style={styles.title}>{t('Your personalised plan')}</Text>
-                <Text style={styles.sub}>
-                  {hasResults ? t('Based on your latest results') : t('Based on your goals for now')} ·{' '}
-                  {t(goalsPlan.length === 1 ? '{n} action' : '{n} actions', { n: goalsPlan.length })}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-            </TouchableOpacity>
-            <View style={styles.items}>
-              {goalsPlan.map((it) => (
-                <View key={it.kind} style={styles.item}>
-                  <Text style={styles.itemTitle}>{it.title}</Text>
-                  <Text style={styles.itemWhy}>{it.detail && it.detail !== it.title ? `${it.detail} ${it.why}` : it.why}</Text>
-                </View>
-              ))}
+              <Text style={[styles.title, { flex: 1, fontSize: 15 }]}>{t('No specialist has sent you a plan yet.')}</Text>
             </View>
-            <TouchableOpacity style={styles.cta} onPress={() => router.push('/action-plan')}>
-              <Text style={styles.ctaText}>{t('See full plan')}</Text>
+            <Text style={[styles.itemWhy, { marginTop: 10 }]}>
+              {t('Share your results with a specialist and, if they see fit, they will send you a plan. It will appear here and in Your goals.')}
+            </Text>
+            <TouchableOpacity style={styles.cta} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
+              <Text style={styles.ctaText}>{t('Talk to a specialist')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ghost} onPress={() => router.push('/metas')}>
+              <Text style={styles.ghostText}>{t('See your goals')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {deleteError ? <Text style={styles.deleteError}>{deleteError}</Text> : null}
-        {versions.map((v, i) => (
+        {(versions ?? []).map((v, i) => (
           <VersionCard
             key={v.id}
             v={v}
@@ -168,67 +138,6 @@ export const PlansScreen = () => {
             onDelete={() => deleteVersion(v)}
           />
         ))}
-
-        {plans.map((raw) => {
-          // Si hay versiones actualizadas, el plan del informe deja de ser el vigente.
-          const p = { ...raw, latest: raw.latest && !hasVersions, fromReport: raw.latest };
-          const open = openId === p.id;
-          return (
-            <View key={p.id} style={[styles.card, p.latest && styles.cardLatest]}>
-              <TouchableOpacity
-                style={styles.head}
-                activeOpacity={0.85}
-                onPress={() => (p.fromReport ? router.push('/report-plan') : setOpenId(open ? null : p.id))}
-              >
-                <View style={[styles.icon, p.latest && { backgroundColor: Colors.accent }]}>
-                  <Ionicons name={p.latest ? 'sparkles' : 'time-outline'} size={20} color={p.latest ? Colors.background : Colors.accent} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  {p.latest && <Text style={styles.badge}>{t('Current plan')}</Text>}
-                  <Text style={styles.title}>{monthYear(p.date)}</Text>
-                  <Text style={styles.sub}>
-                    {p.label} · {t(p.items.length === 1 ? '{n} action' : '{n} actions', { n: p.items.length })}
-                  </Text>
-                </View>
-                <Ionicons name={p.fromReport ? 'chevron-forward' : open ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textMuted} />
-              </TouchableOpacity>
-
-              {p.fromReport && (
-                <TouchableOpacity style={styles.cta} onPress={() => router.push('/report-plan')}>
-                  <Text style={styles.ctaText}>{t('See full plan')}</Text>
-                </TouchableOpacity>
-              )}
-
-              {!p.fromReport && open && (
-                <View style={styles.items}>
-                  {p.items.map((it) => (
-                    <View key={it.title} style={styles.item}>
-                      <Text style={styles.itemTitle}>{it.title}</Text>
-                      <Text style={styles.itemWhy}>{ruleWhyForItem(it)}</Text>
-                      {it.markers.map((id) => {
-                        const before = markerIn(reportsForProgress.before, id);
-                        const after = markerIn(reportsForProgress.after, id);
-                        if (!before) return null;
-                        return (
-                          <View key={id} style={styles.markerRow}>
-                            <Text style={styles.markerName}>{getMarkerDisplayNameEn(id, before.display_name)}</Text>
-                            <Text style={[styles.markerVal, { color: flagColor(before) }]}>{before.value ?? before.value_text}</Text>
-                            <Ionicons name="arrow-forward" size={12} color={Colors.textMuted} />
-                            <Text style={[styles.markerVal, after && { color: flagColor(after) }]}>
-                              {after ? after.value ?? after.value_text : '—'}
-                            </Text>
-                            <Text style={styles.unit}>{before.unit === 'índice' ? 'index' : before.unit}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  ))}
-                  <Text style={styles.note}>{t('Values from your first test → your follow-up test.')}</Text>
-                </View>
-              )}
-            </View>
-          );
-        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -255,15 +164,13 @@ const styles = StyleSheet.create({
   sub: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
   cta: { backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11, alignItems: 'center', marginTop: 14 },
   ctaText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  ghost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 22, paddingVertical: 10, alignItems: 'center', marginTop: 8 },
+  ghostText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   items: { marginTop: 14, gap: 12 },
   item: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 12, gap: 4 },
   itemTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
   itemWhy: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  markerRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  markerName: { color: Colors.textSecondary, fontSize: 12, flex: 1 },
-  markerVal: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  unit: { color: Colors.textMuted, fontSize: 11, minWidth: 44 },
-  note: { color: Colors.textMuted, fontSize: 11, marginTop: 4 },
+  note: { color: Colors.textPrimary, fontSize: 13, lineHeight: 18, fontStyle: 'italic' },
   status: { fontSize: 11, fontWeight: '800' },
   itemNote: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
   deleteRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingTop: 4 },

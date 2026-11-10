@@ -18,9 +18,11 @@ interface WheelPickerProps {
   onChange: (index: number) => void;
   width?: number;
   itemHeight?: number;
+  // Filas a la vista: 5 (lo de siempre) o 3, más baja (metas, fundador 2026-11-05)
+  visible?: 3 | 5;
+  // Color del fondo sobre el que va (los degradados de arriba y abajo se funden con él)
+  fadeColor?: string;
 }
-
-const VISIBLE = 5;
 
 // Selector tipo "rueda de candado": se gira arriba/abajo y encaja en el valor
 // central. Funciona en nativo y en web (en web no hay onMomentumScrollEnd, así
@@ -31,11 +33,17 @@ export const WheelPicker = ({
   onChange,
   width = 90,
   itemHeight = 40,
+  visible = 5,
+  fadeColor = Colors.background,
 }: WheelPickerProps) => {
   const scrollRef = useRef<ScrollView>(null);
   const [visualIndex, setVisualIndex] = useState(selectedIndex);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const height = itemHeight * VISIBLE;
+  const height = itemHeight * visible;
+  const pad = (visible - 1) / 2;
+  const fade = itemHeight * (visible === 3 ? 0.8 : 1.5);
+  // En la web los id de los degradados son de toda la página: uno por color de fondo
+  const fid = fadeColor.replace(/[^a-zA-Z0-9]/g, '');
 
   useEffect(() => {
     // Posición inicial sin animación
@@ -69,7 +77,7 @@ export const WheelPicker = ({
     <View style={{ width, height }}>
       <View
         pointerEvents="none"
-        style={[styles.highlight, { top: itemHeight * 2, height: itemHeight }]}
+        style={[styles.highlight, { top: itemHeight * pad, height: itemHeight }]}
       />
       <ScrollView
         ref={scrollRef}
@@ -79,7 +87,7 @@ export const WheelPicker = ({
         onScroll={handleScroll}
         scrollEventThrottle={16}
         nestedScrollEnabled
-        contentContainerStyle={{ paddingVertical: itemHeight * 2 }}
+        contentContainerStyle={{ paddingVertical: itemHeight * pad }}
       >
         {items.map((label, i) => {
           const distance = i - visualIndex;
@@ -108,22 +116,22 @@ export const WheelPicker = ({
       </ScrollView>
       <Svg pointerEvents="none" width={width} height={height} style={StyleSheet.absoluteFill}>
         <Defs>
-          <LinearGradient id="wheelFadeTop" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={Colors.background} stopOpacity="1" />
-            <Stop offset="1" stopColor={Colors.background} stopOpacity="0" />
+          <LinearGradient id={`wheelFadeTop${fid}`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={fadeColor} stopOpacity="1" />
+            <Stop offset="1" stopColor={fadeColor} stopOpacity="0" />
           </LinearGradient>
-          <LinearGradient id="wheelFadeBottom" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={Colors.background} stopOpacity="0" />
-            <Stop offset="1" stopColor={Colors.background} stopOpacity="1" />
+          <LinearGradient id={`wheelFadeBottom${fid}`} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={fadeColor} stopOpacity="0" />
+            <Stop offset="1" stopColor={fadeColor} stopOpacity="1" />
           </LinearGradient>
         </Defs>
-        <Rect x={0} y={0} width={width} height={itemHeight * 1.5} fill="url(#wheelFadeTop)" />
+        <Rect x={0} y={0} width={width} height={fade} fill={`url(#wheelFadeTop${fid})`} />
         <Rect
           x={0}
-          y={height - itemHeight * 1.5}
+          y={height - fade}
           width={width}
-          height={itemHeight * 1.5}
-          fill="url(#wheelFadeBottom)"
+          height={fade}
+          fill={`url(#wheelFadeBottom${fid})`}
         />
       </Svg>
     </View>

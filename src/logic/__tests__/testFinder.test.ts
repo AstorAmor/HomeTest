@@ -1,63 +1,82 @@
 import { describe, expect, it } from 'vitest';
+import { CATALOG } from '@/data/testCatalog';
 import { FINDER_STEPS, recommend, toggleOption, visibleOptions } from '@/logic/testFinder';
 
-// Precios del catálogo (solo cuentan los ids; el precio desempata)
-const PRICES: Record<string, number> = {
-  essential: 124.99, weight: 89, performance: 99.99, vitamin_d: 39.99, vitamin_b: 59.99, vitamins: 69.99, iron: 49,
-  cycle_hormones: 139.99, cortisol: 49.99, stress: 79.99, fertility_f: 94.99, thyroid: 44.99, thyroid_adv: 124.99,
-  amh: 74.99, testosterone: 54.99, cardio: 79.99, diabetes: 74.99, psa: 54.99, lpa: 69.99, coeliac: 69.99,
-  digestive_pack: 153, sti_4: 89.99, sti_7: 119.99, sti_11: 149.99,
-};
+// Lo que puede pedir cada uno, en el orden del catálogo: lo de «Añadir a tu seguimiento», solo con la suscripción
+const orderable = CATALOG.filter((p) => p.orderable !== false);
+const MEMBER = orderable.map((p) => p.id);
+const NON_MEMBER = orderable.filter((p) => !p.withFollowUp).map((p) => p.id);
 
 describe('Cuestionario: qué analítica pedir', () => {
-  it('perder peso sin buscarlo: tiroides primero y aviso de comentarlo con un médico', () => {
-    const r = recommend({ concerns: ['weight_loss'] }, 'male', PRICES);
-    expect(r.picks[0].id).toBe('thyroid');
+  it('cada prueba del cuestionario existe en el catálogo', () => {
+    const ids = new Set(CATALOG.map((p) => p.id));
+    const used = FINDER_STEPS.flatMap((s) => s.options.flatMap((o) => [...Object.keys(o.tests), ...Object.keys(o.female ?? {})]));
+    expect(used.filter((id) => !ids.has(id))).toEqual([]);
+  });
+
+  it('perder peso sin buscarlo: celiaquía, lo que ya mira el análisis anual y aviso de comentarlo con un médico', () => {
+    const r = recommend({ concerns: ['weight_loss'] }, 'male', NON_MEMBER);
+    expect(r.picks.map((p) => p.id)).toEqual(['coeliac']);
     expect(r.flags).toContain('weight_loss');
-    expect(r.picks.map((p) => p.id)).toEqual(expect.arrayContaining(['diabetes', 'essential', 'coeliac']));
+    expect(r.covered).toEqual(expect.arrayContaining(['TSH', 'glucose and HbA1c', 'blood count']));
   });
 
-  it('ganar peso: tiroides y control de peso; en mujeres también hormonas del ciclo', () => {
-    const m = recommend({ concerns: ['weight_gain'] }, 'male', PRICES);
-    expect(m.picks.slice(0, 2).map((p) => p.id).sort()).toEqual(['thyroid', 'weight']);
-    expect(m.flags).not.toContain('weight_loss');
-    const f = recommend({ concerns: ['weight_gain'] }, 'female', PRICES);
-    expect(f.picks.map((p) => p.id)).toContain('cycle_hormones');
+  it('ganar peso: no hace falta una prueba suelta, lo mira el análisis anual (TSH, azúcar e insulina)', () => {
+    const r = recommend({ concerns: ['weight_gain'] }, 'female', NON_MEMBER);
+    expect(r.picks).toEqual([]);
+    expect(r.covered).toEqual(['TSH', 'glucose and HbA1c', 'insulin']);
   });
 
-  it('cansancio + poco sol: hierro y vitaminas primero, con sus motivos', () => {
-    const r = recommend({ concerns: ['tired'], surroundings: ['less_sun'] }, 'female', PRICES);
+  it('cansancio + poco sol: el análisis anual lo mira; con la suscripción, la vitamina D en el seguimiento', () => {
+    const member = recommend({ concerns: ['tired'], surroundings: ['less_sun'] }, 'female', MEMBER);
+    expect(member.covered).toEqual(['iron and ferritin', 'vitamin B12', 'TSH', 'vitamin D']);
+    expect(member.picks.map((p) => p.id)).toEqual(['vitamin_d']);
+    expect(member.picks[0].reasons).toEqual(['little sun']);
+    // Sin suscripción no se ofrece lo que solo va en el seguimiento
+    expect(recommend({ concerns: ['tired'], surroundings: ['less_sun'] }, 'female', NON_MEMBER).picks).toEqual([]);
+  });
+
+  it('sin nada concreto: un chequeo general, que es el análisis anual', () => {
+    const r = recommend({ changes: ['none'], taking: ['none'] }, undefined, NON_MEMBER);
+    expect(r.picks).toEqual([]);
+    expect(r.covered).toEqual(expect.arrayContaining(['cholesterol and ApoB', 'glucose and HbA1c', 'TSH']));
+  });
+
+  it('estrés y sueño: ningún análisis los mide, se avisa en vez de vender una prueba', () => {
+    const r = recommend({ concerns: ['stress', 'sleep'], changes: ['work'] }, 'male', MEMBER);
+    expect(r.picks).toEqual([]);
+    expect(r.flags).toEqual(['stress_sleep']);
+  });
+
+  it('solo una prueba de ITS y nada exclusivo de mujer para un hombre', () => {
+    const r = recommend({ concerns: ['libido'], changes: ['partner', 'pregnancy'] }, 'male', NON_MEMBER);
     const ids = r.picks.map((p) => p.id);
-    expect(ids.slice(0, 2).sort()).toEqual(['iron', 'vitamins']);
-    // la vitamina D sola se junta con "Vitaminas esenciales" (que ya la incluye)
-    expect(ids).not.toContain('vitamin_d');
-    expect(r.picks.find((p) => p.id === 'vitamins')!.reasons).toEqual(['tiredness', 'little sun']);
+    expect(ids.filter((id) => id.startsWith('sti_'))).toEqual(['sti_basic']);
+    expect(ids).not.toContain('ovarian_reserve');
+    expect(ids[0]).toBe('hormones_m');
   });
 
-  it('sin nada concreto: chequeo general', () => {
-    const r = recommend({ changes: ['none'], taking: ['none'] }, undefined, PRICES);
-    expect(r.picks[0].id).toBe('essential');
-    expect(r.picks[0].reasons).toEqual(['a general check-up']);
+  it('deseo sexual en una mujer: sus hormonas, no las del hombre', () => {
+    const ids = recommend({ concerns: ['libido'] }, 'female', NON_MEMBER).picks.map((p) => p.id);
+    expect(ids[0]).toBe('hormones_f');
+    expect(ids).not.toContain('hormones_m');
   });
 
-  it('solo un test de ITS y nada exclusivo de mujer para un hombre', () => {
-    const r = recommend({ concerns: ['libido'], changes: ['partner', 'pregnancy'] }, 'male', PRICES);
-    const ids = r.picks.map((p) => p.id);
-    expect(ids.filter((id) => id.startsWith('sti_'))).toEqual(['sti_7']);
-    expect(ids).not.toContain('fertility_f');
-    expect(ids).not.toContain('amh');
-    expect(ids[0]).toBe('testosterone');
+  it('cambios en la regla: los andrógenos se juntan con la salud hormonal de la mujer, que ya los incluye', () => {
+    const r = recommend({ concerns: ['period'] }, 'female', NON_MEMBER);
+    expect(r.picks.map((p) => p.id)).toEqual(['hormones_f']);
+    expect(r.picks[0].score).toBe(5);
   });
 
-  it('deseo sexual en una mujer: ciclo hormonal, no testosterona', () => {
-    const ids = recommend({ concerns: ['libido'] }, 'female', PRICES).picks.map((p) => p.id);
-    expect(ids[0]).toBe('cycle_hormones');
-    expect(ids).not.toContain('testosterone');
+  it('digestión: las pruebas de aliento y la celiaquía, en el orden del catálogo', () => {
+    const ids = recommend({ concerns: ['digestion'] }, undefined, NON_MEMBER).picks.map((p) => p.id);
+    expect(ids).toEqual(['coeliac', 'sibo', 'lactose', 'fructose', 'hpylori']);
   });
 
-  it('ánimo bajo y alergias se avisan aparte', () => {
-    const r = recommend({ concerns: ['low'], surroundings: ['allergy'] }, 'male', PRICES);
+  it('ánimo bajo y alergias se avisan aparte; las alergias llevan a la prueba ALEX', () => {
+    const r = recommend({ concerns: ['low'], surroundings: ['allergy'] }, 'male', NON_MEMBER);
     expect(r.flags.sort()).toEqual(['allergy', 'mood']);
+    expect(r.picks.map((p) => p.id)).toEqual(['allergy_alex']);
   });
 
   it('"Nada de esto" desmarca el resto y al revés; las preguntas de mujer no salen a hombres', () => {

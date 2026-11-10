@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { PreferencesBlock } from '@/components/PreferencesBlock';
+import { WeekStartSetting } from '@/components/metas/WeekStartSetting';
 import { Colors } from '@/constants/colors';
 import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
@@ -40,6 +41,8 @@ export const SettingsScreen = () => {
         <ScreenHeader title={t('Settings')} showBack backFallback={tabHref(TAB.more)} />
 
         <PreferencesBlock returnTo="/settings" />
+
+        <WeekStartSetting />
 
         <Text style={styles.section}>{t('Your experience')}</Text>
         <View style={styles.card}>

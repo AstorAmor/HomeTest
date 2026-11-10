@@ -41,7 +41,7 @@ describe('Crear mi propia rutina', () => {
     expect(isCustomProgram(p)).toBe(true);
     expect(p.sessions.map((s) => s.id)).toEqual(['A', 'B']);
     expect(nextSessionId(p)).toBe('A');
-    expect(customProgram('', [addExercises(emptyDay(0), ['Pushups'])]).title).toBe('My routine');
+    expect(customProgram('', [addExercises(emptyDay(0), ['Pushups'])]).title).toBe('My workout');
     expect(customProgram('X', [addExercises(emptyDay(0), ['Pushups'])], { follow: false }).active).toBe(false);
   });
 

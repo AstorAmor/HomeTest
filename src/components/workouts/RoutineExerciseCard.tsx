@@ -3,20 +3,24 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { exerciseName, isLoadable, kgHead } from '@/data/workouts/catalog';
-import { blockLabel } from '@/data/workouts/labels';
+import { blockLabel, doseText, restText } from '@/data/workouts/labels';
 import type { CatalogExercise, WorkoutExercise } from '@/data/workouts/types';
-import type { DraftSet } from '@/logic/customRoutine';
+import { fromDraft, type DraftSet } from '@/logic/customRoutine';
 import { isTimedReps, timeText } from '@/logic/workoutTimer';
 import { useRevealOnFocus } from '@/components/KeyboardAwareScroll';
 import { ExerciseLoop } from './ExerciseLoop';
 import { REST_OPTIONS } from './ExerciseBlock';
 import { t } from '@/i18n';
 
-// Un ejercicio en el editor de rutina, como «Edit Routine» de Hevy: todo a la vista y en el sitio, sin
-// abrir uno a uno. Miniatura y nombre (tocar = cómo se hace), ⋮ para subir, bajar, cambiar o quitar,
+// Un ejercicio en el editor de rutina, como «Edit Routine» de Hevy: en el sitio, sin ir a otra pantalla.
+// Miniatura y nombre (tocar = cómo se hace), ⋮ para subir, bajar, cambiar o quitar,
 // el descanso y una nota, y la tabla con una fila por serie: su peso y sus repeticiones (o sus segundos,
 // si va por tiempo; tocar «Reps» lo cambia). Tocar el número de una serie la quita; «Añadir serie»
 // copia la última.
+// Con `onToggle`, cerrado de partida: una línea con la foto, el nombre y el resumen («4 × 6–8 · 90–100 kg · descanso
+// 2 min»), y al tocarlo se abre todo lo de arriba (fundador, 2026-11-06: «más condensados, a modo lista… no que aparezca
+// todo desplegado de un principio»). Sin `onToggle`, siempre abierto (la hoja de «Ver las sesiones»). El ⋮ sale si hay
+// algo que hacer con él (subir, bajar, cambiar o quitar).
 
 export const RoutineExerciseCard = ({
   item,
@@ -31,6 +35,8 @@ export const RoutineExerciseCard = ({
   onMove,
   onReplace,
   onRemove,
+  open = true,
+  onToggle,
 }: {
   item: WorkoutExercise;
   ex: CatalogExercise;
@@ -41,9 +47,11 @@ export const RoutineExerciseCard = ({
   onChange: (patch: Partial<WorkoutExercise>) => void;
   onDraft: (draft: DraftSet[]) => void;
   onToggleTimed: () => void;
-  onMove: (dir: -1 | 1) => void;
-  onReplace: () => void;
-  onRemove: () => void;
+  onMove?: (dir: -1 | 1) => void;
+  onReplace?: () => void;
+  onRemove?: () => void;
+  open?: boolean;
+  onToggle?: () => void;
 }) => {
   const reveal = useRevealOnFocus();
   const [menu, setMenu] = useState(false);
@@ -52,129 +60,154 @@ export const RoutineExerciseCard = ({
   const timed = isTimedReps(item.reps);
   const withKg = !timed && (isLoadable(ex) || draft.some((d) => d.kg));
   const setRow = (i: number, patch: Partial<DraftSet>) => onDraft(draft.map((d, j) => (j === i ? { ...d, ...patch } : d)));
+  const hasMenu = !!(onMove || onReplace || onRemove);
+  const summary = `${doseText(fromDraft(item, draft))}${item.restSec ? ` · ${restText(item.restSec)}` : ''}`;
 
+  // Cerrado: una línea (foto, nombre, resumen y ⋮, para ordenar la lista sin abrir nada); abierto, todo
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, !open && styles.cardClosed]}>
       <View style={styles.head}>
         <TouchableOpacity onPress={onOpen} accessibilityLabel={exerciseName(ex)}>
           <ExerciseLoop exercise={ex} size={46} radius={23} />
         </TouchableOpacity>
-        <TouchableOpacity style={{ flex: 1 }} onPress={onOpen}>
-          <Text style={styles.name} numberOfLines={2}>
-            {exerciseName(ex)}
-          </Text>
-          {item.block !== 'main' ? <Text style={styles.block}>{blockLabel(item.block)}</Text> : null}
+        <TouchableOpacity
+          style={styles.headMain}
+          onPress={onToggle ?? onOpen}
+          accessibilityRole={onToggle ? 'button' : undefined}
+          accessibilityState={onToggle ? { expanded: open } : undefined}
+          accessibilityLabel={open ? exerciseName(ex) : `${exerciseName(ex)}: ${summary}`}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.name} numberOfLines={2}>
+              {exerciseName(ex)}
+            </Text>
+            {!open && (
+              <Text style={styles.summary} numberOfLines={2}>
+                {summary}
+              </Text>
+            )}
+            {item.block !== 'main' ? <Text style={styles.block}>{blockLabel(item.block)}</Text> : null}
+          </View>
+          {onToggle ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} /> : null}
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setMenu((v) => !v)} hitSlop={10} accessibilityLabel={t('More options')} accessibilityState={{ expanded: menu }}>
-          <Ionicons name="ellipsis-vertical" size={20} color={Colors.textPrimary} />
-        </TouchableOpacity>
-      </View>
-
-      {menu && (
-        <View style={styles.menu}>
-          {!first && <MenuItem icon="arrow-up" label={t('Move up')} onPress={() => onMove(-1)} />}
-          {!last && <MenuItem icon="arrow-down" label={t('Move down')} onPress={() => onMove(1)} />}
-          <MenuItem
-            icon="swap-horizontal"
-            label={t('Replace')}
-            onPress={() => {
-              setMenu(false);
-              onReplace();
-            }}
-          />
-          <MenuItem icon="trash-outline" label={t('Remove')} danger onPress={onRemove} />
-        </View>
-      )}
-
-      <View style={styles.chips}>
-        <TouchableOpacity style={[styles.chip, restOpen && styles.chipOn]} onPress={() => setRestOpen((v) => !v)} accessibilityState={{ expanded: restOpen }}>
-          <Ionicons name="timer-outline" size={16} color={Colors.textPrimary} />
-          <Text style={styles.chipText}>{item.restSec ? t('Rest: {time}', { time: timeText(item.restSec) }) : t('Rest: off')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.chip, noteOpen && styles.chipOn]} onPress={() => setNoteOpen((v) => !v)}>
-          <Ionicons name="document-text-outline" size={16} color={Colors.textPrimary} />
-          <Text style={styles.chipText}>{t('Note')}</Text>
-        </TouchableOpacity>
-      </View>
-      {restOpen && (
-        <View style={styles.options}>
-          {REST_OPTIONS.map((sec) => {
-            const on = item.restSec === sec;
-            return (
-              <TouchableOpacity
-                key={sec}
-                style={[styles.option, on && styles.chipOn]}
-                onPress={() => {
-                  onChange({ restSec: sec });
-                  setRestOpen(false);
-                }}
-              >
-                <Text style={[styles.optionText, on && { color: Colors.textPrimary }]}>{sec ? timeText(sec) : t('No rest')}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-      {noteOpen && (
-        <TextInput
-          style={styles.note}
-          value={item.note ?? ''}
-          onChangeText={(v) => onChange({ note: v.slice(0, 200) || undefined })}
-          placeholder={t('Add a note')}
-          placeholderTextColor={Colors.textMuted}
-          onFocus={reveal}
-          multiline
-        />
-      )}
-
-      <View style={styles.tableHead}>
-        <Text style={[styles.h, styles.colSet]}>{t('Set')}</Text>
-        {withKg && <Text style={[styles.h, styles.colBox]}>{kgHead(ex)}</Text>}
-        <TouchableOpacity style={[styles.colBox, styles.repsHead]} onPress={onToggleTimed} accessibilityLabel={timed ? t('Count by reps') : t('Count by time')}>
-          <Text style={styles.h}>{timed ? t('Seconds') : 'Reps'}</Text>
-          <Ionicons name="caret-down" size={12} color={Colors.textMuted} />
-        </TouchableOpacity>
-      </View>
-      {draft.map((d, i) => (
-        <View key={i} style={styles.row}>
-          <TouchableOpacity
-            style={[styles.colSet, styles.setNo]}
-            onPress={draft.length > 1 ? () => onDraft(draft.filter((_, j) => j !== i)) : undefined}
-            disabled={draft.length < 2}
-            accessibilityLabel={draft.length > 1 ? t('Remove set {n}', { n: i + 1 }) : t('Set {n}', { n: i + 1 })}
-          >
-            <Text style={styles.setNoText}>{i + 1}</Text>
+        {hasMenu && (
+          <TouchableOpacity onPress={() => setMenu((v) => !v)} hitSlop={10} accessibilityLabel={t('More options')} accessibilityState={{ expanded: menu }}>
+            <Ionicons name="ellipsis-vertical" size={20} color={Colors.textPrimary} />
           </TouchableOpacity>
-          {withKg && (
-            <TextInput
-              style={[styles.colBox, styles.box]}
-              value={d.kg}
-              onChangeText={(v) => setRow(i, { kg: v.replace(/[^\d.,]/g, '').slice(0, 6) })}
-              placeholder="–"
-              placeholderTextColor={Colors.textMuted}
-              keyboardType="decimal-pad"
-              selectTextOnFocus
-              onFocus={reveal}
-              accessibilityLabel={t('Set {n}: weight in kg', { n: i + 1 })}
+        )}
+      </View>
+
+      {menu && hasMenu && (
+        <View style={styles.menu}>
+          {!first && onMove && <MenuItem icon="arrow-up" label={t('Move up')} onPress={() => onMove(-1)} />}
+          {!last && onMove && <MenuItem icon="arrow-down" label={t('Move down')} onPress={() => onMove(1)} />}
+          {onReplace && (
+            <MenuItem
+              icon="swap-horizontal"
+              label={t('Replace')}
+              onPress={() => {
+                setMenu(false);
+                onReplace();
+              }}
             />
           )}
-          <TextInput
-            style={[styles.colBox, styles.box]}
-            value={d.reps}
-            onChangeText={(v) => setRow(i, { reps: v.replace(timed ? /\D/g : /[^\d–-]/g, '').slice(0, 7) })}
-            placeholder="–"
-            placeholderTextColor={Colors.textMuted}
-            keyboardType="number-pad"
-            selectTextOnFocus
-            onFocus={reveal}
-            accessibilityLabel={timed ? t('Set {n}: seconds', { n: i + 1 }) : t('Set {n}: reps', { n: i + 1 })}
-          />
+          {onRemove && <MenuItem icon="trash-outline" label={t('Remove')} danger onPress={onRemove} />}
         </View>
-      ))}
-      <TouchableOpacity style={styles.addSet} onPress={() => onDraft([...draft, { ...(draft[draft.length - 1] ?? { kg: '', reps: timed ? '30' : '10' }) }])}>
-        <Ionicons name="add" size={18} color={Colors.textPrimary} />
-        <Text style={styles.addSetText}>{t('Add set')}</Text>
-      </TouchableOpacity>
+      )}
+
+      {open && (
+        <>
+          <View style={styles.chips}>
+            <TouchableOpacity style={[styles.chip, restOpen && styles.chipOn]} onPress={() => setRestOpen((v) => !v)} accessibilityState={{ expanded: restOpen }}>
+              <Ionicons name="timer-outline" size={16} color={Colors.textPrimary} />
+              <Text style={styles.chipText}>{item.restSec ? t('Rest: {time}', { time: timeText(item.restSec) }) : t('Rest: off')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.chip, noteOpen && styles.chipOn]} onPress={() => setNoteOpen((v) => !v)}>
+              <Ionicons name="document-text-outline" size={16} color={Colors.textPrimary} />
+              <Text style={styles.chipText}>{t('Note')}</Text>
+            </TouchableOpacity>
+          </View>
+          {restOpen && (
+            <View style={styles.options}>
+              {REST_OPTIONS.map((sec) => {
+                const on = item.restSec === sec;
+                return (
+                  <TouchableOpacity
+                    key={sec}
+                    style={[styles.option, on && styles.chipOn]}
+                    onPress={() => {
+                      onChange({ restSec: sec });
+                      setRestOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.optionText, on && { color: Colors.textPrimary }]}>{sec ? timeText(sec) : t('No rest')}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+          {noteOpen && (
+            <TextInput
+              style={styles.note}
+              value={item.note ?? ''}
+              onChangeText={(v) => onChange({ note: v.slice(0, 200) || undefined })}
+              placeholder={t('Add a note')}
+              placeholderTextColor={Colors.textMuted}
+              onFocus={reveal}
+              multiline
+            />
+          )}
+
+          <View style={styles.tableHead}>
+            <Text style={[styles.h, styles.colSet]}>{t('Set')}</Text>
+            {withKg && <Text style={[styles.h, styles.colBox]}>{kgHead(ex)}</Text>}
+            <TouchableOpacity style={[styles.colBox, styles.repsHead]} onPress={onToggleTimed} accessibilityLabel={timed ? t('Count by reps') : t('Count by time')}>
+              <Text style={styles.h}>{timed ? t('Seconds') : 'Reps'}</Text>
+              <Ionicons name="caret-down" size={12} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+          {draft.map((d, i) => (
+            <View key={i} style={styles.row}>
+              <TouchableOpacity
+                style={[styles.colSet, styles.setNo]}
+                onPress={draft.length > 1 ? () => onDraft(draft.filter((_, j) => j !== i)) : undefined}
+                disabled={draft.length < 2}
+                accessibilityLabel={draft.length > 1 ? t('Remove set {n}', { n: i + 1 }) : t('Set {n}', { n: i + 1 })}
+              >
+                <Text style={styles.setNoText}>{i + 1}</Text>
+              </TouchableOpacity>
+              {withKg && (
+                <TextInput
+                  style={[styles.colBox, styles.box]}
+                  value={d.kg}
+                  onChangeText={(v) => setRow(i, { kg: v.replace(/[^\d.,]/g, '').slice(0, 6) })}
+                  placeholder="–"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="decimal-pad"
+                  selectTextOnFocus
+                  onFocus={reveal}
+                  accessibilityLabel={t('Set {n}: weight in kg', { n: i + 1 })}
+                />
+              )}
+              <TextInput
+                style={[styles.colBox, styles.box]}
+                value={d.reps}
+                onChangeText={(v) => setRow(i, { reps: v.replace(timed ? /\D/g : /[^\d–-]/g, '').slice(0, 7) })}
+                placeholder="–"
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="number-pad"
+                selectTextOnFocus
+                onFocus={reveal}
+                accessibilityLabel={timed ? t('Set {n}: seconds', { n: i + 1 }) : t('Set {n}: reps', { n: i + 1 })}
+              />
+            </View>
+          ))}
+          <TouchableOpacity style={styles.addSet} onPress={() => onDraft([...draft, { ...(draft[draft.length - 1] ?? { kg: '', reps: timed ? '30' : '10' }) }])}>
+            <Ionicons name="add" size={18} color={Colors.textPrimary} />
+            <Text style={styles.addSetText}>{t('Add set')}</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };
@@ -190,8 +223,11 @@ const H = 44;
 
 const styles = StyleSheet.create({
   card: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: Colors.divider, gap: 10 },
+  cardClosed: { paddingVertical: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   name: { color: Colors.accent, fontSize: 17, fontWeight: '800' },
+  summary: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
   block: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
   menu: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },

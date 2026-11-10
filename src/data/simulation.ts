@@ -33,6 +33,7 @@ import { basalTemperatureRepository, thermometerRepository } from './temperature
 import { cholesterolRepository } from './cholesterolRepository';
 import { cortisolRepository } from './cortisolRepository';
 import { vo2maxRepository } from './vo2maxRepository';
+import { kegelRepository } from './kegelRepository';
 
 // Usuarios simulados dentro de la app (Developer mode → Simulated users, y Ajustes → Test
 // scenarios en una cuenta de prueba). Cargan los JSON de simulation/personas hasta hoy (día 0),
@@ -141,6 +142,7 @@ const LOG_REPOSITORIES = [
   cholesterolRepository,
   cortisolRepository,
   vo2maxRepository,
+  kegelRepository,
 ];
 // Lo mismo, para decirlo antes de borrar
 export const CLEARED_LOGS =

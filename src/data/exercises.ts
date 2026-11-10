@@ -1,6 +1,8 @@
 // Ejercicios guiados de las sugerencias del check-in (siempre opcionales).
 // - breath: el círculo sigue el patrón de respiración (inspirar/aguantar/espirar).
-// - guided: pasos con tiempo; el círculo respira despacio de fondo.
+// - guided: pasos con tiempo y su cuenta atrás en el círculo; el círculo respira despacio de fondo,
+//   salvo en los pasos con `to`, que lo mueven ellos (las contracciones de Kegel, como la respiración en
+//   caja: fundador, 2026-11-05).
 
 export interface BreathPhase {
   label: string; // lo que ve el usuario
@@ -11,6 +13,9 @@ export interface BreathPhase {
 export interface GuidedStep {
   text: string;
   seconds: number;
+  to?: 'in' | 'out'; // mueve el círculo (crece / se encoge) y el texto va dentro, como en la respiración
+  move?: number; // segundos que tarda en moverse (luego se queda quieto); por defecto, todo el paso
+  rep?: [number, number]; // «3 de 8»
 }
 
 export interface Exercise {
@@ -23,6 +28,8 @@ export interface Exercise {
   pattern?: BreathPhase[];
   steps?: GuidedStep[];
   countsAsCalm: boolean; // suma para el logro "Calm mind" y el plan de mindfulness
+  // Cómo se hace, antes de empezar: si lo hay, se lee primero y luego «Ir al ejercicio» (Kegel)
+  howTo?: string[];
 }
 
 const BOX: BreathPhase[] = [
@@ -38,11 +45,15 @@ const RESONANT: BreathPhase[] = [
   { label: 'Breathe out', seconds: 6, to: 'out' },
 ];
 
-// Kegel (suelo pélvico): 8 contracciones lentas de 5 s con 5 s de descanso y luego rápidas.
-// Pauta de inicio del NHS / NICE NG210; pendiente de revisión clínica como el resto.
-const KEGEL_SLOW: GuidedStep[] = Array.from({ length: 8 }, () => [
-  { text: 'Squeeze and lift… hold', seconds: 5 },
-  { text: 'Let go and relax completely', seconds: 5 },
+// Kegel (suelo pélvico): todo el ejercicio son contracciones lentas (fundador, 2026-11-05: «la idea es
+// que sea todo el tiempo lo de aprieta y sube… aguanta… suelta y relaja del todo»; lo de cómo se hace va
+// antes, en `howTo`). 10 contracciones: aprieta y aguanta 6 s, suelta 6 s = 2 min justos. NHS: aguantar
+// 5–10 s, hasta 10 veces, tres veces al día; NICE NG210. Pendiente de revisión clínica como el resto.
+// Al apretar, el círculo se encoge (en algo más de 1 s) y aguanta; al soltar, vuelve a crecer.
+const KEGEL_REPS = 10;
+const KEGEL_SLOW: GuidedStep[] = Array.from({ length: KEGEL_REPS }, (_, i): GuidedStep[] => [
+  { text: 'Squeeze and lift… hold', seconds: 6, to: 'out', move: 1.2, rep: [i + 1, KEGEL_REPS] },
+  { text: 'Let go and relax completely', seconds: 6, to: 'in', move: 2, rep: [i + 1, KEGEL_REPS] },
 ]).flat();
 
 export const EXERCISES: Record<string, Exercise> = {
@@ -165,16 +176,17 @@ export const EXERCISES: Record<string, Exercise> = {
     id: 'kegel',
     title: 'Pelvic floor (Kegel) exercises',
     intro: 'Strengthen the muscles that support your bladder, bowel and, in women, the womb. Useful for everyone, especially after pregnancy, with age or if you leak a little when you cough or jump.',
-    minutes: 3,
+    minutes: 2,
     color: '#F7B6D2',
     type: 'guided',
-    steps: [
-      { text: 'Sit or lie down comfortably. Squeeze as if stopping a wee and holding in wind at the same time: those are your pelvic floor muscles.', seconds: 30 },
-      { text: 'Keep breathing normally. Your belly, buttocks and thighs stay relaxed.', seconds: 15 },
-      ...KEGEL_SLOW,
-      { text: 'Now quick squeezes: squeeze and let go, about one per second.', seconds: 20 },
-      { text: 'Relax. Three times a day is ideal; most people notice a change after 3 to 6 months.', seconds: 15 },
+    howTo: [
+      'Sit or lie down comfortably.',
+      'Squeeze as if stopping a wee and holding in wind at the same time: those are your pelvic floor muscles. Do not practise by really stopping your wee.',
+      'Keep breathing normally. Your belly, buttocks and thighs stay relaxed.',
+      'When the circle shrinks, squeeze, lift and hold; when it grows, let go and relax completely.',
+      'Three times a day is ideal; most people notice a change after 3 to 6 months.',
     ],
+    steps: KEGEL_SLOW,
     countsAsCalm: false,
   },
   journal: {

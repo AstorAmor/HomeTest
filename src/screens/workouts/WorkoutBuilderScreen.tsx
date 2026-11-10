@@ -76,6 +76,9 @@ export const WorkoutBuilderScreen = () => {
     router.dismissTo('/workouts');
   };
 
+  // Sale sin guardar: a la pantalla de antes (Entrenamientos u otra) o, si no hay, a Entrenamientos
+  const discard = () => (router.canGoBack() ? router.back() : router.replace('/workouts'));
+
   if (step === 'preview') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -100,6 +103,11 @@ export const WorkoutBuilderScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity style={styles.link} onPress={() => setStep('ask')}>
               <Text style={styles.linkText}>{t('Change my answers')}</Text>
+            </TouchableOpacity>
+            {/* Descartar (fundador, 2026-11-06): vuelve sin guardar nada */}
+            <TouchableOpacity style={styles.discard} onPress={discard} accessibilityRole="button">
+              <Ionicons name="close-circle-outline" size={18} color={Colors.textSecondary} />
+              <Text style={styles.discardText}>{t('Discard this workout')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -204,6 +212,8 @@ const styles = StyleSheet.create({
   secondaryText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   link: { alignItems: 'center', paddingVertical: 8 },
   linkText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  discard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 11 },
+  discardText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
   preview: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginBottom: 12, gap: 8 },
   previewHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   previewTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },

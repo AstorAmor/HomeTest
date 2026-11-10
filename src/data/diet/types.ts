@@ -131,6 +131,8 @@ export interface DayTargets {
   protein?: number | null;
   carbs?: number | null;
   fat?: number | null;
+  // El reparto por comida de ese día (si no lo tiene, el de la semana). Lo pone el paciente en «Calorías y macros»
+  meals?: Partial<Record<MealSlot, MealMacroPlan>> | null;
 }
 
 export interface DietTargets {

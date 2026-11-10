@@ -42,6 +42,8 @@ export const MOOD_SCORE: Record<Mood, number> = {
   calm: 4.5,
   neutral: 3,
   sad: 2,
+  wired: 2.2,
+  unmotivated: 2,
   anxious: 1.8,
   stressed: 1.8,
   irritable: 2,
@@ -94,7 +96,7 @@ export interface Suggestion {
 // se sustituirán por el motor de recomendaciones.
 export function checkInSuggestions(entry: Omit<CheckInEntry, 'id' | 'createdAt'>): Suggestion[] {
   const out: Suggestion[] = [];
-  const negativeMood = entry.mood && ['sad', 'anxious', 'stressed', 'irritable'].includes(entry.mood);
+  const negativeMood = entry.mood && ['sad', 'wired', 'unmotivated', 'anxious', 'stressed', 'irritable'].includes(entry.mood);
   const lowEnergy = (entry.energy ?? 3) <= 2;
 
   if (entry.moment === 'just_woke_up') {

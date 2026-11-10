@@ -35,6 +35,30 @@ import { IconBadge } from '@/components/HealthIcons';
 import { KuovaAge, kuovaAge, kuovaAgeFromUploads, KuovaAgeResult, realChange } from '@/logic/kuovaAge';
 import { KuovaAgeBadge, KuovaAgeDots, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
 import { showSamples } from '@/data/dataMode';
+import { HistorialBlock } from '@/components/historial/HistorialBlock';
+import { weightRepository } from '@/data/weightRepository';
+import { weighAdvice, WeighAdvice } from '@/logic/weight';
+import { labReports } from '@/utils/labReportView';
+import {
+  chartBand,
+  chartPoints,
+  DEFAULT_CHARTS,
+  isOut,
+  latestAnalysis,
+  markerHistory,
+  markerSummaries,
+  MarkerPoint,
+  MarkerSummary,
+  normalizeCharts,
+  OWN_SCREEN,
+  pointsFromReports,
+  pointsFromUploads,
+  stateCounts,
+  toggleChart,
+} from '@/logic/labMarkers';
+import { userFlags } from '@/data/userFlags';
+import { markerHref, markerName } from '@/utils/markerLinks';
+import { statusColor, statusIcon } from '@/components/LabValueRow';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -107,6 +131,13 @@ export const MyDataScreen = () => {
   const [cortisol, setCortisol] = useDeepState<ChartData | null>(null);
   const [vo2, setVo2] = useDeepState<ChartData | null>(null);
   const [bp, setBp] = useDeepState<ChartData | null>(null);
+  // Peso (fundador, 2026-11-06: salía en Hoy pero no aquí) y cuándo toca pesarse
+  const [weight, setWeight] = useDeepState<ChartData | null>(null);
+  const [weighIn, setWeighIn] = useState<WeighAdvice | null>(null);
+  // «Analíticas»: el último valor de cada marcador de tus analíticas (los de la demo, en las de prueba)
+  const [analyses, setAnalyses] = useDeepState<{ list: MarkerSummary[]; last: MarkerPoint | null; any: boolean; points: MarkerPoint[] }>({ list: [], last: null, any: false, points: [] });
+  // Qué gráficas se ven en Analíticas: el ojo de cada una (fundador, 2026-11-06)
+  const [charts, setCharts] = useState<string[]>(DEFAULT_CHARTS);
   // El ciclo menstrual solo se muestra a perfiles de mujer
   const [sex, setSex] = useState<Sex | undefined>(undefined);
   const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
@@ -124,6 +155,18 @@ export const MyDataScreen = () => {
         setCycle(currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength, cycleGoal));
       })
       .catch(() => undefined);
+    weightRepository
+      .getAll()
+      .then((all) => {
+        setWeighIn(weighAdvice(all));
+        const asc = [...all].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+        setWeight(
+          asc.length
+            ? { labels: asc.map((e) => shortDate(e.fecha)), series: [{ color: Colors.violet, values: asc.map((e) => e.valor) }], latest: num(asc[asc.length - 1].valor.toFixed(1)), isSample: false }
+            : null,
+        );
+      })
+      .catch(() => setWeight(null));
     const [g, bpEntries, chol, cort, vo, uploads, prof] = await Promise.all([
       getGlucoseEntries(),
       getBloodPressureEntries(),
@@ -137,6 +180,18 @@ export const MyDataScreen = () => {
     setGlucose(simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent));
     setCholesterol(simpleChart([...chol, ...labValuesFrom(uploads, 'total_cholesterol')], 'cholesterol', Colors.amber));
     setCortisol(simpleChart([...cort, ...labValuesFrom(uploads, 'cortisol_am')], 'cortisol', Colors.violet));
+    const points = [...pointsFromUploads(uploads), ...pointsFromReports(labReports())];
+    setAnalyses({
+      // Todos, también azúcar, colesterol total y cortisol: su ojo pone o quita su tarjeta de arriba
+      list: markerSummaries(points, (p) => markerName(p.key, p.name)),
+      last: latestAnalysis(points),
+      any: points.length > 0,
+      points,
+    });
+    userFlags
+      .get(CHARTS_FLAG)
+      .then((v) => setCharts(normalizeCharts(v)))
+      .catch(() => undefined);
     const age = kuovaAgeFromUploads(uploads, prof?.dateOfBirth);
     rememberKuovaAge(age);
     setKres(age);
@@ -176,9 +231,16 @@ export const MyDataScreen = () => {
         isSample: true,
       });
     }
-  }, [setGlucose, setCholesterol, setCortisol, setBp, setKres]);
+  }, [setGlucose, setCholesterol, setCortisol, setBp, setKres, setWeight, setAnalyses]);
 
   useReloadOnFocus(load);
+
+  // El ojo: pone la gráfica (al final) o la quita, y se guarda en la cuenta
+  const flipChart = (key: string) => {
+    const next = toggleChart(charts, key);
+    setCharts(next);
+    userFlags.set(CHARTS_FLAG, { keys: next }).catch(() => undefined);
+  };
 
   const handleLoadSeed = async () => {
     setSeedStatus('Loading…');
@@ -206,13 +268,17 @@ export const MyDataScreen = () => {
   const kcal = wearableChart(series.active_energy, Colors.amber, (v) => `${Math.round(v)}`);
   const temp = wearableChart(series.body_temperature, Colors.pinkSoft, (v) => v.toFixed(1));
 
-  // Biomarcadores: primero lo que la persona ha medido; lo que no, "apagado" como incentivo
+  // Analíticas (antes «Biomarcadores»; fundador, 2026-11-06: «todo son biomarcadores», lo de las analíticas
+  // se llama Analíticas): primero lo medido; lo que no, "apagado" como incentivo. El VO2max va en Mediciones.
   const biomarkers = [
-    { key: 'sugar', title: 'Sugar', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
-    { key: 'chol', title: 'Total cholesterol', icon: 'analytics-outline', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
-    { key: 'cortisol', title: 'Cortisol', icon: 'sunny-outline', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
-    { key: 'vo2max', title: 'VO2max', icon: 'mci:lungs', color: Colors.sky, data: vo2, unit: 'mL/kg/min', to: '/vo2max-detail' },
-  ].sort((a, b) => Number(!a.data || a.data.isSample) - Number(!b.data || b.data.isSample));
+    { key: 'sugar', marker: 'glucose', title: 'Sugar', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
+    { key: 'chol', marker: 'total_cholesterol', title: 'Total cholesterol', icon: 'analytics-outline', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
+    { key: 'cortisol', marker: 'cortisol_am', title: 'Cortisol', icon: 'sunny-outline', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
+  ]
+    .filter((b) => charts.includes(b.marker))
+    .sort((a, b) => Number(!a.data || a.data.isSample) - Number(!b.data || b.data.isSample));
+  // Las demás gráficas elegidas con el ojo (vitamina D…), con los valores de tus analíticas
+  const pinned = charts.filter((k) => !OWN_SCREEN[k] && analyses.points.some((p) => p.key === k));
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -257,6 +323,9 @@ export const MyDataScreen = () => {
           </TourTarget>
         )}
 
+        {/* Tu historial: alergias, grupo sanguíneo, vacunas, cirugías e historia clínica, y la tarjeta de emergencia */}
+        {show('history') && <HistorialBlock />}
+
         {sex === 'female' && cycle && show('cycle') && (
           <>
             <View style={styles.sectionHeader}>
@@ -269,8 +338,10 @@ export const MyDataScreen = () => {
         )}
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{show('wearables') ? t('Wearable measurements') : t('Measurements')}</Text>
-          {show('wearables') && <Text style={styles.sectionMeta}>{t('Last 14 days')}{isSample ? ` · ${t('sample')}` : ''}</Text>}
+          <Text style={styles.sectionTitle}>{t('Measurements')}</Text>
+          <Text style={styles.sectionMeta}>
+            {show('wearables') ? `${t('From your watch (last 14 days) and what you log')}${isSample ? ` · ${t('sample')}` : ''}` : t('What you log')}
+          </Text>
         </View>
         <View style={grid ? styles.grid : undefined}>
         {/* Orden pedido: pasos, sueño, calorías, pulso en reposo y variabilidad */}
@@ -308,6 +379,29 @@ export const MyDataScreen = () => {
           </MetricCard>
         )}
 
+        <MetricCard
+          title={t('Weight')}
+          icon="mci:scale-bathroom"
+          iconColor={Colors.violet}
+          value={weight ? weight.latest : '—'}
+          unit={weight ? 'kg' : undefined}
+          avg={
+            !weighIn?.last
+              ? t('Not measured yet')
+              : weighIn.due
+                ? t('Time to weigh in')
+                : t('Next: {day}', { day: weighIn.next ? weighIn.next.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric' }) : '' })
+          }
+          off={!weight}
+          onPress={() => router.push(weight ? '/weight-detail' : '/log-weight')}
+        >
+          {weight ? (
+            <TrendChart labels={weight.labels} series={weight.series} height={90} formatY={(v) => v.toFixed(0)} />
+          ) : (
+            <Text style={styles.offHint}>{t('Weigh yourself once a week, on the same day and at the same time, to see your trend here.')}</Text>
+          )}
+        </MetricCard>
+
         {show('wearables') && (
           <MetricCard title={t('Temperature')} icon="thermometer-outline" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={t('avg {v}', { v: temp.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
             <TrendChart
@@ -319,11 +413,21 @@ export const MyDataScreen = () => {
             />
           </MetricCard>
         )}
+
+        {(() => {
+          const off = !vo2 || vo2.isSample;
+          return (
+            <MetricCard title="VO2max" icon="mci:lungs" iconColor={Colors.sky} value={off ? '—' : vo2!.latest} unit={off ? undefined : 'mL/kg/min'} avg={off ? t('Not measured yet') : ''} off={off} onPress={() => router.push('/vo2max-detail')}>
+              {vo2 ? <TrendChart labels={vo2.labels} series={off ? vo2.series.map((s) => ({ ...s, color: Colors.textMuted })) : vo2.series} height={90} /> : null}
+              {off && <Text style={styles.offHint}>{t('Log a reading or add it to your next test to see your own line here.')}</Text>}
+            </MetricCard>
+          );
+        })()}
         </View>
 
         <View style={[styles.sectionHeader, { marginTop: 16 }]}>
-          <Text style={styles.sectionTitle}>{t('Biomarkers')}</Text>
-          <Text style={styles.sectionMeta}>{t('What you have measured first. Tap any to see history or log a reading.')}</Text>
+          <Text style={styles.sectionTitle}>{t('Lab tests')}</Text>
+          <Text style={styles.sectionMeta}>{t('The values of your lab tests, each one against the range of its lab. Tap one to see all your results for it.')}</Text>
         </View>
         <View style={grid ? styles.grid : undefined}>
         {biomarkers.map((b) => {
@@ -339,6 +443,7 @@ export const MyDataScreen = () => {
               avg={off ? t('Not measured yet') : ''}
               off={off}
               onPress={() => router.push(b.to as any)}
+              onHide={() => flipChart(b.marker)}
             >
               {b.data ? (
                 <TrendChart labels={b.data.labels} series={off ? b.data.series.map((s) => ({ ...s, color: Colors.textMuted })) : b.data.series} height={90} band={b.band} formatY={b.key === 'cortisol' ? (v) => v.toFixed(0) : undefined} />
@@ -347,7 +452,14 @@ export const MyDataScreen = () => {
             </MetricCard>
           );
         })}
+        {pinned.map((k) => (
+          <LabChartCard key={k} k={k} points={analyses.points} onHide={() => flipChart(k)} />
+        ))}
         </View>
+        {biomarkers.length + pinned.length === 0 && analyses.any && (
+          <Text style={[styles.offHint, { marginHorizontal: 20, marginBottom: 10 }]}>{t('No charts chosen. Tap the eye next to a value to see its chart here.')}</Text>
+        )}
+        <AnalysesList list={analyses.list} last={analyses.last} any={analyses.any} charts={charts} onEye={flipChart} />
 
         {showSamples() && <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>{t('Tests')}</Text>}
         {/* Una debajo de otra: no sabemos cuántas pruebas habrá en camino (de ejemplo: no en cuentas reales) */}
@@ -456,6 +568,150 @@ const KuovaAgeHero = ({ k, previous, sample = false, onPress }: { k: KuovaAge; p
   );
 };
 
+// «Analíticas»: el último valor de cada marcador de tus analíticas, frente al rango de su laboratorio. Primero
+// los que están fuera, luego en rango y sin referencia; se ven unos pocos y «Ver todos». Cada uno abre su ficha
+// con todos sus valores (/lab-marker). Sin analíticas, cómo subir la primera.
+const LIST_FIRST = 6;
+const CHARTS_FLAG = 'mydata_charts';
+const shortDay = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
+const monthLabel = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString(dateLocale(), { month: 'short', year: '2-digit' });
+
+// La gráfica de un valor de tus analíticas elegido con el ojo: el último, y su línea si hay dos o más en la
+// misma unidad (con la franja del rango recortada, como en su ficha). Al tocarla, su ficha.
+const LabChartCard = ({ k, points, onHide }: { k: string; points: MarkerPoint[]; onHide: () => void }) => {
+  const router = useRouter();
+  const history = markerHistory(points, k);
+  const latest = history[history.length - 1];
+  if (!latest) return null;
+  const chart = chartPoints(history);
+  const values = chart.points.map((p) => p.value as number);
+  return (
+    <MetricCard
+      title={markerName(k, latest.name)}
+      icon="flask-outline"
+      iconColor={Colors.sky}
+      value={latest.value != null ? num(latest.value) : latest.text || '—'}
+      unit={latest.unit || undefined}
+      avg={shortDay(latest.date)}
+      onPress={() => router.push(markerHref(k))}
+      onHide={onHide}
+    >
+      {values.length >= 2 ? (
+        <TrendChart
+          labels={chart.points.map((p) => monthLabel(p.date))}
+          series={[{ color: Colors.sky, values }]}
+          height={90}
+          band={chartBand(values, latest.low ? latest.low : null, latest.high)}
+          formatY={(v) => num(Math.round(v * 10) / 10)}
+        />
+      ) : (
+        <Text style={styles.offHint}>{t('One result so far: your next lab test will draw the line.')}</Text>
+      )}
+    </MetricCard>
+  );
+};
+
+const AnalysesList = ({ list, last, any, charts, onEye }: { list: MarkerSummary[]; last: MarkerPoint | null; any: boolean; charts: string[]; onEye: (key: string) => void }) => {
+  const router = useRouter();
+  const [all, setAll] = useState(false);
+  if (!any) {
+    return (
+      <View style={styles.anaCard}>
+        <Text style={styles.anaText}>{t('No lab tests in Kuova yet. Upload a report (photo or PDF) and you will see each value here, with its history.')}</Text>
+        <TouchableOpacity onPress={() => router.push('/upload-test')} hitSlop={8} style={{ marginTop: 10 }}>
+          <Text style={styles.anaLink}>
+            {t('Upload a lab test')} <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+  if (!list.length) return null;
+  const counts = stateCounts(list);
+  const first = Math.max(LIST_FIRST, counts.out);
+  const shown = all ? list : list.slice(0, first);
+  const more = list.length > first;
+  const parts = [
+    counts.out ? { text: t(counts.out === 1 ? '1 out of range' : '{n} out of range', { n: counts.out }), color: Colors.attention } : null,
+    counts.in ? { text: t('{n} in range', { n: counts.in }), color: Colors.ok } : null,
+    counts.none ? { text: t('{n} with no reference', { n: counts.none }), color: Colors.textSecondary } : null,
+  ].filter(Boolean) as { text: string; color: string }[];
+  return (
+    <>
+      <View style={styles.anaCard}>
+        {/* La flecha de la derecha abre y cierra la lista entera (fundador, 2026-11-06); la de abajo, también */}
+        <View style={styles.anaHead}>
+          <Text style={[styles.anaTitle, { flex: 1 }]}>{t('All your values')}</Text>
+          {more && (
+            <TouchableOpacity
+              onPress={() => setAll(!all)}
+              hitSlop={10}
+              style={styles.anaToggle}
+              accessibilityRole="button"
+              accessibilityLabel={all ? t('Show fewer') : t('See all {n} values', { n: list.length })}
+            >
+              <Ionicons name={all ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.accent} />
+            </TouchableOpacity>
+          )}
+        </View>
+        {last && <Text style={styles.anaMeta}>{t('Latest test: {date} · {lab}', { date: shortDay(last.date), lab: last.source.lab || t('Uploaded by you') })}</Text>}
+        <Text style={styles.anaCounts}>
+          {parts.map((p, i) => (
+            <Text key={p.text} style={{ color: p.color }}>
+              {i > 0 ? '  ·  ' : ''}
+              {p.text}
+            </Text>
+          ))}
+        </Text>
+        <Text style={styles.anaEyeHint}>{t('The eye shows or hides its chart above.')}</Text>
+        {shown.map((s, i) => {
+          const color = statusColor(s.state);
+          const on = charts.includes(s.key);
+          return (
+            <View key={s.key} style={[styles.anaRow, i > 0 && styles.testDivider]}>
+              <TouchableOpacity
+                onPress={() => onEye(s.key)}
+                hitSlop={8}
+                style={styles.anaEye}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: on }}
+                accessibilityLabel={t('Show its chart')}
+              >
+                <Ionicons name={on ? 'eye' : 'eye-off-outline'} size={18} color={on ? Colors.accent : Colors.textMuted} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.anaMain} onPress={() => router.push(markerHref(s.key))} activeOpacity={0.8}>
+              <Ionicons name={statusIcon(s.state) as any} size={18} color={color} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.anaName} numberOfLines={2}>
+                  {markerName(s.key, s.latest.name)}
+                </Text>
+                <Text style={styles.anaSub}>
+                  {shortDay(s.latest.date)}
+                  {s.count > 1 ? ` · ${t('{n} results', { n: s.count })}` : ''}
+                </Text>
+              </View>
+              <Text style={[styles.anaValue, isOut(s.state) && { color: Colors.attention }]}>
+                {s.latest.value != null ? num(s.latest.value) : s.latest.text || '—'} <Text style={styles.anaUnit}>{s.latest.unit}</Text>
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+          );
+        })}
+        {more ? (
+          <TouchableOpacity onPress={() => setAll(!all)} hitSlop={8} style={styles.anaMore}>
+            <Text style={styles.anaLink}>{all ? t('Show fewer') : t('See all {n} values', { n: list.length })}</Text>
+            <Ionicons name={all ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.accent} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+      <Text style={styles.anaLegend}>
+        {t('In range: within the reference range of its lab. Above or below: outside that range, which is not a diagnosis; your doctor puts it in context. No reference: the lab gives no range.')}
+      </Text>
+    </>
+  );
+};
+
 const MetricCard = ({
   title,
   icon,
@@ -465,6 +721,7 @@ const MetricCard = ({
   avg,
   off,
   onPress,
+  onHide,
   children,
 }: {
   title: string;
@@ -475,12 +732,18 @@ const MetricCard = ({
   avg?: string;
   off?: boolean; // aún sin medir: se ve "apagado"
   onPress: () => void;
+  onHide?: () => void; // el ojo: quita la tarjeta (Analíticas)
   children?: React.ReactNode;
 }) => (
   <TouchableOpacity style={[styles.metricCard, useWebShell() && styles.metricCardHalf, off && styles.metricOff]} onPress={onPress} activeOpacity={0.85}>
     <View style={styles.metricHeader}>
       <IconBadge name={icon} color={iconColor} size={28} />
       <Text style={styles.metricTitle}>{title}</Text>
+      {onHide ? (
+        <TouchableOpacity onPress={onHide} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('Hide this chart')}>
+          <Ionicons name="eye" size={17} color={Colors.accent} />
+        </TouchableOpacity>
+      ) : null}
       <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
     </View>
     <View style={styles.metricValueRow}>
@@ -609,6 +872,24 @@ const styles = StyleSheet.create({
   testStatus: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   testStatusText: { fontSize: 13, fontWeight: '600' },
   metricOff: { opacity: 0.55 },
+  anaCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, marginHorizontal: 20, marginBottom: 8 },
+  anaTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  anaMeta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  anaCounts: { fontSize: 12, fontWeight: '700', marginTop: 6, marginBottom: 4 },
+  anaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11 },
+  anaMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  anaEye: { paddingRight: 2 },
+  anaEyeHint: { color: Colors.textMuted, fontSize: 11, marginBottom: 2 },
+  anaHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  anaToggle: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
+  anaName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  anaSub: { color: Colors.textMuted, fontSize: 11, marginTop: 1 },
+  anaValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  anaUnit: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
+  anaMore: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 8 },
+  anaLink: { color: Colors.accent, fontSize: 13, fontWeight: '800' },
+  anaText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  anaLegend: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, marginHorizontal: 20, marginBottom: 20 },
   offHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 6 },
   diagnosticGrid: {
     flexDirection: 'row',

@@ -1,6 +1,7 @@
 // Para qué puede servir cada producto de la tienda y cada cuánto tiene sentido repetirlo,
 // por id de src/data/testCatalog.ts. Orientativo y sin diagnosticar: lo revisa el asesor
-// médico (ver el backlog de revisión clínica). La versión en español está en
+// médico (ver el backlog de revisión clínica). Las frecuencias siguen la guía de paneles de
+// Kuova («Rutina» frente a «Repetir tras un cambio»). La versión en español está en
 // src/i18n/testGuideEs.ts.
 
 export interface TestGuide {
@@ -13,128 +14,152 @@ const STI: TestGuide = {
   repeat: 'After each possible exposure (some take a few weeks to show up), and every 3-12 months if you have new partners.',
 };
 
+const GENETIC_REPEAT = 'Once: your DNA does not change.';
+const BREATH_REPEAT = 'Once. It is only repeated if your symptoms change or your doctor asks for it.';
+
 export const TEST_GUIDE: Record<string, TestGuide> = {
   membership: {
-    useful: 'To know how your whole body is doing and follow it over time, not just one thing.',
-    repeat: 'Already built in: a full panel when you join and a follow-up 6 months later.',
+    useful:
+      'To see how you are doing overall and follow it over time: cholesterol and ApoB, blood sugar, inflammation, liver enzymes, creatinine, iron and vitamins, TSH, testosterone and your KUOVA age.',
+    repeat: 'Already built in: the Baseline analysis every year and the same follow-up 6 months later, so you can see whether what you changed is working.',
   },
   premium: {
-    useful: "If you're making changes (diet, training, treatment) and want to see their effect soon.",
-    repeat: 'Already built in: a blood test every 3 months.',
+    useful:
+      "If you want a fuller picture once a year (thyroid, hormones, kidneys), or you're making changes (diet, training, treatment) and want to see their effect sooner.",
+    repeat: 'Already built in: the Kuova Premium analysis every year and a follow-up every 3 months.',
   },
-  essential: {
-    useful: "A general check-up if it's been a while since your last blood test, or if you don't feel right and don't know why.",
-    repeat: 'Once a year, or 3 months after changing habits if something came out of range.',
-  },
-  weight: {
-    useful: "If losing weight is hard even though you eat well and move, or your weight has changed for no clear reason.",
-    repeat: '3-6 months after making changes, to see whether the values improve.',
-  },
-  performance: {
-    useful: 'If you train often and notice you recover worse, get injured more or perform below your usual level.',
-    repeat: 'Every 3-6 months, ideally at the same point of your season.',
-  },
+
+  // Añadir a tu seguimiento
   vitamin_d: {
-    useful: "If you get little sun (autumn and winter, working indoors), feel low on energy or mood, or want to check your supplement is working.",
-    repeat: 'Once a year, ideally at the end of winter; 3 months after starting or changing a supplement.',
+    useful: 'If your vitamin D came out below the lab range and you want to see whether what you have changed (sun, diet) has made a difference.',
+    repeat: 'In your follow-up, 6 months later. Bear in mind the season changes in between: vitamin D goes up in summer and down in winter.',
   },
-  vitamin_b: {
-    useful: "If you eat little or no meat, feel low on energy, notice tingling, or have been taking metformin or omeprazole for a while.",
-    repeat: 'Once a year; 3 months after starting a supplement.',
+  b12_folate: {
+    useful: 'If your B12 came out below the range or your MCV (the size of your red blood cells) came out above it. Also if you eat little or no meat.',
+    repeat: 'In your follow-up. If it is still below the range, the next step is talking to your doctor to look for the cause.',
   },
-  vitamins: {
-    useful: 'If you feel low on energy, follow a restrictive diet or get little sun: it checks the three vitamins that are most often low.',
-    repeat: 'Once a year; 3 months after starting supplements.',
+  magnesium: {
+    useful: 'If your magnesium came out below the lab range.',
+    repeat: 'In your follow-up, 6 months later.',
   },
-  iron: {
-    useful: "If you feel low on energy, are losing more hair, have heavy periods or eat little meat: it's the first thing to rule out when energy drops.",
-    repeat: "Once a year; 3 months after starting iron, to check it's working.",
+  calcium: {
+    useful: 'If your calcium came out of range, to confirm it with a second measurement.',
+    repeat: 'In your follow-up. If it comes out above the range twice, talk to your doctor about it.',
   },
-  cycle_hormones: {
-    useful: 'If your cycle is irregular, you have strong premenstrual symptoms or you want to understand how your hormones change through the month.',
-    repeat: 'When your cycle or symptoms change, or when your doctor advises.',
+  sodium_potassium: {
+    useful: 'If they came out of range, or you take blood pressure medication or diuretics, which can move them.',
+    repeat: 'In your follow-up. If they are still out of range, talk to your doctor: they are the one who adjusts your medication.',
   },
-  cortisol: {
-    useful: "If you've been through a stressful time, sleep badly or wake up without energy.",
-    repeat: '3 months after making changes (sleep, stress, routine). The sample is taken in the morning.',
-  },
-  stress: {
-    useful: 'If stress has lasted weeks or months and you notice it in your sleep, energy or mood.',
-    repeat: 'Every 3-6 months while you work on it.',
-  },
-  fertility_f: {
-    useful: "If you're thinking about getting pregnant now or in the next few years and want a picture of your fertility.",
-    repeat: "Once a year while you're planning.",
-  },
-  thyroid: {
-    useful: "If you feel low on energy or cold, your weight or mood has changed or you're losing more hair: the thyroid is behind these more often than you'd think.",
-    repeat: 'Once a year; 6-8 weeks after a change in thyroid medication, if your doctor asks for it.',
-  },
-  thyroid_adv: {
-    useful: 'If there are thyroid problems in your family or a previous TSH came out of range: the antibodies show whether it is autoimmune.',
-    repeat: 'Hormones once a year; the antibodies are usually needed only once, unless your doctor says otherwise.',
-  },
-  amh: {
-    useful: "To know your ovarian reserve if you're thinking about when to have children or about freezing eggs.",
-    repeat: "Once a year if you're planning.",
-  },
-  testosterone: {
-    useful: 'If you notice less energy, less sexual desire or a low mood, or you lose muscle more easily.',
-    repeat: '3-6 months after making changes. The sample is taken in the morning.',
-  },
-  t1d_antibodies: {
-    useful: 'If a parent, brother, sister or child has type 1 diabetes: it can show the risk years before symptoms appear.',
-    repeat: 'Usually once; your doctor will tell you if it needs repeating.',
-  },
-  cardio: {
-    useful: 'If there is heart disease in your family, your cholesterol has been high, you smoke or you take medication for cholesterol or blood pressure.',
-    repeat: 'Once a year; 3 months after changing your diet or medication.',
-  },
-  diabetes: {
-    useful: "If you're thirstier or go to the toilet more, there is diabetes in your family, or you've put on weight or move little.",
-    repeat: "Once a year; every 3-6 months if you've had high values.",
+  insulin: {
+    useful: 'If your fasting insulin or your HOMA-IR came out above the range, to see the trend next to your glucose and HbA1c.',
+    repeat: 'In your follow-up, 6 months later, in the same lab.',
   },
   psa: {
-    useful: 'For men from 50 (or 45 with a family history) who have talked to their doctor about prostate screening.',
-    repeat: 'Every 1-2 years, as agreed with your doctor.',
+    useful: 'For men aged 50 or over (45 with a family history) who choose prostate screening after reading its pros and cons.',
+    repeat: 'If you choose it, how often is something to decide with your doctor, depending on your age and your result.',
   },
-  lpa: {
-    useful: "If someone in your family had a heart attack or a stroke young: Lp(a) is inherited and a normal cholesterol doesn't rule it out.",
-    repeat: 'Usually once in your life: it barely changes.',
+
+  // Confirmar y ampliar
+  thyroid: {
+    useful:
+      'If your TSH came out of the lab range (one measurement is not enough), or if your doctor monitors your thyroid and you want it in the same blood draw as your follow-up.',
+    repeat: 'Once, to confirm. If your doctor monitors your thyroid, they set how often.',
+  },
+  low_testosterone: {
+    useful:
+      'For men whose testosterone came out below the lab range and who notice symptoms such as tiredness or lower sex drive. Testosterone changes from one day to the next, so it is confirmed with another morning blood draw.',
+    repeat: 'Once, to confirm. If it is confirmed below the range, the next step is your doctor.',
+  },
+  androgens: {
+    useful: 'For women whose testosterone came out above the lab range, or who have marked irregular cycles.',
+    repeat: 'Once. With the result, it is worth talking it over with your gynaecologist.',
+  },
+  urine_albumin: {
+    useful: 'If your eGFR came out below the range or there was protein in your urine, or if you have marked diabetes, prediabetes or high blood pressure.',
+    repeat: 'With diabetes or high blood pressure, guidelines ask for it at least once a year. If it comes out above the range, it is confirmed with another sample.',
+  },
+
+  // Objetivos
+  ovarian_reserve: {
+    useful: 'If you want to know your ovarian reserve, for example to plan when to try for a baby, and talk it over with your gynaecologist.',
+    repeat: 'Only when you have a specific question. It is not repeated routinely.',
+  },
+  hormones_f: {
+    useful: 'If your cycle is irregular, you have symptoms that change with your cycle, or you want to understand your hormones and talk it over with your gynaecologist.',
+    repeat: 'Only with a specific question, or when your cycle or your symptoms change.',
+  },
+  hormones_m: {
+    useful: 'If you notice tiredness, lower sex drive or changes in mood and want to look at your hormones.',
+    repeat: 'Only with symptoms or a specific question. Anything out of range is repeated to confirm it.',
+  },
+  preconception: {
+    useful: 'If you are planning a pregnancy. With the result, your doctor tells you whether any vaccine is worth having before trying.',
+    repeat: 'Once, before trying for a baby.',
   },
   coeliac: {
-    useful: 'If you have bloating, diarrhoea or low iron for no clear reason, or someone in your family is coeliac. Keep eating gluten before the test.',
-    repeat: 'If symptoms continue or a relative is diagnosed.',
-  },
-  fructose: {
-    useful: 'If fruit, juice or honey give you gas, bloating or diarrhoea.',
-    repeat: 'Usually once.',
-  },
-  lactose: {
-    useful: 'If milk or dairy give you gas, bloating or diarrhoea.',
-    repeat: 'Usually once.',
-  },
-  lactose_fructose: {
-    useful: "If you feel bloated after eating and don't know whether it's dairy, fruit or both.",
-    repeat: 'Usually once.',
+    useful: 'If you often have digestive symptoms, low iron with no clear cause, or a first-degree relative with coeliac disease.',
+    repeat: 'Once. It is only repeated if your symptoms change or your doctor asks for it.',
   },
   sibo: {
-    useful: 'If you feel bloated almost every day, especially soon after eating, or have gas and changes in your bowel habits.',
-    repeat: 'After treatment, if your doctor asks for it.',
+    useful: 'If you have had frequent bloating or wind for weeks (for example, logged in Digestion).',
+    repeat: BREATH_REPEAT,
   },
-  digestive_pack: {
-    useful: 'If your digestion is bothering you and you want to rule out the three most common causes in one go.',
-    repeat: 'Usually once; SIBO again after treatment if your doctor asks for it.',
+  lactose: {
+    useful: 'If you notice discomfort, bloating or diarrhoea after dairy.',
+    repeat: BREATH_REPEAT,
   },
-  sti_4: STI,
-  sti_7: STI,
-  sti_11: STI,
-  consult_digestive: {
-    useful: 'When you have your intolerance or SIBO results and want a doctor to explain them and tell you the next steps.',
-    repeat: 'Whenever you have new results.',
+  fructose: {
+    useful: 'If you notice discomfort or bloating after fruit, juice or sweets.',
+    repeat: BREATH_REPEAT,
   },
-  consult_sti: {
-    useful: 'When you have your STI results and want a doctor to explain them and tell you the next steps.',
-    repeat: 'Whenever you have new results.',
+  hpylori: {
+    useful: 'If you often have stomach discomfort (burning, pain or heaviness in the upper abdomen).',
+    repeat: 'Once. After treatment, only if your doctor asks for it.',
+  },
+  sti_basic: STI,
+  sti_full: STI,
+  training_load: {
+    useful:
+      'If you train a lot and notice you recover worse. What matters most for sport (blood count, ferritin, vitamin D, magnesium, testosterone) is already in your yearly analysis.',
+    repeat: 'Every 3-6 months, ideally at the same point of your season.',
+  },
+  omega3: {
+    useful: 'If you want to know whether your diet has enough oily fish, or to see the effect of a change in your diet.',
+    repeat: 'About 4 months after a change in your diet: that is how long it takes to show.',
+  },
+  allergy_alex: {
+    useful: 'If you have allergy symptoms (sneezing, itchy eyes or skin, discomfort with a food) and want to take the result to your allergist.',
+    repeat: 'Once. It is only repeated if your allergist asks for it.',
+  },
+  gen_carrier: {
+    useful: "If you are thinking about having children, ideally before the pregnancy, or if there is a hereditary condition in your family or your partner's.",
+    repeat: GENETIC_REPEAT,
+  },
+  gen_coeliac: {
+    useful:
+      'If you have relatives with coeliac disease, or to rule it out when you already eat gluten-free and the antibody test can no longer be read.',
+    repeat: GENETIC_REPEAT,
+  },
+  gen_intolerance: {
+    useful:
+      'If dairy, fruit or some foods often disagree with you and you want to know whether there is a genetic part. The breath tests show how you absorb them today.',
+    repeat: GENETIC_REPEAT,
+  },
+  gen_hfe: {
+    useful: 'If your ferritin and transferrin saturation come out high, or a close relative has haemochromatosis.',
+    repeat: GENETIC_REPEAT,
+  },
+  gen_thrombophilia: {
+    useful:
+      'If you or a close relative have had a thrombosis, especially when young, before starting hormonal contraception or planning a pregnancy.',
+    repeat: GENETIC_REPEAT,
+  },
+  gen_apoe: {
+    useful: 'If you want to know it after thinking it through with a professional: the result can affect you and your family.',
+    repeat: GENETIC_REPEAT,
+  },
+  doctor_request: {
+    useful: 'If your doctor has asked you for tests: taking them in your follow-up blood draw saves you a visit.',
+    repeat: 'When your doctor tells you.',
   },
 };

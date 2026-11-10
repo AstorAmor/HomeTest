@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
-import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_OPTIONS, Mood } from '@/types/checkIn';
+import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_PICKER, Mood } from '@/types/checkIn';
+import { noteCheckInSaved } from '@/logic/checkInCelebration';
 import { checkInRepository, checkInSuggestions, suggestMoment, Suggestion } from '@/data/checkInRepository';
 import { checkInDayKey, checkInDayOptions, fechaForCheckIn, localDayKey } from '@/logic/checkInDay';
 import { confirmAsk } from '@/components/dev/confirmAsk';
@@ -80,6 +81,22 @@ export const CheckInScreen = () => {
   const [done, setDone] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [accepted, setAccepted] = useState<Set<string>>(new Set());
+  // Los check-ins ya hechos, para marcar con un check los momentos de ese día que ya tienes
+  const [all, setAll] = useState<CheckInEntry[]>([]);
+  useEffect(() => {
+    checkInRepository
+      .getAll()
+      .then(setAll)
+      .catch(() => undefined);
+  }, []);
+
+  // Las respuestas de un check-in ya hecho, en el formulario (guardar lo cambia)
+  const fill = (e: CheckInEntry) => {
+    setEditing(e);
+    setAnswers({ sleep: e.sleep, energy: e.energy, stress: e.stress, dayRating: e.dayRating });
+    setMood(e.mood);
+    setNote(e.note ?? '');
+  };
 
   // Editar: se cargan las respuestas del check-in
   useEffect(() => {
@@ -89,12 +106,9 @@ export const CheckInScreen = () => {
       .then((all) => {
         const e = all.find((x) => x.id === params.id);
         if (!e) return;
-        setEditing(e);
+        fill(e);
         setMoment(e.moment);
         setPickedDay(checkInDayKey(e));
-        setAnswers({ sleep: e.sleep, energy: e.energy, stress: e.stress, dayRating: e.dayRating });
-        setMood(e.mood);
-        setNote(e.note ?? '');
       })
       .catch(() => undefined);
   }, [params.id]);
@@ -108,6 +122,26 @@ export const CheckInScreen = () => {
   const pastMidnight = !pickedDay && !params.id && day !== localDayKey(now);
   // Apuntado o movido a otro día (no el que toca ahora): sin ideas "para ahora" al guardar
   const backdated = !!params.id || !!params.date || day !== dayOptions[0];
+  const doneMoments = new Set(all.filter((e) => (!params.id || e.id !== editing?.id) && checkInDayKey(e) === day).map((e) => e.moment));
+
+  // Un momento que ya hiciste ese día (el del check): se ve lo que marcaste y guardar lo cambia, en vez
+  // de apuntar otro (fundador, 2026-11-05). Al pasar a uno sin hacer, el formulario vuelve a estar vacío.
+  const existing = params.id ? undefined : all.find((e) => checkInDayKey(e) === day && e.moment === moment);
+  const autoLoaded = useRef<string | null>(null);
+  useEffect(() => {
+    if (params.id) return;
+    if (existing) {
+      autoLoaded.current = existing.id;
+      fill(existing);
+    } else if (autoLoaded.current) {
+      autoLoaded.current = null;
+      setEditing(null);
+      setAnswers({});
+      setMood(undefined);
+      setNote('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existing?.id, params.id]);
 
   const save = async () => {
     if (!complete) return;
@@ -139,6 +173,7 @@ export const CheckInScreen = () => {
       return;
     }
     await checkInRepository.save({ ...entry, id: `checkin-${Date.now()}`, createdAt: nowIso });
+    noteCheckInSaved(); // si con este se completan los 3 de hoy, Hoy lo celebra
     void offerPhoneReminders('checkin');
     // Apuntado para un día pasado: sin ideas "para ahora"
     if (backdated) {
@@ -167,24 +202,31 @@ export const CheckInScreen = () => {
         ) : (
           <View style={{ width: 24 }} />
         )}
-        <Text style={styles.topTitle}>{params.id ? t('Edit check-in') : t('Check in')}</Text>
+        <Text style={styles.topTitle}>{editing ? t('Edit check-in') : t('Check in')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <KeyboardAwareScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {!done && (
           <>
-            <Text style={styles.question}>{t('What does your day look like?')}</Text>
+            <Text style={styles.question}>{t('Time of day')}</Text>
             <View style={styles.momentRow}>
               {MOMENT_OPTIONS.map((o) => {
                 const selected = moment === o.id;
+                const had = doneMoments.has(o.id);
                 return (
                   <TouchableOpacity
                     key={o.id}
                     style={[styles.momentChip, selected && styles.momentChipSelected]}
                     onPress={() => setMoment(o.id)}
                     activeOpacity={0.85}
+                    accessibilityLabel={had ? `${t(o.label)}. ${t('Already done that day')}` : t(o.label)}
                   >
+                    {had && (
+                      <View style={styles.doneBadge}>
+                        <Ionicons name="checkmark" size={11} color="#FFFFFF" />
+                      </View>
+                    )}
                     <Ionicons name={o.icon as any} size={18} color={selected ? Colors.accent : Colors.textSecondary} />
                     <Text style={[styles.momentText, selected && { color: Colors.textPrimary }]} numberOfLines={2}>
                       {t(o.label)}
@@ -227,7 +269,7 @@ export const CheckInScreen = () => {
             <View style={styles.block}>
               <Text style={styles.question}>{t('How are you feeling?')}</Text>
               <View style={styles.moodGrid}>
-                {MOOD_OPTIONS.map((m) => {
+                {MOOD_PICKER.map((m) => {
                   const selected = mood === m.id;
                   return (
                     <TouchableOpacity
@@ -302,7 +344,7 @@ export const CheckInScreen = () => {
       {!done ? (
         <>
           <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>
-            <Text style={styles.ctaText}>{params.id ? t('Save changes') : t('Save check-in')}</Text>
+            <Text style={styles.ctaText}>{editing ? t('Save changes') : t('Save check-in')}</Text>
           </TouchableOpacity>
           {editing && (
             <TouchableOpacity onPress={remove} style={styles.deleteLink} hitSlop={8}>
@@ -371,7 +413,19 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(Colors.accent, 0.08),
   },
   dayQuestion: { marginTop: 22, fontSize: 15 },
-  dayRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  dayRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
+  // El mini check de un momento ya hecho ese día
+  doneBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: Colors.ok,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   dayChip: {
     backgroundColor: Colors.card,
     borderWidth: 1,

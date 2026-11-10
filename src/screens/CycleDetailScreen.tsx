@@ -17,6 +17,10 @@ import { cycleGoalStore } from '@/data/cycleGoal';
 import { CycleGoalAnswers } from '@/types/cycleGoal';
 import { currentCyclePhase } from '@/utils/cyclePhase';
 import { postAi } from '@/utils/apiBaseUrl';
+import { kegelRepository } from '@/data/kegelRepository';
+import { EXERCISES } from '@/data/exercises';
+import { kegelDayKey, kegelWeek, KegelWeek } from '@/logic/kegel';
+import { ProgressRing } from '@/components/ProgressRing';
 
 const formatListDate = (iso: string) => {
   const d = new Date(iso);
@@ -27,6 +31,51 @@ const formatFullDate = (iso: string) => {
   const d = new Date(iso);
   return d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 };
+
+// Debajo de «Apuntar regla», los ejercicios de Kegel con su histórico mínimo, como el bloque de objetivos
+// de Hoy (fundador, 2026-11-05: «centrado y tal»): el título fuera y, en la tarjeta, todo centrado: un
+// anillo con los días que los hiciste de los últimos 7, un punto por día (lleno si los hiciste), cuándo
+// fue la última vez y «Empezar». Toda la tarjeta abre el ejercicio.
+const lastKegel = (w: KegelWeek, now = new Date()) => {
+  if (!w.last) return t('Not done yet');
+  if (w.last === kegelDayKey(now)) return t('Last time: today');
+  if (w.last === kegelDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1))) return t('Last time: yesterday');
+  const [y, m, d] = w.last.split('-').map(Number);
+  return t('Last time: {date}', { date: new Date(y, m - 1, d).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }) });
+};
+
+const KegelCard = ({ w, onPress }: { w: KegelWeek; onPress: () => void }) => (
+  <View>
+    <Text style={styles.sectionTitle}>{t('Kegel exercises')}</Text>
+    <TouchableOpacity
+      style={styles.kegelCard}
+      onPress={onPress}
+      activeOpacity={0.85}
+      accessibilityRole="button"
+      accessibilityLabel={`${t('Kegel exercises, last 7 days')}: ${t('{n} of 7 days', { n: w.count })}. ${lastKegel(w)}`}
+    >
+      <ProgressRing progress={w.count / 7} color={Colors.pulseAccent} size={78} strokeWidth={10} trackColor={withAlpha(Colors.pulseAccent, 0.16)}>
+        <Text style={styles.kegelRingNum}>{w.count}</Text>
+        <Text style={styles.kegelRingSub}>{t('of 7 days')}</Text>
+      </ProgressRing>
+      <View style={styles.kegelDays}>
+        {w.days.map((d, i) => (
+          <View key={d.key} style={styles.kegelDay}>
+            <View style={[styles.kegelDot, d.done && styles.kegelDotOn]} />
+            <Text style={[styles.kegelDayLabel, i === 6 && styles.kegelToday]}>
+              {d.date.toLocaleDateString(dateLocale(), { weekday: 'narrow' })}
+            </Text>
+          </View>
+        ))}
+      </View>
+      <Text style={styles.kegelNote}>{lastKegel(w)}</Text>
+      <View style={styles.kegelStart}>
+        <Text style={styles.kegelStartText}>{t('Start · {n} min', { n: EXERCISES.kegel.minutes })}</Text>
+        <Ionicons name="chevron-forward" size={16} color={Colors.pulseAccent} />
+      </View>
+    </TouchableOpacity>
+  </View>
+);
 
 const CONFIDENCE_LABEL: Record<string, string> = {
   low: 'Low confidence — log more cycles',
@@ -41,6 +90,7 @@ export const CycleDetailScreen = () => {
   const [prediction, setPrediction] = useState<CyclePrediction | null>(null);
   const [loadingPrediction, setLoadingPrediction] = useState(false);
   const [predictionError, setPredictionError] = useState('');
+  const [kegelDates, setKegelDates] = useState<string[]>([]);
 
   const loadPrediction = async (cycleEntries: CycleEntry[]) => {
     if (cycleEntries.length < 2) {
@@ -77,6 +127,10 @@ export const CycleDetailScreen = () => {
       loadPrediction(data);
     });
     cycleGoalStore.get().then(setCycleGoal).catch(() => setCycleGoal(null));
+    kegelRepository
+      .getAll()
+      .then((xs) => setKegelDates(xs.map((x) => x.fecha)))
+      .catch(() => setKegelDates([]));
   };
 
   const refreshRef = useRef(refresh);
@@ -172,6 +226,7 @@ export const CycleDetailScreen = () => {
           <Ionicons name="add-circle-outline" size={20} color={Colors.pulseAccent} />
           <Text style={styles.addButtonText}>{t('Log period')}</Text>
         </TouchableOpacity>
+        <KegelCard w={kegelWeek(kegelDates)} onPress={() => router.push({ pathname: '/exercise', params: { id: 'kegel' } })} />
 
         <Text style={styles.sectionTitle}>{t('History')}</Text>
         {historyDesc.length === 0 ? (
@@ -315,7 +370,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.cardBorder,
     borderRadius: 16,
     marginHorizontal: 20,
-    marginBottom: 28,
+    marginBottom: 24,
     paddingVertical: 16,
   },
   addButtonText: {
@@ -323,6 +378,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  // Como el bloque de objetivos de Hoy (MetasToday): tarjeta con todo centrado
+  kegelCard: {
+    alignItems: 'center',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 18,
+    marginHorizontal: 20,
+    marginBottom: 28,
+    paddingTop: 18,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+  },
+  kegelRingNum: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', lineHeight: 22 },
+  kegelRingSub: { color: Colors.textMuted, fontSize: 10 },
+  kegelDays: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 14 },
+  kegelDay: { alignItems: 'center', gap: 4 },
+  kegelDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: withAlpha(Colors.pulseAccent, 0.14) },
+  kegelDotOn: { backgroundColor: Colors.pulseAccent },
+  kegelDayLabel: { color: Colors.textMuted, fontSize: 10, textTransform: 'uppercase' },
+  kegelToday: { color: Colors.textPrimary, fontWeight: '700' },
+  kegelNote: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 12 },
+  kegelStart: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 10 },
+  kegelStartText: { color: Colors.pulseAccent, fontSize: 14, fontWeight: '700' },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',

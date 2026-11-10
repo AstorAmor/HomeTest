@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, Pressable, Platform, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
+import Svg, { Path } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { getTarget, onTourStart, RegisteredTarget, setTourActive, stepAvailable, takeTourPending, TOUR_STEPS, TourStep } from './tourStore';
 import { t } from '@/i18n';
 
-// El tutorial en marcha: oscurece la pantalla menos el elemento de cada paso (cuatro franjas alrededor),
+// El tutorial en marcha: oscurece la pantalla menos el elemento de cada paso (una capa con un hueco de
+// esquinas redondeadas, como el borde: con cuatro franjas rectas se veían las esquinas en pico),
 // con un bocadillo encima o debajo. Tocar el elemento o «Siguiente» pasa al siguiente; «Saltar» lo
 // cierra. Cambia de pestaña él solo y baja hasta el elemento si está más abajo. Un paso con `route` abre
 // esa pantalla encima (Tus objetivos, Digestión, Hidratación) para enseñar cómo se edita, y la cierra al
@@ -218,10 +220,9 @@ export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number
       <View style={StyleSheet.absoluteFill}>
         {hole ? (
           <>
-            <View style={[styles.shade, { top: 0, left: 0, right: 0, height: Math.max(0, hole.y) }]} />
-            <View style={[styles.shade, { top: hole.y + hole.h, left: 0, right: 0, bottom: 0 }]} />
-            <View style={[styles.shade, { top: hole.y, left: 0, width: Math.max(0, hole.x), height: hole.h }]} />
-            <View style={[styles.shade, { top: hole.y, left: hole.x + hole.w, right: 0, height: hole.h }]} />
+            <Svg width={W} height={H} style={StyleSheet.absoluteFill} pointerEvents="none">
+              <Path d={shadeWithHole(W, H, hole)} fill={SHADE} fillRule="evenodd" />
+            </Svg>
             <Pressable
               onPress={next}
               style={[styles.hole, { top: hole.y, left: hole.x, width: hole.w, height: hole.h }]}
@@ -251,9 +252,22 @@ export const TourOverlay = ({ goToTab, enabled = true }: { goToTab: (tab: number
   );
 };
 
+// La pantalla entera menos un rectángulo redondeado (mismo radio que el borde del hueco)
+const SHADE = 'rgba(0,0,0,0.62)';
+const HOLE_R = 14;
+function shadeWithHole(W: number, H: number, o: { x: number; y: number; w: number; h: number }): string {
+  const r = Math.max(0, Math.min(HOLE_R, o.w / 2, o.h / 2));
+  const { x, y, w, h } = o;
+  return (
+    `M0 0H${W}V${H}H0Z` +
+    `M${x + r} ${y}H${x + w - r}A${r} ${r} 0 0 1 ${x + w} ${y + r}V${y + h - r}A${r} ${r} 0 0 1 ${x + w - r} ${y + h}` +
+    `H${x + r}A${r} ${r} 0 0 1 ${x} ${y + h - r}V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`
+  );
+}
+
 const styles = StyleSheet.create({
-  shade: { position: 'absolute', backgroundColor: 'rgba(0,0,0,0.62)' },
-  hole: { position: 'absolute', borderRadius: 14, borderWidth: 2, borderColor: Colors.accent },
+  shade: { position: 'absolute', backgroundColor: SHADE },
+  hole: { position: 'absolute', borderRadius: HOLE_R, borderWidth: 2, borderColor: Colors.accent },
   bubble: {
     position: 'absolute',
     backgroundColor: Colors.background,

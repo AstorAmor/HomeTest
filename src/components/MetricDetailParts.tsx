@@ -18,9 +18,10 @@ export const RANGES = [
 export type RangeId = (typeof RANGES)[number]['id'];
 export const rangeDays = (id: RangeId) => RANGES.find((r) => r.id === id)!.days;
 
-export const RangeTabs = ({ value, onChange }: { value: RangeId; onChange: (r: RangeId) => void }) => (
+// `only`: algunos periodos (p. ej. «Tus últimos días», sin 6M)
+export const RangeTabs = ({ value, onChange, only }: { value: RangeId; onChange: (r: RangeId) => void; only?: RangeId[] }) => (
   <View style={styles.tabs}>
-    {RANGES.map((r) => (
+    {RANGES.filter((r) => !only || only.includes(r.id)).map((r) => (
       <TouchableOpacity key={r.id} style={[styles.tab, value === r.id && styles.tabOn]} onPress={() => onChange(r.id)}>
         <Text style={[styles.tabText, value === r.id && styles.tabTextOn]}>{r.id}</Text>
       </TouchableOpacity>
