@@ -3,6 +3,7 @@ import { es } from './es';
 import { workoutsEs } from './workoutsEs';
 import { dietEs } from './dietEs';
 import { authEs } from './authEs';
+import { pickDeviceLang } from './locale';
 
 // Idiomas de la app. El texto fuente es el inglés: t('Today') devuelve la traducción del idioma
 // elegido o, si aún no la hay, el inglés. Así se traduce pantalla a pantalla sin romper nada.
@@ -42,13 +43,25 @@ export const num = (v: number | string | null | undefined): string =>
 
 export const tn = (n: number, one: string, many: string) => t(n === 1 ? one : many, { n });
 
+// Idioma del móvil: primero el del sistema (I18nManager, Android e iPhone), luego el del navegador (web) y
+// por último Intl, que en algún Android dice «en-US» aunque el móvil esté en español (src/i18n/locale.ts)
 function deviceLang(): Lang {
-  try {
-    const loc = (Intl.DateTimeFormat().resolvedOptions().locale || 'en').toLowerCase();
-    return loc.startsWith('es') ? 'es' : 'en';
-  } catch {
-    return 'en';
-  }
+  const tryGet = (f: () => string | null | undefined) => {
+    try {
+      return f();
+    } catch {
+      return null;
+    }
+  };
+  return pickDeviceLang([
+    tryGet(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { I18nManager } = require('react-native');
+      return (I18nManager.getConstants?.() as { localeIdentifier?: string | null } | undefined)?.localeIdentifier;
+    }),
+    tryGet(() => (typeof navigator !== 'undefined' ? navigator.language : null)),
+    tryGet(() => Intl.DateTimeFormat().resolvedOptions().locale),
+  ]);
 }
 
 export async function loadLanguage(): Promise<Lang> {
