@@ -2846,4 +2846,14 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   (`Linking.sendIntent`), pasos a mano para Xiaomi/Samsung y un aviso de prueba en 1 minuto. Pendiente para el lote
   nativo: pedir/comprobar la alarma exacta desde la app y un servicio en primer plano para el descanso del
   entrenamiento. Para publicarlo hay que juntarlo en `metas-fase1` (se aplica limpio) y OTA con el OK de Astor.
+- **Idioma y orden de avisos** (2026-11-10, Astor al crear una cuenta de paciente en Kuova Pruebas: salía en inglés y
+  «Discover your genetic profile» antes que «Before we start»). Idioma: `src/i18n/locale.ts` mira primero el idioma del
+  sistema (`I18nManager…localeIdentifier`, antes solo `Intl`, que en Android daba inglés) y catalán/gallego/euskera van a
+  español; selector «Español / English» arriba en la pantalla de entrar (`LanguagePicker`). Orden:
+  `src/data/permissionsGate.ts`, los avisos de bienvenida esperan a que se cierre «Before we start» y 2 s más (b2eb4e4,
+  d731fce, 7601562; parche para metas-fase1 en las notas compartidas). Solo el idioma va a la app pública, desde la rama
+  `idioma-produccion` (worktree `hometest-app-idioma`, master + 74fa0f3), con el OK de Astor.
+- **Kuova Pruebas = la versión de la beta** (2026-11-10): `metas-fase1` (6cdb760) juntada en `entorno-pruebas` (37150ae),
+  porque Kuova Pruebas tenía la app de master. 661 tests, tsc limpio, web contra pruebas OK (check-in nuevo, metas). Lleva
+  el módulo nativo `kuova-wallpaper`, así que necesita APK nuevo: build `460d5261` (perfil staging).
 
