@@ -1931,7 +1931,8 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   por un admin con registro (`admin-mfa-reset`, `mfa_resets`). Detalle y orden en producción: `docs/doble-factor.md`.
 - **Probado en la base de pruebas**: 109/109 tests SQL (30 nuevos), `node scripts/staging-auth-check.mjs` 23/23 con
   sesiones reales, la web en local contra pruebas (aviso «entorno de pruebas», lista de la contraseña). 474 tests de la
-  app, tsc limpio. **Sin probar en un móvil** ni el correo real (falta Brevo).
+  app, tsc limpio. **Sin probar en un móvil.** Correo real por Brevo probado el 2026-11-10
+  (`node scripts/staging-email-check.mjs <email>`; plantilla subida con `config push`).
 - **Variables de EAS separadas** (2026-11-09, OK de Astor): `development` → base de pruebas; preview y production
   → producción, sin cambios. `GEMINI_API_KEY` copiada a pruebas (`node scripts/staging-ai-check.mjs`: OK). Primer
   APK de «Kuova Pruebas»: build `16edc92f` (EAS), para instalar en el móvil de Astor.
