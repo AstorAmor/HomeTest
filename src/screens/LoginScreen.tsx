@@ -106,7 +106,9 @@ export const LoginScreen = () => {
         style={styles.container}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* El idioma arriba del todo, separado de la marca; el resto queda centrado en el hueco que sobra */}
           <LanguagePicker />
+          <View style={styles.spacer} />
           <View style={styles.header}>
             <View accessible accessibilityRole="header" accessibilityLabel={t('Kuova Health')}>
               <KuovaWordmark height={34} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />
@@ -280,6 +282,7 @@ export const LoginScreen = () => {
               {authMode === 'demo' ? t('Demo mode: use any email/password') : t('Your data is private to your account')}
             </Text>
           </View>
+          <View style={styles.spacer} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -303,6 +306,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 440,
     alignSelf: 'center',
+  },
+  spacer: {
+    flexGrow: 1,
+    minHeight: 28,
   },
   header: {
     alignItems: 'center',
