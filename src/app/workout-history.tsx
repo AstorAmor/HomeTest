@@ -1,3 +1,5 @@
 import { WorkoutHistoryScreen } from '@/screens/workouts/WorkoutHistoryScreen';
+import { gated } from '@/components/FeatureGate';
 
-export default WorkoutHistoryScreen;
+// Entrenamientos va con la suscripción: en modo gratis, su candado (fundador, 2026-11-06)
+export default gated('workouts', WorkoutHistoryScreen);

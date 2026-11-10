@@ -17,8 +17,10 @@ import {
   PhoneReminderData,
   planPhoneReminders,
   reminderData,
+  reminderKindLabel,
   resolvedPresented,
 } from '@/logic/nudges/phone';
+import type { DeliverySetting } from '@/logic/deliveryHelp';
 
 // Recordatorios del móvil con la app cerrada: notificaciones locales programadas con
 // expo-notifications (sin servidor ni push). Qué se programa lo decide src/logic/nudges/phone.ts;
@@ -95,16 +97,26 @@ export async function getPhoneStatus(): Promise<PhoneStatus> {
   return p === 'granted' && (await isOptedIn()) ? 'on' : 'off';
 }
 
-// Dos canales para que en Android se puedan ajustar por separado. En pantalla bloqueada se ve que
-// hay un aviso de Kuova, pero no el texto (el nombre de un medicamento es un dato de salud).
-const CHANNEL = { doses: 'tomas', reminders: 'recordatorios' } as const;
+// Dos canales para que en Android se puedan ajustar por separado.
+// - Tomas: se ven enteras con el móvil bloqueado (PUBLIC), porque el texto no dice qué medicamento es
+//   («Es la hora de tu toma», src/logic/nudges/phone.ts). Hasta el 2026-11-09 era el canal 'tomas', PRIVATE
+//   («Contenido oculto» en la pantalla bloqueada); un canal no se puede cambiar una vez creado, así que
+//   va con otro nombre y el viejo se borra para que no salgan dos en los ajustes del móvil.
+// - Recordatorios (peso, temperatura, check-in): también PUBLIC desde el 2026-11-09 ('recordatorios' era
+//   PRIVATE), porque ya no dicen el dato: peso y temperatura salen como «Hora de apuntar tus datos en
+//   Kuova» y el check-in como «¿Qué tal estás?». Si algún día un aviso de estos dice algo de salud, el
+//   canal vuelve a ser PRIVATE (con otro nombre).
+const CHANNEL = { doses: 'tomas-v2', reminders: 'recordatorios-v2' } as const;
+const OLD_CHANNELS = ['tomas', 'recordatorios'];
 let channelsReady = false;
 
 async function ensureChannels(N: NotificationsModule) {
   if (Platform.OS !== 'android' || channelsReady) return;
+  for (const id of OLD_CHANNELS) await N.deleteNotificationChannelAsync(id).catch(() => undefined);
   const common = { lockscreenVisibility: N.AndroidNotificationVisibility.PRIVATE, showBadge: false, lightColor: '#2E7D5B' };
   await N.setNotificationChannelAsync(CHANNEL.doses, {
     ...common,
+    lockscreenVisibility: N.AndroidNotificationVisibility.PUBLIC,
     name: t('Medication & supplements'),
     description: t('At the time of each dose with reminders on.'),
     importance: N.AndroidImportance.HIGH,
@@ -112,8 +124,9 @@ async function ensureChannels(N: NotificationsModule) {
   });
   await N.setNotificationChannelAsync(CHANNEL.reminders, {
     ...common,
+    lockscreenVisibility: N.AndroidNotificationVisibility.PUBLIC,
     name: t('Reminders'),
-    description: t('Weigh-in, morning temperature and check-in.'),
+    description: t('To log your data, and the check-in.'),
     importance: N.AndroidImportance.DEFAULT,
   });
   channelsReady = true;
@@ -331,7 +344,11 @@ export async function upcomingPhoneReminders(limit = 3): Promise<{ id: string; a
   const scheduled = await N.getAllScheduledNotificationsAsync().catch(() => []);
   return scheduled
     .filter((r) => ours(r.identifier))
-    .map((r) => ({ id: r.identifier, at: new Date(String(r.content.data?.at ?? '')), title: r.content.title ?? '' }))
+    .map((r) => ({
+      id: r.identifier,
+      at: new Date(String(r.content.data?.at ?? '')),
+      title: reminderKindLabel(r.content.data?.kind) ?? r.content.title ?? '',
+    }))
     .filter((r) => !Number.isNaN(r.at.getTime()))
     .sort((a, b) => a.at.getTime() - b.at.getTime())
     .slice(0, limit);
@@ -359,4 +376,51 @@ export function listenToReminderTaps(open: (route: string) => void): () => void 
     live = false;
     sub.remove();
   };
+}
+
+// --- «Para que los avisos lleguen» (Ajustes → Notificaciones, Android) ---------------------------
+// Botones a los ajustes del sistema que deciden si un aviso sale a su hora (src/logic/deliveryHelp.ts).
+// Linking.sendIntent viene con React Native: no hace falta un APK nuevo. Si el móvil no tiene esa
+// pantalla, se abre la ficha de Kuova en los ajustes.
+
+const SETTINGS_INTENT: Record<DeliverySetting, string> = {
+  exact_alarms: 'android.settings.REQUEST_SCHEDULE_EXACT_ALARM', // la lista de «Alarmas y recordatorios»
+  battery: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+  lock_screen: 'android.settings.APP_NOTIFICATION_SETTINGS',
+};
+
+const appPackage = () => requireOptionalNativeModule<{ applicationId?: string | null }>('ExpoApplication')?.applicationId ?? null;
+
+export async function openDeliverySetting(setting: DeliverySetting): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  const pkg = appPackage();
+  const extras = setting === 'lock_screen' && pkg ? [{ key: 'android.provider.extra.APP_PACKAGE', value: pkg }] : undefined;
+  try {
+    await Linking.sendIntent(SETTINGS_INTENT[setting], extras);
+  } catch {
+    await Linking.openSettings().catch(() => undefined);
+  }
+}
+
+// Un aviso de prueba dentro de un minuto, por el canal de las tomas (importancia alta, sonido y
+// vibración). Su identificador no empieza por PHONE_ID_PREFIX: si no, la próxima sincronización lo
+// borraría por no estar en el plan.
+export type TestReminderResult = 'scheduled' | 'no_permission' | 'unsupported';
+
+export async function sendTestReminder(): Promise<TestReminderResult> {
+  const N = loadNotifications();
+  if (!N) return 'unsupported';
+  await ensureChannels(N);
+  if (toPermission(N, await N.getPermissionsAsync()) !== 'granted') return 'no_permission';
+  await N.scheduleNotificationAsync({
+    identifier: `prueba-${Date.now()}`,
+    content: {
+      title: t('Kuova test notification'),
+      body: t('If you can see this with your phone locked, your reminders are getting through.'),
+      sound: 'default',
+      color: '#2E7D5B',
+    },
+    trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: new Date(Date.now() + 60_000), channelId: CHANNEL.doses },
+  });
+  return 'scheduled';
 }

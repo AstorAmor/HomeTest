@@ -11,6 +11,7 @@ import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import { FLAG_LABEL, categoryLabel } from '@/utils/reportDisplay';
 import { findLabReport, flagColor, formatReportDate, markerNameEn, rangePosition, reportCounts } from '@/utils/labReportView';
 import { t } from '@/i18n';
+import { markerHref } from '@/utils/markerLinks';
 
 // Resultados de un informe por secciones (se usa para informes anteriores;
 // el último abre el recorrido completo de report-summary).
@@ -35,7 +36,7 @@ export const LabReportScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title="Lab Results" showBack />
+        <ScreenHeader title={t('Lab Results')} showBack />
 
         <View style={styles.summary}>
           <DonutChart
@@ -88,19 +89,11 @@ export const LabReportScreen = () => {
                       </View>
                     </>
                   );
-                  // El detalle por marcador solo existe para el informe actual
-                  return reportId === 'current' ? (
-                    <TouchableOpacity
-                      key={m.marker_id}
-                      style={styles.markerRow}
-                      onPress={() => router.push({ pathname: '/report-marker-detail', params: { markerId: m.marker_id } })}
-                    >
+                  // Al tocarlo, ese marcador en Mis datos con todos sus valores (fundador, 2026-11-06)
+                  return (
+                    <TouchableOpacity key={m.marker_id} style={styles.markerRow} onPress={() => router.push(markerHref(m.marker_id, `report:${reportId}`))}>
                       {content}
                     </TouchableOpacity>
-                  ) : (
-                    <View key={m.marker_id} style={styles.markerRow}>
-                      {content}
-                    </View>
                   );
                 })}
             </View>

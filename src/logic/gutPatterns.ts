@@ -351,15 +351,15 @@ export const SUGGESTIONS: Record<TestSuggestion['id'], () => TestSuggestion> = {
   hpylori: () => ({
     id: 'hpylori',
     title: t('Helicobacter pylori test'),
-    body: t('Heaviness and feeling full quickly can come from a stomach infection with Helicobacter pylori. A doctor or pharmacy can do the breath test (urea C13); it is not in our store yet.'),
+    body: t('Heaviness and feeling full quickly can come from a stomach infection with Helicobacter pylori. A breath test (urea C13) can show it: you can request it here or ask your doctor or pharmacy.'),
     warning: t('For a reliable result: 2 weeks without omeprazole or similar, and 4 weeks without antibiotics.'),
-    storeIds: [],
+    storeIds: ['hpylori'],
   }),
   ibs: () => ({
     id: 'ibs',
     title: t('See a digestive doctor first'),
     body: t('When nothing else explains it, tummy pain that comes with changes in your stools is what doctors call irritable bowel. The usual first steps are a doctor visit and a coeliac blood test; with diarrhoea, also a stool calprotectin test, which your doctor can order. A low-FODMAP diet can help, best guided by a dietitian.'),
-    storeIds: ['coeliac', 'consult_digestive'],
+    storeIds: ['coeliac'],
   }),
   reflux_advice: () => ({
     id: 'reflux_advice',

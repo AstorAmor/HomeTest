@@ -1,7 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { confirmAsk } from '@/components/dev/confirmAsk';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
@@ -9,12 +11,13 @@ import { exerciseName, getExercise } from '@/data/workouts/catalog';
 import { sessionTitle, setsText } from '@/data/workouts/labels';
 import { programRepository } from '@/data/workouts/programRepository';
 import { workoutRepository } from '@/data/planRepository';
-import { byMonth, setsByExercise, workoutHistory, type HistoryEntry, type LoggedWorkout } from '@/logic/workoutHistory';
+import { byMonth, historyRemoval, setsByExercise, workoutHistory, type HistoryEntry, type LoggedWorkout } from '@/logic/workoutHistory';
+import type { WorkoutProgram } from '@/data/workouts/types';
 import { dateLocale, t, tn } from '@/i18n';
 
 // Historial (Entrenamientos → Historial): cada entreno con su día, sus minutos y, en las sesiones de un
-// programa, lo que se hizo en cada ejercicio. Solo para mirar: no se edita. La lógica, en
-// src/logic/workoutHistory.ts.
+// programa, lo que se hizo en cada ejercicio. No se edita; la papelera de cada uno lo borra, con confirmación
+// (fundador, 2026-11-06). La lógica, en src/logic/workoutHistory.ts.
 
 const PAGE = 30;
 
@@ -36,7 +39,13 @@ const monthText = (month: string) => {
   return capital(new Date(y, m - 1, 1).toLocaleDateString(dateLocale(), { month: 'long', year: 'numeric' }));
 };
 
-const Entry = ({ e }: { e: HistoryEntry }) => {
+const Trash = ({ onPress }: { onPress: () => void }) => (
+  <TouchableOpacity onPress={onPress} hitSlop={10} style={styles.trash} accessibilityRole="button" accessibilityLabel={t('Delete this workout')}>
+    <Ionicons name="trash-outline" size={17} color={Colors.textMuted} />
+  </TouchableOpacity>
+);
+
+const Entry = ({ e, onDelete }: { e: HistoryEntry; onDelete: () => void }) => {
   if (e.kind === 'logged') {
     return (
       <View style={styles.card}>
@@ -49,6 +58,7 @@ const Entry = ({ e }: { e: HistoryEntry }) => {
             <Text style={styles.sub}>{[whenText(e.at), t(INTENSITY[e.intensity])].join(' · ')}</Text>
           </View>
           <Text style={styles.minutes}>{t('{m} min', { m: e.minutes })}</Text>
+          <Trash onPress={onDelete} />
         </View>
       </View>
     );
@@ -71,6 +81,7 @@ const Entry = ({ e }: { e: HistoryEntry }) => {
           </Text>
         </View>
         <Text style={styles.minutes}>{t('{m} min', { m: e.minutes })}</Text>
+        <Trash onPress={onDelete} />
       </View>
       {groups.length > 0 && (
         <View style={styles.exercises}>
@@ -93,13 +104,18 @@ const Entry = ({ e }: { e: HistoryEntry }) => {
 };
 
 export const WorkoutHistoryScreen = () => {
+  const router = useRouter();
   const [entries, setEntries] = useState<HistoryEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
+  // Lo cargado, para saber qué borrar
+  const [source, setSource] = useState<{ programs: WorkoutProgram[]; logged: LoggedWorkout[] }>({ programs: [], logged: [] });
   const [shown, setShown] = useState(PAGE);
 
   const load = useCallback(async () => {
     try {
       const [programs, logged] = await Promise.all([programRepository.list(), workoutRepository.getAll()]);
+      setSource({ programs, logged });
       setEntries(workoutHistory(programs, logged));
       setFailed(false);
     } catch {
@@ -108,15 +124,46 @@ export const WorkoutHistoryScreen = () => {
   }, []);
   useReloadOnFocus(load);
 
+  const remove = async (e: HistoryEntry) => {
+    const what = e.kind === 'session' ? (e.session ? sessionTitle(e.session) : t(e.programTitle)) : t(TYPE[e.type].label);
+    const ok = await confirmAsk(
+      t('Delete this workout?'),
+      t('{what}, {when}. It will disappear from your history and stop counting towards your targets.', { what, when: whenText(e.at) }),
+      t('Delete'),
+    );
+    if (!ok) return;
+    setDeleteFailed(false);
+    const plan = historyRemoval(e, source.programs, source.logged);
+    try {
+      const p = plan.program && source.programs.find((x) => x.id === plan.program!.id);
+      if (p && plan.program) await programRepository.save({ ...p, completions: plan.program.completions });
+      for (const id of plan.loggedIds) await workoutRepository.remove(id);
+    } catch {
+      setDeleteFailed(true);
+    }
+    load();
+  };
+
   const months = useMemo(() => byMonth((entries ?? []).slice(0, shown)), [entries, shown]);
   // Lo que hay en cada mes, aunque aún no se vea entero
   const perMonth = useMemo(() => new Map(byMonth(entries ?? []).map((m) => [m.month, m.entries.length])), [entries]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScreenHeader title={t('History')} showBack backFallback="/workouts" />
+      <ScreenHeader
+        title={t('History')}
+        showBack
+        backFallback="/workouts"
+        right={
+          // Exportar el plan y el historial (fundador, 2026-11-09)
+          <TouchableOpacity onPress={() => router.push('/workout-export')} hitSlop={12} accessibilityRole="button" accessibilityLabel={t('Export')}>
+            <Ionicons name="share-outline" size={23} color={Colors.textPrimary} />
+          </TouchableOpacity>
+        }
+      />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {failed && <Text style={styles.muted}>{t('Your history could not be loaded. Check your connection and try again.')}</Text>}
+        {deleteFailed && <Text style={styles.muted}>{t('The workout could not be deleted. Check your connection and try again.')}</Text>}
         {entries && !entries.length && (
           <View style={styles.empty}>
             <MaterialCommunityIcons name="calendar-blank-outline" size={28} color={Colors.accent} />
@@ -130,7 +177,7 @@ export const WorkoutHistoryScreen = () => {
               <Text style={styles.monthCount}>{tn(perMonth.get(m.month) ?? m.entries.length, '{n} workout', '{n} workouts')}</Text>
             </View>
             {m.entries.map((e) => (
-              <Entry key={e.key} e={e} />
+              <Entry key={e.key} e={e} onDelete={() => remove(e)} />
             ))}
           </View>
         ))}
@@ -158,6 +205,7 @@ const styles = StyleSheet.create({
   title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
   sub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
   minutes: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  trash: { paddingLeft: 4 },
   exercises: { marginTop: 10, paddingTop: 6, borderTopWidth: 1, borderTopColor: Colors.divider, gap: 6 },
   exercise: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   exName: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },

@@ -12,6 +12,7 @@ export interface BadgeShare {
   domId: string; // solo web
   fileName: string;
   message: string;
+  size?: { width: number; height: number }; // la imagen; por defecto, la de las insignias (1080 × 1350)
 }
 
 const sharingModule = (): typeof import('expo-sharing') | null => {
@@ -23,11 +24,11 @@ const sharingModule = (): typeof import('expo-sharing') | null => {
   }
 };
 
-export async function shareBadge({ svg, fileName, message }: BadgeShare): Promise<void> {
+export async function shareBadge({ svg, fileName, message, size }: BadgeShare): Promise<void> {
   const Sharing = sharingModule();
   if (Sharing && svg?.toDataURL && FileSystem.cacheDirectory) {
     try {
-      const data: string = await new Promise((resolve) => svg.toDataURL(resolve, { width: CARD_W, height: CARD_H }));
+      const data: string = await new Promise((resolve) => svg.toDataURL(resolve, size ?? { width: CARD_W, height: CARD_H }));
       const uri = `${FileSystem.cacheDirectory}${fileName}.png`;
       await FileSystem.writeAsStringAsync(uri, data.replace(/^data:image\/png;base64,/, ''), {
         encoding: FileSystem.EncodingType.Base64,

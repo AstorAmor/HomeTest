@@ -1,11 +1,13 @@
 import { RECIPE_LIST, FOODS, addNutrients, getRecipe, scale, ZERO } from '@/data/diet/catalog';
 import type {
+  DayTargets,
   DietDay,
   DietPlan,
   DietPrefs,
   DietReason,
   DietTargets,
   FoodCustom,
+  MealMacroPlan,
   MealSlot,
   Nutrients,
   PlannedMeal,
@@ -157,19 +159,25 @@ export function dietTargets(prefs: DietPrefs, labs: LabFlag[]): DietTargets {
     if (goal === 'gain' || goal === 'perform') kcal *= 1.1;
   }
   kcal = Math.round(kcal / 50) * 50;
-  if (prefs.kcalTarget) kcal = prefs.kcalTarget;
-  // Si el dietista fija los tres macros y no las kcal, las kcal salen de ellos (4, 4 y 9 kcal por gramo)
-  else if (prefs.proteinTarget && prefs.carbsTarget && prefs.fatTarget) kcal = prefs.proteinTarget * 4 + prefs.carbsTarget * 4 + prefs.fatTarget * 9;
+  // Lo puesto a mano manda y, para que cuadre (4, 4 y 9 kcal por gramo), la última casilla libre sale de las otras:
+  // con los tres macros, las kcal; con las kcal y dos macros, el tercero (fundador, 2026-11-06: «que una cosa bloquee a la otra»)
+  const [K, P, C, F] = [prefs.kcalTarget, prefs.proteinTarget, prefs.carbsTarget, prefs.fatTarget].map((v) => (v && v > 0 ? v : null));
+  if (K) kcal = K;
+  else if (P && C && F) kcal = P * 4 + C * 4 + F * 9;
   const perKg = prefs.goal === 'gain' ? 1.6 : prefs.goal === 'lose' || prefs.goal === 'perform' ? 1.4 : 1.0;
   let protein = prefs.weightKg ? prefs.weightKg * perKg : (kcal * 0.18) / 4;
   if (prefs.diet === 'vegan') protein *= 1.1;
   protein = Math.min(Math.round(protein), Math.round((kcal * 0.3) / 4));
   // Riñón: proteína moderada (sin peso, ~10 % de la energía). Lo que fije el dietista manda.
   if (c.kidney) protein = Math.min(protein, Math.round(prefs.weightKg ? prefs.weightKg * KIDNEY_PROTEIN_PER_KG : (kcal * 0.1) / 4));
-  if (prefs.proteinTarget) protein = prefs.proteinTarget;
-  // Grasa: el 30 % de la energía (dentro del 20-35 % de las guías); hidratos, lo que queda
-  const fat = prefs.fatTarget || Math.round((kcal * 0.3) / 9);
-  const carbs = prefs.carbsTarget || Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  if (P) protein = P;
+  else if (K && C && F) protein = Math.max(0, Math.round((K - C * 4 - F * 9) / 4));
+  // Con hidratos y grasa puestos (y sin kcal), las kcal salen de los tres
+  if (!K && C && F) kcal = protein * 4 + C * 4 + F * 9;
+  // Grasa: el 30 % de la energía (dentro del 20-35 % de las guías), o lo que queda si los hidratos están puestos;
+  // hidratos, lo que queda
+  const fat = F || (C ? Math.max(0, Math.round((kcal - protein * 4 - C * 4) / 9)) : Math.round((kcal * 0.3) / 9));
+  const carbs = C || Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   return {
     kcal,
     protein,
@@ -298,29 +306,155 @@ export interface MealMacros {
 export const slotCount = (prefs: Pick<DietPrefs, 'snacks' | 'customs'>, slot: MealSlot) =>
   slot !== 'snack' ? 1 : isRamadan(prefs) ? (prefs.snacks > 0 ? 1 : 0) : Math.min(2, prefs.snacks);
 
-// Lo que le toca a cada comida: su parte de las kcal (la del dietista o la de siempre, reajustadas para
-// que el día sume el 100 %) y de cada macro (lo que haya puesto el dietista en gramos, o su parte). Si
-// fija los tres macros de una comida, sus kcal salen de ellos.
+// Lo que le toca a cada comida (lo usa el generador): ver mealSplit
 export function mealTargets(prefs: DietPrefs, targets: DietTargets): Partial<Record<MealSlot, MealMacros>> {
-  const base = slotShares(prefs.snacks, isRamadan(prefs));
-  const slots = Object.keys(base) as MealSlot[];
-  const raw = (s: MealSlot) => {
-    const own = prefs.meals?.[s]?.share;
-    return own != null && own > 0 ? own / 100 : base[s] ?? 0;
-  };
-  const total = slots.reduce((a, s) => a + raw(s) * slotCount(prefs, s), 0) || 1;
   const out: Partial<Record<MealSlot, MealMacros>> = {};
-  for (const s of slots) {
-    const share = raw(s) / total;
-    const m = prefs.meals?.[s];
-    const protein = m?.protein || targets.protein * share;
-    const carbs = m?.carbs || (targets.carbs ?? 0) * share;
-    const fat = m?.fat || (targets.fat ?? 0) * share;
-    const kcal = m?.protein && m?.carbs && m?.fat ? protein * 4 + carbs * 4 + fat * 9 : targets.kcal * share;
-    out[s] = { kcal, protein, carbs, fat };
-  }
+  for (const [s, m] of Object.entries(mealSplit(prefs, targets).meals) as [MealSlot, MealSplit][]) out[s] = { kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat };
   return out;
 }
+
+// El reparto por comida, que siempre cuadra con el día (fundador, 2026-11-06: «si pongo proteínas en el día y luego
+// las edito por comida, deja de ser coherente»). Cada comida tiene cuatro casillas: % de las kcal del día y gramos de
+// proteína, hidratos y grasa (en el tentempié, por cada uno). La regla es la misma que en el día:
+// - En una comida, con tres casillas puestas la cuarta sale de ellas («calc»): con sus tres gramos, su %; con su % y
+//   dos gramos, el tercero.
+// - En cada columna, las comidas suman lo del día (el 100 % o los gramos del día): lo puesto se queda y las vacías se
+//   reparten lo que queda («auto»), en proporción a su parte de siempre (el %) o a su % (los gramos). La última vacía
+//   de una columna es justo lo que queda («rest») y no se escribe: para cambiarla, vacía otra.
+// Si lo puesto no cabe (las comidas pasan de lo del día, dejan menos de un 5 % a cada comida vacía o los gramos de
+// una comida pasan de sus kcal), sale en `issues` y las pantallas no dejan guardar. El generador, por si llega un
+// menú así de antes, lo reparte todo en proporción para que sume lo del día.
+export type SplitCol = 'share' | 'protein' | 'carbs' | 'fat';
+export const SPLIT_COLS: SplitCol[] = ['share', 'protein', 'carbs', 'fat'];
+const GRAM_COLS = ['protein', 'carbs', 'fat'] as const;
+const KCAL_PER_G = { protein: 4, carbs: 4, fat: 9 } as const;
+export type SplitCell = 'own' | 'auto' | 'rest' | 'calc';
+export interface MealSplit extends MealMacros {
+  share: number; // % de las kcal del día
+  cells: Record<SplitCol, SplitCell>;
+  // Lo que se enseña en cada casilla: lo mismo, salvo en una columna que no cuadra, donde las vacías dicen lo que
+  // les queda de verdad (p. ej. −20 si las comidas se pasan 20 g), no el reparto de emergencia del generador
+  shown: Record<SplitCol, number>;
+}
+export type MacroIssue =
+  // Las kcal del día y sus macros no cuadran: los macros pasan de las kcal (o, en un menú de antes con las cuatro puestas, se alejan más de un 5 %)
+  | { kind: 'day'; macroKcal: number; kcal: number; off: boolean }
+  // Una columna no cuadra con el día: lo puesto pasa de lo del día (o deja menos de un 5 % a cada comida vacía), o todas puestas y no suman
+  | { kind: 'column'; col: SplitCol; sum: number; total: number; free: number }
+  // Los gramos de una comida pasan de sus kcal (o, con las cuatro puestas, no cuadran con su %)
+  | { kind: 'meal'; slot: MealSlot; gramsKcal: number; kcal: number; share: number; off: boolean };
+
+export function mealSplit(prefs: DietPrefs, targets: DietTargets): { meals: Partial<Record<MealSlot, MealSplit>>; issues: MacroIssue[] } {
+  const base = slotShares(prefs.snacks, isRamadan(prefs));
+  const slots = (Object.keys(base) as MealSlot[]).filter((s) => slotCount(prefs, s) > 0);
+  const cnt = (s: MealSlot) => slotCount(prefs, s);
+  const own = (s: MealSlot, c: SplitCol) => {
+    const v = prefs.meals?.[s]?.[c];
+    return v != null && v > 0 ? v : null;
+  };
+  const dayKcal = Math.max(1, targets.kcal);
+  const totals: Record<SplitCol, number> = { share: 100, protein: targets.protein, carbs: targets.carbs ?? 0, fat: targets.fat ?? 0 };
+  const val: Record<SplitCol, Partial<Record<MealSlot, number>>> = { share: {}, protein: {}, carbs: {}, fat: {} };
+  const cell: Record<SplitCol, Partial<Record<MealSlot, SplitCell>>> = { share: {}, protein: {}, carbs: {}, fat: {} };
+  const shown: Record<SplitCol, Partial<Record<MealSlot, number>>> = { share: {}, protein: {}, carbs: {}, fat: {} };
+  const issues: MacroIssue[] = [];
+
+  // 1. En cada comida, con tres casillas puestas la cuarta sale de ellas
+  for (const s of slots) {
+    for (const c of SPLIT_COLS) {
+      const v = own(s, c);
+      if (v != null) [val[c][s], cell[c][s]] = [v, 'own'];
+    }
+    const grams = GRAM_COLS.filter((c) => own(s, c) != null);
+    const gk = grams.reduce((a, c) => a + own(s, c)! * KCAL_PER_G[c], 0);
+    const share = own(s, 'share');
+    if (share == null && grams.length === 3) [val.share[s], cell.share[s]] = [(gk / dayKcal) * 100, 'calc'];
+    else if (share != null && grams.length === 2) {
+      const miss = GRAM_COLS.find((c) => own(s, c) == null)!;
+      [val[miss][s], cell[miss][s]] = [Math.max(0, ((share / 100) * dayKcal - gk) / KCAL_PER_G[miss]), 'calc'];
+    }
+  }
+
+  // 2. En cada columna, las comidas suman lo del día (primero el %, que reparte los gramos)
+  for (const c of SPLIT_COLS) {
+    const total = totals[c];
+    const weight = (s: MealSlot) => Math.max(0.0001, c === 'share' ? base[s] ?? 0 : val.share[s] ?? 0);
+    const fixed = slots.filter((s) => val[c][s] != null);
+    const free = slots.filter((s) => val[c][s] == null);
+    const fixedSum = fixed.reduce((a, s) => a + val[c][s]! * cnt(s), 0);
+    const freeN = free.reduce((a, s) => a + cnt(s), 0);
+    const rest = total - fixedSum;
+    const bad = free.length ? rest < (c === 'share' ? 5 * freeN : 0) - 0.5 : Math.abs(rest) > (c === 'share' ? 1 : Math.max(2, total * 0.02));
+    for (const s of free) cell[c][s] = free.length === 1 ? 'rest' : 'auto';
+    const wFree = free.reduce((a, s) => a + weight(s) * cnt(s), 0) || 1;
+    if (!bad) {
+      for (const s of free) val[c][s] = (rest * weight(s)) / wFree;
+      continue;
+    }
+    for (const s of fixed) shown[c][s] = val[c][s];
+    for (const s of free) shown[c][s] = (rest * weight(s)) / wFree;
+    issues.push({ kind: 'column', col: c, sum: Math.round(fixedSum), total: Math.round(total), free: freeN });
+    // Para hacer el menú igualmente: las vacías con su parte de siempre y todo en proporción, hasta sumar lo del día
+    const w = slots.reduce((a, s) => a + weight(s) * cnt(s), 0) || 1;
+    for (const s of free) val[c][s] = (total * weight(s)) / w;
+    const sum = slots.reduce((a, s) => a + val[c][s]! * cnt(s), 0);
+    if (sum > 0) for (const s of slots) val[c][s] = (val[c][s]! * total) / sum;
+  }
+
+  // 3. Los gramos puestos de cada comida no pueden pasar de sus kcal
+  const meals: Partial<Record<MealSlot, MealSplit>> = {};
+  for (const s of slots) {
+    const share = val.share[s] ?? 0;
+    const kcal = (share / 100) * targets.kcal;
+    const gk = GRAM_COLS.filter((c) => cell[c][s] === 'own' || cell[c][s] === 'calc').reduce((a, c) => a + (val[c][s] ?? 0) * KCAL_PER_G[c], 0);
+    const allOwn = SPLIT_COLS.every((c) => cell[c][s] === 'own');
+    if (allOwn ? Math.abs(gk - kcal) > kcal * 0.1 + 10 : gk > kcal * 1.05 + 10)
+      issues.push({ kind: 'meal', slot: s, gramsKcal: Math.round(gk), kcal: Math.round(kcal), share: Math.round(share), off: allOwn });
+    meals[s] = {
+      kcal,
+      share,
+      protein: val.protein[s] ?? 0,
+      carbs: val.carbs[s] ?? 0,
+      fat: val.fat[s] ?? 0,
+      cells: { share: cell.share[s] ?? 'auto', protein: cell.protein[s] ?? 'auto', carbs: cell.carbs[s] ?? 'auto', fat: cell.fat[s] ?? 'auto' },
+      shown: Object.fromEntries(SPLIT_COLS.map((c) => [c, shown[c][s] ?? val[c][s] ?? 0])) as Record<SplitCol, number>,
+    };
+  }
+  return { meals, issues };
+}
+
+// En el día, la casilla que sale de las otras tres (no se escribe): con los tres macros, las kcal; con las kcal y dos
+// macros, el tercero
+export type DayField = 'kcal' | 'protein' | 'carbs' | 'fat';
+export function dayLock(prefs: Pick<DietPrefs, 'kcalTarget' | 'proteinTarget' | 'carbsTarget' | 'fatTarget'>): DayField | null {
+  const [k, p, c, f] = [prefs.kcalTarget, prefs.proteinTarget, prefs.carbsTarget, prefs.fatTarget].map((v) => !!(v && v > 0));
+  if (!k && p && c && f) return 'kcal';
+  if (k && [p, c, f].filter(Boolean).length === 2) return !p ? 'protein' : !c ? 'carbs' : 'fat';
+  return null;
+}
+
+// ¿Cuadran las kcal y los macros del día? Si una casilla calculada se queda en negativo (se pone a 0), los macros
+// pasan de las kcal
+export function dayIssue(prefs: DietPrefs, targets: DietTargets): Extract<MacroIssue, { kind: 'day' }> | null {
+  const macroKcal = targets.protein * 4 + (targets.carbs ?? 0) * 4 + (targets.fat ?? 0) * 9;
+  const all = !!(prefs.kcalTarget && prefs.proteinTarget && prefs.carbsTarget && prefs.fatTarget);
+  const bad = all ? Math.abs(macroKcal - targets.kcal) > targets.kcal * 0.05 : macroKcal > targets.kcal + Math.max(10, targets.kcal * 0.02);
+  return bad ? { kind: 'day', macroKcal: Math.round(macroKcal), kcal: Math.round(targets.kcal), off: all } : null;
+}
+
+// Todo lo que no cuadra de unos números (el día y su reparto por comida): con algo aquí no se guarda
+export const macroIssues = (prefs: DietPrefs, targets: DietTargets): MacroIssue[] => {
+  const d = dayIssue(prefs, targets);
+  return [...(d ? [d] : []), ...mealSplit(prefs, targets).issues];
+};
+
+// ¿Hay algún número puesto a mano (kcal, un macro o el reparto de una comida)? Para «Calorías y macros» del paciente
+export const ownMacros = (prefs: Pick<DietPrefs, 'kcalTarget' | 'proteinTarget' | 'carbsTarget' | 'fatTarget' | 'meals'>) =>
+  !!(prefs.kcalTarget || prefs.proteinTarget || prefs.carbsTarget || prefs.fatTarget || Object.values(prefs.meals ?? {}).some((m) => m && (m.share || m.protein || m.carbs || m.fat)));
+
+// Por debajo de esto el paciente no se pone las kcal él solo (es el suelo del generador al perder peso, 1200 kcal en
+// mujeres y 1500 en hombres; sin sexo, 1200). Más bajo, con un dietista. Fundador, 2026-11-06.
+export const selfKcalFloor = (prefs: Pick<DietPrefs, 'sex'>) => (prefs.sex === 'male' ? 1500 : 1200);
 
 // ¿Ha fijado el dietista algún macro aparte de la proteína (del día o de una comida)? Solo entonces los
 // platos se eligen también por cómo se reparten sus macros
@@ -631,11 +765,52 @@ export function portionFor(recipeId: string, slot: MealSlot, prefs: DietPrefs, l
 export const maxPortionFor = (prefs: Pick<DietPrefs, 'customs'>, kcal: number) =>
   Math.min(4, Math.max(isRamadan(prefs) ? 2.25 : 1.75, Math.ceil((kcal / 2100) * 1.75 * 4) / 4));
 
+// El reparto por comida, limpio: solo las comidas con algo puesto y cada una con lo suyo, siempre en el mismo orden
+const SLOT_ORDER: MealSlot[] = ['breakfast', 'lunch', 'snack', 'dinner'];
+export function cleanMeals(m?: DietPrefs['meals']): DietPrefs['meals'] | undefined {
+  if (!m) return undefined;
+  const out: NonNullable<DietPrefs['meals']> = {};
+  for (const s of SLOT_ORDER) {
+    const v = m[s];
+    if (!v) continue;
+    const one: MealMacroPlan = {};
+    for (const k of ['share', 'protein', 'carbs', 'fat'] as const) if (v[k] && v[k]! > 0) one[k] = v[k];
+    if (Object.keys(one).length) out[s] = one;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+// Los números de un día, limpios: solo los puestos (mayores que 0), siempre en el mismo orden; sin ninguno, nada
+export function cleanDayTargets(d?: DayTargets | null): DayTargets | undefined {
+  if (!d) return undefined;
+  const out: DayTargets = {};
+  for (const k of ['kcal', 'protein', 'carbs', 'fat'] as const) if (d[k] && d[k]! > 0) out[k] = d[k];
+  const meals = cleanMeals(d.meals);
+  if (meals) out.meals = meals;
+  return Object.keys(out).length ? out : undefined;
+}
+
+// Las kcal objetivo de un día del menú: las suyas, las que salen de sus tres macros o las de la semana
+export function dayKcalTarget(plan: Pick<DietPlan, 'prefs' | 'targets'>, day: Pick<DietDay, 'targets'>): number {
+  if (!cleanDayTargets(day.targets)) return plan.targets.kcal;
+  const p = prefsForDay(plan.prefs, day);
+  if (p.kcalTarget) return p.kcalTarget;
+  if (p.proteinTarget && p.carbsTarget && p.fatTarget) return p.proteinTarget * 4 + p.carbsTarget * 4 + p.fatTarget * 9;
+  return plan.targets.kcal;
+}
+
 // Las preferencias con lo que el dietista haya fijado para un día (lo que no, lo de la semana)
 export function prefsForDay(prefs: DietPrefs, day?: Pick<DietDay, 'targets'>): DietPrefs {
   const d = day?.targets;
   if (!d) return prefs;
-  return { ...prefs, kcalTarget: d.kcal || prefs.kcalTarget, proteinTarget: d.protein || prefs.proteinTarget, carbsTarget: d.carbs || prefs.carbsTarget, fatTarget: d.fat || prefs.fatTarget };
+  return {
+    ...prefs,
+    kcalTarget: d.kcal || prefs.kcalTarget,
+    proteinTarget: d.protein || prefs.proteinTarget,
+    carbsTarget: d.carbs || prefs.carbsTarget,
+    fatTarget: d.fat || prefs.fatTarget,
+    meals: d.meals ?? prefs.meals, // el reparto por comida de ese día, si lo tiene
+  };
 }
 
 // Las raciones de un día hechas a sus objetivos, sin cambiar los platos (al cambiar kcal o macros)

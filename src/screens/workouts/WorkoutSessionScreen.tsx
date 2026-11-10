@@ -8,14 +8,15 @@ import { ChoiceChips } from '@/components/ChoiceChips';
 import { Confetti } from '@/components/Confetti';
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { Colors } from '@/constants/colors';
-import { exerciseName, getExercise, isLoadable, kgHead } from '@/data/workouts/catalog';
-import { BLOCK_ORDER, blockLabel, doseText, restText, sessionTitle, setText, setsText } from '@/data/workouts/labels';
+import { exerciseName, getExercise } from '@/data/workouts/catalog';
+import { BLOCK_ORDER, blockLabel, doseText, restText, sessionName, sessionTitle, setText, setsText } from '@/data/workouts/labels';
+import { daysText } from '@/logic/workoutWeek';
 import { programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutExercise, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
 import { workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
 import { defaultDose, estimateMinutes } from '@/logic/workoutGenerator';
-import { addExercises } from '@/logic/customRoutine';
-import { applyDose, plannedSet, setSeconds } from '@/logic/setPlan';
+import { addExercises, fromDraft, isCustomProgram, switchTimed, toDraft, type DraftSet } from '@/logic/customRoutine';
+import { plannedSet, setSeconds } from '@/logic/setPlan';
 import { KeyboardAwareScroll } from '@/components/KeyboardAwareScroll';
 import { WorkoutModal } from '@/components/workouts/WorkoutModal';
 import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
@@ -37,7 +38,7 @@ import {
 } from '@/data/workouts/bell';
 import { isTimedReps, secondsLeft, upcomingEnds } from '@/logic/workoutTimer';
 import { allSteps, checkRow, lastTimes, nextPending, rowHints, setLogs, startRows, summarize, type Change, type LastTime, type SetRow, type Step } from '@/logic/workoutLog';
-import { DoseEditor } from '@/components/workouts/DoseEditor';
+import { RoutineExerciseCard } from '@/components/workouts/RoutineExerciseCard';
 import { UnfinishedWorkout } from '@/components/workouts/UnfinishedWorkout';
 import { type ActiveWorkout, clearActiveWorkout, loadActiveWorkout, saveActiveWorkout } from '@/data/workouts/activeWorkout';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
@@ -114,7 +115,8 @@ export const WorkoutSessionScreen = () => {
   const [unfinished, setUnfinished] = useState<ActiveWorkout | null>(null); // otra sesión a medias
   const [swapAt, setSwapAt] = useState<number | null>(null); // índice en session.exercises
   const [swapAll, setSwapAll] = useState(false); // al cambiar: todos los ejercicios, no solo los del mismo tipo
-  const [editAt, setEditAt] = useState<number | null>(null); // ídem, para cambiar series, reps o tiempo, peso y descanso
+  const [editAt, setEditAt] = useState<number | null>(null); // ídem, para cambiar sus series, una a una, y su descanso
+  const [editDraft, setEditDraft] = useState<{ item: WorkoutExercise; draft: DraftSet[] } | null>(null); // lo que se está cambiando
   const startedAt = useRef<number>(0);
   const endsAt = useRef(0); // cuándo acaba la cuenta atrás en marcha (hora del reloj, en ms)
   const sideRung = useRef(false); // ya sonó el cambio de lado de este ejercicio
@@ -775,7 +777,7 @@ export const WorkoutSessionScreen = () => {
             <Ionicons name="close" size={26} color={Colors.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.hevyTitle} numberOfLines={1}>
-            {sessionTitle(session)}
+            {sessionTitle(session, isCustomProgram(program))}
           </Text>
           <TouchableOpacity onPress={() => switchView('guided')} hitSlop={8} accessibilityLabel={t('Guided mode')}>
             <Ionicons name="videocam-outline" size={23} color={Colors.textPrimary} />
@@ -905,35 +907,58 @@ export const WorkoutSessionScreen = () => {
     await programRepository.save(next).catch(() => undefined);
   };
 
-  const editing = editAt !== null ? session.exercises[editAt] : undefined;
-  const editingEx = editing ? getExercise(editing.exerciseId) : undefined;
-  const saveDose = async (change: Pick<WorkoutExercise, 'sets' | 'reps' | 'restSec' | 'weightKg'>) => {
-    if (editAt === null) return;
+  // Cambiar un ejercicio: el mismo editor que «Editar rutina», serie a serie (cada una con su peso y sus repeticiones o
+  // sus segundos), su descanso y su nota. Antes era una sola dosis para todas (fundador, 2026-11-06: «no considera que
+  // igual tengo varios pesos»). Se guarda al tocar «Guardar»; cancelar o cerrar no cambia nada.
+  const editingEx = editDraft ? getExercise(editDraft.item.exerciseId) : undefined;
+  const openEdit = (idx: number) => {
+    const it = session.exercises[idx];
+    if (!it) return;
+    setEditAt(idx);
+    setEditDraft({ item: it, draft: toDraft(it, num) });
+  };
+  const closeEdit = () => {
+    setEditAt(null);
+    setEditDraft(null);
+  };
+  const saveEdit = async () => {
+    if (editAt === null || !editDraft) return;
+    const changed = fromDraft(editDraft.item, editDraft.draft);
     const next: WorkoutProgram = {
       ...program,
-      sessions: program.sessions.map((s) => (s.id !== session.id ? s : { ...s, exercises: s.exercises.map((it, j) => (j === editAt ? applyDose(it, change) : it)) })),
+      sessions: program.sessions.map((s) => (s.id !== session.id ? s : { ...s, exercises: s.exercises.map((it, j) => (j === editAt ? changed : it)) })),
     };
-    setEditAt(null);
+    closeEdit();
     setProgram(next);
     await programRepository.save(next).catch(() => undefined);
   };
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScreenHeader title={sessionTitle(session)} showBack backFallback="/workouts" />
+      <ScreenHeader title={sessionTitle(session, isCustomProgram(program))} showBack backFallback="/workouts" />
+      {/* Las rutinas del programa con su letra y su nombre (antes solo la letra: fundador, 2026-11-06) */}
       {program.sessions.length > 1 && (
-        <View style={styles.tabs}>
-          {program.sessions.map((s) => (
-            <TouchableOpacity key={s.id} style={[styles.tab, s.id === session.id && styles.tabOn]} onPress={() => setSessionId(s.id)}>
-              <Text style={[styles.tabText, s.id === session.id && styles.tabTextOn]}>{s.id}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll} contentContainerStyle={styles.tabs}>
+          {program.sessions.map((s) => {
+            const on = s.id === session.id;
+            return (
+              <TouchableOpacity key={s.id} style={[styles.tab, on && styles.tabOn]} onPress={() => setSessionId(s.id)} accessibilityState={{ selected: on }}>
+                <View style={[styles.tabLetter, on && styles.tabLetterOn]}>
+                  <Text style={[styles.tabLetterText, on && { color: Colors.background }]}>{s.id}</Text>
+                </View>
+                <Text style={[styles.tabText, on && styles.tabTextOn]} numberOfLines={1}>
+                  {sessionName(s, isCustomProgram(program))}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       )}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {unfinished && <UnfinishedWorkout workout={unfinished} onContinue={continueUnfinished} />}
         <View style={styles.metaRow}>
           <Text style={[styles.meta, { flex: 1 }]}>
-            ~{estimateMinutes(session)} min · {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
+            {daysText(session) ? `${daysText(session)} · ` : ''}~{estimateMinutes(session)} min ·{' '}
+            {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
           </Text>
           {/* Quitar, añadir y ordenar ejercicios: el editor de rutinas, abierto en este día */}
           <TouchableOpacity style={styles.editBtn} onPress={() => router.push({ pathname: '/workout-custom', params: { program: program.id, day: session.id } })}>
@@ -969,7 +994,7 @@ export const WorkoutSessionScreen = () => {
                     ) : null}
                     {it.note ? <Text style={styles.rowNote}>{it.note}</Text> : null}
                   </View>
-                  <TouchableOpacity style={styles.swap} onPress={() => setEditAt(idx)} hitSlop={8} accessibilityLabel={t('Edit {name}', { name: exerciseName(e) })}>
+                  <TouchableOpacity style={styles.swap} onPress={() => openEdit(idx)} hitSlop={8} accessibilityLabel={t('Edit {name}', { name: exerciseName(e) })}>
                     <Ionicons name="pencil" size={16} color={Colors.accent} />
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.swap} onPress={() => setSwapAt(idx)} hitSlop={8} accessibilityLabel={t('Swap {name}', { name: exerciseName(e) })}>
@@ -1030,20 +1055,37 @@ export const WorkoutSessionScreen = () => {
           </>
         )}
       </WorkoutModal>
-      <WorkoutModal visible={editAt !== null} title={editingEx ? exerciseName(editingEx) : ''} onClose={() => setEditAt(null)}>
-        {editing && (
+      <WorkoutModal visible={editAt !== null && !!editDraft} title={editingEx ? t('Edit {name}', { name: exerciseName(editingEx) }) : ''} onClose={closeEdit}>
+        {editDraft && editingEx && (
           <>
             {program.source === 'professional' && (
               <Text style={styles.swapHint}>{t('{name} will see the change.', { name: program.professionalName || t('Your trainer') })}</Text>
             )}
-            <DoseEditor
-              item={editing}
-              perSide={editingEx?.perSide}
-              withWeight={!!editingEx && isLoadable(editingEx)}
-              kgUnit={editingEx ? kgHead(editingEx) : 'kg'}
-              onSave={saveDose}
-              onCancel={() => setEditAt(null)}
+            <RoutineExerciseCard
+              item={editDraft.item}
+              ex={editingEx}
+              draft={editDraft.draft}
+              first
+              last
+              onOpen={() => undefined}
+              onChange={(patch) => setEditDraft((d) => (d ? { ...d, item: { ...d.item, ...patch } } : d))}
+              onDraft={(draft) => setEditDraft((d) => (d ? { ...d, draft } : d))}
+              onToggleTimed={() =>
+                setEditDraft((d) => {
+                  if (!d) return d;
+                  const next = switchTimed(d.item, d.draft, !isTimedReps(d.item.reps));
+                  return { item: next.item, draft: next.draft };
+                })
+              }
             />
+            <View style={styles.editButtons}>
+              <TouchableOpacity style={styles.editCancel} onPress={closeEdit}>
+                <Text style={styles.editCancelText}>{t('Cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.primary, { flex: 1 }]} onPress={saveEdit}>
+                <Text style={styles.primaryText}>{t('Save')}</Text>
+              </TouchableOpacity>
+            </View>
           </>
         )}
       </WorkoutModal>
@@ -1055,6 +1097,9 @@ export const WorkoutSessionScreen = () => {
 const styles = StyleSheet.create({
   swap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
   swapHint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 10 },
+  editButtons: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  editCancel: { flex: 1, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 13 },
+  editCancelText: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
   safeArea: { flex: 1, backgroundColor: Colors.background },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
   muted: { color: Colors.textSecondary, fontSize: 13, marginHorizontal: 0 },
@@ -1071,10 +1116,26 @@ const styles = StyleSheet.create({
   rowDose: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
   rowLast: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
   rowNote: { color: Colors.accent, fontSize: 12, marginTop: 2, fontStyle: 'italic' },
-  tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 8 },
-  tab: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card },
+  // Sin encoger: con una lista larga debajo, la tira se aplastaba y cortaba las pestañas por arriba (fundador, 2026-11-06)
+  tabsScroll: { flexGrow: 0, flexShrink: 0, marginBottom: 8 },
+  tabs: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 2 },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    paddingLeft: 4,
+    paddingRight: 12,
+    backgroundColor: Colors.card,
+  },
   tabOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  tabText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '800' },
+  tabLetter: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
+  tabLetterOn: { backgroundColor: Colors.accent },
+  tabLetterText: { color: Colors.accent, fontSize: 12, fontWeight: '800' },
+  tabText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700', maxWidth: 150 },
   tabTextOn: { color: Colors.textPrimary },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14 },
   primaryText: { color: Colors.background, fontSize: 16, fontWeight: '800' },

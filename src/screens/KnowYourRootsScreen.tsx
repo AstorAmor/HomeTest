@@ -658,6 +658,27 @@ export const KnowYourRootsScreen = () => {
               </View>
             )}
 
+            {/* Para cualquier resultado (fundador, 2026-11-09): de cara a tener hijos, el test de portadores */}
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <MaterialCommunityIcons name="baby-carriage" size={18} color={Colors.accent} />
+                <Text style={styles.cardTitle}>{tr('If you are thinking about having children')}</Text>
+              </View>
+              <Text style={styles.levelBody}>
+                {tr(
+                  'A carrier test is highly recommended: it shows whether you and your partner carry hereditary conditions that give you no symptoms but could pass to your children. A genetic counsellor explains it and helps you decide.',
+                )}
+              </Text>
+              <TouchableOpacity style={styles.primaryButton} onPress={() => router.push({ pathname: '/professionals', params: { role: 'geneticist' } })}>
+                <Ionicons name="chatbubbles-outline" size={18} color={Colors.background} />
+                <Text style={styles.primaryButtonText}>{tr('Talk to a genetic counsellor')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push({ pathname: '/store', params: { view: 'tests', category: 'genetic', open: 'gen_carrier' } })}>
+                <MaterialCommunityIcons name="dna" size={18} color={Colors.accent} />
+                <Text style={styles.secondaryButtonText}>{tr('See the carrier test')}</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity style={styles.howRow} onPress={() => setShowScores((v) => !v)} activeOpacity={0.85}>
               <Text style={styles.howText}>{tr('How we got this')}</Text>
               <InfoButton topic="family_history" />

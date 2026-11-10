@@ -11,7 +11,7 @@ vi.mock('@react-native-async-storage/async-storage', () => ({
 let userId: string | null = 'user-1';
 vi.mock('@/lib/supabase', () => ({ getCurrentUserId: () => userId }));
 
-import { byMonth, setsByExercise, workoutHistory, type LoggedWorkout } from '@/logic/workoutHistory';
+import { byMonth, historyRemoval, setsByExercise, workoutHistory, type LoggedWorkout } from '@/logic/workoutHistory';
 import { clearActiveWorkout, isFreshWorkout, loadActiveWorkout, saveActiveWorkout, type ActiveWorkout } from '@/data/workouts/activeWorkout';
 import type { WorkoutProgram } from '@/data/workouts/types';
 
@@ -114,5 +114,35 @@ describe('Entreno a medias en el móvil', () => {
     const now = Date.parse('2026-10-26T20:00:00Z');
     expect(isFreshWorkout({ updatedAt: now - 2 * 3600e3 }, now)).toBe(true);
     expect(isFreshWorkout({ updatedAt: now - 7 * 3600e3 }, now)).toBe(false);
+  });
+});
+
+describe('Borrar un entreno del historial (fundador, 2026-11-06)', () => {
+  const at = '2026-10-26T17:05:12.345Z';
+  const programs = [
+    program('p1', [
+      { sessionId: 'A', at: '2026-10-20T18:00:00.000Z', minutes: 50 },
+      { sessionId: 'A', at, minutes: 52 },
+    ]),
+  ];
+  const plan = [logged('2026-10-26T17:05:12.345+00:00'), logged('2026-10-26T19:00:00.000Z', 'cardio')];
+
+  it('una sesión de un programa: sale de sus completions y se borra el entreno del plan guardado con ella', () => {
+    const e = workoutHistory(programs, plan).find((x) => x.kind === 'session' && x.at === at)!;
+    const r = historyRemoval(e, programs, plan);
+    expect(r.program?.completions.map((c) => c.at)).toEqual(['2026-10-20T18:00:00.000Z']);
+    expect(r.loggedIds).toEqual(['w-2026-10-26T17:05:12.345+00:00']);
+  });
+
+  it('si la lista cambió, busca la sesión por su hora; si ya no está, no toca el programa', () => {
+    const e = workoutHistory(programs, plan).find((x) => x.kind === 'session' && x.at === at)!;
+    const moved = [program('p1', [{ sessionId: 'A', at, minutes: 52 }])];
+    expect(historyRemoval(e, moved, []).program?.completions).toEqual([]);
+    expect(historyRemoval(e, [program('p1', [])], []).program).toBeNull();
+  });
+
+  it('un entreno apuntado: solo su fila', () => {
+    const e = workoutHistory(programs, plan).find((x) => x.kind === 'logged')!;
+    expect(historyRemoval(e, programs, plan)).toEqual({ program: null, loggedIds: ['w-2026-10-26T19:00:00.000Z'] });
   });
 });

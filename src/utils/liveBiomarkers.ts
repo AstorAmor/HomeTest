@@ -17,6 +17,14 @@ function sortedAsc<T extends { fecha: string }>(entries: T[]): T[] {
 // como demo para no dejar la pantalla vacía (en una cuenta real, no: sale vacío, "—").
 const unmeasured = (mock: Biomarker): Biomarker => ({ ...mock, valor: '—', status: 'none', statusLabel: 'Tap to log', history: [] });
 
+// Un dato propio: sin juicio (el color del ejemplo no vale para tus datos), con su fecha y de dónde sale
+const own = (latest: { id: string; fecha: string }) => ({
+  status: 'none' as const,
+  statusLabel: 'Latest reading',
+  fecha: latest.fecha,
+  fromLab: latest.id.startsWith('lab:'),
+});
+
 export const initialBiomarkers = (): Biomarker[] => (showSamples() ? mockBiomarkers : mockBiomarkers.map(unmeasured));
 
 export async function getLiveBiomarkers(): Promise<Biomarker[]> {
@@ -40,7 +48,7 @@ export async function getLiveBiomarkers(): Promise<Biomarker[]> {
         ...mock,
         valor: String(latest.valor),
         history: asc.slice(-6).map((e) => e.valor),
-        statusLabel: 'Latest reading',
+        ...own(latest),
       };
     }
 
@@ -51,7 +59,7 @@ export async function getLiveBiomarkers(): Promise<Biomarker[]> {
         ...mock,
         valor: `${latest.systolic}/${latest.diastolic}`,
         history: asc.slice(-6).map((e) => e.systolic),
-        statusLabel: 'Latest reading',
+        ...own(latest),
       };
     }
 
@@ -62,7 +70,7 @@ export async function getLiveBiomarkers(): Promise<Biomarker[]> {
         ...mock,
         valor: String(latest.valor),
         history: asc.slice(-6).map((e) => e.valor),
-        statusLabel: 'Latest reading',
+        ...own(latest),
       };
     }
 
@@ -73,7 +81,7 @@ export async function getLiveBiomarkers(): Promise<Biomarker[]> {
         ...mock,
         valor: String(latest.valor),
         history: asc.slice(-6).map((e) => e.valor),
-        statusLabel: 'Latest reading',
+        ...own(latest),
       };
     }
 

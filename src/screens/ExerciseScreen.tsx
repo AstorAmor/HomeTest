@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,6 +7,7 @@ import Svg, { Defs, RadialGradient, Stop, Circle } from 'react-native-svg';
 import { Colors, OnDark } from '@/constants/colors';
 import { EXERCISES } from '@/data/exercises';
 import { mindfulRepository } from '@/data/planRepository';
+import { logKegelSession } from '@/data/kegelRepository';
 import { Confetti } from '@/components/Confetti';
 import { t } from '@/i18n';
 
@@ -46,7 +47,9 @@ export const ExerciseScreen = () => {
   const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [done, setDone] = useState(false);
-  const scale = useRef(new Animated.Value(MIN_SCALE)).current;
+  // Si lo primero es apretar (Kegel), el círculo empieza grande para que se vea encogerse
+  const scale = useRef(new Animated.Value(exercise.steps?.[0]?.to === 'out' ? 1 : MIN_SCALE)).current;
+  const howTo = !started && exercise.howTo?.length ? exercise.howTo : null;
   const lastPhaseKey = useRef('');
 
   // Fase actual según el tiempo transcurrido
@@ -63,18 +66,28 @@ export const ExerciseScreen = () => {
     let t = elapsed;
     const steps = exercise.steps ?? [];
     for (let i = 0; i < steps.length; i++) {
-      if (t < steps[i].seconds) return { key: `step-${i}`, label: steps[i].text, left: steps[i].seconds - t, to: 'guided' as const, seconds: steps[i].seconds, step: i };
+      const st = steps[i];
+      if (t < st.seconds) return { key: `step-${i}`, label: st.text, left: st.seconds - t, to: st.to ?? ('guided' as const), seconds: st.seconds, move: st.move, rep: st.rep, step: i };
       t -= steps[i].seconds;
     }
     return { key: 'end', label: '', left: 0, to: 'hold' as const, seconds: 0 };
   }, [elapsed, exercise]);
 
-  // Reloj (1 s)
+  // Reloj: los segundos salen de la hora real, no de contar avisos de 1 s. Si el móvil los retrasa o los
+  // junta (segundo plano, pestaña oculta, un hilo ocupado), la cuenta no se adelanta ni se queda atrás:
+  // siempre es lo que ha pasado de verdad desde que empezaste, sin contar las pausas (fundador,
+  // 2026-11-05: «que no corra a un ritmo imposible»).
+  const elapsedRef = useRef(0);
+  useEffect(() => {
+    elapsedRef.current = elapsed;
+  }, [elapsed]);
   useEffect(() => {
     if (!started || paused || done) return;
-    const t = setInterval(() => setElapsed((e) => e + 1), 1000);
+    const t0 = Date.now() - elapsedRef.current * 1000; // al reanudar, sigue donde se quedó
+    const tick = () => setElapsed(Math.min(total, Math.floor((Date.now() - t0) / 1000)));
+    const t = setInterval(tick, 250);
     return () => clearInterval(t);
-  }, [started, paused, done]);
+  }, [started, paused, done, total]);
 
   useEffect(() => {
     if (started && elapsed >= total && !done) {
@@ -85,6 +98,8 @@ export const ExerciseScreen = () => {
           .save({ id: `mindful-${Date.now()}`, fecha: now, createdAt: now, exerciseId: exercise.id, minutes: exercise.minutes })
           .catch(() => undefined);
       }
+      // El Kegel guarda cuándo lo hiciste, para su histórico en la pantalla del ciclo
+      if (exercise.id === 'kegel') logKegelSession(exercise.minutes).catch(() => undefined);
     }
   }, [elapsed, total, started, done, exercise]);
 
@@ -93,27 +108,34 @@ export const ExerciseScreen = () => {
     if (!started || paused || done || phase.key === lastPhaseKey.current) return;
     lastPhaseKey.current = phase.key;
     if (phase.to === 'in' || phase.to === 'out') {
+      // Un paso de Kegel se mueve en `move` segundos y luego aguanta
       Animated.timing(scale, {
         toValue: phase.to === 'in' ? 1 : MIN_SCALE,
-        duration: phase.seconds * 1000,
+        duration: Math.min(phase.seconds, ('move' in phase && phase.move) || phase.seconds) * 1000,
         easing: Easing.inOut(Easing.sin),
         useNativeDriver: useNative,
       }).start();
     }
   }, [phase, started, paused, done, scale]);
 
-  // Ejercicios guiados: el círculo respira despacio de fondo (4 s dentro, 6 s fuera)
+  // Ejercicios guiados: el círculo respira despacio de fondo (4 s dentro, 6 s fuera), salvo en los pasos
+  // que lo mueven. Cada vuelta sigue desde donde está (resetBeforeIteration: false): si no, al acabar de
+  // encogerse volvía de golpe al tamaño con el que empezó (fundador, 2026-11-05: «pega un salto»).
+  const free = exercise.type === 'guided' && phase.to === 'guided';
   useEffect(() => {
-    if (exercise.type !== 'guided' || !started || paused || done) return;
+    if (!free || !started || paused || done) return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(scale, { toValue: 0.95, duration: 4000, easing: Easing.inOut(Easing.sin), useNativeDriver: useNative }),
         Animated.timing(scale, { toValue: 0.62, duration: 6000, easing: Easing.inOut(Easing.sin), useNativeDriver: useNative }),
-      ])
+      ]),
+      { resetBeforeIteration: false }
     );
     loop.start();
     return () => loop.stop();
-  }, [exercise.type, started, paused, done, scale]);
+  }, [free, started, paused, done, scale]);
+  const driven = !free; // respiración o un paso que mueve el círculo: el texto va dentro
+  const rep = 'rep' in phase ? phase.rep : undefined;
 
   if (done) {
     return (
@@ -144,35 +166,59 @@ export const ExerciseScreen = () => {
         <Text style={styles.timer}>{started ? fmt(total - elapsed) : fmt(total)}</Text>
       </View>
 
+      {howTo ? (
+        // Antes de empezar, cómo se hace (fundador, 2026-11-05): se lee y luego «Ir al ejercicio»
+        <ScrollView style={styles.howToScroll} contentContainerStyle={styles.howTo} showsVerticalScrollIndicator={false}>
+          <Text style={styles.intro}>{t(exercise.intro)}</Text>
+          <Text style={[styles.howToTitle, { color: exercise.color }]}>{t('How to do it')}</Text>
+          {howTo.map((line, i) => (
+            <View key={i} style={styles.howToRow}>
+              <View style={[styles.howToNum, { backgroundColor: `${exercise.color}30` }]}>
+                <Text style={[styles.howToNumText, { color: exercise.color }]}>{i + 1}</Text>
+              </View>
+              <Text style={styles.howToText}>{t(line)}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      ) : (
       <View style={styles.stage}>
         <Animated.View style={{ transform: [{ scale }] }}>
           <SoftCircle color={exercise.color} />
         </Animated.View>
-        {started && exercise.type === 'breath' && (
+        {/* Dentro del círculo, lo que toca y los segundos que le quedan a ese paso (fundador, 2026-11-05).
+            En los pasos de texto largo, solo los segundos: el texto va debajo. */}
+        {started && phase.left > 0 && (
           <View style={styles.overlay} pointerEvents="none">
-            <Text style={styles.phaseLabel}>{paused ? t('Paused') : t(phase.label)}</Text>
-            {!paused && <Text style={styles.phaseCount}>{phase.left}</Text>}
+            {driven && <Text style={styles.phaseLabel}>{paused ? t('Paused') : t(phase.label)}</Text>}
+            {!paused && <Text style={driven ? styles.phaseCount : styles.stepCount}>{phase.left}</Text>}
           </View>
         )}
       </View>
+      )}
 
       <View style={styles.bottom}>
-        {!started ? (
+        {howTo ? null : !started ? (
           <Text style={styles.intro}>{t(exercise.intro)}</Text>
-        ) : exercise.type === 'guided' ? (
+        ) : !driven ? (
           <Text style={styles.guided}>{paused ? t('Paused') : t(phase.label)}</Text>
+        ) : rep ? (
+          <Text style={styles.guided}>{t('Squeeze {n} of {total}', { n: rep[0], total: rep[1] })}</Text>
         ) : (
           <Text style={styles.hint}>{t('Follow the circle: it grows as you breathe in and shrinks as you breathe out.')}</Text>
         )}
 
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.min(1, elapsed / total) * 100}%`, backgroundColor: exercise.color }]} />
-        </View>
+        {!howTo && (
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${Math.min(1, elapsed / total) * 100}%`, backgroundColor: exercise.color }]} />
+          </View>
+        )}
 
         {!started ? (
           <TouchableOpacity style={[styles.cta, { backgroundColor: exercise.color }]} onPress={() => setStarted(true)}>
-            <Ionicons name="play" size={18} color={Colors.background} />
-            <Text style={styles.ctaText}>{t('Start · {n} min', { n: exercise.minutes })}</Text>
+            <Ionicons name={howTo ? 'arrow-forward' : 'play'} size={18} color={Colors.background} />
+            <Text style={styles.ctaText}>
+              {howTo ? t('Go to the exercise · {n} min', { n: exercise.minutes }) : t('Start · {n} min', { n: exercise.minutes })}
+            </Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.controls}>
@@ -196,11 +242,19 @@ const styles = StyleSheet.create({
   topTitle: { color: OnDark.text, fontSize: 17, fontWeight: '700', flexShrink: 1, textAlign: 'center', marginHorizontal: 12 },
   timer: { color: OnDark.textSecondary, fontSize: 15, fontVariant: ['tabular-nums'], width: 44, textAlign: 'right' },
   stage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  overlay: { position: 'absolute', alignItems: 'center' },
-  phaseLabel: { color: OnDark.text, fontSize: 24, fontWeight: '700' },
+  overlay: { position: 'absolute', alignItems: 'center', maxWidth: SIZE - 60 },
+  phaseLabel: { color: OnDark.text, fontSize: 24, fontWeight: '700', textAlign: 'center' },
+  stepCount: { color: OnDark.text, fontSize: 34, fontWeight: '700', opacity: 0.9, fontVariant: ['tabular-nums'] },
   phaseCount: { color: OnDark.text, fontSize: 18, opacity: 0.8, marginTop: 4 },
   bottom: { paddingHorizontal: 24, paddingBottom: 16, gap: 18 },
   intro: { color: OnDark.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  howToScroll: { flex: 1 },
+  howTo: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16, gap: 14, flexGrow: 1, justifyContent: 'center' },
+  howToTitle: { fontSize: 13, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 },
+  howToRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  howToNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  howToNumText: { fontSize: 13, fontWeight: '800' },
+  howToText: { flex: 1, color: OnDark.text, fontSize: 16, lineHeight: 23 },
   guided: { color: OnDark.text, fontSize: 19, lineHeight: 27, textAlign: 'center', fontWeight: '600', minHeight: 60 },
   hint: { color: OnDark.textSecondary, fontSize: 13, textAlign: 'center' },
   progressTrack: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' },

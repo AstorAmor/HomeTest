@@ -10,6 +10,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { useSections } from '@/data/appPrefs';
+import { useFeature } from '@/data/access';
 import { t } from '@/i18n';
 
 
@@ -39,6 +41,29 @@ const menuItems: MenuItem[] = [
     subtitle: 'Your plan, renewal and next test',
     iconFamily: 'ionicons',
     icon: 'card-outline',
+  },
+  // Entrenamientos (plan y registro) y plan de comidas: van con «Plan personalizado» (fundador, 2026-11-05)
+  {
+    id: 'workouts',
+    title: 'Workouts',
+    subtitle: 'Your training plan and the log of what you do',
+    iconFamily: 'ionicons',
+    icon: 'barbell-outline',
+  },
+  {
+    id: 'diet',
+    title: 'Meal plan',
+    subtitle: 'Your weekly menu, made from your data',
+    iconFamily: 'ionicons',
+    icon: 'restaurant-outline',
+  },
+  // Tarjeta de emergencia: lo que elijas del historial de Mis datos, con su QR
+  {
+    id: 'emergency',
+    title: 'My emergency card',
+    subtitle: 'What whoever helps you should know in an emergency, with a QR code',
+    iconFamily: 'ionicons',
+    icon: 'qr-code-outline',
   },
   // Lo que ves en la app (también en Ajustes): el tutorial lo señala aquí
   {
@@ -82,6 +107,14 @@ const menuItems: MenuItem[] = [
     subtitle: '118 biomarkers, canonical knowledge base (dev)',
     iconFamily: 'ionicons',
     icon: 'library-outline',
+  },
+  // Las notificaciones se ajustan aquí (ya no hay aviso en Hoy); también siguen en Settings
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    subtitle: 'What we send you, and mute anything you do not want',
+    iconFamily: 'ionicons',
+    icon: 'notifications-outline',
   },
   {
     id: 'settings',
@@ -142,10 +175,21 @@ export const MoreScreen = () => {
   // Los de administración y soporte van justo antes de Settings
   const settingsAt = menuItems.findIndex((m) => m.id === 'settings');
   const extra = [...(isAdmin ? ADMIN_ITEMS : []), ...(isSupportAgent ? SUPPORT_ITEMS : [])];
-  const items = [...menuItems.slice(0, settingsAt), ...extra, ...menuItems.slice(settingsAt)];
+  const show = useSections();
+  // En modo gratis, Entrenamientos y Plan de comidas llevan candado (se abren con suscripción o código)
+  const workoutsOk = useFeature('workouts');
+  const dietOk = useFeature('diet_menu'); // DIET_FEATURE (sin cargar el catálogo de recetas aquí)
+  const locked = (id: string) => (id === 'workouts' && workoutsOk === false) || (id === 'diet' && dietOk === false);
+  const items = [...menuItems.slice(0, settingsAt), ...extra, ...menuItems.slice(settingsAt)].filter(
+    (m) => !['workouts', 'diet'].includes(m.id) || show('plan'),
+  );
 
   const handlePress = (id: string) => {
     if (id === 'settings') return router.push('/settings');
+    if (id === 'emergency') return router.push('/emergency-card' as any);
+    if (id === 'workouts') return router.push('/workouts');
+    if (id === 'diet') return router.push('/diet');
+    if (id === 'notifications') return router.push('/notifications');
     if (id === 'experience') return router.push('/app-sections');
     if (id === 'profile') return router.push('/profile');
     if (id === 'subscription') return router.push('/subscription');
@@ -188,7 +232,11 @@ export const MoreScreen = () => {
                 <Text style={styles.itemTitle}>{t(item.title)}</Text>
                 <Text style={styles.itemSubtitle}>{t(item.subtitle)}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+              {locked(item.id) ? (
+                <Ionicons name="lock-closed-outline" size={19} color={Colors.gold} accessibilityLabel={t('Comes with a subscription')} />
+              ) : (
+                <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+              )}
             </TouchableOpacity>
             </TourTarget>
           ))}

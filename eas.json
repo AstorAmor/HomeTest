@@ -30,6 +30,16 @@
       "ios": {
         "simulator": true
       }
+    },
+    "pruebas": {
+      "extends": "preview",
+      "channel": "pruebas",
+      "environment": "preview"
+    },
+    "pruebas-ios": {
+      "extends": "testflight",
+      "channel": "pruebas",
+      "environment": "preview"
     }
   },
   "submit": {

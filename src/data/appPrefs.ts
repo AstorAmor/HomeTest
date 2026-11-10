@@ -24,7 +24,8 @@ export type AppSection =
   | 'medication'
   | 'badges'
   | 'specialists'
-  | 'learning';
+  | 'learning'
+  | 'history';
 
 export interface AppPrefs {
   purposes: AppPurpose[]; // vacío = sin responder (se ve todo)
@@ -62,7 +63,7 @@ export const PURPOSE_OPTIONS: { id: AppPurpose; title: string; subtitle: string;
 ];
 
 export const SECTION_OPTIONS: { id: AppSection; title: string; subtitle: string; icon: string }[] = [
-  { id: 'plan', title: 'Personalised plan', subtitle: 'Actions, targets and where your markers could go', icon: 'list-outline' },
+  { id: 'plan', title: 'Personalised plan', subtitle: 'Your goals and targets, workouts, meal plan and your specialist’s plan', icon: 'list-outline' },
   { id: 'checkin', title: 'Daily check-in', subtitle: 'How you feel: mood, energy and diary', icon: 'happy-outline' },
   { id: 'readiness', title: 'Daily readiness', subtitle: 'A daily score from your sleep and activity', icon: 'speedometer-outline' },
   { id: 'wearables', title: 'Wearable data', subtitle: 'Heart rate, HRV, sleep, steps, temperature', icon: 'watch-outline' },
@@ -73,6 +74,7 @@ export const SECTION_OPTIONS: { id: AppSection; title: string; subtitle: string;
   { id: 'badges', title: 'Badges', subtitle: 'Achievements and streaks', icon: 'ribbon-outline' },
   { id: 'specialists', title: 'Specialist suggestions', subtitle: '"Talk to a specialist" on Today', icon: 'people-outline' },
   { id: 'learning', title: 'Learning', subtitle: 'Short reads about your health', icon: 'book-outline' },
+  { id: 'history', title: 'Your history', subtitle: 'Allergies, blood group, vaccines and medical history, in My data', icon: 'document-text-outline' },
 ];
 
 // Qué se oculta de entrada según la respuesta. Con varias respuestas se oculta solo lo que

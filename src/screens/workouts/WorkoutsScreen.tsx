@@ -11,7 +11,9 @@ import { getExercise } from '@/data/workouts/catalog';
 import { programFacts, sessionName, sessionTitle } from '@/data/workouts/labels';
 import { isSampleProgram, programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutProgram } from '@/data/workouts/types';
-import { estimateMinutes, nextSessionId, progressionText } from '@/logic/workoutGenerator';
+import { estimateMinutes, progressionText } from '@/logic/workoutGenerator';
+import { isCustomProgram } from '@/logic/customRoutine';
+import { daysText, nextUp, sessionsPerWeek, whenText } from '@/logic/workoutWeek';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
 import { UnfinishedWorkout } from '@/components/workouts/UnfinishedWorkout';
 import { type ActiveWorkout, clearActiveWorkout, loadActiveWorkout } from '@/data/workouts/activeWorkout';
@@ -31,8 +33,10 @@ export const sourceText = (p: WorkoutProgram) =>
 
 const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => void; onDelete: () => void }) => {
   const router = useRouter();
-  const next = nextSessionId(p);
-  const nextSession = p.sessions.find((s) => s.id === next);
+  // Lo que toca: con días de la semana, la rutina de hoy (o la del siguiente día con rutina); sin días, la siguiente
+  const up = nextUp(p);
+  const nextSession = p.sessions.find((s) => s.id === up?.id);
+  const own = isCustomProgram(p);
   const firstMain = nextSession?.exercises.find((e) => e.block === 'main');
   const hero = firstMain ? getExercise(firstMain.exerciseId) : undefined;
   const [showHow, setShowHow] = useState(false);
@@ -53,6 +57,21 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
             {[p.active ? sourceText(p) : null, ...programFacts(p)].filter(Boolean).join(' · ')}
           </Text>
         </View>
+        {/* Cambiar y borrar, arriba y dentro de la tarjeta (fundador, 2026-11-06: abajo, la papelera se salía del recuadro en
+            un móvil estrecho). Cualquier programa se puede cambiar: el editor de entrenamientos */}
+        <View style={styles.tools}>
+          <TouchableOpacity
+            style={styles.tool}
+            onPress={() => router.push({ pathname: '/workout-custom', params: { program: p.id } })}
+            hitSlop={6}
+            accessibilityLabel={t('Edit')}
+          >
+            <Ionicons name="pencil" size={16} color={Colors.accent} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tool} onPress={onDelete} hitSlop={6} accessibilityLabel={t('Delete')}>
+            <Ionicons name="trash-outline" size={17} color={Colors.textMuted} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {p.note ? (
@@ -70,8 +89,8 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
         >
           {hero && <ExerciseLoop exercise={hero} size={64} radius={12} />}
           <View style={{ flex: 1 }}>
-            <Text style={styles.nextLabel}>{t('Next session')}</Text>
-            <Text style={styles.nextTitle}>{sessionTitle(nextSession)}</Text>
+            <Text style={styles.nextLabel}>{whenText(up?.inDays ?? null)}</Text>
+            <Text style={styles.nextTitle}>{sessionTitle(nextSession, own)}</Text>
             <Text style={styles.sub}>
               {tn(nextSession.exercises.filter((e) => e.block !== 'warmup' && e.block !== 'cooldown').length, '{n} exercise', '{n} exercises')} · ~{estimateMinutes(nextSession)} min
             </Text>
@@ -91,11 +110,12 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
       {p.active && (
         <>
           <Text style={styles.week}>
-            {t('This week: {done} of {total} sessions', { done: Math.min(doneThisWeek(p), p.sessions.length), total: p.sessions.length })}
+            {t('This week: {done} of {total} sessions', { done: Math.min(doneThisWeek(p), sessionsPerWeek(p)), total: sessionsPerWeek(p) })}
           </Text>
           <View style={styles.sessions}>
             {p.sessions.map((s) => {
               const last = [...p.completions].filter((c) => c.sessionId === s.id).sort((a, b) => b.at.localeCompare(a.at))[0];
+              const when = daysText(s);
               return (
                 <TouchableOpacity
                   key={s.id}
@@ -106,9 +126,9 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
                     <Text style={styles.letterText}>{s.id}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.sessionTitle}>{sessionName(s)}</Text>
+                    <Text style={styles.sessionTitle}>{sessionName(s, own)}</Text>
                     <Text style={styles.sessionSub}>
-                      ~{estimateMinutes(s)} min{last ? ` · ${t('last done {date}', { date: dayMonth(last.at) })}` : ''}
+                      {when ? `${when} · ` : ''}~{estimateMinutes(s)} min{last ? ` · ${t('last done {date}', { date: dayMonth(last.at) })}` : ''}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
@@ -125,27 +145,18 @@ const ProgramCard = ({ p, onUse, onDelete }: { p: WorkoutProgram; onUse?: () => 
         </>
       )}
 
-      <View style={styles.actions}>
-        {!p.active && onUse && (
-          <TouchableOpacity style={styles.use} onPress={onUse}>
-            <Text style={styles.useText}>{t('Follow this programme')}</Text>
-          </TouchableOpacity>
-        )}
-        {!p.active && (
+      {!p.active && (
+        <View style={styles.actions}>
+          {onUse && (
+            <TouchableOpacity style={styles.use} onPress={onUse}>
+              <Text style={styles.useText}>{t('Follow this programme')}</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.ghost} onPress={() => router.push({ pathname: '/workout-session', params: { program: p.id, session: p.sessions[0]?.id ?? 'A' } })}>
             <Text style={styles.ghostText}>{t('See sessions')}</Text>
           </TouchableOpacity>
-        )}
-        <View style={{ flex: 1 }} />
-        {/* Cualquier programa se puede cambiar: quitar, añadir y ordenar ejercicios (el editor de rutinas) */}
-        <TouchableOpacity style={styles.edit} onPress={() => router.push({ pathname: '/workout-custom', params: { program: p.id } })} hitSlop={8}>
-          <Ionicons name="pencil" size={14} color={Colors.accent} />
-          <Text style={styles.editText}>{t('Edit')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onDelete} hitSlop={8} accessibilityLabel={t('Delete')}>
-          <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
-      </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -236,7 +247,7 @@ export const WorkoutsScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/workout-custom')}>
             <Ionicons name="list-outline" size={18} color={Colors.accent} />
-            <Text style={styles.secondaryText}>{t('Create my own routine')}</Text>
+            <Text style={styles.secondaryText}>{t('Create my own workout')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/log-workout')}>
             <Ionicons name="add-circle-outline" size={18} color={Colors.accent} />
@@ -254,6 +265,16 @@ export const WorkoutsScreen = () => {
           <View style={{ flex: 1 }}>
             <Text style={styles.libraryTitle}>{t('History')}</Text>
             <Text style={styles.sub}>{t('What you trained, session by session')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
+
+        {/* Plan e historial en PDF o texto, para el entrenador o una IA (fundador, 2026-11-09) */}
+        <TouchableOpacity style={[styles.library, { marginTop: 10 }]} onPress={() => router.push('/workout-export')}>
+          <Ionicons name="share-outline" size={20} color={Colors.accent} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.libraryTitle}>{t('Export')}</Text>
+            <Text style={styles.sub}>{t('Your plan and history, for your trainer or an AI')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
@@ -304,13 +325,13 @@ const styles = StyleSheet.create({
   howRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   howTitle: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
   howText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  tools: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start', marginRight: -6, marginTop: -4 },
+  tool: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10 },
   use: { backgroundColor: Colors.accent, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8 },
   useText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
   ghost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8 },
   ghostText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  edit: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 4 },
-  editText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
   buttons: { marginHorizontal: 20, gap: 10, marginBottom: 16 },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13 },
   primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },

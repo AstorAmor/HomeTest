@@ -212,7 +212,7 @@ describe('patrones de frecuencia', () => {
     }
     const r = analyseGut(ctx(digestion, {}, bowel));
     const p = r.patterns.find((x) => x.id === 'freq_ibs')!;
-    expect(p.suggestion?.storeIds).toEqual(['coeliac', 'consult_digestive']);
+    expect(p.suggestion?.storeIds).toEqual(['coeliac']);
     expect(p.body).toMatch(/loose side/);
   });
 });

@@ -23,11 +23,17 @@ interface Props {
 }
 
 // Ficha de un test, la misma en la tienda y en el cuestionario "¿Qué analítica pido?":
-// qué es, para qué puede servir, qué incluye, cada cuánto repetirlo, muestra y plazo.
+// qué es, para qué puede servir, qué incluye, qué tener en cuenta, muestra y plazo. Las genéticas
+// (`counselling`) llevan el aviso de la consulta de asesoramiento genético y no se piden desde aquí.
+// Sin precio decidido, «Precio por confirmar» (ver src/data/testCatalog.ts).
 export const TestCard = ({ test, open: openProp, onToggle, featured, onOrder, isPaid, isCurrent, hasPlan, selected, onSelect, reasons }: Props) => {
   const router = useRouter();
   const open = openProp || !!featured;
   const selectable = !!onSelect;
+  const priced = test.price != null;
+  const withPrice = (label: string) => (priced ? `${label} · ${formatPrice(test.price!)}` : label);
+  // Lo que se mide en la extracción del seguimiento solo se puede pedir con la suscripción
+  const needsPlan = !!test.withFollowUp && !hasPlan;
 
   return (
     <TouchableOpacity
@@ -44,6 +50,12 @@ export const TestCard = ({ test, open: openProp, onToggle, featured, onOrder, is
           <Text style={styles.desc} numberOfLines={open ? undefined : 2}>
             {test.description}
           </Text>
+          {test.counselling && (
+            <View style={styles.reasons}>
+              <Ionicons name="people-outline" size={12} color={Colors.accent} />
+              <Text style={styles.reasonsText}>{t('With genetic counselling')}</Text>
+            </View>
+          )}
           {!!reasons?.length && (
             <View style={styles.reasons}>
               <Ionicons name="sparkles-outline" size={12} color={Colors.accent} />
@@ -57,8 +69,12 @@ export const TestCard = ({ test, open: openProp, onToggle, featured, onOrder, is
           )}
         </View>
         <View style={styles.priceBox}>
-          <Text style={styles.price}>{formatPrice(test.price)}</Text>
-          {test.perYear && <Text style={styles.priceUnit}>{t('/year')}</Text>}
+          {priced ? (
+            <Text style={styles.price}>{formatPrice(test.price!)}</Text>
+          ) : (
+            <Text style={styles.priceTbd}>{t('Price to be confirmed')}</Text>
+          )}
+          {test.perYear && priced && <Text style={styles.priceUnit}>{t('/year')}</Text>}
           {selectable && (
             <TouchableOpacity
               onPress={onSelect}
@@ -76,17 +92,30 @@ export const TestCard = ({ test, open: openProp, onToggle, featured, onOrder, is
 
       {open && (
         <View style={styles.details}>
+          {test.counselling && (
+            <View style={styles.counsel}>
+              <Ionicons name="people-outline" size={18} color={Colors.accent} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.counselTitle}>{t('A genetic counselling consultation is needed')}</Text>
+                <Text style={styles.counselText}>
+                  {t(
+                    'Before the test, a doctor decides with you whether it makes sense, requests it and asks for your written consent. After it, a second consultation explains the result to you.',
+                  )}
+                </Text>
+              </View>
+            </View>
+          )}
           {!!test.useful && (
             <>
-              <Text style={styles.detailLabel}>{t('What it can help with')}</Text>
+              <Text style={[styles.detailLabel, test.counselling && styles.detailGap]}>{t('What it can help with')}</Text>
               <Text style={styles.detailText}>{test.useful}</Text>
             </>
           )}
-          <Text style={[styles.detailLabel, !!test.useful && styles.detailGap]}>{t("What's included")}</Text>
+          <Text style={[styles.detailLabel, (!!test.useful || test.counselling) && styles.detailGap]}>{t("What's included")}</Text>
           {test.includes.map((i, n) =>
-            // En las suscripciones, la primera línea (las analíticas) lleva a la lista de marcadores
-            test.perYear && n === 0 ? (
-              <TouchableOpacity key={i} style={styles.includeRow} onPress={() => router.push('/panel-markers')}>
+            // En las suscripciones, las líneas de las analíticas llevan a la comparativa de marcadores
+            test.perYear && n < (test.markerLines ?? 1) ? (
+              <TouchableOpacity key={i} style={styles.includeRow} onPress={() => router.push({ pathname: '/panel-markers', params: { plan: test.id } })}>
                 <Ionicons name="checkmark" size={14} color={Colors.accent} />
                 <Text style={[styles.includeText, styles.includeLink]}>{i}</Text>
                 <Ionicons name="chevron-forward" size={14} color={Colors.accent} />
@@ -98,10 +127,10 @@ export const TestCard = ({ test, open: openProp, onToggle, featured, onOrder, is
               </View>
             ),
           )}
-          {!!test.repeat && (
+          {!!test.notes && (
             <>
-              <Text style={[styles.detailLabel, styles.detailGap]}>{t('When to repeat it')}</Text>
-              <Text style={styles.detailText}>{test.repeat}</Text>
+              <Text style={[styles.detailLabel, styles.detailGap]}>{t('Good to know')}</Text>
+              <Text style={styles.detailText}>{test.notes}</Text>
             </>
           )}
           <View style={[styles.metaRow, styles.detailGap]}>
@@ -119,18 +148,34 @@ export const TestCard = ({ test, open: openProp, onToggle, featured, onOrder, is
             </View>
           )}
 
-          {selectable ? (
+          {test.orderable === false ? null : selectable ? (
             <TouchableOpacity style={[styles.order, selected && styles.orderDone]} onPress={onSelect}>
               <Text style={[styles.orderText, selected && { color: Colors.accent }]}>
-                {selected ? t('Added to your order') : `${t('Add to my order')} · ${formatPrice(test.price)}`}
+                {selected ? t('Added to your order') : withPrice(t('Add to my order'))}
               </Text>
             </TouchableOpacity>
+          ) : needsPlan && onOrder ? (
+            <View style={[styles.order, styles.orderOff]}>
+              <Text style={[styles.orderText, { color: Colors.textMuted }]}>{t('Only with the subscription, in your follow-up')}</Text>
+            </View>
           ) : onOrder ? (
             <TouchableOpacity style={[styles.order, (isPaid || isCurrent) && styles.orderDone]} disabled={isCurrent} onPress={onOrder}>
               <Text style={[styles.orderText, (isPaid || isCurrent) && { color: Colors.accent }]}>
                 {isCurrent
                   ? t('Your current plan')
-                  : `${test.perYear ? (hasPlan ? t('Upgrade to Premium') : t('Subscribe')) : isPaid ? t('Order again') : t('Order')} · ${formatPrice(test.price)}`}
+                  : withPrice(
+                      test.perYear
+                        ? hasPlan
+                          ? t('Upgrade to Premium')
+                          : t('Subscribe')
+                        : isPaid
+                          ? t('Order again')
+                          : test.withFollowUp
+                            ? t('Add to my follow-up')
+                            : priced
+                              ? t('Order')
+                              : t('Request'),
+                    )}
               </Text>
             </TouchableOpacity>
           ) : null}
@@ -170,6 +215,7 @@ const styles = StyleSheet.create({
   lessRow: { alignSelf: 'center', marginTop: 2 },
   priceBox: { alignItems: 'flex-end', gap: 2 },
   price: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  priceTbd: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textAlign: 'right', maxWidth: 76 },
   priceUnit: { color: Colors.textMuted, fontSize: 11 },
   check: {
     width: 26,
@@ -193,5 +239,16 @@ const styles = StyleSheet.create({
   meta: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flex: 1 },
   order: { backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11, alignItems: 'center', marginTop: 8 },
   orderDone: { backgroundColor: Colors.accentSoft },
+  orderOff: { backgroundColor: Colors.backgroundElevated },
+  counsel: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+    backgroundColor: Colors.accentSoft,
+    borderRadius: 12,
+    padding: 12,
+  },
+  counselTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
+  counselText: { color: Colors.textPrimary, fontSize: 12, lineHeight: 17, marginTop: 2 },
   orderText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
 });

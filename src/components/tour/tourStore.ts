@@ -23,8 +23,10 @@ const BLADDER: Href = { pathname: '/digestive', params: { part: 'bladder' } };
 // Si un paso no tiene su elemento (sección apagada en «Configura tu experiencia»), se salta
 export const TOUR_STEPS: TourStep[] = [
   { target: 'tab.0', tab: 0, title: 'Today', text: 'Your day starts here: what is coming up, your doses and your plan.' },
-  { target: 'today.checkin', tab: 0, title: 'Your check-in', text: 'How you feel each day: energy and mood in a few seconds. Tap here whenever you want to log it.' },
+  { target: 'today.checkin', tab: 0, title: 'Your check-in', text: 'How you feel: energy and mood in a few seconds. The ring fills with up to 3 check-ins a day: morning, midday and night.' },
   { target: 'today.medication', tab: 0, always: true, title: 'Medication & supplements', text: 'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in More → Configure my experience.' },
+  { target: 'today.plan', tab: 0, title: 'Meet your goals', text: 'Your goals and your targets in three areas: exercise, food and habits. Each ring is how your targets are going this week. Tap one to mark today.' },
+  { target: 'today.plan.ej', tab: 0, title: 'Exercise', text: 'Your exercise targets: steps, cardio or strength. Tap the ring to see each day and mark today.' },
   { target: 'today.readiness', tab: 0, title: 'Daily readiness', text: 'Sleep, heart rate and activity from your watch, in one number for today.' },
   { target: 'today.goals', tab: 0, title: 'Your daily goals', text: 'Steps, active calories, sleep and water against your goals. Tap the circles to change them.' },
   { target: 'goals.first', tab: 0, route: '/daily-goals', title: 'Change a goal', text: 'Turn the wheel to set your own goal, for example how many steps you aim for. Underneath, what we suggest and why.' },
@@ -35,8 +37,6 @@ export const TOUR_STEPS: TourStep[] = [
   { target: 'today.hydration', tab: 0, title: 'Hydration', text: 'Two parts too: + for each drink (a glass, or your own amount) and + each time you pee. Tap the card for the colour and more.' },
   { target: 'digestive.water', tab: 0, route: BLADDER, title: 'Water', text: 'Your day and your week. With “Other amount” you choose any amount and can make it your usual one, like your water bottle.' },
   { target: 'digestive.urine', tab: 0, route: BLADDER, title: 'Urine', text: 'Add the colour of each time, or a whole day at once. Each week we tell you what we notice.' },
-  { target: 'today.plan', tab: 0, title: 'Your personalised plan', text: 'The actions that can help you most: each one is a goal, with how far you have got. Tap one to see where you are, why and how.' },
-  { target: 'today.plan.strength', tab: 0, title: 'Physical activity', text: 'Your strength goal and the sessions you have done this week. Tap it to see where you are and go to your programme.' },
   { target: 'today.learning', tab: 0, title: 'Keep learning', text: 'Short guides on training, sleep, nutrition, stress, heart health and more. Swipe through them or tap More for every topic.' },
   { target: 'tab.1', tab: 1, title: 'My Data', text: 'Your biomarkers, your measurements and your wearable, with how they change over time.' },
   { target: 'mydata.age', tab: 1, title: 'Your KUOVA age', text: 'The age your blood test shows. Tap it to see what moves it.' },

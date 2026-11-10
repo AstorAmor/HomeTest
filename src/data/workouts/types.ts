@@ -87,11 +87,15 @@ export interface WorkoutExercise {
   note?: string; // indicación del entrenador
 }
 
+// Una rutina (una sesión) del programa
 export interface WorkoutSession {
-  id: string; // 'A', 'B'…
+  id: string; // 'A', 'B'… por orden (al guardar en el editor se vuelven a poner y lo hecho se mueve con su rutina)
   title: string; // "Cuerpo completo A", "Tren superior"… (texto fuente en inglés, se traduce al pintar)
   focus: 'full' | 'upper' | 'lower' | 'conditioning' | 'mobility';
   exercises: WorkoutExercise[];
+  // Días de la semana en que se hace (0 = domingo … 6 = sábado); un día es de una sola rutina. Sin días en ninguna,
+  // las rutinas van en orden. Desde el 2026-11-06, en el jsonb `sessions` (sin migración). Ver logic/workoutWeek.ts
+  weekdays?: number[];
 }
 
 // Una serie hecha: el peso y las repeticiones de verdad, o los segundos si va por tiempo. Van en el

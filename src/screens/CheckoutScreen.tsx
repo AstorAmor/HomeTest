@@ -7,20 +7,21 @@ import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
-import { CATALOG, CatalogTest, formatPrice, localizeTest, PLANS, testIcon } from '@/data/testCatalog';
+import { CatalogTest, findTest, formatPrice, localizeTest, testIcon, totalPrice } from '@/data/testCatalog';
 import { t } from '@/i18n';
 import { getOrderStatus, startCheckout } from '@/data/orders';
 
 type Stage = 'review' | 'starting' | 'simulated' | 'confirming' | 'paid' | 'pending' | 'cancelled' | 'error';
 
 const findProduct = (id?: string): CatalogTest | undefined => {
-  const p = [...PLANS, ...CATALOG].find((x) => x.id === id);
-  return p && localizeTest(p);
+  const p = id ? findTest(id) : undefined;
+  return p && p.orderable !== false ? localizeTest(p) : undefined;
 };
 
 // Pago de un test o plan (?id=) o de varios tests juntos (?ids=a,b, desde el cuestionario). Con Revolut configurado abre su página de pago segura (la app
 // nunca ve la tarjeta) y espera a que el webhook confirme el cobro. Sin Revolut (o en
-// modo demo) muestra un pago SIMULADO que no cobra nada.
+// modo demo) muestra un pago SIMULADO que no cobra nada. Las pruebas sin precio decidido no llegan
+// al servidor (no las vende): se simula la solicitud y no se cobra nada.
 export const CheckoutScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; ids?: string; status?: string; order_id?: string }>();
@@ -28,7 +29,8 @@ export const CheckoutScreen = () => {
     .map(findProduct)
     .filter((p): p is CatalogTest => !!p && (!params.ids || !p.perYear)); // los planes no van en un pedido conjunto
   const product = items[0];
-  const totalPrice = items.reduce((sum, p) => sum + p.price, 0);
+  const total = totalPrice(items); // null: alguna prueba aún no tiene precio
+  const showPrice = (price?: number | null) => (price == null ? t('To be confirmed') : formatPrice(price));
   const [stage, setStage] = useState<Stage>('review');
   const [message, setMessage] = useState('');
   const [simulated, setSimulated] = useState(false);
@@ -51,6 +53,10 @@ export const CheckoutScreen = () => {
 
   const pay = async () => {
     if (!product) return;
+    if (total == null) {
+      setSimulated(true);
+      return setStage('simulated');
+    }
     setStage('starting');
     try {
       const start = await startCheckout(items.map((p) => p.id));
@@ -85,7 +91,7 @@ export const CheckoutScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Checkout')} showBack />
+        <ScreenHeader title={total == null ? t('Your request') : t('Checkout')} showBack />
 
         {items.length > 1 && !done && (
           <View style={styles.card}>
@@ -98,13 +104,13 @@ export const CheckoutScreen = () => {
                   <Text style={styles.name}>{p.name}</Text>
                   <Text style={styles.small}>{t('Sample: {what}', { what: p.sample })}</Text>
                 </View>
-                <Text style={styles.itemPrice}>{formatPrice(p.price)}</Text>
+                <Text style={styles.itemPrice}>{showPrice(p.price)}</Text>
               </View>
             ))}
-            <Text style={styles.small}>{t('One-off payment')}</Text>
+            {total != null && <Text style={styles.small}>{t('One-off payment')}</Text>}
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>{t('Total')}</Text>
-              <Text style={styles.total}>{formatPrice(totalPrice)}</Text>
+              <Text style={styles.total}>{showPrice(total)}</Text>
             </View>
           </View>
         )}
@@ -117,7 +123,11 @@ export const CheckoutScreen = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{product.name}</Text>
-                <Text style={styles.small}>{product.perYear ? t('Annual subscription · renews every year') : t('One-off payment')}</Text>
+                <Text style={styles.small}>{product.perYear
+                    ? t('Annual subscription · renews every year')
+                    : product.price == null
+                      ? t('Sample: {what}', { what: product.sample })
+                      : t('One-off payment')}</Text>
               </View>
             </View>
             {product.includes.map((i) => (
@@ -129,14 +139,23 @@ export const CheckoutScreen = () => {
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>{t('Total')}</Text>
               <Text style={styles.total}>
-                {formatPrice(product.price)}
-                {product.perYear ? <Text style={styles.small}> {t('/year')}</Text> : null}
+                {showPrice(product.price)}
+                {product.perYear && product.price != null ? <Text style={styles.small}> {t('/year')}</Text> : null}
               </Text>
             </View>
           </View>
         )}
 
-        {stage === 'review' || stage === 'starting' ? (
+        {(stage === 'review' || stage === 'starting') && total == null ? (
+          <View style={styles.secure}>
+            <Ionicons name="information-circle-outline" size={14} color={Colors.textSecondary} />
+            <Text style={styles.small}>
+              {product?.perYear
+                ? t("This subscription doesn't have a price yet. You can simulate the request: nothing is charged and no order is created.")
+                : t("This test doesn't have a price yet. You can simulate the request: nothing is charged and no order is created.")}
+            </Text>
+          </View>
+        ) : stage === 'review' || stage === 'starting' ? (
           <View style={styles.secure}>
             <Ionicons name="lock-closed" size={14} color={Colors.textSecondary} />
             <Text style={styles.small}>
@@ -147,15 +166,17 @@ export const CheckoutScreen = () => {
 
         {isSimulation && (
           <View style={[styles.card, styles.simCard]}>
-            <Text style={styles.simTitle}>{t('Payment simulation')}</Text>
+            <Text style={styles.simTitle}>{total == null ? t('Request simulation') : t('Payment simulation')}</Text>
             <Text style={styles.body}>
-              {t("Payments aren't switched on yet, so this is where Revolut's secure payment page will open. Nothing will be charged.")}
+              {total == null
+                ? t('When the price is decided, this is where you will confirm it and pay. Nothing will be charged.')
+                : t("Payments aren't switched on yet, so this is where Revolut's secure payment page will open. Nothing will be charged.")}
             </Text>
             <TouchableOpacity style={styles.cta} onPress={() => setStage('paid')}>
-              <Text style={styles.ctaText}>{t('Simulate successful payment')}</Text>
+              <Text style={styles.ctaText}>{total == null ? t('Simulate the request') : t('Simulate successful payment')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setStage('cancelled')}>
-              <Text style={styles.link}>{t('Simulate cancelled payment')}</Text>
+              <Text style={styles.link}>{total == null ? t('Cancel') : t('Simulate cancelled payment')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -178,19 +199,25 @@ export const CheckoutScreen = () => {
             </View>
             <Text style={styles.resultTitle}>
               {stage === 'paid'
-                ? product?.perYear
-                  ? t('Welcome to Kuova!')
-                  : t('Order confirmed')
+                ? total == null
+                  ? t('Request simulated')
+                  : product?.perYear
+                    ? t('Welcome to Kuova!')
+                    : t('Order confirmed')
                 : stage === 'pending'
                   ? t('Payment received')
                   : stage === 'cancelled'
-                    ? t('Payment cancelled')
+                    ? total == null
+                      ? t('Request cancelled')
+                      : t('Payment cancelled')
                     : t('Payment failed')}
             </Text>
             <Text style={[styles.body, { textAlign: 'center' }]}>
               {stage === 'paid'
                 ? simulated
-                  ? t('Simulated payment: nothing was charged and no order was created.')
+                  ? total == null
+                    ? t('Simulated request: nothing was charged and no order was created.')
+                    : t('Simulated payment: nothing was charged and no order was created.')
                   : t("We'll send your first kit or book your appointment in the next few days.")
                 : stage === 'pending'
                   ? t("We're waiting for the bank's confirmation. It will show up in the app in a few minutes.")
@@ -207,7 +234,7 @@ export const CheckoutScreen = () => {
           {stage === 'starting' ? (
             <ActivityIndicator color={Colors.background} />
           ) : (
-            <Text style={styles.ctaText}>{t('Pay {price}', { price: formatPrice(totalPrice) })}</Text>
+            <Text style={styles.ctaText}>{total == null ? t('Request') : t('Pay {price}', { price: formatPrice(total) })}</Text>
           )}
         </TouchableOpacity>
       )}

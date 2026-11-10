@@ -1,6 +1,7 @@
 import { SpecialistCard } from './planImages';
 import { ART_PALETTES } from '@/components/BlobArt';
 import { t } from '@/i18n';
+import { EXERCISES } from '@/data/exercises';
 
 // "Keep learning" (Today): temas de salud con una pequeña guía cada uno. Al fundador no le
 // convencían las fotos: de momento cada tema se ilustra con un icono sobre un degradado con
@@ -34,12 +35,21 @@ export const LEARNING_TOPICS: LearningTopic[] = [
       { title: 'What counts as regular', body: 'Cycles between 21 and 35 days are usually considered normal. Big changes are worth discussing with a professional.' },
       { title: 'Markers that matter', body: 'Iron (ferritin), vitamin D and thyroid (TSH) often explain tiredness around your period.' },
       { title: 'Your pelvic floor', body: 'Kegel exercises strengthen the muscles under your bladder and womb. A few minutes a day help with small leaks, after pregnancy and with sexual health. Do not practise by stopping your wee.' },
+      {
+        title: 'Thinking about having children',
+        body: 'A carrier test is highly recommended: it shows whether you and your partner carry hereditary conditions that give you no symptoms but could pass to your children. Ideally before the pregnancy, with genetic counselling before and after.',
+      },
     ],
     action: { label: t('Log your period'), href: '/log-cycle' },
-    moreActions: [{ label: 'Pelvic floor (Kegel) exercises', href: '/exercise', params: { id: 'kegel' } }],
+    moreActions: [
+      { label: 'Pelvic floor (Kegel) exercises', href: '/exercise', params: { id: 'kegel' } },
+      { label: 'See the carrier test', href: '/store', params: { view: 'tests', category: 'genetic', open: 'gen_carrier' } },
+      { label: 'Talk to a genetic counsellor', href: '/professionals', params: { role: 'geneticist' } },
+    ],
     sources: [
       { label: 'NHS: pelvic floor exercises', url: 'https://www.nhs.uk/common-health-questions/womens-health/what-are-pelvic-floor-exercises/' },
       { label: 'NICE NG210: pelvic floor dysfunction (2021)', url: 'https://www.nice.org.uk/guidance/ng210' },
+      { label: 'ACMG: carrier screening before and during pregnancy (2021)', url: 'https://doi.org/10.1038/s41436-021-01203-z' },
     ],
   },
   {
@@ -85,7 +95,7 @@ export const LEARNING_TOPICS: LearningTopic[] = [
       { title: 'Short flows count', body: 'Ten minutes of stretching in the morning improves how you move all day.' },
       { title: 'Listen to your body', body: 'Stretch to mild tension, never pain, and breathe slowly through each pose.' },
     ],
-    action: { label: t('Do a 5-minute stretch'), href: '/exercise', params: { id: 'stretch' } },
+    action: { label: t('Do {n} minutes of stretching', { n: EXERCISES.stretch.minutes }), href: '/exercise', params: { id: 'stretch' } },
   },
   {
     id: 'nutrition',
@@ -158,8 +168,19 @@ export const LEARNING_TOPICS: LearningTopic[] = [
     lessons: [
       { title: 'Family history counts', body: 'Cancer or heart disease in close relatives, especially at a young age, can change when you should start screening.' },
       { title: 'When a genetic test makes sense', body: 'When the pattern in your family meets clinical criteria. A genetic counsellor helps you choose the right test and understand the result.' },
+      {
+        title: 'The carrier test',
+        body: 'Carrying a variant of a recessive condition without knowing it is common. If both members of a couple carry one for the same condition, each child has a 1 in 4 chance of having it. That is why, if you are thinking about having children, a carrier test is highly recommended.',
+      },
     ],
     action: { label: t('Know your roots'), href: '/know-your-roots' },
+    moreActions: [
+      { label: 'See the carrier test', href: '/store', params: { view: 'tests', category: 'genetic', open: 'gen_carrier' } },
+      { label: 'Talk to a genetic counsellor', href: '/professionals', params: { role: 'geneticist' } },
+    ],
+    sources: [
+      { label: 'ACMG: carrier screening before and during pregnancy (2021)', url: 'https://doi.org/10.1038/s41436-021-01203-z' },
+    ],
   },
   {
     id: 'hydration',
@@ -173,7 +194,7 @@ export const LEARNING_TOPICS: LearningTopic[] = [
       { title: 'Check the colour', body: 'Pale straw is the goal. Dark yellow usually means you need to drink more; some vitamins turn it bright yellow.' },
       { title: 'Spread it out', body: 'A glass with each meal and one between meals is easier than drinking a lot at once.' },
     ],
-    action: { label: t('Log your bladder'), href: '/log-urine' },
+    action: { label: t('Log your urination'), href: '/log-urine' },
     sources: [{ label: 'EFSA. Dietary reference values for water. EFSA Journal 2010', url: 'https://doi.org/10.2903/j.efsa.2010.1459' }],
   },
   {

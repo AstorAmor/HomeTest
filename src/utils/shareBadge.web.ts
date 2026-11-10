@@ -6,31 +6,31 @@ import type { BadgeShare } from './shareBadge';
 // no se pueden compartir archivos, se descarga la imagen.
 export type { BadgeShare };
 
-const toPng = (svgEl: SVGSVGElement): Promise<Blob> =>
+const toPng = (svgEl: SVGSVGElement, W = CARD_W, H = CARD_H): Promise<Blob> =>
   new Promise((resolve, reject) => {
     const clone = svgEl.cloneNode(true) as SVGSVGElement;
     clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    clone.setAttribute('width', String(CARD_W));
-    clone.setAttribute('height', String(CARD_H));
+    clone.setAttribute('width', String(W));
+    clone.setAttribute('height', String(H));
     const xml = new XMLSerializer().serializeToString(clone);
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = CARD_W;
-      canvas.height = CARD_H;
+      canvas.width = W;
+      canvas.height = H;
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('No canvas'));
-      ctx.drawImage(img, 0, 0, CARD_W, CARD_H);
+      ctx.drawImage(img, 0, 0, W, H);
       canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('No image'))), 'image/png');
     };
     img.onerror = () => reject(new Error('Could not draw the badge'));
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
   });
 
-export async function shareBadge({ domId, fileName, message }: BadgeShare): Promise<void> {
+export async function shareBadge({ domId, fileName, message, size }: BadgeShare): Promise<void> {
   const svgEl = document.getElementById(domId)?.querySelector('svg');
   if (!svgEl) return;
-  const blob = await toPng(svgEl);
+  const blob = await toPng(svgEl, size?.width, size?.height);
   const file = new File([blob], `${fileName}.png`, { type: 'image/png' });
   const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
   if (nav.share && nav.canShare?.({ files: [file] })) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/colors';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
@@ -16,8 +16,7 @@ const inGroup = (p: ExtractedParametro, group: ValueGroup) => {
   return group === 'in' ? status === 'en_rango' : status === 'sin_rango';
 };
 
-export const LabValuesList = ({ report, group, title }: { report: ExtractedLabReport; group: ValueGroup; title: string }) => {
-  const [open, setOpen] = useState<string | null>(null);
+export const LabValuesList = ({ report, group, title, uploadId }: { report: ExtractedLabReport; group: ValueGroup; title: string; uploadId?: string }) => {
   const sections = report.secciones
     .map((sec, si) => ({ sec, si, params: sec.parametros.map((p, i) => ({ p, i })).filter(({ p }) => inGroup(p, group)) }))
     .filter((x) => x.params.length);
@@ -28,10 +27,9 @@ export const LabValuesList = ({ report, group, title }: { report: ExtractedLabRe
       {sections.map(({ sec, si, params }) => (
         <View key={`${sec.titulo}-${si}`}>
           {sections.length > 1 && <Text style={styles.section}>{sec.titulo}</Text>}
-          {params.map(({ p, i }, k) => {
-            const key = `${si}-${i}`;
-            return <LabValueRow key={key} p={p} open={open === key} onToggle={() => setOpen(open === key ? null : key)} divider={k > 0} />;
-          })}
+          {params.map(({ p, i }, k) => (
+            <LabValueRow key={`${si}-${i}`} p={p} divider={k > 0} uploadId={uploadId} />
+          ))}
         </View>
       ))}
     </View>

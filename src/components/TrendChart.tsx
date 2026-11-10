@@ -25,7 +25,7 @@ const PAD_BOTTOM = 8;
 const Y_LABEL_WIDTH = 34;
 
 // Curva suave (Catmull-Rom -> Bézier) para que las líneas no parezcan dientes de sierra.
-function smoothPath(points: { x: number; y: number }[]) {
+export function smoothPath(points: { x: number; y: number }[]) {
   if (points.length < 2) return '';
   let d = `M ${points[0].x} ${points[0].y}`;
   for (let i = 0; i < points.length - 1; i++) {

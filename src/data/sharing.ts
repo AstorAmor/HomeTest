@@ -417,12 +417,12 @@ export async function fetchSharedPatientData(patientId: string, scopes: ShareSco
     for (const { table, dateColumn, ownerColumn = 'user_id' } of SCOPE_TABLES[scope] ?? []) {
       jobs.push(
         (async () => {
-          const { data, error } = await supabase!
-            .from(table)
-            .select('*')
-            .eq(ownerColumn, patientId)
-            .order(dateColumn, { ascending: false })
-            .limit(60);
+          let query = supabase!.from(table).select('*').eq(ownerColumn, patientId);
+          // Las metas de Hoy (kind 'meta', una fila por meta y día) y las sesiones de Kegel no salen en la
+          // vista del profesional: llenarían las 60 filas y taparían el peso o el colesterol
+          // (src/data/metasRepository.ts, src/data/kegelRepository.ts)
+          if (table === 'metric_readings') query = query.not('kind', 'in', '(meta,kegel)');
+          const { data, error } = await query.order(dateColumn, { ascending: false }).limit(60);
           fail(error);
           out[table] = data ?? [];
         })()

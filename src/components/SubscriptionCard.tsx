@@ -84,7 +84,8 @@ export const SubscriptionCard = () => {
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>{plan.name}</Text>
           <Text style={styles.text}>
-            {formatPrice(plan.price)} {t('/ year')} · {isPremium ? t('test every 3 months') : t('test every 6 months')}
+            {plan.price != null ? `${formatPrice(plan.price)} ${t('/ year')} · ` : ''}
+            {isPremium ? t('test every 3 months') : t('test every 6 months')}
             {sub.sample ? ` · ${t('sample')}` : ''}
           </Text>
         </View>

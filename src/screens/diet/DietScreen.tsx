@@ -16,13 +16,15 @@ import { getRecipe, recipeName, slotLabel } from '@/data/diet/catalog';
 import { loadDietContext } from '@/data/diet/context';
 import { dietRepository, eatenMeals } from '@/data/diet/dietRepository';
 import type { DietPlan, PlannedMeal } from '@/data/diet/types';
-import { dayTotals, generateDiet, weekSummary } from '@/logic/dietPlanner';
+import { cleanDayTargets, dayKcalTarget, dayTotals, fitDay, generateDiet, ownMacros, weekSummary } from '@/logic/dietPlanner';
+import { weekKcalTarget } from '@/logic/dietDayMacros';
 import { num, t } from '@/i18n';
 import { menuFileName, menuToHtml, shoppingText } from '@/utils/menuPdf';
 import { shareHtmlPdf } from '@/utils/shareHtml';
 
 // "Tu menú de la semana": por día (fotos grandes, toca para ver la receta) o la semana entera como un
-// calendario. Arriba, por qué es así (analíticas y respuestas); abajo, la lista de la compra.
+// calendario. Arriba, por qué es así (analíticas y respuestas) y, en tus menús, «Calorías y macros» (/diet-macros:
+// tus números, como el dietista); abajo, la lista de la compra.
 
 export const WEEKDAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 export const WEEKDAYS_LONG = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -66,7 +68,12 @@ export const DietScreen = () => {
     const ctx = await loadDietContext();
     const prefs = { ...plan.prefs, seed: plan.prefs.seed + 1 };
     const g = generateDiet(prefs, ctx.labs);
-    const next = { ...plan, prefs, days: g.days, targets: g.targets, reasons: g.reasons };
+    // Los días con números propios (Calorías y macros → Por día) los conservan, con sus raciones a ellos
+    const days = g.days.map((d) => {
+      const own = cleanDayTargets(plan.days.find((x) => x.day === d.day)?.targets);
+      return own ? fitDay({ ...d, targets: own }, prefs, ctx.labs) : d;
+    });
+    const next = { ...plan, prefs, days, targets: g.targets, reasons: g.reasons };
     await dietRepository.save(next);
     setPlan(next);
     setBusy(false);
@@ -118,7 +125,8 @@ export const DietScreen = () => {
   const summary = weekSummary(plan.days);
   // Lo que lleva de verdad el menú (media de la semana), no el objetivo: la proteína no se ajusta con las raciones
   const potassium = Math.round(plan.days.reduce((a, d) => a + dayTotals(d).potassium, 0) / Math.max(1, plan.days.length) / 100) * 100;
-  const tp = { kcal: num(plan.targets.kcal), protein: Math.round(summary.protein), potassium };
+  // Con días distintos (Calorías y macros), la media de sus objetivos
+  const tp = { kcal: num(weekKcalTarget(plan)), protein: Math.round(summary.protein), potassium };
   const current = plan.days[day];
   const totals = current ? dayTotals(current) : null;
   const slots = plan.days[0]?.meals.map((m) => m.slot) ?? [];
@@ -155,6 +163,16 @@ export const DietScreen = () => {
           <Text style={styles.headText}>
             {t('About {kcal} kcal and {protein} g of protein a day', tp)}
           </Text>
+          {/* Tus propias kcal y macros, con el panel del dietista (en el menú de un dietista, los pone él) */}
+          {plan.source !== 'professional' && (
+            <TouchableOpacity style={styles.whyRow} onPress={() => router.push('/diet-macros')}>
+              <Ionicons name="options-outline" size={16} color={Colors.accent} />
+              <Text style={styles.whyTitle}>
+                {ownMacros(plan.prefs) || plan.days.some((d) => cleanDayTargets(d.targets)) ? t('Your calories and macros') : t('Adjust calories and macros')}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.whyRow} onPress={() => setShowWhy((v) => !v)}>
             <Ionicons name="information-circle-outline" size={16} color={Colors.accent} />
             <Text style={styles.whyTitle}>{t('Why this menu')}</Text>
@@ -196,7 +214,7 @@ export const DietScreen = () => {
               <View style={styles.dayCard}>
                 <MacroDonut m={totals} size={96} />
                 <Text style={styles.dayTotals}>
-                  {t('Target')}: {num(plan.targets.kcal)} kcal · {t('fibre')} {Math.round(totals.fiber)} g
+                  {t('Target')}: {num(current ? dayKcalTarget(plan, current) : plan.targets.kcal)} kcal · {t('fibre')} {Math.round(totals.fiber)} g
                 </Text>
               </View>
             )}

@@ -4,13 +4,16 @@ import { DEFAULT_PREFS, defaultDose, newProgram } from './workoutGenerator';
 import { plannedSet, plannedSets, withPlan } from './setPlan';
 import { parseCount, parseKg } from './workoutLog';
 import { isTimedReps, timedSeconds, timeText } from './workoutTimer';
+import { normWeekdays } from './workoutWeek';
 
-// "Crear mi propia rutina" (como en Hevy o Strong): un nombre, uno o varios días (A, B, C…) y en cada
-// uno los ejercicios que se eligen de la biblioteca, en el orden que se quiera, con series,
-// repeticiones o tiempo, peso y descanso. Se guarda como un WorkoutProgram más (source 'self' y
-// prefs.custom) para que la lista, la sesión guiada y el portal la traten igual que las del generador.
-// El mismo editor cambia cualquier programa (también los del generador y los del entrenador): ahí se
-// respetan su calentamiento, sus estiramientos y el tipo de cada día.
+// "Crear mi propio entrenamiento" (como en Hevy o Strong): un nombre, una o varias rutinas (A, B, C…), cada una con
+// su nombre, los días de la semana en que se hace (puede repetirse varios días: logic/workoutWeek.ts) y los
+// ejercicios que se eligen de la biblioteca, en el orden que se quiera, con series, repeticiones o tiempo, peso y
+// descanso. Se guarda como un WorkoutProgram más (source 'self' y prefs.custom) para que la lista, la sesión guiada y
+// el portal lo traten igual que los del generador. El mismo editor cambia cualquier programa (también los del
+// generador y los del entrenador): ahí se respetan su calentamiento, sus estiramientos y el tipo de cada rutina.
+// Hasta el 2026-11-06 se llamaba «rutina» al todo y «día» a cada rutina (fundador: «hay un lío con rutina, día y
+// nombres»).
 
 export const CUSTOM_PREFS: WorkoutPrefs = { ...DEFAULT_PREFS, level: 'intermediate', custom: true };
 
@@ -18,8 +21,12 @@ export const isCustomProgram = (p: Pick<WorkoutProgram, 'prefs'>) => !!p.prefs?.
 
 export const dayLetter = (i: number) => String.fromCharCode(65 + i);
 
-// Sin título: la pantalla lo llama "Día A" (sessionName en labels.ts)
+// Sin título: la pantalla la llama "Rutina A" (sessionName en labels.ts)
 export const emptyDay = (i: number): WorkoutSession => ({ id: dayLetter(i), title: '', focus: 'full', exercises: [] });
+
+// En el editor, cada rutina recuerda qué letra tenía en el programa guardado (`orig`; null si es nueva; sin el campo,
+// la suya), para que al guardar lo ya hecho se vaya con su rutina aunque cambie de letra
+export type DraftRoutine = WorkoutSession & { orig?: string | null };
 
 // Al final del día (antes de los estiramientos, si los hay), con la dosis de partida del generador
 // para alguien de nivel intermedio (3 × 10–12 en los grandes, 1 × 30 s en los estiramientos…). Luego
@@ -48,22 +55,49 @@ export function focusFor(exercises: WorkoutSession['exercises']): WorkoutSession
   return 'full';
 }
 
-// Al guardar: fuera los ejercicios que ya no están en el catálogo y los días vacíos; las letras van
-// en orden (A, B, C…) y cada día lleva su tipo (en un programa del generador, el que ya tenía:
-// "Tren superior" sigue siéndolo aunque se quite un ejercicio)
-export const cleanDays = (days: WorkoutSession[], keepFocus = false): WorkoutSession[] =>
-  days
-    .map((d) => ({ ...d, title: d.title.trim().slice(0, 60), exercises: d.exercises.filter((e) => getExercise(e.exerciseId)) }))
-    .filter((d) => d.exercises.length)
-    .map((d, i) => ({ ...d, id: dayLetter(i), focus: keepFocus ? d.focus : focusFor(d.exercises) }));
+const tidy = (d: DraftRoutine): DraftRoutine => ({ ...d, title: d.title.trim().slice(0, 60), exercises: d.exercises.filter((e) => getExercise(e.exerciseId)) });
+const kept = (days: DraftRoutine[]) => days.map(tidy).filter((d) => d.exercises.length);
 
-// Nueva (se sigue al guardarla, como las del generador, salvo que se diga lo contrario) o cambiada
-// (conserva id, fecha, sesiones hechas, si se sigue y de dónde salió: una del generador sigue siéndolo)
-export function customProgram(title: string, days: WorkoutSession[], opts: { base?: WorkoutProgram | null; follow?: boolean } = {}): WorkoutProgram {
+// Al guardar: fuera los ejercicios que ya no están en el catálogo y las rutinas vacías; las letras van en orden (A, B,
+// C…), cada día de la semana es de una sola rutina y cada rutina lleva su tipo (en un programa del generador, el que
+// ya tenía: "Tren superior" sigue siéndolo aunque se quite un ejercicio)
+export function cleanDays(days: DraftRoutine[], keepFocus = false): WorkoutSession[] {
+  const taken = new Set<number>();
+  return kept(days).map((d, i) => {
+    const { orig, weekdays, ...rest } = d;
+    const wd = normWeekdays(weekdays).filter((x) => !taken.has(x));
+    wd.forEach((x) => taken.add(x));
+    return { ...rest, id: dayLetter(i), focus: keepFocus ? d.focus : focusFor(d.exercises), ...(wd.length ? { weekdays: wd } : {}) };
+  });
+}
+
+// La primera rutina con nombre o días pero sin ejercicios (no se guarda vacía sin avisar); -1 si no hay
+export const firstEmptyRoutine = (days: DraftRoutine[]) => days.map(tidy).findIndex((d) => !d.exercises.length && (!!d.title || normWeekdays(d.weekdays).length > 0));
+
+// De qué letra a qué letra pasa cada rutina del programa guardado. Las que se quitan van a una que no es de ninguna
+// ("xB"): lo hecho con ellas sigue en el historial, con el nombre del programa, y no se pega a otra rutina.
+export function routineIdMap(days: DraftRoutine[], base: Pick<WorkoutProgram, 'sessions'> | null | undefined): Record<string, string> {
+  const map: Record<string, string> = {};
+  if (!base) return map;
+  base.sessions.forEach((s) => (map[s.id] = `x${s.id}`));
+  kept(days).forEach((d, i) => {
+    const from = d.orig === undefined ? d.id : d.orig;
+    if (from && from in map) map[from] = dayLetter(i);
+  });
+  return map;
+}
+
+// Nuevo (se sigue al guardarlo, como los del generador, salvo que se diga lo contrario) o cambiado (conserva id,
+// fecha, sesiones hechas, si se sigue y de dónde salió: uno del generador sigue siéndolo)
+export function customProgram(title: string, days: DraftRoutine[], opts: { base?: WorkoutProgram | null; follow?: boolean } = {}): WorkoutProgram {
   const name = title.trim().slice(0, 120);
-  if (opts.base) return { ...opts.base, title: name || opts.base.title, sessions: cleanDays(days, !isCustomProgram(opts.base)) };
+  if (opts.base) {
+    const map = routineIdMap(days, opts.base);
+    const completions = opts.base.completions.map((c) => (map[c.sessionId] && map[c.sessionId] !== c.sessionId ? { ...c, sessionId: map[c.sessionId] } : c));
+    return { ...opts.base, title: name || opts.base.title, sessions: cleanDays(days, !isCustomProgram(opts.base)), completions };
+  }
   const sessions = cleanDays(days);
-  return newProgram(CUSTOM_PREFS, { title: name || 'My routine', sessions, active: opts.follow ?? true });
+  return newProgram(CUSTOM_PREFS, { title: name || 'My workout', sessions, active: opts.follow ?? true });
 }
 
 // ── Editar serie a serie, como en Hevy ──

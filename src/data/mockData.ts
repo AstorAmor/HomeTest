@@ -20,6 +20,10 @@ export interface Biomarker {
   status: BiomarkerStatus;
   statusLabel: string;
   history: number[];
+  // Datos propios (2026-11-06): de cuándo es el último y si viene de una analítica. Así Hoy dice de dónde
+  // sale («De tu analítica · 12 oct.») en vez del estado del ejemplo
+  fecha?: string;
+  fromLab?: boolean;
 }
 
 export const mockBiomarkers: Biomarker[] = [

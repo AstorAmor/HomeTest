@@ -53,7 +53,8 @@ const CATEGORIES: NavItem[] = [
 ];
 
 const PLAN: NavItem[] = [
-  { id: 'plans', label: 'My plan', icon: 'list-outline', color: Colors.accent, pathname: '/plans', section: 'plan' },
+  // «Mi plan» pasa a ser Tus objetivos (2026-11-06); el plan de un especialista se enlaza desde allí
+  { id: 'goals', label: 'Your goals', icon: 'flag-outline', color: Colors.accent, pathname: '/metas', section: 'plan' },
   { id: 'workouts', label: 'Workouts', icon: 'barbell-outline', color: Colors.coral, pathname: '/workouts' },
   { id: 'schedule', label: 'Schedule', icon: 'calendar-outline', color: Colors.sky, pathname: '/(tabs)', tab: TAB.schedule },
   { id: 'tracking', label: 'Track your tests', icon: 'mci:van-utility', color: Colors.amber, pathname: '/track-tests' },

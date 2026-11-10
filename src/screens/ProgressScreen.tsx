@@ -124,13 +124,13 @@ export const ProgressScreen = () => {
             </View>
             {/* Agrupados por estado, en el mismo orden que los bloques de arriba */}
             <View onLayout={(e) => (groupY.current.out = e.nativeEvent.layout.y)}>
-              <OutOfRangeSummary report={upload.data} />
+              <OutOfRangeSummary report={upload.data} uploadId={upload.id} />
             </View>
             <View style={styles.table} onLayout={(e) => (groupY.current.in = e.nativeEvent.layout.y)}>
-              <LabValuesList report={upload.data} group="in" title={t('In range')} />
+              <LabValuesList report={upload.data} group="in" title={t('In range')} uploadId={upload.id} />
             </View>
             <View style={styles.table} onLayout={(e) => (groupY.current.none = e.nativeEvent.layout.y)}>
-              <LabValuesList report={upload.data} group="none" title={t('No reference')} />
+              <LabValuesList report={upload.data} group="none" title={t('No reference')} uploadId={upload.id} />
             </View>
           </>
         )}
@@ -202,12 +202,18 @@ export const ProgressScreen = () => {
         )}
       </ScrollView>
 
+      {/* Desde el 2026-11-06 ya no hay «Actualizar mi plan»: la analítica recomienda objetivos (Tus objetivos) y,
+          si quieres un plan, lo hace un especialista */}
       {show('plan') && (
-        <TouchableOpacity style={styles.cta} onPress={() => router.push({ pathname: '/plan-update', params: { upload: upload.id } })}>
-          <Ionicons name="sparkles" size={18} color={Colors.background} />
-          <Text style={styles.ctaText}>{t('Update my plan')}</Text>
+        <TouchableOpacity style={styles.cta} onPress={() => router.push('/metas-objetivos')}>
+          <Ionicons name="flag-outline" size={18} color={Colors.background} />
+          <Text style={styles.ctaText}>{t('Review my goals')}</Text>
         </TouchableOpacity>
       )}
+      <TouchableOpacity style={styles.doctor} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} hitSlop={8}>
+        <Ionicons name="medkit-outline" size={16} color={Colors.accent} />
+        <Text style={styles.doctorText}>{t('Ask a doctor to review it')}</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -261,4 +267,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  doctor: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 },
+  doctorText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
 });
