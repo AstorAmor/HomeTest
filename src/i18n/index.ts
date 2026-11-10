@@ -1,9 +1,9 @@
+import { pickDeviceLang } from './locale';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { es } from './es';
 import { workoutsEs } from './workoutsEs';
 import { dietEs } from './dietEs';
 import { authEs } from './authEs';
-import { pickDeviceLang } from './locale';
 
 // Idiomas de la app. El texto fuente es el inglés: t('Today') devuelve la traducción del idioma
 // elegido o, si aún no la hay, el inglés. Así se traduce pantalla a pantalla sin romper nada.
