@@ -1937,7 +1937,8 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   → producción, sin cambios. `GEMINI_API_KEY` copiada a pruebas (`node scripts/staging-ai-check.mjs`: OK). Primer
   APK de «Kuova Pruebas»: build `16edc92f` (EAS), para instalar en el móvil de Astor.
 - **Entrada al abrir la app** (petición de Astor: «me queda un poco triste»): `src/components/LaunchIntro.tsx`, montada en
-  `index.js`. Tras la pantalla nativa, la K dorada metalizada con un destello y «KUOVA HEALTH» debajo, ~1,5 s, solo en
+  `index.js`. Tras la pantalla nativa, la K dorada metalizada con un destello y «KUOVA HEALTH» debajo (desde el 10/11 la
+  K se queda quieta donde estaba la nativa y el nombre aparece debajo; OTA staging e3524231), ~1,5 s, solo en
   frío, se salta con un toque, sin movimiento con «reducir movimiento», no tras cambiar el tema; en la web solo con
   `?intro=1`. Es JS (llega por OTA). La K de la pantalla nativa (`splash-icon.png`, `python scripts/make-icons.py
   splash`) también es metalizada, pero esa solo cambia con una compilación nueva. No se puso el nombre en la pantalla
