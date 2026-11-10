@@ -1903,3 +1903,24 @@ que cerraba la app. Diagnosticado en una sesión de SecondBrain y arreglado aqu�
   android + ios, runtime `exposdk:57.0.0`) y las dos webs. Solo JavaScript: no hace falta compilación nueva.
 - **Sin comprobar en el iPhone:** abrir Wearables tras recibir la actualización, y pulsar «Conectar Apple Salud» por primera vez
   (la pantalla de permisos de HealthKit y la lectura nunca se han probado en un dispositivo).
+
+## 2026-11-10 — Idioma: se detecta el del móvil y se elige en la pantalla de entrar (master, 466f1b5, publicado)
+
+Astor creó una cuenta de paciente en Kuova Pruebas con el móvil en español y la app le salió en inglés. Lo mismo pasaba en la
+app pública: el idioma salía solo de `Intl`, que en Android da inglés.
+
+- `src/i18n/locale.ts` (con tests): mira primero el idioma del sistema (`I18nManager.getConstants().localeIdentifier`),
+  luego `navigator.language` e `Intl`. Acepta `es_ES`, `es-419`…, y catalán, gallego y euskera van a español; si no
+  reconoce ninguno, inglés.
+- `src/components/LanguagePicker.tsx`: «Español / English» arriba a la derecha de la pantalla de entrar (cada idioma con su
+  nombre propio). Guarda y recarga como Ajustes → Idioma. En `LoginScreen` va arriba del todo, y dos `spacer` con flexGrow
+  dejan la marca y el formulario centrados en el resto (466f1b5: antes iba pegado encima de «KUOVA»).
+- **Publicado 466f1b5** (2026-11-10, OK de Astor «para todos, sí», con la condición de que el selector no quedara encima
+  de la marca): EAS Update grupo `4ed9f8c2-3c02-4ea8-abce-5bf2de923f68` (preview, runtime `exposdk:57.0.0`) y las dos webs.
+  Las dos responden con `X-Robots-Tag: noindex, nofollow`. Solo JavaScript. Publicado desde el worktree
+  `hometest-app-idioma` (la copia principal está en `metas-fase1`), con `.env.local` y `deploy/*/.vercel` copiados de la
+  copia principal y `NODE_OPTIONS=--max-old-space-size=6144`.
+- No ha ido a la app pública lo del orden de los avisos («Discover your genetic profile» espera a «Before we start»,
+  `permissionsGate`), que está en `entorno-pruebas` y `metas-fase1`. La beta de los amigos (canal `pruebas`) recibe el
+  idioma con el OTA de `metas-fase1`, cuando Astor dé el OK en esa sesión.
+- **Sin comprobar en un móvil** que el idioma del sistema se detecte bien.
