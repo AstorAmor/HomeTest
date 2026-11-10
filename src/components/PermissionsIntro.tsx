@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { turnOnPhoneReminders } from '@/data/phoneReminders';
+import { setPermissionsGate } from '@/data/permissionsGate';
 import { t } from '@/i18n';
 
 // La primera vez que se abre la app en este móvil (con sesión de paciente), antes de que el sistema
@@ -30,17 +31,28 @@ export function PermissionsIntro() {
   const patient = isLoggedIn && !professional && demoMode !== 'pro';
   const [show, setShow] = useState(false);
 
+  // Los avisos de bienvenida (perfil genético, la regla) esperan a que esto se cierre (permissionsGate.ts)
   useEffect(() => {
-    if (initializing || !patient || Platform.OS === 'web') return;
+    if (initializing) return;
+    if (!patient || Platform.OS === 'web') {
+      setPermissionsGate('done');
+      return;
+    }
     AsyncStorage.getItem(KEY)
-      .then((v) => !v && setShow(true))
-      .catch(() => undefined);
+      .then((v) => {
+        if (v) return setPermissionsGate('done');
+        setPermissionsGate('open');
+        setShow(true);
+      })
+      .catch(() => setPermissionsGate('done'));
   }, [initializing, patient]);
 
   const close = async (askNow: boolean) => {
     setShow(false);
     await AsyncStorage.setItem(KEY, new Date().toISOString()).catch(() => undefined);
+    // También espera a que se conteste el permiso de avisos del sistema
     if (askNow) await turnOnPhoneReminders().catch(() => undefined);
+    setPermissionsGate('done', { justClosed: true });
   };
 
   if (!show) return null;

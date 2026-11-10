@@ -10,6 +10,7 @@ import { profileRepository } from '@/data/profileRepository';
 import { useSections } from '@/data/appPrefs';
 import { t } from '@/i18n';
 import { useTourActive } from '@/components/tour/tourStore';
+import { usePermissionsGatePending } from '@/data/permissionsGate';
 
 // Avisos de bienvenida (fundador, 2026-10-17): al entrar en Hoy las primeras veces, una tarjeta
 // invita a hacer el perfil genético y, a las mujeres, el cuestionario de la regla. Siempre se puede
@@ -49,6 +50,8 @@ const isOpen = (state: unknown) => {
 export const WelcomePrompts = () => {
   // Con el tutorial en marcha (justo después de los cuestionarios), esperan a que acabe
   const touring = useTourActive();
+  // Y a que se cierre «Before we start» (los permisos), con un rato de margen
+  const permissionsPending = usePermissionsGatePending();
   const router = useRouter();
   const show = useSections();
   const [queue, setQueue] = useState<PromptId[]>([]);
@@ -79,7 +82,7 @@ export const WelcomePrompts = () => {
   useFocusEffect(load);
 
   const current = queue[0];
-  if (!current || touring) return null;
+  if (!current || touring || permissionsPending) return null;
   const p = PROMPTS[current];
   const advance = () => setQueue((q) => q.slice(1));
 
