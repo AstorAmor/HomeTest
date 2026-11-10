@@ -86,6 +86,10 @@ Con la CLI 3 los comandos van contra la base **local** si no se dice otra cosa: 
   (`npx eas-cli env:list <entorno>`) y nunca `eas env:set` sobre una que esté en más de uno.
 - Secretos de la base de pruebas: `GEMINI_API_KEY` (la misma clave que producción, copiada el 2026-11-09 con
   el OK de Astor) para leer analíticas con IA. Comprobar que responde: `node scripts/staging-ai-check.mjs`.
+- Correo: SMTP de Brevo puesto por Astor en el panel (2026-11-10; remitente `support@kuovahealth.com`, puerto
+  587) y plantilla «Confirma tu cuenta de Kuova» subida con `KUOVA_SITE_URL=kuovapruebas:// npx supabase config push
+  --remote=bujbvrozmtcnnmhvkupj --workdir . --yes`. Probar un correo de verdad: `node scripts/staging-email-check.mjs
+  <email>` (se da de alta como la app y borra la cuenta después).
 - APK: `npx eas-cli build --platform android --profile staging` (una vez; con cambios nativos, otra). El
   primero, el 2026-11-09 (build `16edc92f`, versionCode 1, llave de firma creada por EAS en la nube).
   Ojo al juntar con `metas-fase1`: si el código juntado usa un módulo nativo que este APK no tiene (por
