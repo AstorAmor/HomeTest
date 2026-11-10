@@ -45,7 +45,7 @@ export function LanguagePicker() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', gap: 6, marginBottom: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', gap: 6 },
   pill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: 'transparent' },
   pillOn: { borderColor: withAlpha(Colors.accent, 0.6), backgroundColor: withAlpha(Colors.accent, 0.12) },
   text: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
