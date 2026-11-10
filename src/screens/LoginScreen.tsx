@@ -15,6 +15,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Colors, withAlpha } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { KuovaWordmark } from '@/components/KuovaLogo';
+import { LanguagePicker } from '@/components/LanguagePicker';
 import { Ionicons } from '@expo/vector-icons';
 import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
 import { isPublicDemo } from '@/lib/supabase';
@@ -105,6 +106,7 @@ export const LoginScreen = () => {
         style={styles.container}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          <LanguagePicker />
           <View style={styles.header}>
             <View accessible accessibilityRole="header" accessibilityLabel={t('Kuova Health')}>
               <KuovaWordmark height={34} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />

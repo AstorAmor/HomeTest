@@ -1,3 +1,4 @@
+import { pickDeviceLang } from './locale';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { es } from './es';
 import { workoutsEs } from './workoutsEs';
@@ -41,13 +42,25 @@ export const num = (v: number | string | null | undefined): string =>
 
 export const tn = (n: number, one: string, many: string) => t(n === 1 ? one : many, { n });
 
+// Idioma del móvil: primero el del sistema (I18nManager, Android e iPhone), luego el del navegador (web) y
+// por último Intl, que en algún Android dice «en-US» aunque el móvil esté en español (src/i18n/locale.ts)
 function deviceLang(): Lang {
-  try {
-    const loc = (Intl.DateTimeFormat().resolvedOptions().locale || 'en').toLowerCase();
-    return loc.startsWith('es') ? 'es' : 'en';
-  } catch {
-    return 'en';
-  }
+  const tryGet = (f: () => string | null | undefined) => {
+    try {
+      return f();
+    } catch {
+      return null;
+    }
+  };
+  return pickDeviceLang([
+    tryGet(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { I18nManager } = require('react-native');
+      return (I18nManager.getConstants?.() as { localeIdentifier?: string | null } | undefined)?.localeIdentifier;
+    }),
+    tryGet(() => (typeof navigator !== 'undefined' ? navigator.language : null)),
+    tryGet(() => Intl.DateTimeFormat().resolvedOptions().locale),
+  ]);
 }
 
 export async function loadLanguage(): Promise<Lang> {
