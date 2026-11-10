@@ -29,8 +29,8 @@ const GAP_K = 30;
 const WORD_H = 21;
 const GAP_WORD = 12;
 const HEALTH_H = 14;
-// La K empieza centrada en la pantalla (como la nativa) y sube para dejar sitio al nombre
-const LIFT = (GAP_K + WORD_H + GAP_WORD + HEALTH_H) / 2;
+// La K se queda quieta en el centro, donde estaba la nativa, y el nombre aparece debajo (2026-11-10: Astor
+// vio raro que la K subiera para dejarle sitio)
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
@@ -92,7 +92,6 @@ export function LaunchIntro() {
   }, []);
 
   const overlay = useAnimatedStyle(() => ({ opacity: fade.value }));
-  const lockup = useAnimatedStyle(() => ({ transform: [{ translateY: interpolate(reveal.value, [0, 1], [LIFT, 0]) }] }));
   const name = useAnimatedStyle(() => ({
     opacity: interpolate(reveal.value, [0.25, 1], [0, 1], 'clamp'),
     transform: [{ translateY: interpolate(reveal.value, [0.25, 1], [8, 0], 'clamp') }],
@@ -106,7 +105,7 @@ export function LaunchIntro() {
         onPress={() => close(0, 160)}
         accessibilityRole="image"
         accessibilityLabel="Kuova Health">
-        <Animated.View style={[styles.lockup, lockup]}>
+        <View style={styles.kBox}>
           <GoldK shine={shine} />
           <Animated.View style={[styles.name, name]}>
             <KuovaWordmark height={WORD_H} color="#F4EFE3" />
@@ -115,7 +114,7 @@ export function LaunchIntro() {
               HEALTH
             </Text>
           </Animated.View>
-        </Animated.View>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -124,8 +123,9 @@ export function LaunchIntro() {
 const styles = StyleSheet.create({
   overlay: { backgroundColor: LAUNCH_BG, zIndex: 1000, elevation: 1000 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  lockup: { alignItems: 'center' },
-  name: { alignItems: 'center', marginTop: GAP_K },
+  // Solo la K cuenta para centrar; el nombre cuelga debajo sin moverla
+  kBox: { width: K_W, height: K_H },
+  name: { position: 'absolute', top: K_H + GAP_K, left: -160, right: -160, alignItems: 'center' },
   health: {
     color: '#C9A366',
     fontSize: 11,
