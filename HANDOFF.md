@@ -2851,8 +2851,9 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   sistema (`I18nManager…localeIdentifier`, antes solo `Intl`, que en Android daba inglés) y catalán/gallego/euskera van a
   español; selector «Español / English» arriba en la pantalla de entrar (`LanguagePicker`). Orden:
   `src/data/permissionsGate.ts`, los avisos de bienvenida esperan a que se cierre «Before we start» y 2 s más (b2eb4e4,
-  d731fce, 7601562; parche para metas-fase1 en las notas compartidas). Solo el idioma va a la app pública, desde la rama
-  `idioma-produccion` (worktree `hometest-app-idioma`, master + 74fa0f3), con el OK de Astor.
+  d731fce, 7601562; parche para metas-fase1 en las notas compartidas). Solo el idioma fue a la app pública:
+  **publicado 466f1b5** el 2026-11-10 (EAS 4ed9f8c2 y las dos webs, OK de Astor), con el selector arriba del todo y
+  separado de la marca (aquí 2895f46).
 - **Kuova Pruebas = la versión de la beta** (2026-11-10): `metas-fase1` (6cdb760) juntada en `entorno-pruebas` (37150ae),
   porque Kuova Pruebas tenía la app de master. 661 tests, tsc limpio, web contra pruebas OK (check-in nuevo, metas). Lleva
   el módulo nativo `kuova-wallpaper`, así que necesita APK nuevo: build `460d5261` (perfil staging).
