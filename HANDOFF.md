@@ -1925,7 +1925,7 @@ app pública: el idioma salía solo de `Intl`, que en Android da inglés.
   idioma con el OTA de `metas-fase1`, cuando Astor dé el OK en esa sesión.
 - **Sin comprobar en un móvil** que el idioma del sistema se detecte bien.
 
-## 2026-11-11 — «¿Has olvidado tu contraseña?» para la app pública (rama `contrasena-olvidada`, SIN publicar)
+## 2026-11-11 — «¿Has olvidado tu contraseña?» para la app pública (rama `contrasena-olvidada`, PUBLICADO b3c94a1)
 
 Lo pidió Astor («tenemos que incluir algo también de forgot your password»); primero se hizo y se probó en
 `entorno-pruebas` (89eb7a6, Kuova Pruebas). Esta rama, desde master, es la misma función sin el doble factor ni la
@@ -1959,3 +1959,10 @@ La beta de los amigos (canal `pruebas`) no lo lleva: iría con un OTA de `prueba
 - 2026-11-11: prueba real en producción OK (correo con el código a una cuenta de Astor, por Brevo). Política de privacidad
   publicada en kuovahealth.com (HomeTest-web e114725, OK de Astor): Brevo también envía los emails de la cuenta. **Solo
   falta el paso 3** (publicar la app), con su OK.
+- 2026-11-11: **PUBLICADO** con el OK de Astor («Sí, publícala»): master avanzado a b3c94a1 (fast-forward), push y
+  `npm run release` desde el worktree `hometest-app-idioma` (`NODE_OPTIONS=--max-old-space-size=6144`). EAS Update canal
+  `preview`, grupo 9706e52b-efff-4283-a899-ebd9da1226ed (android + ios, runtime exposdk:57.0.0), y las dos webs
+  (hometest-app.vercel.app y hometest-demo.vercel.app). Antes: 474 tests y tsc limpio. Comprobado en las dos webs: el
+  bundle trae «Forgot your password?» y la base de producción (ni rastro de la de pruebas), y en hometest-app.vercel.app
+  el enlace abre el panel del email (sin mandar nada). **Sin probar en un móvil.** La beta de los amigos (canal `pruebas`)
+  no lo lleva hasta un OTA de `pruebas` (rama `pruebas-entrada`, en espera del OK de Astor).
