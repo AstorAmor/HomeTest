@@ -12,6 +12,7 @@ import {
   planPhoneReminders,
   reminderData,
   reminderKindLabel,
+  reminderTapRoute,
   resolvedPresented,
   temperatureReminders,
   usualMorningTime,
@@ -311,6 +312,29 @@ describe('ids estables y reprogramar', () => {
 
   it('el diff no toca notificaciones que no son de Kuova', () => {
     expect(diffPending(['otra-app-1'], []).cancel).toEqual([]);
+  });
+});
+
+describe('tocar un aviso', () => {
+  const DEFAULT = 'expo.modules.notifications.actions.DEFAULT';
+  const dose = { action: DEFAULT, id: `${PHONE_ID_PREFIX}dose-x`, date: 1000, route: '/medications' };
+
+  it('la toma abre Medicación', () => {
+    expect(reminderTapRoute(dose, DEFAULT, new Set())).toBe('/medications');
+  });
+
+  it('el mismo toque solo abre la pantalla una vez (llega al escuchar y otra vez al volver a la app)', () => {
+    const seen = new Set<string>();
+    expect(reminderTapRoute(dose, DEFAULT, seen)).toBe('/medications');
+    expect(reminderTapRoute(dose, DEFAULT, seen)).toBeNull();
+    expect(reminderTapRoute({ ...dose, date: 2000 }, DEFAULT, seen)).toBe('/medications');
+  });
+
+  it('el aviso de prueba, los de otras apps, los botones y las rutas raras no abren nada', () => {
+    expect(reminderTapRoute({ ...dose, id: 'prueba-123' }, DEFAULT, new Set())).toBeNull();
+    expect(reminderTapRoute({ ...dose, action: 'otro-boton' }, DEFAULT, new Set())).toBeNull();
+    expect(reminderTapRoute({ ...dose, route: undefined }, DEFAULT, new Set())).toBeNull();
+    expect(reminderTapRoute({ ...dose, route: 'https://ejemplo.com' }, DEFAULT, new Set())).toBeNull();
   });
 });
 

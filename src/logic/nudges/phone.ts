@@ -303,6 +303,25 @@ export const reminderData = (r: PhoneReminder): PhoneReminderData => ({
   ...(r.medIds ? { medIds: r.medIds } : {}),
 });
 
+// Toque en un aviso: la pantalla que abre, o null si no es un aviso de Kuova (el de prueba tampoco),
+// si se tocó un botón y no el aviso, o si ese mismo toque ya se abrió. El mismo toque puede llegar dos
+// veces (al escuchar y al volver a la app), por eso se recuerda en `seen` (id del aviso + hora del toque).
+export interface ReminderTap {
+  action: string;
+  id: string;
+  date: number;
+  route: unknown;
+}
+
+export function reminderTapRoute(tap: ReminderTap, defaultAction: string, seen: Set<string>): string | null {
+  if (tap.action !== defaultAction || !tap.id.startsWith(PHONE_ID_PREFIX)) return null;
+  if (typeof tap.route !== 'string' || !tap.route.startsWith('/')) return null;
+  const key = `${tap.id}@${tap.date}`;
+  if (seen.has(key)) return null;
+  seen.add(key);
+  return tap.route;
+}
+
 // Avisos que ya están en la barra de notificaciones y ya están hechos (la toma marcada, la
 // temperatura o el peso apuntados, el check-in hecho ese día o después): se quitan de la barra.
 export function resolvedPresented(

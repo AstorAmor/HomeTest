@@ -18,6 +18,7 @@ import {
   planPhoneReminders,
   reminderData,
   reminderKindLabel,
+  reminderTapRoute,
   resolvedPresented,
 } from '@/logic/nudges/phone';
 import type { DeliverySetting } from '@/logic/deliveryHelp';
@@ -354,27 +355,42 @@ export async function upcomingPhoneReminders(limit = 3): Promise<{ id: string; a
     .slice(0, limit);
 }
 
-// Al tocar un aviso de Kuova se abre su pantalla. También si la app estaba cerrada y se abrió así.
+// Toques ya abiertos (id del aviso + hora del toque), para la vida de la app: el mismo toque llega
+// por el oyente y otra vez al volver a la app, y no debe abrir la pantalla dos veces
+const seenTaps = new Set<string>();
+
+// Al tocar un aviso de Kuova se pasa su pantalla a `open` (src/components/PhoneReminders.tsx decide
+// cuándo se puede abrir). Tres caminos: la app estaba cerrada y se abrió así (último toque al empezar),
+// estaba en segundo plano (oyente) y, por si el toque llegó sin nadie escuchando, se vuelve a mirar el
+// último toque cada vez que la app vuelve al primer plano.
 export function listenToReminderTaps(open: (route: string) => void): () => void {
   const N = loadNotifications();
   if (!N) return () => undefined;
   let live = true;
   const handle = (r: Awaited<ReturnType<NotificationsModule['getLastNotificationResponseAsync']>>) => {
-    if (!r || r.actionIdentifier !== N.DEFAULT_ACTION_IDENTIFIER) return;
+    if (!r || !live) return;
     const { identifier, content } = r.notification.request;
-    const route = content.data?.route;
-    if (!ours(identifier) || typeof route !== 'string' || !route.startsWith('/')) return;
+    const route = reminderTapRoute(
+      { action: r.actionIdentifier, id: identifier, date: r.notification.date, route: content.data?.route },
+      N.DEFAULT_ACTION_IDENTIFIER,
+      seenTaps
+    );
+    if (!route) return;
     N.clearLastNotificationResponseAsync().catch(() => undefined);
     open(route);
   };
-  N.getLastNotificationResponseAsync()
-    // Al arrancar, deja que la primera pantalla termine de redirigir antes de abrir la del aviso
-    .then((r) => r && setTimeout(() => live && handle(r), 600))
-    .catch(() => undefined);
+  const checkLast = () => {
+    N.getLastNotificationResponseAsync().then(handle).catch(() => undefined);
+  };
+  checkLast();
   const sub = N.addNotificationResponseReceivedListener(handle);
+  const appState = AppState.addEventListener('change', (s) => {
+    if (s === 'active') checkLast();
+  });
   return () => {
     live = false;
     sub.remove();
+    appState.remove();
   };
 }
 
