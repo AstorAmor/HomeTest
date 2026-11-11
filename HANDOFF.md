@@ -2887,3 +2887,14 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   pantalla cuando la app está en primer plano, sin doble factor ni «Elige una contraseña nueva» delante, a los 600 ms.
   **Falta que Astor lo pruebe en el móvil.** Mismo código en `metas-fase1`/`pruebas-entrada` (beta) y en master
   (app pública): llevarlo allí cuando se confirme.
+- 2026-11-11 (corrección): lo que vio Astor no era el aviso del móvil sino «¿Te has tomado Creatina?» en la lista de
+  Más → Notificaciones (regla `medication_missed`, `route: '/medications'`), en la Kuova de la beta (su bandeja no está
+  en la base de pruebas). Al tocarlo se quedaba en Notificaciones. En la web contra pruebas (cuenta inventada, borrada
+  después) el mismo toque abre Medicación, y Medicación → Historial sí funciona en su Android. Código igual en
+  `pruebas-entrada`, `entorno-pruebas` y la web; diferencias solo-Android de esa pantalla (bloque «En tu móvil»,
+  `DeliveryHelp`, sincronizar avisos al cargar) revisadas sin encontrar la causa. **Sin causa:** falta que Astor lo
+  repita en la beta tocando el texto (no la campana tachada, que abre «Silenciar…») y diga qué pasa. El arreglo de
+  15e898e (toque en el aviso del móvil) cubre otro caso y se queda en Kuova Pruebas.
+- 2026-11-11: Hoy, la (i) de «Tu estado de hoy» iba al final de la línea (`justifyContent: 'space-between'`) y la de
+  «Cumple tus objetivos» justo detrás del título: las dos detrás del título, a 6 px (95cc7a2, OTA staging 9c28f6b6;
+  comprobado en la web a ancho de móvil). Llevar a la beta con lo demás.
