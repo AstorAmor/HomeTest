@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { PreferencesBlock } from '@/components/PreferencesBlock';
 import { WeekStartSetting } from '@/components/metas/WeekStartSetting';
+import { AppLockSetting } from '@/components/AppLockSetting';
 import { Colors } from '@/constants/colors';
 import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
@@ -101,6 +102,8 @@ export const SettingsScreen = () => {
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
               </TouchableOpacity>
+              {/* Face ID / huella: solo con el módulo nativo (APK o app de iPhone desde el 2026-11-11) */}
+              <AppLockSetting />
               {/* Cuenta real ↔ de prueba y casos de prueba: solo probadores (admins y sus «+alias») */}
               {isTester && (
               <View style={[styles.row, styles.divider]}>

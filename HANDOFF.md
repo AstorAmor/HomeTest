@@ -2920,3 +2920,29 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   lo envía; «Pegar el código» con «Tu código de Kuova: 176 526» activa el doble factor; al entrar, escribir el código
   con guion entra solo. Sin probar en Android (no hay emulador en este PC) ni las casillas del correo (mismo
   componente). **Falta que Astor lo pruebe en su Xiaomi.** Llevar a la beta y a la app pública con lo demás.
+- 2026-11-11: **bloquear Kuova con Face ID / huella** (Astor: «quiero implementar huella y face ID»; punto 6 del lote
+  nativo aprobado el 09/11, adelantado). Ajustes → Cuenta → «Bloquear Kuova con tu huella / Face ID…», apagado de
+  serie, solo si la app lleva el módulo; sin huella ni cara configuradas, una línea lo explica. Al activarlo se pide
+  una vez. `src/components/AppLock.tsx` (Modal por encima de todo) + reglas puras en `src/logic/appLock.ts` (tests):
+  - bloquea al abrir en frío con la sesión guardada y al volver de segundo plano tras «Al momento / 1 min (de serie)
+    / 5 min»; tras entrar con la contraseña no; desbloqueo con la cara o el dedo y, si fallan, el código/PIN/patrón
+    del móvil (`disableDeviceFallback: false`); «Usar contraseña» cierra sesión → login (con doble factor si lo tiene);
+  - no sustituye al doble factor: solo abre la sesión que ya está en el móvil. La preferencia es del móvil y de esa
+    cuenta (`app_lock.v1` en AsyncStorage con el id): otra cuenta en el mismo móvil no la hereda;
+  - al pasar a segundo plano, capa con la K dorada (miniatura de «apps recientes»); en Android 13+ además la
+    miniatura sale en blanco con el módulo local nuevo `modules/kuova-privacy` (`setRecentsScreenshotEnabled`, no
+    bloquea las capturas de pantalla como FLAG_SECURE);
+  - mientras el sistema enseña la huella/cara/PIN se ignoran los cambios de AppState (`authenticating()` en
+    `src/utils/biometrics.ts`), si no, el PIN de Android (otra actividad) volvía a bloquear.
+  Nativo: `expo-local-authentication` 57.0.3 (plugin con `faceIDPermission`; español en `assets/locales/es.json`;
+  `USE_BIOMETRIC` lo pone la librería) y `expo-clipboard` 57.0.2 (las casillas del código lo usan si está, con
+  `hasStringAsync` para no sacar el aviso de Android; si no, el módulo de RN). Todo se carga con
+  `requireOptionalNativeModule`: con una OTA sobre un APK anterior (beta verde, app publicada) no aparece nada.
+  `runtimeVersion` es `sdkVersion`, así que las OTA de `staging` siguen llegando a los APK viejos y al nuevo.
+  **Necesita un APK nuevo de Kuova Pruebas** (perfil `staging`) y el OK de Astor para compilarlo. Probado: tsc,
+  675 tests, autolinking (expo-local-authentication, expo-clipboard, kuova-privacy) y la web (Ajustes sin la fila,
+  sin errores). Sin probar en un móvil. iPhone: si hay una pantalla modal abierta al bloquear se cierran antes
+  (`dismissAll`), y la capa de «apps recientes» puede no tapar una pantalla modal: revisar con la compilación de
+  iPhone. Después va al lote nativo para todos.
+  Worktree: `hometest-app-staging/node_modules` ya no es un junction a `hometest-app/node_modules` (instalar paquetes
+  aquí habría tocado la carpeta de la otra sesión): tiene los suyos (`npm ci`, 2026-11-11).

@@ -120,4 +120,37 @@ export const authEs: Record<string, string> = {
   'Reason (at least 10 characters)': 'Motivo (al menos 10 caracteres)',
   'Removed: {n}. Next time they sign in, they will add a new app.': 'Quitadas: {n}. La próxima vez que entre, añadirá una app nueva.',
   Cancel: 'Cancelar',
+
+  // Bloqueo con Face ID / huella (AppLock, AppLockSetting)
+  'Lock Kuova with Face ID': 'Bloquear Kuova con Face ID',
+  'Lock Kuova with Touch ID': 'Bloquear Kuova con Touch ID',
+  'Lock Kuova with your fingerprint': 'Bloquear Kuova con tu huella',
+  'Lock Kuova with your face': 'Bloquear Kuova con tu cara',
+  'Lock Kuova with your fingerprint or face': 'Bloquear Kuova con tu huella o tu cara',
+  'Kuova asks for it when you open it and when you come back after a while. It does not replace two-step verification.':
+    'Kuova te la pide al abrirla y al volver tras un rato. No sustituye a la verificación en dos pasos.',
+  'To use it, first set up your fingerprint or face in your phone settings.':
+    'Para usarlo, configura antes tu huella o tu cara en los ajustes del móvil.',
+  'This phone has no fingerprint reader or face recognition.': 'Este móvil no tiene lector de huella ni reconocimiento facial.',
+  'Confirm it is you': 'Confirma que eres tú',
+  'Could not check it. Try again.': 'No se ha podido comprobar. Vuelve a probar.',
+  'Lock when you come back': 'Bloquear al volver',
+  'Right away': 'Al momento',
+  'After 1 min': 'Tras 1 min',
+  'After 5 min': 'Tras 5 min',
+  'Unlock Kuova': 'Desbloquea Kuova',
+  'Kuova is locked': 'Kuova está bloqueada',
+  'Unlock with Face ID': 'Desbloquear con Face ID',
+  'Unlock with Touch ID': 'Desbloquear con Touch ID',
+  'Unlock with your fingerprint': 'Desbloquear con tu huella',
+  'Unlock with your face': 'Desbloquear con tu cara',
+  Unlock: 'Desbloquear',
+  'Use your password': 'Usar contraseña',
+  'You sign out on this phone and sign in again with your password (and your code, if you use two-step verification).':
+    'Se cierra la sesión en este móvil y entras con tu contraseña (y tu código, si tienes la verificación en dos pasos).',
+  'Too many attempts. Use your phone code, wait a moment, or use your password.':
+    'Demasiados intentos. Usa el código del móvil, espera un poco o usa tu contraseña.',
+  'This phone no longer has a fingerprint, face or screen lock set up. Use your password.':
+    'Este móvil ya no tiene huella, cara ni bloqueo de pantalla configurados. Usa tu contraseña.',
+  'Could not check it. Try again or use your password.': 'No se ha podido comprobar. Vuelve a probar o usa tu contraseña.',
 };

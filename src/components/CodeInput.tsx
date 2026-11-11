@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
 import { t } from '@/i18n';
 import { codeFromInput, codeInText } from '@/logic/mfa';
-import { canReadClipboard, readClipboard } from '@/utils/clipboard';
+import { canReadClipboard, hasClipboardText, readClipboard } from '@/utils/clipboard';
 
 // Casilla del código de 6 cifras: doble factor (alta y al entrar), confirmar el email y «¿Has olvidado tu
 // contraseña?». Fundador, 2026-11-11, en un Xiaomi con HyperOS: costaba meter el código y no dejaba pegar.
@@ -58,6 +58,7 @@ export function CodeInput({ value, onChange, onComplete, editable = true, autoFo
       if (s !== 'active' || !empty.current) return;
       if (timer) clearTimeout(timer);
       timer = setTimeout(async () => {
+        if (!(await hasClipboardText())) return;
         const code = codeInText(await readClipboard());
         if (live.current && empty.current) setCopied(code);
       }, RETURN_DELAY_MS);

@@ -12,6 +12,7 @@ import { WebShell } from '@/components/web/WebShell';
 import { PhoneReminders } from '@/components/PhoneReminders';
 import { PermissionsIntro } from '@/components/PermissionsIntro';
 import { MfaGuard } from '@/components/MfaGuard';
+import { AppLock } from '@/components/AppLock';
 
 // La pantalla de carga se mantiene desde index.js (donde se aplica el tema).
 
@@ -156,6 +157,8 @@ export default function Layout() {
           {/* Recordatorios del móvil con la app cerrada (solo con un APK que lleve expo-notifications) */}
           <PhoneReminders />
           <PermissionsIntro />
+          {/* Bloqueo con Face ID / huella (Ajustes): por encima de todo, también del doble factor */}
+          <AppLock />
         </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
