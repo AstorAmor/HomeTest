@@ -2895,6 +2895,8 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   `DeliveryHelp`, sincronizar avisos al cargar) revisadas sin encontrar la causa. **Sin causa:** falta que Astor lo
   repita en la beta tocando el texto (no la campana tachada, que abre «Silenciar…») y diga qué pasa. El arreglo de
   15e898e (toque en el aviso del móvil) cubre otro caso y se queda en Kuova Pruebas.
+  Mismo día: Astor lo repitió y «ahora sí va bien»: «¿Te has tomado Creatina?» lleva a Medicación. Cerrado sin
+  cambio de código (probablemente se tocó la campana o fue puntual).
 - 2026-11-11: Hoy, la (i) de «Tu estado de hoy» iba al final de la línea (`justifyContent: 'space-between'`) y la de
   «Cumple tus objetivos» justo detrás del título: las dos detrás del título, a 6 px (95cc7a2, OTA staging 9c28f6b6;
   comprobado en la web a ancho de móvil). Llevar a la beta con lo demás.
