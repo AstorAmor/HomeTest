@@ -90,6 +90,8 @@ Con la CLI 3 los comandos van contra la base **local** si no se dice otra cosa: 
   587) y plantilla «Confirma tu cuenta de Kuova» subida con `KUOVA_SITE_URL=kuovapruebas:// npx supabase config push
   --remote=bujbvrozmtcnnmhvkupj --workdir . --yes`. Probar un correo de verdad: `node scripts/staging-email-check.mjs
   <email>` (se da de alta como la app y borra la cuenta después).
+- Plantillas de «¿Has olvidado tu contraseña?» (código de 6 cifras) y del aviso «Tu contraseña de Kuova ha
+  cambiado», subidas igual el 2026-11-11 (ver docs/doble-factor.md).
 - APK: `npx eas-cli build --platform android --profile staging` (una vez; con cambios nativos, otra). El
   primero, el 2026-11-09 (build `16edc92f`, versionCode 1, llave de firma creada por EAS en la nube).
   Ojo al juntar con `metas-fase1`: si el código juntado usa un módulo nativo que este APK no tiene (por

@@ -23,14 +23,8 @@ import { t } from '@/i18n';
 import { PasswordInput } from '@/components/PasswordInput';
 import { isStagingApp, isTestDatabase } from '@/lib/appVariant';
 import { cleanTotpCode, isTotpCodeComplete } from '@/logic/mfa';
-import { PASSWORD_RULES, isPasswordStrongEnough, passwordRuleFromAuthError, passwordRuleMet, type PasswordRule } from '@/logic/password';
-
-// Reglas de la contraseña (las mismas que Supabase: config.toml y logic/password.ts)
-const RULE_LABEL: Record<PasswordRule, string> = {
-  length: 'At least 8 characters',
-  letter: 'One letter (a-z)',
-  digit: 'One number',
-};
+import { isPasswordStrongEnough, passwordRuleFromAuthError } from '@/logic/password';
+import { PasswordRules } from '@/components/PasswordRules';
 
 // Los errores de Supabase llegan en inglés: los más comunes, en el idioma de la app
 const authMessage = (m: string) => {
@@ -62,7 +56,10 @@ export const LoginScreen = () => {
   const [specialty, setSpecialty] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
 
-  const { login, signup, authMode, setDemoMode, verifySignupCode, resendSignupEmail } = useAuth();
+  const { login, signup, authMode, setDemoMode, verifySignupCode, resendSignupEmail, requestPasswordReset, verifyResetCode } = useAuth();
+  // «¿Has olvidado tu contraseña?»: 'email' = pedir el código; 'code' = escribirlo (enviado a resetTo)
+  const [reset, setReset] = useState<null | 'email' | 'code'>(null);
+  const [resetTo, setResetTo] = useState('');
   const isProfessional = proAccess && authMode === 'supabase';
   // «Revisa tu correo»: código de 6 cifras del correo y reenvío (con espera de 1 minuto, como Supabase)
   const [code, setCode] = useState('');
@@ -105,6 +102,53 @@ export const LoginScreen = () => {
       setCooldown(RESEND_SECONDS);
     } catch (err) {
       setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+    }
+  };
+
+  const openReset = () => {
+    setReset('email');
+    setCode('');
+    setInfo('');
+    setError('');
+  };
+
+  const closeReset = () => {
+    setReset(null);
+    setCode('');
+    setInfo('');
+    setError('');
+  };
+
+  // Supabase no dice si hay una cuenta con ese email: se pasa al código igual (y el texto lo explica)
+  const sendResetCode = async (again = false) => {
+    const to = again ? resetTo : email.trim();
+    if (!to || (again && cooldown > 0)) return;
+    setError('');
+    setInfo('');
+    setLoading(true);
+    try {
+      await requestPasswordReset(to);
+      setResetTo(to);
+      setReset('code');
+      if (again) setInfo(t('Sent again. It can take a minute; look in spam or promotions too.'));
+      else setCode('');
+      setCooldown(RESEND_SECONDS);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmResetCode = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      // Con el código bueno se abre la sesión y MfaGuard enseña «Elige una contraseña nueva»
+      await verifyResetCode(resetTo, code);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+      setLoading(false);
     }
   };
 
@@ -196,7 +240,87 @@ export const LoginScreen = () => {
             )}
           </View>
 
-          {sentTo ? (
+          {reset === 'email' ? (
+            <View style={styles.form}>
+              <Text style={styles.resetTitle}>{t('Forgot your password?')}</Text>
+              <Text style={styles.resetText}>
+                {t('Type your account email and we will send you a 6-digit code to choose a new password.')}
+              </Text>
+              <Text style={styles.label}>{t('Email')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('you@email.com')}
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                textContentType="username"
+                value={email}
+                onChangeText={setEmail}
+                editable={!loading}
+                autoFocus={!email}
+                onSubmitEditing={() => email.trim() && sendResetCode()}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              <TouchableOpacity
+                style={[styles.button, (!email.trim() || loading) && styles.buttonDisabled]}
+                onPress={() => sendResetCode()}
+                disabled={!email.trim() || loading}
+              >
+                {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Send me the code')}</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeReset} disabled={loading}>
+                <Text style={styles.toggleText}>{t('Back to sign in')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : reset === 'code' ? (
+            <View style={styles.form}>
+              <View style={styles.sent}>
+                <Ionicons name="mail-outline" size={20} color={Colors.ok} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sentTitle}>{t('Check your email')}</Text>
+                  <Text style={styles.sentText}>
+                    {t('If there is a Kuova account with {email}, we have sent it a 6-digit code. Type it here to choose a new password.', { email: resetTo })}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.label}>{t('Code from the email')}</Text>
+              <TextInput
+                style={[styles.input, styles.codeInput]}
+                value={code}
+                onChangeText={(v) => setCode(cleanTotpCode(v))}
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                textContentType="oneTimeCode"
+                placeholder="123456"
+                placeholderTextColor={Colors.textMuted}
+                maxLength={7}
+                editable={!loading}
+                onSubmitEditing={() => isTotpCodeComplete(code) && confirmResetCode()}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {info ? <Text style={styles.info}>{info}</Text> : null}
+              <TouchableOpacity
+                style={[styles.button, (!isTotpCodeComplete(code) || loading) && styles.buttonDisabled]}
+                onPress={confirmResetCode}
+                disabled={!isTotpCodeComplete(code) || loading}
+              >
+                {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Continue')}</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => sendResetCode(true)} disabled={cooldown > 0 || loading}>
+                <Text style={[styles.toggleText, cooldown > 0 && styles.toggleTextWaiting]}>
+                  {cooldown > 0 ? t('You can ask for another email in {s} s.', { s: cooldown }) : t('Send the email again')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openReset} disabled={loading}>
+                <Text style={styles.toggleText}>{t('Use another email')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeReset} disabled={loading}>
+                <Text style={styles.toggleText}>{t('Back to sign in')}</Text>
+              </TouchableOpacity>
+              <Text style={styles.proNote}>{t('Not arriving? Look in spam or promotions.')}</Text>
+            </View>
+          ) : sentTo ? (
             <View style={styles.form}>
               <View style={styles.sent}>
                 <Ionicons name="mail-outline" size={20} color={Colors.ok} />
@@ -328,18 +452,11 @@ export const LoginScreen = () => {
               textContentType={isSignUp ? 'newPassword' : 'password'}
               autoComplete={isSignUp ? 'new-password' : 'current-password'}
             />
-            {showRules && (
-              <View style={styles.rules}>
-                {PASSWORD_RULES.map((r) => {
-                  const ok = passwordRuleMet(r, password);
-                  return (
-                    <View key={r} style={styles.rule}>
-                      <Ionicons name={ok ? 'checkmark-circle' : 'ellipse-outline'} size={15} color={ok ? Colors.ok : Colors.textMuted} />
-                      <Text style={[styles.ruleText, ok && styles.ruleTextOk]}>{t(RULE_LABEL[r])}</Text>
-                    </View>
-                  );
-                })}
-              </View>
+            {showRules && <PasswordRules password={password} />}
+            {!isSignUp && authMode === 'supabase' && (
+              <TouchableOpacity style={styles.forgot} onPress={openReset} disabled={loading} accessibilityRole="button">
+                <Text style={styles.forgotText}>{t('Forgot your password?')}</Text>
+              </TouchableOpacity>
             )}
             {isSignUp && (
               <>
@@ -479,10 +596,10 @@ const styles = StyleSheet.create({
   sentTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 4 },
   codeInput: { fontSize: 22, letterSpacing: 8, textAlign: 'center' },
   info: { color: Colors.ok, fontSize: 13, marginTop: 10, paddingHorizontal: 8, lineHeight: 19 },
-  rules: { marginTop: 8, gap: 4, paddingHorizontal: 4 },
-  rule: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  ruleText: { color: Colors.textMuted, fontSize: 13 },
-  ruleTextOk: { color: Colors.textPrimary },
+  forgot: { alignSelf: 'flex-end', marginTop: 10, paddingVertical: 4 },
+  forgotText: { color: Colors.accent, fontSize: 13, fontWeight: '600' },
+  resetTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', marginTop: 4 },
+  resetText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 6 },
   toggleTextWaiting: { color: Colors.textMuted, textDecorationLine: 'none' },
   testBadge: {
     flexDirection: 'row',

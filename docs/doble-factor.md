@@ -50,7 +50,30 @@ Supabase no da códigos de recuperación (hay una versión experimental que no e
 3. **Astor (único admin)**: desde el panel de Supabase → Authentication → Users → su cuenta → quitar el
    factor. El panel tiene su propio doble factor. Anotarlo a mano (como los accesos del panel).
 
+## ¿Has olvidado tu contraseña? (2026-11-11)
+
+1. Entrar → «¿Has olvidado tu contraseña?» (solo con cuentas reales, no en la demo) → email → «Enviarme el
+   código». Supabase no dice si la cuenta existe: la app pasa al código igual y el texto empieza por «Si
+   hay una cuenta de Kuova con…».
+2. Correo «Tu código para cambiar la contraseña de Kuova» (`supabase/templates/recuperar-contrasena.html`):
+   solo el código de 6 cifras, sin botón. Caduca en una hora y vale una vez.
+3. Con el código se abre la sesión y `MfaGuard` enseña solo «Elige una contraseña nueva»
+   (`NewPasswordScreen`). Si la cuenta tiene doble factor, antes pide su código: sin él Supabase no deja
+   cambiar la contraseña (`insufficient_aal`). Si la app se cierra a medias, al volver sigue ahí (marca en
+   el móvil, `src/data/passwordReset.ts`, se olvida al día, al cerrar sesión o al entrar con contraseña).
+4. Al guardar llega el aviso «Tu contraseña de Kuova ha cambiado» (`contrasena-cambiada.html`, Supabase →
+   Security notifications → Password changed).
+
+Probado en la web contra la base de pruebas el 2026-11-11 con cuentas inventadas (con y sin doble factor):
+la contraseña vieja deja de valer y la nueva entra.
+
 ## Orden en producción
+
+Para «¿Has olvidado tu contraseña?»: primero las dos plantillas (`config push` con el SMTP de Brevo ya puesto
+en producción; sin plantilla propia, el correo por defecto de Supabase trae un enlace y no el código) y
+después la app. Las dos cosas, con el OK de Astor.
+
+Para el doble factor:
 
 1. La app que sabe pedir el código (OTA con `npm run release`).
 2. Después, la migración `20261109180000_mfa_aal2` y la función `admin-mfa-reset`.

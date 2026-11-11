@@ -16,6 +16,7 @@ import {
 import { amISupportAgent } from '@/data/support';
 import { currentMfaGate } from '@/data/mfa';
 import { cleanTotpCode, type MfaGate } from '@/logic/mfa';
+import { clearPasswordResetPending, markPasswordResetPending, markPasswordResetSaved } from '@/data/passwordReset';
 
 export interface ProfessionalSignup {
   role: ProfessionalRole;
@@ -59,6 +60,11 @@ interface AuthContextType {
   // Código de 6 cifras del correo «Confirma tu cuenta»: confirma el email y deja la sesión iniciada
   verifySignupCode: (email: string, code: string) => Promise<void>;
   resendSignupEmail: (email: string) => Promise<void>;
+  // «¿Has olvidado tu contraseña?»: correo con un código de 6 cifras (no dice si la cuenta existe) → con el
+  // código se abre la sesión y la app solo enseña «Elige una contraseña nueva» (MfaGuard) → se guarda
+  requestPasswordReset: (email: string) => Promise<void>;
+  verifyResetCode: (email: string, code: string) => Promise<void>;
+  setNewPassword: (password: string) => Promise<void>;
   // Alias con el que te saluda la app ("¡Hola, Astor!"). Sin alias, la parte del email antes de la @
   updateDisplayName: (nombre: string) => Promise<void>;
   logout: () => void;
@@ -194,6 +200,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     if (supabase) {
+      // Quien entra con su contraseña no está cambiándola (por si quedó a medias un código de recuperación)
+      await clearPasswordResetPending();
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw new Error(error.message);
       return;
@@ -250,6 +258,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw new Error(error.message);
   };
 
+  const requestPasswordReset = async (email: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    if (error) throw new Error(error.message);
+  };
+
+  const verifyResetCode = async (email: string, code: string) => {
+    if (!supabase) return;
+    // Antes de abrir la sesión, para que la app vaya directa a «Elige una contraseña nueva» y no a las pestañas
+    await markPasswordResetPending();
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: cleanTotpCode(code), type: 'recovery' });
+    if (error) {
+      await clearPasswordResetPending();
+      throw new Error(error.message);
+    }
+  };
+
+  // Con doble factor, Supabase pide antes el código de la app de autenticación (aal2): MfaGuard lo pide primero
+  const setNewPassword = async (password: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw new Error(error.message);
+    await markPasswordResetSaved();
+  };
+
   const updateDisplayName = async (nombre: string) => {
     const name = nombre.trim();
     if (!name) return;
@@ -277,6 +310,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsSupportAgent(false);
       setRealAccount(false);
       setMfaGate(null);
+      clearPasswordResetPending();
       resetDataMode();
       supabase.auth.signOut().catch(() => undefined);
       return;
@@ -305,6 +339,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signup,
         verifySignupCode,
         resendSignupEmail,
+        requestPasswordReset,
+        verifyResetCode,
+        setNewPassword,
         updateDisplayName,
         logout,
       }}

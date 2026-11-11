@@ -2869,4 +2869,11 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   (7f8b190), igual que la carpeta de `metas-fase1` (que lleva el mismo parche sin commit). `dist/` exportado (Android +
   iOS, Supabase de producción). OTA a `pruebas` **en espera**: Astor dijo «aún no»; la sesión de metas-fase1 no manda
   nada a `pruebas` mientras tanto.
+- **«¿Has olvidado tu contraseña?»** (2026-11-11, Astor: «tenemos que incluir algo también de forgot your password»).
+  Enlace bajo la contraseña → email → código de 6 cifras por correo (`recuperar-contrasena.html`, sin botón) → con el
+  código se abre la sesión y `MfaGuard` enseña solo `NewPasswordScreen` (después del doble factor si la cuenta lo tiene:
+  Supabase pide aal2 para cambiarla) → aviso «Tu contraseña de Kuova ha cambiado» (`contrasena-cambiada.html`). Marca en
+  el móvil (`src/data/passwordReset.ts`) para seguir ahí si la app se cierra. Plantillas subidas a la base de pruebas.
+  Probado en la web contra pruebas con cuentas inventadas, con y sin doble factor. Producción: plantillas (con Brevo)
+  antes que la app, todo con OK de Astor (docs/doble-factor.md). La app pública tampoco tiene esto hoy.
 
