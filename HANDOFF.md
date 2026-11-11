@@ -1956,3 +1956,6 @@ La beta de los amigos (canal `pruebas`) no lo lleva: iría con un OTA de `prueba
   el código de 6 cifras (`plantillas-produccion.mjs --subir`: 6 propiedades de Auth; el diff de después, sin cambios
   pendientes). Falta el paso 3 (publicar la app). La política de privacidad nombra a Brevo solo para la newsletter: hay
   que añadir los correos de la cuenta antes de publicar (tarea de Astor en el vault, con el abogado).
+- 2026-11-11: prueba real en producción OK (correo con el código a una cuenta de Astor, por Brevo). Política de privacidad
+  publicada en kuovahealth.com (HomeTest-web e114725, OK de Astor): Brevo también envía los emails de la cuenta. **Solo
+  falta el paso 3** (publicar la app), con su OK.
