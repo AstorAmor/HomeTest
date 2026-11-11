@@ -9,6 +9,13 @@ export const authEs: Record<string, string> = {
   'The password needs at least 8 characters, with letters (a-z) and numbers.':
     'La contraseña necesita al menos 8 caracteres, con letras (a-z) y números.',
 
+  // Casilla del código de 6 cifras (CodeInput)
+  '6-digit code': 'Código de 6 cifras',
+  'Paste the code': 'Pegar el código',
+  'Use {code} (copied)': 'Usar {code} (copiado)',
+  'There is no 6-digit code copied. Copy it in the other app and try again.':
+    'No hay ningún código de 6 cifras copiado. Cópialo en la otra app y vuelve a probar.',
+
   // Confirmar el email
   'Check your email': 'Revisa tu correo',
   'We have sent an email to {email}. Type the 6-digit code from the email here, or tap «Confirm my email» in it and then sign in.':

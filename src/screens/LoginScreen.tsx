@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Text,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -21,8 +20,9 @@ import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
 import { isPublicDemo } from '@/lib/supabase';
 import { t } from '@/i18n';
 import { PasswordInput } from '@/components/PasswordInput';
+import { CodeInput } from '@/components/CodeInput';
 import { isStagingApp, isTestDatabase } from '@/lib/appVariant';
-import { cleanTotpCode, isTotpCodeComplete } from '@/logic/mfa';
+import { isTotpCodeComplete } from '@/logic/mfa';
 import { isPasswordStrongEnough, passwordRuleFromAuthError } from '@/logic/password';
 import { PasswordRules } from '@/components/PasswordRules';
 
@@ -78,13 +78,14 @@ export const LoginScreen = () => {
     setError('');
   };
 
-  const confirmCode = async () => {
-    if (!sentTo) return;
+  // c: el código recién completado (al llegar a 6 cifras se envía solo, antes de que se guarde en el estado)
+  const confirmCode = async (c = code) => {
+    if (!sentTo || loading) return;
     setError('');
     setLoading(true);
     try {
       // Con el código bueno queda la sesión iniciada: AuthContext lleva a la app
-      await verifySignupCode(sentTo, code);
+      await verifySignupCode(sentTo, c);
     } catch (err) {
       setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
     } finally {
@@ -140,12 +141,13 @@ export const LoginScreen = () => {
     }
   };
 
-  const confirmResetCode = async () => {
+  const confirmResetCode = async (c = code) => {
+    if (loading) return;
     setError('');
     setLoading(true);
     try {
       // Con el código bueno se abre la sesión y MfaGuard enseña «Elige una contraseña nueva»
-      await verifyResetCode(resetTo, code);
+      await verifyResetCode(resetTo, c);
     } catch (err) {
       setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
       setLoading(false);
@@ -213,11 +215,10 @@ export const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <CosmicBackground />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* 'padding' también en Android (app de borde a borde: la ventana ya no se encoge sola; con 'height' el
+          teclado tapaba la casilla del código y el botón, 2026-11-11) */}
+      <KeyboardAvoidingView behavior="padding" style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* El idioma arriba del todo, separado de la marca; el resto queda centrado en el hueco que sobra */}
           <LanguagePicker />
           <View style={styles.spacer} />
@@ -285,24 +286,18 @@ export const LoginScreen = () => {
                 </View>
               </View>
               <Text style={styles.label}>{t('Code from the email')}</Text>
-              <TextInput
+              <CodeInput
                 style={[styles.input, styles.codeInput]}
                 value={code}
-                onChangeText={(v) => setCode(cleanTotpCode(v))}
-                keyboardType="number-pad"
-                autoComplete="one-time-code"
-                textContentType="oneTimeCode"
-                placeholder="123456"
-                placeholderTextColor={Colors.textMuted}
-                maxLength={7}
+                onChange={setCode}
+                onComplete={confirmResetCode}
                 editable={!loading}
-                onSubmitEditing={() => isTotpCodeComplete(code) && confirmResetCode()}
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
               {info ? <Text style={styles.info}>{info}</Text> : null}
               <TouchableOpacity
                 style={[styles.button, (!isTotpCodeComplete(code) || loading) && styles.buttonDisabled]}
-                onPress={confirmResetCode}
+                onPress={() => confirmResetCode()}
                 disabled={!isTotpCodeComplete(code) || loading}
               >
                 {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Continue')}</Text>}
@@ -332,24 +327,18 @@ export const LoginScreen = () => {
                 </View>
               </View>
               <Text style={styles.label}>{t('Code from the email')}</Text>
-              <TextInput
+              <CodeInput
                 style={[styles.input, styles.codeInput]}
                 value={code}
-                onChangeText={(v) => setCode(cleanTotpCode(v))}
-                keyboardType="number-pad"
-                autoComplete="one-time-code"
-                textContentType="oneTimeCode"
-                placeholder="123456"
-                placeholderTextColor={Colors.textMuted}
-                maxLength={7}
+                onChange={setCode}
+                onComplete={confirmCode}
                 editable={!loading}
-                onSubmitEditing={() => isTotpCodeComplete(code) && confirmCode()}
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
               {info ? <Text style={styles.info}>{info}</Text> : null}
               <TouchableOpacity
                 style={[styles.button, (!isTotpCodeComplete(code) || loading) && styles.buttonDisabled]}
-                onPress={confirmCode}
+                onPress={() => confirmCode()}
                 disabled={!isTotpCodeComplete(code) || loading}
               >
                 {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Confirm')}</Text>}

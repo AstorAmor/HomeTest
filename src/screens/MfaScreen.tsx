@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
 import { CosmicBackground } from '@/components/CosmicBackground';
+import { CodeInput } from '@/components/CodeInput';
 import { KuovaWordmark } from '@/components/KuovaLogo';
 import { TotpSetup, totpErrorMessage, totpStyles } from '@/components/TotpSetup';
 import { useAuth } from '@/context/AuthContext';
 import { verifyLoginCode } from '@/data/mfa';
-import { cleanTotpCode, isTotpCodeComplete, type MfaGate } from '@/logic/mfa';
+import { isTotpCodeComplete, type MfaGate } from '@/logic/mfa';
 import { t } from '@/i18n';
 
 // Doble factor al entrar (lo pone MfaGuard en _layout delante de toda la app):
@@ -22,11 +23,13 @@ export const MfaScreen = ({ mode }: { mode: Exclude<MfaGate, null> }) => {
   const [error, setError] = useState('');
   const [lostOpen, setLostOpen] = useState(false);
 
-  const verify = async () => {
+  // c: el código recién completado (al llegar a 6 cifras se envía solo)
+  const verify = async (c = code) => {
+    if (busy) return;
     setBusy(true);
     setError('');
     try {
-      await verifyLoginCode(code);
+      await verifyLoginCode(c);
       await refreshMfa();
     } catch (e) {
       setError(totpErrorMessage(e instanceof Error ? e.message : ''));
@@ -39,7 +42,9 @@ export const MfaScreen = ({ mode }: { mode: Exclude<MfaGate, null> }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <CosmicBackground />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+      {/* 'padding' también en Android: con la app de borde a borde la ventana ya no se encoge sola y con
+          'height' el teclado tapaba la casilla y el botón (fundador, 2026-11-11). Dentro hay un ScrollView. */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <KuovaWordmark height={28} color={Colors.isLight ? Colors.accent : Colors.textPrimary} />
@@ -68,24 +73,11 @@ export const MfaScreen = ({ mode }: { mode: Exclude<MfaGate, null> }) => {
               <Text style={[styles.text, { marginBottom: 18 }]}>
                 {t('Open your authenticator app and type the 6-digit code for Kuova Health.')}
               </Text>
-              <TextInput
-                style={totpStyles.codeInput}
-                value={code}
-                onChangeText={(v) => setCode(cleanTotpCode(v))}
-                keyboardType="number-pad"
-                autoComplete="one-time-code"
-                textContentType="oneTimeCode"
-                placeholder="123456"
-                placeholderTextColor={Colors.textMuted}
-                maxLength={7}
-                autoFocus
-                editable={!busy}
-                onSubmitEditing={() => isTotpCodeComplete(code) && verify()}
-              />
+              <CodeInput style={totpStyles.codeInput} value={code} onChange={setCode} onComplete={verify} editable={!busy} autoFocus />
               {error ? <Text style={totpStyles.error}>{error}</Text> : null}
               <TouchableOpacity
                 style={[totpStyles.button, (!isTotpCodeComplete(code) || busy) && totpStyles.buttonDisabled]}
-                onPress={verify}
+                onPress={() => verify()}
                 disabled={!isTotpCodeComplete(code) || busy}
               >
                 {busy ? <ActivityIndicator color={Colors.background} /> : <Text style={totpStyles.buttonText}>{t('Continue')}</Text>}

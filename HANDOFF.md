@@ -2900,3 +2900,23 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
 - 2026-11-11: Hoy, la (i) de «Tu estado de hoy» iba al final de la línea (`justifyContent: 'space-between'`) y la de
   «Cumple tus objetivos» justo detrás del título: las dos detrás del título, a 6 px (95cc7a2, OTA staging 9c28f6b6;
   comprobado en la web a ancho de móvil). Llevar a la beta con lo demás.
+- 2026-11-11: **casillas del código de 6 cifras** (Astor, Xiaomi con HyperOS, al activar el doble factor: «al escribir
+  me saca el teclado y no me permite pegar»). Componente `src/components/CodeInput.tsx` en las 4 casillas (alta del
+  doble factor en Seguridad, código al entrar, confirmar el email y «¿Has olvidado tu contraseña?»):
+  - sin `maxLength` (Android cortaba lo pegado antes de limpiarlo); la casilla se queda con el código
+    (`codeInText`/`codeFromInput` en `src/logic/mfa.ts`, con tests: «123 456», «123-456», texto de un correo; teléfonos,
+    fechas o dos códigos no cuentan);
+  - se envía solo al llegar a 6 cifras (una vez por código; los botones siguen);
+  - botón «Pegar el código» (el teclado numérico de muchos Android no tiene portapapeles) y, solo en Android, al
+    volver a Kuova con un código copiado y la casilla vacía, «Usar 123 456 (copiado)». No se lee al abrir la pantalla
+    (Android 12+ avisa cada vez que una app lee lo copiado); en iPhone no se lee solo (pediría permiso), queda el botón;
+  - el teclado no tapa: `KeyboardAvoidingView` con `padding` también en Android (SDK 57 es edge-to-edge) en entrar,
+    código al entrar y Seguridad.
+  Portapapeles sin librería nueva (`src/utils/clipboard.ts`): el módulo `Clipboard` que React Native 0.86 aún trae,
+  pedido con `TurboModuleRegistry.get` (si falta, no sale el botón), así que va por OTA. **Lote nativo:** cuando se
+  haga un APK nuevo, pasar ese archivo a `expo-clipboard` (no está instalado hoy; `npx expo install expo-clipboard`) y
+  usar `hasStringAsync` antes de leer para no sacar el aviso de Android si no hay nada copiado.
+  Probado en la web contra pruebas (cuenta inventada, borrada): pegar «Código: 111 222 (caduca pronto)» deja 111222 y
+  lo envía; «Pegar el código» con «Tu código de Kuova: 176 526» activa el doble factor; al entrar, escribir el código
+  con guion entra solo. Sin probar en Android (no hay emulador en este PC) ni las casillas del correo (mismo
+  componente). **Falta que Astor lo pruebe en su Xiaomi.** Llevar a la beta y a la app pública con lo demás.

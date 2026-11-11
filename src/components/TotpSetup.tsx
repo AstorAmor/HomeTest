@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
+import { CodeInput } from '@/components/CodeInput';
 import { t } from '@/i18n';
 import { findPendingTotp, startTotpEnrollment, verifyTotp, type TotpEnrollment } from '@/data/mfa';
-import { cleanTotpCode, groupSecret, isTotpCodeComplete, minutesAgo } from '@/logic/mfa';
+import { groupSecret, isTotpCodeComplete, minutesAgo } from '@/logic/mfa';
 import { qrShape } from '@/logic/qr';
 
 export const totpErrorMessage = (m: string) =>
@@ -52,12 +53,13 @@ export const TotpSetup = ({ onDone }: { onDone: () => void }) => {
   }, []);
 
   const factorId = enrollment?.factorId ?? pending?.id;
-  const activate = async () => {
-    if (!factorId) return;
+  // c: el código recién completado (al llegar a 6 cifras se envía solo, antes de que se guarde en el estado)
+  const activate = async (c = code) => {
+    if (!factorId || busy) return;
     setBusy(true);
     setError('');
     try {
-      await verifyTotp(factorId, code);
+      await verifyTotp(factorId, c);
       onDone();
     } catch (e) {
       setError(totpErrorMessage(e instanceof Error ? e.message : ''));
@@ -68,23 +70,11 @@ export const TotpSetup = ({ onDone }: { onDone: () => void }) => {
 
   const codeStep = (
     <>
-      <TextInput
-        style={styles.codeInput}
-        value={code}
-        onChangeText={(v) => setCode(cleanTotpCode(v))}
-        keyboardType="number-pad"
-        autoComplete="one-time-code"
-        textContentType="oneTimeCode"
-        placeholder="123456"
-        placeholderTextColor={Colors.textMuted}
-        maxLength={7}
-        editable={!busy}
-        onSubmitEditing={() => isTotpCodeComplete(code) && activate()}
-      />
+      <CodeInput style={styles.codeInput} value={code} onChange={setCode} onComplete={activate} editable={!busy} />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <TouchableOpacity
         style={[styles.button, (!isTotpCodeComplete(code) || busy) && styles.buttonDisabled]}
-        onPress={activate}
+        onPress={() => activate()}
         disabled={!isTotpCodeComplete(code) || busy}
       >
         {busy ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Activate')}</Text>}

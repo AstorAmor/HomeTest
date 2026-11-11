@@ -22,6 +22,19 @@ export function mfaGate(input: { required: boolean; currentLevel: AalLevel; next
 export const cleanTotpCode = (raw: string) => raw.replace(/\D/g, '').slice(0, 6);
 export const isTotpCodeComplete = (raw: string) => cleanTotpCode(raw).length === 6;
 
+// El código de 6 cifras de un texto copiado: la app de autenticación copia «123456» o «123 456»; un correo,
+// «Tu código: 123456». Solo si hay exactamente uno (3+3 cifras, con espacio o guion en medio o sin nada) y
+// sin más cifras al lado (ni tras un espacio): un teléfono, una fecha o dos códigos distintos no cuentan (null).
+export function codeInText(raw: string): string | null {
+  if (!raw || raw.length > 300) return null;
+  const found = new Set<string>();
+  for (const m of raw.matchAll(/(?<![\d-]|\d[ \u00a0])(\d{3})[ \u00a0-]?(\d{3})(?![\d-]|[ \u00a0]\d)/g)) found.add(m[1] + m[2]);
+  return found.size === 1 ? [...found][0] : null;
+}
+
+// Lo que queda en la casilla al escribir o pegar: el código si lo pegado lo lleva, si no las cifras (máximo 6)
+export const codeFromInput = (raw: string) => codeInText(raw) ?? cleanTotpCode(raw);
+
 // La clave para escribirla a mano, en grupos de 4 («JBSW Y3DP …»)
 export const groupSecret = (secret: string) => secret.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
 

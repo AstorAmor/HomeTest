@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RESUME_MS, cleanTotpCode, groupSecret, isTotpCodeComplete, mfaGate, minutesAgo, pendingTotpToResume } from '@/logic/mfa';
+import { RESUME_MS, cleanTotpCode, codeFromInput, codeInText, groupSecret, isTotpCodeComplete, mfaGate, minutesAgo, pendingTotpToResume } from '@/logic/mfa';
 
 describe('doble factor: qué pantalla toca al entrar', () => {
   it('con aal2 sigue, lo exija o no la cuenta', () => {
@@ -20,6 +20,27 @@ describe('doble factor: qué pantalla toca al entrar', () => {
 });
 
 describe('códigos y clave', () => {
+  it('encuentra el código en lo copiado (app de autenticación, correo) y no en teléfonos ni fechas', () => {
+    expect(codeInText('123456')).toBe('123456');
+    expect(codeInText('123 456')).toBe('123456');
+    expect(codeInText('123-456')).toBe('123456');
+    expect(codeInText(' 123456\n')).toBe('123456');
+    expect(codeInText('Tu código para cambiar la contraseña de Kuova: 482913. Caduca en una hora.')).toBe('482913');
+    expect(codeInText('612345678')).toBeNull();
+    expect(codeInText('612 345 678')).toBeNull();
+    expect(codeInText('2026-11-11')).toBeNull();
+    expect(codeInText('111111 o 222222')).toBeNull();
+    expect(codeInText('12345')).toBeNull();
+    expect(codeInText('')).toBeNull();
+  });
+
+  it('la casilla se queda con el código pegado aunque venga con texto alrededor', () => {
+    expect(codeFromInput('Código: 482 913 (caduca en 60 min)')).toBe('482913');
+    expect(codeFromInput('12345')).toBe('12345');
+    expect(codeFromInput('1234567')).toBe('123456');
+    expect(codeFromInput('12a3')).toBe('123');
+  });
+
   it('limpia espacios y guiones del código', () => {
     expect(cleanTotpCode('123 456')).toBe('123456');
     expect(cleanTotpCode('12-34-567')).toBe('123456');
