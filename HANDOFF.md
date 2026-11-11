@@ -2857,4 +2857,16 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
 - **Kuova Pruebas = la versión de la beta** (2026-11-10): `metas-fase1` (6cdb760) juntada en `entorno-pruebas` (37150ae),
   porque Kuova Pruebas tenía la app de master. 661 tests, tsc limpio, web contra pruebas OK (check-in nuevo, metas). Lleva
   el módulo nativo `kuova-wallpaper`, así que necesita APK nuevo: build `460d5261` (perfil staging).
+- **Doble factor arreglado** (2026-11-11, Astor: «el QR aparecía un poco desplazado, el código no iba bien»; 1293e36,
+  OTA staging a0e6066d). El SVG del QR de Supabase mide 219 px sin `viewBox`: a 190 px salía cortado y sin una esquina,
+  imposible de escanear; ahora `TotpSetup` pinta su propio QR con `qrShape(uri)`. Y si Android cierra la app mientras
+  se añade Kuova a la app de autenticación, al volver se retoma el alta sin verificar de menos de 15 min
+  (`pendingTotpToResume`, `findPendingTotp`) en vez de crear otra clave que deja sin valor la guardada. Probado en la
+  web contra pruebas con códigos TOTP calculados: alta, recarga a medias + retomar, y entrar con el código. Sin probar
+  en el móvil.
+- **Entrada + QR de la tarjeta para la app real** (2026-11-11, pedido por Astor desde la sesión de Curro): rama
+  `pruebas-entrada` (worktree `hometest-app-pruebas-ota`) = 6cdb760 + idioma/avisos + selector arriba + la entrada
+  (7f8b190), igual que la carpeta de `metas-fase1` (que lleva el mismo parche sin commit). `dist/` exportado (Android +
+  iOS, Supabase de producción). OTA a `pruebas` **en espera**: Astor dijo «aún no»; la sesión de metas-fase1 no manda
+  nada a `pruebas` mientras tanto.
 
