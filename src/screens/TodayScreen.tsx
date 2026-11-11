@@ -1245,10 +1245,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
   },
+  // La (i) va justo detrás del título, como en «Cumple tus objetivos» (fundador, 2026-11-11)
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    justifyContent: 'space-between',
+    gap: 6,
     paddingRight: 20,
     marginTop: 16,
     marginBottom: 14,
@@ -1256,6 +1257,7 @@ const styles = StyleSheet.create({
   sectionTitleInline: {
     marginTop: 0,
     marginBottom: 0,
+    paddingRight: 0,
   },
   planCategory: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
   planIcon: {
