@@ -1,5 +1,6 @@
 import { pickDeviceLang } from './locale';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authEs } from './authEs';
 import { es } from './es';
 import { workoutsEs } from './workoutsEs';
 import { dietEs } from './dietEs';
@@ -21,7 +22,7 @@ export const LANGUAGES: { id: Lang; name: string; ready: boolean }[] = [
 ];
 
 const KEY = 'language.v1';
-const DICTS: Partial<Record<Lang, Record<string, string>>> = { es: { ...workoutsEs, ...dietEs, ...es } };
+const DICTS: Partial<Record<Lang, Record<string, string>>> = { es: { ...authEs, ...workoutsEs, ...dietEs, ...es } };
 
 let current: Lang = 'en';
 

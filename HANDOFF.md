@@ -1924,3 +1924,30 @@ app pública: el idioma salía solo de `Intl`, que en Android da inglés.
   `permissionsGate`), que está en `entorno-pruebas` y `metas-fase1`. La beta de los amigos (canal `pruebas`) recibe el
   idioma con el OTA de `metas-fase1`, cuando Astor dé el OK en esa sesión.
 - **Sin comprobar en un móvil** que el idioma del sistema se detecte bien.
+
+## 2026-11-11 — «¿Has olvidado tu contraseña?» para la app pública (rama `contrasena-olvidada`, SIN publicar)
+
+Lo pidió Astor («tenemos que incluir algo también de forgot your password»); primero se hizo y se probó en
+`entorno-pruebas` (89eb7a6, Kuova Pruebas). Esta rama, desde master, es la misma función sin el doble factor ni la
+confirmación del email (que master no tiene):
+
+- Pantalla de entrar: «¿Has olvidado tu contraseña?» bajo la contraseña (solo con cuentas reales) → email → «Enviarme el
+  código» → código de 6 cifras del correo. Supabase no dice si la cuenta existe; el texto empieza por «Si hay una cuenta
+  de Kuova con…». Reenvío con espera de 1 minuto.
+- Con el código se abre la sesión y `PasswordResetGuard` (en `_layout`, delante de todo) enseña solo
+  `NewPasswordScreen` hasta guardar (reglas 8+ con letras y números, `PasswordRules`). Marca en el móvil
+  (`src/data/passwordReset.ts`) para seguir ahí si la app se cierra; se olvida al día, al cerrar sesión o al entrar con
+  contraseña. Textos en `src/i18n/authEs.ts` (en `entorno-pruebas` ese archivo trae más: al juntar, quedarse con aquel).
+- Probado en la web contra la BASE DE PRUEBAS (preview `expo-web-olvido`, cuenta inventada borrada después): código
+  malo, código bueno, contraseña nueva, la vieja deja de valer. 474 tests, tsc limpio.
+
+**Para publicarlo (en este orden, cada paso con el OK de Astor en el chat):**
+1. Astor pone el SMTP de Brevo en producción (Supabase → proyecto HomeTest00 → Authentication → Emails → SMTP
+   Settings), con una clave SMTP nueva de Brevo. Hoy producción no tiene SMTP propio: Supabase solo manda correos a los
+   miembros del equipo, así que nadie más recibiría el código.
+2. `node scripts/plantillas-produccion.mjs` (enseña qué cambia) y, con el OK, `--subir`: código de 6 cifras (producción
+   venía con 8), la plantilla `recuperar-contrasena.html` y el aviso `contrasena-cambiada.html`. Nada más de Auth (no
+   usa `supabase/config.toml`). Comprobado el 2026-11-11 con el diff: 4 cambios declarados y el resto sin tocar.
+3. Juntar la rama en master (fast-forward), push y `npm run release` desde este worktree.
+Al revés (la app antes que las plantillas) el correo de Supabase por defecto traería un enlace y un código de 8 cifras.
+La beta de los amigos (canal `pruebas`) no lo lleva: iría con un OTA de `pruebas`, aparte.

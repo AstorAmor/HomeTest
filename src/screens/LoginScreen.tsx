@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -23,16 +23,20 @@ import { t } from '@/i18n';
 import { PasswordInput } from '@/components/PasswordInput';
 
 // Los errores de Supabase llegan en inglés: los más comunes, en el idioma de la app
-const authMessage = (m: string) =>
-  /invalid login credentials/i.test(m)
-    ? t('Wrong email or password.')
-    : /email not confirmed/i.test(m)
-      ? t('Confirm your email first: open the message we sent you.')
-      : /already registered|already exists/i.test(m)
-        ? t('There is already an account with this email. Sign in instead.')
-        : /password should be at least/i.test(m)
-          ? t('The password needs at least 6 characters.')
-          : m;
+const authMessage = (m: string) => {
+  if (/invalid login credentials/i.test(m)) return t('Wrong email or password.');
+  if (/email not confirmed/i.test(m)) return t('Confirm your email first: open the message we sent you.');
+  if (/already registered|already exists/i.test(m)) return t('There is already an account with this email. Sign in instead.');
+  if (/password should be at least/i.test(m)) return t('The password needs at least 6 characters.');
+  if (/only request this after|rate limit|too many/i.test(m)) return t('Wait a minute before asking for another email.');
+  if (/token has expired|otp.*(invalid|expired)|invalid.*otp/i.test(m))
+    return t('That code is not right or has expired. Check the latest email or ask for a new one.');
+  return m;
+};
+
+// Código de 6 cifras del correo de «¿Has olvidado tu contraseña?»
+const cleanCode = (raw: string) => raw.replace(/\D/g, '').slice(0, 6);
+const RESEND_SECONDS = 60;
 
 export const LoginScreen = () => {
   const [email, setEmail] = useState('');
@@ -50,8 +54,69 @@ export const LoginScreen = () => {
   const [specialty, setSpecialty] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
 
-  const { login, signup, authMode, setDemoMode } = useAuth();
+  const { login, signup, authMode, setDemoMode, requestPasswordReset, verifyResetCode } = useAuth();
   const isProfessional = proAccess && authMode === 'supabase';
+
+  // «¿Has olvidado tu contraseña?»: 'email' = pedir el código; 'code' = escribirlo (enviado a resetTo).
+  // Reenvío con espera de 1 minuto, como Supabase
+  const [reset, setReset] = useState<null | 'email' | 'code'>(null);
+  const [resetTo, setResetTo] = useState('');
+  const [code, setCode] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+  const [info, setInfo] = useState('');
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
+  const openReset = () => {
+    setReset('email');
+    setSentTo(null);
+    setCode('');
+    setInfo('');
+    setError('');
+  };
+
+  const closeReset = () => {
+    setReset(null);
+    setCode('');
+    setInfo('');
+    setError('');
+  };
+
+  // Supabase no dice si hay una cuenta con ese email: se pasa al código igual (y el texto lo explica)
+  const sendResetCode = async (again = false) => {
+    const to = again ? resetTo : email.trim();
+    if (!to || (again && cooldown > 0)) return;
+    setError('');
+    setInfo('');
+    setLoading(true);
+    try {
+      await requestPasswordReset(to);
+      setResetTo(to);
+      setReset('code');
+      if (again) setInfo(t('Sent again. It can take a minute; look in spam or promotions too.'));
+      else setCode('');
+      setCooldown(RESEND_SECONDS);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmResetCode = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      // Con el código bueno se abre la sesión y PasswordResetGuard enseña «Elige una contraseña nueva»
+      await verifyResetCode(resetTo, code);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setError('');
@@ -122,6 +187,87 @@ export const LoginScreen = () => {
             )}
           </View>
 
+          {reset === 'email' ? (
+            <View style={styles.form}>
+              <Text style={styles.resetTitle}>{t('Forgot your password?')}</Text>
+              <Text style={styles.resetText}>
+                {t('Type your account email and we will send you a 6-digit code to choose a new password.')}
+              </Text>
+              <Text style={styles.label}>{t('Email')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('you@email.com')}
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                textContentType="username"
+                value={email}
+                onChangeText={setEmail}
+                editable={!loading}
+                autoFocus={!email}
+                onSubmitEditing={() => email.trim() && sendResetCode()}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              <TouchableOpacity
+                style={[styles.button, (!email.trim() || loading) && styles.buttonDisabled]}
+                onPress={() => sendResetCode()}
+                disabled={!email.trim() || loading}
+              >
+                {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Send me the code')}</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeReset} disabled={loading}>
+                <Text style={styles.toggleText}>{t('Back to sign in')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : reset === 'code' ? (
+            <View style={styles.form}>
+              <View style={styles.sent}>
+                <Ionicons name="mail-outline" size={20} color={Colors.ok} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sentTitle}>{t('Check your email')}</Text>
+                  <Text style={styles.sentText}>
+                    {t('If there is a Kuova account with {email}, we have sent it a 6-digit code. Type it here to choose a new password.', { email: resetTo })}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.label}>{t('Code from the email')}</Text>
+              <TextInput
+                style={[styles.input, styles.codeInput]}
+                value={code}
+                onChangeText={(v) => setCode(cleanCode(v))}
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                textContentType="oneTimeCode"
+                placeholder="123456"
+                placeholderTextColor={Colors.textMuted}
+                maxLength={7}
+                editable={!loading}
+                onSubmitEditing={() => code.length === 6 && confirmResetCode()}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {info ? <Text style={styles.info}>{info}</Text> : null}
+              <TouchableOpacity
+                style={[styles.button, (code.length !== 6 || loading) && styles.buttonDisabled]}
+                onPress={confirmResetCode}
+                disabled={code.length !== 6 || loading}
+              >
+                {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Continue')}</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => sendResetCode(true)} disabled={cooldown > 0 || loading}>
+                <Text style={[styles.toggleText, cooldown > 0 && styles.toggleTextWaiting]}>
+                  {cooldown > 0 ? t('You can ask for another email in {s} s.', { s: cooldown }) : t('Send the email again')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openReset} disabled={loading}>
+                <Text style={styles.toggleText}>{t('Use another email')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeReset} disabled={loading}>
+                <Text style={styles.toggleText}>{t('Back to sign in')}</Text>
+              </TouchableOpacity>
+              <Text style={styles.proNote}>{t('Not arriving? Look in spam or promotions.')}</Text>
+            </View>
+          ) : (
           <View style={styles.form}>
             {isSignUp && (
               <>
@@ -199,6 +345,11 @@ export const LoginScreen = () => {
               editable={!loading}
               textContentType={isSignUp ? 'newPassword' : 'password'}
             />
+            {!isSignUp && authMode === 'supabase' && (
+              <TouchableOpacity style={styles.forgot} onPress={openReset} disabled={loading} accessibilityRole="button">
+                <Text style={styles.forgotText}>{t('Forgot your password?')}</Text>
+              </TouchableOpacity>
+            )}
             {isSignUp && (
               <>
                 <Text style={styles.label}>{t('Repeat your password')}</Text>
@@ -271,6 +422,7 @@ export const LoginScreen = () => {
               </TouchableOpacity>
             )}
           </View>
+          )}
 
           <View style={[styles.demoHint, authMode !== 'demo' && styles.privacyHint]}>
             <Ionicons
@@ -341,6 +493,14 @@ const styles = StyleSheet.create({
   },
   sent: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: withAlpha(Colors.ok, 0.12), borderRadius: 10, padding: 12, marginTop: 14 },
   sentText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
+  sentTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  codeInput: { fontSize: 22, letterSpacing: 8, textAlign: 'center' },
+  info: { color: Colors.ok, fontSize: 13, marginTop: 10, paddingHorizontal: 8, lineHeight: 19 },
+  toggleTextWaiting: { color: Colors.textMuted, textDecorationLine: 'none' },
+  forgot: { alignSelf: 'flex-end', marginTop: 10, paddingVertical: 4 },
+  forgotText: { color: Colors.accent, fontSize: 13, fontWeight: '600' },
+  resetTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', marginTop: 4 },
+  resetText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 6 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,

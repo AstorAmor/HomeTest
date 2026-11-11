@@ -10,6 +10,7 @@ import { Colors } from '@/constants/colors';
 import { WebShell } from '@/components/web/WebShell';
 import { PhoneReminders } from '@/components/PhoneReminders';
 import { PermissionsIntro } from '@/components/PermissionsIntro';
+import { PasswordResetGuard } from '@/components/PasswordResetGuard';
 
 // La pantalla de carga se mantiene desde index.js (donde se aplica el tema).
 
@@ -30,6 +31,8 @@ export default function Layout() {
         <AuthProvider>
           <StatusBar style={Colors.isLight ? 'dark' : 'light'} />
           {/* Web del paciente en escritorio (?web=1): menú lateral + columna; en la app no cambia nada */}
+          {/* Tras «¿Has olvidado tu contraseña?»: la contraseña nueva antes que cualquier pantalla */}
+          <PasswordResetGuard>
           <WebShell>
           <Stack
             screenOptions={{
@@ -134,6 +137,7 @@ export default function Layout() {
             <Stack.Screen name="resumen" options={{ animation: 'none' }} />
           </Stack>
           </WebShell>
+          </PasswordResetGuard>
           {/* Modo "Señalar" para anotar cambios de diseño (solo web, ver DevInspector.web.tsx) */}
           <DevInspector />
           {/* Recordatorios del móvil con la app cerrada (solo con un APK que lleve expo-notifications) */}

@@ -14,6 +14,7 @@ import {
   registerAsProfessional,
 } from '@/data/sharing';
 import { amISupportAgent } from '@/data/support';
+import { clearPasswordResetPending, markPasswordResetPending, markPasswordResetSaved } from '@/data/passwordReset';
 
 export interface ProfessionalSignup {
   role: ProfessionalRole;
@@ -50,6 +51,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   // 'confirm_email' = cuenta creada, falta abrir el correo de confirmación para poder entrar
   signup: (email: string, password: string, nombre: string, professional?: ProfessionalSignup) => Promise<'signed_in' | 'confirm_email'>;
+  // «¿Has olvidado tu contraseña?»: correo con un código de 6 cifras (no dice si la cuenta existe) → con el
+  // código se abre la sesión y la app solo enseña «Elige una contraseña nueva» (PasswordResetGuard) → se guarda
+  requestPasswordReset: (email: string) => Promise<void>;
+  verifyResetCode: (email: string, code: string) => Promise<void>;
+  setNewPassword: (password: string) => Promise<void>;
   // Alias con el que te saluda la app ("¡Hola, Astor!"). Sin alias, la parte del email antes de la @
   updateDisplayName: (nombre: string) => Promise<void>;
   logout: () => void;
@@ -173,6 +179,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     if (supabase) {
+      // Quien entra con su contraseña no está cambiándola (por si quedó a medias un código de recuperación)
+      await clearPasswordResetPending();
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw new Error(error.message);
       return;
@@ -214,6 +222,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return 'signed_in';
   };
 
+  const requestPasswordReset = async (email: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    if (error) throw new Error(error.message);
+  };
+
+  const verifyResetCode = async (email: string, code: string) => {
+    if (!supabase) return;
+    // Antes de abrir la sesión, para que la app vaya directa a «Elige una contraseña nueva» y no a las pestañas
+    await markPasswordResetPending();
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.replace(/\D/g, ''), type: 'recovery' });
+    if (error) {
+      await clearPasswordResetPending();
+      throw new Error(error.message);
+    }
+  };
+
+  const setNewPassword = async (password: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw new Error(error.message);
+    await markPasswordResetSaved();
+  };
+
   const updateDisplayName = async (nombre: string) => {
     const name = nombre.trim();
     if (!name) return;
@@ -240,6 +272,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsTester(false);
       setIsSupportAgent(false);
       setRealAccount(false);
+      clearPasswordResetPending();
       resetDataMode();
       supabase.auth.signOut().catch(() => undefined);
       return;
@@ -264,6 +297,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         realAccount,
         login,
         signup,
+        requestPasswordReset,
+        verifyResetCode,
+        setNewPassword,
         updateDisplayName,
         logout,
       }}

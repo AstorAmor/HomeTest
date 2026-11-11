@@ -1,0 +1,94 @@
+<!doctype html>
+<!--
+  Aviso «Tu contraseña de Kuova ha cambiado» (Supabase → Authentication → Emails → Security notifications →
+  Password changed). Asunto: Tu contraseña de Kuova ha cambiado
+  Lo sube `supabase config push` (config.toml, [auth.email.notification.password_changed]).
+  Llega cada vez que la contraseña cambia (también tras «¿Has olvidado tu contraseña?»): si no ha sido
+  quien tiene la cuenta, se entera y sabe qué hacer. Supabase rellena .Email.
+  Mismo diseño que confirmar-cuenta.html (2026-11-11). Vista previa: abre este archivo en el navegador.
+-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>Tu contraseña de Kuova ha cambiado</title>
+<style>
+  body { margin: 0; padding: 0; }
+  a { text-decoration: none; }
+  @media (max-width: 480px) {
+    .k-body { padding: 32px 22px 28px !important; }
+    .k-code { font-size: 30px !important; letter-spacing: 8px !important; padding-left: 8px !important; }
+    .k-title { font-size: 24px !important; }
+  }
+  @media (prefers-color-scheme: dark) {
+    .k-page { background: #0A1A1A !important; }
+    .k-body { background: #12302F !important; }
+    .k-title, .k-code { color: #F4EFE3 !important; }
+    .k-text { color: #C9C4B8 !important; }
+    .k-codebox { background: #0E2A2A !important; border-color: #2C4A47 !important; }
+    .k-muted { color: #8F9A95 !important; }
+    .k-link { color: #C9A366 !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#FAF7EF;">
+  <!-- Lo que se ve en la bandeja de entrada, junto al asunto -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all;">
+    La contraseña de tu cuenta de Kuova se acaba de cambiar.
+  </div>
+
+  <table role="presentation" class="k-page" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FAF7EF" style="background:#FAF7EF;">
+    <tr>
+      <td align="center" style="padding:32px 12px 24px;">
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;border-collapse:separate;">
+          <!-- Cabecera verde con el logo -->
+          <tr>
+            <td align="center" bgcolor="#0E2A2A" style="background:#0E2A2A;border-radius:20px 20px 0 0;padding:30px 24px 26px;">
+              <img src="https://kuovahealth.com/images/email/logo-kuova.png" width="168" alt="KUOVA Health"
+                style="display:block;width:168px;max-width:168px;height:auto;border:0;outline:none;color:#F4EFE3;font-family:Segoe UI,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;letter-spacing:3px;">
+            </td>
+          </tr>
+          <tr>
+            <td height="3" bgcolor="#C9A366" style="background:#C9A366;height:3px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <!-- Cuerpo -->
+          <tr>
+            <td class="k-body" align="center" bgcolor="#FFFFFF" style="background:#FFFFFF;border-radius:0 0 20px 20px;padding:40px 40px 34px;font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;">
+              <h1 class="k-title" style="margin:0 0 14px;font-size:26px;line-height:1.25;font-weight:700;color:#0E2A2A;">Tu contraseña ha cambiado</h1>
+              <p class="k-text" style="margin:0 0 18px;font-size:16px;line-height:1.6;color:#55605C;">
+                La contraseña de tu cuenta de Kuova ({{ .Email }}) se acaba de cambiar.
+                Si has sido tú, no tienes que hacer nada.
+              </p>
+              <p class="k-text" style="margin:0;font-size:16px;line-height:1.6;color:#55605C;">
+                Si no has sido tú, cámbiala ya desde la app con «¿Has olvidado tu contraseña?» y escríbenos
+                a <a class="k-link" href="mailto:support@kuovahealth.com" style="color:#0E2A2A;font-weight:700;text-decoration:underline;">support@kuovahealth.com</a>
+                desde este email.
+              </p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Pie -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+          <tr>
+            <td align="center" style="padding:22px 24px 0;font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;">
+              <p class="k-muted" style="margin:0 0 8px;font-size:12px;line-height:1.6;color:#8A857B;">
+                Es un aviso de seguridad: te lo mandamos siempre que cambia tu contraseña.
+              </p>
+              <p style="margin:0;font-size:12px;line-height:1.6;color:#A08455;font-weight:600;letter-spacing:0.5px;">
+                Conócete más. Vive mejor. ·
+                <a href="https://kuovahealth.com" target="_blank" style="color:#A08455;text-decoration:none;">kuovahealth.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
