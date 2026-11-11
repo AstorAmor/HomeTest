@@ -2875,5 +2875,6 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   Supabase pide aal2 para cambiarla) → aviso «Tu contraseña de Kuova ha cambiado» (`contrasena-cambiada.html`). Marca en
   el móvil (`src/data/passwordReset.ts`) para seguir ahí si la app se cierra. Plantillas subidas a la base de pruebas.
   Probado en la web contra pruebas con cuentas inventadas, con y sin doble factor. Producción: plantillas (con Brevo)
-  antes que la app, todo con OK de Astor (docs/doble-factor.md). La app pública tampoco tiene esto hoy.
+  antes que la app, todo con OK de Astor (docs/doble-factor.md). La app pública tampoco tiene esto hoy. Commit 89eb7a6,
+  OTA staging d5f88ce9.
 
