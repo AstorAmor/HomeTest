@@ -1951,3 +1951,8 @@ confirmación del email (que master no tiene):
 3. Juntar la rama en master (fast-forward), push y `npm run release` desde este worktree.
 Al revés (la app antes que las plantillas) el correo de Supabase por defecto traería un enlace y un código de 8 cifras.
 La beta de los amigos (canal `pruebas`) no lo lleva: iría con un OTA de `pruebas`, aparte.
+- 2026-11-11: **pasos 1 y 2 hechos.** Astor puso el SMTP de Brevo en HomeTest00 (clave «Supabase Kuova produccion»;
+  smtp-relay.brevo.com:587, remitente support@ «Kuova Health») y, con su OK («Sí, súbelos»), se subieron las dos plantillas y
+  el código de 6 cifras (`plantillas-produccion.mjs --subir`: 6 propiedades de Auth; el diff de después, sin cambios
+  pendientes). Falta el paso 3 (publicar la app). La política de privacidad nombra a Brevo solo para la newsletter: hay
+  que añadir los correos de la cuenta antes de publicar (tarea de Astor en el vault, con el abogado).
