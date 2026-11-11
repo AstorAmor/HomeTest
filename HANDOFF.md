@@ -2878,3 +2878,12 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   antes que la app, todo con OK de Astor (docs/doble-factor.md). La app pública tampoco tiene esto hoy. Commit 89eb7a6,
   OTA staging d5f88ce9.
 
+- 2026-11-11: **tocar el aviso de la toma llevaba a «Notificaciones»** (Astor, en Kuova Pruebas, aviso real «Es la hora
+  de tu toma»): la app se quedaba en la pantalla en la que estaba en vez de abrir Medicación. El aviso sí lleva
+  `route: '/medications'`. Causa más probable (no reproducible aquí, sin Android): con la app en segundo plano el toque
+  llega antes de que la app esté delante y la navegación de ese momento se pierde. Arreglo (15e898e, OTA staging
+  94aa2854): `listenToReminderTaps` solo pasa la ruta (`reminderTapRoute`, con tests: no abre el aviso de prueba, otros
+  botones ni el mismo toque dos veces) y vuelve a mirar el último toque al volver a la app; `PhoneReminders` abre la
+  pantalla cuando la app está en primer plano, sin doble factor ni «Elige una contraseña nueva» delante, a los 600 ms.
+  **Falta que Astor lo pruebe en el móvil.** Mismo código en `metas-fase1`/`pruebas-entrada` (beta) y en master
+  (app pública): llevarlo allí cuando se confirme.
