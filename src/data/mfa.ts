@@ -1,7 +1,7 @@
 // Doble factor con app de autenticación (TOTP) en Supabase: alta, código al entrar, quitarlo y el
 // arreglo de un admin cuando alguien pierde el móvil. Qué pantalla toca: logic/mfa.ts.
 import { isSupabaseConfigured, supabase, supabasePublishableKey, supabaseUrl } from '@/lib/supabase';
-import { type MfaGate, cleanTotpCode, mfaGate } from '@/logic/mfa';
+import { type MfaGate, cleanTotpCode, mfaGate, pendingTotpToResume } from '@/logic/mfa';
 
 export interface TotpFactor {
   id: string;
@@ -11,7 +11,6 @@ export interface TotpFactor {
 
 export interface TotpEnrollment {
   factorId: string;
-  qrCode: string; // data:image/svg+xml…
   secret: string;
   uri: string; // otpauth://… (abre la app de autenticación en el mismo móvil)
 }
@@ -57,7 +56,16 @@ export async function startTotpEnrollment(label?: string): Promise<TotpEnrollmen
   const friendlyName = `${label ?? 'App de autenticación'} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`;
   const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName, issuer: ISSUER });
   fail(error);
-  return { factorId: data!.id, qrCode: data!.totp.qr_code, secret: data!.totp.secret, uri: data!.totp.uri };
+  // El QR lo pinta la app con este uri (logic/qr.ts): el SVG de Supabase no trae viewBox y salía cortado
+  return { factorId: data!.id, secret: data!.totp.secret, uri: data!.totp.uri };
+}
+
+// ¿Hay un alta a medias reciente que retomar? (la app se cerró mientras se añadía Kuova a la app de
+// autenticación; ver logic/mfa.ts)
+export async function findPendingTotp(): Promise<{ id: string; createdAt: string } | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.mfa.listFactors();
+  return pendingTotpToResume(data?.all ?? [], Date.now());
 }
 
 // Comprueba el código: con el alta recién hecha la deja verificada; en ambos casos la sesión pasa a aal2

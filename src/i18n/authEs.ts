@@ -45,8 +45,13 @@ export const authEs: Record<string, string> = {
     'Consejo: añade Kuova a dos apps (por ejemplo, este móvil y 1Password). Si pierdes el móvil, la otra sigue valiendo.',
   'Could not start the setup. Try again in a moment.': 'No se ha podido empezar el alta. Inténtalo de nuevo en un momento.',
   'Try again': 'Reintentar',
-  'That code is not right. Use the newest code and check that your phone sets the time automatically.':
-    'Ese código no es correcto. Usa el más reciente y comprueba que la hora del móvil se pone sola.',
+  'That code is not right. Use the newest code and check that your phone sets the time automatically. If Kuova appears more than once in your app, use the one you added last.':
+    'Ese código no es correcto. Usa el más reciente y comprueba que la hora del móvil se pone sola. Si Kuova sale más de una vez en tu app, usa la última que añadiste.',
+  'You had already started': 'Ya habías empezado',
+  'You started adding Kuova {min} min ago. If it is already in your authenticator app, type the code it shows:':
+    'Empezaste a añadir Kuova hace {min} min. Si ya está en tu app de autenticación, escribe el código que te enseña:',
+  'If you start again, delete the old Kuova entry from your authenticator app: its codes will no longer work.':
+    'Si empiezas de nuevo, borra la entrada antigua de Kuova en tu app de autenticación: sus códigos dejarán de valer.',
   'That code has expired. Type the one the app shows now.': 'Ese código ha caducado. Escribe el que enseña ahora la app.',
   'Enter your code': 'Escribe tu código',
   'Open your authenticator app and type the 6-digit code for Kuova Health.':

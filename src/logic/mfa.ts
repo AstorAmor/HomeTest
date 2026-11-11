@@ -25,11 +25,29 @@ export const isTotpCodeComplete = (raw: string) => cleanTotpCode(raw).length ===
 // La clave para escribirla a mano, en grupos de 4 («JBSW Y3DP …»)
 export const groupSecret = (secret: string) => secret.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
 
-// Supabase da el QR como «data:image/svg+xml;utf-8,<svg…>» (a veces con el SVG codificado para URL)
-export function qrSvgFromDataUrl(dataUrl: string): string | null {
-  const comma = dataUrl.indexOf(',');
-  if (!dataUrl.startsWith('data:image/svg+xml') || comma < 0) return null;
-  const body = dataUrl.slice(comma + 1);
-  const svg = body.trimStart().startsWith('<') ? body : decodeURIComponent(body);
-  return svg.includes('<svg') ? svg : null;
+// Alta a medias que se puede retomar (2026-11-11): si la app se cierra mientras se añade Kuova a la app de
+// autenticación (en Android pasa a menudo al cambiar de app), al volver no se crea otra clave nueva, porque
+// la que ya se guardó dejaría de valer y su código «no sería correcto». Se retoma la última sin verificar
+// si tiene menos de RESUME_MS; las más antiguas se borran al empezar de nuevo.
+export const RESUME_MS = 15 * 60_000;
+
+export interface FactorRow {
+  id: string;
+  factor_type: string;
+  status: string;
+  created_at: string;
 }
+
+export function pendingTotpToResume(factors: FactorRow[], now: number, maxAgeMs = RESUME_MS): { id: string; createdAt: string } | null {
+  const fresh = factors
+    .filter((f) => f.factor_type === 'totp' && f.status !== 'verified')
+    .filter((f) => {
+      const age = now - Date.parse(f.created_at);
+      return age >= 0 && age < maxAgeMs;
+    })
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+  return fresh[0] ? { id: fresh[0].id, createdAt: fresh[0].created_at } : null;
+}
+
+// «hace N min» del aviso de retomar (mínimo 1)
+export const minutesAgo = (createdAt: string, now: number) => Math.max(1, Math.round((now - Date.parse(createdAt)) / 60_000));

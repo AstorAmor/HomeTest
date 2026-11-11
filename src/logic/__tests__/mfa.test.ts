@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanTotpCode, groupSecret, isTotpCodeComplete, mfaGate, qrSvgFromDataUrl } from '@/logic/mfa';
+import { RESUME_MS, cleanTotpCode, groupSecret, isTotpCodeComplete, mfaGate, minutesAgo, pendingTotpToResume } from '@/logic/mfa';
 
 describe('doble factor: qué pantalla toca al entrar', () => {
   it('con aal2 sigue, lo exija o no la cuenta', () => {
@@ -29,10 +29,25 @@ describe('códigos y clave', () => {
   it('agrupa la clave de 4 en 4', () => {
     expect(groupSecret('JBSWY3DPEHPK3PXP')).toBe('JBSW Y3DP EHPK 3PXP');
   });
-  it('saca el SVG del QR, venga codificado o no', () => {
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1"/></svg>';
-    expect(qrSvgFromDataUrl(`data:image/svg+xml;utf-8,${svg}`)).toBe(svg);
-    expect(qrSvgFromDataUrl(`data:image/svg+xml;utf-8,${encodeURIComponent(svg)}`)).toBe(svg);
-    expect(qrSvgFromDataUrl('data:image/png;base64,AAAA')).toBeNull();
+  it('retoma el alta a medias más reciente si tiene menos de 15 minutos', () => {
+    const now = Date.parse('2026-11-11T10:00:00Z');
+    const row = (id: string, min: number, status = 'unverified', factor_type = 'totp') => ({
+      id,
+      factor_type,
+      status,
+      created_at: new Date(now - min * 60_000).toISOString(),
+    });
+    expect(pendingTotpToResume([row('a', 3), row('b', 1)], now)?.id).toBe('b');
+    expect(pendingTotpToResume([row('viejo', 20)], now)).toBeNull();
+    expect(pendingTotpToResume([row('hecho', 1, 'verified')], now)).toBeNull();
+    expect(pendingTotpToResume([row('tel', 1, 'unverified', 'phone')], now)).toBeNull();
+    expect(pendingTotpToResume([], now)).toBeNull();
+    expect(RESUME_MS).toBe(15 * 60_000);
+  });
+
+  it('«hace N min», como mínimo 1', () => {
+    const now = Date.parse('2026-11-11T10:00:00Z');
+    expect(minutesAgo('2026-11-11T09:59:50Z', now)).toBe(1);
+    expect(minutesAgo('2026-11-11T09:52:00Z', now)).toBe(8);
   });
 });
