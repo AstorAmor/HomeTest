@@ -2944,5 +2944,7 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   sin errores). Sin probar en un móvil. iPhone: si hay una pantalla modal abierta al bloquear se cierran antes
   (`dismissAll`), y la capa de «apps recientes» puede no tapar una pantalla modal: revisar con la compilación de
   iPhone. Después va al lote nativo para todos.
+  2026-11-12, con el OK de Astor: APK de Kuova Pruebas con todo esto, EAS 030ee462 (perfil `staging`, desde ca90e83).
+  **Falta que Astor lo instale y lo pruebe en su Xiaomi.**
   Worktree: `hometest-app-staging/node_modules` ya no es un junction a `hometest-app/node_modules` (instalar paquetes
   aquí habría tocado la carpeta de la otra sesión): tiene los suyos (`npm ci`, 2026-11-11).
