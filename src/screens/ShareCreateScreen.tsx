@@ -17,6 +17,7 @@ import {
 } from '@/data/sharing';
 import { profileRepository } from '@/data/profileRepository';
 import { dateLocale, t, tn } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const EXPIRY_OPTIONS: { id: string; label: string; days: number | null }[] = [
   { id: '30', label: '30 days', days: 30 },
@@ -227,11 +228,11 @@ export const ShareCreateScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
-  step: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 14, marginBottom: 10 },
+  step: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, paddingHorizontal: 20, marginTop: 14, marginBottom: 10 },
   stepRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingRight: 20 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  muted: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20 },
-  error: { color: Colors.danger, fontSize: 13, paddingHorizontal: 20, marginTop: 12 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  muted: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginTop: 12 },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  optionTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  optionTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   noteInput: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -264,10 +265,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     minHeight: 70,
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     textAlignVertical: 'top',
   },
-  optionSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  optionSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   expiryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   expiryChip: {
     borderWidth: 1,
@@ -278,10 +279,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   expiryChipSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  expiryText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  expiryText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   footer: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, gap: 10 },
-  summary: { color: Colors.textSecondary, fontSize: 12, textAlign: 'center' },
+  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center' },
   cta: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 15, alignItems: 'center' },
   ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
 });

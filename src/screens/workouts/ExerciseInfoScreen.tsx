@@ -8,6 +8,7 @@ import { EXERCISE_LIST, LEVEL_LABEL, exerciseEquipmentText, exerciseName, exerci
 import type { CatalogExercise } from '@/data/workouts/types';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Ficha de un ejercicio: el movimiento en bucle, qué trabaja, qué hace falta y cómo hacerlo.
 // La comparten la app y el portal (el entrenador la abre desde la biblioteca o desde un programa).
@@ -74,15 +75,15 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   detail: { gap: 8 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  tag: { color: Colors.textPrimary, backgroundColor: Colors.accentSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, fontSize: 12, fontWeight: '700', overflow: 'hidden' },
-  label: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 14 },
-  text: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
-  muted: { color: Colors.textSecondary, fontSize: 13 },
+  tag: { color: Colors.textPrimary, backgroundColor: Colors.accentSoft, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, fontSize: 12, fontFamily: INTER.medium, overflow: 'hidden' },
+  label: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginTop: 14 },
+  text: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   step: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  stepNum: { width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.accent, color: Colors.background, textAlign: 'center', lineHeight: 22, fontSize: 12, fontWeight: '800', overflow: 'hidden' },
-  stepText: { flex: 1, color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
+  stepNum: { width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.accent, color: Colors.background, textAlign: 'center', lineHeight: 22, fontSize: 12, fontFamily: INTER.medium, overflow: 'hidden' },
+  stepText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   similar: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   similarItem: { width: 96, gap: 4 },
-  similarName: { color: Colors.textSecondary, fontSize: 11, fontWeight: '600' },
-  credit: { color: Colors.textMuted, fontSize: 11, marginTop: 18 },
+  similarName: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
+  credit: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 18 },
 });

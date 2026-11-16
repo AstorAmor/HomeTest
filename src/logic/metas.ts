@@ -35,7 +35,8 @@ export const tooMany = (s: MetasState, area: Area) => s.sel[area].length > METAS
 // Enhorabuena también si en la semana te han faltado esto o menos «cosas» (días, sesiones o metas de la semana)
 export const FEW_MISSES = 3;
 
-export const AREA_NAME: Record<Area, string> = { ej: 'Exercise', al: 'Eating', ha: 'Habits' };
+// «Nutrition» en vez de «Eating» (fundador, 2026-11-16); en español sale «Nutrición»
+export const AREA_NAME: Record<Area, string> = { ej: 'Exercise', al: 'Nutrition', ha: 'Habits' };
 
 interface UnitDef {
   one: string;

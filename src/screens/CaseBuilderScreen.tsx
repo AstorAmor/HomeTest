@@ -18,6 +18,7 @@ import {
   LOGGING_LABEL,
   simulatePersona,
 } from '@/logic/nudges';
+import { INTER } from '@/theme/fine';
 
 // Developer mode → Simulated users → Build a case. Un usuario simulado hecho al momento: quién
 // es, qué le va mal, con qué intensidad y desde cuándo. El mismo motor de avisos que la app dice
@@ -234,7 +235,7 @@ export const CaseBuilderScreen = () => {
             today?.decisions.map((x) => (
               <View key={x.id} style={styles.ruleRow}>
                 <Text style={styles.ruleName}>
-                  <Text style={{ color: statusColor(x.status), fontWeight: '800' }}>{STATUS_LABEL[x.status]}</Text> {x.label}
+                  <Text style={{ color: statusColor(x.status), fontFamily: INTER.medium }}>{STATUS_LABEL[x.status]}</Text> {x.label}
                 </Text>
                 <Text style={styles.ruleReason}>{x.reason}</Text>
               </View>
@@ -271,7 +272,7 @@ export const CaseBuilderScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
-  intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 14 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 14 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -283,8 +284,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   field: { marginBottom: 12 },
-  fieldTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  hint: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  fieldTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, alignItems: 'center' },
   chip: {
     borderWidth: 1,
@@ -295,25 +296,25 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   chipOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  chipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  chipText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   chipTextOn: { color: Colors.background },
-  age: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', minWidth: 44, textAlign: 'center' },
-  resultTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
-  summary: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
+  age: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, minWidth: 44, textAlign: 'center' },
+  resultTitle: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
+  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
   counts: { flexDirection: 'row', gap: 12, marginVertical: 10 },
   count: { flex: 1, backgroundColor: Colors.accentSoft, borderRadius: 12, padding: 12 },
-  countValue: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  countLabel: { color: Colors.textSecondary, fontSize: 12 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 6, marginBottom: 2 },
+  countValue: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
+  countLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
+  sectionTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginTop: 6, marginBottom: 2 },
   toggle: { paddingVertical: 10 },
-  toggleText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  toggleText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   ruleRow: { paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  ruleName: { color: Colors.textPrimary, fontSize: 12 },
-  ruleReason: { color: Colors.textMuted, fontSize: 11, lineHeight: 15 },
-  message: { color: Colors.textSecondary, fontSize: 12, marginTop: 8 },
+  ruleName: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12 },
+  ruleReason: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15 },
+  message: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 8 },
   cta: { backgroundColor: Colors.accent, borderRadius: 26, paddingVertical: 13, alignItems: 'center', marginTop: 14 },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
-  ctaNote: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 4 },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  ctaNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 4 },
   secondary: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -322,5 +323,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  secondaryText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  secondaryText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
 });

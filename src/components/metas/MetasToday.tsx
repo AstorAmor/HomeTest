@@ -134,6 +134,10 @@ export function MetasToday({ tourScroll, variant = 'today' }: { tourScroll?: Tou
   if (!data) return null;
   const s = data.state;
   const none = selectedIds(s).length === 0;
+  // Cómo va la semana (la media de las 3 áreas, como el círculo «Semana» de Hoy, que trae aquí)
+  const scores = AREAS.map((a) => areaScore(s, a, vals, week ?? undefined, known)).filter((x): x is number => x != null);
+  const weekPct = scores.length ? Math.round((scores.reduce((x, y) => x + y, 0) / scores.length) * 100) : null;
+  const range = week ? rangeText(week.days[Math.min(week.from, 6)], week.days[6]) : '';
   const go = (path: '/metas' | '/metas-objetivos') => {
     setInfo(false);
     router.push(path);
@@ -159,6 +163,21 @@ export function MetasToday({ tourScroll, variant = 'today' }: { tourScroll?: Tou
       </View>
       <TourTarget id={today ? 'today.plan' : 'plan.targets'} scroll={tourScroll} inset={20}>
         <View style={styles.block}>
+          {/* En Plan, arriba, tu semana en grande: el círculo «Semana» de Hoy lleva aquí y tiene que verse lo
+              mismo (fundador, 2026-11-16: «si no, se ve un poco raro la conexión») */}
+          {!today && !none && weekPct != null && (
+            <View style={styles.weekBig} accessible accessibilityLabel={t('Your week: {n} percent', { n: weekPct })}>
+              <Text style={styles.weekNum}>
+                {weekPct}
+                <Text style={styles.weekSign}> %</Text>
+              </Text>
+              <Text style={styles.weekSub}>
+                {t('of your week')}
+                {range ? `
+${range}` : ''}
+              </Text>
+            </View>
+          )}
           <View style={styles.areas}>
             {AREAS.map((a) => {
               const score = areaScore(s, a, vals, week ?? undefined, known);
@@ -194,7 +213,7 @@ export function MetasToday({ tourScroll, variant = 'today' }: { tourScroll?: Tou
               <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
             </TouchableOpacity>
           ) : (
-            <Text style={styles.note}>{week ? t('This week: {range}.', { range: rangeText(week.days[Math.min(week.from, 6)], week.days[6]) }) : ''}</Text>
+            today || weekPct == null ? <Text style={styles.note}>{week ? t('This week: {range}.', { range }) : ''}</Text> : null
           )}
         </View>
       </TourTarget>
@@ -274,6 +293,10 @@ const styles = StyleSheet.create({
   rvDone: { ...ff('medium'), color: FINE.ivory, fontSize: 13, textAlign: 'right', maxWidth: '45%' },
   rvClosing: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
   titleRow: { marginHorizontal: 20 },
+  weekBig: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
+  weekNum: { ...ff('light'), fontSize: 44, lineHeight: 52, color: FINE.ivory, fontVariant: ['tabular-nums'] },
+  weekSign: { ...ff('regular'), fontSize: 18, color: FINE.mute },
+  weekSub: { ...ff('regular'), flex: 1, fontSize: 13, lineHeight: 18, color: FINE.mute },
   areaMetas: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, marginTop: 4 },
   // Sin tarjeta (rediseño «Emerald Luxury», 2026-11-15): las líneas flotan sobre el fondo
   block: { marginHorizontal: 20, paddingBottom: 4 },

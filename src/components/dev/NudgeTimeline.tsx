@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '@/constants/colors';
 import { SimulationDay } from '@/logic/nudges';
+import { INTER } from '@/theme/fine';
 
 // Línea de tiempo de un usuario simulado: cada día con avisos (enviados o retenidos) y el motivo.
 // La usan Simulated users y Build a case (modo desarrollador).
@@ -56,7 +57,7 @@ export function NudgeTimeline({
               .map((x) => (
                 <View key={x.id}>
                   <Text style={styles.nudgeText}>
-                    <Text style={{ color: statusColor(x.status), fontWeight: '800' }}>{STATUS_LABEL[x.status]}</Text>{' '}
+                    <Text style={{ color: statusColor(x.status), fontFamily: INTER.medium }}>{STATUS_LABEL[x.status]}</Text>{' '}
                     {showText && x.title ? x.title : x.label}
                   </Text>
                   {showText && x.status === 'send' && x.body ? <Text style={styles.body}>{x.body}</Text> : null}
@@ -71,13 +72,13 @@ export function NudgeTimeline({
 }
 
 const styles = StyleSheet.create({
-  empty: { color: Colors.textMuted, fontSize: 12, paddingVertical: 6 },
+  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, paddingVertical: 6 },
   dayRow: { flexDirection: 'row', gap: 10, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.divider },
   today: { backgroundColor: Colors.accentSoft, borderRadius: 8, paddingHorizontal: 6 },
-  dayLabel: { width: 54, color: Colors.textPrimary, fontSize: 12, fontWeight: '700' },
-  dayDate: { color: Colors.textMuted, fontSize: 11, fontWeight: '500' },
-  eventText: { color: Colors.gold, fontSize: 12, fontWeight: '600' },
-  nudgeText: { color: Colors.textPrimary, fontSize: 12 },
-  body: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
-  reason: { color: Colors.textMuted, fontSize: 11, lineHeight: 15 },
+  dayLabel: { width: 54, color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
+  dayDate: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
+  eventText: { color: Colors.gold, fontSize: 12, fontFamily: INTER.medium },
+  nudgeText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12 },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  reason: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15 },
 });

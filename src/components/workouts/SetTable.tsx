@@ -9,6 +9,7 @@ import { isTimedReps } from '@/logic/workoutTimer';
 import { rowHints, type SetRow } from '@/logic/workoutLog';
 import { useRevealOnFocus } from '@/components/KeyboardAwareScroll';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Las series de un ejercicio durante la sesión, como en Hevy: Serie · Anterior · kg · Reps · ✓, con
 // casillas grandes para escribir el peso y las repeticiones con el pulgar. En gris, lo que se guarda si
@@ -150,7 +151,7 @@ const H = 42; // alto de las casillas: cómodas para el pulgar
 
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4, marginBottom: 4 },
-  h: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', textAlign: 'center' },
+  h: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', textAlign: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4, paddingVertical: 4, borderRadius: 10 },
   rowDone: { backgroundColor: Colors.accentSoft },
   rowCurrent: { borderWidth: 1, borderColor: Colors.accent, paddingVertical: 3, paddingHorizontal: 3 },
@@ -163,14 +164,14 @@ const styles = StyleSheet.create({
   colCheck: { width: H, alignItems: 'center' },
   setNo: { height: H, borderRadius: 8, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
   setNoDone: { backgroundColor: 'transparent' },
-  setNoText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  prev: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center' },
+  setNoText: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  prev: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center' },
   box: { height: H, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 8, backgroundColor: Colors.background },
   boxOn: { borderColor: Colors.accent },
-  boxText: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', textAlign: 'center', paddingHorizontal: 4, fontVariant: ['tabular-nums'] },
+  boxText: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, textAlign: 'center', paddingHorizontal: 4, fontVariant: ['tabular-nums'] },
   timeBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   check: { height: H, borderRadius: 8, backgroundColor: Colors.card, justifyContent: 'center' },
   checkOn: { backgroundColor: Colors.accent },
   addSet: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 42, borderRadius: 10, backgroundColor: Colors.card, marginTop: 8 },
-  addSetText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  addSetText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
 });

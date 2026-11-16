@@ -14,6 +14,7 @@ import { WearableMetric } from '@/wearables/types';
 import { thermometerRepository } from '@/data/temperatureRepository';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
+import { fine, INTER } from '@/theme/fine';
 
 // Información orientativa por métrica (texto de bienestar, no diagnóstico).
 // Pendiente de revisión médica antes de usuarios reales.
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 12,
   },
-  thermoText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
+  thermoText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   thermoList: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -293,10 +294,10 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     gap: 6,
   },
-  thermoTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  thermoTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginBottom: 2 },
   thermoRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  thermoDate: { color: Colors.textSecondary, fontSize: 13 },
-  thermoValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  thermoDate: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
+  thermoValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -306,9 +307,9 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     marginHorizontal: 20,
   },
-  tapHint: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 8 },
+  tapHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 8 },
   trend: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 12 },
-  trendText: { color: Colors.textSecondary, fontSize: 13 },
+  trendText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   infoCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -318,16 +319,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 16,
   },
-  infoTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', marginTop: 6, marginBottom: 4 },
-  infoText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  disclaimer: { color: Colors.textMuted, fontSize: 11, marginTop: 10 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  infoTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginTop: 6, marginBottom: 4 },
+  infoText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  disclaimer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 10 },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   list: { backgroundColor: Colors.card, borderRadius: 16, marginHorizontal: 20, paddingHorizontal: 14 },
   listRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 11 },
   listDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  listDate: { color: Colors.textSecondary, fontSize: 13 },
-  listValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  listTimes: { color: Colors.textMuted, fontWeight: '400' },
+  listDate: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
+  listValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  listTimes: { color: Colors.textMuted, fontFamily: INTER.regular },
   manage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18 },
-  manageText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  manageText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
 });

@@ -12,6 +12,7 @@ import { FLAG_LABEL, categoryLabel } from '@/utils/reportDisplay';
 import { findLabReport, flagColor, formatReportDate, markerNameEn, rangePosition, reportCounts } from '@/utils/labReportView';
 import { t } from '@/i18n';
 import { markerHref } from '@/utils/markerLinks';
+import { fine, INTER } from '@/theme/fine';
 
 // Resultados de un informe por secciones (se usa para informes anteriores;
 // el último abre el recorrido completo de report-summary).
@@ -114,9 +115,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
   },
-  title: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },
-  date: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
-  counts: { fontSize: 13, fontWeight: '600', marginTop: 6, color: Colors.textMuted },
+  title: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
+  date: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
+  counts: { fontSize: 13, fontFamily: INTER.medium, marginTop: 6, color: Colors.textMuted },
   section: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -127,8 +128,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14 },
-  sectionTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  sectionCount: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
+  sectionTitle: { ...fine.secTitle, flex: 1 },
+  sectionCount: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
   markerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -137,8 +138,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.divider,
   },
-  markerName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  markerFlag: { fontSize: 12, marginTop: 2 },
+  markerName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  markerFlag: { fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   markerRight: { alignItems: 'flex-end', gap: 6 },
-  markerValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  markerValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
 });

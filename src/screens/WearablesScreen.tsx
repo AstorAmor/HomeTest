@@ -31,6 +31,7 @@ import {
   lastAppleHealthSync,
   openAppleHealth,
 } from '@/wearables/providers/appleHealth';
+import { fine, INTER } from '@/theme/fine';
 
 // En iPhone, Apple Salud; en Android, Health Connect; en la web se explican las dos
 const IS_IOS = Platform.OS === 'ios';
@@ -407,7 +408,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', flexShrink: 1 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, flexShrink: 1 },
   okPill: {
     marginLeft: 'auto',
     flexDirection: 'row',
@@ -419,11 +420,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.ok,
   },
-  okPillText: { color: Colors.ok, fontSize: 12, fontWeight: '600' },
-  cardText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
-  syncText: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
-  warning: { color: Colors.warning, fontSize: 13, lineHeight: 19 },
-  hint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 4 },
+  okPillText: { color: Colors.ok, fontSize: 12, fontFamily: INTER.medium },
+  cardText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
+  syncText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  warning: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginTop: 4 },
   row: { flexDirection: 'row', gap: 10 },
   // Texto centrado también cuando ocupa dos líneas (letra grande o botones en fila)
   button: {
@@ -438,13 +439,13 @@ const styles = StyleSheet.create({
   buttonGrow: { flex: 1 },
   buttonGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.accent },
   buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: Colors.background, fontWeight: '700', fontSize: 15, textAlign: 'center' },
+  buttonText: { color: Colors.background, fontFamily: INTER.medium, fontSize: 15, textAlign: 'center' },
   buttonGhostText: { color: Colors.accent },
-  message: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', marginTop: 8 },
+  message: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
+  sectionTitle: { ...fine.secTitle, marginTop: 8 },
   coverRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  coverLabel: { color: Colors.textPrimary, fontSize: 14, width: 120 },
-  coverValue: { color: Colors.textSecondary, fontSize: 13, flex: 1, textAlign: 'right' },
+  coverLabel: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, width: 120 },
+  coverValue: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, flex: 1, textAlign: 'right' },
   dayCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -453,13 +454,13 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 8,
   },
-  dayTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  dayTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   metricRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   metricLabelWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
-  metricLabel: { color: Colors.textSecondary, fontSize: 14, flexShrink: 1 },
+  metricLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, flexShrink: 1 },
   metricRight: { alignItems: 'flex-end', flexShrink: 1, maxWidth: '60%' },
-  metricValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  metricSource: { color: Colors.textMuted, fontSize: 11 },
+  metricValue: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  metricSource: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
   clear: { alignSelf: 'center', paddingVertical: 12 },
-  clearText: { color: Colors.danger, fontSize: 14 },
+  clearText: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 14 },
 });

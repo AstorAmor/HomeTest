@@ -14,6 +14,7 @@ import { TAB, tabHref } from '@/constants/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { isRealAccount, setRealAccount } from '@/data/dataMode';
 import { reloadKeepingPlace } from '@/theme/appearance';
+import { INTER } from '@/theme/fine';
 
 const PERMISSIONS: { icon: string; title: string; why: string }[] = [
   { icon: 'notifications-outline', title: 'Notifications', why: 'Reminders for your medication, check-ins and tests.' },
@@ -148,23 +149,23 @@ export const SettingsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  section: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  section: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.semibold, marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   block: { marginHorizontal: 20 },
   card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  rowSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  soon: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
+  rowTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  rowSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  soon: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
   sizes: { flexDirection: 'row', gap: 8, marginHorizontal: 20 },
   size: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 10, borderRadius: 14, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder },
   sizeOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  sizeSample: { color: Colors.textPrimary, fontWeight: '800' },
-  sizeLabel: { color: Colors.textSecondary, fontSize: 11, fontWeight: '700' },
+  sizeSample: { color: Colors.textPrimary, fontFamily: INTER.medium },
+  sizeLabel: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
   sizeTextOn: { color: Colors.background },
-  permNote: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, paddingHorizontal: 16, paddingBottom: 14 },
+  permNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, paddingHorizontal: 16, paddingBottom: 14 },
   systemButton: { margin: 12, marginTop: 4, borderWidth: 1, borderColor: Colors.accent, borderRadius: 22, paddingVertical: 10, alignItems: 'center' },
-  systemButtonText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  systemButtonText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 28, paddingVertical: 12 },
-  logoutText: { color: Colors.danger, fontSize: 15, fontWeight: '700' },
+  logoutText: { color: Colors.danger, fontSize: 15, fontFamily: INTER.medium },
 });

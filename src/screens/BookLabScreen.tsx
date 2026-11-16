@@ -13,6 +13,7 @@ import { directionsUrl, hoursLabel, LAB_CENTERS, slotsFor, windowFor } from '@/d
 import { appointmentEvent, LabAppointment, labAppointmentRepository } from '@/data/labAppointments';
 import { calendarLinks } from '@/data/schedule';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { INTER } from '@/theme/fine';
 
 const longDate = (day: string) =>
   new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
@@ -251,9 +252,9 @@ export const BookLabScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 28 },
-  intro: { color: Colors.textSecondary, fontSize: 14, marginHorizontal: 20, marginBottom: 14 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginHorizontal: 20, marginBottom: 14 },
   mapWrap: { marginHorizontal: 20 },
-  section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  section: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginHorizontal: 20, marginTop: 20, marginBottom: 10 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -266,17 +267,17 @@ const styles = StyleSheet.create({
   },
   cardOn: { borderColor: Colors.accent },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', flex: 1 },
-  cardText: { color: Colors.textSecondary, fontSize: 13 },
-  muted: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 0 },
-  change: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginHorizontal: 20, marginTop: 14 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, flex: 1 },
+  cardText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
+  muted: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginHorizontal: 0 },
+  change: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, marginHorizontal: 20, marginTop: 14 },
   calendar: { marginHorizontal: 20 },
   slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 20 },
   slot: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, paddingVertical: 8, width: '22.5%', alignItems: 'center' },
   slotOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  slotText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  prep: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 10 },
-  proto: { color: Colors.warning, fontSize: 12, marginTop: 8, textAlign: 'center' },
+  slotText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  prep: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 10 },
+  proto: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 12, marginTop: 8, textAlign: 'center' },
   upcoming: {},
   apptRow: {
     flexDirection: 'row',
@@ -288,17 +289,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 8,
   },
-  apptText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600', flex: 1 },
-  cancel: { color: Colors.danger, fontSize: 13, fontWeight: '700' },
+  apptText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, flex: 1 },
+  cancel: { color: Colors.danger, fontSize: 13, fontFamily: INTER.medium },
   done: { alignItems: 'center', gap: 10, paddingHorizontal: 24, marginTop: 20 },
   doneIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
-  doneTitle: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  doneText: { color: Colors.textPrimary, fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  doneTitle: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
+  doneText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, textAlign: 'center' },
   row: { flexDirection: 'row', gap: 8, marginHorizontal: 20 },
   chip: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 8 },
-  chipText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  chipText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 18 },
-  link: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  link: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   cta: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 16, alignItems: 'center', marginHorizontal: 20, marginBottom: 12 },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
 });

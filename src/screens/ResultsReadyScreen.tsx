@@ -8,6 +8,7 @@ import { Confetti } from '@/components/Confetti';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { currentReport, markersBackInRange } from '@/data/reportRepository';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Llegan los resultados. Solo se celebra (rayo + GREAT JOB!! + confeti) si hay logros de verdad:
 // marcadores que estaban fuera de rango y han vuelto a él. Si no, un aviso tranquilo.
@@ -104,19 +105,19 @@ const styles = StyleSheet.create({
   greatJob: {
     color: Colors.amber,
     fontSize: 40,
-    fontWeight: '900',
+    fontFamily: INTER.light,
     letterSpacing: 1,
     marginBottom: 8,
   },
   title: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 14,
   },
   teaser: {
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
     marginBottom: 36,
@@ -134,7 +135,7 @@ const styles = StyleSheet.create({
   ctaText: {
     color: Colors.background,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   secondary: {
     paddingVertical: 14,
@@ -142,6 +143,6 @@ const styles = StyleSheet.create({
   secondaryText: {
     color: Colors.textSecondary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
 });

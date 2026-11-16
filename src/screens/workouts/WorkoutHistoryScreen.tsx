@@ -14,6 +14,7 @@ import { workoutRepository } from '@/data/planRepository';
 import { byMonth, historyRemoval, setsByExercise, workoutHistory, type HistoryEntry, type LoggedWorkout } from '@/logic/workoutHistory';
 import type { WorkoutProgram } from '@/data/workouts/types';
 import { dateLocale, t, tn } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Historial (Entrenamientos → Historial): cada entreno con su día, sus minutos y, en las sesiones de un
 // programa, lo que se hizo en cada ejercicio. No se edita; la papelera de cada uno lo borra, con confirmación
@@ -194,22 +195,22 @@ export const WorkoutHistoryScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  muted: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   empty: { alignItems: 'center', gap: 10, marginTop: 40, paddingHorizontal: 20 },
   monthRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 14, marginBottom: 8 },
-  month: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  monthCount: { color: Colors.textMuted, fontSize: 13, fontWeight: '600' },
+  month: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  monthCount: { color: Colors.textMuted, fontSize: 13, fontFamily: INTER.medium },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 12, marginBottom: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  sub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  minutes: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  minutes: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, fontVariant: ['tabular-nums'] },
   trash: { paddingLeft: 4 },
   exercises: { marginTop: 10, paddingTop: 6, borderTopWidth: 1, borderTopColor: Colors.divider, gap: 6 },
   exercise: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  exName: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  exSets: { flexShrink: 1, maxWidth: '55%', color: Colors.textSecondary, fontSize: 13, textAlign: 'right', fontVariant: ['tabular-nums'] },
+  exName: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  exSets: { flexShrink: 1, maxWidth: '55%', color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'right', fontVariant: ['tabular-nums'] },
   more: { alignItems: 'center', paddingVertical: 12 },
-  moreText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  moreText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
 });

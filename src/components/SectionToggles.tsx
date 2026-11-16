@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { AppSection, SECTION_OPTIONS } from '@/data/appPrefs';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Lista de partes de la app con su interruptor. Tocar la fila abre su guía con vista previa.
 // La usan Configure my experience y el último paso del onboarding.
@@ -64,17 +65,17 @@ const styles = StyleSheet.create({
   rowMain: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   rowDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   optional: {
     color: Colors.gold,
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: INTER.semibold,
     textTransform: 'uppercase',
     borderWidth: 1,
     borderColor: withAlpha(Colors.gold, 0.5),
     borderRadius: 6,
     paddingHorizontal: 5,
   },
-  rowSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  more: { color: Colors.accent, fontSize: 12, fontWeight: '600', marginTop: 4 },
+  rowSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  more: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 4 },
 });

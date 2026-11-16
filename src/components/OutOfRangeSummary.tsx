@@ -6,6 +6,7 @@ import { ExtractedLabReport } from '@/types/labReport';
 import { getRangeStatus } from '@/utils/rangeStatus';
 import { LabValueRow } from './LabValueRow';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // "Para revisar" de una analítica subida: los valores fuera del rango del laboratorio. Al tocar uno se abre
 // ese marcador en Mis datos (qué es, qué puede moverlo y todos sus valores). La fila es la misma que en
@@ -49,8 +50,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   allGood: { flexDirection: 'row', alignItems: 'center', gap: 8, borderColor: Colors.cardBorder },
-  allGoodText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  title: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  sub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2, marginBottom: 6 },
-  note: { color: Colors.textMuted, fontSize: 11, marginTop: 8 },
+  allGoodText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  title: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2, marginBottom: 6 },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 8 },
 });

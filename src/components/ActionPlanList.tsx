@@ -13,6 +13,7 @@ import {
   getMarkerDisplayNameEn,
   PROJECTION_UNCERTAINTY_NOTE_EN,
 } from "@/data/reportContentEn";
+import { INTER } from '@/theme/fine';
 
 const CONFIDENCE_COLOR: Record<string, string> = {
   alta: Colors.accent,
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: INTER.medium,
   },
   confidenceBadge: {
     paddingHorizontal: 8,
@@ -162,11 +163,11 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: INTER.medium,
   },
   actionWhy: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 19,
     marginBottom: 8,
   },
@@ -179,12 +180,12 @@ const styles = StyleSheet.create({
   actionHow: {
     flex: 1,
     color: Colors.textPrimary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 18,
   },
   actionCaveat: {
     color: Colors.warning,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 6,
     lineHeight: 16,
   },
@@ -197,18 +198,18 @@ const styles = StyleSheet.create({
   projectionLabel: {
     color: Colors.textSecondary,
     fontSize: 11,
-    fontWeight: "600",
+    fontFamily: INTER.medium,
     marginBottom: 6,
   },
   uncertaintyNote: {
     color: Colors.textMuted,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
     marginTop: 6,
     fontStyle: "italic",
   },
   provenanceText: {
     color: Colors.textMuted,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
     marginTop: 10,
   },
 });

@@ -20,6 +20,7 @@ import {
   visibleOptions,
 } from '@/logic/testFinder';
 import { TAB, tabHref } from '@/constants/tabs';
+import { fine, INTER } from '@/theme/fine';
 
 const TOP = 3;
 
@@ -315,10 +316,10 @@ const styles = StyleSheet.create({
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 4 },
   progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.accent },
-  progressText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  progressText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   body: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24 },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 6 },
-  subtitle: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 20 },
+  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, marginBottom: 6 },
+  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 20 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     flexDirection: 'row',
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600', flexShrink: 1 },
+  chipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium, flexShrink: 1 },
   chipTextOn: { color: Colors.textPrimary },
   footer: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
   backBtn: {
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  backText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  backText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   nextBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     paddingVertical: 14,
   },
-  nextText: { color: Colors.background, fontSize: 16, fontWeight: '800' },
+  nextText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
   results: { paddingBottom: 24 },
   resultHead: { paddingHorizontal: 20, paddingTop: 4 },
   note: {
@@ -372,12 +373,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   noteMood: { borderColor: withAlpha(Colors.violet, 0.45) },
-  noteText: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
-  noteLink: { color: Colors.accent, fontSize: 13, fontWeight: '800' },
+  noteText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  noteLink: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, marginBottom: 10 },
-  moreText: { color: Colors.accent, fontSize: 14, fontWeight: '800' },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', paddingHorizontal: 20, marginTop: 10 },
-  sectionSub: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginTop: 4, marginBottom: 12 },
+  moreText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 10 },
+  sectionSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginTop: 4, marginBottom: 12 },
   disclaimer: {
     marginHorizontal: 20,
     marginTop: 8,
@@ -389,8 +390,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   disclaimerHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  disclaimerTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  disclaimerText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  disclaimerTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  disclaimerText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   doctorBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -402,9 +403,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginTop: 4,
   },
-  doctorBtnText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
+  doctorBtnText: { color: Colors.accent, fontSize: 15, fontFamily: INTER.medium },
   links: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 18 },
-  link: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
+  link: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, textDecorationLine: 'underline' },
   linkDot: { color: Colors.textMuted },
   orderBar: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, borderTopWidth: 1, borderTopColor: Colors.divider, backgroundColor: Colors.background },
   orderBtn: {
@@ -417,5 +418,5 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   orderBtnOff: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder },
-  orderText: { color: Colors.background, fontSize: 16, fontWeight: '800' },
+  orderText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
 });

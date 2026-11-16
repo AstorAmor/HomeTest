@@ -1,12 +1,16 @@
 // Pantallas de objetivos y metas (prototipo v3, 2026-11-04). Rutas en src/app/metas*.tsx; lógica en
-// src/logic/metas.ts; datos en src/hooks/useMetas.ts.
+// src/logic/metas.ts; datos en src/hooks/useMetas.ts. Desde el 2026-11-16, con el aspecto del prototipo de las
+// 4 pestañas (borradores/app-estructura/prototipo; ESPECIFICACION.md §7). El fundador: «los submenús de
+// ejercicio, hábitos, alimentación… déjalo muy próximo a lo que me habías enseñado». Cada área: la cifra grande
+// de la semana, su línea cometa y una sola lista de metas con sus 7 días; cada meta (al tocar su nombre): la
+// cifra de ahora, su historia con la meta en línea de puntos, sus 7 días y dos números.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
 import { useMetas, type MetasApi } from '@/hooks/useMetas';
 import { SERVING_INFO, META_EVIDENCE } from '@/data/metasInfo';
+import { showSamples } from '@/data/dataMode';
 import {
   ALCOHOL,
   AREAS,
@@ -18,6 +22,7 @@ import {
   METAS_MAX,
   OWN_GOALS,
   TOBACCO,
+  addDays,
   areaScore,
   cfgWithPer,
   cfgWithTobaccoUnit,
@@ -25,12 +30,14 @@ import {
   dayMonth,
   defaultCfg,
   evalMeta,
+  fmtMeta,
   goalAllowed,
   labGoalText,
   metaAllowed,
   metaText,
   pickList,
   progressText,
+  r2,
   rangeText,
   recommended,
   resolveMeta,
@@ -39,12 +46,16 @@ import {
   sourceText,
   toggleSel,
   tooMany,
-  upperFirst,
+  unitWord,
+  valuesFor,
+  weekStartOf,
   weekdayName,
   type AlcoholKind,
   type Area,
+  type DayMap,
   type GoalKey,
   type Kind,
+  type Meta,
   type MetaCfg,
   type MetasState,
   type Per,
@@ -52,10 +63,11 @@ import {
 } from '@/logic/metas';
 import {
   AREA_COLOR,
-  AreaRing,
-  CelebrateRing,
+  AREA_RING,
+  CelebratePct,
   Checkbox,
-  MetaCard,
+  MetaRow,
+  MetaWeek,
   PartyOverlay,
   type Party,
   MetasScreenFrame,
@@ -63,15 +75,20 @@ import {
   SmallStepper,
   SourceSwitch,
   TargetStepper,
+  metaName,
   metaStyles as ms,
-  pct,
 } from '@/components/metas/MetaParts';
+import { MetaChart } from '@/components/metas/MetaChart';
+import { CometLine } from '@/components/CometLine';
+import { FRow, SecHead, Tag } from '@/components/fine/Fine';
 import { t } from '@/i18n';
 import { planVersionRepository } from '@/data/planVersions';
 import { specialistPlans } from '@/logic/specialistPlan';
+import { FINE, ff, fine } from '@/theme/fine';
 
 const isArea = (a: unknown): a is Area => typeof a === 'string' && (AREAS as string[]).includes(a);
 const lowerFirst = (s: string) => (/^[A-ZÁÉÍÓÚ][a-záéíóúñ ]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s);
+const pctText = (f: number | null) => (f == null ? '—' : `${Math.round(f * 100)} %`);
 
 function Loading({ title }: { title: string }) {
   return (
@@ -99,52 +116,39 @@ export function MetasHomeScreen() {
   const rec = s.goals.filter((g) => GOALS[g].lab);
   const own = s.goals.filter((g) => !GOALS[g].lab);
 
-  const goalCard = (g: GoalKey) => {
+  const goalRow = (g: GoalKey) => {
     const lg = lab.find((x) => x.key === g);
-    return (
-      <View key={g} style={[ms.card, styles.goal]}>
-        <View style={styles.goalIcon}>
-          <Ionicons name={GOALS[g].icon as any} size={18} color={Colors.accent} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={ms.rowT}>{t(GOALS[g].name)}</Text>
-          <Text style={ms.rowD}>{[lg ? labGoalText(lg) : null, t(GOALS[g].track)].filter(Boolean).join(' ')}</Text>
-        </View>
-      </View>
-    );
+    return <FRow key={g} title={t(GOALS[g].name)} sub={[lg ? labGoalText(lg) : null, t(GOALS[g].track)].filter(Boolean).join(' ')} />;
   };
 
   return (
     <MetasScreenFrame title={t('Your goals')}>
-      {rec.length > 0 && <Text style={ms.sec}>{t('Recommended for you')}</Text>}
-      {rec.map(goalCard)}
-      {own.length > 0 && <Text style={ms.sec}>{t('Your own')}</Text>}
-      {own.map(goalCard)}
-      {!s.goals.length && (
-        <View style={ms.card}>
-          <Text style={ms.p}>{t('You have no goals yet.')}</Text>
-        </View>
-      )}
+      {rec.length > 0 && <SecHead title={t('Recommended for you')} style={styles.firstSec} />}
+      {rec.map(goalRow)}
+      {own.length > 0 && <SecHead title={t('Your own')} style={!rec.length && styles.firstSec} />}
+      {own.map(goalRow)}
+      {!s.goals.length && <Text style={ms.sub}>{t('You have no goals yet.')}</Text>}
       <TouchableOpacity style={ms.btnSoft} onPress={() => router.push('/metas-objetivos')}>
         <Text style={ms.btnSoftText}>{t('Change my goals')}</Text>
       </TouchableOpacity>
 
-      <Text style={ms.sec}>{t('Your action areas')}</Text>
+      <SecHead title={t('Your action areas')} />
       {AREAS.map((a) => {
         const f = areaScore(s, a, api.vals, api.week ?? undefined, api.known);
         return (
           <TouchableOpacity
             key={a}
-            style={ms.card}
-            activeOpacity={0.85}
+            style={styles.area}
+            activeOpacity={0.8}
             onPress={() => router.push(s.sel[a].length ? { pathname: '/metas-area', params: { area: a } } : { pathname: '/metas-elegir', params: { area: a } })}
+            accessibilityRole="button"
           >
+            {/* Como en Hoy: el nombre en marfil y el % apagado; el color va en la línea */}
             <View style={styles.areaHead}>
-              <AreaRing area={a} score={f} size={34} stroke={4} />
-              <Text style={[styles.areaName, { color: AREA_COLOR[a] }]}>{t(AREA_NAME[a])}</Text>
-              <Text style={styles.areaPct}>{f == null ? '—' : pct(f)}</Text>
-              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              <Text style={styles.areaName}>{t(AREA_NAME[a])}</Text>
+              <Text style={styles.areaPct}>{pctText(f)}</Text>
             </View>
+            <CometLine progress={f ?? 0} colors={AREA_RING[a]} thickness={4} style={styles.areaLine} />
             {s.sel[a].length ? (
               s.sel[a].map((id) => {
                 const m = resolveMeta(s, id);
@@ -157,7 +161,7 @@ export function MetasHomeScreen() {
                 );
               })
             ) : (
-              <Text style={[styles.areaRowP, { marginTop: 8 }]}>{t('No targets')}</Text>
+              <Text style={styles.areaRowP}>{t('No targets')}</Text>
             )}
           </TouchableOpacity>
         );
@@ -184,18 +188,7 @@ export function SpecialistPlanLink() {
     };
   }, []);
   if (!latest) return null;
-  return (
-    <TouchableOpacity style={[ms.card, styles.goal]} activeOpacity={0.85} onPress={() => router.push('/plans')}>
-      <View style={styles.goalIcon}>
-        <Ionicons name="medkit-outline" size={18} color={Colors.accent} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={ms.rowT}>{t('Your specialist’s plan')}</Text>
-        <Text style={ms.rowD}>{t('Sent on {date}', { date: dayMonth(latest.slice(0, 10)) })}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-    </TouchableOpacity>
-  );
+  return <FRow title={t('Your specialist’s plan')} sub={t('Sent on {date}', { date: dayMonth(latest.slice(0, 10)) })} onPress={() => router.push('/plans')} style={styles.topLine} />;
 }
 
 export function CommitLink({ s }: { s: MetasState }) {
@@ -209,7 +202,7 @@ export function CommitLink({ s }: { s: MetasState }) {
     );
   return (
     <TouchableOpacity onPress={() => router.push('/metas-firmar')} style={styles.commitLink}>
-      <Ionicons name="checkmark-circle" size={16} color={Colors.ok} />
+      <Ionicons name="checkmark-circle-outline" size={16} color={FINE.jade} />
       <Text style={ms.rowD}>{t('Commitment signed on {date}, for {n} weeks', { date: dayMonth(s.commit.day), n: s.commit.weeks })}</Text>
     </TouchableOpacity>
   );
@@ -237,7 +230,6 @@ export function GoalsPickScreen() {
           <Text style={ms.rowT}>{t(GOALS[g].name)}</Text>
           {lg && <Text style={ms.rowD}>{labGoalText(lg)}</Text>}
         </View>
-        <Ionicons name={GOALS[g].icon as any} size={18} color={Colors.textMuted} />
       </View>
     );
   };
@@ -246,18 +238,14 @@ export function GoalsPickScreen() {
   return (
     <MetasScreenFrame title={t('Your goals')}>
       <Text style={ms.sub}>{t('Up to {n}. Change them whenever you want.', { n: GOALS_MAX })}</Text>
-      <Text style={ms.sec}>{t('Recommended by your blood test')}</Text>
-      {labShown.length ? (
-        <View style={ms.cardList}>{labShown.map(row)}</View>
-      ) : (
-        <Text style={ms.meta}>{t('Your blood test does not point to any goal for now.')}</Text>
-      )}
-      <Text style={ms.sec}>{t('Add your own')}</Text>
+      <SecHead title={t('Recommended by your blood test')} style={styles.firstSec} />
+      {labShown.length ? <View style={ms.cardList}>{labShown.map(row)}</View> : <Text style={ms.meta}>{t('Your blood test does not point to any goal for now.')}</Text>}
+      <SecHead title={t('Add your own')} />
       <View style={ms.cardList}>{OWN_GOALS.filter((g) => goalAllowed(g, who) || s.goals.includes(g)).map(row)}</View>
       <Text style={ms.meta}>{t('{n} of {max}. With the ones you choose, we recommend targets in each area.', { n: s.goals.length, max: GOALS_MAX })}</Text>
       {/* Las metas, aquí mismo, debajo de los objetivos (fundador, 2026-11-06): las que tienes y las que
           recomiendan los objetivos que eliges, que cambian al marcar uno. «Ver todas», a las del área. */}
-      <Text style={ms.sec}>{t('Your targets')}</Text>
+      <SecHead title={t('Your targets')} />
       <Text style={ms.sub}>{t('The recommended ones come from the goals you choose.')}</Text>
       {AREAS.some((a) => tooMany(s, a)) && <ManyTip />}
       {AREAS.map((a) => (
@@ -271,7 +259,7 @@ export function GoalsPickScreen() {
 function ManyTip() {
   return (
     <View style={styles.manyTip}>
-      <Ionicons name="bulb-outline" size={18} color={Colors.accent} />
+      <Ionicons name="bulb-outline" size={17} color={FINE.mute} />
       <Text style={styles.manyTipText}>
         {t('It is great that you set yourself lots of targets, but sometimes it pays to consolidate a few (up to {n} per area) before moving on to the next ones.', { n: METAS_MAX })}
       </Text>
@@ -290,22 +278,13 @@ function AreaTargets({ api, area: a }: { api: MetasApi; area: Area }) {
   const ids = pickList(a, s, who).filter((id) => seen.has(id) || rec.includes(id));
   return (
     <View style={ms.cardList}>
-      <TouchableOpacity
-        style={[styles.quickHead, ids.length > 0 && styles.quickHeadLine]}
-        onPress={() => router.push({ pathname: '/metas-elegir', params: { area: a } })}
-        activeOpacity={0.85}
-        accessibilityLabel={`${t(AREA_NAME[a])}: ${t('See all')}`}
-      >
-        <Text style={[styles.areaName, { color: AREA_COLOR[a] }]}>{t(AREA_NAME[a])}</Text>
-        <Text style={ms.link}>{t('See all')}</Text>
-        <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
-      </TouchableOpacity>
-      {ids.map((id, i) => {
+      <SecHead title={t(AREA_NAME[a])} more={t('See all')} onMore={() => router.push({ pathname: '/metas-elegir', params: { area: a } })} style={styles.areaSec} />
+      {ids.map((id) => {
         const m = resolveMeta(s, id);
         if (!m) return null;
         const on = sel.includes(id);
         return (
-          <View key={id} style={[ms.row, i === ids.length - 1 && styles.lastRow]}>
+          <View key={id} style={ms.row}>
             <Checkbox on={on} onPress={() => api.update(toggleSel(s, a, id, who))} label={metaText(m)} />
             <View style={{ flex: 1 }}>
               <Text style={ms.rowT}>{metaText(m)}</Text>
@@ -324,17 +303,20 @@ function AreaTargets({ api, area: a }: { api: MetasApi; area: Area }) {
   );
 }
 
-// ===== Un área: su donut y sus metas =====
+// ===== Un área: la cifra de la semana, su línea cometa y sus metas con sus 7 días =====
+// Como el prototipo (`area`): «39 %» grande y ligero, «de tu semana» y las fechas al lado, la línea cometa en el
+// color del área, «ESTA SEMANA» y una sola lista de metas. Se puede ir a la semana pasada (para apuntar el
+// domingo el lunes, por ejemplo) desde el enlace de la cabecera de la lista.
 export function MetasAreaScreen() {
   const router = useRouter();
   const { area } = useLocalSearchParams<{ area?: string }>();
   const a: Area = isArea(area) ? area : 'ej';
   const api = useMetas();
-  // La semana en curso o la pasada (para apuntar el domingo el lunes, por ejemplo)
+  // La semana en curso o la pasada
   const [offset, setOffset] = useState(0);
   const { weekView } = api;
   const view = useMemo(() => weekView(offset), [weekView, offset]);
-  // Al llegar al 100 % marcando (en la semana en curso): el donut celebra y salta el confeti
+  // Al llegar al 100 % marcando (en la semana en curso): la cifra celebra y salta el confeti
   const armed = useRef(false);
   const [party, setParty] = useState<Party>(null);
   const partyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -354,72 +336,61 @@ export function MetasAreaScreen() {
   // A la pasada se puede ir si ya habías empezado entonces (sin compromiso, siempre)
   const canBack = offset === 0 && (!s.commit || s.commit.day < days[0]);
   const first = week.from > 0 && week.from <= 6;
+  const ids = s.sel[a];
   return (
     <MetasScreenFrame title={t(AREA_NAME[a])} overlay={<PartyOverlay party={party} />}>
-      <View style={styles.weekBar}>
-        <TouchableOpacity
-          onPress={() => setOffset(-1)}
-          disabled={!canBack}
-          style={[styles.weekArrow, !canBack && { opacity: 0 }]}
-          hitSlop={10}
-          accessibilityLabel={t('Last week')}
-        >
-          <Ionicons name="chevron-back" size={20} color={Colors.textSecondary} />
-        </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={styles.weekTitle}>{t(offset === 0 ? 'This week' : 'Last week')}</Text>
-          <Text style={styles.weekRange}>{upperFirst(rangeText(days[0], days[6]))}</Text>
+      <View style={styles.big}>
+        <CelebratePct area={a} score={f} allDone={allDone} armed={armed} onParty={onParty} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.bigSide}>{t(offset === 0 ? 'of your week' : 'of last week')}</Text>
+          <Text style={styles.bigSide}>{rangeText(days[0], days[6])}</Text>
         </View>
-        <TouchableOpacity
-          onPress={() => setOffset(0)}
-          disabled={offset === 0}
-          style={[styles.weekArrow, offset === 0 && { opacity: 0 }]}
-          hitSlop={10}
-          accessibilityLabel={t('This week')}
-        >
-          <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-        </TouchableOpacity>
       </View>
-      <View style={styles.bigRing}>
-        <CelebrateRing area={a} score={f} allDone={allDone} armed={armed} onParty={onParty} size={124} stroke={8} sub={t(offset === 0 ? 'this week' : 'last week')} />
-      </View>
+      <CometLine progress={f ?? 0} colors={AREA_RING[a]} thickness={4} style={styles.comet} />
       {first && (
-        <Text style={styles.weekNote}>
+        <Text style={fine.note}>
           {t('Your first week counts from {day}: weekly targets go in proportion.', { day: `${weekdayName(days[week.from])} ${dateOfDay(days[week.from])}` })}
         </Text>
       )}
-      {s.sel[a].length ? (
-        <View style={ms.cardList}>
-          {s.sel[a].map((id) => {
-            const m = resolveMeta(s, id);
-            if (!m) return null;
-            return (
-              <MetaCard
-                key={`${id}:${days[0]}`}
-                m={m}
-                vals={vals[id] ?? Array(7).fill(null)}
-                autoVals={days.map((d) => api.auto[id]?.[d] ?? null)}
-                fixed={days.map((d) => api.data?.manual[id]?.[d] != null)}
-                days={days}
-                week={week}
-                known={known[id]}
-                color={AREA_COLOR[a]}
-                onSet={(day, v) => {
-                  armed.current = offset === 0;
-                  api.setValue(m, day, v);
-                }}
-                onToggleSource={() => toggleSource(api, id)}
-              />
-            );
-          })}
-        </View>
+      <SecHead
+        title={t(offset === 0 ? 'This week' : 'Last week')}
+        more={canBack ? t('Last week') : offset !== 0 ? t('This week') : undefined}
+        onMore={() => setOffset(offset === 0 ? -1 : 0)}
+      />
+      {ids.length ? (
+        ids.map((id) => {
+          const m = resolveMeta(s, id);
+          if (!m) return null;
+          return (
+            <MetaRow
+              key={`${id}:${days[0]}`}
+              m={m}
+              vals={vals[id] ?? Array(7).fill(null)}
+              autoVals={days.map((d) => api.auto[id]?.[d] ?? null)}
+              fixed={days.map((d) => api.data?.manual[id]?.[d] != null)}
+              days={days}
+              week={week}
+              known={known[id]}
+              color={AREA_COLOR[a]}
+              onSet={(day, v) => {
+                armed.current = offset === 0;
+                api.setValue(m, day, v);
+              }}
+            />
+          );
+        })
       ) : (
-        <View style={ms.card}>
-          <Text style={ms.p}>{t('You have no targets here.')}</Text>
-        </View>
+        <Text style={ms.sub}>{t('You have no targets here.')}</Text>
       )}
-      <TouchableOpacity style={ms.btnSoft} onPress={() => router.push({ pathname: '/metas-elegir', params: { area: a } })}>
-        <Text style={ms.btnSoftText}>{t('Change my targets')}</Text>
+      {ids.length > 0 && (
+        <Text style={fine.note}>
+          {offset === 0
+            ? t('Tap a day to mark or correct it. Today is the one with the ring. Tap the name to see how it is going.')
+            : t('Tap a day to mark or correct it. Tap the name to see how it is going.')}
+        </Text>
+      )}
+      <TouchableOpacity style={ms.btnSoft} onPress={() => router.push({ pathname: '/metas-elegir', params: { area: a } })} accessibilityRole="button">
+        <Text style={ms.btnSoftText}>{t('+ Add target')}</Text>
       </TouchableOpacity>
     </MetasScreenFrame>
   );
@@ -442,7 +413,7 @@ export function MetasPickScreen() {
     <MetasScreenFrame title={t('Your targets')}>
       <Segmented options={AREAS.map((k) => [k, t(AREA_NAME[k])] as [Area, string])} value={a} onChange={setA} />
       {tooMany(s, a) && <ManyTip />}
-      <Text style={ms.sub}>{t('The recommended ones come from your goals.')}</Text>
+      <Text style={[ms.sub, { marginTop: 8 }]}>{t('The recommended ones come from your goals.')}</Text>
       <View style={ms.cardList}>
         {ids.map((id) => {
           const m = resolveMeta(s, id);
@@ -468,7 +439,7 @@ export function MetasPickScreen() {
                 </TouchableOpacity>
               ) : !m.custom ? (
                 <TouchableOpacity onPress={() => router.push({ pathname: '/metas-info', params: { id } })} hitSlop={8} accessibilityLabel={t('Information')}>
-                  <Ionicons name="information-circle-outline" size={20} color={Colors.textMuted} />
+                  <Ionicons name="information-circle-outline" size={20} color={FINE.mute} />
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity onPress={() => router.push({ pathname: '/metas-ajustar', params: { id } })} hitSlop={8}>
@@ -521,7 +492,7 @@ export function MetaAdjustScreen() {
   };
   return (
     <MetasScreenFrame title={t('Adjust your target')}>
-      <Text style={ms.h2}>{m.custom ? m.custom.name : t(def!.short)}</Text>
+      <Text style={ms.h2}>{metaName(m)}</Text>
       <Text style={ms.sub}>{metaText(m)}</Text>
       {def?.tobacco && (
         <>
@@ -536,13 +507,11 @@ export function MetaAdjustScreen() {
       {def?.alcohol && (
         <>
           <Text style={ms.label}>{t('What you count')}</Text>
-          <View style={styles.chips}>
-            {(Object.keys(ALCOHOL) as AlcoholKind[]).map((k) => (
-              <TouchableOpacity key={k} style={[styles.chip, draft.kind === k && styles.chipOn]} onPress={() => setDraft({ ...draft, kind: k })}>
-                <Text style={[styles.chipText, draft.kind === k && styles.chipTextOn]}>{t(ALCOHOL[k].label)}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Segmented
+            options={(Object.keys(ALCOHOL) as AlcoholKind[]).map((k) => [k, t(ALCOHOL[k].label)] as [AlcoholKind, string])}
+            value={draft.kind ?? 'beer'}
+            onChange={(k) => setDraft({ ...draft, kind: k })}
+          />
         </>
       )}
       {!def?.fixedPer && (
@@ -566,17 +535,17 @@ export function MetaAdjustScreen() {
       )}
       {m.auto && (
         <>
-          <Text style={[ms.label, { marginTop: 14 }]}>{t('How it is filled in')}</Text>
+          <Text style={ms.label}>{t('How it is filled in')}</Text>
           <View style={{ alignItems: 'flex-start' }}>
             <SourceSwitch m={m} onToggle={() => setDraft({ ...draft, auto: !m.autoOn })} />
           </View>
         </>
       )}
-      <TouchableOpacity style={ms.btn} onPress={save}>
+      <TouchableOpacity style={ms.btn} onPress={save} accessibilityRole="button">
         <Text style={ms.btnText}>{t('Save')}</Text>
       </TouchableOpacity>
       {m.custom && (
-        <TouchableOpacity style={styles.delete} onPress={remove}>
+        <TouchableOpacity style={styles.delete} onPress={remove} accessibilityRole="button">
           <Text style={styles.deleteText}>{t('Delete this target')}</Text>
         </TouchableOpacity>
       )}
@@ -602,17 +571,18 @@ export function MetaCustomScreen() {
     api.update({ ...s, custom, cfg, sel: { ...s.sel, [a]: [...s.sel[a], id] } });
     router.canGoBack() ? router.back() : router.replace({ pathname: '/metas-elegir', params: { area: a } });
   };
+  const ready = !!n.name.trim();
   return (
     <MetasScreenFrame title={t('Other target')}>
       <Text style={ms.sub}>{t('For {area}: a name, how it is counted and how often.', { area: t(AREA_NAME[a]) })}</Text>
-      <Text style={ms.label}>{t('Name')}</Text>
+      <Text style={[ms.label, { marginTop: 8 }]}>{t('Name')}</Text>
       <TextInput
         style={styles.input}
         value={n.name}
         maxLength={40}
         onChangeText={(name) => setN({ ...n, name })}
         placeholder={t('For example, read before bed')}
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={FINE.mute}
       />
       <Text style={ms.label}>{t('Kind of target')}</Text>
       <Segmented<Kind>
@@ -634,7 +604,7 @@ export function MetaCustomScreen() {
               maxLength={20}
               onChangeText={(unit) => setN({ ...n, unit })}
               placeholder={t('Unit (optional)')}
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={FINE.mute}
               accessibilityLabel={t('Unit')}
             />
           </View>
@@ -655,47 +625,166 @@ export function MetaCustomScreen() {
           <SmallStepper value={n.days} onChange={(days) => setN({ ...n, days })} max={7} />
         </>
       )}
-      <View style={[ms.card, { marginTop: 14 }]}>
-        <Text style={ms.label}>{t('It will look like this')}</Text>
+      <Text style={ms.label}>{t('It will look like this')}</Text>
+      <View style={styles.preview}>
         <Text style={ms.rowT}>{customText(n)}</Text>
       </View>
-      <TouchableOpacity style={[ms.btn, !n.name.trim() && { opacity: 0.4 }]} onPress={add} disabled={!n.name.trim()}>
+      <TouchableOpacity style={[ms.btn, !ready && { opacity: 0.4 }]} onPress={add} disabled={!ready} accessibilityRole="button" accessibilityState={{ disabled: !ready }}>
         <Text style={ms.btnText}>{t('Add')}</Text>
       </TouchableOpacity>
     </MetasScreenFrame>
   );
 }
 
-// ===== La (i) de una meta =====
+// ===== Una meta: cómo va y su (i) =====
+// Si la tienes elegida (ESPECIFICACION.md §7, «Meta»: siempre igual): la cifra de ahora con su unidad y tu meta,
+// su historia en esa unidad con la meta en línea de puntos, sus 7 días y dos números (la media y de dónde
+// partías); después, ajustarla y de dónde llega. Debajo, lo de su (i): qué cuenta como una y lo que está
+// estudiado. Si no la tienes (desde «Tus metas»), solo la (i).
 export function MetaInfoScreen() {
   const { id: rawId } = useLocalSearchParams<{ id?: string }>();
   const id = String(rawId ?? '');
   const api = useMetas();
-  const def = CATALOG[id];
-  if (!api.data || !def) return <Loading title={t('Information')} />;
-  const m = resolveMeta(api.data.state, id)!;
+  const m = api.data ? resolveMeta(api.data.state, id) : null;
+  if (!api.data || !m) return <Loading title={t('Information')} />;
+  const selected = api.data.state.sel[m.area].includes(id);
   const serving = SERVING_INFO[id];
+  const evidence = META_EVIDENCE[id] ?? [];
   return (
-    <MetasScreenFrame title={t('Information')}>
-      <Text style={ms.h2}>{t(def.short)}</Text>
-      <Text style={ms.sub}>{t('Your target: {text}', { text: lowerFirst(metaText(m)) })}</Text>
+    <MetasScreenFrame title={metaName(m)}>
+      {selected ? <MetaNow api={api} m={m} /> : <Text style={ms.sub}>{t('Your target: {text}', { text: lowerFirst(metaText(m)) })}</Text>}
       {serving && (
-        <View style={ms.card}>
-          <Text style={ms.label}>{t(serving[0])}</Text>
+        <>
+          <SecHead title={t(serving[0])} style={!selected && styles.firstSec} />
           <Text style={ms.p}>{t(serving[1])}</Text>
-        </View>
+        </>
       )}
-      <View style={ms.card}>
-        <Text style={ms.label}>{t('What is studied')}</Text>
-        {(META_EVIDENCE[id] ?? []).map(([level, text]) => (
-          <View key={text} style={styles.ev}>
-            <Text style={styles.evLevel}>{t(level)}</Text>
-            <Text style={ms.p}>{t(text)}</Text>
-          </View>
-        ))}
-      </View>
-      <Text style={ms.meta}>{t('What happens in general, not what will happen to you.')}</Text>
+      {evidence.length > 0 && (
+        <>
+          <SecHead title={t('What is studied')} style={!selected && !serving && styles.firstSec} />
+          {evidence.map(([level, text]) => (
+            <View key={text} style={styles.ev}>
+              <Tag label={t(level)} />
+              <Text style={ms.p}>{t(text)}</Text>
+            </View>
+          ))}
+          <Text style={fine.note}>{t('What happens in general, not what will happen to you.')}</Text>
+        </>
+      )}
     </MetasScreenFrame>
+  );
+}
+
+// La historia de una meta en su unidad (ESPECIFICACION.md §8: «de sus lecturas guardadas, agrupadas por día o por
+// semana»), con lo mismo que el resto de la app (lo apuntado a mano y lo que llega solo): las de cantidad al día,
+// lo de cada uno de los últimos 14 días; las demás, lo de cada una de las últimas 8 semanas (la en curso, al
+// final). Un día o una semana sin ningún dato queda vacío (no cuenta como 0).
+function metaHistory(s: MetasState, m: Meta, manual: DayMap, auto: DayMap, today: string, demoToday?: string) {
+  const daily = m.per === 'day' && m.kind === 'amount';
+  if (daily) {
+    const days = Array.from({ length: 14 }, (_, i) => addDays(today, i - 13));
+    const v = valuesFor(s, days, manual, auto, demoToday)[m.id] ?? [];
+    return { daily, points: days.map((_, i) => (v[i] == null ? null : r2(v[i]! / m.f))), goal: m.tgt };
+  }
+  const first = weekStartOf(today, s.weekStart);
+  const points = Array.from({ length: 8 }, (_, k) => {
+    const days = Array.from({ length: 7 }, (_, i) => addDays(first, (k - 7) * 7 + i));
+    const v = valuesFor(s, days, manual, auto, demoToday)[m.id] ?? [];
+    if (!v.some((x) => x != null)) return null;
+    return m.kind === 'yesno' ? v.filter((x) => x === 1).length : r2(v.reduce<number>((acc, x) => acc + (x ?? 0), 0) / m.f);
+  });
+  // Un sí / no de cada día: cuántos días de cada semana, con la meta en los 7
+  return { daily, points, goal: m.per === 'day' ? 7 : m.tgt };
+}
+
+function MetaNow({ api, m }: { api: MetasApi; m: Meta }) {
+  const router = useRouter();
+  const view = api.weekView(0);
+  if (!api.data || !view) return null;
+  const { week, days, vals, known } = view;
+  const v7 = vals[m.id] ?? Array(7).fill(null);
+  const e = evalMeta(m, v7, week, known[m.id]);
+  const T = week.current ? week.to : -1;
+  const color = AREA_COLOR[m.area];
+
+  // La cifra de ahora: lo de hoy en las de cantidad al día; si no, lo que llevas esta semana
+  let big: string;
+  let side: string;
+  if (m.per === 'day' && m.kind === 'amount') {
+    const v = T >= 0 ? v7[T] : null;
+    const x = v == null ? null : Math.round((v / m.f) * 10) / 10; // con un decimal como mucho (7,62 h → 7,6)
+    big = x == null ? '—' : fmtMeta(m, x);
+    const u = unitWord(m, x ?? m.tgt);
+    side = (m.id === 'dormir' ? t('{unit} last night', { unit: u }) : t('{unit} today', { unit: u })).trim();
+  } else if (m.per === 'day') {
+    big = String(e.n);
+    side = t('{unit} this week', { unit: unitWord(m, e.n) }).trim();
+  } else {
+    const x = r2(e.sum / m.f);
+    big = fmtMeta(m, x);
+    side = t('{unit} this week', { unit: unitWord(m, x) }).trim();
+  }
+
+  const hist = metaHistory(api.data.state, m, api.data.manual, api.auto, api.today, showSamples() ? api.today : undefined);
+  const pts = hist.points;
+  const have = pts.filter((x): x is number => x != null);
+  const avg = have.length ? have.reduce((acc, x) => acc + x, 0) / have.length : null;
+  const firstIdx = pts.findIndex((x) => x != null);
+  const ago = firstIdx < 0 ? 0 : pts.length - 1 - firstIdx;
+  const round = (x: number) => (x >= 100 ? Math.round(x) : Math.round(x * 10) / 10);
+  const withUnit = (x: number) => `${fmtMeta(m, round(x))} ${unitWord(m, round(x))}`.trim();
+  const u = unitWord(m, 2);
+  const unitPhrase = u ? (hist.daily ? t('{q} a day', { q: u }) : t('{q} a week', { q: u })) : '';
+  const span = hist.daily
+    ? unitPhrase
+      ? t('The last 14 days, in {unit}.', { unit: unitPhrase })
+      : t('The last 14 days.')
+    : unitPhrase
+      ? t('The last 8 weeks, in {unit}.', { unit: unitPhrase })
+      : t('The last 8 weeks.');
+  const goalNote = m.limit ? t('The dotted line is your limit.') : t('The dotted line is your target.');
+  let agoLabel = '';
+  if (hist.daily) agoLabel = ago === 1 ? t('Yesterday') : t('{n} days ago', { n: ago });
+  else agoLabel = ago === 1 ? t('Last week') : t('{n} weeks ago', { n: ago });
+
+  return (
+    <>
+      <View style={styles.big}>
+        <Text style={styles.bigNum}>{big}</Text>
+        <View style={{ flex: 1 }}>
+          {side ? <Text style={styles.bigSide}>{side}</Text> : null}
+          <Text style={styles.bigSide}>{t('Your target: {text}', { text: lowerFirst(metaText(m)) })}</Text>
+        </View>
+      </View>
+      {have.length > 1 ? (
+        <>
+          <MetaChart values={pts} color={color} goal={hist.goal} />
+          <Text style={fine.note}>{`${span} ${goalNote}`}</Text>
+        </>
+      ) : (
+        <Text style={[fine.note, { marginTop: 14 }]}>{t('Its history shows here as more data comes in.')}</Text>
+      )}
+
+      <SecHead title={t('This week')} />
+      <MetaWeek
+        m={m}
+        vals={v7}
+        autoVals={days.map((d) => api.auto[m.id]?.[d] ?? null)}
+        fixed={days.map((d) => api.data?.manual[m.id]?.[d] != null)}
+        days={days}
+        week={week}
+        known={known[m.id]}
+        color={color}
+        onSet={(day, v) => api.setValue(m, day, v)}
+      />
+      <Text style={fine.note}>{t('Tap a day to mark or correct it.')}</Text>
+
+      <SecHead title={t('In numbers')} />
+      {avg != null && <FRow title={hist.daily ? t('Average of the last 14 days') : t('Average of the last 8 weeks')} value={withUnit(avg)} />}
+      {ago > 0 && <FRow title={agoLabel} value={withUnit(pts[firstIdx]!)} />}
+      <FRow title={t('Adjust your target')} sub={metaText(m)} onPress={() => router.push({ pathname: '/metas-ajustar', params: { id: m.id } })} last={!m.auto} />
+      {m.auto && <FRow title={t('How it is filled in')} right={<SourceSwitch m={m} onToggle={() => toggleSource(api, m.id)} />} last />}
+    </>
   );
 }
 
@@ -726,45 +815,28 @@ export function MetasCommitScreen() {
   };
   return (
     <MetasScreenFrame title={t('Your commitment')}>
-      <Text style={[ms.h2, { marginBottom: 10 }]}>{t('I commit to…')}</Text>
+      <Text style={ms.h2}>{t('I commit to…')}</Text>
       {AREAS.filter((a) => s.sel[a].length).map((a) => (
-        <View key={a} style={ms.card}>
-          <Text style={[ms.label, { color: AREA_COLOR[a], marginTop: 0 }]}>{t(AREA_NAME[a])}</Text>
+        <View key={a}>
+          <SecHead title={t(AREA_NAME[a])} style={styles.commitSec} />
           {s.sel[a].map((id) => {
             const m = resolveMeta(s, id);
-            return m ? (
-              <View key={id} style={styles.bul}>
-                <Text style={styles.bulDot}>•</Text>
-                <Text style={[ms.p, { flex: 1 }]}>{metaText(m)}</Text>
-              </View>
-            ) : null;
+            return m ? <FRow key={id} title={metaText(m)} /> : null;
           })}
         </View>
       ))}
       <Text style={ms.label}>{t('For')}</Text>
-      <View style={styles.chips}>
-        {[4, 8, 12].map((n) => (
-          <TouchableOpacity key={n} style={[styles.chip, w === n && styles.chipOn]} onPress={() => pickWeeks(n)}>
-            <Text style={[styles.chipText, w === n && styles.chipTextOn]}>{t('{n} weeks', { n })}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <Segmented options={[4, 8, 12].map((n) => [String(n), t('{n} weeks', { n })] as [string, string])} value={String(w)} onChange={(k) => pickWeeks(Number(k))} />
       {s.commit ? (
         <>
-          <View style={[ms.btn, styles.signed]}>
-            <Ionicons name="checkmark" size={18} color={Colors.ok} />
-            <Text style={[ms.btnText, { color: Colors.ok }]}>{t('Commitment signed')}</Text>
+          <View style={styles.signed}>
+            <Ionicons name="checkmark" size={17} color={FINE.jade} />
+            <Text style={styles.signedText}>{t('Commitment signed')}</Text>
           </View>
           {signedNow && markArea && (
             <View style={styles.markNow}>
-              <Text style={styles.markNowText}>
-                {markArea === 'ha' ? t('Shall we mark today’s habits now?') : t('Shall we mark today now?')}
-              </Text>
-              <TouchableOpacity
-                style={[ms.btn, styles.markNowBtn]}
-                onPress={() => router.replace({ pathname: '/metas-area', params: { area: markArea } })}
-                activeOpacity={0.85}
-              >
+              <Text style={styles.markNowText}>{markArea === 'ha' ? t('Shall we mark today’s habits now?') : t('Shall we mark today now?')}</Text>
+              <TouchableOpacity style={[ms.btn, { marginTop: 12 }]} onPress={() => router.replace({ pathname: '/metas-area', params: { area: markArea } })} activeOpacity={0.85}>
                 <Text style={ms.btnText}>{t('Go to {area}', { area: t(AREA_NAME[markArea]) })}</Text>
               </TouchableOpacity>
             </View>
@@ -781,7 +853,7 @@ export function MetasCommitScreen() {
           <Text style={ms.btnText}>{t('I commit')}</Text>
         </TouchableOpacity>
       )}
-      <Text style={ms.meta}>{commitNote(s, api.days, api.today)}</Text>
+      <Text style={[fine.note, { marginTop: 16 }]}>{commitNote(s, api.days, api.today)}</Text>
     </MetasScreenFrame>
   );
 }
@@ -803,53 +875,59 @@ function commitNote(s: MetasState, days: string[], today: string): string {
 }
 
 const styles = StyleSheet.create({
-  goal: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  goalIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  areaHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  areaName: { flex: 1, fontSize: 15, fontWeight: '800' },
-  areaPct: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  areaRow: { marginTop: 10, gap: 2 },
-  areaRowT: { color: Colors.textPrimary, fontSize: 14 },
-  areaRowP: { color: Colors.textMuted, fontSize: 12.5 },
-  commitLink: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: 10 },
-  quickHead: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 12 },
-  quickHeadLine: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.divider },
-  quickEmpty: { color: Colors.textMuted, fontSize: 13, paddingBottom: 12 },
-  lastRow: { borderBottomWidth: 0 },
-  manyTip: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', backgroundColor: Colors.accentSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
-  manyTipText: { flex: 1, color: Colors.textPrimary, fontSize: 13.5, lineHeight: 19 },
-  bigRing: { alignItems: 'center', marginVertical: 12 },
-  weekBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  weekArrow: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card },
-  weekTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  weekRange: { color: Colors.textMuted, fontSize: 12, marginTop: 1 },
-  weekNote: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, textAlign: 'center', marginBottom: 12, paddingHorizontal: 8 },
+  firstSec: { marginTop: 8 },
+  topLine: { borderTopWidth: 1, borderTopColor: FINE.line, marginTop: 20 },
+  // Un área en «Tus objetivos», como en Hoy
+  area: { paddingTop: 10, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  areaHead: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  areaName: { ...ff('medium'), flex: 1, fontSize: 15, color: FINE.ivory },
+  areaPct: { ...ff('regular'), color: FINE.mute, fontSize: 14, fontVariant: ['tabular-nums'] },
+  areaLine: { marginTop: 4, marginRight: -6, marginBottom: 4 },
+  areaRow: { marginTop: 6, gap: 1 },
+  areaRowT: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 19 },
+  areaRowP: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17 },
+  commitLink: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingVertical: 14 },
+  areaSec: { marginTop: 22 },
+  quickEmpty: { ...ff('regular'), color: FINE.mute, fontSize: 13, paddingVertical: 10 },
+  manyTip: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', paddingVertical: 12, marginVertical: 8, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
+  manyTipText: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 13.5, lineHeight: 19 },
+  // La cifra grande de un área o de una meta, con lo suyo al lado (prototipo, `.big`)
+  big: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
+  bigNum: { ...ff('light'), color: FINE.ivory, fontSize: 44, lineHeight: 50, fontVariant: ['tabular-nums'] },
+  bigSide: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18 },
+  comet: { marginTop: 10, marginHorizontal: -6 },
   tags: { flexDirection: 'row', gap: 6 },
-  tagOwn: { color: Colors.violet, backgroundColor: Colors.violetSoft },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
-  chip: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8 },
-  chipOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  chipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  chipTextOn: { color: Colors.background, fontWeight: '800' },
+  tagOwn: { color: FINE.mute, borderColor: FINE.line },
   input: {
-    backgroundColor: Colors.card,
+    ...ff('regular'),
+    backgroundColor: FINE.tile,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 12,
+    borderColor: FINE.line,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    color: Colors.textPrimary,
+    color: FINE.ivory,
     fontSize: 15,
   },
-  qRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  delete: { alignItems: 'center', paddingVertical: 14 },
-  deleteText: { color: Colors.danger, fontSize: 14, fontWeight: '700' },
-  ev: { gap: 4, marginTop: 8 },
-  evLevel: { color: Colors.accent, fontSize: 12, fontWeight: '800' },
-  bul: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  bulDot: { color: Colors.textMuted, fontSize: 14, lineHeight: 20 },
-  signed: { flexDirection: 'row', justifyContent: 'center', gap: 6, backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.ok },
-  markNow: { marginTop: 18, alignItems: 'center' },
-  markNowText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', textAlign: 'center' },
-  markNowBtn: { alignSelf: 'stretch', marginTop: 10 },
+  qRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  preview: { paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
+  delete: { alignSelf: 'center', paddingVertical: 14, marginTop: 4 },
+  deleteText: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  ev: { gap: 6, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: FINE.line, alignItems: 'flex-start' },
+  commitSec: { marginTop: 18 },
+  signed: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 24,
+    minHeight: 40,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: FINE.jadeLine,
+  },
+  signedText: { ...ff('medium'), color: FINE.jade, fontSize: 14 },
+  markNow: { marginTop: 22, alignItems: 'center' },
+  markNowText: { ...ff('medium'), color: FINE.ivory, fontSize: 15, textAlign: 'center' },
 });

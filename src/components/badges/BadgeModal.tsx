@@ -7,6 +7,7 @@ import { BadgeShareCard } from './BadgeShareCard';
 import { Confetti } from './Confetti';
 import { shareBadge } from '@/utils/shareBadge';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Insignia a pantalla completa (tocar una medalla en "Tus insignias"): la medalla entra con un
 // golpe de escala, cae confeti del color del nivel y se puede compartir como imagen. Debajo, la
@@ -147,14 +148,14 @@ const styles = StyleSheet.create({
     marginTop: 22,
     minWidth: 220,
   },
-  shareText: { color: BG, fontSize: 16, fontWeight: '800' },
-  shareHint: { color: '#7F958D', fontSize: 12, textAlign: 'center', marginTop: 8 },
-  status: { color: '#DDEBE6', fontSize: 15, fontWeight: '700', textAlign: 'center', marginTop: 22 },
+  shareText: { color: BG, fontSize: 16, fontFamily: INTER.medium },
+  shareHint: { color: '#7F958D', fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 8 },
+  status: { color: '#DDEBE6', fontSize: 15, fontFamily: INTER.medium, textAlign: 'center', marginTop: 22 },
   ladder: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, maxWidth: 420, alignSelf: 'center', width: '100%' },
   step: { alignItems: 'center', flex: 1 },
   dot: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  stepName: { fontSize: 11, fontWeight: '800', marginTop: 6 },
-  stepValue: { color: '#7F958D', fontSize: 10, marginTop: 2, textAlign: 'center' },
+  stepName: { fontSize: 11, fontFamily: INTER.medium, marginTop: 6 },
+  stepValue: { color: '#7F958D', fontFamily: INTER.regular, fontSize: 10, marginTop: 2, textAlign: 'center' },
   close: { position: 'absolute', right: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   again: { position: 'absolute', left: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
 });

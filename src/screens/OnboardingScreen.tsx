@@ -25,6 +25,7 @@ import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { requestTourAfterOnboarding } from '@/components/tour/tourStore';
+import { INTER } from '@/theme/fine';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
@@ -518,7 +519,7 @@ const styles = StyleSheet.create({
   skip: {
     color: Colors.textSecondary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   body: {
     paddingHorizontal: 20,
@@ -528,12 +529,12 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.textPrimary,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     marginBottom: 8,
   },
   subtitle: {
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     lineHeight: 21,
     marginBottom: 28,
   },
@@ -548,7 +549,7 @@ const styles = StyleSheet.create({
   },
   wheelUnit: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     marginTop: 6,
   },
   bigOptions: {
@@ -573,12 +574,12 @@ const styles = StyleSheet.create({
   bigOptionText: {
     color: Colors.textSecondary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   question: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 10,
     marginTop: 6,
   },
@@ -603,7 +604,7 @@ const styles = StyleSheet.create({
   chipText: {
     color: Colors.textSecondary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   chipTextSelected: {
     color: Colors.textPrimary,
@@ -616,7 +617,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 11,
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     marginBottom: 18,
   },
   goalList: {
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.textSecondary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   purposeRow: {
     alignItems: 'flex-start',
@@ -645,11 +646,11 @@ const styles = StyleSheet.create({
   purposeTitle: {
     color: Colors.textSecondary,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   purposeSubtitle: {
     color: Colors.textMuted,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 18,
     marginTop: 4,
   },
@@ -664,7 +665,7 @@ const styles = StyleSheet.create({
   ctaText: {
     color: Colors.background,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   preview: {
     marginTop: 18,
@@ -675,12 +676,12 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 4,
   },
-  previewTitle: { color: Colors.accent, fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
-  previewItem: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  previewNote: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 4 },
+  previewTitle: { color: Colors.accent, fontSize: 13, fontFamily: INTER.semibold, textTransform: 'uppercase', marginBottom: 2 },
+  previewItem: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  previewNote: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 4 },
   buildingText: {
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     marginTop: 16,
   },
 });

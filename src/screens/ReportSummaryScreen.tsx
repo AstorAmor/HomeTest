@@ -17,6 +17,7 @@ import {
 } from '@/data/reportContentEn';
 import { TIER_COLOR, FLAG_LABEL, FLAG_ICON, categoryLabel } from '@/utils/reportDisplay';
 import { t } from '@/i18n';
+import { fine, INTER } from '@/theme/fine';
 
 // Proxy simplificado: "mejora" = cambio significativo que además ya aterrizó en rango.
 // No tenemos (todavía) una tabla de qué dirección es clínicamente buena por marcador,
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   headline: {
     color: Colors.textPrimary,
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 10,
   },
   improvementPill: {
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
   improvementPillText: {
     color: Colors.accent,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   donutRow: {
     flexDirection: 'row',
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
   },
   categoryRow: {
     paddingHorizontal: 20,
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
   },
   categoryLabel: {
     color: Colors.textSecondary,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 6,
     textAlign: 'center',
   },
@@ -244,30 +245,24 @@ const styles = StyleSheet.create({
   phenoTitle: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   phenoRange: {
     color: Colors.textPrimary,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
   },
   phenoChrono: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     marginBottom: 10,
   },
   phenoExplanation: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 19,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 12 },
   markersList: {
     paddingHorizontal: 20,
     gap: 10,
@@ -295,7 +290,7 @@ const styles = StyleSheet.create({
   markerName: {
     color: Colors.textPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   categoryPill: {
     backgroundColor: Colors.divider,
@@ -306,11 +301,11 @@ const styles = StyleSheet.create({
   categoryPillText: {
     color: Colors.textMuted,
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   markerValue: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   markerBadge: {
     paddingHorizontal: 8,
@@ -319,7 +314,7 @@ const styles = StyleSheet.create({
   },
   markerBadgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   planButton: {
     flexDirection: 'row',
@@ -334,7 +329,7 @@ const styles = StyleSheet.create({
   planButtonText: {
     color: Colors.background,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   habitsLink: {
     flexDirection: 'row',
@@ -352,6 +347,6 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.textPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
 });

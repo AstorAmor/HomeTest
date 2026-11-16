@@ -10,6 +10,7 @@ import { markerHref } from '@/utils/markerLinks';
 import { RangeBar } from './RangeBar';
 import { UnitLabel } from './UnitLabel';
 import { num } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Una fila de una analítica, igual en todos los grupos: el nombre con el valor debajo, a la derecha si está
 // en rango o fuera y, debajo, la barra de rango. Al tocarla se abre ese marcador en Mis datos (fundador,
@@ -62,9 +63,9 @@ const styles = StyleSheet.create({
   item: { paddingVertical: 10 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  name: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  name: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 2 },
-  value: { fontSize: 13, fontWeight: '800' },
-  unit: { fontWeight: '600' },
-  badge: { fontSize: 11, fontWeight: '800', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
+  value: { fontSize: 13, fontFamily: INTER.medium },
+  unit: { fontFamily: INTER.medium },
+  badge: { fontSize: 11, fontFamily: INTER.medium, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
 });

@@ -9,6 +9,7 @@ import { basalTemperatureRepository, thermometerRepository } from '@/data/temper
 import { dayKey } from '@/data/bathroomRepository';
 import { getLang, t } from '@/i18n';
 import { logScreenStyles } from './LogBowelScreen';
+import { INTER } from '@/theme/fine';
 
 // Ruedas, como el resto de mediciones: grados y centésimas de 5 en 5 (lo que da un termómetro basal
 // de dos decimales). La basal va de 35 a 38 °C; con el termómetro, hasta 41 (fiebre).
@@ -121,6 +122,6 @@ export const LogTemperatureScreen = () => {
 const styles = StyleSheet.create({
   ...logScreenStyles,
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 22 },
-  wheelComma: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800', marginHorizontal: 2 },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700', marginLeft: 8 },
+  wheelComma: { color: Colors.textPrimary, fontSize: 26, fontFamily: INTER.medium, marginHorizontal: 2 },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontFamily: INTER.medium, marginLeft: 8 },
 });

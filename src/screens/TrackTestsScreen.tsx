@@ -8,6 +8,7 @@ import { mockShipments, Shipment, ShipmentStep } from '@/data/servicesMock';
 import { t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
 import { showSamples } from '@/data/dataMode';
+import { fine, INTER } from '@/theme/fine';
 
 const stepColor = (s: ShipmentStep['status']) =>
   s === 'done' ? Colors.accent : s === 'current' ? Colors.amber : Colors.cardBorder;
@@ -109,8 +110,8 @@ export const TrackTestsScreen = () => (
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', paddingHorizontal: 20, marginBottom: 12, marginTop: 4 },
-  sectionTitleInline: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 12, marginTop: 4 },
+  sectionTitleInline: { ...fine.secTitle },
   empty: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -123,11 +124,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.cardBorder,
     borderStyle: 'dashed',
   },
-  emptyText: { color: Colors.textSecondary, fontSize: 14, flex: 1 },
+  emptyText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, flex: 1 },
   demoHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, marginBottom: 6 },
   demoTag: { backgroundColor: Colors.divider, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  demoTagText: { color: Colors.textSecondary, fontSize: 10, fontWeight: '800', letterSpacing: 0.6 },
-  demoNote: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginBottom: 12 },
+  demoTagText: { color: Colors.textSecondary, fontSize: 10, fontFamily: INTER.medium, letterSpacing: 0.6 },
+  demoNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginBottom: 12 },
   cardDemo: { borderStyle: 'dashed' },
   card: {
     backgroundColor: Colors.card,
@@ -148,17 +149,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  testName: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
-  carrier: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  testName: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  carrier: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   etaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, marginBottom: 14 },
-  eta: { color: Colors.textSecondary, fontSize: 13 },
+  eta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   timeline: {},
   stepRow: { flexDirection: 'row', gap: 12 },
   stepRail: { alignItems: 'center', width: 18 },
   stepDot: { width: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
   stepLine: { width: 2, flex: 1, minHeight: 18, marginVertical: 2 },
   stepBody: { flex: 1, paddingBottom: 14 },
-  stepLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  stepDetail: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  stepDate: { color: Colors.textMuted, fontSize: 12 },
+  stepLabel: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  stepDetail: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  stepDate: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
 });

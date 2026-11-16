@@ -8,6 +8,7 @@ import { getMySubscription } from '@/data/orders';
 import { DEFAULT_PLAN_FEATURES, FeatureValue, getMyAccess, loadPlanFeatures, localText, PlanFeatureRow, Tier, TIERS, tierName } from '@/data/access';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 type PlanId = 'membership' | 'premium';
 
@@ -130,13 +131,13 @@ const styles = StyleSheet.create({
   colPremium: { borderColor: withAlpha(Colors.amber, 0.55) },
   colCurrent: { borderColor: Colors.accent, borderWidth: 2 },
   icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  planName: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  price: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginTop: 4 },
-  per: { color: Colors.textMuted, fontSize: 12 },
+  planName: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  price: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginTop: 4 },
+  per: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
   cta: { alignSelf: 'stretch', backgroundColor: Colors.accent, borderRadius: 20, paddingVertical: 9, alignItems: 'center', marginTop: 10 },
-  ctaText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
   currentPill: { alignSelf: 'stretch', backgroundColor: Colors.accentSoft, borderRadius: 20, paddingVertical: 9, alignItems: 'center', marginTop: 10 },
-  currentText: { color: Colors.accent, fontSize: 13, fontWeight: '800' },
+  currentText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   table: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -149,15 +150,15 @@ const styles = StyleSheet.create({
   rowBorder: { borderTopWidth: 1, borderTopColor: Colors.divider },
   tableHead: { paddingVertical: 10 },
   headCell: { flex: 1, alignItems: 'center', paddingVertical: 4 },
-  headText: { textAlign: 'center', color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  headText: { textAlign: 'center', color: Colors.textMuted, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
   mineCell: { backgroundColor: Colors.accentSoft, borderRadius: 8 },
   mineText: { color: Colors.accent },
-  mineTag: { color: Colors.accent, fontSize: 10, fontWeight: '700', marginTop: 1 },
-  rowLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  mineTag: { color: Colors.accent, fontSize: 10, fontFamily: INTER.medium, marginTop: 1 },
+  rowLabel: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   cells: { flexDirection: 'row', gap: 10 },
   cell: { flex: 1, alignItems: 'center', paddingVertical: 4 },
-  cellText: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, textAlign: 'center' },
-  dash: { color: Colors.textMuted, fontSize: 16 },
+  cellText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, textAlign: 'center' },
+  dash: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 16 },
   link: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 24, marginTop: 18 },
-  linkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  linkText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
 });

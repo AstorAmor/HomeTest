@@ -5,6 +5,7 @@ import { Colors } from '@/constants/colors';
 import { useWaterToday } from '@/hooks/useWaterToday';
 import { litres } from '@/data/waterRepository';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // La línea del agua en la tarjeta de Hidratación de Hoy: lo bebido hoy frente al objetivo y un «+» que
 // apunta tu medida (un vaso, o la que hayas puesto). Otra cantidad, con la rueda, desde Hidratación.
@@ -25,7 +26,7 @@ export const WaterQuick = ({ goalMl }: { goalMl: number }) => {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  text: { flex: 1, color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
-  strong: { color: Colors.textPrimary, fontWeight: '800' },
+  text: { flex: 1, color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
+  strong: { color: Colors.textPrimary, fontFamily: INTER.medium },
   add: { width: 24, height: 24, borderRadius: 12, backgroundColor: Colors.water, justifyContent: 'center', alignItems: 'center' },
 });

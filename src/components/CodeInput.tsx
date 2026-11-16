@@ -5,6 +5,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { t } from '@/i18n';
 import { codeFromInput, codeInText } from '@/logic/mfa';
 import { canReadClipboard, hasClipboardText, readClipboard } from '@/utils/clipboard';
+import { INTER } from '@/theme/fine';
 
 // Casilla del código de 6 cifras: doble factor (alta y al entrar), confirmar el email y «¿Has olvidado tu
 // contraseña?». Fundador, 2026-11-11, en un Xiaomi con HyperOS: costaba meter el código y no dejaba pegar.
@@ -111,7 +112,7 @@ export function CodeInput({ value, onChange, onComplete, editable = true, autoFo
 
 const styles = StyleSheet.create({
   paste: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', gap: 6, marginTop: 10, paddingVertical: 4 },
-  pasteText: { color: Colors.accent, fontSize: 14, fontWeight: '600' },
+  pasteText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   suggest: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -122,6 +123,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: withAlpha(Colors.accent, 0.9),
   },
-  suggestText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
-  note: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 8 },
+  suggestText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  note: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginTop: 8 },
 });

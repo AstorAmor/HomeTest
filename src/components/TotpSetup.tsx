@@ -8,6 +8,7 @@ import { t } from '@/i18n';
 import { findPendingTotp, startTotpEnrollment, verifyTotp, type TotpEnrollment } from '@/data/mfa';
 import { groupSecret, isTotpCodeComplete, minutesAgo } from '@/logic/mfa';
 import { qrShape } from '@/logic/qr';
+import { INTER } from '@/theme/fine';
 
 export const totpErrorMessage = (m: string) =>
   /invalid totp|invalid code|code.*(invalid|incorrect)|mfa_verification_failed/i.test(m)
@@ -164,7 +165,7 @@ export const totpStyles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 24,
+    fontFamily: INTER.regular, fontSize: 24,
     letterSpacing: 8,
     textAlign: 'center',
     color: Colors.textPrimary,
@@ -173,15 +174,15 @@ export const totpStyles = StyleSheet.create({
   },
   button: { backgroundColor: Colors.accent, borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
   buttonDisabled: { backgroundColor: Colors.cardBorder },
-  buttonText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
-  error: { color: Colors.danger, fontSize: 14, marginTop: 10, lineHeight: 20 },
+  buttonText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 14, marginTop: 10, lineHeight: 20 },
 });
 
 const styles = StyleSheet.create({
   ...totpStyles,
   loading: { paddingVertical: 30, alignItems: 'center', gap: 12 },
-  step: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 6 },
-  text: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 8 },
+  step: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginBottom: 6 },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginTop: 8 },
   qrBox: { alignSelf: 'center', backgroundColor: '#FFFFFF', padding: 4, borderRadius: 12, marginVertical: 12 },
   secondary: {
     flexDirection: 'row',
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: withAlpha(Colors.accent, 0.35),
   },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   secret: {
     marginTop: 6,
     color: Colors.textPrimary,
@@ -204,5 +205,5 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
   },
-  tip: { color: Colors.textMuted, fontSize: 13, lineHeight: 19, marginTop: 16 },
+  tip: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginTop: 16 },
 });

@@ -21,6 +21,7 @@ import { kegelRepository } from '@/data/kegelRepository';
 import { EXERCISES } from '@/data/exercises';
 import { kegelDayKey, kegelWeek, KegelWeek } from '@/logic/kegel';
 import { ProgressRing } from '@/components/ProgressRing';
+import { fine, INTER } from '@/theme/fine';
 
 const formatListDate = (iso: string) => {
   const d = new Date(iso);
@@ -276,11 +277,11 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
   },
   errorText: {
     color: Colors.danger,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     paddingHorizontal: 20,
     marginBottom: 16,
   },
@@ -307,22 +308,22 @@ const styles = StyleSheet.create({
   lateBadgeText: {
     color: Colors.attention,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   predictionLabel: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     marginBottom: 4,
   },
   predictionDate: {
     color: Colors.textPrimary,
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 2,
   },
   predictionWindow: {
     color: Colors.textMuted,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     marginBottom: 20,
   },
   statsRow: {
@@ -337,17 +338,17 @@ const styles = StyleSheet.create({
   statValue: {
     color: Colors.textPrimary,
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   statLabel: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 2,
     textAlign: 'center',
   },
   confidenceText: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     fontStyle: 'italic',
   },
   emptyPredictionCard: {
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: Colors.textMuted,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     paddingHorizontal: 20,
   },
   addButton: {
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: Colors.pulseAccent,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   // Como el bloque de objetivos de Hoy (MetasToday): tarjeta con todo centrado
   kegelCard: {
@@ -391,24 +392,18 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     paddingHorizontal: 16,
   },
-  kegelRingNum: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', lineHeight: 22 },
-  kegelRingSub: { color: Colors.textMuted, fontSize: 10 },
+  kegelRingNum: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, lineHeight: 22 },
+  kegelRingSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
   kegelDays: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 14 },
   kegelDay: { alignItems: 'center', gap: 4 },
   kegelDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: withAlpha(Colors.pulseAccent, 0.14) },
   kegelDotOn: { backgroundColor: Colors.pulseAccent },
-  kegelDayLabel: { color: Colors.textMuted, fontSize: 10, textTransform: 'uppercase' },
-  kegelToday: { color: Colors.textPrimary, fontWeight: '700' },
-  kegelNote: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 12 },
+  kegelDayLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10, textTransform: 'uppercase' },
+  kegelToday: { color: Colors.textPrimary, fontFamily: INTER.medium },
+  kegelNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 12 },
   kegelStart: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 10 },
-  kegelStartText: { color: Colors.pulseAccent, fontSize: 14, fontWeight: '700' },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
+  kegelStartText: { color: Colors.pulseAccent, fontSize: 14, fontFamily: INTER.medium },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 12 },
   historyList: {
     marginHorizontal: 20,
     backgroundColor: Colors.card,
@@ -427,13 +422,13 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     width: 44,
   },
   historyValue: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     flex: 1,
   },
 });

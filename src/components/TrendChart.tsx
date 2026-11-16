@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, LayoutChangeEvent } from 'react-native';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop, Line, Rect } from 'react-native-svg';
 import { Colors, withAlpha } from '@/constants/colors';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 export interface TrendSeries {
   values: number[];
@@ -229,12 +230,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: Colors.textMuted,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
   },
   yLabel: {
     position: 'absolute',
     color: Colors.textMuted,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
   },
   touchLayer: {
     position: 'absolute',
@@ -255,11 +256,11 @@ const styles = StyleSheet.create({
   tooltipDate: {
     color: Colors.textSecondary,
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   tooltipValue: {
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
   },
   xLabels: {
     flexDirection: 'row',
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
   },
   xLabel: {
     color: Colors.textMuted,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
   },
   legend: {
     flexDirection: 'row',
@@ -287,6 +288,6 @@ const styles = StyleSheet.create({
   },
   legendText: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
 });

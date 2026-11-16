@@ -9,6 +9,7 @@ import { t } from '@/i18n';
 import { hideInRecents, useAppLockPrefs } from '@/data/appLock';
 import { lockOnFor, shouldLockOnReturn, unlockProblem, type BiometricKind, type UnlockProblem } from '@/logic/appLock';
 import { authenticate, authenticating, biometricStatus, biometricsInstalled } from '@/utils/biometrics';
+import { INTER } from '@/theme/fine';
 
 // Bloqueo de Kuova con Face ID / huella (Ajustes → «Bloquear Kuova…», apagado de serie). Reglas en
 // src/logic/appLock.ts. Por encima de todo (un Modal: en Android es otra ventana, así tapa también las pantallas
@@ -188,10 +189,10 @@ const styles = StyleSheet.create({
   half: { flex: 1, alignSelf: 'stretch', alignItems: 'center' },
   word: { alignItems: 'center', marginTop: BRAND.GAP_K },
   // Como «HEALTH» en la entrada
-  health: { color: GOLD, fontSize: 11, lineHeight: BRAND.HEALTH_H, fontWeight: '500', letterSpacing: 7, marginRight: -7, marginTop: BRAND.GAP_WORD },
+  health: { color: GOLD, fontSize: 11, lineHeight: BRAND.HEALTH_H, fontFamily: INTER.medium, letterSpacing: 7, marginRight: -7, marginTop: BRAND.GAP_WORD },
   box: { alignItems: 'center', alignSelf: 'stretch', marginTop: 48 },
-  title: { color: CREAM, fontSize: 18, fontWeight: '700', marginBottom: 14 },
-  problem: { color: CREAM, opacity: 0.85, fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 14 },
+  title: { color: CREAM, fontSize: 18, fontFamily: INTER.medium, marginBottom: 14 },
+  problem: { color: CREAM, opacity: 0.85, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 14 },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -202,8 +203,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
   },
-  buttonText: { color: LAUNCH_BG, fontSize: 16, fontWeight: '700' },
+  buttonText: { color: LAUNCH_BG, fontSize: 16, fontFamily: INTER.medium },
   link: { marginTop: 20, paddingVertical: 6 },
-  linkText: { color: GOLD, fontSize: 15, fontWeight: '700' },
-  note: { color: CREAM, opacity: 0.6, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 6 },
+  linkText: { color: GOLD, fontSize: 15, fontFamily: INTER.medium },
+  note: { color: CREAM, opacity: 0.6, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 6 },
 });

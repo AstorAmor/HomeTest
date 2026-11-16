@@ -11,6 +11,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { familyHistoryStore } from '@/data/familyHistoryStore';
 import { LEVEL_TEXT } from '@/logic/genetics';
 import { FamilyHistoryDraft, FamilyHistoryRecord } from '@/types/familyHistory';
+import { INTER } from '@/theme/fine';
 
 // "Your genetic profile": de momento, "Know your roots" (antecedentes familiares) y un hueco para
 // los resultados genéticos, que llegarán más adelante (p. ej. variantes en BRCA2). No inventamos
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroText: { flex: 1, color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  heroText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -147,17 +148,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  cardBody: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
-  cardMeta: { color: Colors.textMuted, fontSize: 12 },
-  cardCta: { color: Colors.gold, fontSize: 14, fontWeight: '800', marginTop: 2 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  cardBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
+  cardMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
+  cardCta: { color: Colors.gold, fontSize: 14, fontFamily: INTER.medium, marginTop: 2 },
   tag: { alignSelf: 'flex-start', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  tagText: { fontSize: 12, fontWeight: '800' },
+  tagText: { fontSize: 12, fontFamily: INTER.medium },
   update: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: 24, marginBottom: 18 },
-  updateText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  updateText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   soon: { opacity: 0.85 },
   soonTag: { marginLeft: 'auto', backgroundColor: Colors.divider, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  soonTagText: { color: Colors.textMuted, fontSize: 11, fontWeight: '700' },
+  soonTagText: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
   pro: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: Colors.card,
   },
-  proText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  proText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   privacy: { flexDirection: 'row', gap: 8, marginHorizontal: 24, marginTop: 18 },
-  privacyText: { flex: 1, color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  privacyText: { flex: 1, color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
 });

@@ -10,6 +10,7 @@ import { AppSection, appPrefs, isSectionVisible, SECTION_OPTIONS, useAppPrefs } 
 import { AppIcon } from '@/components/HealthIcons';
 import { FEATURE_GUIDE } from '@/data/featureGuide';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Guía de cada parte de la app: para qué sirve, qué haces tú, qué recibes, qué avisos manda y
 // una vista previa. ?id=<sección> abre una; sin id, todas.
@@ -87,10 +88,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
+  title: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
   block: { gap: 2 },
-  label: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  text: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
+  label: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase' },
+  text: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.divider,
     paddingTop: 10,
   },
-  switchLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  switchLabel: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   howRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  how: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  how: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
 });

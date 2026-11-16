@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
 import { AppearancePref, getAppearancePref, setAppearancePref } from '@/theme/appearance';
+import { INTER } from '@/theme/fine';
 
 const OPTIONS: { id: AppearancePref; label: string; icon: string }[] = [
   { id: 'system', label: 'Auto', icon: 'phone-portrait-outline' },
@@ -55,5 +56,5 @@ const styles = StyleSheet.create({
   },
   item: { flex: 1, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 10 },
   itemOn: { backgroundColor: Colors.accent },
-  text: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  text: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
 });

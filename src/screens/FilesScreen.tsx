@@ -11,6 +11,7 @@ import { userFlags } from '@/data/userFlags';
 import { labReports } from '@/utils/labReportView';
 import { dateLocale, t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { INTER } from '@/theme/fine';
 
 // "Your files": los informes que nos envía el laboratorio y todo lo que sube el usuario (escaneado
 // o PDF), en una lista. Cada archivo puede llevar el nombre que el usuario quiera dentro de la app
@@ -156,25 +157,25 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: Colors.accent,
   },
-  addText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
+  addText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   icon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  meta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  name: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   originalLink: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, alignSelf: 'flex-start' },
-  originalText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  originalText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   input: {
     flex: 1,
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     borderWidth: 1,
     borderColor: Colors.accent,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  empty: { color: Colors.textMuted, fontSize: 14, paddingVertical: 16 },
-  hint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 24, marginTop: 10 },
+  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 14, paddingVertical: 16 },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginHorizontal: 24, marginTop: 10 },
 });

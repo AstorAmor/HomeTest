@@ -19,6 +19,7 @@ import { profileRepository } from '@/data/profileRepository';
 import { BlobArt } from '@/components/BlobArt';
 import { KIND_ART } from '@/data/planCategories';
 import { t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Alto que ocupan los puntos, el botón y "Saltar" (el texto de cada tarjeta acaba por encima)
 const FOOTER_SPACE = 150;
@@ -146,13 +147,13 @@ const styles = StyleSheet.create({
   pageScroll: { flexGrow: 1, justifyContent: 'flex-end' },
   iconArea: { flexGrow: 1, minHeight: 110, alignItems: 'center', justifyContent: 'center', paddingVertical: 12 },
   top: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingTop: 16 },
-  counter: { color: OnDark.textSecondary, fontSize: 13, fontWeight: '600' },
-  number: { color: Colors.accent, fontSize: 56, fontWeight: '900', lineHeight: 60 },
-  title: { color: OnDark.text, fontSize: 28, fontWeight: '800', marginBottom: 14 },
-  label: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginTop: 8, marginBottom: 6 },
-  why: { color: OnDark.text, fontSize: 15, lineHeight: 22, opacity: 0.92 },
+  counter: { color: OnDark.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  number: { color: Colors.accent, fontSize: 56, fontFamily: INTER.light, lineHeight: 60 },
+  title: { color: OnDark.text, fontSize: 28, fontFamily: INTER.medium, marginBottom: 14 },
+  label: { color: Colors.accent, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 1, marginTop: 8, marginBottom: 6 },
+  why: { color: OnDark.text, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, opacity: 0.92 },
   howRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 6 },
-  howText: { color: OnDark.text, fontSize: 14, lineHeight: 20, flex: 1 },
+  howText: { color: OnDark.text, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, flex: 1 },
   footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 24, paddingBottom: 12, alignItems: 'center', gap: 10 },
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.3)' },
@@ -168,6 +169,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     paddingVertical: 15,
   },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800', flexShrink: 1 },
-  skip: { color: OnDark.textSecondary, fontSize: 14, fontWeight: '600', paddingVertical: 4 },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium, flexShrink: 1 },
+  skip: { color: OnDark.textSecondary, fontSize: 14, fontFamily: INTER.medium, paddingVertical: 4 },
 });

@@ -9,6 +9,7 @@ import { Colors } from '@/constants/colors';
 import { findTopic } from '@/data/learning';
 import { TrainingPlanCard } from '@/components/workouts/TrainingPlanCard';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Tema de "Keep learning": introducción, ideas clave, una acción en la app y las fuentes.
 export const LearnTopicScreen = () => {
@@ -72,17 +73,17 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   hero: { marginHorizontal: 20, marginBottom: 16 },
-  intro: { color: Colors.textPrimary, fontSize: 16, lineHeight: 23, marginHorizontal: 20, marginBottom: 16 },
+  intro: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 16, lineHeight: 23, marginHorizontal: 20, marginBottom: 16 },
   card: { flexDirection: 'row', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14, marginHorizontal: 20, marginBottom: 10 },
-  num: { color: Colors.accent, fontSize: 18, fontWeight: '900', width: 20 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', marginBottom: 4 },
-  body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  num: { color: Colors.accent, fontSize: 18, fontFamily: INTER.medium, width: 20 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginBottom: 4 },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   cta: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.accent, borderRadius: 26, paddingVertical: 14, marginHorizontal: 20, marginTop: 8 },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   secondary: { flexDirection: 'row', gap: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: Colors.accent, borderRadius: 26, paddingVertical: 13, marginHorizontal: 20, marginTop: 10 },
-  secondaryText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
+  secondaryText: { color: Colors.accent, fontSize: 15, fontFamily: INTER.medium },
   sources: { marginHorizontal: 20, marginTop: 18 },
-  sourcesTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', marginBottom: 6 },
-  source: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginBottom: 6, textDecorationLine: 'underline' },
-  note: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 14 },
+  sourcesTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, marginBottom: 6 },
+  source: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginBottom: 6, textDecorationLine: 'underline' },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 14 },
 });

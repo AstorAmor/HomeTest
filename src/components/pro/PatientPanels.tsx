@@ -10,6 +10,7 @@ import { useProIdentity } from '@/components/pro/ProLayout';
 import { TEMPLATE_TOPICS, TopicOption, findGaps, guessTopic, templates, toTemplateBody, topicOptions, topicSettings } from '@/data/proTemplates';
 
 import { dateLocale, num, t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 const shortDate = (iso: string | null) =>
   iso ? new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
@@ -165,7 +166,7 @@ export const NotesPanel = ({ patientId, appointmentId, live }: { patientId: stri
               {FIELDS.map((f) =>
                 n[f.key] ? (
                   <Text key={f.key} style={styles.pastLine}>
-                    <Text style={{ fontWeight: '800' }}>{f.label.slice(0, 1)}: </Text>
+                    <Text style={{ fontFamily: INTER.medium }}>{f.label.slice(0, 1)}: </Text>
                     {n[f.key]}
                   </Text>
                 ) : null,
@@ -336,45 +337,45 @@ const SaveAsTemplate = ({ request }: { request: ConsultRequest }) => {
 };
 
 const styles = StyleSheet.create({
-  muted: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 4 },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, marginTop: 4 },
   labHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
-  labTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  labTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   fileBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: withAlpha(Colors.accent, 0.5), borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
-  fileText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  fileText: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium },
   marker: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Colors.background, borderRadius: 10, padding: 10 },
-  markerName: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  range: { color: Colors.textMuted, fontSize: 11, marginTop: 1 },
+  markerName: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  range: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 1 },
   bar: { width: 80, height: 6, borderRadius: 3, backgroundColor: withAlpha(Colors.attention, 0.25) },
   barIn: { position: 'absolute', left: '22%', right: '22%', top: 0, bottom: 0, backgroundColor: withAlpha(Colors.ok, 0.45), borderRadius: 3 },
   barDot: { position: 'absolute', top: -3, width: 12, height: 12, marginLeft: -6, borderRadius: 6, borderWidth: 2, borderColor: Colors.card },
-  markerValue: { fontSize: 14, fontWeight: '900', minWidth: 58, textAlign: 'right' },
+  markerValue: { fontSize: 14, fontFamily: INTER.medium, minWidth: 58, textAlign: 'right' },
   notesHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  saved: { color: Colors.ok, fontSize: 12, fontWeight: '700' },
-  fieldLabel: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800', marginBottom: 4 },
-  input: { minHeight: 56, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 10, color: Colors.textPrimary, fontSize: 14, textAlignVertical: 'top' },
+  saved: { color: Colors.ok, fontSize: 12, fontFamily: INTER.medium },
+  fieldLabel: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium, marginBottom: 4 },
+  input: { minHeight: 56, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 10, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, textAlignVertical: 'top' },
   btn: { backgroundColor: Colors.accent, borderRadius: 20, paddingVertical: 10, alignItems: 'center' },
-  btnText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
-  sectionLabel: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
+  btnText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
+  sectionLabel: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   pastNote: { backgroundColor: Colors.background, borderRadius: 10, padding: 10, gap: 3 },
-  pastDate: { color: Colors.textSecondary, fontSize: 11, fontWeight: '700' },
-  pastLine: { color: Colors.textPrimary, fontSize: 12, lineHeight: 17 },
+  pastDate: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
+  pastLine: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
   request: { backgroundColor: Colors.background, borderRadius: 12, padding: 12, gap: 6 },
   requestHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  requestKind: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
-  requestStatus: { fontSize: 12, fontWeight: '800' },
-  requestMsg: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
+  requestKind: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  requestStatus: { fontSize: 12, fontFamily: INTER.medium },
+  requestMsg: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   response: { borderLeftWidth: 3, borderLeftColor: Colors.accent, paddingLeft: 10 },
-  responseText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  responseText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
   gaps: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
-  gapsText: { color: Colors.attention, fontSize: 12, fontWeight: '700', flex: 1, lineHeight: 17 },
+  gapsText: { color: Colors.attention, fontSize: 12, fontFamily: INTER.medium, flex: 1, lineHeight: 17 },
   savedRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   saveBox: { gap: 8, borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 8 },
   topics: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   topic: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5 },
   topicOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  topicText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
-  error: { color: Colors.danger, fontSize: 12 },
+  topicText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 12 },
   btnGhost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
-  btnGhostText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
+  btnGhostText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
 });

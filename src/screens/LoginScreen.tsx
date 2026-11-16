@@ -26,6 +26,7 @@ import { isTotpCodeComplete } from '@/logic/mfa';
 import { isPasswordStrongEnough, passwordRuleFromAuthError } from '@/logic/password';
 import { PasswordRules } from '@/components/PasswordRules';
 import { markAppReady } from '@/components/LaunchIntro';
+import { INTER } from '@/theme/fine';
 
 // Los errores de Supabase llegan en inglés: los más comunes, en el idioma de la app
 const authMessage = (m: string) => {
@@ -566,12 +567,12 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     paddingLeft: 7,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     letterSpacing: 7,
     color: '#C9A36B',
   },
   subtitle: {
-    fontSize: 16,
+    fontFamily: INTER.regular, fontSize: 16,
     color: Colors.textSecondary,
   },
   form: {
@@ -579,20 +580,20 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     color: Colors.textSecondary,
     marginBottom: 8,
     marginTop: 16,
   },
   sent: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: withAlpha(Colors.ok, 0.12), borderRadius: 10, padding: 12, marginTop: 14 },
-  sentText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
-  sentTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  codeInput: { fontSize: 22, letterSpacing: 8, textAlign: 'center' },
-  info: { color: Colors.ok, fontSize: 13, marginTop: 10, paddingHorizontal: 8, lineHeight: 19 },
+  sentText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  sentTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginBottom: 4 },
+  codeInput: { fontFamily: INTER.regular, fontSize: 22, letterSpacing: 8, textAlign: 'center' },
+  info: { color: Colors.ok, fontFamily: INTER.regular, fontSize: 13, marginTop: 10, paddingHorizontal: 8, lineHeight: 19 },
   forgot: { alignSelf: 'flex-end', marginTop: 10, paddingVertical: 4 },
-  forgotText: { color: Colors.accent, fontSize: 13, fontWeight: '600' },
-  resetTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', marginTop: 4 },
-  resetText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 6 },
+  forgotText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  resetTitle: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, marginTop: 4 },
+  resetText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginTop: 6 },
   toggleTextWaiting: { color: Colors.textMuted, textDecorationLine: 'none' },
   testBadge: {
     flexDirection: 'row',
@@ -604,14 +605,14 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#D6621E',
   },
-  testBadgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
+  testBadgeText: { color: '#FFFFFF', fontSize: 12, fontFamily: INTER.medium, letterSpacing: 0.5 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 16,
+    fontFamily: INTER.regular, fontSize: 16,
     color: Colors.textPrimary,
     backgroundColor: withAlpha(Colors.card, 0.72),
   },
@@ -628,24 +629,24 @@ const styles = StyleSheet.create({
   buttonText: {
     color: Colors.background,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   toggleText: {
     color: Colors.accent,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     textAlign: 'center',
     marginTop: 16,
     textDecorationLine: 'underline',
   },
   error: {
     color: Colors.danger,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     marginTop: 12,
     paddingHorizontal: 8,
   },
   proIntro: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
     marginTop: 8,
@@ -667,7 +668,7 @@ const styles = StyleSheet.create({
   proLinkText: {
     color: Colors.accent,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   proBox: {
     marginTop: 12,
@@ -696,14 +697,14 @@ const styles = StyleSheet.create({
   roleChipText: {
     color: Colors.textSecondary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   roleChipTextSelected: {
     color: Colors.textPrimary,
   },
   proNote: {
     color: Colors.textMuted,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     lineHeight: 17,
     marginTop: 10,
   },
@@ -721,7 +722,7 @@ const styles = StyleSheet.create({
   privacyHint: { borderLeftColor: Colors.accent },
   demoText: {
     flex: 1,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     color: Colors.textSecondary,
   },
 });

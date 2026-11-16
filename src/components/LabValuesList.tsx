@@ -4,6 +4,7 @@ import { Colors } from '@/constants/colors';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { getRangeStatus } from '@/utils/rangeStatus';
 import { LabValueRow } from './LabValueRow';
+import { INTER } from '@/theme/fine';
 
 // Los valores de una analítica guardada de un grupo («En rango» o «Sin referencia»; «Para revisar» es
 // OutOfRangeSummary), con la misma fila que todos (LabValueRow): una tarjeta, con las secciones del
@@ -38,6 +39,6 @@ export const LabValuesList = ({ report, group, title, uploadId }: { report: Extr
 
 const styles = StyleSheet.create({
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 },
-  title: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginBottom: 2 },
-  section: { color: Colors.textMuted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12 },
+  title: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginBottom: 2 },
+  section: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12 },
 });

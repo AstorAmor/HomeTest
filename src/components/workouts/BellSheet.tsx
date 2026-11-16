@@ -14,6 +14,7 @@ import {
   ringBell,
 } from '@/data/workouts/bell';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Hoja «Sonido» del entrenamiento: quitar el timbre, elegir tono (suena al tocarlo) y qué pasa con
 // la pantalla bloqueada en este móvil (permiso de avisos, APK con los tonos).
@@ -115,8 +116,8 @@ const LockNote = ({ status, tone, onStatus }: { status: BellLockStatus; tone: Be
 
 const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 },
-  switchText: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  hint: { color: Colors.textSecondary, fontSize: 13, marginBottom: 10 },
+  switchText: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginBottom: 10 },
   tone: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -130,13 +131,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   toneOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  toneText: { flex: 1, color: Colors.textSecondary, fontSize: 15, fontWeight: '600' },
-  toneTextOn: { color: Colors.textPrimary, fontWeight: '800' },
+  toneText: { flex: 1, color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
+  toneTextOn: { color: Colors.textPrimary, fontFamily: INTER.medium },
   note: { marginTop: 8, gap: 10 },
   noteHead: { flexDirection: 'row', gap: 8 },
-  noteText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  noteText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
   noteButton: { alignSelf: 'flex-start', borderWidth: 1, borderColor: Colors.accent, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
-  noteButtonText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  noteSmall: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
-  noteLink: { color: Colors.accent, fontWeight: '700' },
+  noteButtonText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  noteSmall: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  noteLink: { color: Colors.accent, fontFamily: INTER.medium },
 });

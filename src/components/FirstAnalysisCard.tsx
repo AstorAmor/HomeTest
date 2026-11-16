@@ -17,7 +17,7 @@ export function FirstAnalysisCard({ variant, onClose }: { variant: 'analysis' | 
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={fine.kicker}>{t('Up next')}</Text>
           <Text style={styles.title}>{t('Start with your first test')}</Text>
-          <Text style={styles.sub}>{t('Choose one, or upload a report you already have.')}</Text>
+          <Text style={styles.sub}>{t('Choose one, or answer 4 questions and we suggest one.')}</Text>
         </View>
         <Pill label={t('See')} onPress={() => goToTab(TAB.analysis)} />
         {onClose && (
@@ -34,7 +34,8 @@ export function FirstAnalysisCard({ variant, onClose }: { variant: 'analysis' | 
       <Text style={styles.heroText}>{t('A blood draw at a lab near you. Then you will see your biomarkers, your KUOVA age and when to repeat it here.')}</Text>
       <View style={styles.actions}>
         <Pill label={t('See tests')} onPress={() => router.push('/store')} />
-        <Pill gold label={t('Upload one I already have')} onPress={() => router.push('/upload-test')} />
+        {/* Subir uno que ya tienes va en Tus archivos (fundador, 2026-11-16) */}
+        <Pill gold label={t('Not sure which one?')} onPress={() => router.push('/test-finder')} />
       </View>
     </View>
   );

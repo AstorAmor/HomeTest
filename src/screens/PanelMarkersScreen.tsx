@@ -8,6 +8,7 @@ import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
 import { BIOMARKER_CATEGORY_LABELS } from '@/utils/biomarkerLabels';
 import { PanelMarker, panelCounts, subscriptionPanelMarkers } from '@/data/subscriptionPanel';
+import { INTER } from '@/theme/fine';
 
 type Filter = 'all' | 'premium' | 'followUp';
 const FILTERS: Filter[] = ['all', 'premium', 'followUp'];
@@ -114,7 +115,7 @@ const PAD = 12; // relleno de las tarjetas; la cabecera suma el borde (1) para q
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 14 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 14 },
   summary: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 14 },
   summaryBox: {
     flex: 1,
@@ -125,8 +126,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  summaryNum: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800' },
-  summaryLabel: { color: Colors.textSecondary, fontSize: 12, marginTop: 2, textAlign: 'center' },
+  summaryNum: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
+  summaryLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2, textAlign: 'center' },
   filters: { flexDirection: 'row', gap: 8, marginHorizontal: 20, marginBottom: 14 },
   filter: {
     flex: 1,
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   filterOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  filterText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  filterText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   filterTextOn: { color: Colors.background },
   colHead: {
     flexDirection: 'row',
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: PAD + 1,
     paddingBottom: 6,
   },
-  colHeadText: { color: Colors.textMuted, fontSize: 10, fontWeight: '700', width: CELL, textAlign: 'center' },
+  colHeadText: { color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium, width: CELL, textAlign: 'center' },
   colHeadName: { flex: 1, width: undefined, textAlign: 'left' },
   section: {
     backgroundColor: Colors.card,
@@ -160,7 +161,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: PAD,
     paddingVertical: 8,
   },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', paddingVertical: 6 },
+  sectionTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, paddingVertical: 6 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -169,10 +170,10 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.divider,
   },
   nameCol: { flex: 1, paddingRight: 6 },
-  name: { color: Colors.textPrimary, fontSize: 14 },
-  calc: { color: Colors.textMuted, fontSize: 11, marginTop: 1 },
+  name: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
+  calc: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 1 },
   cell: { width: CELL, alignItems: 'center' },
-  dash: { color: Colors.textMuted, fontSize: 16 },
-  firstYear: { color: Colors.accent, fontSize: 11, fontWeight: '800' },
-  footnote: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', paddingHorizontal: 30, marginTop: 8, lineHeight: 16 },
+  dash: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 16 },
+  firstYear: { color: Colors.accent, fontSize: 11, fontFamily: INTER.medium },
+  footnote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', paddingHorizontal: 30, marginTop: 8, lineHeight: 16 },
 });

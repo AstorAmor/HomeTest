@@ -14,6 +14,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { num, t } from '@/i18n';
 import { formatPrice } from '@/data/testCatalog';
 import { TAB, tabHref } from '@/constants/tabs';
+import { fine, INTER } from '@/theme/fine';
 
 const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
 
@@ -195,7 +196,7 @@ export const ProfessionalsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 14 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 14 },
   filters: { paddingHorizontal: 20, gap: 8, paddingBottom: 16 },
   filter: {
     flexDirection: 'row',
@@ -209,22 +210,22 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   filterActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  filterText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  filterText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   filterTextActive: { color: Colors.background },
   list: { paddingHorizontal: 20, gap: 12 },
   searchRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 12 },
   search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12 },
-  searchInput: { flex: 1, color: Colors.textPrimary, fontSize: 14, paddingVertical: 10 },
+  searchInput: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, paddingVertical: 10 },
   filterBtn: { width: 44, borderRadius: 14, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
-  filterCount: { position: 'absolute', top: 4, right: 6, color: Colors.background, fontSize: 10, fontWeight: '900' },
+  filterCount: { position: 'absolute', top: 4, right: 6, color: Colors.background, fontSize: 10, fontFamily: INTER.medium },
   panel: { marginHorizontal: 20, marginBottom: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, gap: 10 },
-  panelLabel: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
+  panelLabel: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  switchLabel: { color: Colors.textPrimary, fontSize: 14, flex: 1 },
-  clear: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  empty: { color: Colors.textSecondary, fontSize: 14, paddingHorizontal: 20, marginBottom: 10 },
-  groupTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', paddingHorizontal: 20, marginBottom: 10 },
+  switchLabel: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, flex: 1 },
+  clear: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, paddingHorizontal: 20, marginBottom: 10 },
+  groupTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 10 },
   photo: { width: 52, height: 52, borderRadius: 26 },
   card: {
     flexDirection: 'row',
@@ -236,10 +237,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
   },
-  name: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
-  specialty: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  name: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  specialty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  meta: { color: Colors.textSecondary, fontSize: 12 },
-  metaDot: { color: Colors.textMuted, fontSize: 12 },
-  next: { color: Colors.accent, fontSize: 12, fontWeight: '600', marginTop: 4 },
+  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
+  metaDot: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
+  next: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 4 },
 });

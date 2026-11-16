@@ -22,6 +22,7 @@ import { Colors } from '@/constants/colors';
 import { postAi } from '@/utils/apiBaseUrl';
 import { saveAiLogEntry } from '@/data/aiLogRepository';
 import { MoodQuadrant, MOOD_QUADRANTS, MOOD_QUADRANT_INFO, AiLogExtraction } from '@/types/aiLog';
+import { INTER } from '@/theme/fine';
 
 const REQUEST_TIMEOUT_MS = 60000;
 const WHEEL_SIZE = 212;
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
     right: 0,
     textAlign: 'center',
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     color: 'rgba(255, 255, 255, 0.55)',
     zIndex: 1,
   },
@@ -318,12 +319,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quadrantEmoji: {
-    fontSize: 18,
+    fontFamily: INTER.regular, fontSize: 18,
   },
   quadrantLabel: {
     color: Colors.textSecondary,
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginTop: 2,
   },
   quadrantLabelActive: {
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     backgroundColor: Colors.background,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -380,13 +381,13 @@ const styles = StyleSheet.create({
   recordingText: {
     color: Colors.danger,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginTop: 10,
     textAlign: 'center',
   },
   errorText: {
     color: Colors.danger,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     marginTop: 10,
     textAlign: 'center',
   },
@@ -414,6 +415,6 @@ const styles = StyleSheet.create({
   logButtonText: {
     color: Colors.background,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
 });

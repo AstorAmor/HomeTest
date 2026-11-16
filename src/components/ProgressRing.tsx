@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
-import { View, StyleSheet } from 'react-native';
-import Svg, { Circle, G, Path } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
+import { GlowRing, ringTones, type RingColors } from './GlowRing';
 
 interface ProgressRingProps {
   progress: number; // 0..1 (se recorta)
@@ -14,8 +13,6 @@ interface ProgressRingProps {
   gradient?: string[];
   children?: ReactNode; // contenido centrado (número, icono...)
 }
-
-const SEGMENTS = 90;
 
 const hexToRgb = (hex: string) => {
   const h = hex.replace('#', '');
@@ -33,87 +30,20 @@ export const colorAt = (stops: string[], t: number) => {
   return `rgb(${mix[0]}, ${mix[1]}, ${mix[2]})`;
 };
 
-// Anillo de progreso de un solo valor (daily readiness, pasos, calorías, sueño).
-// A diferencia de DonutChart, que reparte segmentos, aquí hay una sola meta.
-export const ProgressRing = ({
-  progress,
-  color,
-  size = 72,
-  strokeWidth = 8,
-  trackColor = Colors.divider,
-  gradient,
-  children,
-}: ProgressRingProps) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const clamped = Math.max(0, Math.min(1, progress));
-  const c = size / 2;
-
-  // Punto del anillo a una fracción t de la vuelta, empezando arriba y en sentido horario
-  const point = (t: number) => {
-    const a = t * 2 * Math.PI - Math.PI / 2;
-    return [c + radius * Math.cos(a), c + radius * Math.sin(a)];
-  };
-
-  const gradientArc = () => {
-    const n = Math.max(1, Math.ceil(clamped * SEGMENTS));
-    const step = clamped / n;
-    const parts = [];
-    for (let i = 0; i < n; i++) {
-      const t0 = i * step;
-      // Cada tramo pisa un poco el siguiente para que no se vean costuras
-      const t1 = Math.min(clamped, (i + 1) * step + 0.004);
-      const [x0, y0] = point(t0);
-      const [x1, y1] = point(t1);
-      parts.push(
-        <Path
-          key={i}
-          d={`M ${x0} ${y0} A ${radius} ${radius} 0 0 1 ${x1} ${y1}`}
-          stroke={colorAt(gradient!, (t0 + t1) / 2)}
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-      );
-    }
-    // Extremos redondeados con el color de cada punta
-    const [sx, sy] = point(0);
-    const [ex, ey] = point(clamped);
-    parts.push(<Circle key="start" cx={sx} cy={sy} r={strokeWidth / 2} fill={colorAt(gradient!, 0)} />);
-    parts.push(<Circle key="end" cx={ex} cy={ey} r={strokeWidth / 2} fill={colorAt(gradient!, clamped)} />);
-    return parts;
-  };
-
+// Anillo de progreso de un solo valor (ciclo, vistas previas…). Desde el 2026-11-16 es el aro cometa con luz de
+// Hoy (GlowRing): el fundador quiere todos los círculos de la app iguales, «que carguen así, modo brillante».
+// Con `gradient`, la cola, la mitad y la punta toman su primer color, el del medio y el último.
+const isHex = (c: string) => /^#[0-9a-fA-F]{6}$/.test(c);
+export const ProgressRing = ({ progress, color, size = 72, strokeWidth = 8, gradient, children }: ProgressRingProps) => {
+  const tones: RingColors =
+    gradient && gradient.length >= 2 && gradient.every(isHex)
+      ? [gradient[0], gradient[Math.floor((gradient.length - 1) / 2)], gradient[gradient.length - 1]]
+      : ringTones(isHex(color) ? color : Colors.accent);
+  // Más fino que el anillo de antes: como los círculos de Hoy
+  const stroke = Math.max(3, Math.min(strokeWidth, Math.round(size / 15)));
   return (
-    <View style={{ width: size, height: size }}>
-      <Svg width={size} height={size}>
-        <Circle cx={c} cy={c} r={radius} stroke={trackColor} strokeWidth={strokeWidth} fill="none" />
-        {clamped > 0 &&
-          (gradient && gradient.length > 0 ? (
-            gradientArc()
-          ) : (
-            <G transform={`rotate(-90, ${c}, ${c})`}>
-              <Circle
-                cx={c}
-                cy={c}
-                r={radius}
-                stroke={color}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${clamped * circumference} ${circumference}`}
-                strokeLinecap="round"
-                fill="none"
-              />
-            </G>
-          ))}
-      </Svg>
-      <View style={[styles.center, { width: size, height: size }]}>{children}</View>
-    </View>
+    <GlowRing progress={progress} colors={tones} size={size} stroke={stroke}>
+      {children}
+    </GlowRing>
   );
 };
-
-const styles = StyleSheet.create({
-  center: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});

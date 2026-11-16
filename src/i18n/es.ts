@@ -18,12 +18,13 @@ export const es: Record<string, string> = {
   Report: 'Informe',
   'Up next': 'Lo siguiente',
   'Start with your first test': 'Empieza por tu primer análisis',
-  'Choose one, or upload a report you already have.': 'Elige uno, o sube un informe que ya tengas.',
+  'Choose one, or answer 4 questions and we suggest one.': 'Elige uno, o responde 4 preguntas y te proponemos uno.',
+  'Not sure which one?': '¿No sabes cuál?',
+  'Your reports, and where you upload one you already have: a photo or the PDF.': 'Tus informes, y donde subes uno que ya tengas: una foto o el PDF.',
   'A blood draw at a lab near you. Then you will see your biomarkers, your KUOVA age and when to repeat it here.':
     'Una extracción en un laboratorio cerca de ti. Después verás aquí tus biomarcadores, tu Edad KUOVA y cuándo toca repetir.',
   See: 'Ver',
   'See tests': 'Ver análisis',
-  'Upload one I already have': 'Subir uno que ya tengo',
   'Everything you can record, in one place.': 'Todo lo que se puede registrar, desde un solo sitio.',
   'With a QR code': 'Con código QR',
   // Hoy
@@ -32,6 +33,10 @@ export const es: Record<string, string> = {
   'Your state today: {n} out of 100': 'Tu estado de hoy: {n} de 100',
   'Your week: {n} percent': 'Tu semana: {n} por ciento',
   'Menstrual cycle: day {n}, {phase}': 'Ciclo menstrual: día {n}, {phase}',
+  'Next dose · {time} · {done} of {total} today': 'Siguiente toma · {time} · {done} de {total} hoy',
+  'Taken at {time} · {done} of {total} today': 'Tomada a las {time} · {done} de {total} hoy',
+  '{done} of {total} taken today': '{done} de {total} tomadas hoy',
+  'of your week': 'de tu semana',
   // Plan
   'What you have set out to do, and how your week is going': 'Lo que te has propuesto y cómo va tu semana',
   'Choose your goals': 'Elige tus objetivos',
@@ -71,6 +76,13 @@ export const es: Record<string, string> = {
   'Your goals, your weekly targets, your commitment and your badges. Workouts and meals too.': 'Tus objetivos, tus metas de la semana, tu compromiso y tus insignias. También entrenamientos y menús.',
   'Your next test, your results, your appointments and how to order a test.': 'Tu próximo análisis, tus resultados, tus citas y cómo pedir un análisis.',
   'Your health record, sharing, your watch, short reads and settings.': 'Tu ficha, compartir, tu reloj, lecturas cortas y ajustes.',
+
+  // ── Check-in (fase 2, 2026-11-16) ──
+  // La regla de cada escala, sin marcar, y «Tu diario» (la nota de siempre)
+  Slide: 'Desliza',
+  'Not set': 'Sin marcar',
+  'Your diary': 'Tu diario',
+  'Write whatever you want to remember about today': 'Escribe lo que quieras recordar de hoy',
 
   // ── More ──
   'My Profile': 'Mi perfil',
@@ -165,7 +177,7 @@ export const es: Record<string, string> = {
   Anxious: 'Ansioso',
   Stressed: 'Estresado',
   Irritable: 'Irritable',
-  Excited: 'Emocionado',
+  Excited: 'Ilusionado', // antes «Emocionado» (ESPECIFICACION.md §7, 2026-11-16)
   Unmotivated: 'Desmotivado',
   'I just woke up': 'Acabo de despertarme',
   'My day is winding down': 'Mi día está acabando',
@@ -3911,16 +3923,16 @@ export const es: Record<string, string> = {
   // 2026-10-21: capas de Digestión e Hidratación, círculos a elegir, tutorial dentro de pantallas
   'Steps, active calories, sleep and water against your goals. Tap the circles to change them.': 'Pasos, calorías activas, sueño y agua frente a tus objetivos. Toca los círculos para cambiarlos.',
   'Change a goal': 'Cambia un objetivo',
-  'Turn the wheel to set your own goal, for example how many steps you aim for. Underneath, what we suggest and why.': 'Gira la rueda para poner tu objetivo, por ejemplo cuántos pasos quieres dar. Debajo, lo que te sugerimos y por qué.',
+  'Use − and + to set your own goal, for example how many steps you aim for. Underneath, what we suggest and why.': 'Usa − y + para poner tu objetivo, por ejemplo cuántos pasos quieres dar. Debajo, lo que te sugerimos y por qué.',
   'Choose your circles': 'Elige tus círculos',
-  'Show or hide each goal in Today: steps, calories, distance, sleep or water. Save with the tick at the top.': 'Muestra u oculta cada objetivo en Hoy: pasos, calorías, distancia, sueño o agua. Guarda con el ✓ de arriba.',
+  'Show or hide each goal in Today: steps, calories, distance, sleep or water. Then tap Save.': 'Muestra u oculta cada objetivo en Hoy: pasos, calorías, distancia, sueño o agua. Luego toca Guardar.',
   'Two parts: tap a face for how your tummy feels today, and + each time you go to the bathroom.': 'Dos partes: toca una cara para decir cómo te sienta hoy la tripa, y + cada vez que vayas al baño.',
   'Your digestion': 'Tu digestión',
   'Your days at a glance. Add what you feel and what you ate before, and the colour and shape of your stools: each week we tell you what we notice.': 'Tus días de un vistazo. Añade lo que notas y lo que comiste antes, y el color y la forma de las heces: cada semana te contamos lo que vemos.',
   'Two parts too: + for each drink (a glass, or your own amount) and + each time you pee. Tap the card for the colour and more.': 'También dos partes: + por cada bebida (un vaso, o tu propia medida) y + cada vez que orines. Toca la tarjeta para el color y más.',
   'Your day and your week. With “Other amount” you choose any amount and can make it your usual one, like your water bottle.': 'Tu día y tu semana. Con «Otra cantidad» eliges cualquier cantidad y puedes dejarla como tu medida, por ejemplo tu botella.',
   'Add the colour of each time, or a whole day at once. Each week we tell you what we notice.': 'Añade el color de cada vez, o un día entero de golpe. Cada semana te contamos lo que vemos.',
-  'Each circle in “Daily readiness” fills up when you reach its goal. We suggest the ones in your plan; change any of them, and choose which ones show in Today.': 'Cada círculo de «Tu estado de hoy» se completa al llegar a su objetivo. Te sugerimos los de tu plan; cambia el que quieras y elige cuáles salen en Hoy.',
+  'In Today, each figure sits next to its goal. We suggest the ones in your plan; change any of them, and choose which ones show in Today.': 'En Hoy, cada cifra va junto a su objetivo. Te sugerimos los de tu plan; cambia el que quieras y elige cuáles salen en Hoy.',
   'In Today': 'En Hoy',
   'Hidden': 'Oculto',
   'A bit off': 'Regular',

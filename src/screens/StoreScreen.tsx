@@ -9,6 +9,7 @@ import { TestCard } from '@/components/TestCard';
 import { getMySubscription, listMyPaidProducts } from '@/data/orders';
 import { t as tr } from '@/i18n';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { fine, INTER } from '@/theme/fine';
 
 // Los niveles del catálogo, en el orden en que se piensan: lo que va con tu seguimiento, confirmar un
 // resultado, objetivos concretos y lo que pida un médico
@@ -99,10 +100,10 @@ const styles = StyleSheet.create({
   filters: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },
   filter: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   filterOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  filterText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  filterText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   filterTextOn: { color: Colors.background },
   group: { marginBottom: 8 },
-  groupTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginHorizontal: 20, marginTop: 10 },
-  groupIntro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginTop: 4, marginBottom: 10 },
-  footnote: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', paddingHorizontal: 30, marginTop: 10 },
+  groupTitle: { ...fine.secTitle, marginHorizontal: 20, marginTop: 10 },
+  groupIntro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginTop: 4, marginBottom: 10 },
+  footnote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', paddingHorizontal: 30, marginTop: 10 },
 });

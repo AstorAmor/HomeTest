@@ -5,6 +5,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { StatsRow } from '@/components/MetricDetailParts';
 import { dateLocale, t } from '@/i18n';
 import { formatClock, formatSleep, shortDate, SleepNight } from '@/wearables/dailySeries';
+import { fine, INTER } from '@/theme/fine';
 
 // Detalle de cada noche en la ficha del sueño: una barra por noche con sus fases (tocarla la elige; en
 // 6M, una por semana con la media de esa semana),
@@ -148,7 +149,7 @@ export const SleepNightsCard = ({ nights, weekly = false }: { nights: SleepNight
 };
 
 const styles = StyleSheet.create({
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -163,20 +164,20 @@ const styles = StyleSheet.create({
   // De abajo arriba: profundo abajo, despierto arriba
   bar: { borderRadius: 3, overflow: 'hidden', flexDirection: 'column-reverse', minHeight: 2 },
   xLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  xLabel: { color: Colors.textMuted, fontSize: 10 },
-  hint: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 8 },
+  xLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 8 },
   nightHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   nightHeadSpaced: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: Colors.divider },
-  nightTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  nightTotal: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  nightTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  nightTotal: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   times: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 4, marginTop: 8 },
   time: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  timeLabel: { color: Colors.textSecondary, fontSize: 13 },
-  timeValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  timeLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
+  timeValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   stageBar: { flexDirection: 'row', height: 12, borderRadius: 6, overflow: 'hidden', marginTop: 14, marginBottom: 6 },
   stageRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5 },
   dot: { width: 9, height: 9, borderRadius: 5, marginRight: 8 },
-  stageLabel: { flex: 1, color: Colors.textSecondary, fontSize: 13 },
-  stageValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  noStages: { color: Colors.textMuted, fontSize: 12, marginTop: 10 },
+  stageLabel: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
+  stageValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  noStages: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 10 },
 });

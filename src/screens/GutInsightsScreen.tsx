@@ -15,6 +15,7 @@ import { analyseGut, CONFIDENCE_LABEL, Confidence, groupLabel, GutAnalysis, GutP
 import { FOOD_GROUPS, FoodGroup } from '@/logic/foodGroups';
 import { USUAL_FREQUENCIES, UsualFoods, UsualFrequency } from '@/types/digestion';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const CONFIDENCE_COLOR: Record<Confidence, string> = { clear: Colors.ok, probable: Colors.gold, hint: Colors.textMuted };
 
@@ -123,7 +124,7 @@ export const GutInsightsScreen = () => {
                   <Text style={styles.cardTitle}>{al.title}</Text>
                 </View>
                 <Text style={styles.body}>{al.body}</Text>
-                <Text style={[styles.body, { fontWeight: '700', color: Colors.textPrimary }]}>{t('Before any test, talk to a doctor.')}</Text>
+                <Text style={[styles.body, { fontFamily: INTER.medium, color: Colors.textPrimary }]}>{t('Before any test, talk to a doctor.')}</Text>
                 <TouchableOpacity onPress={findDoctor}>
                   <Text style={styles.link}>{t('Find a doctor')}</Text>
                 </TouchableOpacity>
@@ -198,7 +199,7 @@ export const GutInsightsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 12 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 12 },
   sample: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: Colors.card,
   },
-  sampleText: { color: Colors.textSecondary, fontSize: 12, flex: 1 },
+  sampleText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, flex: 1 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -223,14 +224,14 @@ const styles = StyleSheet.create({
   alarm: { borderColor: withAlpha(Colors.danger, 0.5) },
   safety: { borderColor: withAlpha(Colors.gold, 0.5) },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  cardTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '800' },
-  numbers: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, fontWeight: '600' },
-  body: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  gated: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, fontStyle: 'italic', marginTop: 4 },
+  badgeText: { fontSize: 11, fontFamily: INTER.medium },
+  numbers: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, fontFamily: INTER.medium },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  gated: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, fontStyle: 'italic', marginTop: 4 },
   suggestion: { marginTop: 8, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.divider, gap: 6 },
-  suggestionTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  suggestionTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   warning: {
     flexDirection: 'row',
     gap: 8,
@@ -238,13 +239,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: withAlpha(Colors.attention, 0.1),
   },
-  warningText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 18, fontWeight: '600' },
-  prep: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
+  warningText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 18, fontFamily: INTER.medium },
+  prep: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, textDecorationLine: 'underline' },
   usualRow: { gap: 8, marginTop: 10 },
-  usualTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  usualTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   progressTrack: { height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden', marginVertical: 4 },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.green },
   footerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingHorizontal: 20, marginTop: 8 },
-  footer: { flex: 1, color: Colors.textMuted, fontSize: 11, lineHeight: 16 },
+  footer: { flex: 1, color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16 },
 });

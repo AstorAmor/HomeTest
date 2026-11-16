@@ -16,6 +16,7 @@ import {
 import { TIER_COLOR, FLAG_LABEL } from '@/utils/reportDisplay';
 import { t } from '@/i18n';
 import { markerHref } from '@/utils/markerLinks';
+import { fine, INTER } from '@/theme/fine';
 
 export const ReportMarkerDetailScreen = () => {
   const router = useRouter();
@@ -111,7 +112,7 @@ export const ReportMarkerDetailScreen = () => {
 
 const styles = StyleSheet.create({
   historyLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: 20, marginBottom: 6 },
-  historyText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  historyText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   safeArea: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -137,12 +138,12 @@ const styles = StyleSheet.create({
   value: {
     color: Colors.textPrimary,
     fontSize: 32,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     marginBottom: 6,
   },
   range: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     marginBottom: 12,
   },
   badge: {
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     textTransform: 'capitalize',
   },
   trendRow: {
@@ -166,17 +167,12 @@ const styles = StyleSheet.create({
   },
   trendText: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
   },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
+  sectionTitle: { ...fine.secTitle, marginBottom: 10 },
   explanation: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     lineHeight: 21,
     marginBottom: 20,
   },
@@ -192,7 +188,7 @@ const styles = StyleSheet.create({
   },
   retestText: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     flex: 1,
   },
   bookTestButton: {
@@ -208,7 +204,7 @@ const styles = StyleSheet.create({
   bookTestButtonText: {
     color: Colors.background,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   bookedConfirmation: {
     flexDirection: 'row',
@@ -222,7 +218,7 @@ const styles = StyleSheet.create({
   bookedConfirmationText: {
     flex: 1,
     color: Colors.textPrimary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     lineHeight: 17,
   },
 });

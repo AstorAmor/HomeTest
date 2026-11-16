@@ -8,6 +8,7 @@ import { SectionToggles } from '@/components/SectionToggles';
 import { Colors, withAlpha } from '@/constants/colors';
 import { appPrefs, isSectionVisible, PURPOSE_OPTIONS, SECTION_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { t } from '@/i18n';
+import { fine, INTER } from '@/theme/fine';
 
 // Tú → Configure my experience: para qué usa Kuova (una o varias cosas; aplica una configuración
 // de secciones), qué partes ve y, desde cada una, su guía con vista previa. El fundador pidió
@@ -86,7 +87,7 @@ export const AppSectionsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginHorizontal: 20, marginBottom: 10 },
+  sectionTitle: { ...fine.secTitle, marginHorizontal: 20, marginBottom: 10 },
   inline: { marginHorizontal: 0, marginBottom: 0 },
   headerRow: {
     flexDirection: 'row',
@@ -96,8 +97,8 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 4,
   },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  hint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginBottom: 12 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginBottom: 12 },
   explain: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -108,8 +109,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: withAlpha(Colors.accent, 0.08),
   },
-  explainText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 18 },
-  summary: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginHorizontal: 20, marginTop: 10 },
+  explainText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
+  summary: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, marginHorizontal: 20, marginTop: 10 },
   list: { marginHorizontal: 20, gap: 10 },
   purpose: {
     flexDirection: 'row',
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   purposeSelected: { borderColor: Colors.accent, backgroundColor: withAlpha(Colors.accent, 0.08) },
-  purposeTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  purposeSubtitle: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 3 },
-  footnote: { color: Colors.textMuted, fontSize: 12, marginHorizontal: 20, marginTop: 12 },
+  purposeTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  purposeSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  footnote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginHorizontal: 20, marginTop: 12 },
 });

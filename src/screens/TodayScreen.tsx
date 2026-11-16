@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,7 +7,7 @@ import { InfoButton } from '@/components/InfoButton';
 import { GlowRing, mixHex, ringTones, type RingColors } from '@/components/GlowRing';
 import { FirstAnalysisCard } from '@/components/FirstAnalysisCard';
 import { SecHead } from '@/components/fine/Fine';
-import { FINE, ff, fine } from '@/theme/fine';
+import { INTER, FINE, ff, fine } from '@/theme/fine';
 import { currentReport } from '@/data/reportRepository';
 import { MetasToday } from '@/components/metas/MetasToday';
 import { reportSeenKey, userFlags } from '@/data/userFlags';
@@ -40,8 +39,8 @@ import { BowelEntry, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bath
 import { GaugeBar } from '@/components/GaugeBar';
 import { thermometerRepository } from '@/data/temperatureRepository';
 import { doseRepository, medicationRepository } from '@/data/medicationRepository';
-import { dosesForDay, isActiveOn, isReminderMuted } from '@/logic/medication';
-import { DoseRows } from '@/components/DoseRows';
+import { dosesForDay, isActiveOn } from '@/logic/medication';
+import { MedToday } from '@/components/MedToday';
 import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
 import { ScheduledDose } from '@/types/medication';
 import { mockBiomarkers, Biomarker } from '@/data/mockData';
@@ -96,7 +95,6 @@ const vsUsual = (points: DailyPoint[] | undefined, higherIsBetter: boolean) => {
     : { label: higherIsBetter ? 'Below your usual' : 'Above your usual', color: Colors.warning };
 };
 
-const MED_OPEN_KEY = 'today.medOpen.v1';
 // «Empieza por tu primer análisis» cerrada (en la cuenta)
 const FIRST_CARD_FLAG = 'today_first_analysis_closed';
 
@@ -132,16 +130,6 @@ export const TodayScreen = () => {
     urine: null,
   });
   const [dosesToday, setDosesToday] = useDeepState<ScheduledDose[]>([]);
-  // Lo que tiene recordatorio: sus tomas de hoy se marcan desde aquí (Taken / Skip)
-  const [reminderIds, setReminderIds] = useDeepState<string[]>([]);
-  // Flechita de Medicación y suplementos: enseña u oculta todas las tomas de hoy (tengan o no
-  // recordatorio). Se recuerda en el dispositivo; sin elegir, abierta si hay alguna con recordatorio.
-  const [medOpen, setMedOpen] = useState<boolean | null>(null);
-  useEffect(() => {
-    AsyncStorage.getItem(MED_OPEN_KEY)
-      .then((v) => v !== null && setMedOpen(v === '1'))
-      .catch(() => undefined);
-  }, []);
   // Última lectura con termómetro de las últimas 24 h (manda sobre la del wearable)
   const [thermo, setThermo] = useDeepState<number | null>(null);
   // «Lo siguiente» (antes «Your summary»): lo próximo del calendario (citas, logística, resultados)
@@ -193,7 +181,6 @@ export const TodayScreen = () => {
       .then(([m, l]) => {
         const active = m.filter((i) => isActiveOn(i, new Date()));
         setDosesToday(dosesForDay(active, new Date(), l));
-        setReminderIds(active.filter((i) => i.reminders && !isReminderMuted(i)).map((i) => i.id));
       })
       .catch(() => setDosesToday([]));
     dailyGoalsStore.get().then(setSavedGoals);
@@ -216,7 +203,7 @@ export const TodayScreen = () => {
     setCheckInsToday(checkIns.filter((c) => checkInDayKey(c) === todayKey).length);
     const cycleGoal = p.sex === 'female' ? await cycleGoalStore.get().catch(() => null) : null;
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null);
-  }, [setBiomarkers, setProfile, setCycle, reloadBathroom, setDosesToday, setReminderIds, setThermo, setSummary, demoMode]);
+  }, [setBiomarkers, setProfile, setCycle, reloadBathroom, setDosesToday, setThermo, setSummary, demoMode]);
 
   useReloadOnFocus(load);
 
@@ -310,7 +297,6 @@ export const TodayScreen = () => {
     },
   ].filter((c) => !!c) as CircleProps[];
 
-  const medShown = medOpen ?? dosesToday.some((d) => reminderIds.includes(d.medId));
   const dateText = new Date().toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
   // Mediciones, en cajas: primero la que toca hoy (pesarse, si toca)
@@ -407,6 +393,17 @@ export const TodayScreen = () => {
               </Text>
             </TouchableOpacity>
           </View>
+        )}
+
+        {/* Medicación y suplementos, arriba (fundador, 2026-11-16: «debería ir arriba»), como en el prototipo: una
+            fila por cada cosa que tomas hoy con su «Tomada» */}
+        {show('medication') && (
+          <TourTarget id="today.medication" scroll={tourScroll} inset={20}>
+            <View style={styles.medBlock}>
+              <ZoneChangeBanner onChanged={load} />
+              <MedToday doses={dosesToday} onChange={load} />
+            </View>
+          </TourTarget>
         )}
 
         {/* 5. Tres círculos: Hoy, Semana y Ciclo */}
@@ -634,54 +631,6 @@ export const TodayScreen = () => {
         </>
         )}
 
-        {/* 9. Medicación y suplementos */}
-        {show('medication') && (
-          <TourTarget id="today.medication" scroll={tourScroll} inset={20}>
-          {/* Sin tarjeta (rediseño «Emerald Luxury», 2026-11-16): flota sobre el fondo ambiental */}
-          <View style={styles.medBlock}>
-          <ZoneChangeBanner onChanged={load} />
-          <View style={styles.medHeader}>
-          <TouchableOpacity style={styles.medHeaderMain} onPress={() => router.push('/medications')} activeOpacity={0.85}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.medTitle}>{t('Medication & supplements')}</Text>
-              <Text style={styles.fullPlanSub}>
-                {dosesToday.length === 0
-                  ? t('Add what you take to keep track')
-                  : (() => {
-                      const pending = dosesToday.find((d) => !d.log);
-                      const done = dosesToday.filter((d) => d.log?.status === 'taken').length;
-                      return pending
-                        ? t('Next: {name} at {time} · {done}/{total} taken', { name: pending.name, time: `${String(pending.at.getHours()).padStart(2, '0')}:${String(pending.at.getMinutes()).padStart(2, '0')}`, done, total: dosesToday.length })
-                        : t('All {n} doses done today', { n: dosesToday.length });
-                    })()}
-              </Text>
-            </View>
-            {dosesToday.length === 0 && <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />}
-          </TouchableOpacity>
-          {dosesToday.length > 0 && (
-            <TouchableOpacity
-              style={styles.medToggle}
-              hitSlop={10}
-              onPress={() => {
-                const next = !medShown;
-                setMedOpen(next);
-                AsyncStorage.setItem(MED_OPEN_KEY, next ? '1' : '0').catch(() => undefined);
-              }}
-              accessibilityLabel={medShown ? t('Hide today’s doses') : t('Show today’s doses')}
-            >
-              <Ionicons name={medShown ? 'chevron-up' : 'chevron-down'} size={20} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-          </View>
-          {medShown && dosesToday.length > 0 && (
-            <View style={styles.medDoses}>
-              <DoseRows doses={dosesToday} onChange={load} />
-            </View>
-          )}
-          </View>
-          </TourTarget>
-        )}
-
         {/* 11. Cambiar lo que ves aquí */}
         <TouchableOpacity style={styles.changeLink} onPress={() => router.push('/app-sections')} hitSlop={8}>
           <Text style={styles.changeLinkText}>{t('Change what you see here')}</Text>
@@ -827,7 +776,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   weekToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.divider },
-  weekToggleText: { flex: 1, color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  weekToggleText: { flex: 1, color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   safeArea: {
     flex: 1,
     backgroundColor: 'transparent', // deja ver el fondo ambiental de las pestañas
@@ -855,7 +804,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fullPlanTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  fullPlanTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   inboxCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -890,9 +839,9 @@ const styles = StyleSheet.create({
   },
   planHeroNew: { borderColor: Colors.gold },
   keptBox: { marginHorizontal: 20, marginTop: 12, gap: 6 },
-  keptTitle: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
+  keptTitle: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.4 },
   keptRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  keptText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, flex: 1 },
+  keptText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, flex: 1 },
   planHeroIcon: {
     width: 40,
     height: 40,
@@ -901,20 +850,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  planHeroTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  planHeroTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
   fullPlanLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
-  fullPlanLinkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  // Sin tarjeta (2026-11-16): título y tomas sobre el fondo, con una raya fina encima de las tomas
-  medBlock: {
-    paddingVertical: 6,
-    marginHorizontal: 20,
-    marginBottom: 8,
-  },
-  medHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  medHeaderMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  medTitle: { ...fine.secTitle },
-  medToggle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  medDoses: { marginTop: 8, borderTopWidth: 1, borderTopColor: FINE.line },
+  fullPlanLinkText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  medBlock: { marginHorizontal: 20 },
   bathroomCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -938,7 +877,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   miniLogDone: { borderColor: Colors.ok },
-  miniLogText: { color: Colors.textPrimary, fontSize: 12, fontWeight: '700' },
+  miniLogText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
   fullPlanSub: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, marginTop: 2 },
   reportBanner: {
     flexDirection: 'row',
@@ -966,12 +905,12 @@ const styles = StyleSheet.create({
   reportBannerTitle: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 2,
   },
   reportBannerSubtitle: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   greeting: {
     paddingHorizontal: 20,
@@ -998,7 +937,7 @@ const styles = StyleSheet.create({
   bulletText: {
     flex: 1,
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     lineHeight: 21,
   },
   link: {
@@ -1038,7 +977,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   cardFootnote: {
     ...ff('regular'),
@@ -1048,7 +987,7 @@ const styles = StyleSheet.create({
   },
   sampleTag: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 8,
@@ -1070,7 +1009,7 @@ const styles = StyleSheet.create({
   },
   readinessTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 2 },
   readinessSide: { flex: 1 },
-  readinessOf: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  readinessOf: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   readinessLine: { marginHorizontal: -10 }, // el brillo de los extremos, fuera del margen
   daysLink: {
     ...fine.link,
@@ -1089,20 +1028,20 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontSize: 64,
     lineHeight: 72,
-    fontWeight: '200',
+    fontFamily: INTER.light,
     letterSpacing: -1,
     fontVariant: ['tabular-nums'],
   },
   readinessLabel: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   // Círculos de los objetivos del día: anillo cometa con el icono, la cifra y el nombre debajo
   goalRings: { flexDirection: 'row', justifyContent: 'space-around', alignSelf: 'stretch', marginTop: 22 },
   goalRing: { alignItems: 'center' },
-  goalRingValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 8, fontVariant: ['tabular-nums'] },
-  goalRingLabel: { color: Colors.textSecondary, fontSize: 11 },
+  goalRingValue: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 8, fontVariant: ['tabular-nums'] },
+  goalRingLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11 },
   sourceText: {
     ...ff('regular'),
     color: FINE.mute,
@@ -1154,7 +1093,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   biomarkerValueLong: {
-    fontSize: 19,
+    fontFamily: INTER.regular, fontSize: 19,
   },
   biomarkerUnit: {
     ...ff('regular'),
@@ -1193,7 +1132,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     paddingRight: 0,
   },
-  planCategory: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
+  planCategory: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.4 },
   planIcon: {
     width: 46,
     height: 46,
@@ -1204,7 +1143,7 @@ const styles = StyleSheet.create({
   planTitle: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 8,
   },
   planBarTrack: {
@@ -1220,11 +1159,11 @@ const styles = StyleSheet.create({
   },
   planProgress: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   planNote: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     textAlign: 'center',
     marginTop: 12,
     paddingHorizontal: 20,

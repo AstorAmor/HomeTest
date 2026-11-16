@@ -15,6 +15,7 @@ import { t } from '@/i18n';
 import { labFlags } from '@/data/diet/context';
 import { dietRepository } from '@/data/diet/dietRepository';
 import { TodayMenuCard } from '@/components/diet/TodayMenuCard';
+import { INTER } from '@/theme/fine';
 
 // Lo marcado hoy (user_flags "nutrients:YYYY-MM-DD", día local)
 const localDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -99,9 +100,9 @@ export const NutrientsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginHorizontal: 20, marginBottom: 6 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 6 },
-  count: { color: Colors.gold, fontSize: 13, fontWeight: '800', marginHorizontal: 20, marginBottom: 12 },
+  section: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, marginHorizontal: 20, marginBottom: 6 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 6 },
+  count: { color: Colors.gold, fontSize: 13, fontFamily: INTER.medium, marginHorizontal: 20, marginBottom: 12 },
   card: {
     flexDirection: 'row',
     gap: 12,
@@ -116,10 +117,10 @@ const styles = StyleSheet.create({
   },
   cardOn: { borderColor: withAlpha(Colors.ok, 0.6) },
   icon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  why: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  foods: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, marginTop: 6 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  why: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  foods: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginTop: 6 },
   meal: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 10, paddingVertical: 12 },
-  mealText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  note: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, marginHorizontal: 24, marginTop: 6, textAlign: 'center' },
+  mealText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, marginHorizontal: 24, marginTop: 6, textAlign: 'center' },
 });

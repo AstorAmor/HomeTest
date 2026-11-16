@@ -21,6 +21,7 @@ import { digestionRepository, LoadedGut, loadGutContext } from '@/data/digestion
 import { analyseGut, CONFIDENCE_LABEL, GutAnalysis, groupLabel, MIN_EPISODES } from '@/logic/gutPatterns';
 import { mealGroups } from '@/logic/foodGroups';
 import { DigestionEntry, GUT_SYMPTOMS, INTENSITIES, MINUTES_BEFORE } from '@/types/digestion';
+import { fine, INTER } from '@/theme/fine';
 
 const LEVEL: Record<Observation['level'], { icon: string; color: string }> = {
   good: { icon: 'checkmark-circle', color: Colors.ok },
@@ -475,7 +476,7 @@ const styles = StyleSheet.create({
   legend: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendText: { color: Colors.textMuted, fontSize: 11 },
+  legendText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -488,8 +489,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 8,
   },
-  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  rowSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  rowSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   insight: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -515,10 +516,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.cardBorder,
   },
-  wholeDayText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  wholeDayText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 16 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 16 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -528,20 +529,20 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  cardTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  cardMeta: { color: Colors.textMuted, fontSize: 12 },
-  sampleText: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 10 },
+  cardTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  cardMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
+  sampleText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 10 },
   week: { flexDirection: 'row', justifyContent: 'space-between' },
   dayCol: { alignItems: 'center', gap: 4, flex: 1 },
-  dayLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700' },
-  barCount: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800', height: 16 },
+  dayLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
+  barCount: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium, height: 16 },
   barTrack: { height: 64, justifyContent: 'flex-end', alignItems: 'center' },
   bar: { width: 20, borderRadius: 6 },
   barZero: { backgroundColor: Colors.divider },
   barEmpty: { width: 20, height: 6, borderRadius: 3, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.cardBorder },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: 20 },
   titleWithInfo: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 16, marginBottom: 10 },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 16, marginBottom: 10 },
   obs: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -552,10 +553,10 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   obsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  obsTitle: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  obsBody: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  obsQuestion: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, fontWeight: '600', marginTop: 4 },
-  obsAnswer: { fontSize: 13, lineHeight: 19, fontWeight: '600' },
+  obsTitle: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  obsBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  obsQuestion: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, fontFamily: INTER.medium, marginTop: 4 },
+  obsAnswer: { fontSize: 13, lineHeight: 19, fontFamily: INTER.medium },
   answerRow: { flexDirection: 'row', gap: 8 },
   answer: {
     borderWidth: 1,
@@ -565,8 +566,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: Colors.background,
   },
-  answerText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
+  answerText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, textDecorationLine: 'underline' },
   volumeCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -579,5 +580,5 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 10,
   },
-  footer: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, paddingHorizontal: 20, marginTop: 18 },
+  footer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, paddingHorizontal: 20, marginTop: 18 },
 });

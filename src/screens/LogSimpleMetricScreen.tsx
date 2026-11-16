@@ -10,6 +10,7 @@ import { AppIcon } from '@/components/HealthIcons';
 import { WheelPicker } from '@/components/WheelPicker';
 import { createMetricRepository } from '@/data/metricRepository';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
+import { INTER } from '@/theme/fine';
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   list: {
     marginHorizontal: 20,
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
   },
   rowValuePill: {
     backgroundColor: Colors.background,
@@ -258,12 +259,12 @@ const styles = StyleSheet.create({
   rowValueText: {
     color: Colors.textPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
-  rowValuePlain: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  rowValuePlain: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  wheelComma: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800' },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700', marginLeft: 8 },
+  wheelComma: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium, marginLeft: 8 },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -275,6 +276,6 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: Colors.danger,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
 });

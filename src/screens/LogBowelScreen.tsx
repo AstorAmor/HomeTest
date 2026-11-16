@@ -12,6 +12,7 @@ import { bowelRepository, dayKey, entryForDay, noonOf } from '@/data/bathroomRep
 import { BowelEntry, BowelMovement, BRISTOL_TYPES, BristolType, STOOL_COLORS, StoolColor } from '@/types/bathroom';
 import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { INTER } from '@/theme/fine';
 
 // Lo que suele explicar un color llamativo: se pregunta antes de recomendar el médico
 const CAUSES: Partial<Record<StoolColor, string[]>> = {
@@ -246,9 +247,9 @@ export const logScreenStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  subtitle: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 6 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 22, marginBottom: 10 },
+  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
+  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 6 },
+  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 22, marginBottom: 10 },
   askCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -258,10 +259,10 @@ export const logScreenStyles = StyleSheet.create({
     marginTop: 14,
     gap: 8,
   },
-  askTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  askText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  askAdvice: { color: Colors.attention, fontSize: 13, lineHeight: 19, fontWeight: '600' },
-  askOk: { color: Colors.ok, fontSize: 13, lineHeight: 19, fontWeight: '600' },
+  askTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  askText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  askAdvice: { color: Colors.attention, fontSize: 13, lineHeight: 19, fontFamily: INTER.medium },
+  askOk: { color: Colors.ok, fontSize: 13, lineHeight: 19, fontFamily: INTER.medium },
   note: {
     minHeight: 70,
     backgroundColor: Colors.card,
@@ -270,7 +271,7 @@ export const logScreenStyles = StyleSheet.create({
     borderRadius: 14,
     padding: 12,
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     textAlignVertical: 'top',
   },
 });
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   urgentOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  typeTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  dayHeading: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 28 },
-  typeHint: { color: Colors.textSecondary, fontSize: 12, marginTop: 1 },
+  typeTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  dayHeading: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 28 },
+  typeHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 1 },
 });

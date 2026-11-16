@@ -10,6 +10,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { CatalogTest, findTest, formatPrice, localizeTest, testIcon, totalPrice } from '@/data/testCatalog';
 import { t } from '@/i18n';
 import { getOrderStatus, startCheckout } from '@/data/orders';
+import { INTER } from '@/theme/fine';
 
 type Stage = 'review' | 'starting' | 'simulated' | 'confirming' | 'paid' | 'pending' | 'cancelled' | 'error';
 
@@ -265,12 +266,12 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 8 },
   itemRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 6 },
-  itemPrice: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  itemPrice: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  small: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flexShrink: 1 },
+  name: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  small: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, flexShrink: 1 },
   include: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  includeText: { color: Colors.textPrimary, fontSize: 13, flex: 1 },
+  includeText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flex: 1 },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -280,18 +281,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 12,
   },
-  totalLabel: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
-  total: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900' },
+  totalLabel: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
+  total: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
   secure: { flexDirection: 'row', gap: 8, marginHorizontal: 24, alignItems: 'flex-start' },
   simCard: { borderColor: withAlpha(Colors.amber, 0.55), gap: 10 },
-  simTitle: { color: Colors.amber, fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 4 },
+  simTitle: { color: Colors.amber, fontSize: 13, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 4 },
   cta: { backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  link: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center', textDecorationLine: 'underline', paddingVertical: 4 },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  link: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center', textDecorationLine: 'underline', paddingVertical: 4 },
   result: { alignItems: 'center', gap: 12, paddingHorizontal: 28, marginTop: 40 },
   resultIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.accent, justifyContent: 'center', alignItems: 'center' },
-  resultTitle: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800', textAlign: 'center' },
+  resultTitle: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, textAlign: 'center' },
   bottomCta: {
     backgroundColor: Colors.accent,
     borderRadius: 30,

@@ -9,6 +9,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { EVIDENCE, EvidenceTopic } from '@/data/evidence';
 import { t as tr } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { INTER } from '@/theme/fine';
 
 // More → How KUOVA works, o el (i) de cada sitio (?topic=…): cómo calculamos cada cosa y las
 // fuentes. Lo que aún revisa el equipo médico lo dice claramente.
@@ -101,7 +102,7 @@ export const EvidenceScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 14 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 14 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -111,10 +112,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  summary: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   body: { borderTopWidth: 1, borderTopColor: Colors.divider, padding: 14, gap: 8 },
-  paragraph: { color: Colors.textPrimary, fontSize: 14, lineHeight: 21 },
+  paragraph: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 21 },
   pending: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -125,12 +126,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  pendingText: { color: Colors.attention, fontSize: 12, fontWeight: '700' },
-  sourcesTitle: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', marginTop: 6 },
+  pendingText: { color: Colors.attention, fontSize: 12, fontFamily: INTER.medium },
+  sourcesTitle: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', marginTop: 6 },
   sourceRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
-  sourceLink: { flex: 1, color: Colors.accent, fontSize: 13, lineHeight: 18, textDecorationLine: 'underline' },
-  sourceText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  sourceLink: { flex: 1, color: Colors.accent, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, textDecorationLine: 'underline' },
+  sourceText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
   allButton: { alignSelf: 'center', paddingVertical: 12 },
-  allText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  footer: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, paddingHorizontal: 20, marginTop: 10 },
+  allText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  footer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, paddingHorizontal: 20, marginTop: 10 },
 });

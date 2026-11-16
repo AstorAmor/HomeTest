@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
-import { CheckInEntry, DayMoment, MOMENT_OPTIONS, MOOD_PICKER, Mood } from '@/types/checkIn';
+import { CheckInEntry, DayMoment, MOMENT_OPTIONS, Mood } from '@/types/checkIn';
 import { noteCheckInSaved } from '@/logic/checkInCelebration';
 import { checkInRepository, checkInSuggestions, suggestMoment, Suggestion } from '@/data/checkInRepository';
 import { checkInDayKey, checkInDayOptions, fechaForCheckIn, localDayKey } from '@/logic/checkInDay';
@@ -16,6 +15,11 @@ import { offerPhoneReminders } from '@/data/phoneReminders';
 import { profileRepository } from '@/data/profileRepository';
 import { loadCheckInTags, removeCheckInTags, saveCheckInTags } from '@/data/checkInTagRepository';
 import { tagsFor } from '@/logic/checkInTags';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { SecHead } from '@/components/fine/Fine';
+import { Ruler } from '@/components/checkin/Ruler';
+import { MoodFaces } from '@/components/checkin/MoodFaces';
+import { FINE, ff, fine } from '@/theme/fine';
 
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
 type ScaleId = Exclude<QuestionId, 'mood'>;
@@ -34,29 +38,9 @@ const QUESTION_TEXT: Record<ScaleId, { title: string; labels: string[] }> = {
   dayRating: { title: 'How was your day?', labels: ['Rough', 'Meh', 'OK', 'Good', 'Great'] },
 };
 
-const LevelScale = ({ value, onChange, labels }: { value?: number; onChange: (v: number) => void; labels: string[] }) => (
-  <View style={styles.levelRow}>
-    {labels.map((label, i) => {
-      const level = i + 1;
-      const filled = value !== undefined && level <= value;
-      const selected = value === level;
-      return (
-        <TouchableOpacity key={label} style={styles.levelItem} onPress={() => onChange(level)} activeOpacity={0.8}>
-          <View style={styles.levelBarWrap}>
-            <View
-              style={[
-                styles.levelBar,
-                { height: 18 + i * 12 },
-                filled && { backgroundColor: Colors.accent, opacity: 0.45 + i * 0.13 },
-              ]}
-            />
-          </View>
-          <Text style={[styles.levelLabel, selected && styles.levelLabelSelected]}>{t(label)}</Text>
-        </TouchableOpacity>
-      );
-    })}
-  </View>
-);
+// El nombre corto de cada momento en sus pestañas, como en el prototipo (Mañana · Mediodía · Noche); el largo
+// queda para el lector de pantalla
+const MOMENT_SHORT: Record<DayMoment, string> = { just_woke_up: 'Morning', mid_day: 'Midday', winding_down: 'Night' };
 
 // "Hoy", "Ayer" o "mié 15"
 const dayLabel = (key: string, now: Date) => {
@@ -71,6 +55,10 @@ const dayLabel = (key: string, now: Date) => {
 // sugerido), el día al que cuenta, las preguntas de ese momento, el ánimo y una nota opcional.
 // ?id=… edita uno ya hecho (y lo puede mover de día o borrar); ?date=…&moment=… apunta uno de un
 // día pasado (desde "Tus últimos días").
+// Con el lenguaje fino del prototipo (borradores/app-estructura/prototipo, pantalla «ci»; 2026-11-16): los
+// momentos en pestañas pequeñas con borde, cada escala en una regla (src/components/checkin/Ruler.tsx), los
+// ánimos dibujados a línea (src/components/checkin/MoodFaces.tsx), las etiquetas en píldoras con borde, la
+// nota como «Tu diario» y el botón esmeralda centrado. La lógica, los datos y la ruta, los de siempre.
 export const CheckInScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; date?: string; moment?: DayMoment }>();
@@ -216,189 +204,167 @@ export const CheckInScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.topBar}>
-        {!done ? (
-          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="close" size={24} color={Colors.textPrimary} />
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: 24 }} />
-        )}
-        <Text style={styles.topTitle}>{editing ? t('Edit check-in') : t('Check in')}</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <ScreenHeader title={editing ? t('Edit check-in') : t('Check in')} showBack={!done} />
 
       <KeyboardAwareScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {!done && (
           <>
-            <Text style={styles.question}>{t('Time of day')}</Text>
-            <View style={styles.momentRow}>
+            {/* Momento del día: pestañas pequeñas con borde; la elegida, en marfil con borde jade. El check, si
+                ese momento ya está hecho ese día. */}
+            <View style={styles.tabs} accessibilityRole="radiogroup" accessibilityLabel={t('Time of day')}>
               {MOMENT_OPTIONS.map((o) => {
                 const selected = moment === o.id;
                 const had = doneMoments.has(o.id);
+                const color = selected ? FINE.ivory : FINE.mute;
                 return (
                   <TouchableOpacity
                     key={o.id}
-                    style={[styles.momentChip, selected && styles.momentChipSelected]}
+                    style={[styles.tab, selected && styles.tabOn]}
                     onPress={() => setMoment(o.id)}
-                    activeOpacity={0.85}
+                    activeOpacity={0.75}
+                    hitSlop={{ top: 8, bottom: 8, left: 3, right: 3 }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
                     accessibilityLabel={had ? `${t(o.label)}. ${t('Already done that day')}` : t(o.label)}
                   >
-                    {had && (
-                      <View style={styles.doneBadge}>
-                        <Ionicons name="checkmark" size={11} color="#FFFFFF" />
-                      </View>
-                    )}
-                    <Ionicons name={o.icon as any} size={18} color={selected ? Colors.accent : Colors.textSecondary} />
-                    <Text style={[styles.momentText, selected && { color: Colors.textPrimary }]} numberOfLines={2}>
-                      {t(o.label)}
-                    </Text>
+                    {had && <Ionicons name="checkmark" size={12} color={color} />}
+                    <Text style={[styles.tabText, { color }]}>{t(MOMENT_SHORT[o.id])}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-            {moment === suggested && !backdated && <Text style={styles.hint}>{t('Suggested from the time of day.')}</Text>}
+            {moment === suggested && !backdated && <Text style={fine.note}>{t('Suggested from the time of day.')}</Text>}
 
-            <Text style={[styles.question, styles.dayQuestion]}>{t('Which day does it count for?')}</Text>
-            <View style={styles.dayRow}>
+            <SecHead title={t('Which day does it count for?')} />
+            <View style={styles.tabs}>
               {dayOptions.map((key) => {
                 const selected = key === day;
                 return (
                   <TouchableOpacity
                     key={key}
-                    style={[styles.dayChip, selected && styles.momentChipSelected]}
+                    style={[styles.tab, selected && styles.tabOn]}
                     onPress={() => setPickedDay(key)}
-                    activeOpacity={0.85}
+                    activeOpacity={0.75}
+                    hitSlop={{ top: 8, bottom: 8, left: 3, right: 3 }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: selected }}
                   >
-                    <Text style={[styles.dayChipText, selected && { color: Colors.textPrimary }]}>{dayLabel(key, now)}</Text>
+                    <Text style={[styles.tabText, styles.dayText, { color: selected ? FINE.ivory : FINE.mute }]}>{dayLabel(key, now)}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-            {pastMidnight && <Text style={styles.hint}>{t('It is the small hours, so it counts for yesterday.')}</Text>}
+            {pastMidnight && <Text style={fine.note}>{t('It is the small hours, so it counts for yesterday.')}</Text>}
 
+            {/* Cada escala, una regla de 5 posiciones: se guarda lo mismo que antes, de 1 a 5 */}
             {scales.map((q) => (
-              <View key={q} style={styles.block}>
-                <Text style={styles.question}>{t(QUESTION_TEXT[q].title)}</Text>
-                <LevelScale
-                  value={answers[q]}
-                  labels={QUESTION_TEXT[q].labels}
-                  onChange={(v) => setAnswers((prev) => ({ ...prev, [q]: v }))}
-                />
-              </View>
+              <Ruler
+                key={q}
+                title={t(QUESTION_TEXT[q].title)}
+                words={QUESTION_TEXT[q].labels.map((l) => t(l))}
+                value={answers[q]}
+                onChange={(v) => setAnswers((prev) => ({ ...prev, [q]: v }))}
+              />
             ))}
 
-            <View style={styles.block}>
-              <Text style={styles.question}>{t('How are you feeling?')}</Text>
-              <View style={styles.moodGrid}>
-                {MOOD_PICKER.map((m) => {
-                  const selected = mood === m.id;
-                  return (
-                    <TouchableOpacity
-                      key={m.id}
-                      style={[styles.moodItem, selected && styles.moodItemSelected]}
-                      onPress={() => setMood(m.id)}
-                    >
-                      <Text style={styles.moodEmoji}>{m.emoji}</Text>
-                      <Text style={[styles.moodLabel, selected && { color: Colors.textPrimary }]}>{t(m.label)}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+            <SecHead title={t('How are you feeling?')} />
+            <MoodFaces value={mood} onChange={setMood} />
+
+            <SecHead title={t('Anything else? (optional)')} />
+            {/* Etiquetas para marcar con un toque: quedan registradas con el check-in (2026-11-16) */}
+            <View style={styles.chips}>
+              {tagsFor(sex).map((tag) => {
+                const on = tags.includes(tag.id);
+                return (
+                  <TouchableOpacity
+                    key={tag.id}
+                    style={[styles.chip, on && styles.chipOn]}
+                    onPress={() => setTags((prev) => (prev.includes(tag.id) ? prev.filter((x) => x !== tag.id) : [...prev, tag.id]))}
+                    activeOpacity={0.75}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on }}
+                  >
+                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{t(tag.label)}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            <View style={styles.block}>
-              <Text style={styles.question}>{t('Anything else? (optional)')}</Text>
-              {/* Etiquetas para marcar con un toque: quedan registradas con el check-in (2026-11-16) */}
-              <View style={styles.tagRow}>
-                {tagsFor(sex).map((tag) => {
-                  const on = tags.includes(tag.id);
-                  return (
-                    <TouchableOpacity
-                      key={tag.id}
-                      style={[styles.tag, on && styles.tagOn]}
-                      onPress={() => setTags((prev) => (prev.includes(tag.id) ? prev.filter((x) => x !== tag.id) : [...prev, tag.id]))}
-                      activeOpacity={0.8}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: on }}
-                    >
-                      {on && <Ionicons name="checkmark" size={13} color={Colors.accent} />}
-                      <Text style={[styles.tagText, on && styles.tagTextOn]}>{t(tag.label)}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              <TextInput
-                style={styles.noteInput}
-                placeholder={t('e.g. Big presentation today, slept badly…')}
-                placeholderTextColor={Colors.textMuted}
-                value={note}
-                onChangeText={setNote}
-                multiline
-              />
-            </View>
+            {/* La nota de siempre, ahora «Tu diario»: se lee en «Tus últimos días» */}
+            <SecHead title={t('Your diary')} />
+            <TextInput
+              style={styles.diary}
+              placeholder={t('Write whatever you want to remember about today')}
+              placeholderTextColor={FINE.mute}
+              value={note}
+              onChangeText={setNote}
+              multiline
+              accessibilityLabel={t('Your diary')}
+            />
           </>
         )}
 
         {done && (
           <>
-            <View style={styles.doneIcon}>
-              <Ionicons name="checkmark" size={34} color={Colors.background} />
+            <View style={styles.doneRing}>
+              <Ionicons name="checkmark" size={30} color={FINE.jade} />
             </View>
-            <Text style={[styles.title, { textAlign: 'center' }]}>{t('Checked in')}</Text>
-            <Text style={[styles.subtitle, { textAlign: 'center' }]}>
-              {t('Here are a few ideas for right now. All optional.')}
-            </Text>
-            <View style={styles.optionList}>
-              {suggestions.map((s) => {
-                const isAccepted = accepted.has(s.id);
-                return (
-                  <View key={s.id} style={styles.suggestion}>
-                    <View style={styles.optionIcon}>
-                      <Ionicons name={s.icon as any} size={22} color={Colors.green} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.suggestionTitle}>{t(s.title)}</Text>
-                      <Text style={styles.suggestionSubtitle}>
-                        {s.minutes} min · {t(s.subtitle)}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={[styles.startButton, isAccepted && styles.startButtonDone]}
-                      onPress={() => {
-                        setAccepted((prev) => new Set(prev).add(s.id));
-                        router.push({ pathname: '/exercise', params: { id: s.id } });
-                      }}
-                    >
-                      <Text style={[styles.startText, isAccepted && { color: Colors.accent }]}>
-                        {isAccepted ? t('Again') : t('Start')}
-                      </Text>
-                    </TouchableOpacity>
+            <Text style={[fine.title, styles.center]}>{t('Checked in')}</Text>
+            <Text style={[fine.note, styles.center, styles.doneLead]}>{t('Here are a few ideas for right now. All optional.')}</Text>
+            {suggestions.map((s, i) => {
+              const isAccepted = accepted.has(s.id);
+              return (
+                <View key={s.id} style={[fine.row, i === suggestions.length - 1 && styles.lastRow]}>
+                  <View style={styles.rowText}>
+                    <Text style={fine.rowTitle}>{t(s.title)}</Text>
+                    <Text style={fine.rowSub}>
+                      {s.minutes} min · {t(s.subtitle)}
+                    </Text>
                   </View>
-                );
-              })}
-            </View>
+                  <TouchableOpacity
+                    style={styles.start}
+                    onPress={() => {
+                      setAccepted((prev) => new Set(prev).add(s.id));
+                      router.push({ pathname: '/exercise', params: { id: s.id } });
+                    }}
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.startText, isAccepted && { color: FINE.mute }]}>{isAccepted ? t('Again') : t('Start')}</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
           </>
         )}
       </KeyboardAwareScrollView>
 
       <KeyboardFooter>
-      {!done ? (
-        <>
-          <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>
-            <Text style={styles.ctaText}>{editing ? t('Save changes') : t('Save check-in')}</Text>
-          </TouchableOpacity>
-          {editing && (
-            <TouchableOpacity onPress={remove} style={styles.deleteLink} hitSlop={8}>
-              <Text style={styles.deleteText}>{t('Delete this check-in')}</Text>
+        <View style={styles.footer}>
+          {!done ? (
+            <>
+              <TouchableOpacity
+                style={[fine.pill, styles.save, !complete && styles.saveOff]}
+                onPress={save}
+                disabled={!complete}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !complete }}
+              >
+                <Text style={fine.pillText}>{editing ? t('Save changes') : t('Save check-in')}</Text>
+              </TouchableOpacity>
+              {editing && (
+                <TouchableOpacity onPress={remove} style={styles.deleteLink} hitSlop={8} accessibilityRole="button">
+                  <Text style={styles.deleteText}>{t('Delete this check-in')}</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          ) : (
+            <TouchableOpacity style={[fine.pill, styles.save]} onPress={() => router.back()} activeOpacity={0.8} accessibilityRole="button">
+              <Text style={fine.pillText}>{t('Done')}</Text>
             </TouchableOpacity>
           )}
-        </>
-      ) : (
-        <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
-          <Text style={styles.ctaText}>{t('Done')}</Text>
-        </TouchableOpacity>
-      )}
+        </View>
       </KeyboardFooter>
     </SafeAreaView>
   );
@@ -409,253 +375,85 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  topTitle: {
-    color: Colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '700',
-  },
   body: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 2,
     paddingBottom: 24,
   },
-  block: {
-    marginTop: 28,
-  },
-  question: {
-    color: Colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 12,
-  },
-  momentRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  momentChip: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 6,
-  },
-  momentChipSelected: {
-    borderColor: Colors.accent,
-    backgroundColor: withAlpha(Colors.accent, 0.08),
-  },
-  dayQuestion: { marginTop: 22, fontSize: 15 },
-  dayRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
-  // El mini check de un momento ya hecho ese día
-  doneBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: Colors.ok,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayChip: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  dayChipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', textTransform: 'capitalize' },
-  deleteLink: { alignSelf: 'center', marginBottom: 12 },
-  deleteText: { color: Colors.attention, fontSize: 14, fontWeight: '700' },
-  momentText: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  title: {
-    color: Colors.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 21,
-    marginBottom: 24,
-  },
-  hint: {
-    color: Colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 8,
-  },
-  optionList: {
-    gap: 12,
-  },
-  optionIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: Colors.accentSoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  levelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  levelItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  levelBarWrap: {
-    height: 70,
-    justifyContent: 'flex-end',
-    marginBottom: 10,
-  },
-  levelBar: {
-    width: 34,
-    borderRadius: 8,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-  },
-  levelLabel: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  levelLabelSelected: {
-    color: Colors.textPrimary,
-    fontWeight: '700',
-  },
-  moodGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  moodItem: {
-    width: '30.5%',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 14,
-  },
-  moodItemSelected: {
-    borderColor: Colors.accent,
-    backgroundColor: withAlpha(Colors.accent, 0.08),
-  },
-  moodEmoji: {
-    fontSize: 28,
-  },
-  moodLabel: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  tag: {
+  center: { textAlign: 'center' },
+  // Pestañas pequeñas con borde (.tabs del prototipo): momentos del día y día al que cuenta
+  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  tab: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 11,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 18,
-    paddingHorizontal: 13,
-    paddingVertical: 8,
+    borderColor: FINE.line,
   },
-  tagOn: { borderColor: Colors.accent, backgroundColor: withAlpha(Colors.accent, 0.1) },
-  tagText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  tagTextOn: { color: Colors.textPrimary },
-  noteInput: {
-    minHeight: 90,
+  tabOn: { borderColor: FINE.jade },
+  tabText: { ...ff('regular'), fontSize: 12.5 },
+  dayText: { textTransform: 'capitalize' },
+  // Etiquetas de «¿Algo más?» (.chipsw del prototipo)
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    minHeight: 38,
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
+    borderColor: FINE.line,
+  },
+  chipOn: { borderColor: FINE.jade, backgroundColor: 'rgba(131,214,180,0.08)' },
+  chipText: { ...ff('regular'), fontSize: 13, color: FINE.mute },
+  chipTextOn: { color: FINE.ivory },
+  // «Tu diario» (.diary del prototipo)
+  diary: {
+    minHeight: 104,
+    padding: 12,
     borderRadius: 14,
-    padding: 14,
-    color: Colors.textPrimary,
+    borderWidth: 1,
+    borderColor: FINE.line,
+    backgroundColor: FINE.tile,
+    color: FINE.ivory,
+    ...ff('regular'),
     fontSize: 15,
+    lineHeight: 21,
     textAlignVertical: 'top',
   },
-  doneIcon: {
+  // Después de guardar: un aro fino con el check, el título y las ideas en filas con línea
+  doneRing: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: Colors.accent,
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: FINE.jadeLine,
     alignItems: 'center',
+    justifyContent: 'center',
     alignSelf: 'center',
+    marginTop: 12,
     marginBottom: 16,
   },
-  suggestion: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.card,
+  doneLead: { marginTop: 4, marginBottom: 14 },
+  rowText: { flex: 1, minWidth: 0 },
+  lastRow: { borderBottomWidth: 0 },
+  start: {
+    minHeight: 34,
+    justifyContent: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 13,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
+    borderColor: FINE.jadeLine,
   },
-  suggestionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  suggestionSubtitle: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  startButton: {
-    backgroundColor: withAlpha(Colors.green, 0.14),
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  startButtonDone: {
-    backgroundColor: Colors.accentSoft,
-  },
-  startText: {
-    color: Colors.green,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  cta: {
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  ctaDisabled: {
-    backgroundColor: Colors.cardBorder,
-  },
-  ctaText: {
-    color: Colors.background,
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  startText: { ...ff('medium'), fontSize: 13, color: FINE.jade },
+  // El botón esmeralda, centrado (.pill del prototipo, un poco más alto para el dedo)
+  footer: { alignItems: 'center', paddingTop: 10, paddingBottom: 12 },
+  save: { minHeight: 44, paddingHorizontal: 24, borderRadius: 22 },
+  saveOff: { opacity: 0.4 },
+  deleteLink: { marginTop: 14, paddingVertical: 2 },
+  deleteText: { ...ff('regular'), fontSize: 13, color: FINE.mute },
 });

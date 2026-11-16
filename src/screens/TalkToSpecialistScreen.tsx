@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import type { ProfessionalRole } from '@/data/servicesMock';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // «Habla con un especialista sobre tu plan» (Tu plan y el plan del informe): eliges con quién y te
 // lleva a sus especialistas en /professionals, donde se reserva de verdad.
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
   },
   intro: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     lineHeight: 20,
     marginBottom: 20,
   },
@@ -121,12 +122,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 2,
   },
   cardSubtitle: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   submitButton: {
     backgroundColor: Colors.accent,
@@ -140,6 +141,6 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: Colors.background,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
 });

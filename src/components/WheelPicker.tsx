@@ -10,6 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { INTER } from '@/theme/fine';
 
 interface WheelPickerProps {
   items: string[];
@@ -122,12 +123,12 @@ const styles = StyleSheet.create({
   itemText: {
     color: Colors.textSecondary,
     fontSize: 17,
-    fontWeight: '500',
+    fontFamily: INTER.medium,
   },
   itemTextSelected: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     fontVariant: ['tabular-nums'],
   },
 });

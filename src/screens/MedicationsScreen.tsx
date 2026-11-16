@@ -18,6 +18,7 @@ import { DoseRows } from '@/components/DoseRows';
 import { MedIcon } from '@/components/MedIcon';
 import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
 import { offerPhoneReminders } from '@/data/phoneReminders';
+import { fine, INTER } from '@/theme/fine';
 
 
 // Medicación y suplementos: las tomas de hoy (marcar tomada u omitida), lo que toma de forma
@@ -224,10 +225,10 @@ export const MedicationsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 18, marginBottom: 10 },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 18, marginBottom: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
-  hint: { color: Colors.textSecondary, fontSize: 12, paddingHorizontal: 20, marginTop: -4, marginBottom: 10 },
-  empty: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20, marginBottom: 6 },
+  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, paddingHorizontal: 20, marginTop: -4, marginBottom: 10 },
+  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 6 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -238,16 +239,16 @@ const styles = StyleSheet.create({
   },
   doseRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  doseTime: { width: 46, color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  doseName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  doseTime: { width: 46, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  doseName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   take: { backgroundColor: Colors.accent, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  takeText: { color: Colors.background, fontSize: 12, fontWeight: '800' },
+  takeText: { color: Colors.background, fontSize: 12, fontFamily: INTER.medium },
   skip: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
-  skipText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  skipText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   doneTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  doneText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  doneText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   history: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginTop: 10, paddingHorizontal: 14, paddingVertical: 10 },
-  historyTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  historyTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   item: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -258,15 +259,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   itemMain: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14 },
-  itemTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  itemDose: { color: Colors.textSecondary, fontWeight: '500' },
-  itemSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  itemMeta: { color: Colors.textMuted, fontSize: 11, marginTop: 4 },
+  itemTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  itemDose: { color: Colors.textSecondary, fontFamily: INTER.medium },
+  itemSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  itemMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 4 },
   menu: { borderTopWidth: 1, borderTopColor: Colors.divider, padding: 12, gap: 8 },
   menuButton: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   menuRow: { paddingVertical: 4 },
-  menuText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  menuLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  menuText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  menuLabel: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     borderWidth: 1,
@@ -276,8 +277,8 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     backgroundColor: Colors.background,
   },
-  chipText: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
+  chipText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
   add: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 10 },
-  addText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  finished: { color: Colors.textMuted, fontSize: 12, paddingHorizontal: 20, marginBottom: 4 },
+  addText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  finished: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, paddingHorizontal: 20, marginBottom: 4 },
 });

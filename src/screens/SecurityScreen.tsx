@@ -9,6 +9,7 @@ import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { isMfaRequired, listTotpFactors, removeTotpFactor, type TotpFactor } from '@/data/mfa';
 import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Ajustes → Verificación en dos pasos. Opcional para pacientes; obligatoria (al menos una app) para
 // admins, profesionales y soporte. Se pueden tener varias apps a la vez: si pierdes el móvil, la otra vale.
@@ -134,18 +135,18 @@ export const SecurityScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  section: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  section: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.semibold, marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, overflow: 'hidden' },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 16 },
-  status: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
-  text: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, padding: 16, paddingTop: 8 },
+  status: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, padding: 16, paddingTop: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.cardBorder },
-  rowTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  rowSub: { color: Colors.textMuted, fontSize: 13, marginTop: 2 },
-  remove: { color: Colors.danger, fontSize: 14, fontWeight: '700' },
-  note: { color: Colors.textMuted, fontSize: 13, lineHeight: 19, paddingHorizontal: 16, paddingBottom: 14 },
-  error: { color: Colors.danger, fontSize: 14, marginHorizontal: 20, marginTop: 12 },
+  rowTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  rowSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
+  remove: { color: Colors.danger, fontSize: 14, fontFamily: INTER.medium },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, paddingHorizontal: 16, paddingBottom: 14 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 14, marginHorizontal: 20, marginTop: 12 },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -157,6 +158,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
   },
-  addText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
-  footer: { color: Colors.textMuted, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginTop: 20 },
+  addText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  footer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginTop: 20 },
 });

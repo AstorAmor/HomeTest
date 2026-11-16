@@ -17,6 +17,7 @@ import { GlucoseIcon } from '@/components/HealthIcons';
 import { WheelPicker } from '@/components/WheelPicker';
 import { MealType, MEAL_TYPE_LABEL } from '@/types/glucose';
 import { saveGlucoseEntry, updateGlucoseEntry, deleteGlucoseEntry, getGlucoseEntries } from '@/data/glucoseRepository';
+import { INTER } from '@/theme/fine';
 
 const MEAL_OPTIONS: MealType[] = ['desayuno', 'comida', 'cena', 'unspecified'];
 // Dos ruedas: decenas (de 2 a 40, es decir 20-409 mg/dL) y unidades. Más rápido que teclear.
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   list: {
     marginHorizontal: 20,
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
   },
   rowValuePill: {
     backgroundColor: Colors.background,
@@ -292,15 +293,15 @@ const styles = StyleSheet.create({
   rowValueText: {
     color: Colors.textPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   rowValuePlain: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700', marginLeft: 8 },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium, marginLeft: 8 },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
   },
   modalOptionText: {
     color: Colors.textPrimary,
-    fontSize: 16,
+    fontFamily: INTER.regular, fontSize: 16,
   },
   deleteButton: {
     flexDirection: 'row',
@@ -336,6 +337,6 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: Colors.danger,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
 });

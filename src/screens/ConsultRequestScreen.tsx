@@ -14,6 +14,7 @@ import { StoredAudio, VoiceRecorder } from '@/components/VoiceNote';
 import { createShare, DataShare, isShareActive, listMyShares, scopeLabel, SHARE_SCOPES, ShareScope } from '@/data/sharing';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
+import { INTER } from '@/theme/fine';
 
 const KINDS: { id: RequestKind; icon: string; hint: string }[] = [
   { id: 'question', icon: 'help-circle-outline', hint: 'A quick question about your health or plan' },
@@ -191,29 +192,29 @@ export const ConsultRequestScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
-  intro: { color: Colors.textSecondary, fontSize: 14, marginTop: -6, marginBottom: 16 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginTop: -6, marginBottom: 16 },
   kind: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12 },
   kindOn: { borderColor: Colors.accent },
-  kindTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  kindHint: { color: Colors.textSecondary, fontSize: 12, marginTop: 1 },
-  input: { minHeight: 110, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, padding: 12, color: Colors.textPrimary, fontSize: 14, textAlignVertical: 'top', marginTop: 16 },
-  sent: { color: Colors.ok, fontSize: 13, fontWeight: '700', marginTop: 8 },
-  error: { color: Colors.danger, fontSize: 13, marginTop: 8 },
-  section: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', marginTop: 24, marginBottom: 10 },
+  kindTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  kindHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 1 },
+  input: { minHeight: 110, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, padding: 12, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, textAlignVertical: 'top', marginTop: 16 },
+  sent: { color: Colors.ok, fontSize: 13, fontFamily: INTER.medium, marginTop: 8 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginTop: 8 },
+  section: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 24, marginBottom: 10 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, marginBottom: 8, gap: 6 },
-  meta: { color: Colors.textSecondary, fontSize: 12 },
-  msg: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
+  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
+  msg: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   answer: { borderLeftWidth: 3, borderLeftColor: Colors.accent, paddingLeft: 10 },
-  answerText: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
+  answerText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   shared: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: Colors.card, borderRadius: 12, padding: 12 },
-  sharedText: { color: Colors.textPrimary, fontSize: 13, flex: 1, lineHeight: 18 },
-  shareHint: { color: Colors.textSecondary, fontSize: 12, marginBottom: 8 },
+  sharedText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flex: 1, lineHeight: 18 },
+  shareHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginBottom: 8 },
   scopes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   scope: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
   scopeOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  scopeText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  scopeText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 10, borderWidth: 1, borderColor: Colors.accent, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8 },
-  shareBtnText: { color: Colors.accent, fontSize: 13, fontWeight: '800' },
+  shareBtnText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   cta: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 16, alignItems: 'center', marginHorizontal: 20, marginBottom: 12 },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
 });

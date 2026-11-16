@@ -12,6 +12,7 @@ import { ruleWhyForItem, STATUS_LABEL } from '@/utils/planUpdate';
 import { statusColor } from '@/screens/PlanUpdateScreen';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { specialistPlans } from '@/logic/specialistPlan';
+import { INTER } from '@/theme/fine';
 
 // «El plan de tu especialista» (/plans). Desde el 2026-11-06 (fundador: «hacerlo más dependiente de médicos…
 // para eso tenemos lo de los objetivos») la app ya no hace planes sola: aquí solo salen los que manda un
@@ -113,7 +114,7 @@ export const PlansScreen = () => {
               <View style={styles.icon}>
                 <Ionicons name="medkit-outline" size={20} color={Colors.accent} />
               </View>
-              <Text style={[styles.title, { flex: 1, fontSize: 15 }]}>{t('No specialist has sent you a plan yet.')}</Text>
+              <Text style={[styles.title, { flex: 1, fontFamily: INTER.regular, fontSize: 15 }]}>{t('No specialist has sent you a plan yet.')}</Text>
             </View>
             <Text style={[styles.itemWhy, { marginTop: 10 }]}>
               {t('Share your results with a specialist and, if they see fit, they will send you a plan. It will appear here and in Your goals.')}
@@ -146,7 +147,7 @@ export const PlansScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -159,21 +160,21 @@ const styles = StyleSheet.create({
   cardLatest: { borderColor: Colors.accent },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  badge: { color: Colors.accent, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  title: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
-  sub: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
+  badge: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  title: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
+  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
   cta: { backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11, alignItems: 'center', marginTop: 14 },
-  ctaText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
   ghost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 22, paddingVertical: 10, alignItems: 'center', marginTop: 8 },
-  ghostText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  ghostText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   items: { marginTop: 14, gap: 12 },
   item: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 12, gap: 4 },
-  itemTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  itemWhy: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  note: { color: Colors.textPrimary, fontSize: 13, lineHeight: 18, fontStyle: 'italic' },
-  status: { fontSize: 11, fontWeight: '800' },
-  itemNote: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
+  itemTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  itemWhy: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
+  note: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, fontStyle: 'italic' },
+  status: { fontSize: 11, fontFamily: INTER.medium },
+  itemNote: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
   deleteRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingTop: 4 },
-  deleteText: { color: Colors.danger, fontSize: 13, fontWeight: '700' },
-  deleteError: { color: Colors.danger, fontSize: 13, marginHorizontal: 20, marginBottom: 10 },
+  deleteText: { color: Colors.danger, fontSize: 13, fontFamily: INTER.medium },
+  deleteError: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginHorizontal: 20, marginBottom: 10 },
 });

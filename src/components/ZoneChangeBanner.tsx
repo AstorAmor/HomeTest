@@ -6,6 +6,7 @@ import { medicationRepository } from '@/data/medicationRepository';
 import { userFlags } from '@/data/userFlags';
 import { currentZone, isActiveOn, offsetText, shiftSchedule, ZoneStamp, zoneChange } from '@/logic/medication';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // "Hemos notado un cambio de hora": si el móvil cambia de zona horaria (un viaje) y hay tomas
 // programadas, se pregunta si mantener las horas del reloj o moverlas para que caigan en el mismo
@@ -81,11 +82,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  body: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   primary: { backgroundColor: Colors.accent, borderRadius: 20, paddingVertical: 10, alignItems: 'center', marginTop: 2 },
-  primaryText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
   secondary: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 9, alignItems: 'center' },
-  secondaryText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  note: { color: Colors.textMuted, fontSize: 11, lineHeight: 15 },
+  secondaryText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15 },
 });

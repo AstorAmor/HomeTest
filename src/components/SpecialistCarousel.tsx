@@ -5,6 +5,7 @@ import { Colors } from '@/constants/colors';
 import { SPECIALISTS, SpecialistCard } from '@/data/planImages';
 import { BlobArt } from './BlobArt';
 import { useWebShell } from '@/web/webMode';
+import { INTER } from '@/theme/fine';
 
 const CARD = 168; // tamaño de la foto central
 const GAP = 12;
@@ -164,8 +165,8 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
 const styles = StyleSheet.create({
   photoWrap: { width: CARD, height: CARD, borderRadius: 20, overflow: 'hidden', backgroundColor: Colors.card },
   photo: { width: CARD, height: CARD },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', textAlign: 'center', marginTop: 10 },
-  subtitle: { color: Colors.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 2 },
+  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, textAlign: 'center', marginTop: 10 },
+  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 2 },
   flatRow: { gap: GAP, paddingHorizontal: 20 },
   flatRowCentered: { flexGrow: 1, justifyContent: 'center' },
 });

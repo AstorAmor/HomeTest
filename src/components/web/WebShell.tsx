@@ -12,6 +12,7 @@ import { mockPatient } from '@/data/mockData';
 import { t } from '@/i18n';
 import { useWebShell } from '@/web/webMode';
 import { TAB } from '@/constants/tabs';
+import { INTER } from '@/theme/fine';
 
 // Web del paciente en escritorio (estilo Salud de Apple): columna de menú a la izquierda y la
 // pantalla elegida en el centro, en una columna de ancho limitado (bloques, no a lo ancho de
@@ -246,15 +247,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     marginBottom: 10,
   },
-  searchInput: { flex: 1, color: Colors.textPrimary, fontSize: 14, paddingVertical: 8 },
+  searchInput: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, paddingVertical: 8 },
   groupTop: { marginBottom: 6 },
   group: { marginTop: 8 },
   groupHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 6 },
-  groupTitle: { color: Colors.textMuted, fontSize: 12, fontWeight: '800' },
+  groupTitle: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
   item: { flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10 },
   itemOn: { backgroundColor: Colors.accentSoft },
-  itemText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '500', flex: 1 },
-  itemTextOn: { fontWeight: '800' },
+  itemText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, flex: 1 },
+  itemTextOn: { fontFamily: INTER.medium },
   me: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -264,8 +265,8 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 6,
   },
-  meName: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  meSub: { color: Colors.textMuted, fontSize: 11 },
+  meName: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  meSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
   main: { flex: 1, alignItems: 'center' },
   column: { flex: 1, width: '100%' },
 });

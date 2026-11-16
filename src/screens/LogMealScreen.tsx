@@ -11,6 +11,7 @@ import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 import { t } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
+import { INTER } from '@/theme/fine';
 
 const MEAL_TYPES: { id: MealEntry['mealType']; label: string }[] = [
   { id: 'breakfast', label: 'Breakfast' },
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
   },
-  topTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
+  topTitle: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
   body: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
   photoBox: {
     height: 220,
@@ -217,11 +218,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  photoText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  photoText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   galleryLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
-  galleryText: { color: Colors.accent, fontSize: 14, fontWeight: '600' },
-  error: { color: Colors.danger, fontSize: 13, textAlign: 'center' },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 10, marginTop: 14 },
+  galleryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center' },
+  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginBottom: 10, marginTop: 14 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
   },
   sugarChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   selected: { borderColor: Colors.amber, backgroundColor: withAlpha(Colors.amber, 0.1) },
-  chipText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  chipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   cta: {
     backgroundColor: Colors.accent,
     borderRadius: 30,
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
   pointsBadge: {
     width: 110,
     height: 110,
@@ -265,8 +266,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  pointsText: { color: Colors.amber, fontSize: 34, fontWeight: '900' },
-  pointsLabel: { color: Colors.amber, fontSize: 12, fontWeight: '700' },
-  doneTitle: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 8 },
-  doneText: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 32 },
+  pointsText: { color: Colors.amber, fontSize: 34, fontFamily: INTER.light },
+  pointsLabel: { color: Colors.amber, fontSize: 12, fontFamily: INTER.medium },
+  doneTitle: { color: Colors.textPrimary, fontSize: 26, fontFamily: INTER.medium, marginBottom: 8 },
+  doneText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 32 },
 });

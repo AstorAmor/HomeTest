@@ -28,6 +28,7 @@ import {
   deleteBloodPressureEntry,
   getBloodPressureEntries,
 } from '@/data/bloodPressureRepository';
+import { INTER } from '@/theme/fine';
 
 type Step = 'select' | 'processing' | 'edit';
 
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
   methodButtonText: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   processingWrap: {
     flex: 1,
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
   },
   processingText: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
   },
   topBar: {
     flexDirection: 'row',
@@ -392,11 +393,11 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   errorText: {
     color: Colors.danger,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     textAlign: 'center',
     marginHorizontal: 20,
     marginBottom: 16,
@@ -423,7 +424,7 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
   },
   rowValuePill: {
     backgroundColor: Colors.background,
@@ -434,12 +435,12 @@ const styles = StyleSheet.create({
   rowValueText: {
     color: Colors.textPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   wheels: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginHorizontal: 20, marginBottom: 12 },
   wheelCol: { alignItems: 'center', flex: 1 },
-  wheelLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', marginBottom: 4 },
-  wheelUnit: { color: Colors.textMuted, fontSize: 11, marginTop: 4, textAlign: 'center' },
+  wheelLabel: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginBottom: 4 },
+  wheelUnit: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 4, textAlign: 'center' },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -452,6 +453,6 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: Colors.danger,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
 });

@@ -11,6 +11,7 @@ import { ageFromDob, profileRepository } from '@/data/profileRepository';
 import { SafetyQuestionId } from '@/types/digestion';
 import { t } from '@/i18n';
 import { logScreenStyles } from './LogBowelScreen';
+import { INTER } from '@/theme/fine';
 
 // Señales de alarma antes de sugerir ninguna prueba: cualquier "sí" manda al médico en vez de a un
 // test (src/logic/gutPatterns.ts). Basadas en NICE NG12 y CG184, ACG/CAG 2017 (dispepsia) y la
@@ -105,5 +106,5 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 10,
   },
-  questionText: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20, fontWeight: '600' },
+  questionText: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20, fontFamily: INTER.medium },
 });

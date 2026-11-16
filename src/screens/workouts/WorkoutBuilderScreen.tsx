@@ -13,6 +13,7 @@ import type { Equipment, WorkoutPrefs, WorkoutSession } from '@/data/workouts/ty
 import { DEFAULT_PREFS, equipmentForPlace, estimateMinutes, generateProgram, newProgram } from '@/logic/workoutGenerator';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // "Crear mi entrenamiento": unas pocas preguntas (objetivo, nivel, días, minutos, dónde y con qué) y
 // el programa al momento. Se puede pedir otra variación antes de guardarlo.
@@ -193,33 +194,33 @@ export const WorkoutBuilderScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 14 },
-  q: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 18, marginBottom: 10 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 14 },
+  q: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginTop: 18, marginBottom: 10 },
   options: { gap: 8 },
   option: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
   optionOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  optionTitle: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
-  optionHint: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  optionTitle: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
+  optionHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   kit: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   kitItem: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
-  kitText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  kitText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20 },
-  toggleTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  toggleTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   buttons: { gap: 10, marginTop: 24 },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14 },
-  primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   link: { alignItems: 'center', paddingVertical: 8 },
-  linkText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  linkText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   discard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 11 },
-  discardText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
+  discardText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   preview: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginBottom: 12, gap: 8 },
   previewHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  previewTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  previewMeta: { color: Colors.textMuted, fontSize: 13, fontWeight: '600' },
+  previewTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  previewMeta: { color: Colors.textMuted, fontSize: 13, fontFamily: INTER.medium },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  rowName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  rowDose: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  previewFoot: { color: Colors.textMuted, fontSize: 12 },
+  rowName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  rowDose: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  previewFoot: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
 });

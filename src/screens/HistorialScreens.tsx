@@ -56,6 +56,7 @@ import {
   vaccineGroups,
   vaccineLabel,
 } from '@/logic/historial';
+import { INTER } from '@/theme/fine';
 
 const thisYear = () => new Date().getFullYear();
 const yearItems = () => [t('No date'), ...Array.from({ length: thisYear() - FIRST_YEAR + 1 }, (_, i) => String(thisYear() - i))];
@@ -462,7 +463,7 @@ const FILE_NAME: Record<CardVariant, string> = { full: 'kuova-tarjeta-emergencia
 function LockSteps({ ios, android }: { ios: boolean; android: boolean }) {
   return (
     <View style={{ backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14, gap: 8, marginTop: 12 }}>
-      <Text style={{ color: Colors.textPrimary, fontSize: 14, fontWeight: '700' }}>{t('How to put it on your lock screen only')}</Text>
+      <Text style={{ color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium }}>{t('How to put it on your lock screen only')}</Text>
       {ios && (
         <Text style={[hs.meta, { marginTop: 0 }]}>
           {t('iPhone: tap «Save or share the image» and «Save Image». Open it in Photos, tap Share and «Use as Wallpaper», then «Add». When it asks, choose «Customise Home Screen» and pick another photo or a colour: the card stays on the lock screen only.')}
@@ -686,7 +687,7 @@ export function EmergencyCardScreen() {
                       {b === 'photo' && !photo ? <Ionicons name="image-outline" size={22} color={Colors.textSecondary} /> : <LockBgPreview bg={b} photo={photo} width={50} />}
                     </View>
                   </View>
-                  <Text style={{ color: on ? Colors.textPrimary : Colors.textSecondary, fontSize: 12, fontWeight: on ? '700' : '500' }}>{t(LOCK_BG_NAME[b])}</Text>
+                  <Text style={{ color: on ? Colors.textPrimary : Colors.textSecondary, fontSize: 12, fontFamily: on ? INTER.medium : INTER.medium }}>{t(LOCK_BG_NAME[b])}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -778,7 +779,7 @@ export function EmergencyCardScreen() {
           <View style={{ backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, alignItems: 'center' }}>
             <BigQr h={view} lock={variant === 'lock'} size={Math.min(width - 72, 360)} />
           </View>
-          <Text style={{ color: '#FFFFFF', fontSize: 13, marginTop: 16 }}>{t('Tap anywhere to close')}</Text>
+          <Text style={{ color: '#FFFFFF', fontFamily: INTER.regular, fontSize: 13, marginTop: 16 }}>{t('Tap anywhere to close')}</Text>
         </Pressable>
       </Modal>
     </HistFrame>

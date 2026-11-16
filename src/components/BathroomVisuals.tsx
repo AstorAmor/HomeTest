@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { BristolType } from '@/types/bathroom';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Formas abstractas de la escala de Bristol: siluetas sencillas en un tono neutro, nada
 // realista, para que registrar la consistencia no resulte desagradable.
@@ -195,6 +196,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  swatchLabel: { color: Colors.textSecondary, fontSize: 11, textAlign: 'center', marginTop: 4 },
+  swatchLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 4 },
   dropInner: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
 });

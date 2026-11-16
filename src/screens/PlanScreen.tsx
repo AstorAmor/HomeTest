@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MetasToday } from '@/components/metas/MetasToday';
 import { BadgesSection } from '@/components/BadgesSection';
+import { GoalEmblem } from '@/components/fine/GoalEmblem';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { FRow, LockTag, Pill, SecHead, TabHead } from '@/components/fine/Fine';
@@ -79,6 +80,8 @@ function GoalsRow() {
             const lg = data.lab.find((x) => x.key === g);
             return (
               <TouchableOpacity key={g} style={[fine.tile, styles.goal]} onPress={() => router.push('/metas')} activeOpacity={0.8}>
+                {/* Su emblema: un dibujo a línea en un círculo con luz (fundador, 2026-11-16) */}
+                <GoalEmblem goal={g} lab={!!GOALS[g].lab} size={40} />
                 <Text style={styles.goalName} numberOfLines={3}>
                   {t(GOALS[g].name)}
                 </Text>
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
   pad: { paddingHorizontal: 20 },
   padH: { marginHorizontal: 20 },
   goals: { flexDirection: 'row', gap: 8 },
-  goal: { flex: 1, minHeight: 78, justifyContent: 'space-between', gap: 8 },
+  goal: { flex: 1, minHeight: 78, gap: 8 },
   goalName: { ...ff('medium'), color: FINE.ivory, fontSize: 14, lineHeight: 18 },
   goalFig: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, fontVariant: ['tabular-nums'] },
 });

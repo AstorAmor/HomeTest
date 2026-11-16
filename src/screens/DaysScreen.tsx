@@ -27,6 +27,8 @@ import { cycleRepository } from '@/data/cycleRepository';
 import { cycleGoalStore } from '@/data/cycleGoal';
 import { showSamples } from '@/data/dataMode';
 import { CycleEntry } from '@/types/cycle';
+import { INTER } from '@/theme/fine';
+import { MoodFace } from '@/components/checkin/MoodFaces';
 
 // "Tus últimos días" (Today → check-in → Tus últimos 7 días → tocar): todo lo apuntado y medido
 // cada día, para responder a "¿qué ha pasado estos días?" de un vistazo. Los días que se salen de
@@ -273,7 +275,8 @@ export const DaysScreen = () => {
                         accessibilityLabel={`${t(SLOT_LABEL[o.id])}: ${last ? t('change check-in') : t('add check-in')}`}
                       >
                         {mood ? (
-                          <Text style={styles.slotEmoji}>{mood.emoji}</Text>
+                          // La cara a línea del check-in (sin emojis desde el 2026-11-16)
+                          <MoodFace mood={mood.id} size={18} color={Colors.gold} />
                         ) : (
                           <Ionicons name={o.icon as any} size={13} color={last ? Colors.gold : Colors.textMuted} />
                         )}
@@ -398,10 +401,10 @@ export const DaysScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 10 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 6 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 6 },
   chartCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginBottom: 8 },
-  chartTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginBottom: 10 },
-  chartLink: { color: Colors.accent, fontSize: 12.5, fontWeight: '700', marginTop: 10 },
+  chartTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginBottom: 10 },
+  chartLink: { color: Colors.accent, fontSize: 12.5, fontFamily: INTER.medium, marginTop: 10 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -413,20 +416,20 @@ const styles = StyleSheet.create({
   cardFlag: { borderColor: withAlpha(Colors.attention, 0.45) },
   cardFocus: { borderColor: Colors.accent, borderWidth: 2 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  date: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700', textTransform: 'capitalize' },
-  slotsHelp: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 6 },
+  date: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, textTransform: 'capitalize' },
+  slotsHelp: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 6 },
   slots: { flexDirection: 'row', gap: 6 },
   slot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   slotFilled: { backgroundColor: withAlpha(Colors.gold, 0.16), borderWidth: 1, borderColor: withAlpha(Colors.gold, 0.6) },
   slotEmpty: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: withAlpha(Colors.textMuted, 0.6) },
-  slotEmoji: { fontSize: 16 },
+  slotEmoji: { fontFamily: INTER.regular, fontSize: 16 },
   checkInLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   flag: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  flagText: { flex: 1, color: Colors.attention, fontSize: 13, fontWeight: '600' },
-  none: { color: Colors.textMuted, fontSize: 13 },
+  flagText: { flex: 1, color: Colors.attention, fontSize: 13, fontFamily: INTER.medium },
+  none: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
   line: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   lineIcon: { marginTop: 2 },
-  lineText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  strong: { color: Colors.textPrimary, fontWeight: '700' },
-  note: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, fontStyle: 'italic', marginLeft: 23 },
+  lineText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  strong: { color: Colors.textPrimary, fontFamily: INTER.medium },
+  note: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, fontStyle: 'italic', marginLeft: 23 },
 });

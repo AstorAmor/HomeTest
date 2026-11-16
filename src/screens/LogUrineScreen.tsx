@@ -13,6 +13,7 @@ import { UrineColor, UrineEntry, UrineVisit, URINE_COLORS, VOID_VOLUMES } from '
 import { logScreenStyles } from './LogBowelScreen';
 import { t } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { INTER } from '@/theme/fine';
 
 const RED_CAUSES = ['Beetroot', 'Blackberries', 'Rhubarb', 'A new medicine'];
 const NONE = 'None of these';
@@ -238,13 +239,13 @@ export const LogUrineScreen = () => {
 
 const styles = StyleSheet.create({
   ...logScreenStyles,
-  dayHeading: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 28 },
+  dayHeading: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 28 },
   adviceScreen: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28, gap: 10 },
   adviceIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  savedText: { color: Colors.textMuted, fontSize: 13, fontWeight: '600' },
-  adviceTitle: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', textAlign: 'center' },
-  adviceBody: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center' },
-  adviceLink: { color: Colors.accent, fontSize: 14, fontWeight: '700', marginTop: 4 },
+  savedText: { color: Colors.textMuted, fontSize: 13, fontFamily: INTER.medium },
+  adviceTitle: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, textAlign: 'center' },
+  adviceBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  adviceLink: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium, marginTop: 4 },
   adviceButton: {
     alignSelf: 'stretch',
     backgroundColor: Colors.accent,
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 18,
   },
-  adviceButtonText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
+  adviceButtonText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   volumeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -265,8 +266,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
   },
-  volumeTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  volumeSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  volumeTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  volumeSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   input: {
     backgroundColor: Colors.background,
     borderWidth: 1,
@@ -274,6 +275,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
   },
 });

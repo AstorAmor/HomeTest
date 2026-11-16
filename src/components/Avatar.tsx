@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, ImageSourcePropType } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { INTER } from '@/theme/fine';
 
 interface AvatarProps {
   source?: ImageSourcePropType;
@@ -28,7 +29,7 @@ export const Avatar = ({ source, nombre, size = 40 }: AvatarProps) => {
         { width: size, height: size, borderRadius: size / 2 },
       ]}
     >
-      <Text style={[styles.initial, { fontSize: size * 0.4 }]}>{initial}</Text>
+      <Text style={[styles.initial, { fontFamily: INTER.regular, fontSize: size * 0.4 }]}>{initial}</Text>
     </View>
   );
 };
@@ -44,6 +45,6 @@ const styles = StyleSheet.create({
   },
   initial: {
     color: Colors.background,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
 });

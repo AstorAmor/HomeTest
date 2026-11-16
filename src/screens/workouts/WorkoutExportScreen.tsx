@@ -17,6 +17,7 @@ import { workoutsToHtml } from '@/utils/workoutPdf';
 import { shareHtmlPdf } from '@/utils/shareHtml';
 import { shareText, shareTextCopies } from '@/utils/shareText';
 import { t, tn } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Exportar el entrenamiento (Entrenamientos → Exportar, y el botón de compartir del Historial; fundador, 2026-11-09):
 // el programa que eliges y lo entrenado en un periodo, en PDF para tu entrenador o como texto para una IA o un
@@ -209,26 +210,26 @@ export const WorkoutExportScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
-  muted: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, textAlign: 'center' },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  sub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   choices: { gap: 6 },
   choice: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 12, padding: 10 },
   choiceOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  choiceTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  only: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginLeft: 32 },
-  count: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
-  preview: { color: Colors.textPrimary, fontSize: 12, lineHeight: 17, backgroundColor: Colors.background, borderRadius: 10, padding: 10 },
+  choiceTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  only: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginLeft: 32 },
+  count: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
+  preview: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, backgroundColor: Colors.background, borderRadius: 10, padding: 10 },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, marginTop: 4 },
-  primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   off: { opacity: 0.45 },
-  status: { color: Colors.accent, fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  status: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, textAlign: 'center' },
   tip: { flexDirection: 'row', gap: 8, backgroundColor: Colors.accentSoft, borderRadius: 12, padding: 12 },
-  tipText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 18 },
-  privacy: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  tipText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
+  privacy: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
 });

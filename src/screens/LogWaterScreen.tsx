@@ -11,6 +11,7 @@ import { addWater, GLASS_ML, litres, waterOnDay, waterRepository, waterUsual } f
 import { SimpleMetricEntry } from '@/types/simpleMetric';
 import { dateLocale, t } from '@/i18n';
 import { logScreenStyles } from './LogBowelScreen';
+import { INTER } from '@/theme/fine';
 
 // Apuntar una bebida con la rueda, como el resto de mediciones: de 50 en 50 ml, hasta 2 L. Los botones
 // de arriba colocan la rueda en un vaso, una lata o una botella; se parte de la última cantidad. «Usar en
@@ -177,12 +178,12 @@ const styles = StyleSheet.create({
     minWidth: 74,
   },
   presetOn: { backgroundColor: Colors.water, borderColor: Colors.water },
-  presetLabel: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  presetMl: { color: Colors.textSecondary, fontSize: 11, marginTop: 2 },
+  presetLabel: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  presetMl: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11, marginTop: 2 },
   presetLabelOn: { color: Colors.background },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 18 },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700', marginLeft: 8 },
-  usualText: { color: Colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: 10 },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontFamily: INTER.medium, marginLeft: 8 },
+  usualText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 10 },
   usualButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -195,9 +196,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: withAlpha(Colors.water, 0.5),
   },
-  usualButtonText: { color: Colors.water, fontSize: 13, fontWeight: '700' },
+  usualButtonText: { color: Colors.water, fontSize: 13, fontFamily: INTER.medium },
   dayHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dayTotal: { color: Colors.water, fontSize: 15, fontWeight: '800' },
+  dayTotal: { color: Colors.water, fontSize: 15, fontFamily: INTER.medium },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     flexDirection: 'row',
@@ -208,5 +209,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: withAlpha(Colors.water, 0.12),
   },
-  chipText: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
+  chipText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
 });

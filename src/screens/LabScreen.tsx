@@ -238,7 +238,10 @@ export const LabScreen = () => {
         <View style={styles.pad}>
           {/* 7. Archivo: informes, originales y el informe de evolución */}
           <SecHead title={t('Archive')} />
-          <FRow title={t('Your files')} sub={t('Lab reports and everything you upload')} onPress={() => router.push('/files')} />
+          {/* Subir un informe que ya tienes va en Tus archivos (fundador, 2026-11-16) */}
+          <TourTarget id="lab.upload" scroll={tourScroll}>
+            <FRow title={t('Your files')} sub={t('Lab reports and everything you upload')} onPress={() => router.push('/files')} />
+          </TourTarget>
           {olderReports.map((r) => (
             <FRow key={r.id} title={r.title} sub={`${formatReportDate(r.report.test_date)} · ${r.lab}`} onPress={() => openReport(r.id)} />
           ))}
@@ -249,7 +252,8 @@ export const LabScreen = () => {
             last
           />
 
-          {/* 8. Pedir: qué análisis, el catálogo, laboratorios cerca, subir un informe y seguir tu pedido */}
+          {/* 8. Pedir: qué análisis, el catálogo y laboratorios cerca. Subir un informe está en Tus archivos; seguir tu
+              pedido, fuera mientras no funcione (fundador, 2026-11-16) */}
           <SecHead title={t('Order')} />
           <FRow title={t('Not sure which test to order?')} sub={t('4 quick questions')} onPress={() => router.push('/test-finder')} />
           <FRow title={t('Test catalogue')} onPress={() => router.push('/store')} />
@@ -257,11 +261,8 @@ export const LabScreen = () => {
             title={t('Labs near you')}
             sub={t('{n} labs where you can give your sample', { n: LAB_CENTERS.length })}
             onPress={() => router.push('/book-lab')}
+            last
           />
-          <TourTarget id="lab.upload" scroll={tourScroll}>
-            <FRow title={samples ? t('Upload lab report (test)') : t('Upload a lab report you already have')} onPress={() => router.push('/upload-test')} />
-          </TourTarget>
-          <FRow title={t('Track your tests')} onPress={() => router.push('/track-tests')} last />
         </View>
       </ScrollView>
     </SafeAreaView>

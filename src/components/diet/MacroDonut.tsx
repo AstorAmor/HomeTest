@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Reparto de las calorías entre proteína, hidratos y grasa, en donut. Colores validados con el
 // validador de dataviz (OKLCH, banda de luminosidad y separación para daltonismo) para el tema claro
@@ -81,7 +82,7 @@ export const MacroDonut = ({
       {center ? (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
           <View style={styles.center}>
-            <Text style={[styles.kcal, { fontSize: Math.max(11, size / 5.2) }]}>{num(Math.round(m.kcal))}</Text>
+            <Text style={[styles.kcal, { fontFamily: INTER.regular, fontSize: Math.max(11, size / 5.2) }]}>{num(Math.round(m.kcal))}</Text>
             {size >= 64 ? <Text style={styles.kcalUnit}>kcal</Text> : null}
           </View>
         </View>
@@ -127,17 +128,17 @@ export const MacroDonut = ({
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  kcal: { color: Colors.textPrimary, fontWeight: '900' },
-  kcalUnit: { color: Colors.textMuted, fontSize: 10, fontWeight: '700', marginTop: -2 },
+  kcal: { color: Colors.textPrimary, fontFamily: INTER.medium },
+  kcalUnit: { color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium, marginTop: -2 },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   rowBelow: { alignItems: 'center', gap: 10 },
   legendBelow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   swatch: { width: 10, height: 10, borderRadius: 3 },
-  itemLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', minWidth: 62 },
-  itemValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  itemLabel: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, minWidth: 62 },
+  itemValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   inlineItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dot: { width: 7, height: 7, borderRadius: 2 },
-  inlineText: { color: Colors.textSecondary, fontSize: 11, fontWeight: '600' },
+  inlineText: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
 });

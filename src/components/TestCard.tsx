@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { CatalogTest, formatPrice, testIcon } from '@/data/testCatalog';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 interface Props {
   test: CatalogTest; // ya pasado por localizeTest
@@ -207,16 +208,16 @@ const styles = StyleSheet.create({
   cardSelected: { borderColor: Colors.accent },
   cardHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   catIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  desc: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  name: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  desc: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   reasons: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  reasonsText: { color: Colors.accent, fontSize: 12, fontWeight: '700', flexShrink: 1 },
-  more: { color: Colors.accent, fontSize: 12, fontWeight: '700', marginTop: 6 },
+  reasonsText: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, flexShrink: 1 },
+  more: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 6 },
   lessRow: { alignSelf: 'center', marginTop: 2 },
   priceBox: { alignItems: 'flex-end', gap: 2 },
-  price: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  priceTbd: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textAlign: 'right', maxWidth: 76 },
-  priceUnit: { color: Colors.textMuted, fontSize: 11 },
+  price: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  priceTbd: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium, textAlign: 'right', maxWidth: 76 },
+  priceUnit: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
   check: {
     width: 26,
     height: 26,
@@ -229,14 +230,14 @@ const styles = StyleSheet.create({
   },
   checkOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   details: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.divider, gap: 6 },
-  detailLabel: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  detailLabel: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase' },
   detailGap: { marginTop: 6 },
-  detailText: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
+  detailText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   includeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  includeText: { color: Colors.textPrimary, fontSize: 13, flexShrink: 1 },
-  includeLink: { color: Colors.accent, fontWeight: '700', textDecorationLine: 'underline' },
+  includeText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flexShrink: 1 },
+  includeLink: { color: Colors.accent, fontFamily: INTER.medium, textDecorationLine: 'underline' },
   metaRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 4 },
-  meta: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, flex: 1 },
+  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, flex: 1 },
   order: { backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11, alignItems: 'center', marginTop: 8 },
   orderDone: { backgroundColor: Colors.accentSoft },
   orderOff: { backgroundColor: Colors.backgroundElevated },
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
-  counselTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
-  counselText: { color: Colors.textPrimary, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  orderText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  counselTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  counselText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  orderText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
 });

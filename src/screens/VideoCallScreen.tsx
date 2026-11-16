@@ -8,6 +8,7 @@ import { OnDark } from '@/constants/colors';
 import { getVideoJoinUrl } from '@/data/video';
 
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 // Videoconsulta del paciente (Daily): pide la sala al servidor y la abre.
 export const VideoCallScreen = () => {
   const router = useRouter();
@@ -55,8 +56,8 @@ export const VideoCallScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: OnDark.background },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 10 },
-  title: { color: OnDark.text, fontSize: 17, fontWeight: '800', flex: 1 },
+  title: { color: OnDark.text, fontSize: 17, fontFamily: INTER.medium, flex: 1 },
   body: { flex: 1, padding: 8 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  text: { color: OnDark.text, fontSize: 15, textAlign: 'center' },
+  text: { color: OnDark.text, fontFamily: INTER.regular, fontSize: 15, textAlign: 'center' },
 });

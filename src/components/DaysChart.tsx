@@ -20,6 +20,7 @@ import {
   type DayValues,
   type SeriesId,
 } from '@/logic/dayChart';
+import { INTER } from '@/theme/fine';
 
 // La gráfica de «Tus últimos días»: ánimo y energía por defecto y las medidas que añadas debajo, cada una en su
 // escala (logic/dayChart.ts). A las mujeres, la fase del ciclo de cada día en una franja bajo la gráfica.
@@ -268,7 +269,7 @@ export const DaysChart = ({ keys, values, selected, onChange, cycle, sample }: P
 
 const styles = StyleSheet.create({
   empty: { position: 'absolute', left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { color: Colors.textMuted, fontSize: 13 },
+  emptyText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
   tip: {
     position: 'absolute',
     top: -4,
@@ -281,14 +282,14 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     gap: 1,
   },
-  tipDate: { color: Colors.textSecondary, fontSize: 10, fontWeight: '700' },
-  tipRow: { fontSize: 12, fontWeight: '800' },
+  tipDate: { color: Colors.textSecondary, fontSize: 10, fontFamily: INTER.medium },
+  tipRow: { fontSize: 12, fontFamily: INTER.medium },
   xLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  xLabel: { color: Colors.textMuted, fontSize: 10 },
+  xLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
   phases: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 8 },
   phase: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   phaseDot: { width: 8, height: 8, borderRadius: 4, opacity: 0.8 },
-  phaseText: { color: Colors.textSecondary, fontSize: 11 },
+  phaseText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 14 },
   chip: {
     flexDirection: 'row',
@@ -302,8 +303,8 @@ const styles = StyleSheet.create({
   },
   chipNoData: { opacity: 0.55 },
   chipDot: { width: 8, height: 8, borderRadius: 4 },
-  chipText: { color: Colors.textSecondary, fontSize: 12.5, fontWeight: '600' },
-  chipTextOn: { color: Colors.textPrimary, fontWeight: '800' },
-  chipScale: { color: Colors.textMuted, fontSize: 11 },
-  note: { color: Colors.textMuted, fontSize: 11.5, lineHeight: 16, marginTop: 10 },
+  chipText: { color: Colors.textSecondary, fontSize: 12.5, fontFamily: INTER.medium },
+  chipTextOn: { color: Colors.textPrimary, fontFamily: INTER.medium },
+  chipScale: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11.5, lineHeight: 16, marginTop: 10 },
 });

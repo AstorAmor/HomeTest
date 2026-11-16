@@ -30,6 +30,7 @@ import {
 } from '@/data/access';
 import { dateLocale, t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { fine, INTER } from '@/theme/fine';
 
 // Panel del admin de Kuova (Más → Suscripciones (admin)):
 // 1) qué incluye cada nivel: las filas de "Comparar suscripciones"; las marcadas con candado
@@ -264,7 +265,7 @@ export const AdminPlansScreen = () => {
         <View style={styles.card}>
           <View style={styles.fieldRow}>
             <TextInput
-              style={[styles.input, { flex: 1, fontWeight: '800', letterSpacing: 1 }]}
+              style={[styles.input, { flex: 1, fontFamily: INTER.medium, letterSpacing: 1 }]}
               value={newCode}
               onChangeText={(v) => setNewCode(v.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
               autoCapitalize="characters"
@@ -427,11 +428,11 @@ const Field = ({ label, value, onChange, placeholder, numeric }: { label: string
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 48, paddingHorizontal: 20, gap: 10 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', marginTop: 18 },
-  help: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  warning: { color: Colors.warning, fontSize: 14, lineHeight: 20 },
-  message: { color: Colors.ok, fontSize: 14, fontWeight: '600' },
-  error: { color: Colors.attention, fontSize: 14, lineHeight: 20 },
+  sectionTitle: { ...fine.secTitle, marginTop: 18 },
+  help: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  warning: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
+  message: { color: Colors.ok, fontSize: 14, fontFamily: INTER.medium },
+  error: { color: Colors.attention, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 10 },
   rowHead: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   gatePill: {
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
     gap: 5,
     alignSelf: 'flex-start',
   },
-  gateText: { color: Colors.gold, fontSize: 12, fontWeight: '800' },
+  gateText: { color: Colors.gold, fontSize: 12, fontFamily: INTER.medium },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -449,29 +450,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     backgroundColor: Colors.background,
   },
-  inputSmall: { fontSize: 13, paddingVertical: 8 },
+  inputSmall: { fontFamily: INTER.regular, fontSize: 13, paddingVertical: 8 },
   tierBlock: { gap: 6 },
   tierRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tierName: { width: 72, color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  tierName: { width: 72, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   segment: { flex: 1, flexDirection: 'row', borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 10, overflow: 'hidden' },
   segItem: { flex: 1, paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
   segItemOn: { backgroundColor: withAlpha(Colors.accent, 0.16) },
-  segText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700', textAlign: 'center' },
+  segText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium, textAlign: 'center' },
   segTextOn: { color: Colors.accent },
   textValues: { gap: 6, marginLeft: 82 },
   ghostBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
-  ghostText: { color: Colors.accent, fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  ghostText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium, textAlign: 'center' },
   btnRow: { flexDirection: 'row', gap: 10 },
   grow: { flex: 1 },
   btn: { backgroundColor: Colors.accent, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', minHeight: 46 },
   btnGhost: { borderWidth: 1, borderColor: Colors.accent, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', minHeight: 46 },
   btnOff: { opacity: 0.45 },
-  btnText: { color: Colors.background, fontSize: 14, fontWeight: '800', textAlign: 'center' },
+  btnText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium, textAlign: 'center' },
   fieldRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  fieldLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', marginBottom: 4 },
+  fieldLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium, marginBottom: 4 },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
-  itemTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  itemSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  itemAction: { color: Colors.accent, fontSize: 13, fontWeight: '800' },
+  itemTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  itemSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  itemAction: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
 });

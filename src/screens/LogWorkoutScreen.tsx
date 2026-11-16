@@ -7,6 +7,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
 import { strengthSessionsThisWeek, workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
 import { t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const TYPES: { id: WorkoutType; label: string; icon: string }[] = [
   { id: 'strength', label: 'Strength', icon: 'dumbbell' },
@@ -139,9 +140,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
   },
-  topTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
+  topTitle: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
   body: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 10, marginTop: 14 },
+  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginBottom: 10, marginTop: 14 },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   typeItem: {
     width: '47%',
@@ -154,9 +155,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 18,
   },
-  typeText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  typeText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   typeCheck: { position: 'absolute', top: 8, right: 8 },
-  hint: { color: Colors.textMuted, fontSize: 12, marginTop: -6, marginBottom: 10 },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: -6, marginBottom: 10 },
   selected: { borderColor: Colors.coral, backgroundColor: withAlpha(Colors.coral, 0.1) },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
-  chipText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  chipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   cta: {
     backgroundColor: Colors.accent,
     borderRadius: 30,
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 12,
   },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
   doneIcon: {
     width: 96,
     height: 96,
@@ -186,6 +187,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  doneTitle: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 8 },
-  doneText: { color: Colors.textSecondary, fontSize: 15, textAlign: 'center', marginBottom: 32 },
+  doneTitle: { color: Colors.textPrimary, fontSize: 26, fontFamily: INTER.medium, marginBottom: 8 },
+  doneText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 15, textAlign: 'center', marginBottom: 32 },
 });

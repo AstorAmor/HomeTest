@@ -8,6 +8,7 @@ import { mockPatient } from '@/data/mockData';
 import { buildPlanDoc } from '@/utils/planPdf';
 import { planShareSupport, printPlan, sharePlanPdf } from '@/utils/sharePlan';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 type Action = 'send' | 'print';
 
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
-  buttonText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  buttonText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   sheet: {
     backgroundColor: Colors.backgroundElevated,
@@ -154,8 +155,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cardBorder,
     marginBottom: 8,
   },
-  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },
-  sheetText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 8 },
+  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
+  sheetText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 8 },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
   },
-  optionTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  optionSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  error: { color: Colors.danger, fontSize: 13, marginTop: 4 },
+  optionTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  optionSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginTop: 4 },
 });

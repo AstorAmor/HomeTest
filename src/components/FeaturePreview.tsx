@@ -11,6 +11,7 @@ import { AppSection } from '@/data/appPrefs';
 import { GaugeBar } from '@/components/GaugeBar';
 import { URINE_COLORS } from '@/types/bathroom';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Vista previa de cada parte de la app (con datos de ejemplo), para que se vea cómo quedará antes
 // de encenderla. Usa los mismos componentes que la pantalla real cuando se puede.
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
     left: 12,
     color: Colors.textMuted,
     fontSize: 10,
-    fontWeight: '800',
+    fontFamily: INTER.semibold,
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
@@ -220,22 +221,22 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   rowIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  rowTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  rowSub: { color: Colors.textSecondary, fontSize: 11, marginTop: 2 },
+  rowTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  rowSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11, marginTop: 2 },
   track: { height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
   fill: { height: 6, borderRadius: 3 },
   pill: { backgroundColor: Colors.accent, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5 },
-  pillText: { color: Colors.background, fontSize: 11, fontWeight: '800' },
-  big: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800' },
+  pillText: { color: Colors.background, fontSize: 11, fontFamily: INTER.medium },
+  big: { color: Colors.textPrimary, fontSize: 26, fontFamily: INTER.medium },
   week: { flexDirection: 'row', justifyContent: 'space-between' },
   dot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  dotText: { color: Colors.textPrimary, fontSize: 11, fontWeight: '800' },
+  dotText: { color: Colors.textPrimary, fontSize: 11, fontFamily: INTER.medium },
   shapes: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
   orb: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.gold, alignItems: 'center', justifyContent: 'center' },
   levelRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   levelItem: { flex: 1, alignItems: 'center', gap: 4, justifyContent: 'flex-end' },
   levelBar: { width: '100%', borderRadius: 6, backgroundColor: Colors.divider },
-  levelLabel: { color: Colors.textMuted, fontSize: 10, fontWeight: '600' },
-  levelLabelOn: { color: Colors.textPrimary, fontWeight: '800' },
+  levelLabel: { color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium },
+  levelLabelOn: { color: Colors.textPrimary, fontFamily: INTER.medium },
   badge: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
 });

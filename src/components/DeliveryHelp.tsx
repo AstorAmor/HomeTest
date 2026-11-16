@@ -5,6 +5,7 @@ import { t } from '@/i18n';
 import { Colors, withAlpha } from '@/constants/colors';
 import { DeliverySetting, deliverySettings, manualSteps, oemFamily, openByDefault } from '@/logic/deliveryHelp';
 import { openDeliverySetting, sendTestReminder } from '@/data/phoneReminders';
+import { INTER } from '@/theme/fine';
 
 // «Para que los avisos lleguen» (2026-11-09): en Ajustes → Notificaciones, debajo de «En el móvil», solo
 // en Android y con los avisos activados. Algunos móviles (sobre todo Xiaomi, Redmi y POCO) cierran Kuova
@@ -114,12 +115,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  body: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
+  title: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   rowIcon: { alignSelf: 'flex-start', marginTop: 1 },
   rowText: { flex: 1, gap: 1 },
-  rowTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  rowTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   openButton: {
     borderWidth: 1,
     borderColor: Colors.accent,
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
-  openText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  openText: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium },
   manualButton: { alignSelf: 'flex-start', marginTop: 6 },
   manual: {
     backgroundColor: withAlpha(Colors.accent, 0.08),
@@ -147,6 +148,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginTop: 6,
   },
-  testText: { color: Colors.background, fontSize: 13, fontWeight: '700' },
-  note: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
+  testText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
+  note: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
 });

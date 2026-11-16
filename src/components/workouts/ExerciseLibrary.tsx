@@ -6,6 +6,7 @@ import { EQUIPMENT, EXERCISE_LIST, canDo, equipmentLabel, exerciseEquipmentText,
 import type { CatalogExercise, Equipment, MovementPattern } from '@/data/workouts/types';
 import { ExerciseLoop } from './ExerciseLoop';
 import { t, tn } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Biblioteca de ejercicios con buscador y filtros (tipo de movimiento, músculo y material). La usan el
 // usuario (/exercise-library y al hacer su propia rutina) y el entrenador en el portal (para consultar
@@ -256,15 +257,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  searchInput: { flex: 1, color: Colors.textPrimary, fontSize: 14, paddingVertical: 2 },
+  searchInput: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, paddingVertical: 2 },
   chips: { gap: 8, paddingVertical: 10 },
   chip: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  chipText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   chipTextOn: { color: Colors.textPrimary },
   mine: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, marginBottom: 4 },
-  mineText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  count: { color: Colors.textMuted, fontSize: 12, marginBottom: 6 },
+  mineText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  count: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginBottom: 6 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
   cell: { padding: 5 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 8, gap: 6, flex: 1 },
@@ -272,17 +273,17 @@ const styles = StyleSheet.create({
   ring: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 10, borderWidth: 2, borderColor: Colors.accent, pointerEvents: 'none' },
   ringOff: { opacity: 0 },
   check: { position: 'absolute', top: 4, right: 4, width: 26, height: 26, borderRadius: 13, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', minHeight: 34 },
-  meta: { color: Colors.textMuted, fontSize: 11 },
+  name: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, minHeight: 34 },
+  meta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
   pick: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: Colors.accent, borderRadius: 14, paddingVertical: 6 },
-  pickText: { color: Colors.background, fontSize: 12, fontWeight: '800' },
+  pickText: { color: Colors.background, fontSize: 12, fontFamily: INTER.medium },
   picked: { backgroundColor: Colors.accentSoft, borderWidth: 1, borderColor: Colors.accent },
   selects: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   select: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 7 },
-  selectLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700' },
-  selectValue: { flex: 1, color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  selectLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
+  selectValue: { flex: 1, color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   menu: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 },
   more: { alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 16 },
-  moreText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  empty: { color: Colors.textSecondary, fontSize: 14, textAlign: 'center', marginVertical: 20 },
+  moreText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, textAlign: 'center', marginVertical: 20 },
 });

@@ -8,6 +8,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { OriginalFile, originalFiles } from '@/data/labUploads';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // El original de una analítica subida (Tus archivos → Ver original): las fotos, una debajo de otra y
 // a todo lo ancho; un PDF se abre con el visor del móvil. Enlaces firmados de 1 h del bucket privado.
@@ -64,9 +65,9 @@ export const LabOriginalScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  empty: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 20 },
+  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginTop: 20 },
   page: { marginBottom: 16, alignItems: 'center' },
-  pageLabel: { alignSelf: 'flex-start', color: Colors.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 6 },
+  pageLabel: { alignSelf: 'flex-start', color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium, marginBottom: 6 },
   pdf: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -78,5 +79,5 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
   },
-  pdfText: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  pdfText: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
 });

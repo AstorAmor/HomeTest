@@ -13,6 +13,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { audioUrl } from '@/data/consultations';
 
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const MAX_SECONDS = 180;
 
@@ -132,11 +133,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   recording: { backgroundColor: '#E5484D', borderColor: '#E5484D' },
-  recordText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  error: { color: Colors.danger, fontSize: 12, marginTop: 6 },
-  hint: { color: Colors.textMuted, fontSize: 11, marginTop: 4 },
+  recordText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 12, marginTop: 6 },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 4 },
   player: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start' },
-  playerText: { color: Colors.background, fontSize: 13, fontWeight: '700' },
+  playerText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
 });
 
 // Nota de voz guardada (Storage o local): pide la URL firmada y la reproduce.

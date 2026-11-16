@@ -5,6 +5,7 @@ import { Colors } from '@/constants/colors';
 import { getLang, Lang, LANGUAGES, saveLanguage, t } from '@/i18n';
 import { getTextSize, saveTextSize, TEXT_SIZES, TextSize } from '@/theme/textSize';
 import { reloadKeepingPlace } from '@/theme/appearance';
+import { INTER } from '@/theme/fine';
 
 // Idioma y tamaño de letra: lo mismo en Settings de la app y en Ajustes del portal del médico.
 // Cambiar cualquiera recarga la app con un fundido y vuelve a `returnTo`.
@@ -58,7 +59,7 @@ export const PreferencesBlock = ({ returnTo }: { returnTo: string }) => {
           const on = s.id === size;
           return (
             <TouchableOpacity key={s.id} style={[styles.size, on && styles.sizeOn]} onPress={() => chooseSize(s.id)}>
-              <Text style={[styles.sizeSample, { fontSize: 15 * s.scale }, on && styles.sizeTextOn]}>Aa</Text>
+              <Text style={[styles.sizeSample, { fontFamily: INTER.regular, fontSize: 15 * s.scale }, on && styles.sizeTextOn]}>Aa</Text>
               <Text style={[styles.sizeLabel, on && styles.sizeTextOn]}>{t(s.label)}</Text>
             </TouchableOpacity>
           );
@@ -69,7 +70,7 @@ export const PreferencesBlock = ({ returnTo }: { returnTo: string }) => {
 };
 
 export const prefStyles = StyleSheet.create({
-  section: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  section: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.semibold, marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, overflow: 'hidden' },
 });
 
@@ -78,12 +79,12 @@ const styles = StyleSheet.create({
   card: prefStyles.card,
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  soon: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
+  rowTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  soon: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
   sizes: { flexDirection: 'row', gap: 8, marginHorizontal: 20 },
   size: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 10, borderRadius: 14, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder },
   sizeOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  sizeSample: { color: Colors.textPrimary, fontWeight: '800' },
-  sizeLabel: { color: Colors.textSecondary, fontSize: 11, fontWeight: '700' },
+  sizeSample: { color: Colors.textPrimary, fontFamily: INTER.medium },
+  sizeLabel: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
   sizeTextOn: { color: Colors.background },
 });

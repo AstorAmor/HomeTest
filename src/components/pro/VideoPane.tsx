@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { OnDark } from '@/constants/colors';
 
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 // Zona de vídeo/llamada. PROTOTIPO: todavía sin proveedor de vídeo; muestra la sala,
 // los controles y el tiempo. Al integrar el proveedor (Daily, Whereby, LiveKit…), su
 // componente de vídeo sustituye al contenido de `stage` sin tocar el resto de la sala.
@@ -93,14 +94,14 @@ const styles = StyleSheet.create({
   stage: { flex: 1, backgroundColor: OnDark.background, overflow: 'hidden' },
   topBar: { position: 'absolute', top: 14, left: 14, right: 14, flexDirection: 'row', alignItems: 'center', gap: 8, zIndex: 2 },
   live: { width: 10, height: 10, borderRadius: 5 },
-  topText: { color: OnDark.text, fontSize: 14, fontWeight: '700' },
+  topText: { color: OnDark.text, fontSize: 14, fontFamily: INTER.medium },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 18, paddingHorizontal: 20 },
   avatarRing: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
   avatar: { width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: OnDark.text, fontSize: 40, fontWeight: '800' },
-  note: { color: OnDark.textSecondary, fontSize: 12, textAlign: 'center' },
+  avatarText: { color: OnDark.text, fontSize: 40, fontFamily: INTER.light },
+  note: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center' },
   self: { position: 'absolute', right: 14, width: 96, height: 128, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  selfText: { color: OnDark.textSecondary, fontSize: 11 },
+  selfText: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 11 },
   controls: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 16 },
   control: { width: 54, height: 54, borderRadius: 27, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' },
   end: { width: 64, height: 54, borderRadius: 27, backgroundColor: '#E5484D', alignItems: 'center', justifyContent: 'center' },

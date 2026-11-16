@@ -11,6 +11,7 @@ import { REAL_ACCOUNT_REFUSAL } from '@/logic/scenarioAccount';
 import { NudgeTimeline, STATUS_LABEL } from '@/components/dev/NudgeTimeline';
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { useAuth } from '@/context/AuthContext';
+import { INTER } from '@/theme/fine';
 
 // Developer mode → Simulated users (demo) y Ajustes → Test scenarios (cuenta de prueba). Los
 // usuarios de simulation/personas: qué prueba cada uno, si se cumplen sus comprobaciones y qué
@@ -189,8 +190,8 @@ export const SimulationScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 14 },
-  error: { color: Colors.danger, fontSize: 13, paddingHorizontal: 20, marginBottom: 10 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 14 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 10 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -210,16 +211,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: Colors.accent, fontSize: 17, fontWeight: '800' },
-  name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  summary: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  avatarText: { color: Colors.accent, fontSize: 17, fontFamily: INTER.medium },
+  name: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-  badgeText: { fontSize: 12, fontWeight: '800' },
+  badgeText: { fontSize: 12, fontFamily: INTER.medium },
   detail: { borderTopWidth: 1, borderTopColor: Colors.divider, padding: 14, gap: 6 },
-  tests: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19, marginBottom: 6 },
+  tests: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginBottom: 6 },
   expectRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  expectText: { flex: 1, color: Colors.textSecondary, fontSize: 12 },
-  timelineTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 12, marginBottom: 4 },
+  expectText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
+  timelineTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginTop: 12, marginBottom: 4 },
   cta: {
     backgroundColor: Colors.accent,
     borderRadius: 26,
@@ -227,6 +228,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 14,
   },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
-  ctaNote: { color: Colors.textMuted, fontSize: 11, textAlign: 'center' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  ctaNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center' },
 });

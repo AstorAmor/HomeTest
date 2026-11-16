@@ -13,6 +13,7 @@ import { isPublicDemo } from '@/lib/supabase';
 import { setRealAccount } from '@/data/dataMode';
 import { reloadKeepingPlace } from '@/theme/appearance';
 import { useWebShell } from '@/web/webMode';
+import { INTER } from '@/theme/fine';
 
 const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; color: string }[] = [
   {
@@ -160,17 +161,17 @@ const styles = StyleSheet.create({
   devPillText: {
     color: Colors.warning,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   title: {
     color: Colors.textPrimary,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     marginBottom: 8,
   },
   subtitle: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     lineHeight: 20,
     marginBottom: 28,
   },
@@ -200,12 +201,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 3,
   },
   cardSubtitle: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 18,
   },
 });

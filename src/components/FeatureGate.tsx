@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { useFeature } from '@/data/access';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Pantallas enteras que van con la suscripción (filas con candado de data/access.ts). En modo gratis, en su lugar,
 // qué incluye, «Ver suscripciones» y «Tengo un código» (el fundador manda códigos: fundador, 2026-11-06). Con la
@@ -80,9 +81,9 @@ const styles = StyleSheet.create({
   },
   icon: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   lock: { position: 'absolute', top: -2, right: -2, backgroundColor: Colors.gold, borderRadius: 10, padding: 3, overflow: 'hidden' },
-  title: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', textAlign: 'center' },
-  text: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  title: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, textAlign: 'center' },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   primary: { alignSelf: 'stretch', alignItems: 'center', backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 12, marginTop: 4 },
-  primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  link: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  link: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
 });

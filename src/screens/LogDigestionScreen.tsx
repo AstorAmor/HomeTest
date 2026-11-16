@@ -25,6 +25,7 @@ import {
 } from '@/types/digestion';
 import { dateLocale, t } from '@/i18n';
 import { logScreenStyles } from './LogBowelScreen';
+import { INTER } from '@/theme/fine';
 
 // Cuándo empezó: hoy, "hace un rato"; otro día, la parte del día (hora aproximada)
 const AGO = [
@@ -358,8 +359,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   okButtonDone: { opacity: 0.7 },
-  okText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  okHint: { color: Colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: 6, marginBottom: 6 },
+  okText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  okHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 6, marginBottom: 6 },
   symptom: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -369,8 +370,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
     gap: 6,
   },
-  symptomTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  symptomHint: { color: Colors.textSecondary, fontSize: 12, marginBottom: 4 },
+  symptomTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  symptomHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginBottom: 4 },
   levels: { flexDirection: 'row', gap: 6 },
   level: {
     flex: 1,
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
   },
   levelNone: { borderColor: Colors.textMuted },
   levelOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  levelText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  levelText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   levelTextOn: { color: Colors.textPrimary },
   toggle: {
     flexDirection: 'row',
@@ -397,8 +398,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   toggleOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  toggleText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  foodHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 10 },
+  toggleText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  foodHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 10 },
   groups: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   group: {
     flexDirection: 'row',
@@ -412,7 +413,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.card,
   },
   groupOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  groupText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  groupText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   usual: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -422,7 +423,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     gap: 8,
   },
-  usualTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  usualTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   skip: { alignItems: 'center', paddingVertical: 14, marginTop: 10 },
-  skipText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600', textDecorationLine: 'underline' },
+  skipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium, textDecorationLine: 'underline' },
 });

@@ -16,6 +16,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { KuovaWordmark } from '@/components/KuovaLogo';
+import { INTER } from '@/theme/fine';
 
 // Entrada de la app (2026-11-09): justo después de la pantalla de carga nativa (fondo verde y la K,
 // app.json → expo-splash-screen), la K dorada con brillo de la imagen de marca y «KUOVA HEALTH» debajo.
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     color: '#C9A366',
     fontSize: 11,
     lineHeight: HEALTH_H,
-    fontWeight: '500',
+    fontFamily: INTER.medium,
     letterSpacing: 7,
     // el espaciado se añade también tras la última letra: se compensa para que quede centrado
     marginRight: -7,

@@ -5,6 +5,7 @@ import { Colors } from '@/constants/colors';
 import { exerciseMedia, exerciseName, MEDIA_ASPECT } from '@/data/workouts/catalog';
 import type { CatalogExercise } from '@/data/workouts/types';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const useNative = Platform.OS !== 'web';
 
@@ -69,5 +70,5 @@ export const ExerciseLoop = ({
 const styles = StyleSheet.create({
   box: { overflow: 'hidden', backgroundColor: Colors.cardBorder },
   tag: { position: 'absolute', left: 8, bottom: 8, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  tagText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  tagText: { color: '#FFFFFF', fontSize: 10, fontFamily: INTER.medium },
 });

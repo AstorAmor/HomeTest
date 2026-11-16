@@ -5,6 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { getTarget, onTourStart, RegisteredTarget, setTourActive, stepAvailable, takeTourPending, TOUR_STEPS, TourStep } from './tourStore';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // El tutorial en marcha: oscurece la pantalla menos el elemento de cada paso (una capa con un hueco de
 // esquinas redondeadas, como el borde: con cuatro franjas rectas se veían las esquinas en pico),
@@ -277,11 +278,11 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 6,
   },
-  counter: { color: Colors.accent, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  title: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
-  text: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  counter: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  title: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   buttons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
-  skip: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
+  skip: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   next: { backgroundColor: Colors.accent, borderRadius: 20, paddingHorizontal: 22, paddingVertical: 10 },
-  nextText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  nextText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
 });

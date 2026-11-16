@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
 import { AppIcon } from '@/components/HealthIcons';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Piezas comunes de las fichas de detalle (VFC, pulso, sueño… y también glucosa, tensión,
 // colesterol y cortisol) para que todas se vean igual: icono arriba con el último valor,
@@ -64,16 +65,16 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', alignSelf: 'center', backgroundColor: Colors.card, borderRadius: 18, padding: 3, marginBottom: 12 },
   tab: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 15 },
   tabOn: { backgroundColor: Colors.accent },
-  tabText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  tabText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   tabTextOn: { color: Colors.background },
   hero: { alignItems: 'center', marginBottom: 14 },
   icon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  value: { color: Colors.textPrimary, fontSize: 34, fontWeight: '800' },
-  valueSub: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  value: { color: Colors.textPrimary, fontSize: 34, fontFamily: INTER.light },
+  valueSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   stats: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginTop: 12 },
   stat: { flex: 1, backgroundColor: Colors.card, borderRadius: 12, padding: 12, alignItems: 'center' },
-  statValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  statLabel: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
+  statValue: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  statLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 2 },
   add: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -86,5 +87,5 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 12,
   },
-  addText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
+  addText: { color: Colors.accent, fontSize: 15, fontFamily: INTER.medium },
 });

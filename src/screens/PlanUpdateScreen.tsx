@@ -13,6 +13,7 @@ import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { buildPlan } from '@/data/planRepository';
 import { profileRepository } from '@/data/profileRepository';
 import { t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 export const statusColor = (s: PlanItemStatus) =>
   ({
@@ -127,18 +128,18 @@ export const PlanUpdateScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
-  intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginBottom: 12 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginBottom: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginHorizontal: 20, marginBottom: 14 },
   chip: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  chipText: { fontSize: 12, fontWeight: '700' },
+  chipText: { fontSize: 12, fontFamily: INTER.medium },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14, marginHorizontal: 20, marginBottom: 8, gap: 6 },
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', flex: 1 },
-  badge: { fontSize: 11, fontWeight: '800', borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden' },
-  why: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  note: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
-  disclaimer: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, marginHorizontal: 20, marginTop: 8 },
-  error: { color: Colors.danger, fontSize: 13, marginHorizontal: 20, marginTop: 8 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, flex: 1 },
+  badge: { fontSize: 11, fontFamily: INTER.medium, borderWidth: 1, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden' },
+  why: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
+  note: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
+  disclaimer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, marginHorizontal: 20, marginTop: 8 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginHorizontal: 20, marginTop: 8 },
   cta: {
     flexDirection: 'row',
     gap: 8,
@@ -150,5 +151,5 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 12,
   },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
 });

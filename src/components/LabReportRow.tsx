@@ -8,6 +8,7 @@ import { getRangeStatus, rangeStatusLabel, rangeText } from '@/utils/rangeStatus
 import { t } from '@/i18n';
 import { getParameterInfo } from '@/utils/parameterInfo';
 import { UnitLabel } from './UnitLabel';
+import { INTER } from '@/theme/fine';
 
 const statusColor = (status: ReturnType<typeof getRangeStatus>) => {
   switch (status) {
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
   name: {
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     flex: 1,
     marginRight: 8,
   },
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   valueBlock: {
     alignItems: 'center',
@@ -259,7 +260,7 @@ const styles = StyleSheet.create({
   value: {
     color: Colors.textPrimary,
     fontSize: 34,
-    fontWeight: '700',
+    fontFamily: INTER.light,
   },
   unitRow: {
     flexDirection: 'row',
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
   },
   unit: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
   },
   toggle: {
     flexDirection: 'row',
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   toggleText: {
     color: Colors.accent,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   rangeRow: {
     flexDirection: 'row',
@@ -292,11 +293,11 @@ const styles = StyleSheet.create({
   },
   range: {
     color: Colors.textMuted,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   infoText: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     lineHeight: 17,
     marginTop: 10,
     marginBottom: 26,
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
   editLabel: {
     color: Colors.textMuted,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginBottom: 4,
     marginTop: 8,
   },
@@ -330,7 +331,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
   },
   editRow: {
     flexDirection: 'row',
@@ -355,7 +356,7 @@ const styles = StyleSheet.create({
   editCancelText: {
     color: Colors.textSecondary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   editSaveButton: {
     flexDirection: 'row',
@@ -369,6 +370,6 @@ const styles = StyleSheet.create({
   editSaveText: {
     color: Colors.background,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
 });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors } from '@/constants/colors';
+import { INTER } from '@/theme/fine';
 
 // Fila de opciones tipo "chip" (una seleccionada). Se usa en los registros y en las encuestas.
 export function ChoiceChips<T extends string | number>({
@@ -44,6 +45,6 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
   },
   chipSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  text: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  text: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   textSelected: { color: Colors.textPrimary },
 });

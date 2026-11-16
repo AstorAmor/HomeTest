@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { currentReport } from '@/data/reportRepository';
+import { INTER } from '@/theme/fine';
 
 const formatFullDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -65,24 +66,24 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: Colors.textSecondary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginBottom: 10,
   },
   title: {
     color: Colors.textPrimary,
     fontSize: 34,
-    fontWeight: '800',
+    fontFamily: INTER.light,
     marginBottom: 6,
   },
   subtitle: {
     color: Colors.accent,
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 20,
   },
   teaser: {
     color: Colors.textSecondary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
     lineHeight: 22,
     marginBottom: 40,
   },
@@ -98,6 +99,6 @@ const styles = StyleSheet.create({
   ctaText: {
     color: Colors.background,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
 });

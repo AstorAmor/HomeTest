@@ -11,6 +11,7 @@ import { useRevealOnFocus } from '@/components/KeyboardAwareScroll';
 import { ExerciseLoop } from './ExerciseLoop';
 import { REST_OPTIONS } from './ExerciseBlock';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Un ejercicio en el editor de rutina, como «Edit Routine» de Hevy: en el sitio, sin ir a otra pantalla.
 // Miniatura y nombre (tocar = cómo se hace), ⋮ para subir, bajar, cambiar o quitar,
@@ -226,29 +227,29 @@ const styles = StyleSheet.create({
   cardClosed: { paddingVertical: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { color: Colors.accent, fontSize: 17, fontWeight: '800' },
-  summary: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
-  block: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  name: { color: Colors.accent, fontSize: 17, fontFamily: INTER.medium },
+  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
+  block: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   menu: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  menuText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  menuText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   chips: { flexDirection: 'row', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
   chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  chipText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   option: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  optionText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  note: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 10, backgroundColor: Colors.card, color: Colors.textPrimary, fontSize: 14, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44 },
+  optionText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  note: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 10, backgroundColor: Colors.card, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44 },
   tableHead: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 2, marginTop: 4 },
-  h: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', textAlign: 'center' },
+  h: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', textAlign: 'center' },
   repsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 2, paddingVertical: 4 },
   colSet: { width: 40 },
   // minWidth 0: en la web una casilla de texto no encoge por debajo de su ancho natural
   colBox: { flex: 1, minWidth: 0 },
   setNo: { height: H, borderRadius: 8, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
-  setNoText: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  setNoText: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
   box: {
     height: H,
     borderWidth: 1,
@@ -257,11 +258,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     color: Colors.textPrimary,
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     textAlign: 'center',
     paddingHorizontal: 4,
     fontVariant: ['tabular-nums'],
   },
   addSet: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 10, backgroundColor: Colors.card, marginTop: 4 },
-  addSetText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  addSetText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
 });

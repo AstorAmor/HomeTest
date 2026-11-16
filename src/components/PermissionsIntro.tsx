@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { turnOnPhoneReminders } from '@/data/phoneReminders';
 import { setPermissionsGate } from '@/data/permissionsGate';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // La primera vez que se abre la app en este móvil (con sesión de paciente), antes de que el sistema
 // pida nada: qué permisos usa Kuova, para qué y cuándo los pide, y que se puede decir que no. «Continuar»
@@ -96,14 +97,14 @@ const styles = StyleSheet.create({
   card: { width: '100%', maxWidth: 440, maxHeight: '90%', backgroundColor: Colors.background, borderRadius: 20, borderWidth: 1, borderColor: Colors.cardBorder, padding: 20 },
   body: { gap: 12, paddingBottom: 8 },
   icon: { alignSelf: 'center', width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 21, fontWeight: '800', textAlign: 'center' },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  title: { color: Colors.textPrimary, fontSize: 21, fontFamily: INTER.medium, textAlign: 'center' },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   row: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', backgroundColor: Colors.card, borderRadius: 14, padding: 12 },
-  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  rowText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginTop: 2 },
-  note: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  rowText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginTop: 2 },
+  note: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   primary: { alignItems: 'center', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, marginTop: 10 },
-  primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   secondary: { alignItems: 'center', paddingVertical: 11 },
-  secondaryText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
+  secondaryText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
 });

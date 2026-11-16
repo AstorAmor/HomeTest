@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { TABS } from '@/components/BottomTabBar';
 import { WEB_SHELL_ON } from '@/web/webMode';
+import { INTER } from '@/theme/fine';
 
 // Modo "Señalar" (solo web): una barra flotante para tocar cualquier cosa de la app, escribir qué
 // quieres cambiar y copiar todas las notas para pegárselas a Claude. Nunca bloquea la app: tras
@@ -394,18 +395,18 @@ function mount(): () => void {
       return;
     }
     const head = el('div', { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' });
-    head.append(el('strong', { fontSize: '14px' }, 'Comentar este elemento'));
+    head.append(el('strong', { fontFamily: INTER.regular, fontSize: '14px' }, 'Comentar este elemento'));
     const close = button('✕');
     close.title = 'Cerrar (lo escrito se guarda)';
     close.onclick = closeComposer;
     head.appendChild(close);
     composer.appendChild(head);
-    composer.appendChild(el('div', { marginTop: '6px', fontWeight: '600', wordBreak: 'break-word' }, componentChain(selected)));
-    composer.appendChild(el('div', { color: '#5B6662', fontSize: '12px', marginTop: '2px' }, describe(selected)));
-    composer.appendChild(el('div', { color: '#5B6662', fontSize: '12px' }, `Pantalla: ${screenLabel()}`));
+    composer.appendChild(el('div', { marginTop: '6px', fontFamily: INTER.medium, wordBreak: 'break-word' }, componentChain(selected)));
+    composer.appendChild(el('div', { color: '#5B6662', fontFamily: INTER.regular, fontSize: '12px', marginTop: '2px' }, describe(selected)));
+    composer.appendChild(el('div', { color: '#5B6662', fontFamily: INTER.regular, fontSize: '12px' }, `Pantalla: ${screenLabel()}`));
 
     const parent = button('↑ Coger lo que lo contiene');
-    Object.assign(parent.style, { marginTop: '8px', padding: '6px 10px', fontSize: '12px' });
+    Object.assign(parent.style, { marginTop: '8px', padding: '6px 10px', fontFamily: INTER.regular, fontSize: '12px' });
     parent.onclick = () => {
       if (selected?.parentElement && selected.parentElement !== document.body) {
         selected = selected.parentElement;
@@ -450,7 +451,7 @@ function mount(): () => void {
     row.append(save, discard);
     composer.appendChild(row);
     composer.appendChild(
-      el('div', { color: '#8A938F', fontSize: '11px', marginTop: '6px' }, 'La app sigue funcionando con esto abierto. Cerrar con ✕ guarda lo escrito.')
+      el('div', { color: '#8A938F', fontFamily: INTER.regular, fontSize: '11px', marginTop: '6px' }, 'La app sigue funcionando con esto abierto. Cerrar con ✕ guarda lo escrito.')
     );
     composer.style.display = 'block';
     placeComposer();
@@ -466,7 +467,7 @@ function mount(): () => void {
     if (!drawerOpen) return;
     const notes = readNotes();
     const head = el('div', { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '8px' });
-    head.append(el('strong', { fontSize: '14px' }, `${isPortal() ? 'Notas · portal del médico' : 'Notas'} (${notes.length})`));
+    head.append(el('strong', { fontFamily: INTER.regular, fontSize: '14px' }, `${isPortal() ? 'Notas · portal del médico' : 'Notas'} (${notes.length})`));
     const close = button('✕');
     close.title = 'Cerrar (las notas se quedan guardadas)';
     close.onclick = () => {
@@ -483,7 +484,7 @@ function mount(): () => void {
     notes.forEach((n, i) => {
       const item = el('div', { borderTop: i ? '1px solid rgba(14,42,36,0.1)' : 'none', padding: '8px 0' });
       const top = el('div', { display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'baseline' });
-      top.append(el('span', { fontWeight: '700', fontSize: '12px', wordBreak: 'break-word' }, `${i + 1}. ${n.route} · ${n.chain.split(' › ').pop()}`));
+      top.append(el('span', { fontFamily: INTER.medium, fontSize: '12px', wordBreak: 'break-word' }, `${i + 1}. ${n.route} · ${n.chain.split(' › ').pop()}`));
       const del = el('button', { border: 'none', background: 'none', color: '#B3402F', cursor: 'pointer', font: '600 12px system-ui, sans-serif' }, 'Borrar');
       del.onclick = () => {
         writeNotes(readNotes().filter((_, j) => j !== i));

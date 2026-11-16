@@ -14,6 +14,7 @@ import { sampleBloodPressure } from '@/data/sampleReadings';
 import { bpLabel, bpLevel, BpLevel } from '@/logic/bloodPressure';
 import { dateLocale, t } from '@/i18n';
 import { showSamples } from '@/data/dataMode';
+import { fine, INTER } from '@/theme/fine';
 
 const shortDay = (iso: string) => {
   const d = new Date(iso);
@@ -157,8 +158,8 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     marginHorizontal: 20,
   },
-  tapHint: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 8 },
-  statsNote: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 6 },
+  tapHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 8 },
+  statsNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 6 },
   sampleNote: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -171,17 +172,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.cardBorder,
   },
-  sampleNoteText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
-  emptyText: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20 },
+  sampleNoteText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  emptyText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20 },
   historyList: { backgroundColor: Colors.card, borderRadius: 16, marginHorizontal: 20, paddingHorizontal: 14 },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
   historyDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  historyDate: { color: Colors.textSecondary, fontSize: 13, width: 40 },
-  historyValue: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  historyUnit: { color: Colors.textSecondary, fontSize: 12, fontWeight: '500' },
+  historyDate: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, width: 40 },
+  historyValue: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  historyUnit: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginHorizontal: 20, marginTop: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  legendText: { color: Colors.textSecondary, fontSize: 11 },
-  legendNote: { color: Colors.textMuted, fontSize: 11, marginHorizontal: 20, marginTop: 6 },
+  legendText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11 },
+  legendNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginHorizontal: 20, marginTop: 6 },
 });

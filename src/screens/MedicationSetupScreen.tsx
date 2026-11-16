@@ -15,6 +15,7 @@ import { t as tr } from '@/i18n';
 import { offerPhoneReminders } from '@/data/phoneReminders';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
+import { INTER } from '@/theme/fine';
 
 type Step = 'what' | 'dose' | 'when' | 'duration' | 'reminders' | 'summary';
 type Frequency = 'once' | 'twice' | 'three' | 'every_hours' | 'weekdays' | 'as_needed';
@@ -558,9 +559,9 @@ const styles = StyleSheet.create({
   progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.green },
   current: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 16 },
-  currentName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  currentNext: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  currentPos: { color: Colors.gold, fontSize: 12, fontWeight: '800' },
+  currentName: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  currentNext: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  currentPos: { color: Colors.gold, fontSize: 12, fontFamily: INTER.medium },
   otherBox: {
     marginTop: 12,
     backgroundColor: Colors.card,
@@ -571,14 +572,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  colon: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginHorizontal: 4 },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700', marginLeft: 8 },
+  colon: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginHorizontal: 4 },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontFamily: INTER.medium, marginLeft: 8 },
   addTime: { backgroundColor: Colors.accent, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 9, marginTop: 6, marginBottom: 6 },
-  addTimeText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  addTimeText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
   content: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 24 },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 8 },
-  subtitle: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 16 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 20, marginBottom: 10 },
+  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, marginBottom: 8 },
+  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 16 },
+  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 20, marginBottom: 10 },
   bigInput: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -586,7 +587,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     color: Colors.textPrimary,
-    fontSize: 16,
+    fontFamily: INTER.regular, fontSize: 16,
   },
   input: {
     backgroundColor: Colors.card,
@@ -595,7 +596,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
   },
   prefilled: {
     flexDirection: 'row',
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 14,
   },
-  prefilledText: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  prefilledText: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   weekRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   weekDay: {
     width: 44,
@@ -619,7 +620,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   weekDayOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  weekDayText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  weekDayText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   slot: {
     borderWidth: 1,
@@ -632,8 +633,8 @@ const styles = StyleSheet.create({
   slotOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
   slotCustom: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   suggestion: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  slotText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  tip: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginTop: 16, fontStyle: 'italic' },
+  slotText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  tip: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginTop: 16, fontStyle: 'italic' },
   summaryCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -642,9 +643,9 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 4,
   },
-  summaryName: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', marginBottom: 4 },
-  summaryLine: { color: Colors.textSecondary, fontSize: 14 },
-  disclaimer: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 16 },
+  summaryName: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium, marginBottom: 4 },
+  summaryLine: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14 },
+  disclaimer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, marginTop: 16 },
   cta: {
     backgroundColor: Colors.accent,
     borderRadius: 30,
@@ -654,5 +655,5 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
 });

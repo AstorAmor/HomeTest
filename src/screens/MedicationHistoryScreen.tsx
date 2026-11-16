@@ -12,6 +12,7 @@ import { addAsNeededDose, doseRepository, medicationRepository, setDoseStatus } 
 import { dayKey } from '@/data/bathroomRepository';
 import { asNeededLogsOn, DaySummary, daySummary, dosesForDay, historyDays, isActiveOn } from '@/logic/medication';
 import { DoseLog, MedicationItem, ScheduledDose } from '@/types/medication';
+import { INTER } from '@/theme/fine';
 
 // Historial de medicación (Medicación y suplementos → Historial, o la línea de medicación de Tus
 // últimos días): cada día con lo que tocaba y lo marcado. Al tocar un día se despliega y se corrige
@@ -273,8 +274,8 @@ export const MedicationHistoryScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 14 },
-  empty: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20, marginTop: 8 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 14 },
+  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginTop: 8 },
   weekCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -284,9 +285,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 14,
   },
-  weekLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
-  weekMain: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginTop: 4 },
-  weekSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 4 },
+  weekLabel: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
+  weekMain: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginTop: 4 },
+  weekSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 4 },
   day: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -298,16 +299,16 @@ const styles = StyleSheet.create({
   },
   dayOpen: { borderColor: Colors.accent },
   dayHead: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12 },
-  dayTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  dayTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   dayLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 4 },
   dots: { flexDirection: 'row', gap: 2 },
-  daySummary: { color: Colors.textSecondary, fontSize: 12, flexShrink: 1 },
+  daySummary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, flexShrink: 1 },
   dayBody: { paddingHorizontal: 14 },
   doseRow: { paddingVertical: 10, borderTopWidth: 1, borderTopColor: Colors.divider },
   doseTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  doseTime: { width: 46, color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  doseName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  doseSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  doseTime: { width: 46, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  doseName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  doseSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   choices: { flexDirection: 'row', gap: 8, marginTop: 8, marginLeft: 56 },
   choice: {
     flexDirection: 'row',
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   choiceOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  choiceText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  choiceText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   choiceTextOn: { color: Colors.accent },
   step: {
     width: 32,
@@ -332,7 +333,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  count: { minWidth: 18, textAlign: 'center', color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  count: { minWidth: 18, textAlign: 'center', color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   more: { alignItems: 'center', paddingVertical: 12 },
-  moreText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  moreText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
 });

@@ -49,6 +49,7 @@ import {
 import { userFlags } from '@/data/userFlags';
 import { markerHref, markerName } from '@/utils/markerLinks';
 import { statusColor, statusIcon } from '@/components/LabValueRow';
+import { fine, INTER } from '@/theme/fine';
 
 const diagnosticIcon = (status: DiagnosticTest['status']) => {
   switch (status) {
@@ -631,11 +632,11 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   bioAge: { alignItems: 'center', marginHorizontal: 20, marginTop: 4, marginBottom: 24 },
-  bioAgeKicker: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  bioAgeKicker: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
   bioAgeMeta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 6 },
-  bioAgeMore: { color: Colors.accent, fontSize: 13, fontWeight: '800', marginTop: 10 },
-  bioAgeDiff: { fontSize: 17, fontWeight: '800', marginTop: 14 },
-  bioAgeMargin: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800' },
+  bioAgeMore: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, marginTop: 10 },
+  bioAgeDiff: { fontSize: 17, fontFamily: INTER.medium, marginTop: 14 },
+  bioAgeMargin: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   // El tutorial señala el bloque genético: los márgenes van en su marco para que el hueco se ajuste
   geneticSlot: { marginHorizontal: 20, marginBottom: 20 },
   geneticInSlot: { marginHorizontal: 0, marginBottom: 0 },
@@ -659,16 +660,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  geneticTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  geneticSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  geneticTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  geneticSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   // "years" pequeño y abajo, como un subíndice
-  bioAgeSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 18 },
-  bioAgeLocked: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 8, maxWidth: 290 },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
+  bioAgeSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 18 },
+  bioAgeLocked: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 8, maxWidth: 290 },
+  sectionTitle: { ...fine.secTitle },
   sectionTitleSpaced: {
     paddingHorizontal: 20,
     marginTop: 16,
@@ -676,7 +673,7 @@ const styles = StyleSheet.create({
   },
   sectionMeta: {
     color: Colors.textMuted,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20 },
   metricCardHalf: { width: '49%', marginHorizontal: 0 },
@@ -699,7 +696,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.textSecondary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   metricValueRow: {
     flexDirection: 'row',
@@ -709,16 +706,16 @@ const styles = StyleSheet.create({
   metricValue: {
     color: Colors.textPrimary,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
   },
   metricUnit: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
   },
   metricAvg: {
     marginLeft: 'auto',
     color: Colors.textMuted,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   testList: {
     marginHorizontal: 20,
@@ -732,27 +729,27 @@ const styles = StyleSheet.create({
   testRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
   testDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   testStatus: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  testStatusText: { fontSize: 13, fontWeight: '600' },
+  testStatusText: { fontSize: 13, fontFamily: INTER.medium },
   metricOff: { opacity: 0.55 },
   anaCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, marginHorizontal: 20, marginBottom: 8 },
-  anaTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  anaMeta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  anaCounts: { fontSize: 12, fontWeight: '700', marginTop: 6, marginBottom: 4 },
+  anaTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  anaMeta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  anaCounts: { fontSize: 12, fontFamily: INTER.medium, marginTop: 6, marginBottom: 4 },
   anaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11 },
   anaMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   anaEye: { paddingRight: 2 },
-  anaEyeHint: { color: Colors.textMuted, fontSize: 11, marginBottom: 2 },
+  anaEyeHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginBottom: 2 },
   anaHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   anaToggle: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
-  anaName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  anaSub: { color: Colors.textMuted, fontSize: 11, marginTop: 1 },
-  anaValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  anaUnit: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
+  anaName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  anaSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 1 },
+  anaValue: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  anaUnit: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
   anaMore: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 8 },
-  anaLink: { color: Colors.accent, fontSize: 13, fontWeight: '800' },
-  anaText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  anaLegend: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, marginHorizontal: 20, marginBottom: 20 },
-  offHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 6 },
+  anaLink: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  anaText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  anaLegend: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, marginHorizontal: 20, marginBottom: 20 },
+  offHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 6 },
   diagnosticGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -774,7 +771,7 @@ const styles = StyleSheet.create({
   diagnosticName: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     flexShrink: 1,
   },
   diagnosticWaiting: {
@@ -783,7 +780,7 @@ const styles = StyleSheet.create({
   },
   diagnosticWaitingText: {
     color: Colors.textSecondary,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
     textAlign: 'center',
     width: 60,
   },
@@ -803,7 +800,7 @@ const styles = StyleSheet.create({
   filesText: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   seedButton: {
     flexDirection: 'row',
@@ -816,11 +813,11 @@ const styles = StyleSheet.create({
   },
   seedButtonText: {
     color: Colors.textMuted,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
   },
   seedStatus: {
     color: Colors.textMuted,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     textAlign: 'center',
     marginTop: 4,
   },

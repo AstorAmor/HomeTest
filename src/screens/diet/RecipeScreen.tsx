@@ -13,6 +13,7 @@ import { dietRepository } from '@/data/diet/dietRepository';
 import type { DietPlan, MealSlot, Recipe } from '@/data/diet/types';
 import { alternativesForSlot, LabFlag, portionFor } from '@/logic/dietPlanner';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Ficha de un plato: foto grande, cuánto lleva tu ración, nutrientes, por qué te conviene y cómo se
 // hace. Si viene del menú, se puede cambiar por otro que también encaje.
@@ -185,30 +186,30 @@ const Tag = ({ icon, text }: { icon: string; text: string }) => (
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  name: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900', marginTop: 14 },
+  name: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, marginTop: 14 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 },
-  tagText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  tagText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   macroCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 10, marginTop: 14 },
-  macroTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  fibre: { color: Colors.textMuted, fontSize: 12 },
+  macroTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  fibre: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
   ingHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, marginBottom: 8 },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  portionValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', minWidth: 90, textAlign: 'center' },
+  portionValue: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, minWidth: 90, textAlign: 'center' },
   why: { backgroundColor: Colors.accentSoft, borderRadius: 14, padding: 12, gap: 4, marginTop: 12 },
-  whyTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  whyItem: { color: Colors.textPrimary, fontSize: 13, lineHeight: 18 },
-  section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginTop: 18, marginBottom: 8 },
+  whyTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  whyItem: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
+  section: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, marginTop: 18, marginBottom: 8 },
   ing: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  ingName: { flex: 1, color: Colors.textPrimary, fontSize: 14 },
-  ingAmount: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  ingName: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
+  ingAmount: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   step: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10 },
-  stepNum: { width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.accent, color: Colors.background, textAlign: 'center', lineHeight: 22, fontSize: 12, fontWeight: '800', overflow: 'hidden' },
-  stepText: { flex: 1, color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
+  stepNum: { width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.accent, color: Colors.background, textAlign: 'center', lineHeight: 22, fontSize: 12, fontFamily: INTER.medium, overflow: 'hidden' },
+  stepText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12, marginTop: 16, marginBottom: 8 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   alt: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 8, marginBottom: 8 },
-  altName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  altMeta: { color: Colors.textMuted, fontSize: 12 },
-  credit: { color: Colors.textMuted, fontSize: 11, marginTop: 18 },
+  altName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  altMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
+  credit: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 18 },
 });

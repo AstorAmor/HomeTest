@@ -7,6 +7,7 @@ import type { WorkoutExercise } from '@/data/workouts/types';
 import { isTimedReps, timedSeconds, timeText } from '@/logic/workoutTimer';
 import { parseKg } from '@/logic/workoutLog';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Cambiar un ejercicio de la sesión: series, por repeticiones o por tiempo, el peso (si lleva) y el
 // descanso. Con ruedas, como el resto de la app; el peso, escrito (22,5). Si no se toca la rueda de
@@ -145,11 +146,11 @@ export const DoseEditor = ({
 const styles = StyleSheet.create({
   cols: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: 14 },
   col: { alignItems: 'center', gap: 4 },
-  colLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  colLabel: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase' },
   weightRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 },
-  weightLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  unit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
-  hint: { color: Colors.textSecondary, fontSize: 12, textAlign: 'center', marginTop: 6 },
+  weightLabel: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  unit: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
+  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 6 },
   kg: {
     width: 96,
     borderWidth: 1,
@@ -159,12 +160,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     color: Colors.textPrimary,
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     textAlign: 'center',
   },
   buttons: { flexDirection: 'row', gap: 10, marginTop: 22 },
   primary: { flex: 1, alignItems: 'center', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13 },
-  primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   secondary: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 13 },
-  secondaryText: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
+  secondaryText: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
 });

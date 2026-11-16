@@ -11,6 +11,7 @@ import { useSections } from '@/data/appPrefs';
 import { t } from '@/i18n';
 import { useTourActive } from '@/components/tour/tourStore';
 import { usePermissionsGatePending } from '@/data/permissionsGate';
+import { INTER } from '@/theme/fine';
 
 // Avisos de bienvenida (fundador, 2026-10-17): al entrar en Hoy las primeras veces, una tarjeta
 // invita a hacer el perfil genético y, a las mujeres, el cuestionario de la regla. Siempre se puede
@@ -153,8 +154,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 14,
   },
-  title: { color: Colors.textPrimary, fontSize: 21, fontWeight: '800', textAlign: 'center' },
-  body: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 8 },
+  title: { color: Colors.textPrimary, fontSize: 21, fontFamily: INTER.medium, textAlign: 'center' },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 8 },
   cta: {
     flexDirection: 'row',
     gap: 8,
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     marginTop: 20,
   },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   row: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 10 },
   secondary: {
     flex: 1,
@@ -179,9 +180,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 12,
   },
-  secondaryText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  hint: { color: Colors.textMuted, fontSize: 12, marginTop: 6 },
+  secondaryText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 6 },
   muteBtn: { flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 14 },
-  muteText: { color: Colors.textMuted, fontSize: 13 },
-  count: { color: Colors.textMuted, fontSize: 11, marginTop: 10 },
+  muteText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
+  count: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 10 },
 });

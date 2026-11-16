@@ -16,6 +16,7 @@ import { t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
 import { removeAvatar, setAvatar, useAvatar } from '@/data/avatar';
 import { confirmAsk } from '@/components/dev/confirmAsk';
+import { fine, INTER } from '@/theme/fine';
 
 // Se evalúa con el idioma ya cargado (index.js); cambiar de idioma recarga la app.
 const LABELS: Record<string, string> = {
@@ -219,11 +220,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  photoLink: { color: Colors.textMuted, fontSize: 12, fontWeight: '600', marginTop: 8 },
+  photoLink: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium, marginTop: 8 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
-  name: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800' },
-  heroError: { color: Colors.attention, fontSize: 13, marginTop: 8, textAlign: 'center' },
-  email: { color: Colors.textSecondary, fontSize: 14, marginTop: 2 },
+  name: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
+  heroError: { color: Colors.attention, fontFamily: INTER.regular, fontSize: 13, marginTop: 8, textAlign: 'center' },
+  email: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginTop: 2 },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -231,13 +232,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 10,
   },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },
+  sectionTitle: { ...fine.secTitle },
   spaced: { paddingHorizontal: 20, marginTop: 22, marginBottom: 10 },
-  edit: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  edit: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   afterCard: { marginTop: 22 },
   purposeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
-  purposeTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  purposeSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  purposeTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  purposeSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -248,10 +249,10 @@ const styles = StyleSheet.create({
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 13 },
   rowDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowLabel: { color: Colors.textSecondary, fontSize: 14 },
-  rowValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  rowLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14 },
+  rowValue: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   rowValueWrap: { flexShrink: 1, textAlign: 'right', marginLeft: 16 },
-  rowEmpty: { color: Colors.textMuted, fontSize: 13, fontWeight: '400' },
+  rowEmpty: { color: Colors.textMuted, fontSize: 13, fontFamily: INTER.regular },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   goalChip: {
     flexDirection: 'row',
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  goalText: { color: Colors.textPrimary, fontSize: 13 },
+  goalText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13 },
   badge: {
     alignItems: 'center',
     gap: 6,
@@ -274,5 +275,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
-  badgeText: { color: Colors.amber, fontSize: 12, fontWeight: '700' },
+  badgeText: { color: Colors.amber, fontSize: 12, fontFamily: INTER.medium },
 });

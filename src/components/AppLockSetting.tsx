@@ -7,6 +7,7 @@ import { t } from '@/i18n';
 import { disableAppLock, enableAppLock, setLockAfter, useAppLockPrefs } from '@/data/appLock';
 import { LOCK_AFTER_OPTIONS, lockOnFor, unlockProblem, type BiometricKind, type LockAfter } from '@/logic/appLock';
 import { authenticate, biometricStatus, type BiometricStatus } from '@/utils/biometrics';
+import { INTER } from '@/theme/fine';
 
 // Ajustes → Cuenta → «Bloquear Kuova con Face ID / huella» (apagado de serie). Solo con el módulo nativo (APK o
 // app de iPhone desde el 2026-11-11). Si el móvil no tiene huella ni cara configuradas, una línea lo explica.
@@ -99,14 +100,14 @@ export function AppLockSetting() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  rowSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  error: { color: Colors.danger, fontSize: 12, lineHeight: 17, marginTop: 4 },
+  rowTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  rowSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 4 },
   after: { paddingHorizontal: 16, paddingVertical: 12 },
-  afterTitle: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 8 },
+  afterTitle: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, marginBottom: 8 },
   chips: { flexDirection: 'row', gap: 8 },
   chip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: Colors.cardBorder },
   chipOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  chipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  chipText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   chipTextOn: { color: Colors.background },
 });

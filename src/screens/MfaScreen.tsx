@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { verifyLoginCode } from '@/data/mfa';
 import { isTotpCodeComplete, type MfaGate } from '@/logic/mfa';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Doble factor al entrar (lo pone MfaGuard en _layout delante de toda la app):
 // - enroll: admin, profesional o soporte sin app de autenticación → darla de alta (obligatorio).
@@ -119,9 +120,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: withAlpha(Colors.accent, 0.12),
   },
-  badgeText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  title: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginBottom: 8 },
-  text: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, marginTop: 4 },
+  badgeText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  title: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginBottom: 8 },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, marginTop: 4 },
   card: {
     padding: 16,
     borderRadius: 16,
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
     backgroundColor: withAlpha(Colors.card, 0.85),
   },
   link: { alignSelf: 'center', marginTop: 20, paddingVertical: 6 },
-  linkText: { color: Colors.accent, fontSize: 14, textDecorationLine: 'underline' },
-  help: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 4, textAlign: 'center' },
-  signOut: { color: Colors.textMuted, fontSize: 13 },
+  linkText: { color: Colors.accent, fontFamily: INTER.regular, fontSize: 14, textDecorationLine: 'underline' },
+  help: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginTop: 4, textAlign: 'center' },
+  signOut: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
 });

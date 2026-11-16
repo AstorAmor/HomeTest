@@ -10,6 +10,7 @@ import { mindfulRepository } from '@/data/planRepository';
 import { logKegelSession } from '@/data/kegelRepository';
 import { Confetti } from '@/components/Confetti';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const SIZE = 280;
 const MIN_SCALE = 0.5;
@@ -239,31 +240,31 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#0B0D16' },
   center: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12 },
-  topTitle: { color: OnDark.text, fontSize: 17, fontWeight: '700', flexShrink: 1, textAlign: 'center', marginHorizontal: 12 },
-  timer: { color: OnDark.textSecondary, fontSize: 15, fontVariant: ['tabular-nums'], width: 44, textAlign: 'right' },
+  topTitle: { color: OnDark.text, fontSize: 17, fontFamily: INTER.medium, flexShrink: 1, textAlign: 'center', marginHorizontal: 12 },
+  timer: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 15, fontVariant: ['tabular-nums'], width: 44, textAlign: 'right' },
   stage: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   overlay: { position: 'absolute', alignItems: 'center', maxWidth: SIZE - 60 },
-  phaseLabel: { color: OnDark.text, fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  stepCount: { color: OnDark.text, fontSize: 34, fontWeight: '700', opacity: 0.9, fontVariant: ['tabular-nums'] },
-  phaseCount: { color: OnDark.text, fontSize: 18, opacity: 0.8, marginTop: 4 },
+  phaseLabel: { color: OnDark.text, fontSize: 24, fontFamily: INTER.medium, textAlign: 'center' },
+  stepCount: { color: OnDark.text, fontSize: 34, fontFamily: INTER.light, opacity: 0.9, fontVariant: ['tabular-nums'] },
+  phaseCount: { color: OnDark.text, fontFamily: INTER.regular, fontSize: 18, opacity: 0.8, marginTop: 4 },
   bottom: { paddingHorizontal: 24, paddingBottom: 16, gap: 18 },
-  intro: { color: OnDark.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  intro: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, textAlign: 'center' },
   howToScroll: { flex: 1 },
   howTo: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 16, gap: 14, flexGrow: 1, justifyContent: 'center' },
-  howToTitle: { fontSize: 13, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 },
+  howToTitle: { fontSize: 13, fontFamily: INTER.semibold, letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 },
   howToRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   howToNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  howToNumText: { fontSize: 13, fontWeight: '800' },
-  howToText: { flex: 1, color: OnDark.text, fontSize: 16, lineHeight: 23 },
-  guided: { color: OnDark.text, fontSize: 19, lineHeight: 27, textAlign: 'center', fontWeight: '600', minHeight: 60 },
-  hint: { color: OnDark.textSecondary, fontSize: 13, textAlign: 'center' },
+  howToNumText: { fontSize: 13, fontFamily: INTER.medium },
+  howToText: { flex: 1, color: OnDark.text, fontFamily: INTER.regular, fontSize: 16, lineHeight: 23 },
+  guided: { color: OnDark.text, fontSize: 19, lineHeight: 27, textAlign: 'center', fontFamily: INTER.medium, minHeight: 60 },
+  hint: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center' },
   progressTrack: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden' },
   progressFill: { height: 4 },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 30, paddingVertical: 15, alignSelf: 'stretch' },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
   controls: { flexDirection: 'row', justifyContent: 'center', gap: 24 },
   control: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
   doneIcon: { width: 88, height: 88, borderRadius: 44, justifyContent: 'center', alignItems: 'center', marginBottom: 18 },
-  doneTitle: { color: OnDark.text, fontSize: 28, fontWeight: '800', marginBottom: 8 },
-  doneText: { color: OnDark.textSecondary, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 30 },
+  doneTitle: { color: OnDark.text, fontSize: 28, fontFamily: INTER.medium, marginBottom: 8 },
+  doneText: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 30 },
 });

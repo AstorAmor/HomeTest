@@ -12,6 +12,7 @@ import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { RecipeImage } from './RecipeImage';
 import { MacroDonut } from './MacroDonut';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // En "Alimentación": el menú de hoy (fotos, macros del día y acceso a la semana) o, si aún no hay,
 // "Construye tu plan". El menú personalizado va con suscripción (fila 'diet_menu' de los planes).
@@ -127,22 +128,22 @@ export const TodayMenuCard = () => {
 };
 
 const styles = StyleSheet.create({
-  eaten: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  eaten: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   caution: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.accentSoft, borderRadius: 10, paddingVertical: 7, paddingHorizontal: 10 },
-  cautionText: { color: Colors.textPrimary, fontSize: 13, flex: 1 },
+  cautionText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flex: 1 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginHorizontal: 20, marginBottom: 16, gap: 10 },
   locked: { alignItems: 'center' },
   lockedIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   head: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
-  badge: { color: Colors.accent, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  title: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
-  text: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  badge: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  title: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'stretch', backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11 },
-  primaryText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  primaryText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   meal: { width: 136, gap: 2 },
-  slot: { color: Colors.accent, fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 6 },
-  mealName: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  mealMeta: { color: Colors.textMuted, fontSize: 11 },
+  slot: { color: Colors.accent, fontSize: 10, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 6 },
+  mealName: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  mealMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
   shop: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
 });

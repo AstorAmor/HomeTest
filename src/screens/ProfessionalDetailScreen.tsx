@@ -13,6 +13,7 @@ import { listVerifiedProfessionals, roleLabel } from '@/data/sharing';
 import { consult, isRealProfessional, ProCapabilities } from '@/data/consultations';
 import { num, t } from '@/i18n';
 import { formatPrice } from '@/data/testCatalog';
+import { fine, INTER } from '@/theme/fine';
 
 interface ProView {
   id: string;
@@ -192,24 +193,24 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 32 },
   hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   photo: { width: 84, height: 84, borderRadius: 42 },
-  name: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginTop: 12 },
-  specialty: { color: Colors.textSecondary, fontSize: 14, marginTop: 4, textAlign: 'center' },
+  name: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginTop: 12 },
+  specialty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginTop: 4, textAlign: 'center' },
   verified: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  verifiedText: { color: Colors.ok, fontSize: 12, fontWeight: '700' },
+  verifiedText: { color: Colors.ok, fontSize: 12, fontFamily: INTER.medium },
   statsRow: { flexDirection: 'row', alignSelf: 'stretch', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingVertical: 14, marginTop: 18 },
   stat: { flex: 1, alignItems: 'center', gap: 3 },
-  statValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  statLabel: { color: Colors.textMuted, fontSize: 11 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginBottom: 8, marginTop: 8 },
-  bio: { color: Colors.textSecondary, fontSize: 14, lineHeight: 21, paddingHorizontal: 20 },
-  languages: { color: Colors.textMuted, fontSize: 12, paddingHorizontal: 20, marginTop: 6, marginBottom: 16 },
+  statValue: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  statLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 8, marginTop: 8 },
+  bio: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 21, paddingHorizontal: 20 },
+  languages: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, paddingHorizontal: 20, marginTop: 6, marginBottom: 16 },
   actions: { paddingHorizontal: 20, gap: 10 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14 },
   actionPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   actionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  actionTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  actionSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  actionTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  actionSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   chatOff: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 6 },
-  chatOffText: { color: Colors.textMuted, fontSize: 12, flex: 1 },
-  proto: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 16, paddingHorizontal: 30 },
+  chatOffText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, flex: 1 },
+  proto: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 16, paddingHorizontal: 30 },
 });

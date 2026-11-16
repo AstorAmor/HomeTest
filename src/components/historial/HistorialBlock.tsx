@@ -7,6 +7,7 @@ import { useHistorial } from '@/hooks/useHistorial';
 import { historialSummary } from '@/logic/historial';
 import { userFlags } from '@/data/userFlags';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // «Tu historial» en Mis datos: alergias arriba (lo primero que necesita un profesional), grupo
 // sanguíneo, vacunas e historia clínica (cirugías, ingresos, enfermedades…), y la tarjeta de emergencia
@@ -118,14 +119,14 @@ export function HistorialBlock() {
 const styles = StyleSheet.create({
   wrap: { marginBottom: 8 },
   head: { paddingHorizontal: 20, marginBottom: 12, gap: 2 },
-  title: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary },
+  title: { fontSize: 20, fontFamily: INTER.medium, color: Colors.textPrimary },
   headClosed: { marginBottom: 14 },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  meta: { color: Colors.textMuted, fontSize: 12 },
+  meta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -147,12 +148,12 @@ const styles = StyleSheet.create({
   tileLabel: {
     color: Colors.textSecondary,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: INTER.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  tileValue: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  tileSub: { color: Colors.textMuted, fontSize: 12, lineHeight: 16 },
+  tileValue: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  tileSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 16 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -174,6 +175,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  cardSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  cardSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
 });

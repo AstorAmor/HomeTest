@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
 import { UserAvatar } from './UserAvatar';
 import { useIsShellRoot } from './web/WebShell';
+import { FINE, INTER } from '@/theme/fine';
+import { t } from '@/i18n';
 
 
 interface ScreenHeaderProps {
@@ -24,21 +25,27 @@ export const ScreenHeader = ({ title, showBack = false, showAvatar = false, back
   const shellRoot = useIsShellRoot();
   const back = showBack && !shellRoot;
 
+  // Como en el prototipo (borradores/app-estructura/prototipo, 2026-11-16): «‹» en jade y el título a la izquierda,
+  // en Inter de peso medio, sin negrita (el fundador: «los submenús siguen con fuente negrita súper gorda»)
   return (
     <View style={styles.header}>
-      <View style={styles.side}>
-        {back && (
-          <TouchableOpacity onPress={() => (router.canGoBack() ? router.back() : router.replace(backFallback as any))} hitSlop={12}>
-            <Ionicons name="chevron-back" size={26} color={Colors.textPrimary} />
-          </TouchableOpacity>
-        )}
-      </View>
+      {back ? (
+        <TouchableOpacity
+          style={styles.back}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace(backFallback as any))}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('Back')}
+        >
+          <Ionicons name="chevron-back" size={24} color={FINE.jade} />
+        </TouchableOpacity>
+      ) : null}
 
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, !back && styles.titleAlone]} numberOfLines={2} accessibilityRole="header">
+        {title}
+      </Text>
 
-      <View style={[styles.side, styles.sideRight]}>
-        {right ?? (showAvatar && !shellRoot && <UserAvatar size={38} />)}
-      </View>
+      {right ?? (showAvatar && !shellRoot ? <UserAvatar size={38} /> : null)}
     </View>
   );
 };
@@ -47,22 +54,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    gap: 4,
+    paddingLeft: 10,
+    paddingRight: 20,
+    paddingTop: 6,
+    paddingBottom: 12,
+    minHeight: 56,
   },
-  side: {
-    width: 44,
-    justifyContent: 'center',
-  },
-  sideRight: {
-    alignItems: 'flex-end',
-  },
-  title: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
+  back: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
+  title: { flex: 1, fontFamily: INTER.medium, fontSize: 19, lineHeight: 24, color: FINE.ivory },
+  titleAlone: { paddingLeft: 10 },
 });

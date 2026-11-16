@@ -27,6 +27,7 @@ import {
 import { fertilityAdvice, SexFrequency, Timing, TryingFor } from '@/logic/fertility';
 import { t as tr } from '@/i18n';
 import { offerPhoneReminders } from '@/data/phoneReminders';
+import { INTER } from '@/theme/fine';
 
 type Step = 'goal' | 'last' | 'lengths' | 'flow' | 'pain' | 'contraception' | 'conditions' | 'trying' | 'temperature' | 'result';
 
@@ -497,13 +498,13 @@ const styles = StyleSheet.create({
   },
   progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
   progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.pulseAccent },
-  skip: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  skip: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   content: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 24 },
   icon: { alignSelf: 'center', marginBottom: 10 },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 8 },
-  subtitle: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 18 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 18, marginBottom: 6 },
-  hint: { color: Colors.textMuted, fontSize: 12, marginBottom: 10 },
+  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, marginBottom: 8 },
+  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 18 },
+  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 18, marginBottom: 6 },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginBottom: 10 },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -516,16 +517,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   optionSelected: { borderColor: Colors.pulseAccent, backgroundColor: Colors.pinkSoftBg },
-  optionTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  optionSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  optionTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  optionSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   calendarCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 12, marginBottom: 12 },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginVertical: 6 },
   dim: { opacity: 0.35 },
-  unit: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700' },
+  unit: { color: Colors.textSecondary, fontSize: 16, fontFamily: INTER.medium },
   multi: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   pill: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9 },
   pillOn: { borderColor: Colors.pulseAccent, backgroundColor: Colors.pinkSoftBg },
-  pillText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  pillText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   pillTextOn: { color: Colors.textPrimary },
   infoCard: {
     flexDirection: 'row',
@@ -535,8 +536,8 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 18,
   },
-  infoText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  infoText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   adviceCard: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -546,10 +547,10 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 14,
   },
-  adviceTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
-  adviceBody: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  adviceTitle: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
+  adviceBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   tipRow: { flexDirection: 'row', gap: 8 },
-  tipText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  tipText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   secondaryCta: {
     marginTop: 6,
     borderWidth: 1,
@@ -558,8 +559,8 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     alignItems: 'center',
   },
-  secondaryCtaText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  disclaimer: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 18 },
+  secondaryCtaText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  disclaimer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, marginTop: 18 },
   cta: {
     backgroundColor: Colors.accent,
     borderRadius: 30,
@@ -569,5 +570,5 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
 });

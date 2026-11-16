@@ -6,6 +6,7 @@ import type { DietDay, DietPrefs, DietTargets, MealMacroPlan, MealSlot } from '@
 import { cleanMeals, dayIssue, dayLock, mealSplit, slotAverages, slotCount, type DayField, type MacroIssue, type SplitCell, type SplitCol } from '@/logic/dietPlanner';
 import { useRevealOnFocus } from '@/components/KeyboardAwareScroll';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Las calorías y los macros de un menú, como los fija el dietista: kcal, proteína, hidratos y grasa al día (vacío = lo
 // que calcula el generador, en gris) y el reparto por comida (% de las kcal y gramos de cada macro; vacío = su parte),
@@ -225,23 +226,23 @@ const MealCell = ({
 };
 
 const styles = StyleSheet.create({
-  label: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', marginTop: 12, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 9, color: Colors.textPrimary, fontSize: 14 },
+  label: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, marginTop: 12, marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 9, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
   // Sale de las otras: sin fondo, borde discontinuo y en gris
   locked: { backgroundColor: 'transparent', borderStyle: 'dashed', borderColor: Colors.textMuted, color: Colors.textMuted },
   bad: { borderColor: Colors.warning },
   targets: { flexDirection: 'row', gap: 10 },
-  warn: { color: Colors.warning, fontSize: 12, lineHeight: 16, marginTop: 6 },
-  lockHint: { color: Colors.textMuted, fontSize: 11, lineHeight: 15, marginTop: 6 },
+  warn: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 12, lineHeight: 16, marginTop: 6 },
+  lockHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15, marginTop: 6 },
   issue: { gap: 2 },
   mealsHead: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  reset: { color: Colors.accent, fontSize: 12, fontWeight: '700', marginTop: 6 },
+  reset: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 6 },
   mealBlock: { marginBottom: 6 },
   mealRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  mealLabel: { width: 76, color: Colors.textPrimary, fontSize: 12, fontWeight: '700' },
-  mealHead: { flex: 1, color: Colors.textMuted, fontSize: 10, fontWeight: '800', textAlign: 'center', marginBottom: 4 },
+  mealLabel: { width: 76, color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
+  mealHead: { flex: 1, color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium, textAlign: 'center', marginBottom: 4 },
   // width 0 + minWidth 0: en la web un campo de texto no se encoge por debajo de su ancho por defecto
-  mealCell: { flex: 1, width: 0, minWidth: 0, paddingVertical: 6, paddingHorizontal: 4, textAlign: 'center', fontSize: 13 },
-  mealMenu: { color: Colors.textMuted, fontSize: 10, marginTop: 3, marginLeft: 82 },
-  mealHint: { color: Colors.textMuted, fontSize: 11, lineHeight: 15, marginTop: 4 },
+  mealCell: { flex: 1, width: 0, minWidth: 0, paddingVertical: 6, paddingHorizontal: 4, textAlign: 'center', fontFamily: INTER.regular, fontSize: 13 },
+  mealMenu: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10, marginTop: 3, marginLeft: 82 },
+  mealHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15, marginTop: 4 },
 });

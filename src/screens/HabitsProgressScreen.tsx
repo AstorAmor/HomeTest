@@ -13,6 +13,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { ChangeVerdict, classifyChange, compareUpload } from '@/utils/progress';
 import { DailyPoint, formatSleep, useDailyWearables } from '@/wearables/dailySeries';
 import { dateLocale, num, t } from '@/i18n';
+import { fine, INTER } from '@/theme/fine';
 
 interface HabitStat {
   key: string;
@@ -331,16 +332,16 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 40,
   },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
-  empty: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 20 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
+  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 20 },
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  groupTitle: { fontSize: 15, fontWeight: '700' },
+  groupTitle: { ...fine.secTitle },
   markerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
-  markerName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  markerValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600', flexShrink: 0 },
-  markerWas: { color: Colors.textMuted, fontWeight: '400' },
+  markerName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  markerValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, flexShrink: 0 },
+  markerWas: { color: Colors.textMuted, fontFamily: INTER.regular },
   disclaimer: { flexDirection: 'row', gap: 8, marginHorizontal: 20, marginBottom: 20, marginTop: -2 },
-  disclaimerText: { flex: 1, color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  disclaimerText: { flex: 1, color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
   share: {
     flexDirection: 'row',
     gap: 8,
@@ -352,15 +353,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 12,
   },
-  shareText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-    marginTop: 8,
-  },
+  shareText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 12, marginTop: 8 },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -384,22 +378,22 @@ const styles = StyleSheet.create({
   statValue: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
   },
   statLabel: {
     color: Colors.textPrimary,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginTop: 2,
   },
   statBaseline: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 2,
   },
   statNote: {
     color: Colors.textMuted,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
     marginTop: 6,
     lineHeight: 14,
   },
@@ -415,7 +409,7 @@ const styles = StyleSheet.create({
   trendLabel: {
     color: Colors.textPrimary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginBottom: 8,
   },
 });

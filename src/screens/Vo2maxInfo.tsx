@@ -6,6 +6,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { profileRepository } from '@/data/profileRepository';
 import { FRIEND_VO2MAX, Vo2Sex } from '@/logic/vo2max';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const ageOf = (dob?: string) => {
   if (!dob) return null;
@@ -111,24 +112,24 @@ export const Vo2maxInfo = () => {
 const styles = StyleSheet.create({
   wrap: { gap: 12, marginTop: 16, marginHorizontal: 20 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 16, gap: 8 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', marginTop: 2 },
-  body: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 2 },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 12, marginTop: 6 },
-  ctaText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
-  soon: { color: Colors.textMuted, fontSize: 12, textAlign: 'center' },
+  ctaText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
+  soon: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center' },
   sexRow: { flexDirection: 'row', alignSelf: 'flex-start', backgroundColor: Colors.background, borderRadius: 16, padding: 3 },
   sexBtn: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 13 },
   sexBtnOn: { backgroundColor: Colors.accent },
-  sexText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  sexText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   sexTextOn: { color: Colors.background },
   table: { borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: Colors.divider },
   tr: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 6, borderTopWidth: 1, borderTopColor: Colors.divider },
   th: { borderTopWidth: 0, backgroundColor: Colors.background },
-  thText: { fontWeight: '800', fontSize: 11 },
+  thText: { fontFamily: INTER.medium, fontSize: 11 },
   trMine: { backgroundColor: withAlpha(Colors.accent, 0.12) },
-  cell: { flex: 1, color: Colors.textPrimary, fontSize: 11, textAlign: 'center' },
-  ageCell: { flex: 0.85, color: Colors.textSecondary, fontWeight: '700' },
-  mineText: { color: Colors.accent, fontWeight: '800' },
-  note: { color: Colors.textMuted, fontSize: 11, lineHeight: 16 },
-  source: { color: Colors.accent, fontSize: 11, lineHeight: 16 },
+  cell: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center' },
+  ageCell: { flex: 0.85, color: Colors.textSecondary, fontFamily: INTER.medium },
+  mineText: { color: Colors.accent, fontFamily: INTER.medium },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16 },
+  source: { color: Colors.accent, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16 },
 });

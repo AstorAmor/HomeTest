@@ -9,6 +9,7 @@ import { AddMeasurementButton, MetricHero, RangeId, rangeDays, RangeTabs, StatsR
 import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, num, t } from '@/i18n';
+import { fine, INTER } from '@/theme/fine';
 
 export interface GenericMetricEntry {
   id: string;
@@ -178,14 +179,14 @@ const styles = StyleSheet.create({
   },
   describe: {
     fontSize: 14,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     textAlign: 'center',
     marginTop: -8,
     marginBottom: 12,
   },
   tapHint: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -204,18 +205,11 @@ const styles = StyleSheet.create({
   sampleNoteText: {
     flex: 1,
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 18,
   },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '700',
-    paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  emptyText: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20 },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
+  emptyText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20 },
   historyList: {
     backgroundColor: Colors.card,
     borderRadius: 16,
@@ -229,12 +223,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   historyDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  historyDate: { color: Colors.textSecondary, fontSize: 13, width: 44 },
+  historyDate: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, width: 44 },
   historyValue: {
     flex: 1,
     color: Colors.textPrimary,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
-  historyExtra: { color: Colors.textSecondary, fontWeight: '500' },
+  historyExtra: { color: Colors.textSecondary, fontFamily: INTER.medium },
 });

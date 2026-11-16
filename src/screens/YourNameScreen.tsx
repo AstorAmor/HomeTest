@@ -8,6 +8,7 @@ import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // "Tu nombre": el alias con el que te saluda Kuova ("¡Hola, Astor!") y el que ven los
 // profesionales con los que compartes. Cualquier cuenta puede cambiarlo cuando quiera. Se llega
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     padding: 18,
     gap: 12,
   },
-  label: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
+  label: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
   input: {
     borderWidth: 1,
     borderColor: Colors.accent,
@@ -98,14 +99,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: Colors.textPrimary,
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     backgroundColor: Colors.background,
   },
   preview: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  previewText: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
-  help: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  error: { color: Colors.attention, fontSize: 13 },
+  previewText: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
+  help: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  error: { color: Colors.attention, fontFamily: INTER.regular, fontSize: 13 },
   cta: { backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', minHeight: 48 },
   ctaOff: { opacity: 0.45 },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
 });

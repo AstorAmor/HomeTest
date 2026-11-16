@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
+import { INTER } from '@/theme/fine';
 
 export interface DonutSegment {
   value: number;
@@ -86,11 +87,11 @@ const styles = StyleSheet.create({
   centerLabel: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
   },
   centerSubLabel: {
     color: Colors.textSecondary,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 2,
     textAlign: 'center',
   },

@@ -7,6 +7,7 @@ import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Ajustes del portal del médico: apariencia, idioma y tamaño de letra (lo mismo que en la app) y
 // salir. El perfil profesional (datos, contacto, canales, agenda) sigue en "Profile".
@@ -26,5 +27,5 @@ export const ProPreferencesScreen = () => {
 
 const styles = StyleSheet.create({
   exit: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 28, paddingVertical: 12 },
-  exitText: { color: Colors.danger, fontSize: 15, fontWeight: '700' },
+  exitText: { color: Colors.danger, fontSize: 15, fontFamily: INTER.medium },
 });

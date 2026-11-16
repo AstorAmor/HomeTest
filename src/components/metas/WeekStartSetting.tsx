@@ -8,6 +8,7 @@ import { prefStyles } from '@/components/PreferencesBlock';
 import { useMetas } from '@/hooks/useMetas';
 import type { WeekStart } from '@/logic/metas';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const OPTIONS: { id: WeekStart; label: string }[] = [
   { id: 1, label: 'Monday' },
@@ -46,6 +47,6 @@ export function WeekStartSetting() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  note: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 8 },
+  rowTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 8 },
 });

@@ -15,6 +15,7 @@ import {
 } from '@/data/sharing';
 import { adminResetMfa } from '@/data/mfa';
 import { confirmAsk } from '@/components/dev/confirmAsk';
+import { INTER } from '@/theme/fine';
 
 // Panel de Kuova: verificar profesionales y aprobar/rechazar su tarifa.
 // Solo funciona para admins (la base de datos lo comprueba en cada llamada).
@@ -183,8 +184,8 @@ export const AdminReviewScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  summary: { color: Colors.textSecondary, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
-  error: { color: Colors.danger, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
+  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -198,13 +199,13 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
   photo: { width: 48, height: 48, borderRadius: 24 },
   photoEmpty: { backgroundColor: Colors.divider, justifyContent: 'center', alignItems: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
-  meta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  name: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   badge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 },
-  badgeText: { fontSize: 11, fontWeight: '800' },
-  detail: { color: Colors.textSecondary, fontSize: 13 },
-  detailStrong: { color: Colors.textPrimary, fontWeight: '700' },
-  bio: { color: Colors.textPrimary, fontSize: 13, lineHeight: 18 },
+  badgeText: { fontSize: 11, fontFamily: INTER.medium },
+  detail: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
+  detailStrong: { color: Colors.textPrimary, fontFamily: INTER.medium },
+  bio: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
   rateBox: { backgroundColor: Colors.backgroundElevated, borderRadius: 10, padding: 10, gap: 4, marginTop: 4 },
   noteInput: {
     borderWidth: 1,
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     color: Colors.textPrimary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     marginTop: 4,
   },
   actions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 6 },
@@ -221,5 +222,5 @@ const styles = StyleSheet.create({
   actionPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
   actionNeutral: { backgroundColor: Colors.card },
   actionDanger: { backgroundColor: Colors.dangerSoft, borderColor: Colors.danger },
-  actionText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  actionText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
 });

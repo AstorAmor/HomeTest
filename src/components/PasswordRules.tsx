@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { PASSWORD_RULES, passwordRuleMet, type PasswordRule } from '@/logic/password';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Reglas de la contraseña (las mismas que Supabase: config.toml y logic/password.ts), con su ✓ según se
 // escribe. En «Crear cuenta» y en «Elige una contraseña nueva».
@@ -30,6 +31,6 @@ export const PasswordRules = ({ password }: { password: string }) => (
 const styles = StyleSheet.create({
   rules: { marginTop: 8, gap: 4, paddingHorizontal: 4 },
   rule: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  ruleText: { color: Colors.textMuted, fontSize: 13 },
+  ruleText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
   ruleTextOk: { color: Colors.textPrimary },
 });

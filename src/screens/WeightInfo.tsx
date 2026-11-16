@@ -10,6 +10,7 @@ import { profileRepository } from '@/data/profileRepository';
 import { BodyComp, latestBodyComp, weightRepository } from '@/data/weightRepository';
 import { bmi as bmiOf, bmiBand, BMI_RANGE, CompSlice, compositionSlices, weighAdvice } from '@/logic/weight';
 import { dateLocale, num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Debajo de la gráfica del peso: cuándo toca pesarse, el IMC (con su altura del perfil y lo que no
 // dice), la última composición corporal en un donut y cómo pesarse bien.
@@ -167,21 +168,21 @@ export const WeightInfo = () => {
 
 const styles = StyleSheet.create({
   card: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: Colors.accentSoft, borderRadius: 14, padding: 12 },
-  cardText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
+  cardText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   box: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 8 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  text: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  muted: { color: Colors.textMuted, fontSize: 12 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  muted: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
   bmiRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  bmiValue: { color: Colors.textPrimary, fontSize: 30, fontWeight: '900' },
-  bmiUnit: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  bmiValue: { color: Colors.textPrimary, fontSize: 30, fontFamily: INTER.medium },
+  bmiUnit: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   more: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 2 },
   donutRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 },
   legend: { flex: 1, gap: 7 },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 9, height: 9, borderRadius: 5 },
-  legendLabel: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  legendValue: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
-  water: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  legendLabel: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  legendValue: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
+  water: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
 });

@@ -10,6 +10,7 @@ import type { SetRow } from '@/logic/workoutLog';
 import { ExerciseLoop } from './ExerciseLoop';
 import { SetTable } from './SetTable';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Un ejercicio en la sesión, como en Hevy: miniatura redonda y nombre (tocar = cómo se hace), lo que
 // pide la rutina, el descanso de este ejercicio (se cambia aquí, solo para hoy), la papelera (quitarlo de
@@ -105,14 +106,14 @@ export const ExerciseBlock = memo(function ExerciseBlock({
 const styles = StyleSheet.create({
   block: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.divider, gap: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  name: { color: Colors.accent, fontSize: 17, fontWeight: '800' },
-  target: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  name: { color: Colors.accent, fontSize: 17, fontFamily: INTER.medium },
+  target: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   chips: { flexDirection: 'row', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
   chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  chipText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   restMenu: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   option: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  optionText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  note: { color: Colors.textPrimary, fontSize: 13, fontStyle: 'italic' },
+  optionText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  note: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, fontStyle: 'italic' },
 });

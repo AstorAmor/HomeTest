@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import { clearPasswordResetPending } from '@/data/passwordReset';
 import { isPasswordStrongEnough, passwordRuleFromAuthError } from '@/logic/password';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 type Problem = '' | 'same' | 'weak' | 'mismatch' | 'session' | 'other';
 
@@ -158,22 +159,22 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: withAlpha(Colors.accent, 0.12),
   },
-  badgeText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  title: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginBottom: 8 },
+  badgeText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  title: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginBottom: 8 },
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  text: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, marginTop: 4 },
-  label: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary, marginBottom: 8, marginTop: 16 },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, marginTop: 4 },
+  label: { fontSize: 14, fontFamily: INTER.medium, color: Colors.textSecondary, marginBottom: 8, marginTop: 16 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 16,
+    fontFamily: INTER.regular, fontSize: 16,
     color: Colors.textPrimary,
     backgroundColor: withAlpha(Colors.card, 0.72),
   },
   link: { alignSelf: 'center', marginTop: 20, paddingVertical: 6 },
-  linkText: { color: Colors.accent, fontSize: 14, textDecorationLine: 'underline' },
-  signOut: { color: Colors.textMuted, fontSize: 13 },
+  linkText: { color: Colors.accent, fontFamily: INTER.regular, fontSize: 14, textDecorationLine: 'underline' },
+  signOut: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
 });

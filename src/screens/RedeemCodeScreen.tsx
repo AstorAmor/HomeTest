@@ -8,6 +8,7 @@ import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { Colors } from '@/constants/colors';
 import { redeemAccessCode, tierName, Tier } from '@/data/access';
 import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // "¿Tienes un código de invitación?": Kuova da códigos (amigos, pruebas) que abren lo de una
 // suscripción sin pagar, durante un tiempo o sin fin. Los crea el admin en Más → Suscripciones.
@@ -96,8 +97,8 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   okIcon: { alignSelf: 'center', width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', textAlign: 'center' },
-  text: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  title: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, textAlign: 'center' },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -106,14 +107,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: Colors.textPrimary,
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     letterSpacing: 1.5,
     textAlign: 'center',
     backgroundColor: Colors.background,
   },
-  error: { color: Colors.attention, fontSize: 13, lineHeight: 18 },
+  error: { color: Colors.attention, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
   cta: { backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', minHeight: 48 },
   ctaDisabled: { opacity: 0.45 },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800', textAlign: 'center' },
-  link: { color: Colors.accent, fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium, textAlign: 'center' },
+  link: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium, textAlign: 'center' },
 });

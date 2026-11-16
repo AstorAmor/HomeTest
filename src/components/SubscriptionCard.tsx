@@ -9,6 +9,7 @@ import { Access, getMyAccess, tierName } from '@/data/access';
 import { mockNextTestDate } from '@/data/mockData';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const longDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
@@ -132,19 +133,19 @@ const styles = StyleSheet.create({
   premium: { borderColor: Colors.amber },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  text: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
   active: { backgroundColor: Colors.accentSoft, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  activeText: { color: Colors.accent, fontSize: 11, fontWeight: '800' },
+  activeText: { color: Colors.accent, fontSize: 11, fontFamily: INTER.medium },
   rows: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 10, gap: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  rowLabel: { color: Colors.textSecondary, fontSize: 13, flex: 1 },
-  rowValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  rowLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, flex: 1 },
+  rowValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   actions: { flexDirection: 'row', gap: 8, marginTop: 4 },
   cta: { flex: 1, backgroundColor: Colors.accent, borderRadius: 20, paddingVertical: 10, alignItems: 'center' },
-  ctaText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
   secondary: { flex: 1, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 10, alignItems: 'center' },
-  secondaryText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  secondaryText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   codeLink: { alignSelf: 'center', paddingVertical: 2 },
-  codeLinkText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  codeLinkText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
 });

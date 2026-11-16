@@ -13,6 +13,7 @@ import { shoppingList } from '@/logic/dietPlanner';
 import { num, t } from '@/i18n';
 import { menuFileName, menuToHtml, shoppingText } from '@/utils/menuPdf';
 import { shareHtmlPdf } from '@/utils/shareHtml';
+import { INTER } from '@/theme/fine';
 
 // Lista de la compra de la semana, por secciones del súper, con casillas y el coste aproximado
 const ORDER: ShopSection[] = ['produce', 'meat_fish', 'chilled', 'frozen', 'bakery', 'pantry'];
@@ -109,13 +110,13 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  total: { color: Colors.textPrimary, fontSize: 18, fontWeight: '900' },
+  total: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
   share: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
-  shareText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  hint: { color: Colors.textMuted, fontSize: 12, marginTop: 4 },
-  section: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  shareText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 4 },
+  section: { color: Colors.accent, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  itemName: { flex: 1, color: Colors.textPrimary, fontSize: 14 },
-  itemAmount: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  itemName: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
+  itemAmount: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   done: { color: Colors.textMuted, textDecorationLine: 'line-through' },
 });

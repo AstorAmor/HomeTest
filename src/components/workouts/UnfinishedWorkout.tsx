@@ -5,6 +5,7 @@ import { Colors } from '@/constants/colors';
 import type { ActiveWorkout } from '@/data/workouts/activeWorkout';
 import { sessionTitle } from '@/data/workouts/labels';
 import { dateLocale, t, tn } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Aviso de un entreno a medias (src/data/workouts/activeWorkout.ts), arriba en Entrenamientos y en
 // otra sesión: «Seguir» vuelve a él tal como estaba; «Descartar», si se pasa, lo borra.
@@ -45,11 +46,11 @@ export const UnfinishedWorkout = ({ workout, onContinue, onDiscard }: { workout:
 const styles = StyleSheet.create({
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.accentSoft, borderWidth: 1, borderColor: Colors.accent, borderRadius: 16, padding: 12, marginBottom: 12 },
   icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' },
-  label: { color: Colors.accent, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  sub: { color: Colors.textSecondary, fontSize: 12, marginTop: 1 },
+  label: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 1 },
   discard: { alignSelf: 'flex-start', marginTop: 6 },
-  discardText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  discardText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   go: { backgroundColor: Colors.accent, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 9 },
-  goText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  goText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
 });

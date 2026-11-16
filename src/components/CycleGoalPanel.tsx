@@ -15,6 +15,7 @@ import { wearableRepository } from '@/wearables/wearableRepository';
 import { CYCLE_GOAL_OPTIONS, CycleGoalAnswers } from '@/types/cycleGoal';
 import { dailyTemps, detectTempShift, FertilityAdvice, fertilityAdvice, TempReading, TempShift } from '@/logic/fertility';
 import { t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const ageFrom = (dob?: string) => {
   if (!dob) return null;
@@ -177,9 +178,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
   },
-  goalLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  goalTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 2 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700', textDecorationLine: 'underline' },
+  goalLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase' },
+  goalTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 2 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, textDecorationLine: 'underline' },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -189,8 +190,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  cardText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  cardText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   logButton: { backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
-  logButtonText: { color: Colors.background, fontSize: 12, fontWeight: '800' },
+  logButtonText: { color: Colors.background, fontSize: 12, fontFamily: INTER.medium },
 });

@@ -8,6 +8,7 @@ import { BristolShape, ColorSwatches, UrineDrop } from './BathroomVisuals';
 import { dayKey } from '@/data/bathroomRepository';
 import { BRISTOL_TYPES, BristolType, STOOL_COLORS, URINE_COLORS } from '@/types/bathroom';
 import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Las veces de un día en Orina y Heces (pantalla del día): arriba cuántas veces en total, con − y +, y
 // debajo cada vez suelta con su hora y lo que quieras apuntar (color y escozor; o forma, color y prisa).
@@ -264,10 +265,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepButtonOff: { opacity: 0.4 },
-  stepValue: { color: Colors.textPrimary, fontSize: 28, fontWeight: '800', minWidth: 40, textAlign: 'center' },
-  stepHint: { color: Colors.textMuted, fontSize: 12 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 22, marginBottom: 10 },
-  empty: { color: Colors.textMuted, fontSize: 13 },
+  stepValue: { color: Colors.textPrimary, fontSize: 28, fontFamily: INTER.medium, minWidth: 40, textAlign: 'center' },
+  stepHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
+  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 22, marginBottom: 10 },
+  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -281,9 +282,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  time: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', minWidth: 46 },
+  time: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, minWidth: 46 },
   dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Colors.cardBorder },
-  rowText: { flex: 1, color: Colors.textSecondary, fontSize: 13 },
+  rowText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   addOne: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 4,
   },
-  addOneText: { color: Colors.accent, fontSize: 14, fontWeight: '800' },
+  addOneText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   editor: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -304,14 +305,14 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 8,
   },
-  editorTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', textAlign: 'center' },
+  editorTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, textAlign: 'center' },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  colon: { color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginHorizontal: 4 },
-  fieldLabel: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', marginTop: 14, marginBottom: 8 },
+  colon: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginHorizontal: 4 },
+  fieldLabel: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, marginTop: 14, marginBottom: 8 },
   shapes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 4 },
   shape: { width: 38, height: 38, borderRadius: 10, borderWidth: 1, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
   shapeOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  shapeLabel: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600', textAlign: 'center', marginTop: 6 },
+  shapeLabel: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, textAlign: 'center', marginTop: 6 },
   urgent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -323,9 +324,9 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   urgentOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  urgentText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  urgentText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   editorButtons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
-  cancel: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
+  cancel: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   saveVisit: { backgroundColor: Colors.accent, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 10 },
-  saveVisitText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  saveVisitText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
 });

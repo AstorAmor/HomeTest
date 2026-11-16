@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
 import { cycleRepository } from '@/data/cycleRepository';
+import { INTER } from '@/theme/fine';
 
 const DAY_MS = 24 * 3600 * 1000;
 const fromKey = (key: string) => new Date(`${key}T12:00:00`);
@@ -160,8 +161,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  subtitle: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 6 },
+  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
+  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 6 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -177,8 +178,8 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
   },
-  summaryLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  summaryValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 4, textAlign: 'center' },
+  summaryLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase' },
+  summaryValue: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginTop: 4, textAlign: 'center' },
   deleteButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 24 },
-  deleteButtonText: { color: Colors.danger, fontSize: 14, fontWeight: '600' },
+  deleteButtonText: { color: Colors.danger, fontSize: 14, fontFamily: INTER.medium },
 });

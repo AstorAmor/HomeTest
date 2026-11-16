@@ -6,6 +6,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { KuovaAgeResult, PHENOAGE_INPUTS, PhenoAgeCoverage } from '@/logic/kuovaAge';
 import type { PhenoInput } from '@/logic/phenoAge';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Insignia de la Edad KUOVA, el "buque insignia" de Mis datos: las "capas" de la marca (láminas
 // apiladas con borde de ruido fractal, sin contorno; las eligió el fundador), recortadas en círculo,
@@ -53,7 +54,7 @@ export const KuovaAgeBadge = ({ size = 220, value, good = true, locked = false }
           <Text
             style={[
               styles.value,
-              { fontSize: 60 * k, lineHeight: 68 * k, color: light ? '#0E2A24' : '#FFFFFF' },
+              { fontFamily: INTER.regular, fontSize: 60 * k, lineHeight: 68 * k, color: light ? '#0E2A24' : '#FFFFFF' },
               light ? styles.shadowLight : styles.shadowDark,
             ]}
           >
@@ -110,11 +111,11 @@ export const KuovaAgeDots = ({ c }: { c: PhenoAgeCoverage }) => (
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
-  value: { fontWeight: '800' },
+  value: { fontFamily: INTER.medium },
   // Sombra suave para que el número se lea sobre el brillo del corazón
   shadowDark: { textShadowColor: 'rgba(0,0,0,0.65)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 10 },
   shadowLight: { textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 10 },
   dots: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot: { width: 7, height: 7, borderRadius: 3.5 },
-  dotsText: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', marginLeft: 4 },
+  dotsText: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium, marginLeft: 4 },
 });

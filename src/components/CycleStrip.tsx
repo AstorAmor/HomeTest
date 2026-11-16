@@ -6,6 +6,7 @@ import { Colors } from '@/constants/colors';
 import { mixHex } from '@/components/GlowRing';
 import { CyclePhaseInfo, PHASE_COLORS, phaseBoundaries } from '@/utils/cyclePhase';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 interface CycleStripProps {
   info: CyclePhaseInfo;
@@ -166,11 +167,11 @@ const styles = StyleSheet.create({
   },
   phase: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   day: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
   },
   bar: {
     flexDirection: 'row',
@@ -190,7 +191,7 @@ const styles = StyleSheet.create({
   },
   next: {
     color: Colors.textPrimary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 18,
     marginTop: 12,
   },
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
   },
   hint: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     marginTop: 10,
   },
 });

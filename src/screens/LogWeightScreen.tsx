@@ -12,6 +12,7 @@ import { profileRepository } from '@/data/profileRepository';
 import { BodyComp, bodyCompFor, removeWeighIn, saveWeighIn, weightRepository } from '@/data/weightRepository';
 import { BODY_COMP, BodyCompKind, parseComp, weighAdvice } from '@/logic/weight';
 import { offerPhoneReminders } from '@/data/phoneReminders';
+import { INTER } from '@/theme/fine';
 
 // Apuntar el peso (ruedas, como el resto de mediciones) y, si la báscula la da, la composición corporal
 // a mano: grasa, agua, músculo y hueso. Con el aviso de que no hace falta pesarse a diario.
@@ -229,29 +230,29 @@ const styles = StyleSheet.create({
   circleButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
   header: { alignItems: 'center', gap: 10, marginTop: 6, marginBottom: 14 },
   iconBadge: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900' },
+  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
   note: { flexDirection: 'row', gap: 8, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, marginHorizontal: 20, marginBottom: 14 },
-  noteText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  noteText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   list: { backgroundColor: Colors.card, borderRadius: 16, marginHorizontal: 20, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: Colors.divider },
   rowLast: { borderBottomWidth: 0 },
-  rowLabel: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
+  rowLabel: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   pill: { backgroundColor: Colors.background, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
-  pillText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  rowValue: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  pillText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  rowValue: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 },
-  wheelComma: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800', marginHorizontal: 2 },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700', marginLeft: 8 },
+  wheelComma: { color: Colors.textPrimary, fontSize: 26, fontFamily: INTER.medium, marginHorizontal: 2 },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontFamily: INTER.medium, marginLeft: 8 },
   compToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 20, marginTop: 18, paddingVertical: 8 },
-  compToggleText: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  compToggleText: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   compBox: { backgroundColor: Colors.card, borderRadius: 16, marginHorizontal: 20, padding: 14, gap: 10 },
-  compHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  compHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
   compRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  compLabel: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  compLabel: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   compInputWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, paddingHorizontal: 10, minWidth: 110 },
-  compInput: { flex: 1, color: Colors.textPrimary, fontSize: 16, paddingVertical: 7, textAlign: 'right' },
-  compUnit: { color: Colors.textMuted, fontSize: 13, width: 22 },
-  error: { color: Colors.danger, fontSize: 12 },
+  compInput: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 16, paddingVertical: 7, textAlign: 'right' },
+  compUnit: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, width: 22 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 12 },
   deleteButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 24 },
-  deleteText: { color: Colors.danger, fontSize: 14, fontWeight: '700' },
+  deleteText: { color: Colors.danger, fontSize: 14, fontFamily: INTER.medium },
 });

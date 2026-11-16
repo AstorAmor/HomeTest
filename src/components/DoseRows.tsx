@@ -6,6 +6,7 @@ import { doseRepository } from '@/data/medicationRepository';
 import { MedIcon } from './MedIcon';
 import { t } from '@/i18n';
 import { DoseLog, ScheduledDose } from '@/types/medication';
+import { INTER } from '@/theme/fine';
 
 // Tomas de hoy con su hora y los botones Taken / Skip. Las usan Medication & supplements y la
 // tarjeta de Today (allí solo las de lo que tiene recordatorio).
@@ -89,13 +90,13 @@ export function DoseRows({ doses, onChange }: { doses: ScheduledDose[]; onChange
 const styles = StyleSheet.create({
   doseRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  doseTime: { width: 46, color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  doseName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  doseSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  doseTime: { width: 46, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  doseName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  doseSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   take: { backgroundColor: Colors.accent, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  takeText: { color: Colors.background, fontSize: 12, fontWeight: '800' },
+  takeText: { color: Colors.background, fontSize: 12, fontFamily: INTER.medium },
   skip: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
-  skipText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  skipText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   doneTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  doneText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  doneText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
 });

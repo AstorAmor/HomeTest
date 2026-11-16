@@ -12,6 +12,7 @@ import { dailyTotalNote } from '@/logic/bathroom';
 import { UrineEntry, VOID_VOLUMES, VoidVolume } from '@/types/bathroom';
 import { logScreenStyles } from './LogBowelScreen';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Volumen exacto en la rueda: de 50 a 1.000 ml de 10 en 10; el total de 24 h, de 300 a 5.000 de 50 en 50
 const ML = Array.from({ length: 96 }, (_, i) => 50 + i * 10);
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accentSoft,
     color: Colors.accent,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     textAlign: 'center',
     lineHeight: 22,
     overflow: 'hidden',
@@ -244,12 +245,12 @@ const styles = StyleSheet.create({
   levels: { flex: 1, gap: 8 },
   level: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9 },
   levelOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  levelText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700' },
+  levelText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   levelTextOn: { color: Colors.textPrimary },
-  levelMl: { color: Colors.textMuted, fontSize: 11, marginTop: 1 },
+  levelMl: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 1 },
   exactToggle: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 18 },
-  exactText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  exactText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   wheelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8 },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
+  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
   centerText: { textAlign: 'center', marginTop: 8 },
 });

@@ -11,6 +11,7 @@ import { getLang, t } from '@/i18n';
 import { catalogCardEs } from '@/i18n/catalogEs';
 import { BIOMARKER_CATEGORY_LABELS, biomarkerDisplayName } from '@/utils/biomarkerLabels';
 import { TAB, tabHref } from '@/constants/tabs';
+import { INTER } from '@/theme/fine';
 
 // Los datos de knowledge/ tienen nombres en español (canonical_name) e inglés (canonical_name_en);
 // la muestra y alguna unidad vienen en español: aquí se muestran en el idioma de la app.
@@ -229,11 +230,11 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
   },
   count: {
     color: Colors.textMuted,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     marginHorizontal: 20,
     marginTop: 10,
     marginBottom: 4,
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     color: Colors.textSecondary,
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: INTER.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: 18,
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
   },
   empty: {
     color: Colors.textMuted,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     textAlign: 'center',
     marginTop: 40,
   },
@@ -275,7 +276,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.textPrimary,
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -296,11 +297,11 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   badgeTextMuted: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     color: Colors.textMuted,
   },
   detail: {
@@ -312,45 +313,45 @@ const styles = StyleSheet.create({
   },
   detailRow: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     lineHeight: 17,
   },
   detailLabel: {
     color: Colors.textMuted,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   kTitle: {
     color: Colors.textPrimary,
     fontSize: 12,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     marginTop: 8,
   },
   refText: {
     color: Colors.accent,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     marginTop: 8,
     textDecorationLine: 'underline',
   },
   reviewText: {
     color: Colors.warning,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 6,
   },
   knowledgeText: {
     color: Colors.textSecondary,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     lineHeight: 17,
     marginTop: 4,
   },
   limitationsText: {
     color: Colors.warning,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     lineHeight: 16,
     marginTop: 4,
   },
   sourceText: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 2,
   },
 });

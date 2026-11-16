@@ -26,6 +26,7 @@ import { useSections } from '@/data/appPrefs';
 import { useFeature } from '@/data/access';
 import { SubscribePopup } from '@/components/SubscribePopup';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
 
@@ -407,11 +408,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   lockedIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
-  lockedTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', textAlign: 'center' },
-  lockedText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  lockedTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium, textAlign: 'center' },
+  lockedText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   lockedCta: { alignSelf: 'stretch', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  lockedCtaText: { color: Colors.background, fontSize: 15, fontWeight: '800', textAlign: 'center' },
-  lockedLink: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  lockedCtaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium, textAlign: 'center' },
+  lockedLink: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   content: {
     paddingBottom: 40,
   },
@@ -437,7 +438,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   pagesSection: {
     paddingHorizontal: 20,
@@ -445,7 +446,7 @@ const styles = StyleSheet.create({
   },
   pagesTitle: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     marginBottom: 10,
   },
   pagesRow: {
@@ -463,7 +464,7 @@ const styles = StyleSheet.create({
   },
   thumbIndex: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 4,
   },
   thumbRemove: {
@@ -485,11 +486,11 @@ const styles = StyleSheet.create({
   analyzeButtonText: {
     color: Colors.background,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   fileName: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     paddingHorizontal: 20,
     marginBottom: 12,
   },
@@ -502,7 +503,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
   },
   tableWrap: {
     paddingHorizontal: 20,
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
   rawToggleText: {
     color: Colors.accent,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     textDecorationLine: 'underline',
   },
   resultBox: {
@@ -536,7 +537,7 @@ const styles = StyleSheet.create({
   },
   resultLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: INTER.semibold,
     marginBottom: 10,
     textTransform: 'uppercase',
   },
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   nextActions: { marginTop: 16, gap: 10 },
-  nextTitle: { color: Colors.textSecondary, fontSize: 13 },
+  nextTitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   nextPrimary: {
     flexDirection: 'row',
     gap: 8,
@@ -557,7 +558,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     paddingVertical: 14,
   },
-  nextPrimaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  nextPrimaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   nextSecondary: {
     flexDirection: 'row',
     gap: 8,
@@ -568,6 +569,6 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     paddingVertical: 14,
   },
-  nextSecondaryText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
-  saveError: { color: Colors.danger, fontSize: 13 },
+  nextSecondaryText: { color: Colors.accent, fontSize: 15, fontFamily: INTER.medium },
+  saveError: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13 },
 });

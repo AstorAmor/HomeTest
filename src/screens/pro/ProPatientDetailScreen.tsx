@@ -12,6 +12,7 @@ import { scopeLabel } from '@/data/sharing';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 import { dateLocale, t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 type Tab = 'shared' | 'results' | 'notes' | 'requests';
 
 const shortDay = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' });
@@ -159,19 +160,19 @@ const styles = StyleSheet.create({
   hero: { flexDirection: 'row', gap: 14, alignItems: 'center', marginBottom: 14 },
   heroWide: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 16 },
   avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: Colors.accent, fontSize: 22, fontWeight: '900' },
-  sub: { color: Colors.textSecondary, fontSize: 13 },
-  scopes: { color: Colors.textMuted, fontSize: 12 },
+  avatarText: { color: Colors.accent, fontSize: 22, fontFamily: INTER.medium },
+  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
+  scopes: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: withAlpha(Colors.accent, 0.5), borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
   actionPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  actionText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  actionText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   tab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder },
   tabOn: { borderColor: Colors.accent },
-  tabText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  tabCount: { color: Colors.background, backgroundColor: Colors.attention, fontSize: 11, fontWeight: '800', borderRadius: 8, paddingHorizontal: 6, overflow: 'hidden' },
+  tabText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  tabCount: { color: Colors.background, backgroundColor: Colors.attention, fontSize: 11, fontFamily: INTER.medium, borderRadius: 8, paddingHorizontal: 6, overflow: 'hidden' },
   panel: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14 },
   chatLink: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.background, borderRadius: 12, padding: 12 },
-  chatLinkText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', flex: 1 },
+  chatLinkText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, flex: 1 },
 });

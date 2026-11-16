@@ -4,6 +4,7 @@ import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { Colors } from '@/constants/colors';
 import { LabReportRow } from './LabReportRow';
 import { t } from '@/i18n';
+import { fine, INTER } from '@/theme/fine';
 
 interface LabReportTableProps {
   report: ExtractedLabReport;
@@ -77,22 +78,17 @@ const styles = StyleSheet.create({
   },
   patientLabel: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
   },
   patientValue: {
     color: Colors.textPrimary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     flexShrink: 1,
     textAlign: 'right',
   },
   section: {
     marginBottom: 20,
   },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
+  sectionTitle: { ...fine.secTitle, marginBottom: 10 },
 });

@@ -12,6 +12,7 @@ import { onDataChange } from '@/data/dataEvents';
 import { DEFAULT_GOALS } from '@/logic/dailyGoals';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
 import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 const lastSevenDays = () =>
   Array.from({ length: 7 }, (_, i) => {
@@ -111,18 +112,18 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  title: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  goal: { color: Colors.water, fontSize: 12, fontWeight: '700' },
-  total: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800' },
-  of: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  title: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  goal: { color: Colors.water, fontSize: 12, fontFamily: INTER.medium },
+  total: { color: Colors.textPrimary, fontSize: 26, fontFamily: INTER.medium },
+  of: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
   track: { height: 8, borderRadius: 4, backgroundColor: withAlpha(Colors.water, 0.15), marginTop: 8, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4, backgroundColor: Colors.water },
   week: { flexDirection: 'row', marginTop: 16 },
   dayCol: { flex: 1, alignItems: 'center', gap: 4 },
   barTrack: { width: 14, height: 44, borderRadius: 7, backgroundColor: withAlpha(Colors.water, 0.12), justifyContent: 'flex-end', overflow: 'hidden' },
   bar: { width: 14, borderRadius: 7, backgroundColor: Colors.water },
-  dayLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700' },
-  note: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 12 },
+  dayLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 12 },
   buttons: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginTop: 12, marginBottom: 22 },
   button: {
     flex: 1,
@@ -136,5 +137,5 @@ const styles = StyleSheet.create({
     borderColor: withAlpha(Colors.water, 0.6),
   },
   buttonMain: { backgroundColor: Colors.water, borderColor: Colors.water },
-  buttonText: { color: Colors.water, fontSize: 14, fontWeight: '800' },
+  buttonText: { color: Colors.water, fontSize: 14, fontFamily: INTER.medium },
 });

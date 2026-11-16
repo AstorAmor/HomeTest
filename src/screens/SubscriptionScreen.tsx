@@ -9,6 +9,7 @@ import { PlanComparison } from '@/components/PlanComparison';
 import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { INTER } from '@/theme/fine';
 
 // "My subscription" (More): suscripción activa, renovación y próxima analítica; debajo, la comparación de
 // suscripciones con la tuya marcada, y el catálogo de pruebas.
@@ -35,7 +36,7 @@ export const SubscriptionScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginHorizontal: 20, marginTop: 22, marginBottom: 10 },
+  section: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, marginHorizontal: 20, marginTop: 22, marginBottom: 10 },
   link: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 24, marginTop: 18 },
-  linkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  linkText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
 });
