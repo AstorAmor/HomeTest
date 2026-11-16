@@ -462,7 +462,7 @@ const RoutineNameInput = ({ value, placeholder, onChange }: { value: string; pla
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.divider },
   cancel: { color: Colors.accent, fontSize: 16, fontWeight: '600' },
   topTitle: { flex: 1, color: Colors.textPrimary, fontSize: 16, fontWeight: '800', textAlign: 'center' },

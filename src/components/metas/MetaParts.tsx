@@ -477,7 +477,7 @@ export const metaStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   ringPct: { color: Colors.textPrimary, fontSize: 19, fontWeight: '600', letterSpacing: -0.3, fontVariant: ['tabular-nums'] },
   ringPctBig: { fontSize: 28 },

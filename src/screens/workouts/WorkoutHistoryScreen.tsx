@@ -192,7 +192,7 @@ export const WorkoutHistoryScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   muted: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   empty: { alignItems: 'center', gap: 10, marginTop: 40, paddingHorizontal: 20 },

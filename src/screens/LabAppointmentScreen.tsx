@@ -118,7 +118,7 @@ export const LabAppointmentScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   empty: { color: Colors.textSecondary, fontSize: 14, marginHorizontal: 20, marginTop: 12 },
   hero: { alignItems: 'center', gap: 4, marginHorizontal: 20, marginBottom: 18 },

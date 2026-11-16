@@ -129,7 +129,7 @@ export const LogWorkoutScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   centered: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   topBar: {
     flexDirection: 'row',

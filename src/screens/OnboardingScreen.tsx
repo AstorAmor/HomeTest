@@ -488,7 +488,7 @@ export const OnboardingScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   centered: {
     justifyContent: 'center',

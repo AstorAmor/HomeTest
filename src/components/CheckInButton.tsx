@@ -3,8 +3,8 @@
 // (mañana, mediodía, noche). Alrededor, un aro fino tipo cometa dice cuántos llevas: la cola se estrecha y
 // se difumina, la cabeza lleva un punto de luz, y va de jade a champán.
 // - El tramo nuevo se rellena poco a poco y la nebulosa se enciende a la vez.
-// - Al completar los 3 (justo después de guardar el tercero): el cometa da la vuelta, la nebulosa crece y
-//   vuelve, salen los destellos dorados y Hoy suelta confeti (`onComplete`).
+// - Al completar los 3 (justo después de guardar el tercero): el cometa da la vuelta y la nebulosa crece y
+//   vuelve. Sin confeti ni destellos (fundador, 2026-11-16).
 // Antes (fundador, 2026-11-05): carita sobre un disco y donut de 3 tramos dorados.
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -28,7 +28,7 @@ const TAIL_W = 0.5;
 const TONES = Colors.isLight ? ['#2E9A72', '#7E9A55', '#B08A45'] : ['#83D6B4', '#B4C894', '#D8B978'];
 const toneAt = (f: number) => (f <= 0.5 ? mixHex(TONES[0], TONES[1], f * 2) : mixHex(TONES[1], TONES[2], (f - 0.5) * 2));
 
-export function CheckInButton({ done, onPress, onComplete }: { done: number; onPress: () => void; onComplete?: () => void }) {
+export function CheckInButton({ done, onPress }: { done: number; onPress: () => void }) {
   const c = SIZE / 2;
   const r = RING_R;
   const n = Math.max(0, Math.min(CHECKINS_PER_DAY, done));
@@ -44,9 +44,8 @@ export function CheckInButton({ done, onPress, onComplete }: { done: number; onP
     if (n >= CHECKINS_PER_DAY && was < CHECKINS_PER_DAY && checkInSavedRecently()) {
       clearCheckInSaved();
       setBurst((b) => b + 1);
-      onComplete?.();
     }
-  }, [n, onComplete]);
+  }, [n]);
 
   const at = (f: number) => {
     const a = f * 2 * Math.PI - Math.PI / 2;

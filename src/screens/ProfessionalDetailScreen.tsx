@@ -188,7 +188,7 @@ const Stat = ({ icon, color, value, label }: { icon: string; color: string; valu
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
   photo: { width: 84, height: 84, borderRadius: 42 },

@@ -203,7 +203,7 @@ export const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 24 },
   cameraBadge: {

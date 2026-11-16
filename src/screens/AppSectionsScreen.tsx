@@ -84,7 +84,7 @@ export const AppSectionsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginHorizontal: 20, marginBottom: 10 },
   inline: { marginHorizontal: 0, marginBottom: 0 },

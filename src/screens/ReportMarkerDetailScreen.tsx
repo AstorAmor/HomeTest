@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   historyText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   content: {
     paddingHorizontal: 20,

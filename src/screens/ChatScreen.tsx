@@ -145,7 +145,7 @@ ${t}` : t));
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   notice: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginHorizontal: 24, marginBottom: 6 },
   list: { paddingHorizontal: 16, paddingVertical: 8, gap: 8, flexGrow: 1 },
   bubble: { maxWidth: '80%', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },

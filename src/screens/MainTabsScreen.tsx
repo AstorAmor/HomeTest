@@ -8,8 +8,6 @@ import { ScheduleScreen } from './ScheduleScreen';
 import { LabScreen } from './LabScreen';
 import { MoreScreen } from './MoreScreen';
 import { BottomTabBar, TABS } from '@/components/BottomTabBar';
-import { Colors } from '@/constants/colors';
-import { AmbientBackground } from '@/components/AmbientBackground';
 import { TourOverlay } from '@/components/tour/TourOverlay';
 import { useAuth } from '@/context/AuthContext';
 import { setVisibleTab } from '@/hooks/useLiveMotion';
@@ -35,8 +33,6 @@ export const MainTabsScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Fondo ambiental detrás de las pestañas, que lo dejan ver (rediseño 2026-11-16) */}
-      <AmbientBackground />
       <PagerView
         ref={pagerRef}
         style={styles.pager}
@@ -68,9 +64,10 @@ export const MainTabsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  // Transparente: el fondo ambiental lo pone el _layout debajo de cada pantalla (ScreenBackdrop)
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   pager: {
     flex: 1,

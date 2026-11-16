@@ -191,7 +191,7 @@ export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   topBar: {
     flexDirection: 'row',

@@ -225,7 +225,7 @@ export const ShareCreateScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
   step: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', paddingHorizontal: 20, marginTop: 14, marginBottom: 10 },
   stepRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingRight: 20 },

@@ -334,7 +334,7 @@ export const DietBuilderScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 30 },
   progress: { height: 4, backgroundColor: Colors.cardBorder, marginHorizontal: 20, borderRadius: 2, overflow: 'hidden', marginBottom: 14 },
   progressFill: { height: 4, backgroundColor: Colors.accent },

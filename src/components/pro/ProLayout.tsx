@@ -181,7 +181,7 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   wideRoot: { flex: 1, flexDirection: 'row', backgroundColor: Colors.background },
   sidebar: {
     width: 230,

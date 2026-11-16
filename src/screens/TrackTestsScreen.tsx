@@ -107,7 +107,7 @@ export const TrackTestsScreen = () => (
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', paddingHorizontal: 20, marginBottom: 12, marginTop: 4 },
   sectionTitleInline: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700' },

@@ -97,7 +97,7 @@ export const NutrientsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginHorizontal: 20, marginBottom: 6 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 6 },

@@ -157,7 +157,7 @@ export const ReportSummaryScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   content: {
     paddingBottom: 40,

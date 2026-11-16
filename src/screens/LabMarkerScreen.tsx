@@ -190,7 +190,7 @@ export const LabMarkerScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   empty: { color: Colors.textSecondary, fontSize: 14, marginHorizontal: 20 },
   kicker: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8, marginHorizontal: 20, marginBottom: 10 },

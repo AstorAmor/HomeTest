@@ -226,7 +226,7 @@ const Stat = ({ value, label, color, onPress }: { value: number; label: string; 
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
   intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginBottom: 14 },
   subhead: { color: Colors.textSecondary, fontSize: 13, marginHorizontal: 20, marginBottom: 12 },

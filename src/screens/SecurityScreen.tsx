@@ -132,7 +132,7 @@ export const SecurityScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   section: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700', marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
   card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, overflow: 'hidden' },

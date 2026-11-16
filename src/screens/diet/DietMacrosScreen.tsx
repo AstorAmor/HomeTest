@@ -282,7 +282,7 @@ const CompareTable = ({ target, menu }: { target: DietTargets; menu: { kcal: num
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { padding: 20, paddingBottom: 40, gap: 12 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
   caution: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderWidth: 1, borderColor: Colors.accent, borderRadius: 12, padding: 12 },

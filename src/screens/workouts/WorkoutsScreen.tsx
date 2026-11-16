@@ -297,7 +297,7 @@ export const WorkoutsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   hero: { marginHorizontal: 20, marginBottom: 16, gap: 8 },
   heroTitle: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900' },

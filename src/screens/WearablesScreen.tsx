@@ -396,7 +396,7 @@ export const WearablesScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40, paddingHorizontal: 20, gap: 12 },
   card: {
     backgroundColor: Colors.card,

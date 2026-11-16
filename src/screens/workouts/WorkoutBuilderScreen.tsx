@@ -191,7 +191,7 @@ export const WorkoutBuilderScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 14 },
   q: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 18, marginBottom: 10 },

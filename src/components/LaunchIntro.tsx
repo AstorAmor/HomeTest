@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { ClipPath, Defs, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { KuovaWordmark } from '@/components/KuovaLogo';
 
@@ -20,6 +21,26 @@ import { KuovaWordmark } from '@/components/KuovaLogo';
 // app.json → expo-splash-screen), la K dorada con brillo de la imagen de marca y «KUOVA HEALTH» debajo.
 // Solo en el móvil y al abrir la app en frío (index.js); dura ~1,5 s, se salta con un toque y, con
 // «reducir movimiento», no se mueve. Es JavaScript: llega por OTA (la pantalla nativa, no).
+//
+// El paso desde la nativa (fundador, 2026-11-16: «una especie de salto»): antes la nativa la quitaba
+// _layout al montarse, un rato después, y mientras tanto la entrada ya corría por debajo sin verse; al
+// irse la nativa, el nombre y el brillo aparecían de golpe a medias. Ahora la quita la entrada en cuanto
+// está pintada (su primer fotograma es idéntico: mismo fondo y la misma K en el mismo sitio), empieza
+// cuando la nativa ya no se ve y no se va hasta que la app está montada debajo (`markAppReady`).
+const NATIVE_FADE = 160; // ms del fundido de la nativa sobre la entrada (son iguales: no se nota)
+const START = NATIVE_FADE + 40;
+const MAX_WAIT = 4000; // si la app tarda más, la entrada se va igual
+
+let appReady = false;
+const readyWaiters: (() => void)[] = [];
+// Lo llama el _layout de las rutas al montarse: la app ya está debajo y la entrada se puede ir
+export function markAppReady() {
+  if (appReady) return;
+  appReady = true;
+  readyWaiters.splice(0).forEach((f) => f());
+}
+const whenAppReady = () => new Promise<void>((resolve) => (appReady ? resolve() : readyWaiters.push(resolve)));
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export const LAUNCH_BG = '#0E2A24'; // = backgroundColor del splash nativo
 export const K_PATH = 'M0 0H38V127L197 0H260L103.67 115.49L250 257H194L72.58 138.45L38 164V202C37 230 20 250 0 257Z';
@@ -81,13 +102,21 @@ export function LaunchIntro() {
   };
 
   useEffect(() => {
-    if (reduceMotion) {
-      close(700, 250);
-      return;
+    let alive = true;
+    // Fuera la nativa ya: lo que queda debajo es esta misma imagen
+    SplashScreen.setOptions({ duration: NATIVE_FADE, fade: true });
+    SplashScreen.hideAsync().catch(() => undefined);
+    if (!reduceMotion) {
+      reveal.value = withDelay(START, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
+      shine.value = withDelay(START + 280, withTiming(1, { duration: 780, easing: Easing.inOut(Easing.quad) }));
     }
-    reveal.value = withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) });
-    shine.value = withDelay(280, withTiming(1, { duration: 780, easing: Easing.inOut(Easing.quad) }));
-    close(1150, 340);
+    const minimum = reduceMotion ? 700 : START + 1150;
+    Promise.all([sleep(minimum), Promise.race([whenAppReady(), sleep(MAX_WAIT)])]).then(() => {
+      if (alive) close(0, reduceMotion ? 250 : 340);
+    });
+    return () => {
+      alive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

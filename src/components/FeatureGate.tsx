@@ -65,7 +65,7 @@ export function gated<P extends object>(feature: GatedScreen, Screen: React.Comp
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   center: { alignItems: 'center', justifyContent: 'center' },
   content: { paddingBottom: 40 },
   card: {

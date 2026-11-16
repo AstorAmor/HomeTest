@@ -1,10 +1,11 @@
 // Fondo ambiental de las pestañas (rediseño «Emerald Luxury · Living Nebula», 2026-11-16, como el
 // mockup): un degradado verde hondo con brillos esmeralda difusos y un toque de oro muy sutil. Va detrás
-// de las cinco pestañas (MainTabsScreen), que tienen el fondo transparente; al deslizar entre pestañas
+// de cada pantalla (`ScreenBackdrop`, en el `screenLayout` del _layout), que tienen el fondo transparente
+// (fundador, 2026-11-16: «el fondo de las ventanas sigue sin ser gradient»); al deslizar entre pestañas
 // el fondo se queda quieto. Es estático (un SVG que se pinta una vez): nada que animar ni que respetar
 // con «reducir movimiento». En claro, crema con un velo salvia y oro.
 // Paleta: #061A16 · #0B2921 · #17634B · #83D6B4 · #D8B978 (y #F0EFE6 / #8D9E95 para textos).
-import { memo, useId, useState } from 'react';
+import { memo, useId, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Defs, Ellipse, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
@@ -72,3 +73,17 @@ export const AmbientBackground = memo(function AmbientBackground() {
     </View>
   );
 });
+
+// El fondo de cada pantalla de la pila. Opaco a propósito: en Android las pantallas de encima son
+// 'transparentModal' y la de debajo sigue montada, así que el color de base tapa lo de debajo desde el
+// primer fotograma (el degradado se pinta en cuanto se conoce el tamaño).
+export function ScreenBackdrop({ children }: { children: ReactNode }) {
+  return (
+    <View style={[styles.backdrop, { backgroundColor: Colors.isLight ? LIGHT.base[0] : DARK.base[0] }]}>
+      <AmbientBackground />
+      {children}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({ backdrop: { flex: 1 } });

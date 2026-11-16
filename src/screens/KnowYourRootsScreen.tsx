@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
   },
   whoTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
   whoText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   topBar: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 8 },
   circleButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.card, justifyContent: 'center', alignItems: 'center' },
   segments: { flexDirection: 'row', gap: 4 },

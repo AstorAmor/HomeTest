@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -13,6 +13,8 @@ import { PhoneReminders } from '@/components/PhoneReminders';
 import { PermissionsIntro } from '@/components/PermissionsIntro';
 import { MfaGuard } from '@/components/MfaGuard';
 import { AppLock } from '@/components/AppLock';
+import { markAppReady } from '@/components/LaunchIntro';
+import { ScreenBackdrop } from '@/components/AmbientBackground';
 
 // La pantalla de carga se mantiene desde index.js (donde se aplica el tema).
 
@@ -29,12 +31,17 @@ import { AppLock } from '@/components/AppLock';
 // pestañas, onboarding y portal del especialista) siguen en 'card' para no dejar nada viejo debajo.
 // En iOS y en la web no cambia nada.
 const OVER = Platform.OS === 'android' ? 'transparentModal' : undefined;
+
+// Fondo ambiental (degradado) debajo de cada pantalla, que tienen el suyo transparente (2026-11-16)
+const withBackdrop = ({ children }: { children: ReactElement }) => <ScreenBackdrop>{children}</ScreenBackdrop>;
 const BASE = { presentation: 'card' } as const;
 const MODAL = { presentation: OVER ?? 'modal', animation: 'slide_from_bottom' } as const;
 
 export default function Layout() {
   useEffect(() => {
+    // Con la entrada (LaunchIntro) la nativa ya se ha ido; esto cubre la web y el arranque tras cambiar el tema
     SplashScreen.hideAsync();
+    markAppReady();
   }, []);
 
   return (
@@ -47,6 +54,7 @@ export default function Layout() {
           <MfaGuard>
           <WebShell>
           <Stack
+            screenLayout={withBackdrop}
             screenOptions={{
               headerShown: false,
               presentation: OVER,

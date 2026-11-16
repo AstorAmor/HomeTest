@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.cardBorder,
   },
   wholeDayText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 16 },
   card: {

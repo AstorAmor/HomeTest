@@ -249,7 +249,7 @@ export const BookLabScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 28 },
   intro: { color: Colors.textSecondary, fontSize: 14, marginHorizontal: 20, marginBottom: 14 },
   mapWrap: { marginHorizontal: 20 },

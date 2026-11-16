@@ -425,7 +425,7 @@ const Field = ({ label, value, onChange, placeholder, numeric }: { label: string
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 48, paddingHorizontal: 20, gap: 10 },
   sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', marginTop: 18 },
   help: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },

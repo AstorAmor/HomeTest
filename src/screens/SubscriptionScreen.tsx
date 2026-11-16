@@ -33,7 +33,7 @@ export const SubscriptionScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   section: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800', marginHorizontal: 20, marginTop: 22, marginBottom: 10 },
   link: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 24, marginTop: 18 },

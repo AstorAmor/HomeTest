@@ -112,7 +112,7 @@ const CELL = 64;
 const PAD = 12; // relleno de las tarjetas; la cabecera suma el borde (1) para quedar alineada
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 14 },
   summary: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 14 },

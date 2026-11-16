@@ -58,7 +58,6 @@ import { profileRepository, UserProfile } from '@/data/profileRepository';
 import { checkInRepository, dailyCheckInSeries, sampleCheckInSeries, DailyCheckInPoint } from '@/data/checkInRepository';
 import { CheckInEntry, MOMENT_OPTIONS } from '@/types/checkIn';
 import { CheckInButton } from '@/components/CheckInButton';
-import { Confetti } from '@/components/Confetti';
 import { checkInDayKey } from '@/logic/checkInDay';
 import { cycleRepository } from '@/data/cycleRepository';
 import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
@@ -146,14 +145,7 @@ export const TodayScreen = () => {
   // Avisos sin leer (src/logic/nudges: se evalúan al abrir Today) y registro de baño de hoy
   // Check-ins del día (el día de la persona: de madrugada aún cuenta el anterior)
   const [checkInsToday, setCheckInsToday] = useState(0);
-  // Confeti al completar los 3 check-ins del día (lo dispara el botón, justo después de guardar el tercero)
-  const [confetti, setConfetti] = useState(0);
-  useEffect(() => {
-    if (!confetti) return;
-    const id = setTimeout(() => setConfetti(0), 3200);
-    return () => clearTimeout(id);
-  }, [confetti]);
-  const celebrate = useCallback(() => setConfetti(Date.now()), []);
+  // Sin confeti al completar los 3 check-ins (fundador, 2026-11-16): basta con el aro y la nebulosa
   const [bathroomToday, setBathroomToday] = useDeepState<{ bowel: BowelEntry | null; urine: UrineEntry | null }>({
     bowel: null,
     urine: null,
@@ -413,7 +405,7 @@ export const TodayScreen = () => {
             <View style={styles.checkInWrap}>
               {/* La nebulosa viva con su aro de 3 tramos: los check-ins del día (rediseño 2026-11-15) */}
               <TourTarget id="today.checkin" scroll={tourScroll}>
-                <CheckInButton done={checkInsToday} onPress={() => router.push('/check-in')} onComplete={celebrate} />
+                <CheckInButton done={checkInsToday} onPress={() => router.push('/check-in')} />
               </TourTarget>
 
               <TouchableOpacity
@@ -790,7 +782,6 @@ export const TodayScreen = () => {
           </TourTarget>
         )}
       </ScrollView>
-      {confetti > 0 && <Confetti key={confetti} count={90} />}
       {/* Perfil genético y, a las mujeres, cuestionario de la regla: las primeras veces que entra */}
       <WelcomePrompts />
     </SafeAreaView>

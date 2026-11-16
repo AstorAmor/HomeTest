@@ -181,7 +181,7 @@ export const AdminReviewScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   summary: { color: Colors.textSecondary, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
   error: { color: Colors.danger, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },

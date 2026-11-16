@@ -125,7 +125,7 @@ export const PlanUpdateScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
   intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginBottom: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginHorizontal: 20, marginBottom: 14 },

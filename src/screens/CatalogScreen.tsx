@@ -211,7 +211,7 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   searchWrap: {
     flexDirection: 'row',

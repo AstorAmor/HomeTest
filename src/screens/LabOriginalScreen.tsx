@@ -62,7 +62,7 @@ export const LabOriginalScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   empty: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 20 },
   page: { marginBottom: 16, alignItems: 'center' },

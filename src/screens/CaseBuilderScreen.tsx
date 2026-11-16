@@ -269,7 +269,7 @@ export const CaseBuilderScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' },
   intro: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginBottom: 14 },
   card: {

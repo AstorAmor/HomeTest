@@ -226,7 +226,7 @@ const Chip = ({ on, label, icon, onPress }: { on: boolean; label: string; icon?:
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24, paddingHorizontal: 20 },
   intro: { color: Colors.textSecondary, fontSize: 14, marginTop: -6 },
   section: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', marginTop: 20, marginBottom: 10 },

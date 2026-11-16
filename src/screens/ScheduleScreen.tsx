@@ -201,7 +201,7 @@ const EventCard = ({ event, showDate, past = false }: { event: ScheduleEvent; sh
 
 const styles = StyleSheet.create({
   eventLink: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 8 },
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   transparent: { backgroundColor: 'transparent' }, // en la pestaña, deja ver el fondo ambiental
   content: { paddingBottom: 32 },
   card: {

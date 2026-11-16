@@ -69,7 +69,7 @@ export const LearnTopicScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   hero: { marginHorizontal: 20, marginBottom: 16 },
   intro: { color: Colors.textPrimary, fontSize: 16, lineHeight: 23, marginHorizontal: 20, marginBottom: 16 },

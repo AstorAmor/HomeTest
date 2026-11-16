@@ -106,7 +106,7 @@ export const ShoppingListScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   total: { color: Colors.textPrimary, fontSize: 18, fontWeight: '900' },

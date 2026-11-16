@@ -1100,7 +1100,7 @@ const styles = StyleSheet.create({
   editButtons: { flexDirection: 'row', gap: 10, marginTop: 16 },
   editCancel: { flex: 1, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 13 },
   editCancelText: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
   muted: { color: Colors.textSecondary, fontSize: 13, marginHorizontal: 0 },
   meta: { color: Colors.textSecondary, fontSize: 14, marginBottom: 6 },

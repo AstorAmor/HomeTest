@@ -337,7 +337,7 @@ const Stat = ({ icon, label, value }: { icon: string; label: string; value: stri
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   hero: { gap: 8, marginBottom: 18 },
   heroTitle: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900' },

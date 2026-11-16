@@ -7,8 +7,9 @@
 //   0: tres láminas pequeñas, verde hondo y tenue
 //   1: una lámina más; el centro pasa a jade
 //   2: otra más; jade y esmeralda hasta fuera, núcleo champán
-//   3: todas, a su tamaño, luminosas, con el núcleo dorado y destellos
-// Todo cambia fundiéndose, nunca a saltos.
+//   3: todas, a su tamaño, luminosas, con el núcleo dorado
+// Todo cambia fundiéndose, nunca a saltos. Sin destellos ni estrellitas al completar (fundador, 2026-11-16:
+// «quedan un poco cutres»).
 //
 // Rendimiento: el SVG de cada lámina se dibuja una vez; lo que se anima (escala, giro leve, desplazamiento,
 // opacidad) son transformaciones de vistas en el hilo de la interfaz (Reanimated), sin volver a pintar el
@@ -120,7 +121,6 @@ const DARK_P = {
   champagne: '#D8B978',
   core: '#F4F1E4',
   gold: '#FFF1CF',
-  spark: '#F3DFA8',
 };
 const LIGHT_P: typeof DARK_P = {
   dim: ['#EDE7DA', '#E7E0D1', '#E0D8C7', '#D9D0BD', '#D1C8B3', '#C9BFA8'],
@@ -133,7 +133,6 @@ const LIGHT_P: typeof DARK_P = {
   champagne: '#C9A366',
   core: '#FFFFFF',
   gold: '#F2D594',
-  spark: '#B8904F',
 };
 
 function Layer({ size, style, children }: { size: number; style?: object; children: ReactNode }) {
@@ -202,12 +201,6 @@ function Sheet({ i, size, u, P, clock, p }: { i: number; size: number; u: string
   );
 }
 
-// Estrella de cuatro puntas (los destellos dorados)
-const star = (x: number, y: number, s: number) => {
-  const k = s * 0.2;
-  return `M ${x} ${y - s} L ${x + k} ${y - k} L ${x + s} ${y} L ${x + k} ${y + k} L ${x} ${y + s} L ${x - k} ${y + k} L ${x - s} ${y} L ${x - k} ${y - k} Z`;
-};
-
 export function CheckInNebula({ size, progress, burst, moving }: { size: number; progress: number; burst: number; moving: boolean }) {
   const P = Colors.isLight ? LIGHT_P : DARK_P;
   const u = `nb${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -251,10 +244,6 @@ export function CheckInNebula({ size, progress, burst, moving }: { size: number;
   const coreGold = useAnimatedStyle(() => ({
     opacity: interpolate(p.value, [0.5, 1], [0, 0.95], Extrapolation.CLAMP) * (0.82 + 0.18 * Math.sin(TAU * (clock.value * 26 + 0.25))),
     transform: [{ scale: 1 + 0.1 * Math.sin(TAU * (clock.value * 26 + 0.25)) }],
-  }));
-  const sparks = useAnimatedStyle(() => ({
-    opacity: interpolate(p.value, [0.88, 1], [0, 1], Extrapolation.CLAMP) * (0.55 + 0.45 * Math.sin(TAU * clock.value * 36)),
-    transform: [{ rotate: `${clock.value * 360}deg` }],
   }));
 
   return (
@@ -319,27 +308,6 @@ export function CheckInNebula({ size, progress, burst, moving }: { size: number;
           <Path d={K_PATH} fill={Colors.isLight ? '#FFFFFF' : '#04110D'} opacity={Colors.isLight ? 0.5 : 0.55} transform="translate(6 9)" />
           <Path d={K_PATH} fill={Colors.isLight ? '#0E2A24' : `url(#${u}kg)`} />
         </G>
-      </Layer>
-      {/* Destellos dorados: solo con el día completo */}
-      <Layer size={size} style={sparks}>
-        <Defs>
-          <RadialGradient id={`${u}sg`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={P.spark} stopOpacity={0.6} />
-            <Stop offset="1" stopColor={P.spark} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        {[
-          [146, 64, 6.5],
-          [56, 140, 5],
-          [138, 146, 4],
-          [62, 56, 3.5],
-          [158, 112, 3],
-        ].map(([x, y, s], i) => (
-          <G key={i}>
-            <Circle cx={x} cy={y} r={s * 1.7} fill={`url(#${u}sg)`} />
-            <Path d={star(x, y, s)} fill={P.spark} />
-          </G>
-        ))}
       </Layer>
     </Animated.View>
   );

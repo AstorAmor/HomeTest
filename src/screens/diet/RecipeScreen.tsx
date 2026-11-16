@@ -183,7 +183,7 @@ const Tag = ({ icon, text }: { icon: string; text: string }) => (
 );
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
   name: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900', marginTop: 14 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },

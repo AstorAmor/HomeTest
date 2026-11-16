@@ -396,7 +396,7 @@ export const DaysScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 10 },
   intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 6 },
   chartCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginBottom: 8 },

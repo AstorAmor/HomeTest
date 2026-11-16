@@ -393,7 +393,7 @@ export const UploadTestScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   locked: {
     marginHorizontal: 20,

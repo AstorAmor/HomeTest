@@ -242,7 +242,7 @@ export const ProfessionalProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
   photoWrap: { alignSelf: 'center', marginTop: 4 },
   photo: { width: 108, height: 108, borderRadius: 54 },

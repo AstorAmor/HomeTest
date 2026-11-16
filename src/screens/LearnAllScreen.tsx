@@ -50,7 +50,7 @@ export const LearnAllScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   section: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', paddingHorizontal: 20, marginTop: 14, marginBottom: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 20, rowGap: 18 },
