@@ -10,8 +10,8 @@ export const metasEs: Record<string, string> = {
   'No targets': 'Sin metas',
   'About your goals': 'Sobre tus objetivos',
   'See your goals': 'Ver tus objetivos',
-  'Your goals come from your lab results, following Kuova’s recommendations, and from what you set out to do yourself. To meet them, each area holds your exercise, food and habit targets: tap a circle to see them and mark your day.':
-    'Tus objetivos salen de tus análisis, según las recomendaciones de Kuova, y de lo que tú te propongas. Para cumplirlos, cada área tiene tus metas de ejercicio, alimentación y hábitos: toca un círculo para verlas y marcar tu día.',
+  'Your goals come from your lab results, following Kuova’s recommendations, and from what you set out to do yourself. To meet them, each area holds your exercise, food and habit targets: tap an area to see them and mark your day.':
+    'Tus objetivos salen de tus análisis, según las recomendaciones de Kuova, y de lo que tú te propongas. Para cumplirlos, cada área tiene tus metas de ejercicio, alimentación y hábitos: toca un área para verlas y marcar tu día.',
   Automatic: 'Automático',
   'Choose your targets': 'Elige tus metas',
 

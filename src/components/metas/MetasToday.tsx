@@ -1,7 +1,7 @@
 // La sección de Hoy que sustituye al plan: al cerrar tu semana, la enhorabuena (o ánimo); después,
-// «Cumple tus objetivos» con su (i) y los tres donuts de las áreas, centrados en un mismo bloque (cada
-// uno abre su área, donde se marca y se edita). Fundador, 2026-11-05: sin flecha en el título ni
-// «Toca para marcar» debajo de cada círculo.
+// «Tus objetivos» con su (i) y una línea cometa por área (cada una abre su área, donde se marca y se
+// edita). Fundador, 2026-11-05: sin flecha en el título ni «Toca para marcar». 2026-11-16: líneas aquí
+// y círculos en los objetivos del día (antes, al revés).
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,11 +14,11 @@ import { TourTarget } from '@/components/tour/TourTarget';
 import type { TourScroll } from '@/components/tour/tourStore';
 import { useMetas } from '@/hooks/useMetas';
 import { AREAS, AREA_NAME, GOALS, areaScore, metaText, rangeText, resolveMeta, reviewClosing, selectedIds } from '@/logic/metas';
-import { AREA_COLOR, AREA_RING, AreaRing, pct, takePop, usePop } from './MetaParts';
+import { AREA_COLOR, AREA_ICON, AREA_RING, pct, takePop, usePop } from './MetaParts';
 import type { Area, Congrats, ReviewArea } from '@/logic/metas';
 
-// El donut de un área en Hoy: si acabas de completarla (en su pantalla), al volver crece y vuelve una vez
-function TodayRing({ area, score }: { area: Area; score: number | null }) {
+// El % de un área en Hoy: si acabas de completarla (en su pantalla), al volver crece y vuelve una vez
+function TodayPct({ area, score }: { area: Area; score: number | null }) {
   const { scale, pop } = usePop();
   useEffect(() => {
     if (takePop(area)) {
@@ -28,7 +28,10 @@ function TodayRing({ area, score }: { area: Area; score: number | null }) {
   });
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
-      <AreaRing area={area} score={score} />
+      <Text style={styles.areaPct}>
+        {score == null ? '—' : Math.round(score * 100)}
+        {score != null && <Text style={styles.areaPctSign}>%</Text>}
+      </Text>
     </Animated.View>
   );
 }
@@ -143,20 +146,28 @@ export function MetasToday({ tourScroll }: { tourScroll?: TourScroll }) {
       </View>
       <TourTarget id="today.plan" scroll={tourScroll} inset={20}>
         <View style={styles.block}>
-          <View style={styles.levers}>
-            {AREAS.map((a) => (
-              <TourTarget key={a} id={`today.plan.${a}`} scroll={tourScroll}>
-                <TouchableOpacity
-                  style={styles.lever}
-                  onPress={() => router.push(s.sel[a].length ? { pathname: '/metas-area', params: { area: a } } : { pathname: '/metas-elegir', params: { area: a } })}
-                  activeOpacity={0.8}
-                  accessibilityLabel={t(AREA_NAME[a])}
-                >
-                  <TodayRing area={a} score={areaScore(s, a, vals, week ?? undefined, known)} />
-                  <Text style={[styles.leverName, { color: AREA_COLOR[a] }]}>{t(AREA_NAME[a])}</Text>
-                </TouchableOpacity>
-              </TourTarget>
-            ))}
+          <View style={styles.areas}>
+            {AREAS.map((a) => {
+              const score = areaScore(s, a, vals, week ?? undefined, known);
+              return (
+                <TourTarget key={a} id={`today.plan.${a}`} scroll={tourScroll}>
+                  <TouchableOpacity
+                    onPress={() => router.push(s.sel[a].length ? { pathname: '/metas-area', params: { area: a } } : { pathname: '/metas-elegir', params: { area: a } })}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${t(AREA_NAME[a])}: ${score == null ? t('No data') : pct(score)}`}
+                  >
+                    <View style={styles.areaHead}>
+                      <Ionicons name={AREA_ICON[a] as any} size={16} color={AREA_COLOR[a]} style={styles.areaIcon} />
+                      <Text style={[styles.areaName, { color: AREA_COLOR[a] }]}>{t(AREA_NAME[a])}</Text>
+                      <TodayPct area={a} score={score} />
+                      <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+                    </View>
+                    <CometLine progress={score ?? 0} colors={AREA_RING[a]} thickness={4} style={styles.areaLine} />
+                  </TouchableOpacity>
+                </TourTarget>
+              );
+            })}
           </View>
           {none ? (
             <TouchableOpacity style={styles.start} onPress={() => router.push({ pathname: '/metas-elegir', params: { area: 'ej' } })} activeOpacity={0.85}>
@@ -179,7 +190,7 @@ export function MetasToday({ tourScroll }: { tourScroll?: TourScroll }) {
               </TouchableOpacity>
             </View>
             <Text style={styles.sheetText}>
-              {t('Your goals come from your lab results, following Kuova’s recommendations, and from what you set out to do yourself. To meet them, each area holds your exercise, food and habit targets: tap a circle to see them and mark your day.')}
+              {t('Your goals come from your lab results, following Kuova’s recommendations, and from what you set out to do yourself. To meet them, each area holds your exercise, food and habit targets: tap an area to see them and mark your day.')}
             </Text>
             {s.goals.length > 0 && (
               <View style={styles.goals}>
@@ -245,12 +256,17 @@ const styles = StyleSheet.create({
   rvClosing: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, marginTop: 16, marginBottom: 12 },
   title: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary },
-  // Sin tarjeta (rediseño «Emerald Luxury», 2026-11-15): los anillos flotan sobre el fondo
+  // Sin tarjeta (rediseño «Emerald Luxury», 2026-11-15): las líneas flotan sobre el fondo
   block: { marginHorizontal: 20, paddingTop: 4, paddingBottom: 4 },
-  levers: { flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'flex-start' },
-  lever: { alignItems: 'center', gap: 10, paddingHorizontal: 4 },
-  leverName: { fontSize: 13, fontWeight: '700', letterSpacing: 0.2 },
-  note: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 12 },
+  // Una línea cometa por área: icono, nombre y % arriba (toca para abrir el área)
+  areas: { gap: 14 },
+  areaHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  areaIcon: { width: 20, textAlign: 'center' },
+  areaName: { flex: 1, fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
+  areaPct: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  areaPctSign: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
+  areaLine: { marginTop: 2, marginLeft: 20, marginRight: -6 },
+  note: { color: Colors.textMuted, fontSize: 11, textAlign: 'left', marginTop: 12 },
   start: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 12 },
   startText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },

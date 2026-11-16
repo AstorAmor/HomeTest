@@ -9,8 +9,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 
 interface WheelPickerProps {
   items: string[];
@@ -20,13 +19,15 @@ interface WheelPickerProps {
   itemHeight?: number;
   // Filas a la vista: 5 (lo de siempre) o 3, más baja (metas, fundador 2026-11-05)
   visible?: 3 | 5;
-  // Color del fondo sobre el que va (los degradados de arriba y abajo se funden con él)
-  fadeColor?: string;
 }
 
 // Selector tipo "rueda de candado": se gira arriba/abajo y encaja en el valor
 // central. Funciona en nativo y en web (en web no hay onMomentumScrollEnd, así
 // que el encaje se hace con un temporizador cuando el scroll se detiene).
+// Solo los números (fundador, 2026-11-16: «sin un bloque oscuro… un bloque dentro de otro bloque; que los
+// números se muevan de arriba abajo sin tanto alrededor»): sin rayas de selección ni velos de color encima
+// (con el fondo degradado se veían como un rectángulo); el del centro, grande y entero, y los demás se
+// apagan y encogen al alejarse.
 export const WheelPicker = ({
   items,
   selectedIndex,
@@ -34,16 +35,14 @@ export const WheelPicker = ({
   width = 90,
   itemHeight = 40,
   visible = 5,
-  fadeColor = Colors.background,
 }: WheelPickerProps) => {
   const scrollRef = useRef<ScrollView>(null);
   const [visualIndex, setVisualIndex] = useState(selectedIndex);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const height = itemHeight * visible;
   const pad = (visible - 1) / 2;
-  const fade = itemHeight * (visible === 3 ? 0.8 : 1.5);
-  // En la web los id de los degradados son de toda la página: uno por color de fondo
-  const fid = fadeColor.replace(/[^a-zA-Z0-9]/g, '');
+  // Cuánto se apaga cada fila según lo lejos que está del centro
+  const fadeAt = (abs: number) => (abs === 0 ? 1 : abs === 1 ? (visible === 3 ? 0.38 : 0.45) : 0.16);
 
   useEffect(() => {
     // Posición inicial sin animación
@@ -75,10 +74,6 @@ export const WheelPicker = ({
 
   return (
     <View style={{ width, height }}>
-      <View
-        pointerEvents="none"
-        style={[styles.highlight, { top: itemHeight * pad, height: itemHeight }]}
-      />
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
@@ -101,10 +96,11 @@ export const WheelPicker = ({
                 styles.item,
                 {
                   height: itemHeight,
-                  opacity: abs === 0 ? 1 : abs === 1 ? 0.55 : 0.25,
+                  opacity: fadeAt(abs),
                   transform: [
                     { perspective: 400 },
                     { rotateX: `${Math.max(-60, Math.min(60, distance * 22))}deg` },
+                    { scale: abs === 0 ? 1 : abs === 1 ? 0.92 : 0.84 },
                   ],
                 },
               ]}
@@ -114,40 +110,11 @@ export const WheelPicker = ({
           );
         })}
       </ScrollView>
-      <Svg pointerEvents="none" width={width} height={height} style={StyleSheet.absoluteFill}>
-        <Defs>
-          <LinearGradient id={`wheelFadeTop${fid}`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={fadeColor} stopOpacity="1" />
-            <Stop offset="1" stopColor={fadeColor} stopOpacity="0" />
-          </LinearGradient>
-          <LinearGradient id={`wheelFadeBottom${fid}`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={fadeColor} stopOpacity="0" />
-            <Stop offset="1" stopColor={fadeColor} stopOpacity="1" />
-          </LinearGradient>
-        </Defs>
-        <Rect x={0} y={0} width={width} height={fade} fill={`url(#wheelFadeTop${fid})`} />
-        <Rect
-          x={0}
-          y={height - fade}
-          width={width}
-          height={fade}
-          fill={`url(#wheelFadeBottom${fid})`}
-        />
-      </Svg>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  // La selección se marca con dos rayas horizontales (arriba y abajo), sin recuadro
-  highlight: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    borderTopWidth: 1.5,
-    borderBottomWidth: 1.5,
-    borderColor: withAlpha(Colors.accent, 0.7),
-  },
   item: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -159,7 +126,8 @@ const styles = StyleSheet.create({
   },
   itemTextSelected: {
     color: Colors.textPrimary,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
 });

@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
-import { ringTones } from '@/components/GlowRing';
+import { GlowRing, ringTones } from '@/components/GlowRing';
 import { CometLine } from '@/components/CometLine';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
@@ -291,7 +291,7 @@ export const TodayScreen = () => {
   // la distancia ocupa el sitio de las kcal, como antes
   const shownGoals = goalsShown(savedShown, show('bladder'));
   const distanceForKcal = shownGoals.activeKcal && calories == null && distanceKm != null && !shownGoals.distanceM;
-  // Filas de «Tus objetivos del día» (antes, círculos): lo de hoy y el objetivo
+  // Círculos de «Tus objetivos del día»: lo de hoy y el objetivo
   const km = (m: number) => `${(m / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 })} km`;
   const rings = [
     shownGoals.steps && {
@@ -339,7 +339,8 @@ export const TodayScreen = () => {
       goal: litres(goals.waterMl),
       label: t('Water'),
     },
-  ].filter((r) => !!r) as GoalRowProps[];
+  ].filter((r) => !!r) as GoalRingProps[];
+  const ringSize = rings.length >= 5 ? 54 : rings.length === 4 ? 60 : 66;
   const achievements = computeAchievements({
     dailySteps: series.steps ?? [],
     ...achievementData,
@@ -522,20 +523,19 @@ export const TodayScreen = () => {
             </View>
             <TourTarget id="today.readiness" scroll={tourScroll} inset={20}>
             {/* Sin tarjeta ni círculo (rediseño 2026-11-16): un número grande y una línea cometa que va de
-                coral a verde según la puntuación; los objetivos del día, en filas con su barra cometa */}
+                coral a verde según la puntuación. Sin datos de hoy, «—» y la línea vacía con la frase debajo:
+                siempre se ve que está (fundador, 2026-11-16: «no puedo ver si hay un Daily readiness»). Los
+                objetivos del día, en círculos */}
             <View style={styles.readinessBlock}>
-              {readiness ? (
-                <>
-                  <View style={styles.readinessTop}>
-                    <Text style={styles.readinessScore}>{readiness.score}</Text>
-                    <View style={styles.readinessSide}>
-                      <Text style={styles.readinessLabel}>{t(readiness.label)}</Text>
-                      <Text style={styles.readinessOf}>{t('out of 100')}</Text>
-                    </View>
-                  </View>
-                  <CometLine progress={readiness.score / 100} colors={[Colors.coral, Colors.gold, Colors.green]} spread="track" thickness={5} style={styles.readinessLine} />
-                </>
-              ) : (
+              <View style={styles.readinessTop}>
+                <Text style={[styles.readinessScore, !readiness && styles.readinessScoreEmpty]}>{readiness ? readiness.score : '—'}</Text>
+                <View style={styles.readinessSide}>
+                  {readiness && <Text style={styles.readinessLabel}>{t(readiness.label)}</Text>}
+                  <Text style={styles.readinessOf}>{t('out of 100')}</Text>
+                </View>
+              </View>
+              <CometLine progress={readiness ? readiness.score / 100 : 0} colors={[Colors.coral, Colors.gold, Colors.green]} spread="track" thickness={5} style={styles.readinessLine} />
+              {!readiness && (
                 <Text style={styles.readinessEmpty}>
                   {!hasAny
                     ? t('Connect a wearable to see your readiness.')
@@ -558,9 +558,9 @@ export const TodayScreen = () => {
                 <TourTarget id="today.goals" scroll={tourScroll} style={styles.ringsTap}>
                 <TouchableOpacity style={styles.ringsTap} activeOpacity={0.8} onPress={() => router.push('/daily-goals')} accessibilityLabel={t('Your daily goals')}>
                 {rings.length > 0 && (
-                  <View style={styles.goalRows}>
+                  <View style={styles.goalRings}>
                     {rings.map(({ key, ...r }) => (
-                      <GoalRow key={key} {...r} />
+                      <GoalRing key={key} size={ringSize} {...r} />
                     ))}
                   </View>
                 )}
@@ -788,20 +788,16 @@ export const TodayScreen = () => {
   );
 };
 
-// Una fila de «Tus objetivos del día»: icono, nombre, lo de hoy / el objetivo y su barra cometa (antes, un
-// círculo pequeño; fundador, 2026-11-16: círculos solo para la nebulosa y los 3 objetivos)
-type GoalRowProps = { key: string; icon: React.ReactNode; color: string; progress: number; value: string; goal: string; label: string };
-const GoalRow = ({ icon, color, progress, value, goal, label }: Omit<GoalRowProps, 'key'>) => (
-  <View style={styles.goalRow} accessible accessibilityLabel={`${label}: ${value} / ${goal}`}>
-    <View style={styles.goalRowHead}>
-      <View style={styles.goalRowIcon}>{icon}</View>
-      <Text style={styles.goalRowLabel}>{label}</Text>
-      <Text style={styles.goalRowValue}>
-        {value}
-        <Text style={styles.goalRowGoal}>{` / ${goal}`}</Text>
-      </Text>
-    </View>
-    <CometLine progress={progress} colors={ringTones(color)} thickness={3.5} style={styles.goalRowLine} />
+// Un círculo de «Tus objetivos del día»: el anillo cometa con el icono dentro, lo de hoy y el nombre debajo
+// (fundador, 2026-11-16: mejor círculos aquí y líneas en «Tus objetivos»; antes del rediseño, ProgressRing)
+type GoalRingProps = { key: string; icon: React.ReactNode; color: string; progress: number; value: string; goal: string; label: string };
+const GoalRing = ({ icon, color, progress, value, goal, label, size }: Omit<GoalRingProps, 'key'> & { size: number }) => (
+  <View style={styles.goalRing} accessible accessibilityLabel={`${label}: ${value} / ${goal}`}>
+    <GlowRing progress={progress} colors={ringTones(color)} size={size} stroke={size < 60 ? 4 : 4.5}>
+      {icon}
+    </GlowRing>
+    <Text style={styles.goalRingValue}>{value}</Text>
+    <Text style={styles.goalRingLabel}>{label}</Text>
   </View>
 );
 
@@ -1153,7 +1149,9 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
+    marginTop: 8,
   },
+  readinessScoreEmpty: { color: Colors.textMuted },
   readinessScore: {
     color: Colors.textPrimary,
     fontSize: 64,
@@ -1167,15 +1165,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  // Filas de los objetivos del día: nombre y cifras arriba, la barra cometa debajo
-  goalRows: { marginTop: 18, gap: 12 },
-  goalRow: {},
-  goalRowHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  goalRowIcon: { width: 20, alignItems: 'center' },
-  goalRowLabel: { flex: 1, color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  goalRowValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  goalRowGoal: { color: Colors.textMuted, fontSize: 13, fontWeight: '500' },
-  goalRowLine: { marginTop: 2, marginLeft: 20, marginRight: -6 },
+  // Círculos de los objetivos del día: anillo cometa con el icono, la cifra y el nombre debajo
+  goalRings: { flexDirection: 'row', justifyContent: 'space-around', alignSelf: 'stretch', marginTop: 22 },
+  goalRing: { alignItems: 'center' },
+  goalRingValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 8, fontVariant: ['tabular-nums'] },
+  goalRingLabel: { color: Colors.textSecondary, fontSize: 11 },
   sourceText: {
     color: Colors.textMuted,
     fontSize: 11,

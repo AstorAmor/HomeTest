@@ -367,7 +367,7 @@ function DayWheel({ m, value, onChange }: { m: Meta; value: number | null; onCha
   const cur = clamp(Math.round((value ?? 0) / m.f / m.step), 0, opts.length - 1);
   return (
     <View style={styles.wheelRow}>
-      <WheelPicker items={opts.map((x) => fmtMeta(m, x))} selectedIndex={cur} onChange={(i) => onChange(Math.round(opts[i] * m.f * 100) / 100)} width={110} itemHeight={36} visible={3} fadeColor={Colors.backgroundElevated} />
+      <WheelPicker items={opts.map((x) => fmtMeta(m, x))} selectedIndex={cur} onChange={(i) => onChange(Math.round(opts[i] * m.f * 100) / 100)} width={110} itemHeight={36} visible={3} />
       <Text style={styles.wheelUnit}>{unitWord(m, opts[cur])}</Text>
     </View>
   );
@@ -399,7 +399,7 @@ export function TargetStepper({ m, onChange }: { m: Meta; onChange: (tgt: number
             </TouchableOpacity>
           </View>
           <View style={styles.wheelRow}>
-            <WheelPicker items={vals.map((x) => fmtMeta(m, x))} selectedIndex={cur} onChange={(i) => onChange(vals[i])} width={110} itemHeight={36} visible={3} fadeColor={Colors.backgroundElevated} />
+            <WheelPicker items={vals.map((x) => fmtMeta(m, x))} selectedIndex={cur} onChange={(i) => onChange(vals[i])} width={110} itemHeight={36} visible={3} />
             <Text style={styles.wheelUnit}>{`${unitWord(m, vals[cur])} ${per}`.trim()}</Text>
           </View>
         </View>
