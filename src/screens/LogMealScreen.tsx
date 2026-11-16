@@ -10,6 +10,7 @@ import { Confetti } from '@/components/Confetti';
 import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 import { t } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
 
 const MEAL_TYPES: { id: MealEntry['mealType']; label: string }[] = [
   { id: 'breakfast', label: 'Breakfast' },
@@ -169,13 +170,15 @@ export const LogMealScreen = () => {
         </View>
       </KeyboardAwareScrollView>
 
-      <TouchableOpacity
-        style={[styles.cta, !photoUri && !description.trim() && styles.ctaDisabled]}
-        onPress={save}
-        disabled={!photoUri && !description.trim()}
-      >
-        <Text style={styles.ctaText}>{t('Save meal · +10 points')}</Text>
-      </TouchableOpacity>
+      <KeyboardFooter>
+        <TouchableOpacity
+          style={[styles.cta, !photoUri && !description.trim() && styles.ctaDisabled]}
+          onPress={save}
+          disabled={!photoUri && !description.trim()}
+        >
+          <Text style={styles.ctaText}>{t('Save meal · +10 points')}</Text>
+        </TouchableOpacity>
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };

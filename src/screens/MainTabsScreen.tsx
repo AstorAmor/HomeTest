@@ -9,8 +9,10 @@ import { LabScreen } from './LabScreen';
 import { MoreScreen } from './MoreScreen';
 import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
+import { AmbientBackground } from '@/components/AmbientBackground';
 import { TourOverlay } from '@/components/tour/TourOverlay';
 import { useAuth } from '@/context/AuthContext';
+import { setVisibleTab } from '@/hooks/useLiveMotion';
 
 // Pestañas con deslizamiento lateral (también al tocarlas). Las cinco se quedan preparadas
 // (offscreenPageLimit): sin eso, Android suelta las que no se ven y al volver a Hoy la tenía que pintar
@@ -20,6 +22,8 @@ export const MainTabsScreen = () => {
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const initialTab = Math.min(TABS.length - 1, Math.max(0, Number(tab) || 0));
   const [currentPage, setCurrentPage] = useState(initialTab);
+  // Las animaciones que no paran solo se mueven a la vista (useLiveMotion)
+  React.useEffect(() => setVisibleTab(currentPage), [currentPage]);
 
   const handleTabPress = (index: number) => {
     pagerRef.current?.setPage(index);
@@ -31,6 +35,8 @@ export const MainTabsScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Fondo ambiental detrás de las pestañas, que lo dejan ver (rediseño 2026-11-16) */}
+      <AmbientBackground />
       <PagerView
         ref={pagerRef}
         style={styles.pager}

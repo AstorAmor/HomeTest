@@ -140,7 +140,7 @@ export function MetasHomeScreen() {
             onPress={() => router.push(s.sel[a].length ? { pathname: '/metas-area', params: { area: a } } : { pathname: '/metas-elegir', params: { area: a } })}
           >
             <View style={styles.areaHead}>
-              <AreaRing area={a} score={f} size={34} stroke={5} />
+              <AreaRing area={a} score={f} size={34} stroke={4} />
               <Text style={[styles.areaName, { color: AREA_COLOR[a] }]}>{t(AREA_NAME[a])}</Text>
               <Text style={styles.areaPct}>{f == null ? '—' : pct(f)}</Text>
               <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
@@ -381,7 +381,7 @@ export function MetasAreaScreen() {
         </TouchableOpacity>
       </View>
       <View style={styles.bigRing}>
-        <CelebrateRing area={a} score={f} allDone={allDone} armed={armed} onParty={onParty} size={112} stroke={14} sub={t(offset === 0 ? 'this week' : 'last week')} />
+        <CelebrateRing area={a} score={f} allDone={allDone} armed={armed} onParty={onParty} size={124} stroke={8} sub={t(offset === 0 ? 'this week' : 'last week')} />
       </View>
       {first && (
         <Text style={styles.weekNote}>
@@ -704,9 +704,13 @@ export function MetasCommitScreen() {
   const router = useRouter();
   const api = useMetas();
   const [weeks, setWeeks] = useState<number | null>(null);
+  // Recién firmado aquí: se ofrece ir a marcar los hábitos de hoy (fundador, 2026-11-16)
+  const [signedNow, setSignedNow] = useState(false);
   if (!api.data) return <Loading title={t('Your commitment')} />;
   const s = api.data.state;
   const w = weeks ?? s.commit?.weeks ?? 8;
+  // Hábitos si tiene alguno; si no, la primera área con metas
+  const markArea: Area | undefined = s.sel.ha.length ? 'ha' : AREAS.find((a) => s.sel[a].length > 0);
   if (!selectedIds(s).length)
     return (
       <MetasScreenFrame title={t('Your commitment')}>
@@ -746,12 +750,34 @@ export function MetasCommitScreen() {
         ))}
       </View>
       {s.commit ? (
-        <View style={[ms.btn, styles.signed]}>
-          <Ionicons name="checkmark" size={18} color={Colors.ok} />
-          <Text style={[ms.btnText, { color: Colors.ok }]}>{t('Commitment signed')}</Text>
-        </View>
+        <>
+          <View style={[ms.btn, styles.signed]}>
+            <Ionicons name="checkmark" size={18} color={Colors.ok} />
+            <Text style={[ms.btnText, { color: Colors.ok }]}>{t('Commitment signed')}</Text>
+          </View>
+          {signedNow && markArea && (
+            <View style={styles.markNow}>
+              <Text style={styles.markNowText}>
+                {markArea === 'ha' ? t('Shall we mark today’s habits now?') : t('Shall we mark today now?')}
+              </Text>
+              <TouchableOpacity
+                style={[ms.btn, styles.markNowBtn]}
+                onPress={() => router.replace({ pathname: '/metas-area', params: { area: markArea } })}
+                activeOpacity={0.85}
+              >
+                <Text style={ms.btnText}>{t('Go to {area}', { area: t(AREA_NAME[markArea]) })}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </>
       ) : (
-        <TouchableOpacity style={ms.btn} onPress={() => api.update({ ...s, commit: { day: api.today, weeks: w }, closedWeek: null })}>
+        <TouchableOpacity
+          style={ms.btn}
+          onPress={() => {
+            setSignedNow(true);
+            api.update({ ...s, commit: { day: api.today, weeks: w }, closedWeek: null });
+          }}
+        >
           <Text style={ms.btnText}>{t('I commit')}</Text>
         </TouchableOpacity>
       )}
@@ -823,4 +849,7 @@ const styles = StyleSheet.create({
   bul: { flexDirection: 'row', gap: 8, marginTop: 4 },
   bulDot: { color: Colors.textMuted, fontSize: 14, lineHeight: 20 },
   signed: { flexDirection: 'row', justifyContent: 'center', gap: 6, backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.ok },
+  markNow: { marginTop: 18, alignItems: 'center' },
+  markNowText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', textAlign: 'center' },
+  markNowBtn: { alignSelf: 'stretch', marginTop: 10 },
 });

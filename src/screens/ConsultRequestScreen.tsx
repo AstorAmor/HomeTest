@@ -13,6 +13,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { StoredAudio, VoiceRecorder } from '@/components/VoiceNote';
 import { createShare, DataShare, isShareActive, listMyShares, scopeLabel, SHARE_SCOPES, ShareScope } from '@/data/sharing';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
 
 const KINDS: { id: RequestKind; icon: string; hint: string }[] = [
   { id: 'question', icon: 'help-circle-outline', hint: 'A quick question about your health or plan' },
@@ -178,9 +179,11 @@ export const ConsultRequestScreen = () => {
           </>
         )}
       </KeyboardAwareScrollView>
-      <TouchableOpacity style={[styles.cta, !message.trim() && !audioUri && { opacity: 0.5 }]} disabled={(!message.trim() && !audioUri) || state === 'sending'} onPress={send}>
-        {state === 'sending' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{tr('Send request')}</Text>}
-      </TouchableOpacity>
+      <KeyboardFooter>
+        <TouchableOpacity style={[styles.cta, !message.trim() && !audioUri && { opacity: 0.5 }]} disabled={(!message.trim() && !audioUri) || state === 'sending'} onPress={send}>
+          {state === 'sending' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{tr('Send request')}</Text>}
+        </TouchableOpacity>
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };

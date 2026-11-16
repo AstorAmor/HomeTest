@@ -6,7 +6,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
-import { ProgressRing } from '@/components/ProgressRing';
+import { ringTones } from '@/components/GlowRing';
+import { CometLine } from '@/components/CometLine';
 import { TrendChart } from '@/components/TrendChart';
 import { CycleStrip } from '@/components/CycleStrip';
 import { currentReport } from '@/data/reportRepository';
@@ -174,7 +175,8 @@ export const TodayScreen = () => {
   const [summary, setSummary] = useDeepState<SummaryLine[]>([]);
   // Los últimos 7 días cuelgan del check-in: desplegados por defecto, la flecha los pliega y se
   // recuerda (clave v2: antes empezaban plegados y la elección guardada era la contraria)
-  const [weekOpen, setWeekOpen] = useState(true);
+  // «Tus últimos 7 días» sale plegado de primeras (fundador, 2026-11-15); se recuerda si lo abres (clave nueva v3)
+  const [weekOpen, setWeekOpen] = useState(false);
 
   // Peso: el último y cuándo toca pesarse (una vez por semana)
   const [weight, setWeight] = useState<WeighAdvice | null>(null);
@@ -190,7 +192,7 @@ export const TodayScreen = () => {
   );
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
-    userFlags.get('today_week_open.v2').then((v) => setWeekOpen(v !== false));
+    userFlags.get('today_week_open.v3').then((v) => setWeekOpen(v === true));
     Promise.all([
       userFlags.get(reportSeenKey(currentReport.report_id)),
       labAppointmentEvents().catch(() => []),
@@ -297,14 +299,25 @@ export const TodayScreen = () => {
   // la distancia ocupa el sitio de las kcal, como antes
   const shownGoals = goalsShown(savedShown, show('bladder'));
   const distanceForKcal = shownGoals.activeKcal && calories == null && distanceKm != null && !shownGoals.distanceM;
+  // Filas de «Tus objetivos del día» (antes, círculos): lo de hoy y el objetivo
+  const km = (m: number) => `${(m / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 })} km`;
   const rings = [
-    shownGoals.steps && { key: 'steps', icon: <Ionicons name="footsteps" size={16} color={Colors.sky} />, color: Colors.sky, progress: steps / goals.steps, value: steps.toLocaleString(dateLocale()), label: t('Steps') },
+    shownGoals.steps && {
+      key: 'steps',
+      icon: <Ionicons name="footsteps" size={16} color={Colors.sky} />,
+      color: Colors.sky,
+      progress: steps / goals.steps,
+      value: steps.toLocaleString(dateLocale()),
+      goal: goals.steps.toLocaleString(dateLocale()),
+      label: t('Steps'),
+    },
     shownGoals.activeKcal && !distanceForKcal && {
       key: 'kcal',
       icon: <Ionicons name="flame" size={16} color={Colors.coral} />,
       color: Colors.coral,
       progress: (calories ?? 0) / goals.activeKcal,
       value: calories != null ? `${calories}` : '—',
+      goal: goals.activeKcal.toLocaleString(dateLocale()),
       label: t('Active kcal'),
     },
     (shownGoals.distanceM || distanceForKcal) && {
@@ -312,13 +325,29 @@ export const TodayScreen = () => {
       icon: <Ionicons name="navigate-outline" size={16} color={Colors.amber} />,
       color: Colors.amber,
       progress: (distanceKm ?? 0) / goals.distanceM,
-      value: distanceKm != null ? (distanceKm / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 }) : '—',
-      label: t('km'),
+      value: distanceKm != null ? km(distanceKm) : '—',
+      goal: km(goals.distanceM),
+      label: t('Distance'),
     },
-    shownGoals.sleepMin && { key: 'sleep', icon: <Ionicons name="moon" size={15} color={Colors.violet} />, color: Colors.violet, progress: sleep / goals.sleepMin, value: sleep ? formatSleep(sleep) : '—', label: t('Sleep') },
-    shownGoals.waterMl && { key: 'water', icon: <Ionicons name="water" size={16} color={Colors.water} />, color: Colors.water, progress: water.total / goals.waterMl, value: litres(water.total), label: t('Water') },
-  ].filter((r) => !!r) as { key: string; icon: React.ReactNode; color: string; progress: number; value: string; label: string }[];
-  const ringSize = rings.length >= 5 ? 52 : rings.length === 4 ? 58 : 64;
+    shownGoals.sleepMin && {
+      key: 'sleep',
+      icon: <Ionicons name="moon" size={15} color={Colors.violet} />,
+      color: Colors.violet,
+      progress: sleep / goals.sleepMin,
+      value: sleep ? formatSleep(sleep) : '—',
+      goal: formatSleep(goals.sleepMin),
+      label: t('Sleep'),
+    },
+    shownGoals.waterMl && {
+      key: 'water',
+      icon: <Ionicons name="water" size={16} color={Colors.water} />,
+      color: Colors.water,
+      progress: water.total / goals.waterMl,
+      value: litres(water.total),
+      goal: litres(goals.waterMl),
+      label: t('Water'),
+    },
+  ].filter((r) => !!r) as GoalRowProps[];
   const achievements = computeAchievements({
     dailySteps: series.steps ?? [],
     ...achievementData,
@@ -382,7 +411,7 @@ export const TodayScreen = () => {
         {show('checkin') && (
           <>
             <View style={styles.checkInWrap}>
-              {/* Un botón con la carita y un donut de 3 tramos: los check-ins del día (fundador, 2026-11-05) */}
+              {/* La nebulosa viva con su aro de 3 tramos: los check-ins del día (rediseño 2026-11-15) */}
               <TourTarget id="today.checkin" scroll={tourScroll}>
                 <CheckInButton done={checkInsToday} onPress={() => router.push('/check-in')} onComplete={celebrate} />
               </TourTarget>
@@ -391,7 +420,7 @@ export const TodayScreen = () => {
                 style={styles.weekToggle}
                 onPress={() => {
                   setWeekOpen(!weekOpen);
-                  userFlags.set('today_week_open.v2', !weekOpen);
+                  userFlags.set('today_week_open.v3', !weekOpen);
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ expanded: weekOpen }}
@@ -434,15 +463,14 @@ export const TodayScreen = () => {
 
         {show('medication') && (
           <TourTarget id="today.medication" scroll={tourScroll} inset={20}>
-          <View style={styles.medCard}>
+          {/* Sin tarjeta (rediseño «Emerald Luxury», 2026-11-16): flota sobre el fondo ambiental */}
+          <View style={styles.medBlock}>
           <ZoneChangeBanner onChanged={load} />
           <View style={styles.medHeader}>
           <TouchableOpacity style={styles.medHeaderMain} onPress={() => router.push('/medications')} activeOpacity={0.85}>
-            <View style={styles.inboxIcon}>
-              <Ionicons name="medical-outline" size={20} color={Colors.gold} />
-            </View>
+            <Ionicons name="medical-outline" size={20} color={Colors.gold} style={styles.medIcon} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.fullPlanTitle}>{t('Medication & supplements')}</Text>
+              <Text style={styles.medTitle}>{t('Medication & supplements')}</Text>
               <Text style={styles.fullPlanSub}>
                 {dosesToday.length === 0
                   ? t('Add what you take to keep track')
@@ -483,7 +511,7 @@ export const TodayScreen = () => {
 
         {cycle && show('cycle') && (
           <View style={styles.block}>
-            <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />
+            <CycleStrip variant="line" info={cycle} onPress={() => router.push('/cycle-detail')} />
           </View>
         )}
 
@@ -501,18 +529,20 @@ export const TodayScreen = () => {
               <InfoButton topic="readiness" />
             </View>
             <TourTarget id="today.readiness" scroll={tourScroll} inset={20}>
-            <View style={[styles.card, styles.readinessCard]}>
+            {/* Sin tarjeta ni círculo (rediseño 2026-11-16): un número grande y una línea cometa que va de
+                coral a verde según la puntuación; los objetivos del día, en filas con su barra cometa */}
+            <View style={styles.readinessBlock}>
               {readiness ? (
-                <ProgressRing
-                  size={156}
-                  strokeWidth={14}
-                  progress={readiness.score / 100}
-                  color={Colors.green}
-                  gradient={[Colors.coral, Colors.gold, Colors.green]}
-                >
-                  <Text style={styles.readinessScore}>{readiness.score}</Text>
-                  <Text style={styles.readinessLabel}>{t(readiness.label)}</Text>
-                </ProgressRing>
+                <>
+                  <View style={styles.readinessTop}>
+                    <Text style={styles.readinessScore}>{readiness.score}</Text>
+                    <View style={styles.readinessSide}>
+                      <Text style={styles.readinessLabel}>{t(readiness.label)}</Text>
+                      <Text style={styles.readinessOf}>{t('out of 100')}</Text>
+                    </View>
+                  </View>
+                  <CometLine progress={readiness.score / 100} colors={[Colors.coral, Colors.gold, Colors.green]} spread="track" thickness={5} style={styles.readinessLine} />
+                </>
               ) : (
                 <Text style={styles.readinessEmpty}>
                   {!hasAny
@@ -536,9 +566,9 @@ export const TodayScreen = () => {
                 <TourTarget id="today.goals" scroll={tourScroll} style={styles.ringsTap}>
                 <TouchableOpacity style={styles.ringsTap} activeOpacity={0.8} onPress={() => router.push('/daily-goals')} accessibilityLabel={t('Your daily goals')}>
                 {rings.length > 0 && (
-                  <View style={styles.smallRings}>
+                  <View style={styles.goalRows}>
                     {rings.map(({ key, ...r }) => (
-                      <SmallRing key={key} size={ringSize} {...r} />
+                      <GoalRow key={key} {...r} />
                     ))}
                   </View>
                 )}
@@ -767,27 +797,20 @@ export const TodayScreen = () => {
   );
 };
 
-const SmallRing = ({
-  icon,
-  color,
-  progress,
-  value,
-  label,
-  size = 64,
-}: {
-  icon: React.ReactNode;
-  color: string;
-  progress: number;
-  value: string;
-  label: string;
-  size?: number;
-}) => (
-  <View style={styles.smallRing}>
-    <ProgressRing size={size} strokeWidth={size < 60 ? 6 : 7} progress={progress} color={color}>
-      {icon}
-    </ProgressRing>
-    <Text style={styles.smallRingValue}>{value}</Text>
-    <Text style={styles.smallRingLabel}>{label}</Text>
+// Una fila de «Tus objetivos del día»: icono, nombre, lo de hoy / el objetivo y su barra cometa (antes, un
+// círculo pequeño; fundador, 2026-11-16: círculos solo para la nebulosa y los 3 objetivos)
+type GoalRowProps = { key: string; icon: React.ReactNode; color: string; progress: number; value: string; goal: string; label: string };
+const GoalRow = ({ icon, color, progress, value, goal, label }: Omit<GoalRowProps, 'key'>) => (
+  <View style={styles.goalRow} accessible accessibilityLabel={`${label}: ${value} / ${goal}`}>
+    <View style={styles.goalRowHead}>
+      <View style={styles.goalRowIcon}>{icon}</View>
+      <Text style={styles.goalRowLabel}>{label}</Text>
+      <Text style={styles.goalRowValue}>
+        {value}
+        <Text style={styles.goalRowGoal}>{` / ${goal}`}</Text>
+      </Text>
+    </View>
+    <CometLine progress={progress} colors={ringTones(color)} thickness={3.5} style={styles.goalRowLine} />
   </View>
 );
 
@@ -858,7 +881,7 @@ const BiomarkerCard = ({
 };
 
 const styles = StyleSheet.create({
-  goalsLink: { color: Colors.accent, fontSize: 12, fontWeight: '700', textAlign: 'center', marginTop: 10 },
+  goalsLink: { color: Colors.accent, fontSize: 12, fontWeight: '700', marginTop: 12 },
   // A todo lo ancho de la tarjeta (centrada): si no, los cuatro círculos se juntan en medio
   ringsTap: { alignSelf: 'stretch' },
   summaryCard: {
@@ -874,20 +897,19 @@ const styles = StyleSheet.create({
   summaryDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
   summaryText: { flex: 1, color: Colors.textPrimary, fontSize: 14, lineHeight: 19 },
   summaryHighlight: { fontWeight: '800', color: Colors.gold },
+  // Sin tarjeta (rediseño «Emerald Luxury», 2026-11-15): la nebulosa flota sobre el fondo y los 7 días
+  // quedan debajo de un separador fino
   checkInWrap: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
+    paddingHorizontal: 4,
+    paddingTop: 4,
     marginHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   weekToggle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: Colors.divider },
   weekToggleText: { flex: 1, color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent', // deja ver el fondo ambiental de las pestañas
   },
   content: {
     paddingBottom: 32,
@@ -961,19 +983,18 @@ const styles = StyleSheet.create({
   planHeroTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
   fullPlanLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10 },
   fullPlanLinkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  medCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
+  // Sin tarjeta (2026-11-16): título y tomas sobre el fondo, con una raya fina encima de las tomas
+  medBlock: {
+    paddingVertical: 6,
     marginHorizontal: 20,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   medHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  medHeaderMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  medToggle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.background },
-  medDoses: { marginTop: 8, borderTopWidth: 1, borderTopColor: Colors.divider },
+  medHeaderMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  medIcon: { width: 22, textAlign: 'center' },
+  medTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
+  medToggle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  medDoses: { marginTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.divider },
   bathroomCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1122,10 +1143,15 @@ const styles = StyleSheet.create({
   },
   sectionTitleTight: { marginBottom: 2 },
   sectionHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, paddingHorizontal: 20, marginBottom: 12 },
-  readinessCard: {
-    alignItems: 'center',
-    paddingVertical: 22,
+  // Disposición sin tarjeta: el número grande a la izquierda y lo que significa al lado
+  readinessBlock: {
+    marginHorizontal: 20,
+    marginBottom: 12,
   },
+  readinessTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 2 },
+  readinessSide: { flex: 1 },
+  readinessOf: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  readinessLine: { marginHorizontal: -10 }, // el brillo de los extremos, fuera del margen
   daysLink: {
     color: Colors.accent,
     fontSize: 13,
@@ -1136,46 +1162,33 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
-    textAlign: 'center',
-    paddingHorizontal: 18,
   },
   readinessScore: {
     color: Colors.textPrimary,
-    fontSize: 44,
-    fontWeight: '800',
+    fontSize: 64,
+    lineHeight: 72,
+    fontWeight: '200',
+    letterSpacing: -1,
+    fontVariant: ['tabular-nums'],
   },
   readinessLabel: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-    maxWidth: 110,
-  },
-  smallRings: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignSelf: 'stretch',
-    marginTop: 22,
-  },
-  smallRing: {
-    alignItems: 'center',
-  },
-  smallRingValue: {
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    marginTop: 8,
   },
-  smallRingLabel: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-  },
+  // Filas de los objetivos del día: nombre y cifras arriba, la barra cometa debajo
+  goalRows: { marginTop: 18, gap: 12 },
+  goalRow: {},
+  goalRowHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  goalRowIcon: { width: 20, alignItems: 'center' },
+  goalRowLabel: { flex: 1, color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  goalRowValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  goalRowGoal: { color: Colors.textMuted, fontSize: 13, fontWeight: '500' },
+  goalRowLine: { marginTop: 2, marginLeft: 20, marginRight: -6 },
   sourceText: {
     color: Colors.textMuted,
     fontSize: 11,
-    marginTop: 16,
-    textAlign: 'center',
-    paddingHorizontal: 16,
+    marginTop: 14,
   },
   grid: {
     flexDirection: 'row',

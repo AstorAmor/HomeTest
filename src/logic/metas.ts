@@ -613,6 +613,41 @@ export function weeklyCongrats(s: MetasState, today: string, valuesFor: (days: s
   };
 }
 
+// Al tocar la enhorabuena de la semana (fundador, 2026-11-16): área por área, lo que te propusiste y lo que
+// hiciste esa semana (en tu primera, desde el día en que empezaste y con las metas a la semana en
+// proporción). El % del área es el de su donut; una meta sin datos esa semana no cuenta en él.
+export interface ReviewRow {
+  id: string;
+  target: string; // «2 sesiones de fuerza a la semana»
+  done: string; // «1 de 2 sesiones», «4 de 7 días», «Sin datos esa semana»
+}
+export interface ReviewArea {
+  area: Area;
+  score: number | null;
+  rows: ReviewRow[];
+}
+export function weekReview(s: MetasState, weekVals: ValuesById, w: WeekPart = CLOSED_WEEK): ReviewArea[] {
+  const part: WeekPart = { ...w, current: false };
+  return AREAS.filter((a) => s.sel[a].length > 0).map((area) => ({
+    area,
+    score: areaScore(s, area, weekVals, part),
+    rows: s.sel[area].flatMap((id) => {
+      const m = resolveMeta(s, id);
+      if (!m) return [];
+      const e = evalMeta(m, weekVals[id] ?? Array(7).fill(null), part);
+      return [{ id, target: metaText({ ...m, tgt: e.tgt }), done: progressText(m, e) }];
+    }),
+  }));
+}
+
+// La frase del final de ese resumen: cálida y sin culpa (queda una semana entera por delante)
+export const reviewClosing = (tone: Congrats['tone']) =>
+  tone === 'done'
+    ? t('Same again this week? You know how.')
+    : tone === 'almost'
+      ? t('This week you have room to get there. Keep going, one step at a time.')
+      : t('This week has just started, so there is plenty of room. Don’t give up: every small step counts.');
+
 // ===== Textos =====
 export const r2 = (x: number) => Math.round(x * 100) / 100;
 export const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));

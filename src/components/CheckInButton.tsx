@@ -1,125 +1,109 @@
-// El check-in de Hoy (fundador, 2026-11-05): un botón redondo con la carita y, alrededor, un donut de 3
-// tramos que se llena con los check-ins del día (mañana, mediodía, noche).
-// - Modo claro: círculo blanco y la carita en verde KUOVA (fundador, 2026-11-05: el verde de fondo
-//   quedaba mal). Oscuro: degradado ámbar → dorado.
-// - El tramo nuevo se rellena poco a poco y el donut va cogiendo color (más intenso con cada uno).
-// - Al completar los 3 (justo después de guardar el tercero): el anillo se cierra, la carita sale hacia
-//   delante y Hoy suelta confeti (`onComplete`).
+// El check-in de Hoy. Rediseño «Emerald Luxury · Living Nebula» (2026-11-15): la carita deja paso a una
+// nebulosa viva (CheckInNebula) que siempre se mueve un poco y gana luz con cada check-in del día
+// (mañana, mediodía, noche). Alrededor, un aro fino tipo cometa dice cuántos llevas: la cola se estrecha y
+// se difumina, la cabeza lleva un punto de luz, y va de jade a champán.
+// - El tramo nuevo se rellena poco a poco y la nebulosa se enciende a la vez.
+// - Al completar los 3 (justo después de guardar el tercero): el cometa da la vuelta, la nebulosa crece y
+//   vuelve, salen los destellos dorados y Hoy suelta confeti (`onComplete`).
+// Antes (fundador, 2026-11-05): carita sobre un disco y donut de 3 tramos dorados.
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
+import { mixHex } from '@/components/GlowRing';
 import { Colors, withAlpha } from '@/constants/colors';
 import { checkInSavedRecently, clearCheckInSaved } from '@/logic/checkInCelebration';
+import { CheckInNebula } from '@/components/CheckInNebula';
+import { useLiveMotion } from '@/hooks/useLiveMotion';
+import { useTween } from '@/hooks/useTween';
+import { TAB } from '@/constants/tabs';
 import { t } from '@/i18n';
 
 export const CHECKINS_PER_DAY = 3;
 
-const SIZE = 132;
-const STROKE = 8;
-const GAP = 0.035; // hueco entre tramos (fracción de la vuelta)
-const KUOVA_GREEN = '#0E2A24';
-const KUOVA_GOLD = '#C9A366';
-// El donut coge color con cada check-in: dorado suave, dorado y dorado KUOVA
-const FILL = ['#E3CFA3', '#D6B97F', KUOVA_GOLD];
-const useNative = Platform.OS !== 'web';
-
-// Un número que va hacia `target` en `ms` (para los trazos del SVG, que no se animan solos en todas partes)
-function useTween(target: number, ms: number): number {
-  const [v, setV] = useState(target);
-  const from = useRef(target);
-  useEffect(() => {
-    const start = from.current;
-    if (start === target) return;
-    const t0 = Date.now();
-    let raf = 0;
-    const step = () => {
-      const k = Math.min(1, (Date.now() - t0) / ms);
-      const eased = 1 - Math.pow(1 - k, 3);
-      const now = start + (target - start) * eased;
-      from.current = now;
-      setV(now);
-      if (k < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [target, ms]);
-  return v;
-}
+const SIZE = 184;
+const RING_R = 84; // radio del aro (px): por fuera de las láminas, dentro del halo
+const HEAD_W = 2.8; // grosor de la cabeza del cometa; la cola baja a TAIL_W y se apaga
+const TAIL_W = 0.5;
+// El cometa va de jade a champán según avanza (en claro, más hondos para que se vean sobre el crema)
+const TONES = Colors.isLight ? ['#2E9A72', '#7E9A55', '#B08A45'] : ['#83D6B4', '#B4C894', '#D8B978'];
+const toneAt = (f: number) => (f <= 0.5 ? mixHex(TONES[0], TONES[1], f * 2) : mixHex(TONES[1], TONES[2], (f - 0.5) * 2));
 
 export function CheckInButton({ done, onPress, onComplete }: { done: number; onPress: () => void; onComplete?: () => void }) {
   const c = SIZE / 2;
-  const r = (SIZE - STROKE) / 2;
+  const r = RING_R;
   const n = Math.max(0, Math.min(CHECKINS_PER_DAY, done));
   const full = n >= CHECKINS_PER_DAY;
-  const progress = useTween(n, 650); // 0..3, con decimales mientras se rellena
-  const closed = useTween(full ? 1 : 0, 450); // los huecos se cierran al completar
-  const scale = useRef(new Animated.Value(full ? 1.08 : 1)).current;
+  const progress = useTween(n, 900); // 0..3, con decimales mientras se rellena
+  const [burst, setBurst] = useState(0);
   const prev = useRef(n);
+  const moving = useLiveMotion(TAB.today);
 
   useEffect(() => {
     const was = prev.current;
     prev.current = n;
     if (n >= CHECKINS_PER_DAY && was < CHECKINS_PER_DAY && checkInSavedRecently()) {
       clearCheckInSaved();
-      // La carita sale hacia delante y se queda un poco más grande
-      Animated.sequence([
-        Animated.timing(scale, { toValue: 1.32, duration: 260, easing: Easing.out(Easing.back(2)), useNativeDriver: useNative }),
-        Animated.spring(scale, { toValue: 1.08, friction: 4, tension: 60, useNativeDriver: useNative }),
-      ]).start();
+      setBurst((b) => b + 1);
       onComplete?.();
-    } else if (n < CHECKINS_PER_DAY) {
-      scale.setValue(1);
-    } else {
-      scale.setValue(1.08);
     }
-  }, [n, scale, onComplete]);
+  }, [n, onComplete]);
 
-  const point = (f: number) => {
+  const at = (f: number) => {
     const a = f * 2 * Math.PI - Math.PI / 2;
-    return `${c + r * Math.cos(a)} ${c + r * Math.sin(a)}`;
+    return { x: c + r * Math.cos(a), y: c + r * Math.sin(a) };
   };
-  const gap = GAP * (1 - closed);
-  const seg = (i: number, part = 1) => {
-    const from = i / CHECKINS_PER_DAY + gap / 2;
-    const to = from + (1 / CHECKINS_PER_DAY - gap) * part;
-    return `M ${point(from)} A ${r} ${r} 0 0 1 ${point(to)}`;
+  const arc = (a: number, b: number) => {
+    const s = at(a);
+    const e = at(b);
+    return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 0 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
   };
-  const fill = FILL[Math.max(0, Math.ceil(progress) - 1)] ?? KUOVA_GOLD;
-  const inner = SIZE - STROKE * 2 - 12;
+  // Cometa (fundador, 2026-11-15): de la salida, arriba, hasta donde va el día; la cola se estrecha y se
+  // difumina y la cabeza lleva el punto de luz. Tramos cortos, cada uno con su grosor, color y opacidad.
+  const f = progress / CHECKINS_PER_DAY;
+  const parts = f > 0.003 ? Math.max(4, Math.ceil(f * 96)) : 0;
+  const comet = Array.from({ length: parts }, (_, i) => {
+    const u = (i + 0.5) / parts; // 0 cola … 1 cabeza
+    return (
+      <Path
+        key={i}
+        d={arc((f * i) / parts, (f * (i + 1)) / parts)}
+        stroke={toneAt((f * (i + 0.5)) / parts)}
+        strokeOpacity={Math.pow(u, 1.4)}
+        strokeWidth={TAIL_W + (HEAD_W - TAIL_W) * Math.pow(u, 0.8)}
+        fill="none"
+      />
+    );
+  });
+  const tip = at(f);
   const caption = full ? t('All 3 check-ins done today') : t('{n} of {total} check-ins today', { n, total: CHECKINS_PER_DAY });
   const light = Colors.isLight;
 
   return (
     <View style={styles.wrap}>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel={`${t('Check in')}. ${caption}`}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={`${t('Check in')}. ${caption}`}>
         <View style={{ width: SIZE, height: SIZE }}>
-          <Svg width={SIZE} height={SIZE}>
-            {Array.from({ length: CHECKINS_PER_DAY }, (_, i) => (
-              <Path key={`b${i}`} d={seg(i)} stroke={Colors.divider} strokeWidth={STROKE} strokeLinecap={closed > 0.95 ? 'butt' : 'round'} fill="none" />
-            ))}
+          <CheckInNebula size={SIZE} progress={n / CHECKINS_PER_DAY} burst={burst} moving={moving} />
+          <Svg width={SIZE} height={SIZE} style={StyleSheet.absoluteFill} pointerEvents="none">
+            <Defs>
+              <RadialGradient id="checkinTip" cx="50%" cy="50%" r="50%">
+                <Stop offset="0" stopColor={toneAt(f)} stopOpacity={0.8} />
+                <Stop offset="1" stopColor={toneAt(f)} stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            {/* Pista apenas visible y una marca en cada tercio (mañana, mediodía, noche) */}
+            <Circle cx={c} cy={c} r={r} stroke={light ? withAlpha('#0E2A24', 0.07) : withAlpha('#F0EFE6', 0.07)} strokeWidth={1} fill="none" />
             {Array.from({ length: CHECKINS_PER_DAY }, (_, i) => {
-              const part = Math.max(0, Math.min(1, progress - i));
-              if (part < 0.01) return null;
-              return <Path key={`f${i}`} d={seg(i, part)} stroke={fill} strokeWidth={STROKE} strokeLinecap={closed > 0.95 ? 'butt' : 'round'} fill="none" />;
+              const m = at(i / CHECKINS_PER_DAY);
+              return <Circle key={`m${i}`} cx={m.x} cy={m.y} r={1.4} fill={light ? '#0E2A24' : '#F0EFE6'} opacity={i < n ? 0 : 0.28} />;
             })}
+            {comet}
+            {parts > 0 && (
+              <>
+                <Circle cx={tip.x} cy={tip.y} r={8} fill="url(#checkinTip)" />
+                <Circle cx={tip.x} cy={tip.y} r={2.5} fill={light ? '#FFFFFF' : '#F7F3E6'} />
+              </>
+            )}
           </Svg>
-          <Animated.View style={[StyleSheet.absoluteFill, styles.center, { transform: [{ scale }] }]}>
-            <View style={[styles.disc, { width: inner, height: inner, borderRadius: inner / 2 }, light && styles.discLight, full && light && styles.discGlow]}>
-              {!light && (
-                <Svg width={inner} height={inner} style={StyleSheet.absoluteFill}>
-                  <Defs>
-                    <LinearGradient id="checkinFace" x1="0" y1="0" x2="1" y2="1">
-                      <Stop offset="0" stopColor={Colors.amber} />
-                      <Stop offset="1" stopColor={Colors.gold} />
-                    </LinearGradient>
-                  </Defs>
-                  <Circle cx={inner / 2} cy={inner / 2} r={inner / 2} fill="url(#checkinFace)" />
-                </Svg>
-              )}
-              <Ionicons name="happy-outline" size={52} color={KUOVA_GREEN} />
-            </View>
-          </Animated.View>
         </View>
       </TouchableOpacity>
       <Text style={styles.title}>{t('Check in')}</Text>
@@ -130,27 +114,6 @@ export function CheckInButton({ done, onPress, onComplete }: { done: number; onP
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: 2 },
-  center: { alignItems: 'center', justifyContent: 'center' },
-  disc: { alignItems: 'center', justifyContent: 'center' }, // sin overflow: hidden, que en iOS corta la sombra
-  discLight: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: withAlpha(KUOVA_GREEN, 0.1),
-    shadowColor: KUOVA_GREEN,
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  discGlow: {
-    shadowColor: KUOVA_GOLD,
-    shadowOpacity: 0.55,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
-    borderWidth: 2,
-    borderColor: withAlpha(KUOVA_GOLD, 0.6),
-  },
-  title: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 8 },
-  caption: { color: Colors.textMuted, fontSize: 13 },
+  title: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', letterSpacing: 0.3, marginTop: 2 },
+  caption: { color: Colors.textSecondary, fontSize: 13 },
 });

@@ -11,7 +11,11 @@ import { checkInDayKey, checkInDayOptions, fechaForCheckIn, localDayKey } from '
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { dateLocale, t } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { offerPhoneReminders } from '@/data/phoneReminders';
+import { profileRepository } from '@/data/profileRepository';
+import { loadCheckInTags, removeCheckInTags, saveCheckInTags } from '@/data/checkInTagRepository';
+import { tagsFor } from '@/logic/checkInTags';
 
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
 type ScaleId = Exclude<QuestionId, 'mood'>;
@@ -78,6 +82,15 @@ export const CheckInScreen = () => {
   const [answers, setAnswers] = useState<Partial<Record<QuestionId, number>>>({});
   const [mood, setMood] = useState<Mood>();
   const [note, setNote] = useState('');
+  // Etiquetas de «¿Algo más?» (dolor de cabeza, hinchazón…): solo quedan registradas con el check-in
+  const [tags, setTags] = useState<string[]>([]);
+  const [sex, setSex] = useState<string | null>(null);
+  useEffect(() => {
+    profileRepository
+      .get()
+      .then((p) => setSex(p?.sex ?? null))
+      .catch(() => undefined);
+  }, []);
   const [done, setDone] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [accepted, setAccepted] = useState<Set<string>>(new Set());
@@ -96,6 +109,10 @@ export const CheckInScreen = () => {
     setAnswers({ sleep: e.sleep, energy: e.energy, stress: e.stress, dayRating: e.dayRating });
     setMood(e.mood);
     setNote(e.note ?? '');
+    setTags([]);
+    loadCheckInTags(e.id)
+      .then(setTags)
+      .catch(() => undefined);
   };
 
   // Editar: se cargan las respuestas del check-in
@@ -139,6 +156,7 @@ export const CheckInScreen = () => {
       setAnswers({});
       setMood(undefined);
       setNote('');
+      setTags([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing?.id, params.id]);
@@ -169,10 +187,13 @@ export const CheckInScreen = () => {
         dayRating: clear(entry.dayRating),
         note: clear(entry.note),
       });
+      await saveCheckInTags(editing.id, entry.fecha, tags).catch((e) => console.warn('Check-in tags not saved', e));
       router.back();
       return;
     }
-    await checkInRepository.save({ ...entry, id: `checkin-${Date.now()}`, createdAt: nowIso });
+    const id = `checkin-${Date.now()}`;
+    await checkInRepository.save({ ...entry, id, createdAt: nowIso });
+    if (tags.length) await saveCheckInTags(id, entry.fecha, tags).catch((e) => console.warn('Check-in tags not saved', e));
     noteCheckInSaved(); // si con este se completan los 3 de hoy, Hoy lo celebra
     void offerPhoneReminders('checkin');
     // Apuntado para un día pasado: sin ideas "para ahora"
@@ -189,6 +210,7 @@ export const CheckInScreen = () => {
     const ok = await confirmAsk(t('Delete this check-in?'), t('It will disappear from your days and your trends.'), t('Delete'));
     if (!ok) return;
     await checkInRepository.remove(editing.id);
+    await removeCheckInTags(editing.id).catch(() => undefined);
     router.back();
   };
 
@@ -287,6 +309,25 @@ export const CheckInScreen = () => {
 
             <View style={styles.block}>
               <Text style={styles.question}>{t('Anything else? (optional)')}</Text>
+              {/* Etiquetas para marcar con un toque: quedan registradas con el check-in (2026-11-16) */}
+              <View style={styles.tagRow}>
+                {tagsFor(sex).map((tag) => {
+                  const on = tags.includes(tag.id);
+                  return (
+                    <TouchableOpacity
+                      key={tag.id}
+                      style={[styles.tag, on && styles.tagOn]}
+                      onPress={() => setTags((prev) => (prev.includes(tag.id) ? prev.filter((x) => x !== tag.id) : [...prev, tag.id]))}
+                      activeOpacity={0.8}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: on }}
+                    >
+                      {on && <Ionicons name="checkmark" size={13} color={Colors.accent} />}
+                      <Text style={[styles.tagText, on && styles.tagTextOn]}>{t(tag.label)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
               <TextInput
                 style={styles.noteInput}
                 placeholder={t('e.g. Big presentation today, slept badly…')}
@@ -341,6 +382,7 @@ export const CheckInScreen = () => {
         )}
       </KeyboardAwareScrollView>
 
+      <KeyboardFooter>
       {!done ? (
         <>
           <TouchableOpacity style={[styles.cta, !complete && styles.ctaDisabled]} onPress={save} disabled={!complete}>
@@ -357,6 +399,7 @@ export const CheckInScreen = () => {
           <Text style={styles.ctaText}>{t('Done')}</Text>
         </TouchableOpacity>
       )}
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };
@@ -529,6 +572,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    borderRadius: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+  },
+  tagOn: { borderColor: Colors.accent, backgroundColor: withAlpha(Colors.accent, 0.1) },
+  tagText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  tagTextOn: { color: Colors.textPrimary },
   noteInput: {
     minHeight: 90,
     borderWidth: 1,

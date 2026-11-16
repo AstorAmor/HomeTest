@@ -14,6 +14,7 @@ import { MedicationItem, MedKind, MedSchedule } from '@/types/medication';
 import { t as tr } from '@/i18n';
 import { offerPhoneReminders } from '@/data/phoneReminders';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
 
 type Step = 'what' | 'dose' | 'when' | 'duration' | 'reminders' | 'summary';
 type Frequency = 'once' | 'twice' | 'three' | 'every_hours' | 'weekdays' | 'as_needed';
@@ -530,13 +531,15 @@ export const MedicationSetupScreen = () => {
         )}
       </KeyboardAwareScrollView>
 
-      <TouchableOpacity
-        style={[styles.cta, !canContinue && styles.ctaDisabled]}
-        onPress={step === 'summary' ? save : next}
-        disabled={!canContinue}
-      >
-        <Text style={styles.ctaText}>{step === 'summary' ? (queue.length ? tr('Save and set up {name}', { name: queue[0] }) : tr('Save')) : tr('Continue')}</Text>
-      </TouchableOpacity>
+      <KeyboardFooter>
+        <TouchableOpacity
+          style={[styles.cta, !canContinue && styles.ctaDisabled]}
+          onPress={step === 'summary' ? save : next}
+          disabled={!canContinue}
+        >
+          <Text style={styles.ctaText}>{step === 'summary' ? (queue.length ? tr('Save and set up {name}', { name: queue[0] }) : tr('Save')) : tr('Continue')}</Text>
+        </TouchableOpacity>
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };

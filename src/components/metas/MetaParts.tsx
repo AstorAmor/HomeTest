@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
-import { ProgressRing } from '@/components/ProgressRing';
+import { GlowRing, type RingColors } from '@/components/GlowRing';
 import { WheelPicker } from '@/components/WheelPicker';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Confetti } from '@/components/Confetti';
@@ -35,7 +35,15 @@ import {
   type WeekPart,
 } from '@/logic/metas';
 
-export const AREA_COLOR: Record<Area, string> = { ej: Colors.sky, al: Colors.ok, ha: Colors.violet };
+// Identidad de cada área (rediseño «Emerald Luxury», 2026-11-15): Ejercicio turquesa, Alimentación jade y
+// Hábitos champán. En claro, tonos más hondos para que el nombre se lea sobre el crema. El anillo va de
+// un tono hondo a uno luminoso en la punta.
+export const AREA_COLOR: Record<Area, string> = Colors.isLight
+  ? { ej: '#217A83', al: '#287A5A', ha: '#8C6C33' }
+  : { ej: '#5CC7C9', al: '#83D6B4', ha: '#D8B978' };
+export const AREA_RING: Record<Area, RingColors> = Colors.isLight
+  ? { ej: ['#1A5F68', '#2E959E', '#73C6C4'], al: ['#1D654A', '#2E9A72', '#7BC9A5'], ha: ['#7A5B26', '#AE8843', '#D9BA79'] }
+  : { ej: ['#2A7F8C', '#4FC0C6', '#A6EAE3'], al: ['#2A7F5F', '#5DC197', '#B2EBD0'], ha: ['#93713A', '#CFAE6C', '#F3E0AE'] };
 export const AREA_ICON: Record<Area, string> = { ej: 'walk-outline', al: 'nutrition-outline', ha: 'time-outline' };
 export const pct = (f: number) => `${Math.round(f * 100)}%`;
 
@@ -131,12 +139,20 @@ export function PartyOverlay({ party }: { party: Party }) {
   );
 }
 
-export function AreaRing({ area, score, size = 62, stroke = 10, sub }: { area: Area; score: number | null; size?: number; stroke?: number; sub?: string }) {
+// El donut de un área: anillo fino con degradado y punto de luz (GlowRing) y la cifra en el centro, con el
+// «%» más pequeño. En los anillos pequeños de las listas (< 48 px) no se pone cifra.
+export function AreaRing({ area, score, size = 80, stroke = 5, sub }: { area: Area; score: number | null; size?: number; stroke?: number; sub?: string }) {
+  const big = size > 90;
   return (
-    <ProgressRing progress={score ?? 0} color={AREA_COLOR[area]} size={size} strokeWidth={stroke} trackColor={withAlpha(AREA_COLOR[area], 0.16)}>
-      <Text style={[styles.ringPct, size > 90 && styles.ringPctBig]}>{score == null ? '—' : pct(score)}</Text>
+    <GlowRing progress={score ?? 0} colors={AREA_RING[area]} size={size} stroke={stroke}>
+      {size >= 48 && (
+        <Text style={[styles.ringPct, big && styles.ringPctBig]} accessibilityLabel={score == null ? t('No data') : pct(score)}>
+          {score == null ? '—' : Math.round(score * 100)}
+          {score != null && <Text style={[styles.ringPctSign, big && styles.ringPctSignBig]}>%</Text>}
+        </Text>
+      )}
       {sub ? <Text style={styles.ringSub}>{sub}</Text> : null}
-    </ProgressRing>
+    </GlowRing>
   );
 }
 
@@ -463,8 +479,10 @@ export const metaStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  ringPct: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  ringPctBig: { fontSize: 24 },
+  ringPct: { color: Colors.textPrimary, fontSize: 19, fontWeight: '600', letterSpacing: -0.3, fontVariant: ['tabular-nums'] },
+  ringPctBig: { fontSize: 28 },
+  ringPctSign: { color: Colors.textSecondary, fontSize: 11, fontWeight: '500', letterSpacing: 0 },
+  ringPctSignBig: { fontSize: 14 },
   ringSub: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
   partyBox: {
     position: 'absolute',

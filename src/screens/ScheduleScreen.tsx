@@ -68,7 +68,7 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
   const dayEvents = selected ? events.filter((e) => e.date === selected) : [];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, embedded && styles.transparent]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your schedule')} showBack={!embedded} />
 
@@ -202,6 +202,7 @@ const EventCard = ({ event, showDate, past = false }: { event: ScheduleEvent; sh
 const styles = StyleSheet.create({
   eventLink: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 8 },
   safeArea: { flex: 1, backgroundColor: Colors.background },
+  transparent: { backgroundColor: 'transparent' }, // en la pestaña, deja ver el fondo ambiental
   content: { paddingBottom: 32 },
   card: {
     backgroundColor: Colors.card,

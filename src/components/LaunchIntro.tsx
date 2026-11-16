@@ -22,7 +22,7 @@ import { KuovaWordmark } from '@/components/KuovaLogo';
 // «reducir movimiento», no se mueve. Es JavaScript: llega por OTA (la pantalla nativa, no).
 
 export const LAUNCH_BG = '#0E2A24'; // = backgroundColor del splash nativo
-const K_PATH = 'M0 0H38V127L197 0H260L103.67 115.49L250 257H194L72.58 138.45L38 164V202C37 230 20 250 0 257Z';
+export const K_PATH = 'M0 0H38V127L197 0H260L103.67 115.49L250 257H194L72.58 138.45L38 164V202C37 230 20 250 0 257Z';
 const K_W = 88; // = imageWidth del splash nativo: la K empieza donde estaba
 const K_H = (K_W * 257) / 260;
 const GAP_K = 30;

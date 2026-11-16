@@ -337,6 +337,15 @@ export const metasEs: Record<string, string> = {
   For: 'Durante',
   '{n} weeks': '{n} semanas',
   'Commitment signed': 'Compromiso firmado',
+  'Shall we mark today’s habits now?': '¿Marcamos ya los hábitos de hoy?',
+  // La semana cerrada, al tocar la enhorabuena (2026-11-16)
+  'See how your week went': 'Mira cómo fue tu semana',
+  'Hide': 'Ocultar',
+  'Same again this week? You know how.': '¿Repetimos esta semana? Ya sabes cómo.',
+  'This week you have room to get there. Keep going, one step at a time.': 'Esta semana tienes margen para llegar. Sigue, paso a paso.',
+  'This week has just started, so there is plenty of room. Don’t give up: every small step counts.': 'La semana acaba de empezar y hay margen de sobra. No te rindas: cada pequeño paso cuenta.',
+  'Shall we mark today now?': '¿Marcamos ya lo de hoy?',
+  'Go to {area}': 'Ir a {area}',
   'I commit': 'Me comprometo',
   'Signed on {date}. Your weeks go from {first} to {last} (you can change it in Settings); the first one counted from the day you signed.':
     'Firmado el {date}. Tus semanas van de {first} a {last} (lo puedes cambiar en Ajustes); la primera contó desde el día que firmaste.',

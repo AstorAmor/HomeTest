@@ -25,7 +25,7 @@ export const TOUR_STEPS: TourStep[] = [
   { target: 'tab.0', tab: 0, title: 'Today', text: 'Your day starts here: what is coming up, your doses and your plan.' },
   { target: 'today.checkin', tab: 0, title: 'Your check-in', text: 'How you feel: energy and mood in a few seconds. The ring fills with up to 3 check-ins a day: morning, midday and night.' },
   { target: 'today.medication', tab: 0, always: true, title: 'Medication & supplements', text: 'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in More → Configure my experience.' },
-  { target: 'today.plan', tab: 0, title: 'Meet your goals', text: 'Your goals and your targets in three areas: exercise, food and habits. Each ring is how your targets are going this week. Tap one to mark today.' },
+  { target: 'today.plan', tab: 0, title: 'Your goals', text: 'Your goals and your targets in three areas: exercise, food and habits. Each ring is how your targets are going this week. Tap one to mark today.' },
   { target: 'today.plan.ej', tab: 0, title: 'Exercise', text: 'Your exercise targets: steps, cardio or strength. Tap the ring to see each day and mark today.' },
   { target: 'today.readiness', tab: 0, title: 'Daily readiness', text: 'Sleep, heart rate and activity from your watch, in one number for today.' },
   { target: 'today.goals', tab: 0, title: 'Your daily goals', text: 'Steps, active calories, sleep and water against your goals. Tap the circles to change them.' },

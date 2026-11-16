@@ -420,8 +420,9 @@ export async function fetchSharedPatientData(patientId: string, scopes: ShareSco
           let query = supabase!.from(table).select('*').eq(ownerColumn, patientId);
           // Las metas de Hoy (kind 'meta', una fila por meta y día) y las sesiones de Kegel no salen en la
           // vista del profesional: llenarían las 60 filas y taparían el peso o el colesterol
-          // (src/data/metasRepository.ts, src/data/kegelRepository.ts)
-          if (table === 'metric_readings') query = query.not('kind', 'in', '(meta,kegel)');
+          // (src/data/metasRepository.ts, src/data/kegelRepository.ts). Tampoco las etiquetas del check-in
+          // (kind 'checkin_tag', src/data/checkInTagRepository.ts)
+          if (table === 'metric_readings') query = query.not('kind', 'in', '(meta,kegel,checkin_tag)');
           const { data, error } = await query.order(dateColumn, { ascending: false }).limit(60);
           fail(error);
           out[table] = data ?? [];

@@ -23,6 +23,7 @@ import { AppPurpose, appPrefs, PURPOSE_OPTIONS } from '@/data/appPrefs';
 import { sectionsFromAnswers } from '@/data/goalEffects';
 import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { requestTourAfterOnboarding } from '@/components/tour/tourStore';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -473,11 +474,13 @@ export const OnboardingScreen = () => {
         )}
       </KeyboardAwareScrollView>
 
-      <TouchableOpacity style={styles.cta} onPress={next} activeOpacity={0.85}>
-        <Text style={styles.ctaText}>
-          {stepIndex < STEPS.length - 1 ? tr('Continue') : tr('Done')}
-        </Text>
-      </TouchableOpacity>
+      <KeyboardFooter>
+        <TouchableOpacity style={styles.cta} onPress={next} activeOpacity={0.85}>
+          <Text style={styles.ctaText}>
+            {stepIndex < STEPS.length - 1 ? tr('Continue') : tr('Done')}
+          </Text>
+        </TouchableOpacity>
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };

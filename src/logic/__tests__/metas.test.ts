@@ -31,6 +31,8 @@ import {
   weekStartOf,
   weeklyCongrats,
   weekMisses,
+  weekReview,
+  reviewClosing,
   valuesFor,
   type MetasState,
   type ValuesById,
@@ -382,6 +384,30 @@ describe('La semana y la enhorabuena', () => {
     expect(c.tone).toBe('go');
     expect(c.body).toBe("From 2 to 8 November you didn't reach your targets, but let's go for them this time!");
     expect(weekMisses(s, w).misses.find((x) => x.id === 'embutido')!.text).toBe('processed meat (2 servings too many)');
+  });
+
+  it('al tocarla: lo propuesto y lo hecho, área por área', () => {
+    const w = { ...full, fruta: [1, 1, 1, 1, 3, 3, 3], embutido: [1, 1, 1, 0, 0, 0, 0] };
+    const r = weekReview(s, w, closedWeek(s, '2026-11-09')!);
+    expect(r.map((a) => a.area)).toEqual(['ej', 'al', 'ha']);
+    const al = r.find((a) => a.area === 'al')!;
+    expect(al.rows.map((x) => x.id)).toEqual(['fruta', 'embutido']);
+    expect(al.rows[0].done).toBe('3 of 7 days');
+    expect(al.score).toBeGreaterThan(0);
+    expect(al.score).toBeLessThan(1);
+    // El paseo no tuvo datos esa semana: sale, pero no cuenta en el % de Hábitos
+    const ha = r.find((a) => a.area === 'ha')!;
+    expect(ha.score).toBeNull();
+    expect(ha.rows[0].done).toBe('No data that week');
+    expect(reviewClosing('go')).toMatch(/plenty of room/);
+  });
+
+  it('en la primera semana, la meta a la semana va en proporción', () => {
+    const w: ValuesById = { fuerza: [0, 0, 0, 1, 0, 0, 0], fruta: Array(7).fill(null), embutido: Array(7).fill(null), paseo: Array(7).fill(null) };
+    const r = weekReview(s, w, closedWeek(s, '2026-11-02')!);
+    const ej = r.find((a) => a.area === 'ej')!;
+    expect(ej.rows[0].done).toMatch(/^1 of /);
+    expect(ej.score).toBe(1);
   });
 
   it('sin compromiso, antes de acabar la semana o ya cerrada: nada', () => {

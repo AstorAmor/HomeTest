@@ -8,9 +8,11 @@ import { LabScreen } from './LabScreen';
 import { MoreScreen } from './MoreScreen';
 import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { Colors } from '@/constants/colors';
+import { AmbientBackground } from '@/components/AmbientBackground';
 import { useWebShell } from '@/web/webMode';
 import { TourOverlay } from '@/components/tour/TourOverlay';
 import { useAuth } from '@/context/AuthContext';
+import { setVisibleTab } from '@/hooks/useLiveMotion';
 
 const LAST = TABS.length - 1;
 
@@ -26,6 +28,8 @@ export const MainTabsScreen = () => {
   const { isLoggedIn, initializing } = useAuth();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const [currentPage, setCurrentPage] = useState(Math.min(LAST, Math.max(0, Number(tab) || 0)));
+  // Las animaciones que no paran solo se mueven a la vista (useLiveMotion)
+  React.useEffect(() => setVisibleTab(currentPage), [currentPage]);
 
   useEffect(() => {
     const n = Math.min(LAST, Math.max(0, Number(tab) || 0));
@@ -53,6 +57,8 @@ export const MainTabsScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* Fondo ambiental detrás de las pestañas, que lo dejan ver (rediseño 2026-11-16) */}
+      <AmbientBackground />
       <View style={styles.page}>
         {pages.map((page, i) => (
           <View key={page.key} style={[styles.page, i !== currentPage && styles.hidden]}>

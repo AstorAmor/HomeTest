@@ -249,7 +249,7 @@ export const MoreScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent', // deja ver el fondo ambiental de las pestañas
   },
   content: {
     paddingBottom: 32,

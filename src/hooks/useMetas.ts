@@ -19,12 +19,14 @@ import {
 import {
   addDays,
   autoValues,
+  closedWeek,
   dayKeyOf,
   knownBefore,
   labGoals,
   valuesFor,
   weekOf,
   weeklyCongrats,
+  weekReview,
   type DayMap,
   type LabGoal,
   type Meta,
@@ -121,6 +123,13 @@ export function useMetas() {
     [data, today, auto, demoToday],
   );
 
+  // Lo que te propusiste y lo que hiciste la semana que se acaba de cerrar (al tocar la enhorabuena)
+  const review = useMemo(() => {
+    if (!data || !congrats) return null;
+    const w = closedWeek(data.state, today);
+    return w ? weekReview(data.state, valuesFor(data.state, w.days, data.manual, auto, demoToday), w) : null;
+  }, [data, congrats, today, auto, demoToday]);
+
   // Guarda lo elegido (se ve al momento)
   const update = useCallback((next: MetasState) => {
     setShared((d) => (d ? { ...d, state: next, saved: true } : d));
@@ -150,6 +159,7 @@ export function useMetas() {
     auto,
     today,
     congrats,
+    review,
     update,
     setValue,
     reload: load,
