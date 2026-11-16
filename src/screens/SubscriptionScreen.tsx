@@ -17,7 +17,7 @@ export const SubscriptionScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My subscription')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('My subscription')} showBack backFallback={tabHref(TAB.you)} />
         <View style={{ marginHorizontal: 20 }}>
           <SubscriptionCard />
         </View>

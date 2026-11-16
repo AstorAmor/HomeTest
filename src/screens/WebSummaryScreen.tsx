@@ -387,7 +387,7 @@ export const WebSummaryScreen = () => {
         )}
       </View>
 
-      <TouchableOpacity style={styles.allData} onPress={() => go('/(tabs)', { tab: String(TAB.myData) })} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.allData} onPress={() => go('/(tabs)', { tab: String(TAB.analysis) })} activeOpacity={0.85}>
         <Ionicons name="grid-outline" size={18} color={Colors.accent} />
         <Text style={styles.allDataText}>{t('Show all health data')}</Text>
         <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />

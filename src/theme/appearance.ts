@@ -10,8 +10,15 @@ export type AppearancePref = 'system' | 'light' | 'dark';
 const KEY = 'appearance.v1';
 const RETURN_KEY = 'appearance.returnTo.v1';
 
+// Solo tema oscuro (Astor, 2026-11-16). El rediseño «Emerald Luxury» está pensado en oscuro y mantener
+// dos temas obligaba a diseñar y revisar cada pieza dos veces. Antes, con 'system' por defecto, quien
+// tenía el móvil en claro veía la app en claro. La paleta clara sigue en constants/colors.ts y el selector
+// en components/AppearanceSwitch.tsx, sin usar: para volver a ofrecerla, poner esto a false y devolver
+// el selector a PreferencesBlock.
+export const DARK_ONLY = true;
+
 export const resolveTheme = (pref: AppearancePref): ThemeName =>
-  pref === 'system' ? (Appearance.getColorScheme() === 'light' ? 'light' : 'dark') : pref;
+  DARK_ONLY ? 'dark' : pref === 'system' ? (Appearance.getColorScheme() === 'light' ? 'light' : 'dark') : pref;
 
 export async function getAppearancePref(): Promise<AppearancePref> {
   try {

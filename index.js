@@ -14,6 +14,18 @@ import { loadTextSize } from './src/theme/textSize';
 import { loadLanguage } from './src/i18n';
 import { Colors } from './src/constants/colors';
 import { LaunchIntro } from './src/components/LaunchIntro';
+import * as Font from 'expo-font';
+
+// Inter, la letra del prototipo de las 4 pestañas (src/theme/fine.ts): solo los cuatro pesos que se usan, cada uno
+// por su ruta (el índice del paquete arrastraría los 18 archivos a cada OTA). Se espera a que esté antes de
+// pintar, como el tema, para que no cambie la letra a la vista; si falla, sale la del sistema.
+const loadFonts = () =>
+  Font.loadAsync({
+    Inter_300Light: require('@expo-google-fonts/inter/300Light/Inter_300Light.ttf'),
+    Inter_400Regular: require('@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf'),
+    Inter_500Medium: require('@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf'),
+    Inter_600SemiBold: require('@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf'),
+  });
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,6 +43,7 @@ function Root() {
       loadLanguage().catch(() => undefined),
       loadTextSize().catch(() => undefined),
       takePendingFade(),
+      loadFonts().catch(() => undefined),
     ]).then(([, , , fade]) => {
       setVeil(fade);
       // require() tardío: las rutas (y sus StyleSheet) se evalúan ya con el tema aplicado.

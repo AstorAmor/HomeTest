@@ -120,7 +120,7 @@ export const AdminPlansScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAwareScrollView contentContainerStyle={styles.content}>
-          <ScreenHeader title={t('Subscriptions (admin)')} showBack backFallback={tabHref(TAB.more)} />
+          <ScreenHeader title={t('Subscriptions (admin)')} showBack backFallback={tabHref(TAB.you)} />
           <Text style={styles.warning}>
             {t('This needs the database update of 17 October (plan_access). Until it is applied, the app does not lock anything.')}
           </Text>
@@ -132,7 +132,7 @@ export const AdminPlansScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ScreenHeader title={t('Subscriptions (admin)')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('Subscriptions (admin)')} showBack backFallback={tabHref(TAB.you)} />
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}

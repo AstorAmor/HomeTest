@@ -2,9 +2,10 @@ import { createRef, RefObject, useSyncExternalStore } from 'react';
 import type { Href } from 'expo-router';
 import { Platform, ScrollView, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { TAB } from '@/constants/tabs';
 
 // Tutorial guiado («cómo se usa Kuova»): una pantalla oscurecida con un hueco sobre cada parte
-// principal y un bocadillo que la explica. Sale al terminar los cuestionarios del inicio y desde Más.
+// principal y un bocadillo que la explica. Sale al terminar los cuestionarios del inicio y desde Tú.
 // Aquí: los pasos, qué elemento de la pantalla es cada uno (TourTarget lo registra) y cómo empezar.
 // Lo pinta TourOverlay, dentro de las pestañas.
 
@@ -20,31 +21,33 @@ export interface TourStep {
 const GUT: Href = { pathname: '/digestive', params: { part: 'gut' } };
 const BLADDER: Href = { pathname: '/digestive', params: { part: 'bladder' } };
 
-// Si un paso no tiene su elemento (sección apagada en «Configura tu experiencia»), se salta
+// Si un paso no tiene su elemento (sección apagada en «Configura tu experiencia»), se salta. Desde el
+// 2026-11-16, por las cuatro pestañas: Hoy, el botón K, Plan, Análisis y Tú (TAB en src/constants/tabs.ts).
 export const TOUR_STEPS: TourStep[] = [
-  { target: 'tab.0', tab: 0, title: 'Today', text: 'Your day starts here: what is coming up, your doses and your plan.' },
-  { target: 'today.checkin', tab: 0, title: 'Your check-in', text: 'How you feel: energy and mood in a few seconds. The ring fills with up to 3 check-ins a day: morning, midday and night.' },
-  { target: 'today.medication', tab: 0, always: true, title: 'Medication & supplements', text: 'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in More → Configure my experience.' },
-  { target: 'today.plan', tab: 0, title: 'Your goals', text: 'Your goals and your targets in three areas: exercise, food and habits. Each ring is how your targets are going this week. Tap one to mark today.' },
-  { target: 'today.plan.ej', tab: 0, title: 'Exercise', text: 'Your exercise targets: steps, cardio or strength. Tap the ring to see each day and mark today.' },
-  { target: 'today.readiness', tab: 0, title: 'Daily readiness', text: 'Sleep, heart rate and activity from your watch, in one number for today.' },
-  { target: 'today.goals', tab: 0, title: 'Your daily goals', text: 'Steps, active calories, sleep and water against your goals. Tap the circles to change them.' },
-  { target: 'goals.first', tab: 0, route: '/daily-goals', title: 'Change a goal', text: 'Turn the wheel to set your own goal, for example how many steps you aim for. Underneath, what we suggest and why.' },
-  { target: 'goals.first.shown', tab: 0, route: '/daily-goals', title: 'Choose your circles', text: 'Show or hide each goal in Today: steps, calories, distance, sleep or water. Save with the tick at the top.' },
-  { target: 'today.bp', tab: 0, title: 'Blood pressure', text: 'Log each reading from your monitor and see how your blood pressure changes over time. Tap the card to add one.' },
-  { target: 'today.gut', tab: 0, title: 'Digestion', text: 'Two parts: tap a face for how your tummy feels today, and + each time you go to the bathroom.' },
-  { target: 'digestive.gut', tab: 0, route: GUT, title: 'Your digestion', text: 'Your days at a glance. Add what you feel and what you ate before, and the colour and shape of your stools: each week we tell you what we notice.' },
-  { target: 'today.hydration', tab: 0, title: 'Hydration', text: 'Two parts too: + for each drink (a glass, or your own amount) and + each time you pee. Tap the card for the colour and more.' },
-  { target: 'digestive.water', tab: 0, route: BLADDER, title: 'Water', text: 'Your day and your week. With “Other amount” you choose any amount and can make it your usual one, like your water bottle.' },
-  { target: 'digestive.urine', tab: 0, route: BLADDER, title: 'Urine', text: 'Add the colour of each time, or a whole day at once. Each week we tell you what we notice.' },
-  { target: 'today.learning', tab: 0, title: 'Keep learning', text: 'Short guides on training, sleep, nutrition, stress, heart health and more. Swipe through them or tap More for every topic.' },
-  { target: 'tab.1', tab: 1, title: 'My Data', text: 'Your biomarkers, your measurements and your wearable, with how they change over time.' },
-  { target: 'mydata.age', tab: 1, title: 'Your KUOVA age', text: 'The age your blood test shows. Tap it to see what moves it.' },
-  { target: 'mydata.genetics', tab: 1, title: 'Your genetic profile', text: 'Know your roots: a few questions on what runs in your family, to see whether it is worth talking to a professional. Genetic test results will appear here too.' },
-  { target: 'lab.upload', tab: 2, title: 'Upload a report', text: 'Take a photo or upload the PDF of any blood test: we read it and explain each value.' },
-  { target: 'tab.3', tab: 3, title: 'Schedule', text: 'Your appointments, deliveries and results, and a button to add them to your calendar.' },
-  { target: 'more.experience', tab: 4, title: 'Make it yours', text: 'What you use Kuova for shapes your experience: it decides what you see, like the plan, the daily check-in or your wearable data. Change it, or each part, in More → Configure my experience.' },
-  { target: 'more.tutorial', tab: 4, title: 'Watch it again', text: 'Settings, professionals, your subscription… and this tutorial, whenever you want.' },
+  { target: 'tab.0', tab: TAB.today, title: 'Today', text: 'Your day: your check-in, how your week is going and what you measure.' },
+  { target: 'today.checkin', tab: TAB.today, title: 'Your check-in', text: 'How you feel: energy and mood in a few seconds. The ring fills with up to 3 check-ins a day: morning, midday and night.' },
+  { target: 'today.plan', tab: TAB.today, title: 'This week', text: 'Your targets in three areas: exercise, food and habits. Each bar is how your targets are going this week.' },
+  { target: 'today.plan.ej', tab: TAB.today, title: 'Exercise', text: 'Your exercise targets: steps, cardio or strength. Tap it to see each day and mark today.' },
+  { target: 'today.readiness', tab: TAB.today, title: 'Today', text: 'How you are today, from the sleep, heart rate and activity of your watch.' },
+  { target: 'today.goals', tab: TAB.today, title: 'Your daily goals', text: 'Steps, active calories, sleep and water against your goals. Tap them to change them.' },
+  { target: 'goals.first', tab: TAB.today, route: '/daily-goals', title: 'Change a goal', text: 'Turn the wheel to set your own goal, for example how many steps you aim for. Underneath, what we suggest and why.' },
+  { target: 'goals.first.shown', tab: TAB.today, route: '/daily-goals', title: 'Choose what you see', text: 'Show or hide each goal in Today: steps, calories, distance, sleep or water. Save with the tick at the top.' },
+  { target: 'today.bp', tab: TAB.today, title: 'Blood pressure', text: 'Log each reading from your monitor and see how your blood pressure changes over time. Tap the card to add one.' },
+  { target: 'today.gut', tab: TAB.today, title: 'Digestion', text: 'Two parts: tap a face for how your tummy feels today, and + each time you go to the bathroom.' },
+  { target: 'digestive.gut', tab: TAB.today, route: GUT, title: 'Your digestion', text: 'Your days at a glance. Add what you feel and what you ate before, and the colour and shape of your stools: each week we tell you what we notice.' },
+  { target: 'today.hydration', tab: TAB.today, title: 'Hydration', text: 'Two parts too: + for each drink (a glass, or your own amount) and + each time you pee. Tap the card for the colour and more.' },
+  { target: 'digestive.water', tab: TAB.today, route: BLADDER, title: 'Water', text: 'Your day and your week. With “Other amount” you choose any amount and can make it your usual one, like your water bottle.' },
+  { target: 'digestive.urine', tab: TAB.today, route: BLADDER, title: 'Urine', text: 'Add the colour of each time, or a whole day at once. Each week we tell you what we notice.' },
+  { target: 'today.medication', tab: TAB.today, always: true, title: 'Medication & supplements', text: 'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in You → Configure my experience.' },
+  { target: 'tab.log', tab: TAB.today, title: 'Log', text: 'The K button: log anything from any tab, like a check-in, your weight, blood pressure, a meal, a workout or a report.' },
+  { target: 'tab.1', tab: TAB.plan, title: 'Plan', text: 'Your goals, your weekly targets, your commitment and your badges. Workouts and meals too.' },
+  { target: 'tab.2', tab: TAB.analysis, title: 'Analysis', text: 'Your next test, your results, your appointments and how to order a test.' },
+  { target: 'analysis.age', tab: TAB.analysis, title: 'Your KUOVA age', text: 'The age your blood test shows. Tap it to see what moves it.' },
+  { target: 'lab.upload', tab: TAB.analysis, title: 'Upload a report', text: 'Take a photo or upload the PDF of any blood test: we read it and explain each value.' },
+  { target: 'tab.3', tab: TAB.you, title: 'You', text: 'Your health record, sharing, your watch, short reads and settings.' },
+  { target: 'more.genetics', tab: TAB.you, title: 'Your genetic profile', text: 'Know your roots: a few questions on what runs in your family, to see whether it is worth talking to a professional. Genetic test results will appear here too.' },
+  { target: 'more.experience', tab: TAB.you, title: 'Make it yours', text: 'What you use Kuova for shapes your experience: it decides what you see, like the plan, the daily check-in or your wearable data. Change it, or each part, in You → Configure my experience.' },
+  { target: 'more.tutorial', tab: TAB.you, title: 'Watch it again', text: 'Settings, professionals, your subscription… and this tutorial, whenever you want.' },
 ];
 
 // --- Elementos de la pantalla ------------------------------------------------------------------

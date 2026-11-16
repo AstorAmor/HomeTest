@@ -7,7 +7,7 @@ import { TAB, tabHref } from '@/constants/tabs';
 
 // Piezas comunes de las pantallas del historial y de la tarjeta de emergencia
 
-export function HistFrame({ title, children, right, backFallback = tabHref(TAB.myData) }: { title: string; children?: ReactNode; right?: ReactNode; backFallback?: string }) {
+export function HistFrame({ title, children, right, backFallback = tabHref(TAB.you) }: { title: string; children?: ReactNode; right?: ReactNode; backFallback?: string }) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScreenHeader title={title} showBack backFallback={backFallback} />

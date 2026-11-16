@@ -41,7 +41,10 @@ export default function Layout() {
   useEffect(() => {
     // Con la entrada (LaunchIntro) la nativa ya se ha ido; esto cubre la web y el arranque tras cambiar el tema
     SplashScreen.hideAsync();
-    markAppReady();
+    // La entrada se va cuando ya está puesta la primera pantalla de verdad (el log-in, las pestañas o el selector
+    // de la demo llaman a markAppReady al montarse). Esto, por si se abre en otra (un enlace): como mucho 2,5 s
+    const id = setTimeout(markAppReady, 2500);
+    return () => clearTimeout(id);
   }, []);
 
   return (

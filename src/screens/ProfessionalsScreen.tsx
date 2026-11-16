@@ -52,7 +52,7 @@ export const ProfessionalsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Professionals')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('Professionals')} showBack backFallback={tabHref(TAB.you)} />
         <Text style={styles.intro}>
           {t('Doctors, psychologists, dietitians, trainers, genetic counsellors and more, all with access to your results if you allow it.')}
         </Text>

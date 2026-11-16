@@ -81,7 +81,7 @@ export const CatalogScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScreenHeader title={t('Biomarker Catalog')} showBack backFallback={tabHref(TAB.more)} />
+      <ScreenHeader title={t('Biomarker Catalog')} showBack backFallback={tabHref(TAB.you)} />
 
       <View style={styles.searchWrap}>
         <Ionicons name="search" size={16} color={Colors.textMuted} />

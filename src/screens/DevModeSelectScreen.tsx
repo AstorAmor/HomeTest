@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
+import { markAppReady } from '@/components/LaunchIntro';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { DemoMode, useAuth } from '@/context/AuthContext';
 import { currentReport } from '@/data/reportRepository';
@@ -49,6 +50,8 @@ export const DevModeSelectScreen = () => {
   const router = useRouter();
   const { setDemoMode, authMode } = useAuth();
   const webShell = useWebShell();
+  // Ya está el selector debajo: la entrada de la marca se puede ir (LaunchIntro)
+  React.useEffect(() => markAppReady(), []);
 
   // Su cuenta de verdad, sin ejemplos (lo mismo que Ajustes → Cuenta real): recarga para leerla así
   const chooseReal = async () => {

@@ -1,7 +1,9 @@
 // La sección de Hoy que sustituye al plan: al cerrar tu semana, la enhorabuena (o ánimo); después,
 // «Tus objetivos» con su (i) y una línea cometa por área (cada una abre su área, donde se marca y se
 // edita). Fundador, 2026-11-05: sin flecha en el título ni «Toca para marcar». 2026-11-16: líneas aquí
-// y círculos en los objetivos del día (antes, al revés).
+// y círculos en los objetivos del día (antes, al revés). Desde las 4 pestañas (2026-11-16) se usa dos veces:
+// en Hoy, «Esta semana» (las 3 áreas en barra y un enlace a Plan); en Plan, «Tus metas» (las mismas barras con
+// los nombres de sus metas debajo).
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,8 +15,10 @@ import { CometLine } from '@/components/CometLine';
 import { TourTarget } from '@/components/tour/TourTarget';
 import type { TourScroll } from '@/components/tour/tourStore';
 import { useMetas } from '@/hooks/useMetas';
+import { goToTab, TAB } from '@/constants/tabs';
 import { AREAS, AREA_NAME, GOALS, areaScore, metaText, rangeText, resolveMeta, reviewClosing, selectedIds } from '@/logic/metas';
-import { AREA_COLOR, AREA_ICON, AREA_RING, pct, takePop, usePop } from './MetaParts';
+import { AREA_COLOR, AREA_RING, pct, takePop, usePop } from './MetaParts';
+import { FINE, ff, fine } from '@/theme/fine';
 import type { Area, Congrats, ReviewArea } from '@/logic/metas';
 
 // El % de un área en Hoy: si acabas de completarla (en su pantalla), al volver crece y vuelve una vez
@@ -30,7 +34,7 @@ function TodayPct({ area, score }: { area: Area; score: number | null }) {
     <Animated.View style={{ transform: [{ scale }] }}>
       <Text style={styles.areaPct}>
         {score == null ? '—' : Math.round(score * 100)}
-        {score != null && <Text style={styles.areaPctSign}>%</Text>}
+        {score != null && <Text style={styles.areaPctSign}> %</Text>}
       </Text>
     </Animated.View>
   );
@@ -121,7 +125,8 @@ function WeekBlock({ congrats, review, onClose }: { congrats: Congrats; review: 
   );
 }
 
-export function MetasToday({ tourScroll }: { tourScroll?: TourScroll }) {
+export function MetasToday({ tourScroll, variant = 'today' }: { tourScroll?: TourScroll; variant?: 'today' | 'plan' }) {
+  const today = variant === 'today';
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data, week, vals, known, congrats, review, update } = useMetas();
@@ -136,34 +141,48 @@ export function MetasToday({ tourScroll }: { tourScroll?: TourScroll }) {
 
   return (
     <View>
-      {congrats && <WeekBlock congrats={congrats} review={review} onClose={() => update({ ...s, closedWeek: congrats.week })} />}
-      <View style={styles.titleRow}>
-        {/* «Your goals» (fundador, 2026-11-16; antes «Meet your goals») */}
-        <Text style={styles.title}>{t('Your goals')}</Text>
-        <TouchableOpacity onPress={() => setInfo(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('About your goals')}>
-          <Ionicons name="information-circle-outline" size={20} color={Colors.textMuted} />
-        </TouchableOpacity>
+      {today && congrats && <WeekBlock congrats={congrats} review={review} onClose={() => update({ ...s, closedWeek: congrats.week })} />}
+      <View style={[fine.secHead, styles.titleRow]}>
+        {/* Hoy: «ESTA SEMANA» y «Tu plan ›»; Plan: «TUS METAS» con su (i) */}
+        <Text style={fine.secTitle} accessibilityRole="header">
+          {today ? t('This week') : t('Your targets')}
+        </Text>
+        {today ? (
+          <TouchableOpacity onPress={() => goToTab(TAB.plan)} hitSlop={10} style={{ marginLeft: 'auto' }} accessibilityRole="link">
+            <Text style={fine.secMore}>{t('Your plan')} ›</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => setInfo(true)} hitSlop={10} style={{ marginLeft: 'auto' }} accessibilityRole="button" accessibilityLabel={t('About your goals')}>
+            <Ionicons name="information-circle-outline" size={18} color={FINE.mute} />
+          </TouchableOpacity>
+        )}
       </View>
-      <TourTarget id="today.plan" scroll={tourScroll} inset={20}>
+      <TourTarget id={today ? 'today.plan' : 'plan.targets'} scroll={tourScroll} inset={20}>
         <View style={styles.block}>
           <View style={styles.areas}>
             {AREAS.map((a) => {
               const score = areaScore(s, a, vals, week ?? undefined, known);
+              // En Plan, los nombres cortos de sus metas debajo de la barra
+              const names = s.sel[a]
+                .map((id) => resolveMeta(s, id))
+                .map((m) => (m ? (m.def ? t(m.def.short) : m.custom?.name) : null))
+                .filter(Boolean)
+                .join(' · ');
               return (
-                <TourTarget key={a} id={`today.plan.${a}`} scroll={tourScroll}>
+                <TourTarget key={a} id={today ? `today.plan.${a}` : `plan.targets.${a}`} scroll={tourScroll}>
                   <TouchableOpacity
                     onPress={() => router.push(s.sel[a].length ? { pathname: '/metas-area', params: { area: a } } : { pathname: '/metas-elegir', params: { area: a } })}
                     activeOpacity={0.8}
                     accessibilityRole="button"
                     accessibilityLabel={`${t(AREA_NAME[a])}: ${score == null ? t('No data') : pct(score)}`}
                   >
+                    {/* Como el prototipo: el nombre en marfil y el % apagado; el color va en la línea */}
                     <View style={styles.areaHead}>
-                      <Ionicons name={AREA_ICON[a] as any} size={16} color={AREA_COLOR[a]} style={styles.areaIcon} />
-                      <Text style={[styles.areaName, { color: AREA_COLOR[a] }]}>{t(AREA_NAME[a])}</Text>
+                      <Text style={styles.areaName}>{t(AREA_NAME[a])}</Text>
                       <TodayPct area={a} score={score} />
-                      <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
                     </View>
                     <CometLine progress={score ?? 0} colors={AREA_RING[a]} thickness={4} style={styles.areaLine} />
+                    {!today && <Text style={styles.areaMetas}>{names || t('No targets')}</Text>}
                   </TouchableOpacity>
                 </TourTarget>
               );
@@ -240,40 +259,39 @@ const styles = StyleSheet.create({
   glow: { position: 'absolute', top: -36, bottom: -36, left: -30, right: -30 },
   cgHead: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   cgIcon: { width: 22, marginTop: 1, textAlign: 'center' },
-  cgTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  cgBody: { color: Colors.textSecondary, fontSize: 13.5, lineHeight: 19, marginTop: 3 },
+  cgTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 16 },
+  cgBody: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, lineHeight: 19, marginTop: 3 },
   cgMoreRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 },
-  cgMore: { fontSize: 13, fontWeight: '700' },
+  cgMore: { ...ff('regular'), fontSize: 13 },
   rv: { marginTop: 14, marginLeft: 34, gap: 16 },
   rvArea: { gap: 2 },
   rvAreaHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  rvAreaName: { fontSize: 14, fontWeight: '800', letterSpacing: 0.2 },
-  rvPct: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  rvAreaName: { ...ff('medium'), fontSize: 14 },
+  rvPct: { ...ff('regular'), color: FINE.mute, fontSize: 14, fontVariant: ['tabular-nums'] },
   rvLine: { marginHorizontal: -8, marginBottom: 2 },
   rvRow: { flexDirection: 'row', gap: 10, alignItems: 'baseline', paddingVertical: 3 },
-  rvTarget: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
-  rvDone: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700', textAlign: 'right', maxWidth: '45%' },
-  rvClosing: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, marginTop: 16, marginBottom: 12 },
-  title: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary },
+  rvTarget: { ...ff('regular'), flex: 1, color: FINE.mute, fontSize: 13, lineHeight: 18 },
+  rvDone: { ...ff('medium'), color: FINE.ivory, fontSize: 13, textAlign: 'right', maxWidth: '45%' },
+  rvClosing: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
+  titleRow: { marginHorizontal: 20 },
+  areaMetas: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, marginTop: 4 },
   // Sin tarjeta (rediseño «Emerald Luxury», 2026-11-15): las líneas flotan sobre el fondo
-  block: { marginHorizontal: 20, paddingTop: 4, paddingBottom: 4 },
-  // Una línea cometa por área: icono, nombre y % arriba (toca para abrir el área)
-  areas: { gap: 14 },
-  areaHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  areaIcon: { width: 20, textAlign: 'center' },
-  areaName: { flex: 1, fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
-  areaPct: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  areaPctSign: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
-  areaLine: { marginTop: 2, marginLeft: 20, marginRight: -6 },
-  note: { color: Colors.textMuted, fontSize: 11, textAlign: 'left', marginTop: 12 },
+  block: { marginHorizontal: 20, paddingBottom: 4 },
+  // Una línea cometa por área: nombre y % arriba (toca para abrir el área)
+  areas: { gap: 4 },
+  areaHead: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 10 },
+  areaName: { ...ff('medium'), flex: 1, fontSize: 15, color: FINE.ivory },
+  areaPct: { ...ff('regular'), color: FINE.mute, fontSize: 14, fontVariant: ['tabular-nums'] },
+  areaPctSign: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  areaLine: { marginTop: 4, marginRight: -6, marginBottom: 2 },
+  note: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, textAlign: 'left', marginTop: 12 },
   start: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 12 },
-  startText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  startText: { ...ff('regular'), color: FINE.jade, fontSize: 14 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: Colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 20, paddingTop: 16 },
+  sheet: { backgroundColor: '#0A2019', borderTopLeftRadius: 22, borderTopRightRadius: 22, borderTopWidth: 1, borderColor: FINE.line, paddingHorizontal: 20, paddingTop: 18 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
-  sheetText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  sheetTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 20 },
+  sheetText: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20 },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   goalChip: {
     flexDirection: 'row',
@@ -282,16 +300,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 14,
-    backgroundColor: Colors.accentSoft,
+    backgroundColor: FINE.tile,
+    borderWidth: 1,
+    borderColor: FINE.line,
   },
-  goalChipText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  goalChipText: { ...ff('regular'), color: FINE.ivory, fontSize: 13 },
   sheetMetas: { marginTop: 16 },
-  sheetSec: { color: Colors.textMuted, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 },
+  sheetSec: { ...fine.secTitle, marginBottom: 4 },
   sheetArea: { marginTop: 8, gap: 2 },
-  sheetAreaName: { fontSize: 13, fontWeight: '800' },
-  sheetMeta: { color: Colors.textSecondary, fontSize: 14, lineHeight: 19 },
-  sheetBtn: { marginTop: 18, backgroundColor: Colors.accent, borderRadius: 14, paddingVertical: 13, alignItems: 'center' },
-  sheetBtnText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  sheetAreaName: { ...ff('medium'), fontSize: 13 },
+  sheetMeta: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 19 },
+  sheetBtn: { marginTop: 18, backgroundColor: FINE.emerald, borderRadius: 22, paddingVertical: 13, alignItems: 'center' },
+  sheetBtnText: { ...ff('medium'), color: '#F0EFE6', fontSize: 15 },
   sheetLink: { alignSelf: 'center', paddingVertical: 12 },
-  sheetLinkText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  sheetLinkText: { ...ff('regular'), color: FINE.jade, fontSize: 14 },
 });

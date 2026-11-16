@@ -9,7 +9,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { appPrefs, isSectionVisible, PURPOSE_OPTIONS, SECTION_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { t } from '@/i18n';
 
-// More → Configure my experience: para qué usa Kuova (una o varias cosas; aplica una configuración
+// Tú → Configure my experience: para qué usa Kuova (una o varias cosas; aplica una configuración
 // de secciones), qué partes ve y, desde cada una, su guía con vista previa. El fundador pidió
 // (2026-10-30) que quede claro que esa respuesta define la experiencia: qué partes, tarjetas,
 // opciones y avisos salen; por eso el aviso de arriba y el recuento que cambia al elegir.
@@ -29,7 +29,7 @@ export const AppSectionsScreen = () => {
           <Ionicons name="information-circle-outline" size={18} color={Colors.accent} />
           <Text style={styles.explainText}>
             {t(
-              'Your answer shapes your experience: it decides which parts, cards and options appear in Today, My Data and the rest of the app, and which reminders you get. Pick one or more.',
+              'Your answer shapes your experience: it decides which parts, cards and options appear in Today, Plan, Analysis and the rest of the app, and which reminders you get. Pick one or more.',
             )}
           </Text>
         </View>

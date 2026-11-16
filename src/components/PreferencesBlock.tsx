@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppearanceSwitch } from '@/components/AppearanceSwitch';
 import { Colors } from '@/constants/colors';
 import { getLang, Lang, LANGUAGES, saveLanguage, t } from '@/i18n';
 import { getTextSize, saveTextSize, TEXT_SIZES, TextSize } from '@/theme/textSize';
 import { reloadKeepingPlace } from '@/theme/appearance';
 
-// Apariencia, idioma y tamaño de letra: lo mismo en Settings de la app y en Ajustes del portal del
-// médico. Cambiar cualquiera recarga la app con un fundido y vuelve a `returnTo`.
+// Idioma y tamaño de letra: lo mismo en Settings de la app y en Ajustes del portal del médico.
+// Cambiar cualquiera recarga la app con un fundido y vuelve a `returnTo`.
+// Sin selector de apariencia desde el 2026-11-16: la app es solo oscura (DARK_ONLY en theme/appearance.ts).
+// El selector sigue en components/AppearanceSwitch.tsx por si se vuelve a ofrecer el tema claro.
 export const PreferencesBlock = ({ returnTo }: { returnTo: string }) => {
   const [size, setSize] = useState<TextSize>('default');
   const lang = getLang();
@@ -30,11 +31,6 @@ export const PreferencesBlock = ({ returnTo }: { returnTo: string }) => {
 
   return (
     <>
-      <Text style={styles.section}>{t('Appearance')}</Text>
-      <View style={styles.block}>
-        <AppearanceSwitch returnTo={returnTo} />
-      </View>
-
       <Text style={styles.section}>{t('Language')}</Text>
       <View style={styles.card}>
         {LANGUAGES.map((l, i) => {
@@ -79,7 +75,6 @@ export const prefStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   section: prefStyles.section,
-  block: { marginHorizontal: 20 },
   card: prefStyles.card,
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
   divider: { borderTopWidth: 1, borderTopColor: Colors.divider },

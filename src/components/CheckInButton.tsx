@@ -17,6 +17,7 @@ import { useLiveMotion } from '@/hooks/useLiveMotion';
 import { useTween } from '@/hooks/useTween';
 import { TAB } from '@/constants/tabs';
 import { t } from '@/i18n';
+import { FINE, ff } from '@/theme/fine';
 
 export const CHECKINS_PER_DAY = 3;
 
@@ -113,6 +114,7 @@ export function CheckInButton({ done, onPress }: { done: number; onPress: () => 
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', gap: 2 },
-  title: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', letterSpacing: 0.3, marginTop: 2 },
-  caption: { color: Colors.textSecondary, fontSize: 13 },
+  // Letra fina del prototipo (src/theme/fine.ts)
+  title: { ...ff('semibold'), color: FINE.ivory, fontSize: 16, marginTop: 2 },
+  caption: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
 });

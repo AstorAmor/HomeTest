@@ -25,6 +25,7 @@ import { isStagingApp, isTestDatabase } from '@/lib/appVariant';
 import { isTotpCodeComplete } from '@/logic/mfa';
 import { isPasswordStrongEnough, passwordRuleFromAuthError } from '@/logic/password';
 import { PasswordRules } from '@/components/PasswordRules';
+import { markAppReady } from '@/components/LaunchIntro';
 
 // Los errores de Supabase llegan en inglés: los más comunes, en el idioma de la app
 const authMessage = (m: string) => {
@@ -208,6 +209,9 @@ export const LoginScreen = () => {
       setLoading(false);
     }
   };
+
+  // Ya está el log-in debajo: la entrada de la marca se puede ir (LaunchIntro)
+  useEffect(() => markAppReady(), []);
 
   const isFormValid = email && password && (!isSignUp || (nombre && password2));
   const showRules = isSignUp && authMode === 'supabase';

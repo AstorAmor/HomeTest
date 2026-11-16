@@ -170,7 +170,7 @@ export function MetasHomeScreen() {
   );
 }
 
-function SpecialistPlanLink() {
+export function SpecialistPlanLink() {
   const router = useRouter();
   const [latest, setLatest] = useState<string | null>(null);
   useEffect(() => {
@@ -198,7 +198,7 @@ function SpecialistPlanLink() {
   );
 }
 
-function CommitLink({ s }: { s: MetasState }) {
+export function CommitLink({ s }: { s: MetasState }) {
   const router = useRouter();
   if (!selectedIds(s).length) return null;
   if (!s.commit)

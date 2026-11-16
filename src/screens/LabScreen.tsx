@@ -3,24 +3,25 @@ import { TourTarget } from '@/components/tour/TourTarget';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { getRangeStatus } from '@/utils/rangeStatus';
-import { ScreenHeader } from '@/components/ScreenHeader';
-import { DonutChart } from '@/components/DonutChart';
 import { MarkerRangeBar } from '@/components/MarkerRangeBar';
-import { TileMap } from '@/components/TileMap';
+import { SpecialistCarousel } from '@/components/SpecialistCarousel';
+import { KuovaAgeSection } from '@/components/KuovaAgeSection';
+import { FirstAnalysisCard } from '@/components/FirstAnalysisCard';
+import { Chev, FRow, SecHead, TabHead } from '@/components/fine/Fine';
 import { LAB_CENTERS } from '@/data/labCenters';
-import { t } from '@/i18n';
-import { Colors } from '@/constants/colors';
-import { TAB } from '@/constants/tabs';
+import { dateLocale, t } from '@/i18n';
 import { mockUpcomingAnalyses } from '@/data/mockData';
 import { showSamples } from '@/data/dataMode';
+import { useSections } from '@/data/appPrefs';
 import { labAppointmentEvents } from '@/data/labAppointments';
-import type { ScheduleEvent } from '@/data/schedule';
+import { consultationEvents } from '@/data/consultations';
+import { buildSchedule, SCHEDULE_COLORS, type ScheduleEvent } from '@/data/schedule';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
+import { FINE, ff, fine } from '@/theme/fine';
 import {
   labReports,
   flagColor,
@@ -31,10 +32,13 @@ import {
   reportCounts,
 } from '@/utils/labReportView';
 
-const formatShortDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return `${date.getDate()}/${date.getMonth() + 1}`;
-};
+// Pestaña Análisis (2026-11-16, borradores/app-estructura/ESPECIFICACION.md §5): lo que era Laboratorio, la
+// Agenda y la parte de análisis de Mis datos. De arriba abajo: tu próximo análisis (o «Empieza por tu primer
+// análisis»), la Edad KUOVA, tu último informe, tus biomarcadores, la agenda, hablar con un especialista, el
+// archivo y pedir. El círculo «Semana 8 de 26» llega en la fase 3 (hace falta la fecha del próximo análisis).
+// Con el lenguaje fino del prototipo (src/theme/fine.ts): cabeceras pequeñas, filas con línea y letra Inter.
+
+const shortDate = (d: string) => new Date(`${d.slice(0, 10)}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' });
 
 // Recuento en rango / fuera de rango de una analítica subida (con los rangos del propio laboratorio;
 // "< 200" cuenta como rango). Lo que no trae ninguna referencia no suma en ninguno de los dos.
@@ -51,20 +55,31 @@ const uploadCounts = (u: LabUpload) => {
   return { inRange, out };
 };
 
+const AGENDA_MAX = 3;
+
 export const LabScreen = () => {
   const tourScroll = useMemo(makeTourScroll, []);
   const router = useRouter();
+  const show = useSections();
   const [uploads, setUploads] = useDeepState<LabUpload[]>([]);
   // Citas de extracción reservadas (las de verdad; en las cuentas de prueba, además, las de ejemplo)
   const [draws, setDraws] = useDeepState<ScheduleEvent[]>([]);
+  // Agenda: lo que viene (pruebas, envíos, resultados, citas en el laboratorio y consultas)
+  const [agenda, setAgenda] = useDeepState<ScheduleEvent[]>([]);
   const samples = showSamples();
   const reports = labReports();
   useReloadOnFocus(
     useCallback(async () => {
       setUploads(await labUploadRepository.getAll().catch(() => []));
       const today = new Date().toISOString().slice(0, 10);
-      setDraws((await labAppointmentEvents().catch(() => [])).filter((e) => e.date >= today));
-    }, [setUploads, setDraws]),
+      const [lab, consults] = await Promise.all([labAppointmentEvents().catch(() => []), consultationEvents().catch(() => [])]);
+      setDraws(lab.filter((e) => e.date >= today));
+      setAgenda(
+        [...buildSchedule(), ...lab, ...consults]
+          .filter((e) => e.date >= today && e.type !== 'sample')
+          .sort((a, b) => (a.date + (a.start ?? '')).localeCompare(b.date + (b.start ?? ''))),
+      );
+    }, [setUploads, setDraws, setAgenda]),
   );
 
   const openReport = (id: 'current' | 'baseline') => {
@@ -74,398 +89,207 @@ export const LabScreen = () => {
     else router.push({ pathname: '/lab-report', params: { id } });
   };
 
+  const hasAny = reports.length > 0 || uploads.length > 0;
+  const upcoming = draws.length > 0 || (samples && mockUpcomingAnalyses.length > 0);
+  // Tu último informe: el más reciente de los del laboratorio o, si no hay, la última analítica subida
+  const [latestReport, ...olderReports] = reports;
+  const lastUpload = [...uploads].sort((a, b) => (b.testDate ?? b.createdAt).localeCompare(a.testDate ?? a.createdAt))[0];
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Lab')} />
+        <View style={styles.pad}>
+          <TabHead title={t('Analysis')} lead={t('Your next test, your results and your appointments')} />
 
-        {/* El plan personalizado vive en Today ("Tu plan"), no en Lab (fundador, 2026-10-17) */}
-        <Text style={styles.sectionTitle}>{t('Upcoming Analysis')}</Text>
-        <View style={styles.sectionBlock}>
-          {draws.map((e) => (
-            <TouchableOpacity
-              key={e.id}
-              style={styles.upcomingCard}
-              onPress={() => router.push({ pathname: '/lab-appointment', params: { id: e.id } })}
-              activeOpacity={0.85}
-            >
-              <View style={styles.upcomingLeft}>
-                <Text style={styles.upcomingName}>{e.title}</Text>
-                <Text style={styles.upcomingDesc} numberOfLines={2}>{e.start ? `${e.start} · ` : ''}{e.detail}</Text>
-              </View>
-              <View style={styles.upcomingRight}>
-                <View style={styles.dateBadge}>
-                  <Text style={styles.dateBadgeText}>{formatShortDate(e.date)}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-              </View>
-            </TouchableOpacity>
-          ))}
-          {!samples && draws.length === 0 && (
-            <Text style={styles.emptyText}>{t('Nothing on the way. When you order a test or book a blood draw, you will see it here.')}</Text>
-          )}
-          {samples && mockUpcomingAnalyses.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.upcomingCard}
-              onPress={() => router.push({ pathname: '/upcoming-analysis', params: { id: item.id } })}
-              activeOpacity={0.85}
-            >
-              <View style={styles.upcomingLeft}>
-                <Text style={styles.upcomingName}>{item.nombre}</Text>
-                <Text style={styles.upcomingDesc}>{item.descripcion}</Text>
-              </View>
-              <View style={styles.upcomingRight}>
-                <View style={styles.dateBadge}>
-                  <Text style={styles.dateBadgeText}>{formatShortDate(item.fecha)}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Entre las analíticas de la suscripción y los resultados: ayuda para elegir qué pedir */}
-        <View style={styles.finderCard}>
-          <View style={styles.finderHead}>
-            <View style={styles.finderIcon}>
-              <Ionicons name="help-buoy-outline" size={20} color={Colors.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.finderTitle}>{t('Feeling different and not sure which test to order?')}</Text>
-              <Text style={styles.finderSub}>{t('Answer 4 quick questions or ask a doctor.')}</Text>
-            </View>
-          </View>
-          <View style={styles.finderButtons}>
-            <TouchableOpacity
-              style={[styles.finderBtn, styles.finderBtnGhost]}
-              onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}
-            >
-              <Ionicons name="medkit-outline" size={17} color={Colors.accent} />
-              <Text style={[styles.finderBtnText, { color: Colors.accent }]}>{t('Talk to a specialist')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.finderBtn} onPress={() => router.push('/test-finder')}>
-              <Ionicons name="list-outline" size={17} color={Colors.background} />
-              <Text style={styles.finderBtnText}>{t('Take this short quiz')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <Text style={styles.sectionTitle}>{t('Lab Results')}</Text>
-        <View style={styles.sectionBlock}>
-          {reports.length === 0 && uploads.length === 0 && (
-            <Text style={styles.emptyText}>{t('No lab results yet. Upload one you already have (PDF or photo) and Kuova will read it for you.')}</Text>
-          )}
-          {reports.map(({ id, title, lab, report }) => {
-            const counts = reportCounts(report);
-            const flagged = flaggedMarkers(report);
-            return (
-              <TouchableOpacity key={id} style={styles.resultCard} onPress={() => openReport(id)} activeOpacity={0.85}>
-                <View style={styles.resultTop}>
-                  <DonutChart
-                    size={58}
-                    strokeWidth={7}
-                    segments={[
-                      { value: counts.inRange, color: Colors.ok },
-                      { value: counts.needsReview, color: Colors.attention },
-                    ]}
+          {/* 1. Tu próximo análisis o, sin ninguno todavía, cómo empezar */}
+          {upcoming ? (
+            <>
+              <SecHead title={t('Your next test')} />
+              {draws.map((e) => (
+                <FRow
+                  key={e.id}
+                  title={e.title}
+                  sub={`${e.start ? `${e.start} · ` : ''}${e.detail ?? ''}`}
+                  value={shortDate(e.date)}
+                  onPress={() => router.push({ pathname: '/lab-appointment', params: { id: e.id } })}
+                />
+              ))}
+              {samples &&
+                mockUpcomingAnalyses.map((item) => (
+                  <FRow
+                    key={item.id}
+                    title={item.nombre}
+                    sub={item.descripcion}
+                    value={shortDate(item.fecha)}
+                    onPress={() => router.push({ pathname: '/upcoming-analysis', params: { id: item.id } })}
                   />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.resultName}>{title}</Text>
-                    <Text style={styles.resultDate}>
-                      {formatReportDate(report.test_date)}
-                      <Text style={styles.resultLab}> · {lab}</Text>
-                    </Text>
-                    <Text style={styles.resultCounts}>
-                      <Text style={{ color: Colors.ok }}>{t('{n} in range', { n: counts.inRange })}</Text>
-                      {'  ·  '}
-                      <Text style={{ color: Colors.attention }}>{t('{n} need a look', { n: counts.needsReview })}</Text>
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-                </View>
+                ))}
+            </>
+          ) : !hasAny ? (
+            <FirstAnalysisCard variant="analysis" />
+          ) : null}
+        </View>
 
-                {flagged.length > 0 && (
-                  <View style={styles.paramsList}>
-                    {flagged.map((m) => {
-                      const pos = rangePosition(m);
-                      return (
-                        <View key={m.marker_id} style={styles.paramRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.paramText} numberOfLines={1}>
-                              {markerNameEn(m)}
-                            </Text>
-                            <Text style={[styles.paramValue, { color: flagColor(m) }]}>
-                              {getMarkerValueTextEn(m.value, m.unit)}
-                            </Text>
-                          </View>
-                          {pos !== null && <MarkerRangeBar position={pos} color={flagColor(m)} />}
+        {/* 2. Edad KUOVA, con su cobertura (lo que falta para calcularla) */}
+        <KuovaAgeSection tourScroll={tourScroll} />
+
+        <View style={styles.pad}>
+          {/* 3. Tu último informe: el recuento y lo que conviene mirar, con su línea de rango */}
+          {hasAny && (
+            <>
+              <SecHead title={t('Your latest report')} />
+              {latestReport ? (
+                (() => {
+                  const { id, title, lab, report } = latestReport;
+                  const counts = reportCounts(report);
+                  const flagged = flaggedMarkers(report);
+                  return (
+                    <>
+                      <TouchableOpacity style={fine.row} onPress={() => openReport(id)} activeOpacity={0.7}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={fine.rowTitle}>
+                            {t('{n} in range', { n: counts.inRange })} · {t('{n} need a look', { n: counts.needsReview })}
+                          </Text>
+                          <Text style={fine.rowSub}>
+                            {formatReportDate(report.test_date)} · {lab}
+                            {title ? ` · ${title}` : ''}
+                          </Text>
                         </View>
-                      );
-                    })}
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-          {uploads.map((u) => {
-            const c = uploadCounts(u);
-            return (
-              <TouchableOpacity
-                key={u.id}
-                style={styles.resultCard}
-                onPress={() => router.push({ pathname: '/progress', params: { upload: u.id } })}
-                activeOpacity={0.85}
-              >
-                <View style={styles.resultTop}>
-                  <DonutChart
-                    size={58}
-                    strokeWidth={7}
-                    segments={[
-                      { value: c.inRange, color: Colors.ok },
-                      { value: c.out, color: Colors.attention },
-                    ]}
-                  />
+                        <Chev />
+                      </TouchableOpacity>
+                      {flagged.map((m) => {
+                        const pos = rangePosition(m);
+                        return (
+                          <TouchableOpacity key={m.marker_id} style={fine.row} onPress={() => openReport(id)} activeOpacity={0.7}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.paramName} numberOfLines={1}>
+                                {markerNameEn(m)}
+                              </Text>
+                              <Text style={[styles.paramValue, { color: flagColor(m) }]}>{getMarkerValueTextEn(m.value, m.unit)}</Text>
+                            </View>
+                            {pos !== null && <MarkerRangeBar position={pos} color={flagColor(m)} />}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </>
+                  );
+                })()
+              ) : lastUpload ? (
+                <UploadRow u={lastUpload} />
+              ) : null}
+              <FRow title={t('Talk it over with a doctor')} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} last />
+            </>
+          )}
+
+          {/* 4. Tus biomarcadores: todos los valores de tus análisis, con su historia */}
+          {hasAny && (
+            <>
+              <SecHead title={t('Your biomarkers')} />
+              <FRow
+                title={t('See all your values')}
+                sub={t('Each one against the range of its lab, with its history')}
+                onPress={() => router.push('/biomarkers')}
+                last
+              />
+            </>
+          )}
+
+          {/* 5. Agenda: lo próximo en lista; el mes entero en «Ver calendario» */}
+          <SecHead title={t('Schedule')} more={t('See calendar')} onMore={() => router.push('/schedule')} />
+          {agenda.length === 0 ? (
+            <Text style={fine.note}>{t('Nothing scheduled.')}</Text>
+          ) : (
+            agenda.slice(0, AGENDA_MAX).map((e, i, all) => {
+              // Las citas de laboratorio abren su ficha; una videoconsulta confirmada, la llamada (como en el calendario)
+              const target = (e.type === 'lab' ? { pathname: '/lab-appointment', params: { id: e.id } } : e.action) as Href | undefined;
+              return (
+                <TouchableOpacity
+                  key={e.id}
+                  style={[fine.row, i === all.length - 1 && { borderBottomWidth: 0 }]}
+                  disabled={!target}
+                  onPress={() => target && router.push(target)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.agendaDot, { backgroundColor: SCHEDULE_COLORS[e.type] }]} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.resultName}>{t('Uploaded analysis')}</Text>
-                    <Text style={styles.resultDate}>
-                      {u.testDate ? formatReportDate(u.testDate) : formatReportDate(u.createdAt.slice(0, 10))}
-                      <Text style={styles.resultLab}> · {t('User upload')}{u.labName ? ` · ${u.labName}` : ''}</Text>
+                    <Text style={fine.rowTitle} numberOfLines={1}>
+                      {e.title}
                     </Text>
-                    <Text style={styles.resultCounts}>
-                      <Text style={{ color: Colors.ok }}>{t('{n} in range', { n: c.inRange })}</Text>
-                      {'  ·  '}
-                      <Text style={{ color: Colors.attention }}>{t('{n} need a look', { n: c.out })}</Text>
+                    <Text style={fine.rowSub}>
+                      {new Date(`${e.date}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' })}
+                      {e.start ? ` · ${e.start}` : ''}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                  {target ? <Chev /> : null}
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
 
-        {/* Laboratorios cerca: el mapa de tu zona; tocarlo abre la reserva de cita */}
-        <Text style={styles.sectionTitle}>{t('Find a lab near you')}</Text>
-        <View style={styles.mapCard}>
-          <TileMap points={LAB_CENTERS} height={200} onSelect={() => router.push('/book-lab')} />
-          <TouchableOpacity style={styles.mapFooter} onPress={() => router.push('/book-lab')} activeOpacity={0.85}>
-            <Ionicons name="location-outline" size={18} color={Colors.accent} />
-            <Text style={styles.mapFooterText}>{t('{n} labs where you can give your sample', { n: LAB_CENTERS.length })}</Text>
-            <Text style={styles.mapFooterLink}>{t('Book')}</Text>
-            <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
-          </TouchableOpacity>
+        {/* 6. Habla con un especialista (antes en Hoy) */}
+        {show('specialists') && (
+          <>
+            <SecHead title={t('Talk to a specialist')} style={styles.padM} />
+            <SpecialistCarousel loop onSelect={(s) => router.push({ pathname: '/professionals', params: { role: s.id } })} />
+          </>
+        )}
+
+        <View style={styles.pad}>
+          {/* 7. Archivo: informes, originales y el informe de evolución */}
+          <SecHead title={t('Archive')} />
+          <FRow title={t('Your files')} sub={t('Lab reports and everything you upload')} onPress={() => router.push('/files')} />
+          {olderReports.map((r) => (
+            <FRow key={r.id} title={r.title} sub={`${formatReportDate(r.report.test_date)} · ${r.lab}`} onPress={() => openReport(r.id)} />
+          ))}
+          <FRow
+            title={t('Your evolution report')}
+            sub={t('How your habits and markers have changed. Create it and share it.')}
+            onPress={() => router.push('/habits')}
+            last
+          />
+
+          {/* 8. Pedir: qué análisis, el catálogo, laboratorios cerca, subir un informe y seguir tu pedido */}
+          <SecHead title={t('Order')} />
+          <FRow title={t('Not sure which test to order?')} sub={t('4 quick questions')} onPress={() => router.push('/test-finder')} />
+          <FRow title={t('Test catalogue')} onPress={() => router.push('/store')} />
+          <FRow
+            title={t('Labs near you')}
+            sub={t('{n} labs where you can give your sample', { n: LAB_CENTERS.length })}
+            onPress={() => router.push('/book-lab')}
+          />
+          <TourTarget id="lab.upload" scroll={tourScroll}>
+            <FRow title={samples ? t('Upload lab report (test)') : t('Upload a lab report you already have')} onPress={() => router.push('/upload-test')} />
+          </TourTarget>
+          <FRow title={t('Track your tests')} onPress={() => router.push('/track-tests')} last />
         </View>
-
-        <TouchableOpacity style={styles.requestButton} onPress={() => router.push('/store')}>
-          <Ionicons name="flask-outline" size={20} color={Colors.background} />
-          <Text style={styles.requestButtonText}>{t('Request a new test')}</Text>
-        </TouchableOpacity>
-
-
-        <TourTarget id="lab.upload" scroll={tourScroll} inset={20}>
-          <TouchableOpacity style={styles.uploadButton} onPress={() => router.push('/upload-test')}>
-            <Ionicons name="cloud-upload-outline" size={20} color={Colors.accent} />
-            <Text style={styles.uploadButtonText}>{samples ? t('Upload lab report (test)') : t('Upload a lab report you already have')}</Text>
-          </TouchableOpacity>
-        </TourTarget>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
+// La última analítica subida por ti: el recuento (en rango / fuera) y de cuándo es
+function UploadRow({ u }: { u: LabUpload }) {
+  const router = useRouter();
+  const c = uploadCounts(u);
+  return (
+    <FRow
+      title={`${t('{n} in range', { n: c.inRange })} · ${t('{n} need a look', { n: c.out })}`}
+      sub={`${u.testDate ? formatReportDate(u.testDate) : formatReportDate(u.createdAt.slice(0, 10))} · ${t('User upload')}${u.labName ? ` · ${u.labName}` : ''}`}
+      onPress={() => router.push({ pathname: '/progress', params: { upload: u.id } })}
+    />
+  );
+}
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'transparent', // deja ver el fondo ambiental de las pestañas
   },
-  content: {
-    paddingBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 14,
-  },
-  finderCard: {
-    marginHorizontal: 20,
-    marginTop: -8,
-    marginBottom: 28,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    gap: 14,
-  },
-  finderHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  finderIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
-  finderTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', lineHeight: 21 },
-  finderSub: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
-  finderButtons: { flexDirection: 'row', gap: 10 },
-  finderBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Colors.accent,
-    borderRadius: 22,
-    paddingVertical: 11,
-    paddingHorizontal: 10,
-  },
-  finderBtnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.accent },
-  finderBtnText: { color: Colors.background, fontSize: 13, fontWeight: '800', textAlign: 'center', flexShrink: 1 },
-  mapCard: {
-    marginHorizontal: 20,
-    marginBottom: 28,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-  },
-  mapFooter: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 12 },
-  mapFooterText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  mapFooterLink: { color: Colors.accent, fontSize: 14, fontWeight: '800' },
-  sectionBlock: {
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 28,
-  },
-  emptyText: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  upcomingCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  upcomingLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  upcomingName: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  upcomingDesc: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  upcomingRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  dateBadge: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  dateBadgeText: {
-    color: Colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  resultCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-  },
-  resultTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  resultName: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  resultDate: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  resultLab: {
-    color: Colors.textMuted,
-    fontSize: 11,
-  },
-  resultCounts: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
-    color: Colors.textMuted,
-  },
-  paramsList: {
-    gap: 10,
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-  },
-  paramRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  paramText: {
-    color: Colors.textPrimary,
-    fontSize: 13,
-  },
-  paramValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 1,
-  },
-  requestButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    marginHorizontal: 20,
-  },
-  requestButtonText: {
-    color: Colors.background,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 30,
-    paddingVertical: 16,
-    marginHorizontal: 20,
-    marginTop: 12,
-  },
-  uploadButtonText: {
-    color: Colors.accent,
-    fontSize: 15,
-    fontWeight: '700',
-  },
+  content: { paddingBottom: 40 },
+  pad: { paddingHorizontal: 20 },
+  padM: { marginHorizontal: 20 },
+  paramName: { ...ff('regular'), color: FINE.ivory, fontSize: 14 },
+  paramValue: { ...ff('regular'), fontSize: 12.5, marginTop: 1, fontVariant: ['tabular-nums'] },
+  agendaDot: { width: 7, height: 7, borderRadius: 4 },
 });

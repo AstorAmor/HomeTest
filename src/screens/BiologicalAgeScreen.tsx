@@ -192,7 +192,7 @@ export const BiologicalAgeScreen = () => {
                   style={styles.labLink}
                   onPress={() =>
                     subscribed
-                      ? router.navigate({ pathname: '/(tabs)', params: { tab: String(TAB.lab) } } as any)
+                      ? router.navigate({ pathname: '/(tabs)', params: { tab: String(TAB.analysis) } } as any)
                       : router.push({ pathname: '/checkout', params: { id: 'membership' } })
                   }
                 >
@@ -265,7 +265,7 @@ export const BiologicalAgeScreen = () => {
                 })}
               </View>
             ))}
-            <TouchableOpacity style={styles.labLink} onPress={() => router.navigate({ pathname: '/(tabs)', params: { tab: String(TAB.lab) } } as any)}>
+            <TouchableOpacity style={styles.labLink} onPress={() => router.navigate({ pathname: '/(tabs)', params: { tab: String(TAB.analysis) } } as any)}>
               <Ionicons name="flask-outline" size={18} color={Colors.accent} />
               <Text style={styles.labLinkText}>{t('See your values in Lab')}</Text>
               <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />

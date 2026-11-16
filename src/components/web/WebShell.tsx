@@ -37,8 +37,9 @@ const TOP: NavItem[] = [
 ];
 
 const CATEGORIES: NavItem[] = [
-  { id: 'lab', label: 'Lab results', icon: 'flask-outline', color: Colors.danger, pathname: '/(tabs)', tab: TAB.lab },
-  { id: 'mydata', label: 'My Data', icon: 'analytics-outline', color: Colors.accent, pathname: '/(tabs)', tab: TAB.myData },
+  { id: 'lab', label: 'Analysis', icon: 'flask-outline', color: Colors.danger, pathname: '/(tabs)', tab: TAB.analysis },
+  // Mis datos ya no es pestaña (2026-11-16): sus mediciones, en su pantalla
+  { id: 'mydata', label: 'Measurements', icon: 'analytics-outline', color: Colors.accent, pathname: '/measurements' },
   { id: 'activity', label: 'Activity', icon: 'footsteps-outline', color: Colors.sky, pathname: '/metric', params: { kind: 'steps' }, section: 'wearables' },
   { id: 'sleep', label: 'Sleep', icon: 'moon-outline', color: Colors.violet, pathname: '/metric', params: { kind: 'sleep_duration' }, section: 'wearables' },
   { id: 'heart', label: 'Heart', icon: 'heart-outline', color: Colors.coral, pathname: '/metric', params: { kind: 'resting_heart_rate' }, section: 'wearables' },
@@ -54,9 +55,9 @@ const CATEGORIES: NavItem[] = [
 
 const PLAN: NavItem[] = [
   // «Mi plan» pasa a ser Tus objetivos (2026-11-06); el plan de un especialista se enlaza desde allí
-  { id: 'goals', label: 'Your goals', icon: 'flag-outline', color: Colors.accent, pathname: '/metas', section: 'plan' },
+  { id: 'goals', label: 'Your plan', icon: 'flag-outline', color: Colors.accent, pathname: '/(tabs)', tab: TAB.plan, section: 'plan' },
   { id: 'workouts', label: 'Workouts', icon: 'barbell-outline', color: Colors.coral, pathname: '/workouts' },
-  { id: 'schedule', label: 'Schedule', icon: 'calendar-outline', color: Colors.sky, pathname: '/(tabs)', tab: TAB.schedule },
+  { id: 'schedule', label: 'Schedule', icon: 'calendar-outline', color: Colors.sky, pathname: '/schedule' },
   { id: 'tracking', label: 'Track your tests', icon: 'mci:van-utility', color: Colors.amber, pathname: '/track-tests' },
   { id: 'pros', label: 'Professionals', icon: 'medkit-outline', color: Colors.green, pathname: '/professionals' },
   { id: 'learning', label: 'Learning', icon: 'book-outline', color: Colors.violet, pathname: '/learn-all', section: 'learning' },
@@ -65,6 +66,7 @@ const PLAN: NavItem[] = [
 const ACCOUNT: NavItem[] = [
   { id: 'subscription', label: 'My subscription', icon: 'card-outline', color: Colors.gold, pathname: '/subscription' },
   { id: 'store', label: 'Test catalogue', icon: 'pricetags-outline', color: Colors.coral, pathname: '/store', params: { view: 'tests' } },
+  { id: 'you', label: 'You', icon: 'person-circle-outline', color: Colors.accent, pathname: '/(tabs)', tab: TAB.you },
   { id: 'settings', label: 'Settings', icon: 'settings-outline', color: Colors.accent, pathname: '/settings' },
 ];
 
@@ -145,8 +147,8 @@ const ShellFrame = ({ children }: { children: React.ReactNode }) => {
   );
 
   // El resumen usa más ancho (rejilla de bloques); el resto, una columna cómoda de leer
-  // (Mis datos va en 2 columnas, así que también usa más ancho)
-  const maxWidth = pathname === '/resumen' ? 1180 : inTabs && tab === 1 ? 1080 : 760;
+  // (las mediciones van en 2 columnas, así que también usan más ancho)
+  const maxWidth = pathname === '/resumen' ? 1180 : pathname === '/measurements' || pathname === '/biomarkers' ? 1080 : 760;
 
   return (
     <View style={styles.root}>

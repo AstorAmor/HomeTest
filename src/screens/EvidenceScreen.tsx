@@ -78,7 +78,7 @@ export const EvidenceScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={first && !showAll ? tr('How we calculate it') : tr('How KUOVA works')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={first && !showAll ? tr('How we calculate it') : tr('How KUOVA works')} showBack backFallback={tabHref(TAB.you)} />
         {(!first || showAll) && (
           <Text style={styles.intro}>
             {tr('How we calculate what you see, and the studies and guidelines behind it. Look for the (i) next to a number or a suggestion to jump straight to its explanation.')}

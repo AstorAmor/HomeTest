@@ -120,7 +120,7 @@ export const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My Profile')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('My Profile')} showBack backFallback={tabHref(TAB.you)} />
 
         <View style={styles.hero}>
           {/* Tocar la foto: elegir otra de la galería */}

@@ -39,7 +39,7 @@ export const SettingsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Settings')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('Settings')} showBack backFallback={tabHref(TAB.you)} />
 
         <PreferencesBlock returnTo="/settings" />
 

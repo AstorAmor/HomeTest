@@ -6,7 +6,7 @@ import { userFlags } from '@/data/userFlags';
 // Para qué quiere el usuario la app (una o varias cosas) y qué secciones ve. Hay quien solo
 // quiere guardar sus analíticas (un historial clínico, sin planes ni "gamificación"), y quien
 // quiere todo el acompañamiento. Se pregunta al principio del onboarding y se puede cambiar
-// en More → Configure my experience (cada sección se puede encender o apagar).
+// en Tú → Configure my experience (cada sección se puede encender o apagar).
 //
 // Se guarda en user_flags (clave "app_prefs"): con cuenta, se respeta en todos sus
 // dispositivos; sin cuenta, en el móvil. Sin respuesta, se ve todo (como antes).
@@ -71,10 +71,10 @@ export const SECTION_OPTIONS: { id: AppSection; title: string; subtitle: string;
   { id: 'gut', title: 'Digestion', subtitle: 'How your tummy feels after eating, and your stools', icon: 'intestine' },
   { id: 'bladder', title: 'Hydration', subtitle: 'Urine: how often, colour and how hydrated you are', icon: 'water-outline' },
   { id: 'medication', title: 'Medication & supplements', subtitle: 'What you take, when, and reminders if you want them', icon: 'medical-outline' },
-  { id: 'badges', title: 'Badges', subtitle: 'Achievements and streaks', icon: 'ribbon-outline' },
-  { id: 'specialists', title: 'Specialist suggestions', subtitle: '"Talk to a specialist" on Today', icon: 'people-outline' },
-  { id: 'learning', title: 'Learning', subtitle: 'Short reads about your health', icon: 'book-outline' },
-  { id: 'history', title: 'Your history', subtitle: 'Allergies, blood group, vaccines and medical history, in My data', icon: 'document-text-outline' },
+  { id: 'badges', title: 'Badges', subtitle: 'Achievements and streaks, in Plan', icon: 'ribbon-outline' },
+  { id: 'specialists', title: 'Specialist suggestions', subtitle: '"Talk to a specialist" in Analysis', icon: 'people-outline' },
+  { id: 'learning', title: 'Learning', subtitle: 'Short reads about your health, in You', icon: 'book-outline' },
+  { id: 'history', title: 'Your history', subtitle: 'Allergies, blood group, vaccines and medical history, in You', icon: 'document-text-outline' },
 ];
 
 // Qué se oculta de entrada según la respuesta. Con varias respuestas se oculta solo lo que

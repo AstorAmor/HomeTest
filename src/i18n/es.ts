@@ -11,6 +11,67 @@ export const es: Record<string, string> = {
   More: 'Más',
   Settings: 'Ajustes',
 
+  // ── Las 4 pestañas (2026-11-16, borradores/app-estructura/ESPECIFICACION.md) ──
+  Analysis: 'Análisis',
+  Log: 'Apuntar',
+  Dose: 'Toma',
+  Report: 'Informe',
+  'Up next': 'Lo siguiente',
+  'Start with your first test': 'Empieza por tu primer análisis',
+  'Choose one, or upload a report you already have.': 'Elige uno, o sube un informe que ya tengas.',
+  'A blood draw at a lab near you. Then you will see your biomarkers, your KUOVA age and when to repeat it here.':
+    'Una extracción en un laboratorio cerca de ti. Después verás aquí tus biomarcadores, tu Edad KUOVA y cuándo toca repetir.',
+  See: 'Ver',
+  'See tests': 'Ver análisis',
+  'Upload one I already have': 'Subir uno que ya tengo',
+  'Everything you can record, in one place.': 'Todo lo que se puede registrar, desde un solo sitio.',
+  'With a QR code': 'Con código QR',
+  // Hoy
+  'Change what you see here': 'Cambiar lo que ves aquí',
+  'Your state today': 'Tu estado de hoy',
+  'Your state today: {n} out of 100': 'Tu estado de hoy: {n} de 100',
+  'Your week: {n} percent': 'Tu semana: {n} por ciento',
+  'Menstrual cycle: day {n}, {phase}': 'Ciclo menstrual: día {n}, {phase}',
+  // Plan
+  'What you have set out to do, and how your week is going': 'Lo que te has propuesto y cómo va tu semana',
+  'Choose your goals': 'Elige tus objetivos',
+  'Up to {n}. Each one is tied to something that is measured.': 'Máximo {n}. Cada uno va unido a algo que se mide.',
+  'Your plan is turned off. Turn it on to choose your goals and your weekly targets.': 'Tu plan está apagado. Enciéndelo para elegir tus objetivos y tus metas de la semana.',
+  'Badges and streaks': 'Insignias y rachas',
+  'Workouts and meals': 'Entrenamientos y menús',
+  // Análisis
+  'Your next test, your results and your appointments': 'Tu próximo análisis, tus resultados y tus citas',
+  'Your next test': 'Tu próximo análisis',
+  'Your latest report': 'Tu último informe',
+  'Talk it over with a doctor': 'Coméntalo con un médico',
+  'Your biomarkers': 'Tus biomarcadores',
+  'See all your values': 'Ver todos tus valores',
+  'Each one against the range of its lab, with its history': 'Cada uno frente al rango de su laboratorio, con su historia',
+  'See calendar': 'Ver calendario',
+  Archive: 'Archivo',
+  'Not sure which test to order?': '¿No sabes cuál pedir?',
+  '4 quick questions': '4 preguntas',
+  'Labs near you': 'Laboratorios cerca',
+  // Tú
+  'Your record': 'Tu ficha',
+  Connections: 'Conexiones',
+  Learn: 'Aprende',
+  'Free account': 'Cuenta gratuita',
+  'Subscription {tier}': 'Suscripción {tier}',
+  // Tutorial
+  'Your day: your check-in, how your week is going and what you measure.': 'Tu día: tu check-in, cómo va tu semana y lo que mides.',
+  'Your targets in three areas: exercise, food and habits. Each bar is how your targets are going this week.':
+    'Tus metas en tres áreas: ejercicio, alimentación y hábitos. Cada barra es cómo van esta semana.',
+  'Your exercise targets: steps, cardio or strength. Tap it to see each day and mark today.': 'Tus metas de ejercicio: pasos, cardio o fuerza. Tócalo para ver cada día y marcar hoy.',
+  'How you are today, from the sleep, heart rate and activity of your watch.': 'Cómo estás hoy, según el sueño, el pulso y la actividad de tu reloj.',
+  'Steps, active calories, sleep and water against your goals. Tap them to change them.': 'Pasos, calorías activas, sueño y agua frente a tus metas. Tócalos para cambiarlas.',
+  'Choose what you see': 'Elige lo que ves',
+  'The K button: log anything from any tab, like a check-in, your weight, blood pressure, a meal, a workout or a report.':
+    'El botón K: apunta lo que sea desde cualquier pestaña, como un check-in, tu peso, la tensión, una comida, un entrenamiento o un informe.',
+  'Your goals, your weekly targets, your commitment and your badges. Workouts and meals too.': 'Tus objetivos, tus metas de la semana, tu compromiso y tus insignias. También entrenamientos y menús.',
+  'Your next test, your results, your appointments and how to order a test.': 'Tu próximo análisis, tus resultados, tus citas y cómo pedir un análisis.',
+  'Your health record, sharing, your watch, short reads and settings.': 'Tu ficha, compartir, tu reloj, lecturas cortas y ajustes.',
+
   // ── More ──
   'My Profile': 'Mi perfil',
   'View and edit details': 'Consulta y edita tus datos',
@@ -26,7 +87,7 @@ export const es: Record<string, string> = {
   'Connect Huawei, Xiaomi, Garmin, Oura and more': 'Conecta Huawei, Xiaomi, Garmin, Oura y más',
   'Biomarker Catalog': 'Catálogo de biomarcadores',
   '118 biomarkers, canonical knowledge base (dev)': '118 biomarcadores, base de conocimiento (dev)',
-  'Appearance, language, text size, permissions and notifications': 'Apariencia, idioma, tamaño de letra, permisos y notificaciones',
+  'Language, text size, permissions and notifications': 'Idioma, tamaño de letra, permisos y notificaciones',
   'How KUOVA works': 'Cómo funciona KUOVA',
   'How we calculate things, and the studies and guidelines behind them': 'Cómo calculamos cada cosa, y los estudios y guías en los que nos basamos',
   'Professionals review': 'Revisión de profesionales',
@@ -1624,8 +1685,8 @@ export const es: Record<string, string> = {
   'Talk to a specialist about your plan': 'Habla con un especialista sobre tu plan',
   'What do you use Kuova for?': '¿Para qué usas Kuova?',
   'What you see': 'Qué ves',
-  'Your answer shapes your experience: it decides which parts, cards and options appear in Today, My Data and the rest of the app, and which reminders you get. Pick one or more.':
-    'Tu respuesta define tu experiencia: decide qué partes, tarjetas y opciones aparecen en Hoy, Mis datos y el resto de la app, y qué avisos te llegan. Puedes elegir varias.',
+  'Your answer shapes your experience: it decides which parts, cards and options appear in Today, Plan, Analysis and the rest of the app, and which reminders you get. Pick one or more.':
+    'Tu respuesta define tu experiencia: decide qué partes, tarjetas y opciones aparecen en Hoy, Plan, Análisis y el resto de la app, y qué avisos te llegan. Puedes elegir varias.',
   'With your answer you see {n} of {total} parts of the app.': 'Con tu respuesta ves {n} de {total} partes de la app.',
   'No answer yet: you see {n} of {total} parts of the app.': 'Aún no has elegido: ves {n} de {total} partes de la app.',
   'This comes from your answer above. Turn each part on or off as you like; if you change your answer, this list is set again.':
@@ -1928,9 +1989,9 @@ export const es: Record<string, string> = {
   'Bowel movements: how often, colour and consistency': 'Deposiciones: cuántas veces, color y consistencia',
   'Urine: how often, colour and how hydrated you are': 'Orina: cuántas veces, color y lo hidratado que estás',
   'What you take, when, and reminders if you want them': 'Qué tomas, cuándo, y recordatorios si los quieres',
-  'Achievements and streaks': 'Logros y rachas',
-  '"Talk to a specialist" on Today': '«Habla con un especialista» en Hoy',
-  'Short reads about your health': 'Lecturas cortas sobre tu salud',
+  'Achievements and streaks, in Plan': 'Logros y rachas, en Plan',
+  '"Talk to a specialist" in Analysis': '«Habla con un especialista» en Análisis',
+  'Short reads about your health, in You': 'Lecturas cortas sobre tu salud, en Tú',
   'Improve my general health': 'Mejorar mi salud en general',
   'Prevent disease': 'Prevenir enfermedades',
   'Have more energy': 'Tener más energía',
@@ -3830,10 +3891,10 @@ export const es: Record<string, string> = {
   'It is a guide to how hard to push today, not a medical measure. The formula is being reviewed by our medical team.': 'Es una guía de cuánto exigirte hoy, no una medida médica. La fórmula la está revisando nuestro equipo médico.',
   'HRV-guided training: daily values compared with your own rolling baseline (Plews et al., Sports Med 2013)': 'Entrenamiento guiado por la VFC: cada día frente a tu propia media móvil (Plews et al., Sports Med 2013)',
   // 2026-10-21: veces sueltas en Orina y Heces, tutorial (medicación, Configura tu experiencia)
-  'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in More → Configure my experience.': 'Apunta lo que tomas y, si quieres, recibe un aviso en cada toma. Si no lo ves en Hoy, actívalo en Más → Configura tu experiencia.',
+  'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in You → Configure my experience.': 'Apunta lo que tomas y, si quieres, recibe un aviso en cada toma. Si no lo ves en Hoy, actívalo en Tú → Configura tu experiencia.',
   'Make it yours': 'A tu manera',
-  'What you use Kuova for shapes your experience: it decides what you see, like the plan, the daily check-in or your wearable data. Change it, or each part, in More → Configure my experience.':
-    'Para qué usas Kuova define tu experiencia: decide qué ves, como el plan, el check-in diario o los datos de tu wearable. Cámbialo, o cada parte por separado, en Más → Configura tu experiencia.',
+  'What you use Kuova for shapes your experience: it decides what you see, like the plan, the daily check-in or your wearable data. Change it, or each part, in You → Configure my experience.':
+    'Para qué usas Kuova define tu experiencia: decide qué ves, como el plan, el check-in diario o los datos de tu wearable. Cámbialo, o cada parte por separado, en Tú → Configura tu experiencia.',
   'One time less': 'Una vez menos',
   'One time more': 'Una vez más',
   '{n} of them with details below': '{n} de ellas con detalle abajo',

@@ -1,11 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { labUploadRepository } from '@/data/labUploads';
-import { rememberKuovaAge } from '@/data/kuovaAgeCache';
-import { TourTarget } from '@/components/tour/TourTarget';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { labValuesFrom } from '@/data/labUploadValues';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -15,27 +13,19 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 import { loadSeedData } from '@/data/seedData';
 import { importLocalDataToAccount } from '@/data/importLocalData';
-import { profileRepository, Sex } from '@/data/profileRepository';
 import { useAuth } from '@/context/AuthContext';
 import { getGlucoseEntries } from '@/data/glucoseRepository';
 import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
 import { vo2maxRepository } from '@/data/vo2maxRepository';
-import { baselineReport, currentReport } from '@/data/reportRepository';
 import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
-import { cycleRepository } from '@/data/cycleRepository';
-import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
-import { cycleGoalStore } from '@/data/cycleGoal';
-import { CycleStrip } from '@/components/CycleStrip';
 import { useSections } from '@/data/appPrefs';
 import { dateLocale, num, t } from '@/i18n';
 import { useWebShell } from '@/web/webMode';
 import { IconBadge } from '@/components/HealthIcons';
-import { KuovaAge, kuovaAge, kuovaAgeFromUploads, KuovaAgeResult, realChange } from '@/logic/kuovaAge';
-import { KuovaAgeBadge, KuovaAgeDots, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
 import { showSamples } from '@/data/dataMode';
-import { HistorialBlock } from '@/components/historial/HistorialBlock';
+import { TAB, tabHref } from '@/constants/tabs';
 import { weightRepository } from '@/data/weightRepository';
 import { weighAdvice, WeighAdvice } from '@/logic/weight';
 import { labReports } from '@/utils/labReportView';
@@ -118,7 +108,11 @@ const wearableChart = (points: DailyPoint[] | undefined, color: string, format: 
   };
 };
 
-export const MyDataScreen = () => {
+// Lo que quedaba de «Mis datos», que dejó de ser pestaña el 2026-11-16 (borradores/app-estructura): dos
+// pantallas sueltas. `measurements`: tus mediciones con su línea en el tiempo (pasos, sueño, tensión, peso…;
+// «Ver todas» desde Hoy). `biomarkers`: los valores de tus analíticas con sus gráficas y la lista entera
+// («Ver todos» desde Análisis). La Edad KUOVA pasó a Análisis; el historial y el perfil genético, a Tú.
+export const MyDataScreen = ({ part }: { part: 'measurements' | 'biomarkers' }) => {
   const router = useRouter();
   const show = useSections();
   const { series, isSample } = useDailyWearables();
@@ -138,23 +132,9 @@ export const MyDataScreen = () => {
   const [analyses, setAnalyses] = useDeepState<{ list: MarkerSummary[]; last: MarkerPoint | null; any: boolean; points: MarkerPoint[] }>({ list: [], last: null, any: false, points: [] });
   // Qué gráficas se ven en Analíticas: el ojo de cada una (fundador, 2026-11-06)
   const [charts, setCharts] = useState<string[]>(DEFAULT_CHARTS);
-  // El ciclo menstrual solo se muestra a perfiles de mujer
-  const [sex, setSex] = useState<Sex | undefined>(undefined);
-  const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
-  // Edad KUOVA de la cuenta real: con sus analíticas subidas y su fecha de nacimiento (o qué falta)
-  const [kres, setKres] = useDeepState<KuovaAgeResult | null>(null);
   const tourScroll = useMemo(makeTourScroll, []);
 
   const load = useCallback(async () => {
-    profileRepository
-      .get()
-      .then(async (p) => {
-        setSex(p.sex);
-        if (p.sex !== 'female') return setCycle(null);
-        const [entries, cycleGoal] = await Promise.all([cycleRepository.getAll(), cycleGoalStore.get().catch(() => null)]);
-        setCycle(currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength, cycleGoal));
-      })
-      .catch(() => undefined);
     weightRepository
       .getAll()
       .then((all) => {
@@ -167,14 +147,13 @@ export const MyDataScreen = () => {
         );
       })
       .catch(() => setWeight(null));
-    const [g, bpEntries, chol, cort, vo, uploads, prof] = await Promise.all([
+    const [g, bpEntries, chol, cort, vo, uploads] = await Promise.all([
       getGlucoseEntries(),
       getBloodPressureEntries(),
       cholesterolRepository.getAll(),
       cortisolRepository.getAll(),
       vo2maxRepository.getAll().catch(() => []),
       labUploadRepository.getAll().catch(() => []),
-      profileRepository.get().catch(() => null),
     ]);
     // Lo apuntado a mano más lo que traen las analíticas subidas (glucosa, colesterol total, cortisol)
     setGlucose(simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent));
@@ -192,9 +171,6 @@ export const MyDataScreen = () => {
       .get(CHARTS_FLAG)
       .then((v) => setCharts(normalizeCharts(v)))
       .catch(() => undefined);
-    const age = kuovaAgeFromUploads(uploads, prof?.dateOfBirth);
-    rememberKuovaAge(age);
-    setKres(age);
     // VO2max: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
     const voAsc = [...vo].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);    setVo2(
       voAsc.length
@@ -231,7 +207,7 @@ export const MyDataScreen = () => {
         isSample: true,
       });
     }
-  }, [setGlucose, setCholesterol, setCortisol, setBp, setKres, setWeight, setAnalyses]);
+  }, [setGlucose, setCholesterol, setCortisol, setBp, setWeight, setAnalyses]);
 
   useReloadOnFocus(load);
 
@@ -283,62 +259,11 @@ export const MyDataScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My Data')} />
+        <ScreenHeader title={part === 'measurements' ? t('Measurements') : t('Your biomarkers')} showBack backFallback={tabHref(part === 'measurements' ? TAB.today : TAB.analysis)} />
 
-        {/* Edad KUOVA (PhenoAge) de la última analítica completa: lo primero que se ve */}
-        {!showSamples() && kres?.status === 'ok' && (
-          <TourTarget id="mydata.age" scroll={tourScroll}>
-            <KuovaAgeHero k={kres.k} previous={kres.previous} onPress={() => router.push('/biological-age')} />
-          </TourTarget>
-        )}
-        {!showSamples() && kres && kres.status !== 'ok' && (
-          // Cuenta real sin Edad KUOVA todavía: la insignia difuminada, sin cifra, y en pequeño qué
-          // falta (valores, fecha de nacimiento…); al tocarla, el detalle con los 9
-          <TourTarget id="mydata.age" scroll={tourScroll}>
-          <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.9}>
-            <Text style={styles.bioAgeKicker}>{t('Your KUOVA age')}</Text>
-            <KuovaAgeBadge size={180} locked />
-            <View style={{ marginTop: 14 }}>
-              <KuovaAgeDots c={kres.coverage} />
-            </View>
-            <Text style={styles.bioAgeLocked}>{kuovaAgeLockedHint(kres)}</Text>
-            {kres.status === 'missing' && (
-              <TouchableOpacity onPress={() => router.push('/store')} hitSlop={8}>
-                <Text style={styles.bioAgeMore}>
-                  {t('Get the full blood test')} <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
-                </Text>
-              </TouchableOpacity>
-            )}
-          </TouchableOpacity>
-          </TourTarget>
-        )}
-        {showSamples() && currentReport.summary.phenoage.available && (
-          <TourTarget id="mydata.age" scroll={tourScroll}>
-            <KuovaAgeHero
-              sample
-              k={kuovaAge(currentReport.summary.phenoage)}
-              previous={baselineReport.summary.phenoage.available ? kuovaAge(baselineReport.summary.phenoage) : null}
-              onPress={() => router.push('/biological-age')}
-            />
-          </TourTarget>
-        )}
-
-        {/* Tu historial: alergias, grupo sanguíneo, vacunas, cirugías e historia clínica, y la tarjeta de emergencia */}
-        {show('history') && <HistorialBlock />}
-
-        {sex === 'female' && cycle && show('cycle') && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('Menstrual cycle')}</Text>
-            </View>
-            <View style={styles.periodBlock}>
-              <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />
-            </View>
-          </>
-        )}
-
+        {part === 'measurements' && (
+        <>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('Measurements')}</Text>
           <Text style={styles.sectionMeta}>
             {show('wearables') ? `${t('From your watch (last 14 days) and what you log')}${isSample ? ` · ${t('sample')}` : ''}` : t('What you log')}
           </Text>
@@ -424,9 +349,12 @@ export const MyDataScreen = () => {
           );
         })()}
         </View>
+        </>
+        )}
 
-        <View style={[styles.sectionHeader, { marginTop: 16 }]}>
-          <Text style={styles.sectionTitle}>{t('Lab tests')}</Text>
+        {part === 'biomarkers' && (
+        <>
+        <View style={styles.sectionHeader}>
           <Text style={styles.sectionMeta}>{t('The values of your lab tests, each one against the range of its lab. Tap one to see all your results for it.')}</Text>
         </View>
         <View style={grid ? styles.grid : undefined}>
@@ -480,51 +408,17 @@ export const MyDataScreen = () => {
           })}
         </View>}
 
-        {/* Perfil genético: antecedentes familiares ("Know your roots") y, más adelante, resultados */}
-        <TourTarget id="mydata.genetics" scroll={tourScroll} style={styles.geneticSlot}>
-        <TouchableOpacity style={[styles.genetic, styles.geneticInSlot]} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
-          <View style={styles.geneticIcon}>
-            <MaterialCommunityIcons name="dna" size={20} color={Colors.gold} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.geneticTitle}>{t('Your genetic profile')}</Text>
-            <Text style={styles.geneticSub}>{t('Know your roots: what runs in your family')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
-        </TourTarget>
-
-        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/files')} activeOpacity={0.85}>
-          <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.accent, 0.12) }]}>
-            <Ionicons name="folder-open-outline" size={20} color={Colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.geneticTitle}>{t('Your files')}</Text>
-            <Text style={styles.geneticSub}>{t('Lab reports and everything you upload')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
-
-        {/* Informe de evolución: hábitos y marcadores entre tus dos últimas analíticas */}
-        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/habits')} activeOpacity={0.85}>
-          <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.ok, 0.14) }]}>
-            <Ionicons name="trending-up" size={20} color={Colors.ok} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.geneticTitle}>{t('Your evolution report')}</Text>
-            <Text style={styles.geneticSub}>{t('How your habits and markers have changed. Create it and share it.')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
+        </>
+        )}
 
         {/* Botones de desarrollo: nunca en una cuenta real (meterían datos inventados en ella) */}
-        {showSamples() && (
+        {part === 'measurements' && showSamples() && (
         <TouchableOpacity style={styles.seedButton} onPress={handleLoadSeed}>
           <Ionicons name="flask-outline" size={18} color={Colors.textMuted} />
           <Text style={styles.seedButtonText}>Load dummy data (dev)</Text>
         </TouchableOpacity>
         )}
-        {authMode === 'supabase' && showSamples() && (
+        {part === 'measurements' && authMode === 'supabase' && showSamples() && (
           <TouchableOpacity style={styles.seedButton} onPress={handleImportLocal}>
             <Ionicons name="cloud-upload-outline" size={18} color={Colors.textMuted} />
             <Text style={styles.seedButtonText}>Upload this phone's data to my account (dev)</Text>
@@ -533,38 +427,6 @@ export const MyDataScreen = () => {
         {seedStatus ? <Text style={styles.seedStatus}>{seedStatus}</Text> : null}
       </ScrollView>
     </SafeAreaView>
-  );
-};
-
-// "Buque insignia": la insignia sola, sin bloque, y al tocarla el detalle (como Whoop). Debajo, los
-// años de diferencia, el margen y el cambio desde la analítica anterior solo si supera el margen.
-const KuovaAgeHero = ({ k, previous, sample = false, onPress }: { k: KuovaAge; previous: KuovaAge | null; sample?: boolean; onPress: () => void }) => {
-  const change = previous ? realChange(k, previous) : null;
-  return (
-    <TouchableOpacity style={styles.bioAge} onPress={onPress} activeOpacity={0.9}>
-      <Text style={styles.bioAgeKicker}>
-        {t('Your KUOVA age')}
-        {sample ? ` · ${t('sample')}` : ''}
-      </Text>
-      <KuovaAgeBadge size={230} value={num(k.age.toFixed(1))} good={k.diff >= 0} />
-      <Text style={[styles.bioAgeDiff, { color: k.diff >= 0 ? Colors.gold : Colors.attention }]}>
-        {t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
-      </Text>
-      <View style={styles.bioAgeMeta}>
-        <Text style={styles.bioAgeMargin}>{t('± {n} years', { n: num(k.margin.toFixed(1)) })}</Text>
-        {previous && (
-          <Text style={styles.bioAgeSub}>
-            ·{' '}
-            {change == null
-              ? t('no real change since your previous test')
-              : t('{n} since your previous test', { n: `${change > 0 ? '+' : '−'}${num(Math.abs(change).toFixed(1))}` })}
-          </Text>
-        )}
-      </View>
-      <Text style={styles.bioAgeMore}>
-        {t('See what moves it')} <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
-      </Text>
-    </TouchableOpacity>
   );
 };
 

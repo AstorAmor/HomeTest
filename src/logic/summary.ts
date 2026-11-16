@@ -1,9 +1,9 @@
 import type { ScheduleEvent } from '@/data/schedule';
 import { Appointment, appointmentTitle, canJoinVideo } from '@/data/specialistTypes';
 import { dateLocale, t } from '@/i18n';
-import { TAB } from '@/constants/tabs';
 
-// "Your summary" en Today: lo próximo de tu calendario, en este orden y sin nombrar categorías:
+// «Lo siguiente» en Hoy (antes «Your summary»; desde el 2026-11-16 «Ver» lleva a la cita o al análisis, no a
+// una pestaña): lo próximo de tu calendario, en este orden y sin nombrar categorías:
 // 1. citas (laboratorio y profesionales), 2. logística (entrega y recogida del kit), 3. resultados
 // (los esperados o los recién llegados; una vez abiertos ya no se repiten).
 
@@ -70,7 +70,7 @@ export function buildSummary(input: {
         when: a.startsAt,
         target: (a.canJoin
           ? { pathname: '/video', params: { appt: a.id, title: a.label } }
-          : { pathname: '/(tabs)', params: { tab: String(TAB.schedule) } }) as SummaryLine['target'],
+          : { pathname: '/schedule' }) as SummaryLine['target'],
       })),
   ].sort((a, b) => a.when.localeCompare(b.when));
   lines.push(...appts.slice(0, 2));
@@ -114,7 +114,7 @@ export function buildSummary(input: {
         icon: 'document-text-outline',
         text: t('Results for your {name} expected around {day}', { name: t(next.title.split(':')[0]), day: dayText(next.date) }),
         when: next.date,
-        target: { pathname: '/(tabs)', params: { tab: String(TAB.lab) } },
+        target: { pathname: '/upcoming-analysis', params: { id: next.id.replace(/-results$/, '') } },
       });
   }
   return lines;

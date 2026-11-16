@@ -209,7 +209,7 @@ export function BloodGroupScreen() {
         label={t('Save')}
         onPress={() => {
           update({ ...h, bloodGroup: idx === 0 ? null : BLOOD_GROUPS[idx - 1] });
-          goBack(router, tabHref(TAB.myData));
+          goBack(router, tabHref(TAB.you));
         }}
       />
     </HistFrame>
@@ -543,7 +543,7 @@ export function EmergencyCardScreen() {
     },
     [update],
   );
-  if (!h || !draft) return <HistFrame title={t('My emergency card')} backFallback={tabHref(TAB.more)} />;
+  if (!h || !draft) return <HistFrame title={t('My emergency card')} backFallback={tabHref(TAB.you)} />;
   const view: Historial = { ...h, card: draft };
   const save = (next: CardData = draft) => {
     if (JSON.stringify(next) !== JSON.stringify(h.card)) update({ ...h, card: next });
@@ -644,7 +644,7 @@ export function EmergencyCardScreen() {
   );
 
   return (
-    <HistFrame title={t('My emergency card')} backFallback={tabHref(TAB.more)}>
+    <HistFrame title={t('My emergency card')} backFallback={tabHref(TAB.you)}>
       <Text style={hs.sub}>{t('What whoever helps you should know, with a QR code that holds the same details and can be read without internet.')}</Text>
       <Segment options={VARIANTS.map(([v, l]) => [v, t(l)] as [CardVariant, string])} value={variant} onChange={setVariant} />
       <Text style={[hs.meta, { marginTop: 8, marginBottom: 12 }]}>{t(VARIANT_NOTE[variant])}</Text>

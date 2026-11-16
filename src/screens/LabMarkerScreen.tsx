@@ -51,7 +51,7 @@ export const LabMarkerScreen = () => {
   if (!history || !latest) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title={name} showBack backFallback={tabHref(TAB.myData)} />
+        <ScreenHeader title={name} showBack backFallback={tabHref(TAB.analysis)} />
         {history && <Text style={styles.empty}>{t('This value is not in any of your lab tests any more.')}</Text>}
       </SafeAreaView>
     );
@@ -77,7 +77,7 @@ export const LabMarkerScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={name} showBack backFallback={tabHref(TAB.myData)} />
+        <ScreenHeader title={name} showBack backFallback={tabHref(TAB.analysis)} />
         <Text style={styles.kicker}>{t('In your lab tests')}</Text>
 
         {/* El último valor */}

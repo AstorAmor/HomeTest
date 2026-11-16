@@ -41,7 +41,7 @@ export const LabAppointmentScreen = () => {
   if (!appt || !center) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.schedule)} />
+        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.analysis)} />
         {loaded && <Text style={styles.empty}>{t('This appointment no longer exists. It may have been cancelled.')}</Text>}
       </SafeAreaView>
     );
@@ -60,13 +60,13 @@ export const LabAppointmentScreen = () => {
     if (!ok) return;
     await labAppointmentRepository.cancel(appt.id);
     if (router.canGoBack()) router.back();
-    else router.replace(tabHref(TAB.schedule) as any);
+    else router.replace(tabHref(TAB.analysis) as any);
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.schedule)} />
+        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.analysis)} />
 
         <View style={styles.hero}>
           <View style={styles.heroIcon}>

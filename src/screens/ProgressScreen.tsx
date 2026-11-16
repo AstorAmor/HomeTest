@@ -83,7 +83,7 @@ export const ProgressScreen = () => {
   if (!upload || !result) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.lab)} />
+        <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.analysis)} />
       </SafeAreaView>
     );
   }
@@ -97,7 +97,7 @@ export const ProgressScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.lab)} />
+        <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.analysis)} />
         <Text style={styles.subhead}>
           {upload.testDate ? shortDate(upload.testDate) : t('Uploaded test')} · {upload.labName ?? t('User upload')}
         </Text>

@@ -231,7 +231,7 @@ export const WearablesScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Wearables')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('Wearables')} showBack backFallback={tabHref(TAB.you)} />
 
         {SHOW_APPLE && (
           <View style={styles.card}>

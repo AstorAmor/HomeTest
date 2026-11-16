@@ -27,6 +27,9 @@ import { KuovaWordmark } from '@/components/KuovaLogo';
 // irse la nativa, el nombre y el brillo aparecían de golpe a medias. Ahora la quita la entrada en cuanto
 // está pintada (su primer fotograma es idéntico: mismo fondo y la misma K en el mismo sitio), empieza
 // cuando la nativa ya no se ve y no se va hasta que la app está montada debajo (`markAppReady`).
+// 2026-11-16 (fundador: «el log-in da saltos, no va fluido»): «montada» era el _layout, que se monta antes de saber
+// si hay sesión; la entrada se fundía a una pantalla vacía y luego aparecían de golpe el log-in o Hoy. Ahora
+// avisan el log-in, las pestañas y el selector de la demo al montarse (y el _layout, a los 2,5 s, por si acaso).
 const NATIVE_FADE = 160; // ms del fundido de la nativa sobre la entrada (son iguales: no se nota)
 const START = NATIVE_FADE + 40;
 const MAX_WAIT = 4000; // si la app tarda más, la entrada se va igual
@@ -50,6 +53,8 @@ const GAP_K = 30;
 const WORD_H = 21;
 const GAP_WORD = 12;
 const HEALTH_H = 14;
+// Las mismas medidas para el bloqueo con Face ID / huella (AppLock): la K no cambia de sitio ni de tamaño
+export const BRAND = { K_W, K_H, GAP_K, WORD_H, GAP_WORD, HEALTH_H };
 // La K se queda quieta en el centro, donde estaba la nativa, y el nombre aparece debajo (2026-11-10: Astor
 // vio raro que la K subiera para dejarle sitio)
 

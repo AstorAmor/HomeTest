@@ -6,7 +6,7 @@
 // con «reducir movimiento». En claro, crema con un velo salvia y oro.
 // Paleta: #061A16 · #0B2921 · #17634B · #83D6B4 · #D8B978 (y #F0EFE6 / #8D9E95 para textos).
 import { memo, useId, useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Svg, { Defs, Ellipse, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 
@@ -36,7 +36,12 @@ const LIGHT: typeof DARK = {
 
 export const AmbientBackground = memo(function AmbientBackground() {
   const u = `amb${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
-  const [size, setSize] = useState({ w: 0, h: 0 });
+  // Con el tamaño de la pantalla desde el principio: si no, el primer fotograma salía liso y el degradado aparecía
+  // después (un destello al entrar). Luego onLayout lo ajusta a lo que mida de verdad
+  const [size, setSize] = useState(() => {
+    const d = Dimensions.get('window');
+    return { w: d.width, h: d.height };
+  });
   const P = Colors.isLight ? LIGHT : DARK;
   const { w, h } = size;
   return (

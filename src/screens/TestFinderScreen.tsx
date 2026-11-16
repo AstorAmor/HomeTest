@@ -94,7 +94,7 @@ export const TestFinderScreen = () => {
   if (!done) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.lab)} />
+        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.analysis)} />
         <View style={styles.progressRow}>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${((stepIndex + 1) / FINDER_STEPS.length) * 100}%` }]} />
@@ -166,7 +166,7 @@ export const TestFinderScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView ref={scroll} contentContainerStyle={styles.results} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.lab)} />
+        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.analysis)} />
 
         <View style={styles.resultHead}>
           <Text style={styles.title}>{picks.length ? t('These tests could help you') : t('Your yearly analysis already looks at this')}</Text>

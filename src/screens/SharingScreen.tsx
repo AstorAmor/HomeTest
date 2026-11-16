@@ -52,7 +52,7 @@ export const SharingScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Sharing & privacy')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('Sharing & privacy')} showBack backFallback={tabHref(TAB.you)} />
 
         <View style={styles.intro}>
           <Ionicons name="shield-checkmark" size={22} color={Colors.accent} />

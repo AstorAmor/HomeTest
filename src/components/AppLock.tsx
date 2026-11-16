@@ -3,7 +3,7 @@ import { AppState, Modal, Platform, StyleSheet, Text, TouchableOpacity, View } f
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { GoldK, LAUNCH_BG } from '@/components/LaunchIntro';
+import { BRAND, GoldK, LAUNCH_BG } from '@/components/LaunchIntro';
 import { KuovaWordmark } from '@/components/KuovaLogo';
 import { t } from '@/i18n';
 import { hideInRecents, useAppLockPrefs } from '@/data/appLock';
@@ -145,28 +145,36 @@ export function AppLock() {
       // Atrás (Android): sigue bloqueada
       onRequestClose={() => undefined}
     >
+      {/* La K en el centro exacto y del mismo tamaño que en el splash y la entrada (LaunchIntro): mitad de arriba
+          y mitad de abajo iguales, y lo demás cuelga debajo sin moverla al aparecer (fundador, 2026-11-16: «da
+          saltos, no va fluido»; antes era de 72 y subía al salir el botón) */}
       <View style={styles.screen} accessibilityViewIsModal>
-        <GoldK width={72} />
-        <View style={styles.word}>
-          <KuovaWordmark height={20} color="#F4EFE3" />
-          <Text style={styles.health}>HEALTH</Text>
-        </View>
-        {locked && (
-          <View style={styles.box}>
-            <Text style={styles.title}>{t('Kuova is locked')}</Text>
-            {problem ? <Text style={styles.problem}>{t(PROBLEM[problem])}</Text> : null}
-            <TouchableOpacity style={styles.button} onPress={unlock} activeOpacity={0.85} accessibilityRole="button">
-              <Ionicons name={ICON[kind]} size={20} color={LAUNCH_BG} />
-              <Text style={styles.buttonText}>{t(UNLOCK_LABEL[kind])}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.link} onPress={signInWithPassword} hitSlop={8} accessibilityRole="button">
-              <Text style={styles.linkText}>{t('Use your password')}</Text>
-            </TouchableOpacity>
-            <Text style={styles.note}>
-              {t('You sign out on this phone and sign in again with your password (and your code, if you use two-step verification).')}
+        <View style={styles.half} />
+        <GoldK />
+        <View style={styles.half}>
+          <View style={styles.word}>
+            <KuovaWordmark height={BRAND.WORD_H} color="#F4EFE3" />
+            <Text style={styles.health} allowFontScaling={false}>
+              HEALTH
             </Text>
           </View>
-        )}
+          {locked && (
+            <View style={styles.box}>
+              <Text style={styles.title}>{t('Kuova is locked')}</Text>
+              {problem ? <Text style={styles.problem}>{t(PROBLEM[problem])}</Text> : null}
+              <TouchableOpacity style={styles.button} onPress={unlock} activeOpacity={0.85} accessibilityRole="button">
+                <Ionicons name={ICON[kind]} size={20} color={LAUNCH_BG} />
+                <Text style={styles.buttonText}>{t(UNLOCK_LABEL[kind])}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.link} onPress={signInWithPassword} hitSlop={8} accessibilityRole="button">
+                <Text style={styles.linkText}>{t('Use your password')}</Text>
+              </TouchableOpacity>
+              <Text style={styles.note}>
+                {t('You sign out on this phone and sign in again with your password (and your code, if you use two-step verification).')}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
     </Modal>
   );
@@ -176,9 +184,11 @@ const CREAM = '#F4EFE3';
 const GOLD = '#C9A366';
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: LAUNCH_BG, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  word: { alignItems: 'center', marginTop: 30 },
-  health: { color: GOLD, fontSize: 11, fontWeight: '600', letterSpacing: 7, paddingLeft: 7, marginTop: 12 },
+  screen: { flex: 1, backgroundColor: LAUNCH_BG, alignItems: 'center', paddingHorizontal: 32 },
+  half: { flex: 1, alignSelf: 'stretch', alignItems: 'center' },
+  word: { alignItems: 'center', marginTop: BRAND.GAP_K },
+  // Como «HEALTH» en la entrada
+  health: { color: GOLD, fontSize: 11, lineHeight: BRAND.HEALTH_H, fontWeight: '500', letterSpacing: 7, marginRight: -7, marginTop: BRAND.GAP_WORD },
   box: { alignItems: 'center', alignSelf: 'stretch', marginTop: 48 },
   title: { color: CREAM, fontSize: 18, fontWeight: '700', marginBottom: 14 },
   problem: { color: CREAM, opacity: 0.85, fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 14 },

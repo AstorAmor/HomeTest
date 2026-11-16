@@ -76,7 +76,7 @@ const realShipments: Shipment[] = [];
 export const TrackTestsScreen = () => (
   <SafeAreaView style={styles.safeArea} edges={['top']}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title={t('Track your tests')} showBack backFallback={tabHref(TAB.more)} />
+      <ScreenHeader title={t('Track your tests')} showBack backFallback={tabHref(TAB.you)} />
 
       <Text style={styles.sectionTitle}>{t('In progress')}</Text>
       {realShipments.length ? (

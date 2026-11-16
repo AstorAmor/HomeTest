@@ -76,7 +76,7 @@ export const FilesScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ScreenHeader title={t('Your files')} showBack backFallback={tabHref(TAB.myData)} />
+        <ScreenHeader title={t('Your files')} showBack backFallback={tabHref(TAB.analysis)} />
 
         <TouchableOpacity style={styles.add} onPress={() => router.push('/upload-test')} activeOpacity={0.85}>
           <Ionicons name="add-circle-outline" size={20} color={Colors.background} />

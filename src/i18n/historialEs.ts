@@ -156,7 +156,7 @@ export const historialEs: Record<string, string> = {
   Hide: 'Ocultar',
   'Allergies, blood group, vaccines and more. Tap one to add or change it. You can show it again in Configure my experience.':
     'Alergias, grupo sanguíneo, vacunas y más. Toca uno para añadir o cambiar. Puedes volver a mostrarlo en Configura tu experiencia.',
-  'Allergies, blood group, vaccines and medical history, in My data': 'Alergias, grupo sanguíneo, vacunas e historia clínica, en Mis datos',
+  'Allergies, blood group, vaccines and medical history, in You': 'Alergias, grupo sanguíneo, vacunas e historia clínica, en Tú',
   'Your allergies, blood group, vaccines and medical history (surgeries, hospital stays, illnesses…) in one place.':
     'Tus alergias, grupo sanguíneo, vacunas e historia clínica (cirugías, ingresos, enfermedades…) en un sitio.',
   'Add what you know, when you want.': 'Añade lo que sepas, cuando quieras.',
