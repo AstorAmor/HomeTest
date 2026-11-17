@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { InfoButton } from '@/components/InfoButton';
 import { GlowRing, mixHex, ringTones, type RingColors } from '@/components/GlowRing';
@@ -258,6 +258,7 @@ export const TodayScreen = () => {
         label: t('Steps'),
         progress: share(steps, goals.steps),
         color: GOAL_COLORS.steps,
+        href: { pathname: '/metric', params: { kind: 'steps' } },
       },
     hasAny && shownGoals.activeKcal && !distanceForKcal && {
       key: 'kcal',
@@ -266,6 +267,7 @@ export const TodayScreen = () => {
       label: t('Active kcal'),
       progress: share(calories, goals.activeKcal),
       color: GOAL_COLORS.kcal,
+      href: { pathname: '/metric', params: { kind: 'active_energy' } },
     },
     hasAny &&
       (shownGoals.distanceM || distanceForKcal) && {
@@ -275,6 +277,7 @@ export const TodayScreen = () => {
         label: t('Distance'),
         progress: share(distanceKm != null ? distanceKm * 1000 : null, goals.distanceM),
         color: GOAL_COLORS.distance,
+        href: { pathname: '/metric', params: { kind: 'distance' } },
       },
     hasAny &&
       shownGoals.sleepMin && {
@@ -284,6 +287,7 @@ export const TodayScreen = () => {
         label: t('Sleep'),
         progress: share(sleep || null, goals.sleepMin),
         color: GOAL_COLORS.sleep,
+        href: { pathname: '/metric', params: { kind: 'sleep_duration' } },
       },
     shownGoals.waterMl && {
       key: 'water',
@@ -292,6 +296,7 @@ export const TodayScreen = () => {
       label: t('Water'),
       progress: share(water.total, goals.waterMl),
       color: GOAL_COLORS.water,
+      href: { pathname: '/digestive', params: { part: 'bladder' } },
     },
   ].filter((r) => !!r) as GoalNumProps[];
 
@@ -477,7 +482,9 @@ export const TodayScreen = () => {
         {show('readiness') && (
           <>
             <View style={[styles.sectionHeaderRow, { alignItems: 'center' }]}>
-              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>{t('Today')}</Text>
+              {/* «Preparación» y no «Hoy» (fundador, 2026-11-17: «lo primero que veo es Baja… ¿Baja qué? Tu preparación
+                  o algo así, pero no HOY»): Alta, Moderada o Baja dicen de qué hablan */}
+              <Text style={[styles.sectionTitle, styles.sectionTitleInline]}>{t('Readiness')}</Text>
               <InfoButton topic="readiness" />
             </View>
             <TourTarget id="today.readiness" scroll={tourScroll} inset={20}>
@@ -503,16 +510,20 @@ export const TodayScreen = () => {
               )}
               {goalNums.length > 0 && (
                 <TourTarget id="today.goals" scroll={tourScroll} style={styles.ringsTap}>
-                <TouchableOpacity style={styles.ringsTap} activeOpacity={0.8} onPress={() => router.push('/daily-goals')} accessibilityLabel={t('Your daily goals')}>
+                {/* Cada cifra abre su detalle (pasos, sueño, agua…); «Tus objetivos del día ›», cambiarlos (fundador,
+                    2026-11-17). Por eso el bloque ya no es un solo botón */}
+                <View style={styles.ringsTap}>
                   <View style={styles.goalNums}>
-                    {goalNums.map(({ key, ...g }) => (
-                      <GoalNum key={key} {...g} />
+                    {goalNums.map(({ key, href, ...g }) => (
+                      <GoalNum key={key} {...g} onPress={() => router.push(href)} />
                     ))}
                   </View>
-                  <Text style={styles.goalsLink}>
-                    {t('Your daily goals')} ›
-                  </Text>
-                </TouchableOpacity>
+                  <TouchableOpacity onPress={() => router.push('/daily-goals')} hitSlop={8} style={styles.goalsLinkTap} accessibilityRole="link">
+                    <Text style={styles.goalsLink}>
+                      {t('Your daily goals')} ›
+                    </Text>
+                  </TouchableOpacity>
+                </View>
                 </TourTarget>
               )}
               <Text style={styles.sourceText}>
@@ -689,11 +700,11 @@ const Circle = ({ label, progress, tones, center, onPress, a11y }: Omit<CirclePr
 // línea de progreso en su color (fundador, 2026-11-16: «barra de progreso debajo de cada uno, cada uno con un
 // color»). Es una línea cometa, como los aros: estrecha y apagada al principio, más ancha hacia la punta y un
 // punto de luz en la cabeza («estilo igual que los dónuts, con el círculo brillante»). Hace de línea de separación.
-type GoalNumProps = { key: string; value: string; goal: string; label: string; progress: number | null; color: string };
-const GoalNum = ({ value, goal, label, progress, color }: Omit<GoalNumProps, 'key'>) => {
+type GoalNumProps = { key: string; value: string; goal: string; label: string; progress: number | null; color: string; href: Href };
+const GoalNum = ({ value, goal, label, progress, color, onPress }: Omit<GoalNumProps, 'key' | 'href'> & { onPress: () => void }) => {
   const p = progress == null ? 0 : Math.max(0, Math.min(1, progress));
   return (
-    <View style={styles.goalNum} accessible accessibilityLabel={`${label}: ${value} / ${goal}`}>
+    <TouchableOpacity style={styles.goalNum} onPress={onPress} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel={`${label}: ${value} / ${goal}`}>
       <Text style={styles.goalNumLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -702,7 +713,7 @@ const GoalNum = ({ value, goal, label, progress, color }: Omit<GoalNumProps, 'ke
         <Text style={styles.goalNumGoal}> / {goal}</Text>
       </Text>
       <CometLine progress={p} colors={goalTones(color)} thickness={3.5} style={styles.goalComet} />
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -812,7 +823,8 @@ const styles = StyleSheet.create({
   measureHead: { marginHorizontal: 20 },
   changeLink: { alignSelf: 'center', marginTop: 22, minHeight: 36, justifyContent: 'center' },
   changeLinkText: { ...fine.link },
-  goalsLink: { ...fine.link, fontSize: 12.5, marginTop: 10 },
+  goalsLink: { ...fine.link, fontSize: 12.5 },
+  goalsLinkTap: { alignSelf: 'flex-start', paddingTop: 10, paddingBottom: 2 },
   // A todo lo ancho de la tarjeta (centrada): si no, los cuatro círculos se juntan en medio
   ringsTap: { alignSelf: 'stretch' },
   summaryCard: {

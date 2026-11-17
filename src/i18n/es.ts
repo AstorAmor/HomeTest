@@ -4811,4 +4811,9 @@ export const es: Record<string, string> = {
   'With higher temperature and pulse, effort can feel harder; adjust intensity to how you feel.': 'Con más temperatura y pulso, el esfuerzo puede sentirse mayor; ajusta la intensidad a cómo te encuentres.',
   'Average trends: each person varies. With your daily check-in you will see your own pattern.': 'Son tendencias medias y cada persona varía. Con tu check-in diario verás tu propio patrón.',
   'If pain or symptoms before your period disrupt your daily life, talk to your doctor.': 'Si el dolor o los síntomas antes de la regla alteran tu día a día, coméntalo con tu médico.',
+  // Hoy: la sección del estado se llama «Preparación» (Alta, Moderada o Baja) y la ficha de la distancia (2026-11-17)
+  Readiness: 'Preparación',
+  'Distance walked or run each day, as estimated by your phone or wearable.': 'Distancia que caminas o corres cada día, según la estima tu móvil o tu wearable.',
+  'Around 6-8 km a day is roughly 8,000-10,000 steps; it depends on stride length.': 'Unos 6-8 km al día equivalen a unos 8.000-10.000 pasos; depende de la longitud de tu zancada.',
+  'Walks and runs. Phone estimates depend on stride length and on where you carry it.': 'Paseos y carreras. Lo que estima el móvil depende de tu zancada y de dónde lo lleves.',
 };

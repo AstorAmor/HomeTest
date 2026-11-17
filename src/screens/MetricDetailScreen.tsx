@@ -94,6 +94,18 @@ const INFO: Partial<Record<WearableMetric, MetricInfo>> = {
     typical: 'Depends on body size and activity: 300-600 kcal is a common range for active adults.',
     affects: 'Training intensity, daily steps and body weight. Wearable estimates can be off by 20% or more.',
   },
+  // Distancia (desde Hoy, «Tus objetivos del día», 2026-11-17): llega en metros; se enseña en km con la coma del idioma
+  distance: {
+    title: 'Distance',
+    unit: 'km',
+    color: FINE.jade,
+    higherIsBetter: true,
+    figure: (v) => num((v / 1000).toFixed(1)),
+    format: (v) => `${num((v / 1000).toFixed(1))} km`,
+    what: 'Distance walked or run each day, as estimated by your phone or wearable.',
+    typical: 'Around 6-8 km a day is roughly 8,000-10,000 steps; it depends on stride length.',
+    affects: 'Walks and runs. Phone estimates depend on stride length and on where you carry it.',
+  },
   body_temperature: {
     title: 'Body temperature',
     unit: '°C',
@@ -114,7 +126,7 @@ const INFO: Partial<Record<WearableMetric, MetricInfo>> = {
 // sección "Mediciones" no me gusta»)
 export const metricLine = (kind: WearableMetric) => ({ color: INFO[kind]?.color ?? FINE.jade, band: INFO[kind]?.band });
 
-// Las cifras del eje: pasos en miles y sueño en horas, con la coma decimal del idioma
+// Las cifras del eje: pasos en miles, sueño en horas y distancia en km, con la coma decimal del idioma
 export const metricAxis = (kind: WearableMetric): ((v: number) => string) | undefined =>
   kind === 'sleep_duration'
     ? (v) => `${num((v / 60).toFixed(1))} h`
@@ -122,7 +134,9 @@ export const metricAxis = (kind: WearableMetric): ((v: number) => string) | unde
       ? (v) => `${num((v / 1000).toFixed(1))}k`
       : kind === 'body_temperature'
         ? (v) => num(v.toFixed(1))
-        : undefined;
+        : kind === 'distance'
+          ? (v) => num((v / 1000).toFixed(1))
+          : undefined;
 
 // Los periodos van por fecha (los últimos 7, 14, 30 o 182 días de calendario, hoy incluido), no por
 // número de registros. En 6M, por semanas de calendario (weeklyAverages): 180 puntos diarios no se

@@ -2,7 +2,7 @@
 // 2026-11-17, del cuestionario del ciclo: «no está coherente la barra de progreso y la fuente e iconos con el resto
 // de la app». Antes: un botón sobre un círculo relleno y una barra gruesa de color. Ahora, como en «Crear mi menú»:
 // «‹» en jade para volver al paso anterior (× en el primero, que cierra), el avance como una línea cometa fina y, a
-// la derecha, lo que lleve cada cuestionario («Omitir», borrar). La usan el del ciclo y el de la medicación.
+// la derecha, lo que lleve cada cuestionario («Omitir», borrar). La usan el del ciclo, el de la medicación y el cuestionario de inicio.
 import type { ReactNode } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,17 +15,23 @@ export function StepsBar({
   total,
   onBack,
   right,
+  noClose,
 }: {
   index: number; // el paso en el que está, desde 0
   total: number;
   onBack: () => void; // al paso anterior o, en el primero, cerrar
   right?: ReactNode;
+  noClose?: boolean; // en el primer paso, sin ×: no hay adónde volver (los primeros pasos de una cuenta nueva)
 }) {
   return (
     <View style={styles.bar}>
-      <TouchableOpacity style={styles.side} onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel={index > 0 ? t('Back') : t('Close')}>
-        <Ionicons name={index > 0 ? 'chevron-back' : 'close'} size={24} color={FINE.jade} />
-      </TouchableOpacity>
+      {index === 0 && noClose ? (
+        <View style={styles.side} />
+      ) : (
+        <TouchableOpacity style={styles.side} onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel={index > 0 ? t('Back') : t('Close')}>
+          <Ionicons name={index > 0 ? 'chevron-back' : 'close'} size={24} color={FINE.jade} />
+        </TouchableOpacity>
+      )}
       <View
         style={styles.line}
         accessible
