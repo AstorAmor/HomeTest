@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { AppIcon } from '@/components/HealthIcons';
 import { WheelPicker } from '@/components/WheelPicker';
@@ -25,6 +25,8 @@ import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { requestTourAfterOnboarding } from '@/components/tour/tourStore';
+import { userFlags } from '@/data/userFlags';
+import { FIRST_STEPS_FLAG } from '@/logic/firstSteps';
 // Opciones, ruedas y lo que se enciende al guardar: compartido con «Sobre ti» de Mi perfil (2026-11-16)
 import {
   ACTIVITY_OPTIONS,
@@ -87,6 +89,8 @@ function ChipGroup<T extends string>({
 
 export const OnboardingScreen = () => {
   const router = useRouter();
+  // Primeros pasos de una cuenta nueva (src/logic/firstSteps.ts): al acabar, a objetivos y metas en vez de a Hoy
+  const inicio = useLocalSearchParams<{ inicio?: string }>().inicio === '1';
   const [stepIndex, setStepIndex] = useState(0);
 
   const [day, setDay] = useState(14);
@@ -179,6 +183,8 @@ export const OnboardingScreen = () => {
     await profileRepository.save(profile);
     await applySections(profile);
     await requestTourAfterOnboarding();
+    // Saltó el cuestionario: no se le vuelve a llevar a los primeros pasos
+    if (inicio) await userFlags.set(FIRST_STEPS_FLAG, 'skipped').catch(() => undefined);
     router.replace('/(tabs)');
   };
 
@@ -196,7 +202,10 @@ export const OnboardingScreen = () => {
     // Directo a Hoy, donde empieza el tutorial. Sin las pantallas de presentación del plan (el
     // fundador las quitó el 2026-10-21: no se veían bien ni tienen sentido sin la suscripción completa)
     await requestTourAfterOnboarding();
-    router.replace('/(tabs)');
+    // Cuenta nueva: sigue con sus objetivos y metas (lo que recomiendan sus respuestas) y la firma; el tutorial,
+    // al llegar a Hoy (fundador, 2026-11-17)
+    if (inicio) router.replace({ pathname: '/metas-objetivos', params: { inicio: '1' } });
+    else router.replace('/(tabs)');
   };
 
   const toggleCondition = (id: ConditionId) => setConditions((prev) => toggleConditionIn(prev, id));
@@ -230,7 +239,7 @@ export const OnboardingScreen = () => {
             <Text style={styles.title}>{tr('What do you want Kuova for?')}</Text>
             <Text style={styles.subtitle}>
               {tr(
-                'Pick one or more. Your answer shapes your experience: what you see in the app and which options appear. You can change it anytime in More → Configure my experience.',
+                'Pick one or more. Your answer shapes your experience: what you see in the app and which options appear. You can change it anytime in You → Configure my experience.',
               )}
             </Text>
             <View style={styles.goalList}>

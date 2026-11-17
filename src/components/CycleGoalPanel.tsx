@@ -1,11 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { AppIcon } from '@/components/HealthIcons';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { TrendChart } from '@/components/TrendChart';
 import { InfoButton } from '@/components/InfoButton';
+import { FRow, SecHead } from '@/components/fine/Fine';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { CYCLE_GOAL_PROMPTED, cycleGoalStore } from '@/data/cycleGoal';
 import { cycleRepository } from '@/data/cycleRepository';
@@ -16,7 +15,7 @@ import { wearableRepository } from '@/wearables/wearableRepository';
 import { CYCLE_GOAL_OPTIONS, CycleGoalAnswers } from '@/types/cycleGoal';
 import { dailyTemps, detectTempShift, FertilityAdvice, fertilityAdvice, TempReading, TempShift } from '@/logic/fertility';
 import { num, t as tr } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 const ageFrom = (dob?: string) => {
   if (!dob) return null;
@@ -32,8 +31,9 @@ const shortDay = (date: string) => {
   return `${d.getDate()}/${d.getMonth() + 1}`;
 };
 
-// Parte de arriba del detalle del ciclo: el objetivo de la encuesta (la primera vez se abre
-// sola), el consejo de fertilidad si busca embarazo, y la temperatura basal con la del wearable.
+// Parte del detalle del ciclo: el objetivo de la encuesta (la primera vez se abre sola), el consejo de fertilidad si
+// busca embarazo, y la temperatura basal con la del wearable. En el lenguaje fino desde el 2026-11-17 (cabeceras
+// pequeñas con línea, filas finas, sin tarjetas ni iconos); va dentro del margen de la pantalla.
 export const CycleGoalPanel = () => {
   const router = useRouter();
   const [goal, setGoal] = useDeepState<CycleGoalAnswers | null>(null);
@@ -85,12 +85,12 @@ export const CycleGoalPanel = () => {
   const days = dailyTemps(temps).slice(-30);
   const manualDays = days.filter((d) => d.source === 'manual');
   const chartDays = manualDays.length >= 3 ? manualDays : days;
-  const wearableByDay = new Map(temps.filter((t) => t.source === 'wearable').map((t) => [t.date, t.celsius]));
+  const wearableByDay = new Map(temps.filter((x) => x.source === 'wearable').map((x) => [x.date, x.celsius]));
   const wearableAligned = chartDays.map((d) => wearableByDay.get(d.date));
   const series = [
     {
       label: manualDays.length >= 3 ? tr('Thermometer') : tr('Wearable'),
-      color: Colors.gold,
+      color: FINE.gold,
       values: chartDays.map((d) => d.celsius),
     },
     ...(manualDays.length >= 3 && wearableAligned.every((v) => v != null)
@@ -99,39 +99,32 @@ export const CycleGoalPanel = () => {
   ];
 
   return (
-    <View style={styles.wrap}>
-      <TouchableOpacity style={styles.goalRow} onPress={() => router.push('/cycle-goal')} activeOpacity={0.85}>
-        <AppIcon name={option?.icon ?? 'lotus'} size={20} color={Colors.pulseAccent} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.goalLabel}>{tr('Your goal')}</Text>
-          <Text style={styles.goalTitle}>{option ? tr(option.title) : tr('Tell us what you are looking for')}</Text>
-        </View>
-        <Text style={styles.link}>{goal ? tr('Change') : tr('Start')}</Text>
-      </TouchableOpacity>
+    <View>
+      <SecHead title={tr('Your goal')} more={goal ? tr('Change') : tr('Start')} onMore={() => router.push('/cycle-goal')} />
+      <FRow title={option ? tr(option.title) : tr('Tell us what you are looking for')} onPress={() => router.push('/cycle-goal')} last />
 
       {advice && (
-        <View style={[styles.card, advice.level !== 'keep_trying' && { borderColor: withAlpha(Colors.gold, 0.5) }]}>
-          <View style={styles.cardHeader}>
-            <Text style={[styles.cardTitle, { flex: 1 }]}>{advice.title}</Text>
-            <InfoButton topic="fertility" />
+        <View style={styles.advice}>
+          <View style={styles.adviceHead}>
+            <Text style={[fine.rowTitle, styles.flex]}>{advice.title}</Text>
+            <InfoButton topic="fertility" size={15} color={FINE.mute} />
           </View>
-          <Text style={styles.cardText}>{advice.body}</Text>
+          <Text style={styles.text}>{advice.body}</Text>
           {advice.level !== 'keep_trying' && (
-            <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-              <Text style={styles.link}>{tr('Find a gynaecologist or fertility specialist')}</Text>
+            <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} hitSlop={8}>
+              <Text style={styles.link}>{tr('Find a gynaecologist or fertility specialist')} ›</Text>
             </TouchableOpacity>
           )}
         </View>
       )}
 
       {showTemperature ? (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="thermometer-outline" size={18} color={Colors.gold} />
-            <Text style={[styles.cardTitle, { flex: 1 }]}>{tr('Morning temperature')}</Text>
-            <InfoButton topic="temperature" />
-            <TouchableOpacity style={styles.logButton} onPress={() => router.push('/log-temperature')}>
-              <Text style={styles.logButtonText}>{tr('Log today')}</Text>
+        <>
+          <View style={fine.secHead}>
+            <Text style={fine.secTitle}>{tr('Morning temperature')}</Text>
+            <InfoButton topic="temperature" size={15} color={FINE.mute} />
+            <TouchableOpacity onPress={() => router.push('/log-temperature')} hitSlop={10} style={styles.more} accessibilityRole="link">
+              <Text style={fine.secMore}>{tr('Log today')} ›</Text>
             </TouchableOpacity>
           </View>
           {chartDays.length >= 3 ? (
@@ -144,9 +137,9 @@ export const CycleGoalPanel = () => {
               interactive
             />
           ) : (
-            <Text style={styles.cardText}>{tr('Log a few mornings to see your curve.')}</Text>
+            <Text style={styles.text}>{tr('Log a few mornings to see your curve.')}</Text>
           )}
-          <Text style={styles.cardText}>
+          <Text style={[fine.note, styles.tempNote]}>
             {shift
               ? tr(
                   shift.confidence === 'low'
@@ -156,43 +149,28 @@ export const CycleGoalPanel = () => {
                 )
               : tr('After ovulation your temperature rises about 0.2–0.5 °C and stays up until your period. We will mark it when we see it.')}
           </Text>
-        </View>
+        </>
       ) : (
-        <TouchableOpacity style={styles.card} onPress={() => router.push('/cycle-goal')} activeOpacity={0.85}>
-          <Text style={styles.cardTitle}>{tr('Add your morning temperature')}</Text>
-          <Text style={styles.cardText}>
-            {tr('It confirms when you ovulate and makes predictions more accurate. If your wearable measures temperature at night, we use it too.')}
-          </Text>
-        </TouchableOpacity>
+        <>
+          <SecHead title={tr('Morning temperature')} />
+          <FRow
+            title={tr('Add your morning temperature')}
+            sub={tr('It confirms when you ovulate and makes predictions more accurate. If your wearable measures temperature at night, we use it too.')}
+            onPress={() => router.push('/cycle-goal')}
+            last
+          />
+        </>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: 20, gap: 10, marginBottom: 16 },
-  goalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.pinkSoftBg,
-    borderRadius: 16,
-    padding: 14,
-  },
-  goalLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase' },
-  goalTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 2 },
-  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, textDecorationLine: 'underline' },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
-    gap: 8,
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  cardText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  logButton: { backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
-  logButtonText: { color: Colors.background, fontSize: 12, fontFamily: INTER.medium },
+  flex: { flex: 1 },
+  advice: { paddingVertical: 12, gap: 6, borderTopWidth: 1, borderTopColor: FINE.line, marginTop: 4 },
+  adviceHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  text: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 20, opacity: 0.86 },
+  link: { ...fine.link, marginTop: 4 },
+  more: { marginLeft: 'auto' },
+  tempNote: { marginTop: 8 },
 });

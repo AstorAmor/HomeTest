@@ -211,8 +211,22 @@ export function CommitLink({ s }: { s: MetasState }) {
 // ===== Elegir tus objetivos =====
 export function GoalsPickScreen() {
   const api = useMetas();
+  const router = useRouter();
+  // Primeros pasos de una cuenta nueva (src/logic/firstSteps.ts): una nota arriba y «Continuar» a la firma
+  const first = useLocalSearchParams<{ inicio?: string }>().inicio === '1';
+  // Quien empieza llega con las metas que recomiendan sus objetivos ya marcadas (hasta {METAS_MAX} por área), para que
+  // Hoy tenga algo que enseñar desde el primer día; las puede quitar aquí mismo. Solo si aún no eligió nada
+  const prefilled = useRef(false);
+  useEffect(() => {
+    const d = api.data;
+    if (!first || prefilled.current || !d || d.saved || selectedIds(d.state).length) return;
+    prefilled.current = true;
+    const sel = { ...d.state.sel };
+    for (const a of AREAS) sel[a] = recommended(a, d.state.goals, d.who).slice(0, METAS_MAX);
+    api.update({ ...d.state, sel });
+  }, [first, api]);
   if (!api.data) return <Loading title={t('Your goals')} />;
-  const { state: s, lab, who } = api.data;
+  const { state: s, lab, who, hasLab } = api.data;
   const full = s.goals.length >= GOALS_MAX;
   const recKeys = lab.map((g) => g.key);
   const toggle = (g: GoalKey) => {
@@ -237,9 +251,21 @@ export function GoalsPickScreen() {
   const labShown = LAB_GOALS.filter((g) => recKeys.includes(g) || s.goals.includes(g));
   return (
     <MetasScreenFrame title={t('Your goals')}>
+      {/* Lo que se le dice a quien empieza (fundador, 2026-11-17): de primeras ya le ayuda, y el análisis lo afina */}
+      {first && (
+        <Text style={styles.firstLead}>
+          {t('To start, your goals and targets come from what you told us, and with them Today shows how you are doing each day. When you have your first blood test, we will fine-tune them to your results.')}
+        </Text>
+      )}
       <Text style={ms.sub}>{t('Up to {n}. Change them whenever you want.', { n: GOALS_MAX })}</Text>
       <SecHead title={t('Recommended by your blood test')} style={styles.firstSec} />
-      {labShown.length ? <View style={ms.cardList}>{labShown.map(row)}</View> : <Text style={ms.meta}>{t('Your blood test does not point to any goal for now.')}</Text>}
+      {labShown.length ? (
+        <View style={ms.cardList}>{labShown.map(row)}</View>
+      ) : (
+        <Text style={ms.meta}>
+          {hasLab ? t('Your blood test does not point to any goal for now.') : t('When you have your blood test, the goals your results point to will appear here.')}
+        </Text>
+      )}
       <SecHead title={t('Add your own')} />
       <View style={ms.cardList}>{OWN_GOALS.filter((g) => goalAllowed(g, who) || s.goals.includes(g)).map(row)}</View>
       <Text style={ms.meta}>{t('{n} of {max}. With the ones you choose, we recommend targets in each area.', { n: s.goals.length, max: GOALS_MAX })}</Text>
@@ -251,6 +277,16 @@ export function GoalsPickScreen() {
       {AREAS.map((a) => (
         <AreaTargets key={a} api={api} area={a} />
       ))}
+      {first && (
+        <>
+          <TouchableOpacity style={ms.btn} onPress={() => router.push({ pathname: '/metas-firmar', params: { inicio: '1' } })} activeOpacity={0.85}>
+            <Text style={ms.btnText}>{t('Continue')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={ms.btnSoft} onPress={() => router.replace('/(tabs)')}>
+            <Text style={ms.btnSoftText}>{t('Not now')}</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </MetasScreenFrame>
   );
 }
@@ -792,6 +828,8 @@ function MetaNow({ api, m }: { api: MetasApi; m: Meta }) {
 export function MetasCommitScreen() {
   const router = useRouter();
   const api = useMetas();
+  // Último paso de los primeros pasos de una cuenta nueva: después de firmar, a Hoy (y su tutorial)
+  const first = useLocalSearchParams<{ inicio?: string }>().inicio === '1';
   const [weeks, setWeeks] = useState<number | null>(null);
   // Recién firmado aquí: se ofrece ir a marcar los hábitos de hoy (fundador, 2026-11-16)
   const [signedNow, setSignedNow] = useState(false);
@@ -804,7 +842,7 @@ export function MetasCommitScreen() {
     return (
       <MetasScreenFrame title={t('Your commitment')}>
         <Text style={ms.sub}>{t('Choose your targets first.')}</Text>
-        <TouchableOpacity style={ms.btn} onPress={() => router.replace({ pathname: '/metas-elegir', params: { area: 'ej' } })}>
+        <TouchableOpacity style={ms.btn} onPress={() => (first && router.canGoBack() ? router.back() : router.replace({ pathname: '/metas-elegir', params: { area: 'ej' } }))}>
           <Text style={ms.btnText}>{t('Choose your targets')}</Text>
         </TouchableOpacity>
       </MetasScreenFrame>
@@ -833,7 +871,12 @@ export function MetasCommitScreen() {
             <Ionicons name="checkmark" size={17} color={FINE.jade} />
             <Text style={styles.signedText}>{t('Commitment signed')}</Text>
           </View>
-          {signedNow && markArea && (
+          {first && (
+            <TouchableOpacity style={ms.btn} onPress={() => router.replace('/(tabs)')} activeOpacity={0.85}>
+              <Text style={ms.btnText}>{t('Go to Today')}</Text>
+            </TouchableOpacity>
+          )}
+          {!first && signedNow && markArea && (
             <View style={styles.markNow}>
               <Text style={styles.markNowText}>{markArea === 'ha' ? t('Shall we mark today’s habits now?') : t('Shall we mark today now?')}</Text>
               <TouchableOpacity style={[ms.btn, { marginTop: 12 }]} onPress={() => router.replace({ pathname: '/metas-area', params: { area: markArea } })} activeOpacity={0.85}>
@@ -851,6 +894,11 @@ export function MetasCommitScreen() {
           }}
         >
           <Text style={ms.btnText}>{t('I commit')}</Text>
+        </TouchableOpacity>
+      )}
+      {first && !s.commit && (
+        <TouchableOpacity style={ms.btnSoft} onPress={() => router.replace('/(tabs)')}>
+          <Text style={ms.btnSoftText}>{t('Not now')}</Text>
         </TouchableOpacity>
       )}
       <Text style={[fine.note, { marginTop: 16 }]}>{commitNote(s, api.days, api.today)}</Text>
@@ -876,6 +924,8 @@ function commitNote(s: MetasState, days: string[], today: string): string {
 
 const styles = StyleSheet.create({
   firstSec: { marginTop: 8 },
+  // La nota de los primeros pasos, entre dos líneas finas (como el consejo de «muchas metas»)
+  firstLead: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 20, paddingVertical: 12, marginBottom: 14, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
   topLine: { borderTopWidth: 1, borderTopColor: FINE.line, marginTop: 20 },
   // Un área en «Tus objetivos», como en Hoy
   area: { paddingTop: 10, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: FINE.line },

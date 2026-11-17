@@ -63,7 +63,8 @@ export const DevModeSelectScreen = () => {
 
   const choose = (mode: DemoMode) => {
     setDemoMode(mode);
-    if (mode === 'new') router.replace('/onboarding');
+    // Usuario nuevo: el mismo recorrido que una cuenta nueva (cuestionario → objetivos y metas → compromiso)
+    if (mode === 'new') router.replace({ pathname: '/onboarding', params: { inicio: '1' } });
     else if (mode === 'results') {
       // Demo: al elegir "acaba de recibir resultados" el aviso de informe vuelve a salir
       userFlags.set(reportSeenKey(currentReport.report_id), false);
@@ -82,7 +83,7 @@ export const DevModeSelectScreen = () => {
           <Text style={styles.devPillText}>Developer mode</Text>
         </View>
         <Text style={styles.title}>Which user do you want to show?</Text>
-        <Text style={styles.subtitle}>Prototype only. Log out from More → Settings to come back here.</Text>
+        <Text style={styles.subtitle}>Prototype only. Log out from You → My Profile to come back here.</Text>
 
         <View style={styles.list}>
           {authMode === 'supabase' && (
@@ -92,7 +93,7 @@ export const DevModeSelectScreen = () => {
               </View>
               <View style={styles.textWrap}>
                 <Text style={styles.cardTitle}>My real account</Text>
-                <Text style={styles.cardSubtitle}>Only your own data, no examples. Change it in More → Settings → Real account</Text>
+                <Text style={styles.cardSubtitle}>Only your own data, no examples. Change it in You → Preferences → Real account</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
             </TouchableOpacity>

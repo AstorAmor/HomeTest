@@ -407,4 +407,11 @@ export const metasEs: Record<string, string> = {
   'A few minutes before bed may help you fall asleep.': 'Unos minutos antes de acostarte pueden ayudarte a dormirte.',
   'Using screens just before bed is linked to taking longer to fall asleep.': 'Usar pantallas justo antes de acostarte se asocia a tardar más en dormirte.',
   'Bright light late in the evening can delay your body clock.': 'La luz intensa a última hora de la tarde puede retrasar tu reloj interno.',
+  // Primeros pasos de una cuenta nueva (2026-11-17)
+  'To start, your goals and targets come from what you told us, and with them Today shows how you are doing each day. When you have your first blood test, we will fine-tune them to your results.':
+    'Para empezar, tus objetivos y tus metas salen de lo que nos has contado, y con ellas Hoy te enseña cómo vas cada día. Cuando tengas tu primer análisis, los ajustaremos a tus resultados.',
+  'When you have your blood test, the goals your results point to will appear here.': 'Cuando tengas tu análisis, aquí aparecerán los objetivos que indiquen tus resultados.',
+  'Go to Today': 'Ir a Hoy',
+  Continue: 'Continuar',
+  'Not now': 'Ahora no',
 };

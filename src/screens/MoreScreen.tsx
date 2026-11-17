@@ -44,7 +44,8 @@ const CONNECTIONS: MenuItem[] = [
 const SETTINGS: MenuItem[] = [
   // Lo que ves en la app: el tutorial lo señala aquí
   { id: 'experience', title: 'Configure my experience', subtitle: 'What you use Kuova for sets what you see and which options appear', to: '/app-sections' },
-  { id: 'settings', title: 'Settings', subtitle: 'Language, text size, permissions and notifications', to: '/settings' },
+  // «Preferencias»: la sección ya se llama Ajustes (fundador, 2026-11-17: «Settings › Settings», mejor otro nombre)
+  { id: 'settings', title: 'Preferences', subtitle: 'Language, text size, week, notifications, permissions and security', to: '/settings' },
   { id: 'evidence', title: 'How KUOVA works', subtitle: 'How we calculate things, and the studies and guidelines behind them', to: '/evidence' },
   { id: 'tutorial', title: 'Tutorial', subtitle: 'A quick tour of the main parts of the app' },
   { id: 'catalog', title: 'Biomarker Catalog', subtitle: '118 biomarkers, canonical knowledge base (dev)', to: '/catalogo' },

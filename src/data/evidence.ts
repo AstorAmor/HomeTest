@@ -112,7 +112,7 @@ export const EVIDENCE: EvidenceTopic[] = [
     body: [
       'Each notification follows a written rule: for example, no records of any kind for 7 days, or three low-energy check-ins in a row.',
       'The same reminder never repeats before its minimum gap, and you get at most two a day, health-related ones first.',
-      'You can mute any of them for 7 days, 1 month, 3 months or for good, from the notification itself or from More → Notifications.',
+      'You can mute any of them for 7 days, 1 month, 3 months or for good, from the notification itself or from You → Notifications.',
       'We test these rules with simulated users at different moments before they reach you.',
     ],
     sources: [],

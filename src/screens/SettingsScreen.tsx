@@ -10,7 +10,6 @@ import { FRow, SecHead } from '@/components/fine/Fine';
 import { FLink } from '@/components/fine/FineForm';
 import { SwitchRow, settingsStyles } from '@/components/settings/SettingsParts';
 import { Colors } from '@/constants/colors';
-import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
 import { withSystemUi } from '@/utils/systemUi';
 import { TAB, tabHref } from '@/constants/tabs';
@@ -31,10 +30,10 @@ const PERMISSIONS: { title: string; why: string }[] = [
 // y la cuenta. Idioma y letra recargan la app con un fundido y vuelven aquí.
 // Desde el 2026-11-17, en el lenguaje fino (como la pestaña Tú; el fundador: «Ajustes parece que dentro tampoco está
 // actualizado… de repente tengo mil iconos»): cabeceras pequeñas, filas con línea fina, título y explicación
-// apagada, sin iconos ni tarjetas; «Cerrar sesión», un enlace apagado (sin rojo).
+// apagada, sin iconos ni tarjetas. Desde el 2026-11-17 se llama «Preferencias» (en Tú, «Ajustes › Ajustes» se repetía;
+// el fundador pidió otro nombre) y «Cerrar sesión» está al final de Mi perfil.
 export const SettingsScreen = () => {
   const router = useRouter();
-  const exit = useLogout();
   const { authMode, user, isTester } = useAuth();
   const [real, setReal] = useState(isRealAccount());
   // Cuenta real ↔ de prueba: cambia lo que se enseña en toda la app, así que recarga (vuelve aquí)
@@ -46,7 +45,7 @@ export const SettingsScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Settings')} showBack backFallback={tabHref(TAB.you)} />
+        <ScreenHeader title={t('Preferences')} showBack backFallback={tabHref(TAB.you)} />
 
         <View style={settingsStyles.body}>
           <PreferencesBlock returnTo="/settings" fine />
@@ -113,7 +112,6 @@ export const SettingsScreen = () => {
             </>
           )}
 
-          <FLink label={t('Log out')} onPress={exit} muted style={styles.logout} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -123,5 +121,4 @@ export const SettingsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  logout: { marginTop: 28 },
 });

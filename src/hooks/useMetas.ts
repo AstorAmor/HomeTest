@@ -42,6 +42,7 @@ interface Loaded {
   checkIns: CheckInEntry[];
   who: Who;
   lab: LabGoal[];
+  hasLab: boolean; // tiene algún valor de analítica (aunque no apunte a ningún objetivo)
 }
 
 // Lo cargado se comparte entre Hoy y las pantallas de metas (y se queda en memoria): al abrir un área se
@@ -86,7 +87,7 @@ export function useMetas() {
       workoutRepository.getAll().catch(() => [] as WorkoutEntry[]),
       checkInRepository.getAll().catch(() => [] as CheckInEntry[]),
     ]);
-    setShared(() => ({ state, saved, manual, workouts, checkIns, who: whoOf(profile), lab: labGoals(labReadings) }));
+    setShared(() => ({ state, saved, manual, workouts, checkIns, who: whoOf(profile), lab: labGoals(labReadings), hasLab: labReadings.length > 0 }));
   }, []);
   useReloadOnFocus(load);
 

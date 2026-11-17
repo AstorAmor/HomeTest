@@ -80,6 +80,7 @@ const userFromSession = (session: Session | null): AuthUser | null => {
     id: u.id,
     email: u.email ?? '',
     nombre: (u.user_metadata?.display_name as string | undefined) ?? u.email?.split('@')[0] ?? '',
+    createdAt: u.created_at,
   };
 };
 

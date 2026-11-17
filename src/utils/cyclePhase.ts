@@ -37,7 +37,7 @@ export const PHASE_COLORS: Record<CyclePhaseId, string> = {
 };
 
 const PHASE_TEXT: Record<CyclePhaseId, { label: string; hint: string }> = {
-  menstrual: { label: 'Menstrual phase', hint: 'Energy can be lower. Be kind to yourself.' },
+  menstrual: { label: 'Menstrual phase', hint: 'Energy can be lower in the first days.' },
   follicular: { label: 'Follicular phase', hint: 'Energy usually rises. Good moment for harder training.' },
   ovulation: { label: 'Ovulation window', hint: 'Often peak energy and mood.' },
   luteal: { label: 'Luteal phase', hint: 'Sleep and mood can dip. Prioritise recovery.' },
