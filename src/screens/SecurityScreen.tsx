@@ -1,18 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TotpSetup } from '@/components/TotpSetup';
 import { confirmAsk } from '@/components/dev/confirmAsk';
-import { Colors } from '@/constants/colors';
+import { SecHead } from '@/components/fine/Fine';
+import { FButton, formStyles } from '@/components/fine/FineForm';
+import { settingsStyles } from '@/components/settings/SettingsParts';
 import { useAuth } from '@/context/AuthContext';
 import { isMfaRequired, listTotpFactors, removeTotpFactor, type TotpFactor } from '@/data/mfa';
 import { dateLocale, t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Ajustes → Verificación en dos pasos. Opcional para pacientes; obligatoria (al menos una app) para
 // admins, profesionales y soporte. Se pueden tener varias apps a la vez: si pierdes el móvil, la otra vale.
+// Desde el 2026-11-17, en el lenguaje fino de Ajustes: el estado en una palabra grande y ligera (jade si está
+// activada) en lugar del escudo, las apps en filas con línea fina, «Quitar» apagado (sin rojo) y el botón esmeralda.
 export const SecurityScreen = () => {
   const { refreshMfa } = useAuth();
   const [factors, setFactors] = useState<TotpFactor[] | null>(null);
@@ -57,75 +60,66 @@ export const SecurityScreen = () => {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ScreenHeader title={t('Two-step verification')} showBack backFallback="/settings" />
 
-        <View style={styles.card}>
-          <View style={styles.statusRow}>
-            <Ionicons name={on ? 'shield-checkmark' : 'shield-outline'} size={26} color={on ? Colors.ok : Colors.textSecondary} />
-            <Text style={styles.status}>{factors === null ? '' : on ? t('On') : t('Off')}</Text>
-          </View>
+        <View style={settingsStyles.body}>
+          <Text style={[styles.status, on && styles.statusOn]}>{factors === null ? ' ' : on ? t('On') : t('Off')}</Text>
           <Text style={styles.text}>
             {required
               ? t('Your account can see patient data, so it needs it: when you sign in, Kuova asks for a 6-digit code from your authenticator app.')
               : t('Add a second step when you sign in: a 6-digit code from an authenticator app. Then nobody can open your account with only your password.')}
           </Text>
-        </View>
 
-        {factors === null ? (
-          <ActivityIndicator color={Colors.accent} style={{ marginTop: 24 }} />
-        ) : (
-          <>
-            {on && (
-              <>
-                <Text style={styles.section}>{t('Your authenticator apps')}</Text>
-                <View style={styles.card}>
+          {factors === null ? (
+            <ActivityIndicator color={FINE.jade} style={{ marginTop: 24 }} />
+          ) : (
+            <>
+              {on && (
+                <>
+                  <SecHead title={t('Your authenticator apps')} />
                   {factors.map((f, i) => (
-                    <View key={f.id} style={[styles.row, i > 0 && styles.divider]}>
-                      <Ionicons name="phone-portrait-outline" size={20} color={Colors.accent} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.rowTitle}>{f.name || t('Authenticator app')}</Text>
-                        <Text style={styles.rowSub}>
+                    <View key={f.id} style={[fine.row, i === factors.length - 1 && settingsStyles.noLine]}>
+                      <View style={styles.flex}>
+                        <Text style={fine.rowTitle}>{f.name || t('Authenticator app')}</Text>
+                        <Text style={fine.rowSub}>
                           {t('Added {date}', { date: new Date(f.createdAt).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) })}
                         </Text>
                       </View>
                       {canRemove && (
-                        <TouchableOpacity onPress={() => remove(f)} hitSlop={8}>
+                        <TouchableOpacity onPress={() => remove(f)} hitSlop={8} style={styles.removeButton} accessibilityRole="button">
                           <Text style={styles.remove}>{t('Remove')}</Text>
                         </TouchableOpacity>
                       )}
                     </View>
                   ))}
                   {!canRemove && (
-                    <Text style={styles.note}>
+                    <Text style={fine.note}>
                       {t('Your account needs at least one: to change it, add the new app first and then remove the old one.')}
                     </Text>
                   )}
+                </>
+              )}
+
+              {error ? <Text style={[formStyles.error, styles.error]}>{error}</Text> : null}
+
+              {adding ? (
+                <View style={styles.setup}>
+                  <TotpSetup
+                    onDone={async () => {
+                      setAdding(false);
+                      await load();
+                      await refreshMfa();
+                    }}
+                  />
                 </View>
-              </>
-            )}
+              ) : (
+                <FButton label={on ? t('Add another app') : t('Turn on two-step verification')} onPress={() => setAdding(true)} style={styles.add} />
+              )}
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            {adding ? (
-              <View style={[styles.card, { marginTop: 18, padding: 16 }]}>
-                <TotpSetup
-                  onDone={async () => {
-                    setAdding(false);
-                    await load();
-                    await refreshMfa();
-                  }}
-                />
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.addButton} onPress={() => setAdding(true)}>
-                <Ionicons name="add-circle-outline" size={20} color={Colors.background} />
-                <Text style={styles.addText}>{on ? t('Add another app') : t('Turn on two-step verification')}</Text>
-              </TouchableOpacity>
-            )}
-
-            <Text style={styles.footer}>
-              {t('Lost your phone? Write to support@kuovahealth.com from your account email. Once we have checked it is you, we remove the old app and you add a new one when you sign in.')}
-            </Text>
-          </>
-        )}
+              <Text style={styles.footer}>
+                {t('Lost your phone? Write to support@kuovahealth.com from your account email. Once we have checked it is you, we remove the old app and you add a new one when you sign in.')}
+              </Text>
+            </>
+          )}
+        </View>
       </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -135,29 +129,16 @@ export const SecurityScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  section: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.semibold, marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
-  card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, overflow: 'hidden' },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 16 },
-  status: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
-  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, padding: 16, paddingTop: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  divider: { borderTopWidth: 1, borderTopColor: Colors.cardBorder },
-  rowTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  rowSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
-  remove: { color: Colors.danger, fontSize: 14, fontFamily: INTER.medium },
-  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, paddingHorizontal: 16, paddingBottom: 14 },
-  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 14, marginHorizontal: 20, marginTop: 12 },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 18,
-    backgroundColor: Colors.accent,
-    borderRadius: 12,
-    paddingVertical: 14,
-  },
-  addText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  footer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginTop: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  // «Activada» / «Desactivada»: grande y ligera, como las cifras; activada, en jade
+  status: { ...ff('light'), color: FINE.ivory, fontSize: 32, lineHeight: 38, marginTop: 4 },
+  statusOn: { color: FINE.jade },
+  text: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, marginTop: 6 },
+  removeButton: { minHeight: 36, justifyContent: 'center' },
+  remove: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  error: { marginTop: 12 },
+  // El alta de la app de autenticación, debajo de una raya fina (sin tarjeta)
+  setup: { marginTop: 22, paddingTop: 16, borderTopWidth: 1, borderTopColor: FINE.rule },
+  add: { marginTop: 22 },
+  footer: { ...fine.note, marginTop: 20 },
 });

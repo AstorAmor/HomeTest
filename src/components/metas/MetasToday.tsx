@@ -1,44 +1,24 @@
-// La sección de Hoy que sustituye al plan: al cerrar tu semana, la enhorabuena (o ánimo); después,
-// «Tus objetivos» con su (i) y una línea cometa por área (cada una abre su área, donde se marca y se
-// edita). Fundador, 2026-11-05: sin flecha en el título ni «Toca para marcar». 2026-11-16: líneas aquí
-// y círculos en los objetivos del día (antes, al revés). Desde las 4 pestañas (2026-11-16) se usa dos veces:
-// en Hoy, «Esta semana» (las 3 áreas en barra y un enlace a Plan); en Plan, «Tus metas» (las mismas barras con
-// los nombres de sus metas debajo).
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable, Animated } from 'react-native';
+// Tus metas de la semana. Desde las 4 pestañas (2026-11-16) se usa dos veces: en Hoy, solo la enhorabuena (o el
+// ánimo) al cerrar la semana (fundador: «Esta semana me sobra»; el círculo «Semana» ya lleva a Plan); en Plan,
+// «Tu semana» en una cifra (WeekHero, el círculo «Semana» de Hoy en grande) y «Tus metas» en filas con sus nombres.
+import { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
 import { CometLine } from '@/components/CometLine';
+import { AppIcon } from '@/components/HealthIcons';
 import { TourTarget } from '@/components/tour/TourTarget';
 import type { TourScroll } from '@/components/tour/tourStore';
 import { useMetas } from '@/hooks/useMetas';
-import { goToTab, TAB } from '@/constants/tabs';
-import { AREAS, AREA_NAME, GOALS, areaScore, metaText, rangeText, resolveMeta, reviewClosing, selectedIds } from '@/logic/metas';
-import { AREA_COLOR, AREA_RING, pct, takePop, usePop } from './MetaParts';
+import { AREAS, AREA_NAME, GOALS, metaText, resolveMeta, reviewClosing, selectedIds, weekScore } from '@/logic/metas';
+import { AREA_COLOR, AREA_RING, pct } from './MetaParts';
+import { WeekHero } from './WeekHero';
 import { FINE, ff, fine } from '@/theme/fine';
 import type { Area, Congrats, ReviewArea } from '@/logic/metas';
 
-// El % de un área en Hoy: si acabas de completarla (en su pantalla), al volver crece y vuelve una vez
-function TodayPct({ area, score }: { area: Area; score: number | null }) {
-  const { scale, pop } = usePop();
-  useEffect(() => {
-    if (takePop(area)) {
-      const t0 = setTimeout(() => pop(), 350); // cuando ya se ve Hoy
-      return () => clearTimeout(t0);
-    }
-  });
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Text style={styles.areaPct}>
-        {score == null ? '—' : Math.round(score * 100)}
-        {score != null && <Text style={styles.areaPctSign}> %</Text>}
-      </Text>
-    </Animated.View>
-  );
-}
 import { t } from '@/i18n';
 
 // Un brillo suave detrás del bloque, en vez de una caja (rediseño «Emerald Luxury», 2026-11-16)
@@ -129,91 +109,61 @@ export function MetasToday({ tourScroll, variant = 'today' }: { tourScroll?: Tou
   const today = variant === 'today';
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data, week, vals, known, congrats, review, update } = useMetas();
+  const { data, week, vals, known, congrats, review, update, weekView } = useMetas();
   const [info, setInfo] = useState(false);
+  // En Plan, la semana pasada (para compararla con esta)
+  const lastView = useMemo(() => (today ? null : weekView(-1)), [today, weekView]);
   if (!data) return null;
   const s = data.state;
   const none = selectedIds(s).length === 0;
-  // Cómo va la semana (la media de las 3 áreas, como el círculo «Semana» de Hoy, que trae aquí)
-  const scores = AREAS.map((a) => areaScore(s, a, vals, week ?? undefined, known)).filter((x): x is number => x != null);
-  const weekPct = scores.length ? Math.round((scores.reduce((x, y) => x + y, 0) / scores.length) * 100) : null;
-  const range = week ? rangeText(week.days[Math.min(week.from, 6)], week.days[6]) : '';
+  const last = lastView && lastView.week.from <= 6 ? weekScore(s, lastView.vals, lastView.week, lastView.known) : null;
   const go = (path: '/metas' | '/metas-objetivos') => {
     setInfo(false);
     router.push(path);
   };
+  const openArea = (a: Area) =>
+    router.push(s.sel[a].length ? { pathname: '/metas-area', params: { area: a } } : { pathname: '/metas-elegir', params: { area: a } });
+  // Las metas de cada área, en corto («Pasos · Cardio · Fuerza»)
+  const areaNames = Object.fromEntries(
+    AREAS.map((a) => [
+      a,
+      s.sel[a]
+        .map((id) => resolveMeta(s, id))
+        .map((m) => (m ? (m.def ? t(m.def.short) : m.custom?.name) : null))
+        .filter(Boolean)
+        .join(' · '),
+    ]),
+  ) as Record<Area, string>;
+  const startBtn = (
+    <TouchableOpacity style={styles.start} onPress={() => router.push({ pathname: '/metas-elegir', params: { area: 'ej' } })} activeOpacity={0.85}>
+      <Text style={styles.startText}>{t('Choose your targets')}</Text>
+      <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
+    </TouchableOpacity>
+  );
+
+  // Hoy ya no lleva «Esta semana» con las tres líneas (fundador, 2026-11-16: «me sobra; la gracia era que al
+  // pinchar en el círculo Semana te llevase a Plan»): solo queda, al cerrar la semana, la enhorabuena o el ánimo
+  if (today) return congrats ? <WeekBlock congrats={congrats} review={review} onClose={() => update({ ...s, closedWeek: congrats.week })} /> : null;
 
   return (
     <View>
-      {today && congrats && <WeekBlock congrats={congrats} review={review} onClose={() => update({ ...s, closedWeek: congrats.week })} />}
       <View style={[fine.secHead, styles.titleRow]}>
-        {/* Hoy: «ESTA SEMANA» y «Tu plan ›»; Plan: «TUS METAS» con su (i) */}
         <Text style={fine.secTitle} accessibilityRole="header">
-          {today ? t('This week') : t('Your targets')}
+          {t('Your week')}
         </Text>
-        {today ? (
-          <TouchableOpacity onPress={() => goToTab(TAB.plan)} hitSlop={10} style={{ marginLeft: 'auto' }} accessibilityRole="link">
-            <Text style={fine.secMore}>{t('Your plan')} ›</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={() => setInfo(true)} hitSlop={10} style={{ marginLeft: 'auto' }} accessibilityRole="button" accessibilityLabel={t('About your goals')}>
-            <Ionicons name="information-circle-outline" size={18} color={FINE.mute} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={() => setInfo(true)} hitSlop={10} style={{ marginLeft: 'auto' }} accessibilityRole="button" accessibilityLabel={t('About your goals')}>
+          <Ionicons name="information-circle-outline" size={18} color={FINE.mute} />
+        </TouchableOpacity>
       </View>
-      <TourTarget id={today ? 'today.plan' : 'plan.targets'} scroll={tourScroll} inset={20}>
+      {/* Tu semana en una cifra, el mismo círculo «Semana» de Hoy en grande (fundador, 2026-11-16: «al pinchar en
+          Semana te lleva a Plan y ahí tendría que haber alguna métrica que aglutinase»); justo debajo, tus metas de
+          cada área, una sola vez (antes se repetían en una sección «Tus metas» aparte) */}
+      <TourTarget id="plan.targets" scroll={tourScroll} inset={20}>
         <View style={styles.block}>
-          {/* En Plan, arriba, tu semana en grande: el círculo «Semana» de Hoy lleva aquí y tiene que verse lo
-              mismo (fundador, 2026-11-16: «si no, se ve un poco raro la conexión») */}
-          {!today && !none && weekPct != null && (
-            <View style={styles.weekBig} accessible accessibilityLabel={t('Your week: {n} percent', { n: weekPct })}>
-              <Text style={styles.weekNum}>
-                {weekPct}
-                <Text style={styles.weekSign}> %</Text>
-              </Text>
-              <Text style={styles.weekSub}>
-                {t('of your week')}
-                {range ? `
-${range}` : ''}
-              </Text>
-            </View>
-          )}
-          <View style={styles.areas}>
-            {AREAS.map((a) => {
-              const score = areaScore(s, a, vals, week ?? undefined, known);
-              // En Plan, los nombres cortos de sus metas debajo de la barra
-              const names = s.sel[a]
-                .map((id) => resolveMeta(s, id))
-                .map((m) => (m ? (m.def ? t(m.def.short) : m.custom?.name) : null))
-                .filter(Boolean)
-                .join(' · ');
-              return (
-                <TourTarget key={a} id={today ? `today.plan.${a}` : `plan.targets.${a}`} scroll={tourScroll}>
-                  <TouchableOpacity
-                    onPress={() => router.push(s.sel[a].length ? { pathname: '/metas-area', params: { area: a } } : { pathname: '/metas-elegir', params: { area: a } })}
-                    activeOpacity={0.8}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${t(AREA_NAME[a])}: ${score == null ? t('No data') : pct(score)}`}
-                  >
-                    {/* Como el prototipo: el nombre en marfil y el % apagado; el color va en la línea */}
-                    <View style={styles.areaHead}>
-                      <Text style={styles.areaName}>{t(AREA_NAME[a])}</Text>
-                      <TodayPct area={a} score={score} />
-                    </View>
-                    <CometLine progress={score ?? 0} colors={AREA_RING[a]} thickness={4} style={styles.areaLine} />
-                    {!today && <Text style={styles.areaMetas}>{names || t('No targets')}</Text>}
-                  </TouchableOpacity>
-                </TourTarget>
-              );
-            })}
-          </View>
-          {none ? (
-            <TouchableOpacity style={styles.start} onPress={() => router.push({ pathname: '/metas-elegir', params: { area: 'ej' } })} activeOpacity={0.85}>
-              <Text style={styles.startText}>{t('Choose your targets')}</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.accent} />
-            </TouchableOpacity>
+          {none || !week ? (
+            startBtn
           ) : (
-            today || weekPct == null ? <Text style={styles.note}>{week ? t('This week: {range}.', { range }) : ''}</Text> : null
+            <WeekHero s={s} week={week} vals={vals} known={known} last={last} names={areaNames} onArea={openArea} tourScroll={tourScroll} />
           )}
         </View>
       </TourTarget>
@@ -234,7 +184,8 @@ ${range}` : ''}
               <View style={styles.goals}>
                 {s.goals.map((g) => (
                   <View key={g} style={styles.goalChip}>
-                    <Ionicons name={GOALS[g].icon as any} size={14} color={Colors.accent} />
+                    {/* AppIcon: las pesas («Ponerte en forma») salen con el dibujo único de la app (fine/dumbbell.ts) */}
+                    <AppIcon name={GOALS[g].icon} size={14} color={Colors.accent} />
                     <Text style={styles.goalChipText}>{t(GOALS[g].name)}</Text>
                   </View>
                 ))}
@@ -293,21 +244,8 @@ const styles = StyleSheet.create({
   rvDone: { ...ff('medium'), color: FINE.ivory, fontSize: 13, textAlign: 'right', maxWidth: '45%' },
   rvClosing: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
   titleRow: { marginHorizontal: 20 },
-  weekBig: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
-  weekNum: { ...ff('light'), fontSize: 44, lineHeight: 52, color: FINE.ivory, fontVariant: ['tabular-nums'] },
-  weekSign: { ...ff('regular'), fontSize: 18, color: FINE.mute },
-  weekSub: { ...ff('regular'), flex: 1, fontSize: 13, lineHeight: 18, color: FINE.mute },
-  areaMetas: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, marginTop: 4 },
   // Sin tarjeta (rediseño «Emerald Luxury», 2026-11-15): las líneas flotan sobre el fondo
   block: { marginHorizontal: 20, paddingBottom: 4 },
-  // Una línea cometa por área: nombre y % arriba (toca para abrir el área)
-  areas: { gap: 4 },
-  areaHead: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 10 },
-  areaName: { ...ff('medium'), flex: 1, fontSize: 15, color: FINE.ivory },
-  areaPct: { ...ff('regular'), color: FINE.mute, fontSize: 14, fontVariant: ['tabular-nums'] },
-  areaPctSign: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
-  areaLine: { marginTop: 4, marginRight: -6, marginBottom: 2 },
-  note: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, textAlign: 'left', marginTop: 12 },
   start: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingTop: 12 },
   startText: { ...ff('regular'), color: FINE.jade, fontSize: 14 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },

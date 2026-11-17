@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { IntestineIcon } from '@/components/IntestineIcon';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
-import { BristolShape, ColorSwatches } from '@/components/BathroomVisuals';
+import { BristolRuler, StoolColorPicker } from '@/components/BathroomVisuals';
 import { DayCountStepper, VisitsSection } from '@/components/BathroomVisits';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { SecHead } from '@/components/fine/Fine';
+import { CheckRow, CloseButton, FineButton, measureStyles } from '@/components/fine/FineMeasure';
+import { formStyles } from '@/components/fine/FineForm';
 import { bowelRepository, dayKey, entryForDay, noonOf } from '@/data/bathroomRepository';
-import { BowelEntry, BowelMovement, BRISTOL_TYPES, BristolType, STOOL_COLORS, StoolColor } from '@/types/bathroom';
+import { BowelEntry, BowelMovement, BristolType, STOOL_COLORS, StoolColor } from '@/types/bathroom';
 import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
-import { INTER } from '@/theme/fine';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Lo que suele explicar un color llamativo: se pregunta antes de recomendar el médico
 const CAUSES: Partial<Record<StoolColor, string[]>> = {
@@ -24,6 +27,16 @@ const NONE = 'None of these';
 // Apunte del día: cuántas veces (con − y +), cada vez suelta con su hora (BathroomVisits), color,
 // consistencia y notas. Si ya existe, se edita.
 // Con ?quick=1, "una vez, ahora": solo color y consistencia, y se suma una vez al día de hoy.
+// Desde el 2026-11-16, en el lenguaje fino del prototipo (como LogWeightScreen y LogDigestionScreen): título a la
+// izquierda con la × de cerrar, sin icono en círculo de color, cabeceras de sección pequeñas con su raya, las
+// formas de Bristol en filas con línea fina y el círculo de marcar, y un solo botón de Guardar abajo (antes, el ✓
+// de arriba). Tono neutro: jade si algo lo explica, oro para «coméntalo con un médico» y ámbar solo para «ve al
+// médico».
+// Desde el 2026-11-17 (fundador: «la misma estética que la orina, con un continuo de color sin tantos nombres, no
+// como ahora con circulitos… 2 líneas: una para la escala de marrones y otra para los demás colores. Consistencia
+// me pregunto si se puede mejorar»): el color, en dos reglas como la de la orina (StoolColorPicker) y la
+// consistencia, en una regla de muy dura a líquida con el dibujo a línea del tipo elegido (BristolRuler), en vez
+// de los círculos con nombre y de las siete filas. Se guarda lo mismo que antes.
 export const LogBowelScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ day?: string; quick?: string }>();
@@ -88,37 +101,24 @@ export const LogBowelScreen = () => {
     }
   };
 
+  // Color y consistencia: en «una vez, ahora» son las secciones de la pantalla; en el día van dentro de «El día
+  // en general», con su nombre en pequeño
+  const subHead = (title: string) => (quick ? <SecHead title={title} /> : <Text style={styles.subHead}>{title}</Text>);
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={() => router.back()}>
-          <Ionicons name="close" size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.circleButton, total != null && styles.circleButtonActive]}
-          onPress={save}
-          disabled={saving || total == null}
-        >
-          <Ionicons name="checkmark" size={22} color={total != null ? Colors.background : Colors.textMuted} />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title={quick ? tr('Just now') : tr('Your stools today')} right={<CloseButton onPress={() => router.back()} />} />
 
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View style={styles.iconBadge}>
-            <IntestineIcon size={26} color={Colors.green} />
-          </View>
-          <Text style={styles.title}>{quick ? tr('Just now') : tr('Your stools today')}</Text>
-          <Text style={styles.subtitle}>
-            {quick
-              ? tr('It adds one time to today ({n} so far). Colour and shape are optional.', { n: existing?.count ?? 0 })
-              : tr('Takes 10 seconds. It helps us spot changes early, and nobody else sees it.')}
-          </Text>
-        </View>
+        <Text style={styles.lead}>
+          {quick
+            ? tr('It adds one time to today ({n} so far). Colour and shape are optional.', { n: existing?.count ?? 0 })
+            : tr('Takes 10 seconds. It helps us spot changes early, and nobody else sees it.')}
+        </Text>
 
         {!quick && (
           <>
-            <Text style={styles.label}>{tr('How many times did you go today?')}</Text>
+            <SecHead title={tr('How many times did you go today?')} />
             <DayCountStepper count={count} min={visits.length} max={20} onChange={setCount} />
             <VisitsSection
               kind="bowel"
@@ -136,22 +136,23 @@ export const LogBowelScreen = () => {
                 if (saved?.consistency) setConsistency(saved.consistency);
               }}
             />
-            {total != null && total > 0 && <Text style={styles.dayHeading}>{tr('The day in general')}</Text>}
+            {total != null && total > 0 && <SecHead title={tr('The day in general')} />}
           </>
         )}
 
         {total != null && total > 0 && (
           <>
-            <Text style={styles.label}>{tr('Colour')}</Text>
-            <ColorSwatches options={STOOL_COLORS} value={color} onChange={(c) => { setColor(c); setCause(undefined); }} center />
+            {subHead(tr('Colour'))}
+            <StoolColorPicker value={color} onChange={(c) => { setColor(c); setCause(undefined); }} />
 
+            {/* Un color llamativo: antes que el médico, se pregunta por lo que suele explicarlo */}
             {causes && (
-              <View style={styles.askCard}>
-                <Text style={styles.askTitle}>{tr('Could something explain it?')}</Text>
+              <View style={styles.ask}>
+                <Text style={fine.rowTitle}>{tr('Could something explain it?')}</Text>
                 <Text style={styles.askText}>{tr('In the last two days, did you have any of these?')}</Text>
-                <ChoiceChips options={[...causes, NONE].map((c) => ({ id: c, label: tr(c) }))} value={cause} onChange={setCause} center />
+                <ChoiceChips options={[...causes, NONE].map((c) => ({ id: c, label: tr(c) }))} value={cause} onChange={setCause} />
                 {cause === NONE && (
-                  <Text style={styles.askAdvice}>
+                  <Text style={styles.askDoctor}>
                     {color === 'black'
                       ? tr('Please see a doctor soon. If you also feel dizzy or weak, get urgent help.')
                       : tr('Please talk to a doctor in the next few days. Get urgent help if there is a lot of blood.')}
@@ -165,145 +166,55 @@ export const LogBowelScreen = () => {
               </View>
             )}
             {flag === 'doctor' && (
-              <View style={styles.askCard}>
-                <Text style={styles.askText}>
-                  {tr('Pale or clay-coloured stools are worth mentioning to a doctor, especially if they happen more than once.')}
-                </Text>
-              </View>
+              <Text style={[formStyles.warn, styles.flagNote]}>
+                {tr('Pale or clay-coloured stools are worth mentioning to a doctor, especially if they happen more than once.')}
+              </Text>
             )}
 
-            <Text style={styles.label}>{tr('Consistency')}</Text>
-            <View style={styles.types}>
-              {BRISTOL_TYPES.map((t) => {
-                const selected = consistency === t.id;
-                return (
-                  <TouchableOpacity
-                    key={t.id}
-                    style={[styles.typeCard, selected && styles.typeCardSelected]}
-                    onPress={() => setConsistency(t.id)}
-                    activeOpacity={0.85}
-                  >
-                    <BristolShape type={t.id} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.typeTitle}>{tr(t.label)}</Text>
-                      <Text style={styles.typeHint}>{tr(t.hint)}</Text>
-                    </View>
-                    <Ionicons
-                      name={selected ? 'radio-button-on' : 'radio-button-off'}
-                      size={20}
-                      color={selected ? Colors.accent : Colors.textMuted}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {quick && (
-              <TouchableOpacity style={[styles.urgent, urgent && styles.urgentOn]} onPress={() => setUrgent(!urgent)} activeOpacity={0.85}>
-                <Ionicons name={urgent ? 'checkbox' : 'square-outline'} size={20} color={urgent ? Colors.accent : Colors.textMuted} />
-                <Text style={styles.typeTitle}>{tr('I had to rush (urgency)')}</Text>
-              </TouchableOpacity>
-            )}
+            {subHead(tr('Consistency'))}
+            <BristolRuler value={consistency} onChange={setConsistency} />
+            {quick && <CheckRow label={tr('I had to rush (urgency)')} on={urgent} onPress={() => setUrgent(!urgent)} style={styles.rushRow} />}
           </>
         )}
 
         {!quick && (
           <>
-            <Text style={styles.label}>{tr('Anything else? (optional)')}</Text>
+            <SecHead title={tr('Anything else? (optional)')} />
             <TextInput
-              style={styles.note}
+              style={measureStyles.input}
               value={note}
               onChangeText={setNote}
               placeholder={tr('Travelling, new food, tummy ache…')}
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={FINE.mute}
               multiline
+              accessibilityLabel={tr('Anything else? (optional)')}
             />
           </>
         )}
       </KeyboardAwareScrollView>
+
+      <KeyboardFooter>
+        <View style={measureStyles.footer}>
+          <FineButton label={tr('Save')} onPress={save} disabled={saving || total == null} />
+        </View>
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };
 
-export const logScreenStyles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: 'transparent' },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8 },
-  circleButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  circleButtonActive: { backgroundColor: Colors.accent },
-  content: { paddingHorizontal: 20, paddingBottom: 40 },
-  header: { alignItems: 'center', marginTop: 8, marginBottom: 8 },
-  iconBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.accentSoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
-  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 6 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 22, marginBottom: 10 },
-  askCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 14,
-    marginTop: 14,
-    gap: 8,
-  },
-  askTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  askText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  askAdvice: { color: Colors.attention, fontSize: 13, lineHeight: 19, fontFamily: INTER.medium },
-  askOk: { color: Colors.ok, fontSize: 13, lineHeight: 19, fontFamily: INTER.medium },
-  note: {
-    minHeight: 70,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 12,
-    color: Colors.textPrimary,
-    fontFamily: INTER.regular, fontSize: 14,
-    textAlignVertical: 'top',
-  },
-});
-
 const styles = StyleSheet.create({
-  ...logScreenStyles,
-  types: { gap: 8 },
-  typeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  typeCardSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  urgent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 14,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-  },
-  urgentOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  typeTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  dayHeading: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 28 },
-  typeHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 1 },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  content: { paddingHorizontal: 20, paddingBottom: 24 },
+  lead: { ...fine.note, marginTop: 0 },
+  // El nombre de cada parte dentro de «El día en general»
+  subHead: { ...ff('medium'), fontSize: 15, color: FINE.ivory, marginTop: 18, marginBottom: 12 },
+  // La pregunta de un color llamativo: tarjeta casi transparente, sin color de alarma
+  ask: { ...fine.tile, padding: 14, marginTop: 16, gap: 8 },
+  askText: { ...fine.note, marginTop: 0, marginBottom: 2 },
+  // Solo «ve al médico» va en ámbar; si algo lo explica, en jade
+  askDoctor: { ...ff('medium'), color: Colors.attention, fontSize: 13, lineHeight: 19, marginTop: 2 },
+  askOk: { ...ff('regular'), color: FINE.jade, fontSize: 13, lineHeight: 19, marginTop: 2 },
+  flagNote: { marginTop: 14 },
+  // «Tuve que ir corriendo», entre dos rayas finas bajo la regla de la consistencia
+  rushRow: { marginTop: 18, borderTopWidth: 1, borderTopColor: FINE.line },
 });

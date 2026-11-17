@@ -78,7 +78,9 @@ export default function Layout() {
             <Stack.Screen name="log-cholesterol" options={MODAL} />
             <Stack.Screen name="log-cortisol" options={MODAL} />
             <Stack.Screen name="log-vo2max" options={MODAL} />
+            <Stack.Screen name="log-grip-strength" options={MODAL} />
             <Stack.Screen name="log-weight" options={MODAL} />
+            <Stack.Screen name="log-measurements" options={MODAL} />
             <Stack.Screen name="daily-goals" options={MODAL} />
             <Stack.Screen name="log-cycle" options={MODAL} />
             <Stack.Screen name="check-in" options={MODAL} />
@@ -89,6 +91,7 @@ export default function Layout() {
             <Stack.Screen name="gut-safety" options={MODAL} />
             <Stack.Screen name="log-urine" options={MODAL} />
             <Stack.Screen name="log-water" options={MODAL} />
+            <Stack.Screen name="log-symptom" options={MODAL} />
             <Stack.Screen name="volume-check" options={MODAL} />
             <Stack.Screen name="log-temperature" options={MODAL} />
             <Stack.Screen name="cycle-goal" options={MODAL} />
@@ -99,6 +102,7 @@ export default function Layout() {
             <Stack.Screen name="cholesterol-detail" />
             <Stack.Screen name="cortisol-detail" />
             <Stack.Screen name="vo2max-detail" />
+            <Stack.Screen name="grip-strength-detail" />
             <Stack.Screen name="weight-detail" />
             <Stack.Screen name="cycle-detail" />
             <Stack.Screen name="digestive" />

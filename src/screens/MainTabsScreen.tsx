@@ -10,7 +10,7 @@ import { BottomTabBar, TABS } from '@/components/BottomTabBar';
 import { TourOverlay } from '@/components/tour/TourOverlay';
 import { useAuth } from '@/context/AuthContext';
 import { setVisibleTab } from '@/hooks/useLiveMotion';
-import { onGoToTab } from '@/constants/tabs';
+import { onGoToTab, onTabSwipe } from '@/constants/tabs';
 import { markAppReady } from '@/components/LaunchIntro';
 
 // Pestañas con deslizamiento lateral (también al tocarlas): Hoy, Plan, Análisis y Tú (2026-11-16; el
@@ -42,6 +42,9 @@ export const MainTabsScreen = () => {
   // «Ver» en Hoy y demás saltos desde dentro de una pestaña (goToTab), y los que llegan por la URL
   // (router.navigate a /(tabs)?tab=N desde una pantalla de encima)
   useEffect(() => onGoToTab((n) => pagerRef.current?.setPage(n)), []);
+  // Sin deslizar de pestaña mientras mueves de lado una fila de dentro (holdTabsProps en src/constants/tabs.ts)
+  const [swipe, setSwipe] = useState(true);
+  useEffect(() => onTabSwipe(setSwipe), []);
   useEffect(() => {
     if (tab === undefined) return;
     pagerRef.current?.setPage(Math.min(TABS.length - 1, Math.max(0, Number(tab) || 0)));
@@ -58,6 +61,7 @@ export const MainTabsScreen = () => {
         style={styles.pager}
         initialPage={initialTab}
         offscreenPageLimit={TABS.length - 1}
+        scrollEnabled={swipe}
         onPageSelected={(event) => setCurrentPage(event.nativeEvent.position)}
       >
         <View key="today" style={styles.page}>

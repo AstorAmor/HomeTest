@@ -4,13 +4,15 @@ import { metasEs } from '@/i18n/metasEs';
 import { workoutsEs } from '@/i18n/workoutsEs';
 import { dietEs } from '@/i18n/dietEs';
 import { historialEs } from '@/i18n/historialEs';
+import { measuresEs } from '@/i18n/measuresEs';
 import { FEATURE_GUIDE } from '@/data/featureGuide';
 import { LOCK_BG_NAME } from '@/logic/historial';
 
 // Notas del fundador del 2026-11-06 (peso y Analíticas en Mis datos, la página de cada marcador, el plan del
 // especialista, Descartar y borrar entrenos, Bloqueo): cada texto nuevo tiene su traducción.
-// Igual que src/i18n/index.ts: es.ts gana a los demás
-const ES: Record<string, string> = { ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...es };
+// Igual que src/i18n/index.ts: es.ts gana a los demás, salvo measuresEs, que va después (Mediciones y fuerza de
+// agarre, 2026-11-17)
+const ES: Record<string, string> = { ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...es, ...measuresEs };
 
 type Fs = { readFileSync: (p: string, enc: 'utf8') => string };
 const FILES = [

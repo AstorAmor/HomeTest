@@ -1,11 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { ChoiceChips } from '@/components/ChoiceChips';
-import { Colors, withAlpha } from '@/constants/colors';
+import { FButton, FChips, FLink, FOption, formStyles } from '@/components/fine/FineForm';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { programRepository } from '@/data/workouts/programRepository';
 import { workoutRepository } from '@/data/planRepository';
@@ -17,14 +16,20 @@ import { workoutsToHtml } from '@/utils/workoutPdf';
 import { shareHtmlPdf } from '@/utils/shareHtml';
 import { shareText, shareTextCopies } from '@/utils/shareText';
 import { t, tn } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Exportar el entrenamiento (Entrenamientos → Exportar, y el botón de compartir del Historial; fundador, 2026-11-09):
 // el programa que eliges y lo entrenado en un periodo, en PDF para tu entrenador o como texto para una IA o un
 // mensaje. Solo JavaScript (expo-print, expo-sharing y el Share de React Native ya van en las apps instaladas): llega
 // con una actualización. Los datos y el texto, en src/logic/workoutExport.ts; el PDF, en src/utils/workoutPdf.ts.
 
+// Rediseño del 2026-11-16 (lenguaje fino): el plan y el historial como secciones entre líneas finas con su interruptor
+// esmeralda, los programas en filas con un círculo, el PDF en esmeralda y el texto como acción en jade.
+// Desde el 2026-11-17, sin los iconos de delante de cada sección ni el del consejo (fundador: «seguimos teniendo
+// iconos… hay que ser coherente con el resto de experiencia de la app»): solo texto, como las filas de Entrenamientos.
+
 // La vista previa se corta aquí (lo que se comparte va entero)
+const SWITCH = { trackColor: { false: 'rgba(240,239,230,0.14)', true: FINE.emerald }, ios_backgroundColor: 'rgba(240,239,230,0.14)' };
 const PREVIEW_MAX = 60;
 
 export const WorkoutExportScreen = () => {
@@ -98,14 +103,13 @@ export const WorkoutExportScreen = () => {
           {t('Share your plan and what you have trained with your personal trainer, or paste it into an AI to help you adjust it.')}
         </Text>
         {failed && <Text style={styles.muted}>{t('Your workouts could not be loaded. Check your connection and try again.')}</Text>}
-        {!data && !failed && <ActivityIndicator color={Colors.accent} style={{ marginTop: 30 }} />}
+        {!data && !failed && <ActivityIndicator color={FINE.jade} style={{ marginTop: 30 }} />}
 
         {data && (
           <>
             {/* El plan: el programa que elijas */}
-            <View style={styles.card}>
+            <View style={[styles.card, styles.cardFirst]}>
               <View style={styles.row}>
-                <MaterialCommunityIcons name="clipboard-list-outline" size={20} color={Colors.accent} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{t('Plan')}</Text>
                   <Text style={styles.sub}>{programs.length ? t('Each routine with its exercises, sets, weights and rests') : t('You have no programme yet')}</Text>
@@ -114,25 +118,23 @@ export const WorkoutExportScreen = () => {
                   value={withPlan && programs.length > 0}
                   disabled={!programs.length}
                   onValueChange={setWithPlan}
-                  trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
-                  thumbColor={withPlan && programs.length ? Colors.accent : Colors.textMuted}
+                  {...SWITCH}
+                  thumbColor={withPlan && programs.length ? FINE.ivory : FINE.mute}
                   accessibilityLabel={t('Plan')}
                 />
               </View>
               {withPlan && programs.length > 1 && (
-                <View style={styles.choices}>
-                  {programs.map((p) => {
-                    const on = p.id === programId;
-                    return (
-                      <TouchableOpacity key={p.id} style={[styles.choice, on && styles.choiceOn]} onPress={() => setProgramId(p.id)} accessibilityRole="radio" accessibilityState={{ checked: on }}>
-                        <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={18} color={on ? Colors.accent : Colors.textMuted} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.choiceTitle}>{label(p)}</Text>
-                          <Text style={styles.sub}>{[p.active ? t('Your programme') : null, sourceLine(p)].filter(Boolean).join(' · ')}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  })}
+                <View style={styles.choices} accessibilityRole="radiogroup">
+                  {programs.map((p, i) => (
+                    <FOption
+                      key={p.id}
+                      title={label(p)}
+                      hint={[p.active ? t('Your programme') : null, sourceLine(p)].filter(Boolean).join(' · ')}
+                      on={p.id === programId}
+                      onPress={() => setProgramId(p.id)}
+                      last={i === programs.length - 1}
+                    />
+                  ))}
                 </View>
               )}
               {withPlan && programs.length === 1 && <Text style={styles.only}>{label(programs[0])}</Text>}
@@ -141,22 +143,15 @@ export const WorkoutExportScreen = () => {
             {/* El historial: lo entrenado en un periodo */}
             <View style={styles.card}>
               <View style={styles.row}>
-                <Ionicons name="time-outline" size={20} color={Colors.accent} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{t('History')}</Text>
                   <Text style={styles.sub}>{t('Session by session, with a summary of your progress per exercise')}</Text>
                 </View>
-                <Switch
-                  value={withHistory}
-                  onValueChange={setWithHistory}
-                  trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
-                  thumbColor={withHistory ? Colors.accent : Colors.textMuted}
-                  accessibilityLabel={t('History')}
-                />
+                <Switch value={withHistory} onValueChange={setWithHistory} {...SWITCH} thumbColor={withHistory ? FINE.ivory : FINE.mute} accessibilityLabel={t('History')} />
               </View>
               {withHistory && (
                 <>
-                  <ChoiceChips options={EXPORT_PERIODS.map((p) => ({ id: p.id, label: t(p.label) }))} value={period} onChange={setPeriod} />
+                  <FChips options={EXPORT_PERIODS.map((p) => ({ id: p.id, label: t(p.label) }))} value={period} onChange={setPeriod} style={styles.periods} />
                   <Text style={styles.count}>{doc?.history ? tn(doc.history.count, '{n} workout in this period', '{n} workouts in this period') : ''}</Text>
                 </>
               )}
@@ -165,10 +160,9 @@ export const WorkoutExportScreen = () => {
             {/* Lo que se va a compartir, tal cual */}
             {!empty && (
               <View style={styles.card}>
-                <TouchableOpacity style={styles.row} onPress={() => setPreview((v) => !v)} accessibilityRole="button">
-                  <Ionicons name="eye-outline" size={20} color={Colors.accent} />
+                <TouchableOpacity style={styles.row} onPress={() => setPreview((v) => !v)} accessibilityRole="button" accessibilityState={{ expanded: preview }}>
                   <Text style={[styles.cardTitle, { flex: 1 }]}>{t('What you will share')}</Text>
-                  <Ionicons name={preview ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
+                  <Ionicons name={preview ? 'chevron-up' : 'chevron-down'} size={15} color={FINE.mute} />
                 </TouchableOpacity>
                 {preview && (
                   <>
@@ -183,18 +177,23 @@ export const WorkoutExportScreen = () => {
 
             {empty && <Text style={styles.muted}>{t('Choose the plan, the history or both.')}</Text>}
 
-            <TouchableOpacity style={[styles.primary, (empty || !!busy) && styles.off]} onPress={sendPdf} disabled={empty || !!busy}>
-              {busy === 'pdf' ? <ActivityIndicator color={Colors.background} /> : <Ionicons name="document-text-outline" size={18} color={Colors.background} />}
-              <Text style={styles.primaryText}>{t('PDF for your trainer')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.secondary, (empty || !!busy) && styles.off]} onPress={sendText} disabled={empty || !!busy}>
-              {busy === 'text' ? <ActivityIndicator color={Colors.accent} /> : <Ionicons name={shareTextCopies ? 'copy-outline' : 'chatbubble-ellipses-outline'} size={18} color={Colors.accent} />}
-              <Text style={styles.secondaryText}>{shareTextCopies ? t('Copy as text for an AI') : t('Text for an AI or a message')}</Text>
-            </TouchableOpacity>
+            <FButton
+              label={t('PDF for your trainer')}
+              icon="document-text-outline"
+              onPress={sendPdf}
+              disabled={empty || !!busy}
+              busy={busy === 'pdf'}
+              style={{ marginTop: 12 }}
+            />
+            <FLink
+              label={shareTextCopies ? t('Copy as text for an AI') : t('Text for an AI or a message')}
+              onPress={sendText}
+              disabled={empty || !!busy}
+              busy={busy === 'text'}
+            />
             {status && <Text style={styles.status}>{status}</Text>}
 
             <View style={styles.tip}>
-              <Ionicons name="sparkles-outline" size={16} color={Colors.accent} />
               <Text style={styles.tipText}>
                 {t('Paste the text into your AI (ChatGPT, Gemini, Claude…) and ask it, for example: «How do I adjust my programme to keep progressing?»')}
               </Text>
@@ -209,27 +208,23 @@ export const WorkoutExportScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
-  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, textAlign: 'center' },
-  card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 12 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  choices: { gap: 6 },
-  choice: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 12, padding: 10 },
-  choiceOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  choiceTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  only: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, marginLeft: 32 },
-  count: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
-  preview: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, backgroundColor: Colors.background, borderRadius: 10, padding: 10 },
-  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, marginTop: 4 },
-  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  off: { opacity: 0.45 },
-  status: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, textAlign: 'center' },
-  tip: { flexDirection: 'row', gap: 8, backgroundColor: Colors.accentSoft, borderRadius: 12, padding: 12 },
-  tipText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
-  privacy: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
+  intro: { ...formStyles.lead, marginTop: 4, marginBottom: 6 },
+  muted: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18, textAlign: 'center', marginTop: 10 },
+  // Cada parte, una sección entre líneas finas (sin caja)
+  card: { gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  cardFirst: { borderTopWidth: 1, borderTopColor: FINE.line, marginTop: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
+  cardTitle: { ...fine.rowTitle },
+  sub: { ...fine.rowSub },
+  choices: {},
+  only: { ...fine.body, fontSize: 14 },
+  periods: {},
+  count: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  // Lo que se comparte, tal cual: aquí sí una caja casi transparente
+  preview: { ...fine.tile, ...ff('regular'), color: '#CFD6CF', fontSize: 12, lineHeight: 17 },
+  status: { ...ff('regular'), color: FINE.jade, fontSize: 13, textAlign: 'center' },
+  tip: { flexDirection: 'row', gap: 8, paddingTop: 14, marginTop: 10, borderTopWidth: 1, borderTopColor: FINE.line },
+  tipText: { flex: 1, ...ff('regular'), color: '#CFD6CF', fontSize: 13, lineHeight: 18 },
+  privacy: { ...fine.note },
 });

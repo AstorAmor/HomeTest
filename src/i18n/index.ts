@@ -6,6 +6,16 @@ import { dietEs } from './dietEs';
 import { authEs } from './authEs';
 import { metasEs } from './metasEs';
 import { historialEs } from './historialEs';
+import { bodyEs } from './bodyEs';
+import { gutEs } from './gutEs';
+import { careEs } from './careEs';
+import { symptomsEs } from './symptomsEs';
+import { rootsEs } from './rootsEs';
+import { settingsEs } from './settingsEs';
+import { checkinEs } from './checkinEs';
+import { measuresEs } from './measuresEs';
+import { guideEs } from './guideEs';
+import { storeEs } from './storeEs';
 
 // Idiomas de la app. El texto fuente es el inglés: t('Today') devuelve la traducción del idioma
 // elegido o, si aún no la hay, el inglés. Así se traduce pantalla a pantalla sin romper nada.
@@ -24,7 +34,7 @@ export const LANGUAGES: { id: Lang; name: string; ready: boolean }[] = [
 ];
 
 const KEY = 'language.v1';
-const DICTS: Partial<Record<Lang, Record<string, string>>> = { es: { ...authEs, ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...es } };
+const DICTS: Partial<Record<Lang, Record<string, string>>> = { es: { ...authEs, ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...bodyEs, ...gutEs, ...careEs, ...symptomsEs, ...rootsEs, ...settingsEs, ...es, ...checkinEs, ...measuresEs, ...guideEs, ...storeEs } };
 
 let current: Lang = 'en';
 

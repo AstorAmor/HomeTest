@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import Svg, { Circle, Defs, G, Path, RadialGradient, Stop } from 'react-native-svg';
 import type { GoalKey } from '@/logic/metas';
 import { FINE } from '@/theme/fine';
+import { DUMBBELL_PATH } from './dumbbell';
 
 // Trazos a 24 × 24, línea de 1,4 (como los iconos de la barra de pestañas)
 const FLASK = 'M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3M7.5 15h9';
@@ -20,7 +21,7 @@ const PATHS: Record<GoalKey, string> = {
   sueno: 'M19.5 14.6A8 8 0 1 1 9.4 4.5a6.4 6.4 0 0 0 10.1 10.1zM16.5 4.5v3M15 6h3',
   peso: 'M6 4h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM8.5 10.5a3.5 3.5 0 0 1 7 0M12 10.5l1.6-1.8',
   estres: 'M5 19C5 11 10 6 19.5 5 18.5 14 13.5 19 5 19zM5 19l8.5-8.5',
-  forma: 'M3.5 9.5v5M6.5 7v10M17.5 7v10M20.5 9.5v5M6.5 12h11',
+  forma: DUMBBELL_PATH, // las pesas, las mismas en toda la app (fine/dumbbell.ts)
   tabaco: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM5.6 5.6l12.8 12.8',
   alcohol: 'M7 3h10l-.8 6.5a4.2 4.2 0 0 1-8.4 0L7 3zM12 14v6.5M8.5 20.5h7',
   salud: 'M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.4a4.2 4.2 0 0 1 7.5 2.4C19.5 15.4 12 20 12 20z',

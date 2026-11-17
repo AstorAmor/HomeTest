@@ -7,7 +7,7 @@
 // rellena (no un trazo) para poder estrecharlo hacia la cola.
 import { ReactNode, useId } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, G, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
 import { Colors, withAlpha } from '@/constants/colors';
 import { useTween } from '@/hooks/useTween';
 
@@ -62,6 +62,21 @@ export function GlowRing({
   const id = `gr${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const target = Math.max(0, Math.min(1, progress));
   const p = useTween(target, 1100, 0);
+
+  return (
+    <View style={{ width: size, height: size }}>
+      <Svg width={size} height={size}>
+        <GlowRingArt id={id} progress={p} colors={colors} size={size} stroke={stroke} />
+      </Svg>
+      <View style={[StyleSheet.absoluteFill, styles.center]}>{children}</View>
+    </View>
+  );
+}
+
+// El dibujo del anillo, quieto y sin la vista de alrededor, para meterlo dentro de otro SVG: la imagen que se comparte
+// de una insignia (BadgeShareCard) lleva así el mismo anillo que se ve en la app. `id`: único en ese SVG.
+export function GlowRingArt({ id, progress, colors, size, stroke }: { id: string; progress: number; colors: RingColors; size: number; stroke: number }) {
+  const p = Math.max(0, Math.min(1, progress));
   const small = size < 48;
   const c = size / 2;
   const dot = small ? 0 : stroke * 0.62; // el punto de luz de la cabeza
@@ -77,56 +92,53 @@ export function GlowRing({
   const light = Colors.isLight;
 
   return (
-    <View style={{ width: size, height: size }}>
-      <Svg width={size} height={size}>
-        <Defs>
-          {/* Mitad derecha: la cola, arriba, algo difuminada */}
-          <LinearGradient id={`${id}a`} gradientUnits="userSpaceOnUse" x1={c} y1={c - r} x2={c} y2={c + r}>
-            <Stop offset="0" stopColor={colors[0]} stopOpacity={0.4} />
-            <Stop offset="0.4" stopColor={mixHex(colors[0], colors[1], 0.4)} stopOpacity={1} />
-            <Stop offset="1" stopColor={colors[1]} />
-          </LinearGradient>
-          <LinearGradient id={`${id}b`} gradientUnits="userSpaceOnUse" x1={c} y1={c + r} x2={c} y2={c - r}>
-            <Stop offset="0" stopColor={colors[1]} />
-            <Stop offset="1" stopColor={colors[2]} />
-          </LinearGradient>
-          {/* Disco interior: casi transparente en el centro y un velo del color hacia el borde */}
-          <RadialGradient id={`${id}d`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={colors[1]} stopOpacity={0} />
-            <Stop offset="0.75" stopColor={colors[1]} stopOpacity={light ? 0.04 : 0.05} />
-            <Stop offset="1" stopColor={colors[1]} stopOpacity={light ? 0.1 : 0.12} />
-          </RadialGradient>
-          {/* Halo: una luz muy suave a lo largo del anillo, más fuerte cuanto más lleno */}
-          <RadialGradient id={`${id}h`} cx="50%" cy="50%" r="50%">
-            <Stop offset={String(Math.max(0, (r - stroke * 2.2) / c))} stopColor={colors[2]} stopOpacity={0} />
-            <Stop offset={String(r / c)} stopColor={colors[2]} stopOpacity={(light ? 0.1 : 0.16) * (0.35 + 0.65 * p)} />
-            <Stop offset="1" stopColor={colors[2]} stopOpacity={0} />
-          </RadialGradient>
-          <RadialGradient id={`${id}g`} cx="50%" cy="50%" r="50%">
-            <Stop offset="0" stopColor={colors[2]} stopOpacity={light ? 0.55 : 0.7} />
-            <Stop offset="1" stopColor={colors[2]} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        {!small && <Circle cx={c} cy={c} r={c} fill={`url(#${id}h)`} />}
-        <Circle cx={c} cy={c} r={r - stroke / 2} fill={`url(#${id}d)`} />
-        <Circle cx={c} cy={c} r={r} stroke={withAlpha(colors[1], light ? 0.14 : 0.12)} strokeWidth={stroke * 0.7} fill="none" />
-        {p > 0.002 && <Path d={band(c, r, 0, Math.min(p, 0.5) + (p > 0.5 ? 0.004 : 0), width)} fill={`url(#${id}a)`} />}
-        {p > 0.5 && <Path d={band(c, r, 0.5, p, width)} fill={`url(#${id}b)`} />}
-        {p > 0.002 && (
-          <>
-            {/* Cabeza redondeada del color de la punta */}
-            <Circle cx={tip.x} cy={tip.y} r={width(p) / 2} fill={tipColor} />
-            {dot > 0 && (
-              <>
-                <Circle cx={tip.x} cy={tip.y} r={dot * 2.6} fill={`url(#${id}g)`} />
-                <Circle cx={tip.x} cy={tip.y} r={dot} fill={light ? '#FFFFFF' : '#F7F3E6'} />
-              </>
-            )}
-          </>
-        )}
-      </Svg>
-      <View style={[StyleSheet.absoluteFill, styles.center]}>{children}</View>
-    </View>
+    <G>
+      <Defs>
+        {/* Mitad derecha: la cola, arriba, algo difuminada */}
+        <LinearGradient id={`${id}a`} gradientUnits="userSpaceOnUse" x1={c} y1={c - r} x2={c} y2={c + r}>
+          <Stop offset="0" stopColor={colors[0]} stopOpacity={0.4} />
+          <Stop offset="0.4" stopColor={mixHex(colors[0], colors[1], 0.4)} stopOpacity={1} />
+          <Stop offset="1" stopColor={colors[1]} />
+        </LinearGradient>
+        <LinearGradient id={`${id}b`} gradientUnits="userSpaceOnUse" x1={c} y1={c + r} x2={c} y2={c - r}>
+          <Stop offset="0" stopColor={colors[1]} />
+          <Stop offset="1" stopColor={colors[2]} />
+        </LinearGradient>
+        {/* Disco interior: casi transparente en el centro y un velo del color hacia el borde */}
+        <RadialGradient id={`${id}d`} cx="50%" cy="50%" r="50%">
+          <Stop offset="0" stopColor={colors[1]} stopOpacity={0} />
+          <Stop offset="0.75" stopColor={colors[1]} stopOpacity={light ? 0.04 : 0.05} />
+          <Stop offset="1" stopColor={colors[1]} stopOpacity={light ? 0.1 : 0.12} />
+        </RadialGradient>
+        {/* Halo: una luz muy suave a lo largo del anillo, más fuerte cuanto más lleno */}
+        <RadialGradient id={`${id}h`} cx="50%" cy="50%" r="50%">
+          <Stop offset={String(Math.max(0, (r - stroke * 2.2) / c))} stopColor={colors[2]} stopOpacity={0} />
+          <Stop offset={String(r / c)} stopColor={colors[2]} stopOpacity={(light ? 0.1 : 0.16) * (0.35 + 0.65 * p)} />
+          <Stop offset="1" stopColor={colors[2]} stopOpacity={0} />
+        </RadialGradient>
+        <RadialGradient id={`${id}g`} cx="50%" cy="50%" r="50%">
+          <Stop offset="0" stopColor={colors[2]} stopOpacity={light ? 0.55 : 0.7} />
+          <Stop offset="1" stopColor={colors[2]} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      {!small && <Circle cx={c} cy={c} r={c} fill={`url(#${id}h)`} />}
+      <Circle cx={c} cy={c} r={r - stroke / 2} fill={`url(#${id}d)`} />
+      <Circle cx={c} cy={c} r={r} stroke={withAlpha(colors[1], light ? 0.14 : 0.12)} strokeWidth={stroke * 0.7} fill="none" />
+      {p > 0.002 && <Path d={band(c, r, 0, Math.min(p, 0.5) + (p > 0.5 ? 0.004 : 0), width)} fill={`url(#${id}a)`} />}
+      {p > 0.5 && <Path d={band(c, r, 0.5, p, width)} fill={`url(#${id}b)`} />}
+      {p > 0.002 && (
+        <>
+          {/* Cabeza redondeada del color de la punta */}
+          <Circle cx={tip.x} cy={tip.y} r={width(p) / 2} fill={tipColor} />
+          {dot > 0 && (
+            <>
+              <Circle cx={tip.x} cy={tip.y} r={dot * 2.6} fill={`url(#${id}g)`} />
+              <Circle cx={tip.x} cy={tip.y} r={dot} fill={light ? '#FFFFFF' : '#F7F3E6'} />
+            </>
+          )}
+        </>
+      )}
+    </G>
   );
 }
 

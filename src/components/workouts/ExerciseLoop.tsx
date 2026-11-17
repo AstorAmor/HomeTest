@@ -1,11 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
-import { Colors } from '@/constants/colors';
 import { exerciseMedia, exerciseName, MEDIA_ASPECT } from '@/data/workouts/catalog';
 import type { CatalogExercise } from '@/data/workouts/types';
 import { t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff } from '@/theme/fine';
 
 const useNative = Platform.OS !== 'web';
 
@@ -67,8 +66,20 @@ export const ExerciseLoop = ({
   );
 };
 
+// Lenguaje fino (2026-11-16): mientras carga, un fondo casi transparente; la etiqueta «Imagen provisional», una
+// píldora oscura con borde fino y la letra en marfil
 const styles = StyleSheet.create({
-  box: { overflow: 'hidden', backgroundColor: Colors.cardBorder },
-  tag: { position: 'absolute', left: 8, bottom: 8, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 },
-  tagText: { color: '#FFFFFF', fontSize: 10, fontFamily: INTER.medium },
+  box: { overflow: 'hidden', backgroundColor: FINE.tile },
+  tag: {
+    position: 'absolute',
+    left: 8,
+    bottom: 8,
+    backgroundColor: 'rgba(6,26,22,0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(240,239,230,0.14)',
+    borderRadius: 20,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+  },
+  tagText: { ...ff('regular'), color: '#F0EFE6', fontSize: 10.5, letterSpacing: 0.2 },
 });

@@ -122,7 +122,7 @@ export const FINDER_STEPS: FinderStep[] = [
       { id: 'less_sun', label: 'I get less sun now (autumn, winter, office)', icon: 'partly-sunny-outline', why: 'little sun', tests: { vitamin_d: 2 }, panel: [VIT_D] },
       { id: 'season', label: 'The season has changed and I feel it', icon: 'leaf-outline', why: 'change of season', tests: { vitamin_d: 1 }, panel: [VIT_D] },
       { id: 'schedule', label: 'My hours have changed (night shifts, travel)', icon: 'time-outline', why: 'new hours', tests: {}, flag: 'stress_sleep' },
-      { id: 'allergy', label: 'I sneeze more or my eyes or skin itch', icon: 'flower-outline', why: 'allergy symptoms', tests: { allergy_alex: 2 }, flag: 'allergy' },
+      { id: 'allergy', label: 'I sneeze more or my eyes or skin itch', icon: 'mci:flower-pollen-outline', why: 'allergy symptoms', tests: { allergy_alex: 2 }, flag: 'allergy' },
       { id: 'none', label: 'None of these', icon: 'remove-circle-outline', why: '', tests: {}, none: true },
     ],
   },

@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { INTER } from '@/theme/fine';
+import { View, StyleSheet } from 'react-native';
+import { FChip } from '@/components/fine/FineForm';
 
 // Fila de opciones tipo "chip" (una seleccionada). Se usa en los registros y en las encuestas.
+// Desde el 2026-11-16, en el lenguaje fino del prototipo (como FChips de FineForm): chips con un borde fino y la
+// letra apagada; el elegido, con borde jade y la letra en marfil. Mismas props y la misma fila que antes.
 export function ChoiceChips<T extends string | number>({
   options,
   value,
@@ -16,35 +17,15 @@ export function ChoiceChips<T extends string | number>({
   center?: boolean;
 }) {
   return (
-    <View style={[styles.row, center && { justifyContent: 'center' }]}>
-      {options.map((o) => {
-        const selected = value === o.id;
-        return (
-          <TouchableOpacity
-            key={String(o.id)}
-            style={[styles.chip, selected && styles.chipSelected]}
-            onPress={() => onChange(o.id)}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.text, selected && styles.textSelected]}>{o.label}</Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[styles.row, center && styles.center]} accessibilityRole="radiogroup">
+      {options.map((o) => (
+        <FChip key={String(o.id)} label={o.label} on={value === o.id} onPress={() => onChange(o.id)} />
+      ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  chipSelected: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  text: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  textSelected: { color: Colors.textPrimary },
+  center: { justifyContent: 'center' },
 });

@@ -2,7 +2,7 @@
 // bloques»). Como en el prototipo (borradores/app-estructura/prototipo, .ruler): arriba la pregunta como
 // cabecera de sección y, a la derecha, la palabra de lo marcado en jade («Desliza» si aún no hay nada); debajo,
 // una línea fina con 17 marcas (las de las 5 posiciones, más largas), el tramo hecho en degradado jade y un
-// botón marfil con borde jade; y bajo los extremos, las palabras de los extremos.
+// punto de luz; y bajo los extremos, las palabras de los extremos.
 // Se arrastra o se toca en cualquier punto y salta a la posición más cercana: se guarda lo mismo que antes,
 // de 1 a 5. Sin marcar, el botón queda gris en el centro y no hay tramo jade.
 // Todo en JS (PanResponder), así que va igual con el dedo en Android y iPhone que con el ratón en la web.
@@ -30,7 +30,6 @@ const IVORY = '#F7F3E6';
 const JADE = '#83D6B4';
 const JADE_DEEP = '#2F8F70';
 const GREY = '#8D9E95';
-const RING = '#0A2019'; // el aro oscuro que separa el botón de la línea
 
 // Qué posición (1 a 5) cae en el punto x de una regla de `width` de ancho
 export const rulerValueAt = (x: number, width: number): number => {
@@ -144,7 +143,8 @@ export function Ruler({ title, words, value, onChange }: Props) {
                 <Stop offset="1" stopColor={JADE} />
               </LinearGradient>
               <RadialGradient id={`${gid}g`} cx="0.5" cy="0.5" r="0.5">
-                <Stop offset="0.5" stopColor={JADE} stopOpacity={0.45} />
+                <Stop offset="0" stopColor={JADE} stopOpacity={0.75} />
+                <Stop offset="0.45" stopColor={JADE} stopOpacity={0.32} />
                 <Stop offset="1" stopColor={JADE} stopOpacity={0} />
               </RadialGradient>
             </Defs>
@@ -167,10 +167,11 @@ export function Ruler({ title, words, value, onChange }: Props) {
                 />
               );
             })}
-            {/* El botón: halo jade (solo marcado), aro oscuro y el botón marfil con borde jade (gris sin marcar) */}
-            {set && <Circle cx={cx} cy={Y} r={24} fill={`url(#${gid}g)`} />}
-            <Circle cx={cx} cy={Y} r={15.5} fill="none" stroke={RING} strokeWidth={3} />
-            <Circle cx={cx} cy={Y} r={11.5} fill={IVORY} stroke={set ? JADE : GREY} strokeWidth={5} />
+            {/* El botón: un punto de luz, como el de las demás reglas (FineGauge) y la cabeza de las líneas cometa. Antes
+                era un botón marfil con borde jade grueso y aro oscuro (fundador, 2026-11-16: «muy bastos… contorno
+                super gordo»). Marcado: halo jade y punto marfil; sin marcar, el punto apagado con un halo tenue */}
+            <Circle cx={cx} cy={Y} r={set ? 19 : 13} fill={`url(#${gid}g)`} opacity={set ? 1 : 0.35} />
+            <Circle cx={cx} cy={Y} r={set ? 6.5 : 5.5} fill={set ? IVORY : GREY} />
           </Svg>
         )}
         {/* La capa que recibe el dedo o el ratón, encima del dibujo */}

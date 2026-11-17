@@ -1,104 +1,52 @@
 import { dateLocale, t } from '@/i18n';
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
+import { GlowRing, ringTones } from '@/components/GlowRing';
+import { FineButton } from '@/components/fine/FineMeasure';
 import { currentReport } from '@/data/reportRepository';
-import { INTER } from '@/theme/fine';
+import { FINE, ff } from '@/theme/fine';
 
 const formatFullDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 };
 
+// «Ya tienes tu informe» (desde «Lo siguiente» de Hoy). Desde el 2026-11-16, en fino: el aro de luz jade con un
+// icono a línea, la fecha pequeña en mayúsculas, el título grande y ligero y el botón esmeralda.
 export const ReportIntroScreen = () => {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.content}>
-        <View style={styles.badgeCircle}>
-          <Ionicons name="sparkles" size={30} color={Colors.accent} />
-        </View>
+        <GlowRing progress={1} colors={ringTones(FINE.jade)} size={84} stroke={3}>
+          <Ionicons name="sparkles-outline" size={26} color={FINE.ivory} />
+        </GlowRing>
 
         <Text style={styles.eyebrow}>{formatFullDate(currentReport.test_date)}</Text>
-        <Text style={styles.title}>{t('Your report is here!')}</Text>
+        <Text style={styles.title} accessibilityRole="header">
+          {t('Your report is here!')}
+        </Text>
         <Text style={styles.subtitle}>{t('And the improvement shows.')}</Text>
 
         <Text style={styles.teaser}>
           {t('Your cholesterol, glucose, and inflammation markers have clearly improved over the last 6 months — right in step with better sleep and more movement.')}
         </Text>
 
-        <TouchableOpacity
-          style={styles.cta}
-          onPress={() => router.replace('/report-summary')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.ctaText}>{t('View my report')}</Text>
-          <Ionicons name="arrow-forward" size={18} color={Colors.background} />
-        </TouchableOpacity>
+        <FineButton label={t('View my report')} onPress={() => router.replace('/report-summary')} />
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-  },
-  badgeCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: Colors.accentSoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  eyebrow: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    fontFamily: INTER.medium,
-    marginBottom: 10,
-  },
-  title: {
-    color: Colors.textPrimary,
-    fontSize: 34,
-    fontFamily: INTER.light,
-    marginBottom: 6,
-  },
-  subtitle: {
-    color: Colors.accent,
-    fontSize: 18,
-    fontFamily: INTER.medium,
-    marginBottom: 20,
-  },
-  teaser: {
-    color: Colors.textSecondary,
-    fontFamily: INTER.regular, fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 40,
-  },
-  cta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-  },
-  ctaText: {
-    color: Colors.background,
-    fontSize: 16,
-    fontFamily: INTER.medium,
-  },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  content: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
+  eyebrow: { ...ff('regular'), color: FINE.mute, fontSize: 11, letterSpacing: 2.2, textTransform: 'uppercase', marginTop: 26 },
+  title: { ...ff('light'), color: FINE.ivory, fontSize: 34, lineHeight: 40, letterSpacing: -0.3, marginTop: 10 },
+  subtitle: { ...ff('regular'), color: FINE.jade, fontSize: 17, lineHeight: 23, marginTop: 6 },
+  teaser: { ...ff('regular'), color: '#CFD6CF', fontSize: 15, lineHeight: 22, marginTop: 18, marginBottom: 36 },
 });

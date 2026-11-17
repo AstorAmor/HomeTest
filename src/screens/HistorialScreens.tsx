@@ -419,20 +419,19 @@ export function HistoryListScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Filas solo con texto y flecha, como el resto del historial (fundador, 2026-11-17: los iconos dorados de aquí no
+          eran coherentes) */}
       <Text style={hs.label}>{t('Also in your history')}</Text>
       <View style={hs.card}>
         <TouchableOpacity style={hs.row} onPress={() => router.push('/medications')}>
-          <Ionicons name="medical-outline" size={18} color={Colors.gold} />
           <Text style={hs.rowTitle}>{t('Your medication')}</Text>
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
         <TouchableOpacity style={[hs.row, hs.rowDivider]} onPress={() => router.push('/genetic-profile')}>
-          <Ionicons name="people-outline" size={18} color={Colors.gold} />
           <Text style={hs.rowTitle}>{t('What runs in your family')}</Text>
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
         <TouchableOpacity style={[hs.row, hs.rowDivider]} onPress={() => router.push('/files')}>
-          <Ionicons name="folder-open-outline" size={18} color={Colors.gold} />
           <Text style={hs.rowTitle}>{t('Your files')}</Text>
           <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
         </TouchableOpacity>

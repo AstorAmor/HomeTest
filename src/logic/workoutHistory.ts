@@ -13,6 +13,7 @@ export interface LoggedWorkout {
   id: string;
   fecha: string;
   type: 'strength' | 'cardio' | 'mobility' | 'sport';
+  sport?: string; // con 'sport' («Otro»): qué deporte, si se apuntó (src/logic/workoutSports.ts)
   minutes: number;
   intensity: 'easy' | 'moderate' | 'hard';
 }
@@ -62,7 +63,7 @@ export function workoutHistory(programs: Pick<WorkoutProgram, 'id' | 'title' | '
   const times = sessions.map((s) => Date.parse(s.at));
   const others: HistoryEntry[] = logged
     .filter((w) => !times.some((t) => Math.abs(t - Date.parse(w.fecha)) < SAME_MS))
-    .map((w) => ({ kind: 'logged' as const, key: w.id, at: w.fecha, type: w.type, minutes: w.minutes, intensity: w.intensity }));
+    .map((w) => ({ kind: 'logged' as const, key: w.id, at: w.fecha, type: w.type, ...(w.sport ? { sport: w.sport } : {}), minutes: w.minutes, intensity: w.intensity }));
   return [...sessions, ...others].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }
 

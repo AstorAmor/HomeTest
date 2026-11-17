@@ -1,18 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors, withAlpha } from '@/constants/colors';
-import { CatalogTest, findTest, formatPrice, localizeTest, testIcon, totalPrice } from '@/data/testCatalog';
+import { FButton, FLink } from '@/components/fine/FineForm';
+import { PathEmblem } from '@/components/fine/RoleEmblem';
+import { CHECK_PATH } from '@/components/PlanComparison';
+import { CatalogTest, findTest, formatPrice, localizeTest, totalPrice } from '@/data/testCatalog';
 import { t } from '@/i18n';
 import { getOrderStatus, startCheckout } from '@/data/orders';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 type Stage = 'review' | 'starting' | 'simulated' | 'confirming' | 'paid' | 'pending' | 'cancelled' | 'error';
+
+// Los dibujos a línea del resultado (24 × 24, como los de fine/RoleEmblem): un reloj para «pendiente» y una × para
+// «cancelado» o «ha fallado»; la marca de hecho es la de las tablas de suscripción (CHECK_PATH)
+const CLOCK_PATH = 'M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16zM12 8v4.5l3 2';
+const CROSS_PATH = 'M7.5 7.5l9 9M16.5 7.5l-9 9';
 
 const findProduct = (id?: string): CatalogTest | undefined => {
   const p = id ? findTest(id) : undefined;
@@ -23,6 +29,9 @@ const findProduct = (id?: string): CatalogTest | undefined => {
 // nunca ve la tarjeta) y espera a que el webhook confirme el cobro. Sin Revolut (o en
 // modo demo) muestra un pago SIMULADO que no cobra nada. Las pruebas sin precio decidido no llegan
 // al servidor (no las vende): se simula la solicitud y no se cobra nada.
+// En el lenguaje fino (src/theme/fine.ts) desde el 2026-11-17: lo que se pide en filas con una línea fina y el total
+// como cifra ligera, sin iconos; la simulación en una tarjeta casi transparente con borde de oro y el resultado con un
+// dibujo a línea en un aro fino (jade si ha ido bien), en lugar del círculo relleno.
 export const CheckoutScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string; ids?: string; status?: string; order_id?: string }>();
@@ -81,7 +90,7 @@ export const CheckoutScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScreenHeader title={t('Checkout')} showBack />
-        <Text style={styles.body}>{t('This product is not available.')}</Text>
+        <Text style={[styles.body, styles.pad]}>{t('This product is not available.')}</Text>
       </SafeAreaView>
     );
   }
@@ -94,158 +103,141 @@ export const CheckoutScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={total == null ? t('Your request') : t('Checkout')} showBack />
 
-        {items.length > 1 && !done && (
-          <View style={styles.card}>
-            {items.map((p) => (
-              <View key={p.id} style={styles.itemRow}>
-                <View style={styles.icon}>
-                  <MaterialCommunityIcons name={testIcon(p) as any} size={20} color={Colors.accent} />
+        <View style={styles.pad}>
+          {/* Varias pruebas juntas (desde el buscador): una fila por prueba con su precio y, debajo, el total */}
+          {items.length > 1 && !done && (
+            <View style={styles.list}>
+              {items.map((p) => (
+                <View key={p.id} style={fine.row}>
+                  <View style={styles.flex}>
+                    <Text style={fine.rowTitle}>{p.name}</Text>
+                    <Text style={fine.rowSub}>{t('Sample: {what}', { what: p.sample })}</Text>
+                  </View>
+                  <Text style={[fine.rowValue, p.price == null && styles.tbd]}>{showPrice(p.price)}</Text>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{p.name}</Text>
-                  <Text style={styles.small}>{t('Sample: {what}', { what: p.sample })}</Text>
-                </View>
-                <Text style={styles.itemPrice}>{showPrice(p.price)}</Text>
+              ))}
+              {total != null && <Text style={styles.small}>{t('One-off payment')}</Text>}
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>{t('Total')}</Text>
+                <Text style={[styles.total, total == null && styles.totalTbd]}>{showPrice(total)}</Text>
               </View>
-            ))}
-            {total != null && <Text style={styles.small}>{t('One-off payment')}</Text>}
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{t('Total')}</Text>
-              <Text style={styles.total}>{showPrice(total)}</Text>
             </View>
-          </View>
-        )}
+          )}
 
-        {items.length === 1 && product && !done && (
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <View style={styles.icon}>
-                <MaterialCommunityIcons name={testIcon(product) as any} size={20} color={Colors.accent} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{product.name}</Text>
-                <Text style={styles.small}>{product.perYear
-                    ? t('Annual subscription · renews every year')
-                    : product.price == null
-                      ? t('Sample: {what}', { what: product.sample })
-                      : t('One-off payment')}</Text>
-              </View>
-            </View>
-            {product.includes.map((i) => (
-              <View key={i} style={styles.include}>
-                <Ionicons name="checkmark" size={14} color={Colors.accent} />
-                <Text style={styles.includeText}>{i}</Text>
-              </View>
-            ))}
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>{t('Total')}</Text>
-              <Text style={styles.total}>
-                {showPrice(product.price)}
-                {product.perYear && product.price != null ? <Text style={styles.small}> {t('/year')}</Text> : null}
+          {/* Una sola prueba o una suscripción: su nombre, qué incluye con puntos y el total */}
+          {items.length === 1 && product && !done && (
+            <View>
+              <Text style={styles.name}>{product.name}</Text>
+              <Text style={styles.small}>
+                {product.perYear
+                  ? t('Annual subscription · renews every year')
+                  : product.price == null
+                    ? t('Sample: {what}', { what: product.sample })
+                    : t('One-off payment')}
               </Text>
+              <Text style={styles.label}>{t("What's included")}</Text>
+              {product.includes.map((i) => (
+                <View key={i} style={styles.dotRow}>
+                  <View style={styles.dot} />
+                  <Text style={styles.dotText}>{i}</Text>
+                </View>
+              ))}
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>{t('Total')}</Text>
+                <Text style={[styles.total, product.price == null && styles.totalTbd]}>
+                  {showPrice(product.price)}
+                  {product.perYear && product.price != null ? <Text style={styles.unit}> {t('/year')}</Text> : null}
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {(stage === 'review' || stage === 'starting') && total == null ? (
-          <View style={styles.secure}>
-            <Ionicons name="information-circle-outline" size={14} color={Colors.textSecondary} />
-            <Text style={styles.small}>
+          {/* Sin precio todavía, o el pago seguro: una nota apagada, sin icono */}
+          {(stage === 'review' || stage === 'starting') && total == null ? (
+            <Text style={styles.note}>
               {product?.perYear
                 ? t("This subscription doesn't have a price yet. You can simulate the request: nothing is charged and no order is created.")
                 : t("This test doesn't have a price yet. You can simulate the request: nothing is charged and no order is created.")}
             </Text>
-          </View>
-        ) : stage === 'review' || stage === 'starting' ? (
-          <View style={styles.secure}>
-            <Ionicons name="lock-closed" size={14} color={Colors.textSecondary} />
-            <Text style={styles.small}>
+          ) : stage === 'review' || stage === 'starting' ? (
+            <Text style={styles.note}>
               {t("You'll pay on Revolut's secure page (card, Apple Pay, Google Pay or Revolut Pay). Kuova never sees or stores your card details.")}
             </Text>
-          </View>
-        ) : null}
+          ) : null}
 
-        {isSimulation && (
-          <View style={[styles.card, styles.simCard]}>
-            <Text style={styles.simTitle}>{total == null ? t('Request simulation') : t('Payment simulation')}</Text>
-            <Text style={styles.body}>
-              {total == null
-                ? t('When the price is decided, this is where you will confirm it and pay. Nothing will be charged.')
-                : t("Payments aren't switched on yet, so this is where Revolut's secure payment page will open. Nothing will be charged.")}
-            </Text>
-            <TouchableOpacity style={styles.cta} onPress={() => setStage('paid')}>
-              <Text style={styles.ctaText}>{total == null ? t('Simulate the request') : t('Simulate successful payment')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setStage('cancelled')}>
-              <Text style={styles.link}>{total == null ? t('Cancel') : t('Simulate cancelled payment')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {stage === 'confirming' && (
-          <View style={styles.result}>
-            <ActivityIndicator color={Colors.accent} />
-            <Text style={styles.body}>{t('Confirming your payment…')}</Text>
-          </View>
-        )}
-
-        {done && (
-          <View style={styles.result}>
-            <View style={[styles.resultIcon, stage !== 'paid' && { backgroundColor: Colors.cardBorder }]}>
-              <Ionicons
-                name={stage === 'paid' ? 'checkmark' : stage === 'pending' ? 'time-outline' : 'close'}
-                size={32}
-                color={stage === 'paid' ? Colors.background : Colors.textPrimary}
-              />
+          {isSimulation && (
+            <View style={styles.sim}>
+              <Text style={styles.simTitle}>{total == null ? t('Request simulation') : t('Payment simulation')}</Text>
+              <Text style={styles.body}>
+                {total == null
+                  ? t('When the price is decided, this is where you will confirm it and pay. Nothing will be charged.')
+                  : t("Payments aren't switched on yet, so this is where Revolut's secure payment page will open. Nothing will be charged.")}
+              </Text>
+              <FButton label={total == null ? t('Simulate the request') : t('Simulate successful payment')} onPress={() => setStage('paid')} style={styles.simCta} />
+              <FLink muted label={total == null ? t('Cancel') : t('Simulate cancelled payment')} onPress={() => setStage('cancelled')} />
             </View>
-            <Text style={styles.resultTitle}>
-              {stage === 'paid'
-                ? total == null
-                  ? t('Request simulated')
-                  : product?.perYear
-                    ? t('Welcome to Kuova!')
-                    : t('Order confirmed')
-                : stage === 'pending'
-                  ? t('Payment received')
-                  : stage === 'cancelled'
-                    ? total == null
-                      ? t('Request cancelled')
-                      : t('Payment cancelled')
-                    : t('Payment failed')}
-            </Text>
-            <Text style={[styles.body, { textAlign: 'center' }]}>
-              {stage === 'paid'
-                ? simulated
+          )}
+
+          {stage === 'confirming' && (
+            <View style={styles.result}>
+              <ActivityIndicator color={FINE.jade} />
+              <Text style={[styles.body, styles.center]}>{t('Confirming your payment…')}</Text>
+            </View>
+          )}
+
+          {done && (
+            <View style={styles.result}>
+              <PathEmblem
+                d={stage === 'paid' ? CHECK_PATH : stage === 'pending' ? CLOCK_PATH : CROSS_PATH}
+                size={72}
+                glow={stage === 'paid'}
+                color={stage === 'paid' ? FINE.jade : FINE.mute}
+              />
+              <Text style={styles.resultTitle}>
+                {stage === 'paid'
                   ? total == null
-                    ? t('Simulated request: nothing was charged and no order was created.')
-                    : t('Simulated payment: nothing was charged and no order was created.')
-                  : t("We'll send your first kit or book your appointment in the next few days.")
-                : stage === 'pending'
-                  ? t("We're waiting for the bank's confirmation. It will show up in the app in a few minutes.")
-                  : stage === 'cancelled'
-                    ? t('Nothing was charged. You can try again whenever you like.')
-                    : message}
-            </Text>
-          </View>
-        )}
+                    ? t('Request simulated')
+                    : product?.perYear
+                      ? t('Subscription active')
+                      : t('Order confirmed')
+                  : stage === 'pending'
+                    ? t('Payment received')
+                    : stage === 'cancelled'
+                      ? total == null
+                        ? t('Request cancelled')
+                        : t('Payment cancelled')
+                      : t('Payment failed')}
+              </Text>
+              <Text style={[styles.body, styles.center]}>
+                {stage === 'paid'
+                  ? simulated
+                    ? total == null
+                      ? t('Simulated request: nothing was charged and no order was created.')
+                      : t('Simulated payment: nothing was charged and no order was created.')
+                    : t("We'll send your first kit or book your appointment in the next few days.")
+                  : stage === 'pending'
+                    ? t("We're waiting for the bank's confirmation. It will show up in the app in a few minutes.")
+                    : stage === 'cancelled'
+                      ? t('Nothing was charged. You can try again whenever you like.')
+                      : message}
+              </Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       {(stage === 'review' || stage === 'starting') && product && (
-        <TouchableOpacity style={styles.bottomCta} onPress={pay} disabled={stage === 'starting'}>
-          {stage === 'starting' ? (
-            <ActivityIndicator color={Colors.background} />
-          ) : (
-            <Text style={styles.ctaText}>{total == null ? t('Request') : t('Pay {price}', { price: formatPrice(total) })}</Text>
-          )}
-        </TouchableOpacity>
+        <View style={styles.footer}>
+          <FButton label={total == null ? t('Request') : t('Pay {price}', { price: formatPrice(total) })} onPress={pay} busy={stage === 'starting'} />
+        </View>
       )}
       {done && (
-        <TouchableOpacity
-          style={styles.bottomCta}
-          onPress={() => (stage === 'cancelled' || stage === 'error' ? setStage('review') : router.back())}
-        >
-          <Text style={styles.ctaText}>{stage === 'cancelled' || stage === 'error' ? t('Try again') : t('Done')}</Text>
-        </TouchableOpacity>
+        <View style={styles.footer}>
+          <FButton
+            label={stage === 'cancelled' || stage === 'error' ? t('Try again') : t('Done')}
+            onPress={() => (stage === 'cancelled' || stage === 'error' ? setStage('review') : router.back())}
+          />
+        </View>
       )}
     </SafeAreaView>
   );
@@ -254,51 +246,39 @@ export const CheckoutScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 14,
-    gap: 6,
-  },
-  row: { flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 8 },
-  itemRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 6 },
-  itemPrice: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, justifyContent: 'center', alignItems: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  small: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, flexShrink: 1 },
-  include: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  includeText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flex: 1 },
+  pad: { paddingHorizontal: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  list: { borderTopWidth: 1, borderTopColor: FINE.line },
+  tbd: { color: FINE.mute, fontSize: 13 },
+  name: { ...ff('medium'), color: FINE.ivory, fontSize: 19, lineHeight: 25 },
+  small: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, marginTop: 4 },
+  label: { ...fine.kicker, marginTop: 18, marginBottom: 4 },
+  dotRow: { flexDirection: 'row', gap: 10, paddingVertical: 2 },
+  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: FINE.mute, marginTop: 8 },
+  dotText: { flex: 1, ...ff('regular'), color: '#CFD6CF', fontSize: 13.5, lineHeight: 19 },
+  // El total: una raya fina encima y la cifra grande y ligera
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
+    gap: 12,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-    marginTop: 10,
+    borderTopColor: FINE.rule,
+    marginTop: 16,
     paddingTop: 12,
   },
-  totalLabel: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  total: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
-  secure: { flexDirection: 'row', gap: 8, marginHorizontal: 24, alignItems: 'flex-start' },
-  simCard: { borderColor: withAlpha(Colors.amber, 0.55), gap: 10 },
-  simTitle: { color: Colors.amber, fontSize: 13, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
-  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 4 },
-  cta: { backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
-  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  link: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center', textDecorationLine: 'underline', paddingVertical: 4 },
-  result: { alignItems: 'center', gap: 12, paddingHorizontal: 28, marginTop: 40 },
-  resultIcon: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.accent, justifyContent: 'center', alignItems: 'center' },
-  resultTitle: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, textAlign: 'center' },
-  bottomCta: {
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
+  totalLabel: { ...fine.kicker },
+  total: { ...fine.num, fontSize: 26, lineHeight: 32, flexShrink: 1, textAlign: 'right' },
+  totalTbd: { ...ff('regular'), color: FINE.mute, fontSize: 15, lineHeight: 20 },
+  unit: { ...ff('regular'), color: FINE.mute, fontSize: 12 },
+  note: { ...fine.note, marginTop: 16 },
+  // La simulación es un estado que hay que mirar: tarjeta casi transparente con borde de oro
+  sim: { ...fine.tile, padding: 14, borderColor: FINE.goldLine, marginTop: 18, gap: 8 },
+  simTitle: { ...fine.kicker, color: FINE.gold },
+  simCta: { marginTop: 4 },
+  body: { ...ff('regular'), color: '#CFD6CF', fontSize: 14, lineHeight: 20 },
+  center: { textAlign: 'center' },
+  result: { alignItems: 'center', gap: 12, paddingHorizontal: 8, marginTop: 36 },
+  resultTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 22, lineHeight: 28, textAlign: 'center' },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
 });

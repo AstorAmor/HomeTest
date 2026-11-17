@@ -1,19 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { FeaturePreview } from '@/components/FeaturePreview';
-import { Colors, withAlpha } from '@/constants/colors';
+import { SecHead } from '@/components/fine/Fine';
+import { FLink } from '@/components/fine/FineForm';
+import { measureStyles } from '@/components/fine/FineMeasure';
+import { SwitchRow, settingsStyles } from '@/components/settings/SettingsParts';
 import { AppSection, appPrefs, isSectionVisible, SECTION_OPTIONS, useAppPrefs } from '@/data/appPrefs';
-import { AppIcon } from '@/components/HealthIcons';
 import { FEATURE_GUIDE } from '@/data/featureGuide';
 import { t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, fine } from '@/theme/fine';
 
 // Guía de cada parte de la app: para qué sirve, qué haces tú, qué recibes, qué avisos manda y
 // una vista previa. ?id=<sección> abre una; sin id, todas.
+// Desde el 2026-11-17, en el lenguaje fino de Ajustes: sin tarjetas ni iconos; con todas, cada parte con su cabecera
+// pequeña; cada bloque con su etiqueta en mayúsculas apagada, el interruptor en una fila con línea fina y «Cómo lo
+// calculamos» como enlace en jade.
 export const FeatureGuideScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -23,8 +27,8 @@ export const FeatureGuideScreen = () => {
 
   const block = (label: string, text: string) => (
     <View style={styles.block}>
-      <Text style={styles.label}>{t(label)}</Text>
-      <Text style={styles.text}>{t(text)}</Text>
+      <Text style={fine.kicker}>{t(label)}</Text>
+      <Text style={measureStyles.p}>{t(text)}</Text>
     </View>
   );
 
@@ -32,43 +36,36 @@ export const FeatureGuideScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={one ? t(one.title) : t('How each part works')} showBack backFallback="/app-sections" />
-        {list.map((o) => {
-          const g = FEATURE_GUIDE[o.id as AppSection];
-          const on = isSectionVisible(prefs, o.id);
-          return (
-            <View key={o.id} style={styles.card}>
-              {!one && (
-                <View style={styles.titleRow}>
-                  <AppIcon name={o.icon} size={20} color={Colors.accent} />
-                  <Text style={styles.title}>{t(o.title)}</Text>
-                </View>
-              )}
-              <FeaturePreview section={o.id} />
-              {block('What it is for', g.what)}
-              {block('What you do', g.youDo)}
-              {block('What you get', g.youGet)}
-              {g.notifications && block('Notifications', `${t(g.notifications)} ${t('You can mute any of them.')}`)}
-              <View style={styles.switchRow}>
-                <Text style={styles.switchLabel}>{on ? t('On in your app') : t('Off in your app')}</Text>
-                <Switch
+        <View style={settingsStyles.body}>
+          {list.map((o, i) => {
+            const g = FEATURE_GUIDE[o.id as AppSection];
+            const on = isSectionVisible(prefs, o.id);
+            return (
+              <View key={o.id} style={styles.part}>
+                {!one && <SecHead title={t(o.title)} style={i === 0 ? settingsStyles.firstSec : undefined} />}
+                <FeaturePreview section={o.id} />
+                {block('What it is for', g.what)}
+                {block('What you do', g.youDo)}
+                {block('What you get', g.youGet)}
+                {g.notifications && block('Notifications', `${t(g.notifications)} ${t('You can mute any of them.')}`)}
+                <SwitchRow
+                  title={on ? t('On in your app') : t('Off in your app')}
                   value={on}
                   onValueChange={(v) => appPrefs.setSectionVisible(o.id, v)}
-                  trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
-                  thumbColor={on ? Colors.accent : Colors.textMuted}
+                  style={styles.switchRow}
+                  last={!g.evidenceTopic}
                 />
+                {g.evidenceTopic && (
+                  <FLink
+                    label={t('How we calculate it')}
+                    onPress={() => router.push({ pathname: '/evidence', params: { topic: g.evidenceTopic! } })}
+                    style={settingsStyles.linkLeft}
+                  />
+                )}
               </View>
-              {g.evidenceTopic && (
-                <TouchableOpacity
-                  style={styles.howRow}
-                  onPress={() => router.push({ pathname: '/evidence', params: { topic: g.evidenceTopic! } })}
-                >
-                  <Ionicons name="information-circle-outline" size={16} color={Colors.accent} />
-                  <Text style={styles.how}>{t('How we calculate it')}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          );
-        })}
+            );
+          })}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -77,30 +74,8 @@ export const FeatureGuideScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
-    marginHorizontal: 20,
-    marginBottom: 14,
-    gap: 12,
-  },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  block: { gap: 2 },
-  label: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase' },
-  text: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-    paddingTop: 10,
-  },
-  switchLabel: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  howRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  how: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  part: { gap: 12 },
+  block: { gap: 3 },
+  // El interruptor, con una línea fina encima
+  switchRow: { borderTopWidth: 1, borderTopColor: FINE.line },
 });

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch, Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Ionicons } from '@expo/vector-icons';
 import { WorkoutModal } from '@/components/workouts/WorkoutModal';
+import { FOption } from '@/components/fine/FineForm';
 import {
   allowBellOnLock,
   BELL_TONES,
@@ -14,10 +14,11 @@ import {
   ringBell,
 } from '@/data/workouts/bell';
 import { t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Hoja «Sonido» del entrenamiento: quitar el timbre, elegir tono (suena al tocarlo) y qué pasa con
 // la pantalla bloqueada en este móvil (permiso de avisos, APK con los tonos).
+// Con el lenguaje fino (2026-11-16): los tonos en filas con línea fina y el círculo de elegido a la derecha.
 export const BellSheet = ({
   visible,
   prefs,
@@ -44,30 +45,28 @@ export const BellSheet = ({
             onChange({ on });
             if (on) ringBell(prefs.tone);
           }}
-          trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
-          thumbColor={prefs.on ? Colors.accent : Colors.textMuted}
+          trackColor={{ false: 'rgba(240,239,230,0.14)', true: FINE.emerald }}
+          thumbColor={prefs.on ? FINE.ivory : FINE.mute}
+          accessibilityLabel={t('Sound when the countdown ends')}
         />
       </View>
       <Text style={styles.hint}>
         {t('Tap a sound to hear it.')} {t('During the session the screen stays on, so the bell can ring.')}
       </Text>
-      {BELL_TONES.map((x) => {
+      {BELL_TONES.map((x, i) => {
         const sel = prefs.on && x.id === prefs.tone;
         return (
-          <TouchableOpacity
+          <FOption
             key={x.id}
-            style={[styles.tone, sel && styles.toneOn]}
+            title={t(x.label)}
+            on={sel}
+            last={i === BELL_TONES.length - 1}
+            left={<Ionicons name="volume-high-outline" size={17} color={sel ? FINE.jade : FINE.mute} />}
             onPress={() => {
               onChange({ tone: x.id, on: true });
               ringBell(x.id);
             }}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: sel }}
-          >
-            <Ionicons name={sel ? 'radio-button-on' : 'radio-button-off'} size={20} color={sel ? Colors.accent : Colors.textMuted} />
-            <Text style={[styles.toneText, sel && styles.toneTextOn]}>{t(x.label)}</Text>
-            <MaterialCommunityIcons name="volume-high" size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
+          />
         );
       })}
       {prefs.on && lock && <LockNote status={lock} tone={prefs.tone} onStatus={setLock} />}
@@ -88,16 +87,16 @@ const LockNote = ({ status, tone, onStatus }: { status: BellLockStatus; tone: Be
   return (
     <View style={styles.note}>
       <View style={styles.noteHead}>
-        <Ionicons name="lock-closed-outline" size={15} color={Colors.textSecondary} />
+        <Ionicons name="lock-closed-outline" size={15} color={FINE.mute} />
         <Text style={styles.noteText}>{t(text[status])}</Text>
       </View>
       {status === 'ask' && (
-        <TouchableOpacity style={styles.noteButton} onPress={() => allowBellOnLock(tone).then(onStatus)}>
+        <TouchableOpacity style={styles.noteButton} onPress={() => allowBellOnLock(tone).then(onStatus)} accessibilityRole="button">
           <Text style={styles.noteButtonText}>{t('Allow notifications')}</Text>
         </TouchableOpacity>
       )}
       {status === 'blocked' && (
-        <TouchableOpacity style={styles.noteButton} onPress={openPhoneSettings}>
+        <TouchableOpacity style={styles.noteButton} onPress={openPhoneSettings} accessibilityRole="button">
           <Text style={styles.noteButtonText}>{t('Open settings')}</Text>
         </TouchableOpacity>
       )}
@@ -105,7 +104,7 @@ const LockNote = ({ status, tone, onStatus }: { status: BellLockStatus; tone: Be
       {status === 'on' && Platform.OS === 'android' && lockToneAvailable() && (
         <Text style={styles.noteSmall}>
           {t('If it rings late with the screen locked, allow "Alarms & reminders" for Kuova in your phone settings.')}{' '}
-          <Text style={styles.noteLink} onPress={openPhoneSettings}>
+          <Text style={styles.noteLink} onPress={openPhoneSettings} accessibilityRole="link">
             {t('Open settings')}
           </Text>
         </Text>
@@ -115,29 +114,14 @@ const LockNote = ({ status, tone, onStatus }: { status: BellLockStatus; tone: Be
 };
 
 const styles = StyleSheet.create({
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 },
-  switchText: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginBottom: 10 },
-  tone: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 8,
-  },
-  toneOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  toneText: { flex: 1, color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
-  toneTextOn: { color: Colors.textPrimary, fontFamily: INTER.medium },
-  note: { marginTop: 8, gap: 10 },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6, minHeight: 44 },
+  switchText: { ...fine.rowTitle, flex: 1 },
+  hint: { ...fine.note, marginTop: 0, marginBottom: 6 },
+  note: { marginTop: 14, gap: 10 },
   noteHead: { flexDirection: 'row', gap: 8 },
-  noteText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
-  noteButton: { alignSelf: 'flex-start', borderWidth: 1, borderColor: Colors.accent, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
-  noteButtonText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  noteSmall: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
-  noteLink: { color: Colors.accent, fontFamily: INTER.medium },
+  noteText: { ...ff('regular'), flex: 1, color: FINE.mute, fontSize: 13, lineHeight: 18 },
+  noteButton: { alignSelf: 'flex-start', borderWidth: 1, borderColor: FINE.jadeLine, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
+  noteButtonText: { ...ff('regular'), color: FINE.jade, fontSize: 14 },
+  noteSmall: { ...ff('regular'), color: FINE.mute, fontSize: 12, lineHeight: 17 },
+  noteLink: { ...ff('regular'), color: FINE.jade },
 });

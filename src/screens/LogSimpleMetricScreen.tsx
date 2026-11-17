@@ -1,16 +1,19 @@
-import { dateLocale, getLang, num, t } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { DateTimeSheet } from '@/components/DateTimeSheet';
-import { Colors, withAlpha } from '@/constants/colors';
-import { AppIcon } from '@/components/HealthIcons';
-import { WheelPicker } from '@/components/WheelPicker';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
+import { FRow } from '@/components/fine/Fine';
+import { CloseButton, FineButton, measureStyles } from '@/components/fine/FineMeasure';
+import { FineNumber, useNumbersReady } from '@/components/fine/FineNumber';
 import { createMetricRepository } from '@/data/metricRepository';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString(dateLocale(), { day: '2-digit', month: 'short', year: 'numeric' });
@@ -21,46 +24,41 @@ const formatTime = (date: Date) =>
 interface LogSimpleMetricScreenProps {
   title: string;
   unit: string;
-  icon: string; // nombre de AppIcon
-  color: string;
+  // El icono y el color de antes (círculo de color sobre el título): en el estilo fino ya no se pintan
+  icon?: string;
+  color?: string;
   repo: ReturnType<typeof createMetricRepository<SimpleMetricEntry>>;
-  // Ruedas: parte entera de min a max y, si decimals, una rueda más con el decimal
+  // De min a max y, si decimals, con un decimal
   min: number;
   max: number;
   decimals?: boolean;
   initial: number; // valor de partida si aún no hay ninguna medición
   withTime?: boolean; // false: solo la fecha (p. ej. el VO2max, que no depende de la hora)
+  hint?: string; // una línea apagada bajo la fecha: cómo se toma (clave en inglés para t())
 }
 
-// Apunte de una medición de un solo valor (colesterol, cortisol, VO2max) con ruedas, como la
-// glucosa y la tensión: una para la parte entera y, si hace falta, otra para el decimal.
+// Apunte de una medición de un solo valor (colesterol, cortisol, VO2max). Desde el 2026-11-16, como la glucosa, el
+// peso y la tensión (el fundador: «me quedo con +- y que se pueda introducir con teclado»): en lugar de las ruedas,
+// la cifra grande y ligera con «− +» (FineNumber: de uno en uno, o de 0,1 en 0,1 si lleva decimal, y dejándolo
+// pulsado, al rato más deprisa; tocarla abre el teclado), la fecha (y la hora) en filas con línea fina y un solo
+// botón de Guardar abajo, que sube con el teclado. Título a la izquierda con la × de cerrar, fuera de lo que se
+// desplaza.
 
-export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max, decimals, initial, withTime = true }: LogSimpleMetricScreenProps) => {
+export const LogSimpleMetricScreen = ({ title, unit, repo, min, max, decimals, initial, withTime = true, hint }: LogSimpleMetricScreenProps) => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditing = !!id;
+  const places = decimals ? 1 : 0;
+  const clampValue = (v: number) => Math.round(Math.max(min, Math.min(max, v)) * 10 ** places) / 10 ** places;
 
   const [dateTime, setDateTime] = useState(new Date());
-  const WHOLE = Array.from({ length: max - min + 1 }, (_, i) => String(min + i));
-  const DEC = Array.from({ length: 10 }, (_, i) => String(i));
-  const split = (v: number) => {
-    const r = Math.round(Math.max(min, Math.min(max, v)) * 10) / 10;
-    return { whole: Math.floor(r) - min, dec: Math.round((r - Math.floor(r)) * 10) };
-  };
-  const [whole, setWhole] = useState(split(initial).whole);
-  const [dec, setDec] = useState(split(initial).dec);
-  const [wheelKey, setWheelKey] = useState(0);
-  const value = min + whole + (decimals ? dec / 10 : 0);
-  const setFrom = (v: number) => {
-    const w = split(v);
-    setWhole(w.whole);
-    setDec(w.dec);
-    setWheelKey((k) => k + 1);
-  };
+  const [value, setValue] = useState(() => clampValue(initial));
+  const setFrom = (v: number) => setValue(clampValue(v));
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
   const [saving, setSaving] = useState(false);
+  const numbers = useNumbersReady();
 
-  // Al editar, las ruedas empiezan en ese valor; si no, en la última medición
+  // Al editar, la cifra empieza en ese valor; si no, en la última medición
   useEffect(() => {
     repo.getAll().then((entries) => {
       const existing = id ? entries.find((e) => e.id === id) : undefined;
@@ -73,6 +71,12 @@ export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // La fecha y la hora se eligen con el teclado cerrado
+  const openPicker = (mode: 'date' | 'time') => {
+    Keyboard.dismiss();
+    setPickerMode(mode);
+  };
 
   const onPickerChange = (_event: unknown, selected?: Date) => {
     if (Platform.OS === 'android') setPickerMode(null);
@@ -89,7 +93,7 @@ export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max
     });
   };
 
-  const isValid = value >= min;
+  const isValid = value >= min && numbers.ready;
 
   const handleSave = async () => {
     if (!isValid) return;
@@ -121,68 +125,41 @@ export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={() => router.back()}>
-          <Ionicons name="close" size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.circleButton, isValid ? { backgroundColor: color } : undefined]}
-          onPress={handleSave}
-          disabled={!isValid || saving}
-        >
-          <Ionicons name="checkmark" size={22} color={Colors.background} />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title={t(title)} right={<CloseButton onPress={() => router.back()} />} />
 
-      <View style={styles.header}>
-        <View style={[styles.iconBadge, { backgroundColor: withAlpha(color, 0.14) }]}>
-          <AppIcon name={icon} size={26} color={color} />
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FineNumber
+          value={value}
+          onChange={setFrom}
+          min={min}
+          max={max}
+          decimals={places}
+          step={decimals ? 0.1 : 1}
+          fastStep={decimals ? 1 : 5}
+          unit={unit}
+          label={t(title)}
+          onValidChange={numbers.watch('value')}
+          style={styles.number}
+        />
+
+        <View style={styles.rows}>
+          <FRow title={t('Date')} value={formatDate(dateTime)} onPress={() => openPicker('date')} last={!withTime} />
+          {withTime && <FRow title={t('Time')} value={formatTime(dateTime)} onPress={() => openPicker('time')} last />}
         </View>
-        <Text style={styles.title}>{t(title)}</Text>
-      </View>
+        {hint ? <Text style={fine.note}>{t(hint)}</Text> : null}
+      </KeyboardAwareScrollView>
 
-      <View style={styles.list}>
-        <TouchableOpacity style={styles.row} onPress={() => setPickerMode('date')}>
-          <Text style={styles.rowLabel}>{t('Date')}</Text>
-          <View style={styles.rowValuePill}>
-            <Text style={styles.rowValueText}>{formatDate(dateTime)}</Text>
-          </View>
-        </TouchableOpacity>
-
-        {withTime && (
-          <TouchableOpacity style={styles.row} onPress={() => setPickerMode('time')}>
-            <Text style={styles.rowLabel}>{t('Time')}</Text>
-            <View style={styles.rowValuePill}>
-              <Text style={styles.rowValueText}>{formatTime(dateTime)}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-
-        <View style={[styles.row, styles.rowLast]}>
-          <Text style={styles.rowLabel}>{t(title)}</Text>
-          <Text style={styles.rowValuePlain}>
-            {num(decimals ? value.toFixed(1) : String(value))} {unit}
-          </Text>
+      <KeyboardFooter>
+        <View style={measureStyles.footer}>
+          <FineButton label={t('Save')} onPress={handleSave} disabled={!isValid || saving} />
+          {isEditing && (
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete} hitSlop={8} accessibilityRole="button">
+              <Ionicons name="trash-outline" size={15} color={FINE.mute} />
+              <Text style={styles.deleteText}>{t('Delete entry')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      </View>
-
-      <View style={styles.wheels} key={wheelKey}>
-        <WheelPicker items={WHOLE} selectedIndex={whole} onChange={setWhole} width={84} />
-        {decimals && (
-          <>
-            <Text style={styles.wheelComma}>{getLang() === 'en' ? '.' : ','}</Text>
-            <WheelPicker items={DEC} selectedIndex={dec} onChange={setDec} width={56} />
-          </>
-        )}
-        <Text style={styles.wheelUnit}>{unit}</Text>
-      </View>
-
-      {isEditing && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={16} color={Colors.danger} />
-          <Text style={styles.deleteButtonText}>{t('Delete entry')}</Text>
-        </TouchableOpacity>
-      )}
+      </KeyboardFooter>
 
       <DateTimeSheet mode={pickerMode} value={dateTime} onChange={onPickerChange} onClose={() => setPickerMode(null)} />
     </SafeAreaView>
@@ -190,92 +167,11 @@ export const LogSimpleMetricScreen = ({ title, unit, icon, color, repo, min, max
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  circleButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 24,
-  },
-  iconBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  title: {
-    color: Colors.textPrimary,
-    fontSize: 22,
-    fontFamily: INTER.medium,
-  },
-  list: {
-    marginHorizontal: 20,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  rowLast: {
-    borderBottomWidth: 0,
-  },
-  rowLabel: {
-    color: Colors.textSecondary,
-    fontFamily: INTER.regular, fontSize: 15,
-  },
-  rowValuePill: {
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  rowValueText: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontFamily: INTER.medium,
-  },
-  rowValuePlain: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  wheelComma: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium, marginLeft: 8 },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    paddingVertical: 12,
-  },
-  deleteButtonText: {
-    color: Colors.danger,
-    fontSize: 13,
-    fontFamily: INTER.medium,
-  },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  // flexGrow: la ScrollView ocupa todo el hueco, así que tocar en cualquier sitio libre cierra el teclado
+  content: { flexGrow: 1, paddingHorizontal: 20, paddingBottom: 24 },
+  number: { marginTop: 26, marginBottom: 18 },
+  rows: { borderTopWidth: 1, borderTopColor: FINE.line },
+  deleteButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12, paddingVertical: 4 },
+  deleteText: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
 });

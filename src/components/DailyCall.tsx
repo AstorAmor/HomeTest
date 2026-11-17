@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { OnDark } from '@/constants/colors';
+import { t } from '@/i18n';
 import { INTER } from '@/theme/fine';
 
 // Móvil: la sala de Daily se abre en la ventana segura del navegador integrado (Chrome
@@ -30,16 +31,16 @@ export const DailyCall = ({ joinUrl, onClose, patientName }: { joinUrl: string; 
   return (
     <View style={styles.wrap}>
       <Ionicons name="videocam" size={44} color={OnDark.text} />
-      <Text style={styles.title}>{opened ? 'Video consultation in progress' : 'Opening the video…'}</Text>
+      <Text style={styles.title}>{opened ? t('Video consultation in progress') : t('Opening the video…')}</Text>
       {patientName ? <Text style={styles.sub}>{patientName}</Text> : null}
       <TouchableOpacity style={styles.btn} onPress={open}>
         <Ionicons name="enter-outline" size={18} color="#111" />
-        <Text style={styles.btnText}>{opened ? 'Back to the call' : 'Join video'}</Text>
+        <Text style={styles.btnText}>{opened ? t('Back to the call') : t('Join video')}</Text>
       </TouchableOpacity>
       {onClose && (
         <TouchableOpacity style={styles.end} onPress={onClose}>
           <Ionicons name="call" size={20} color="#FFFFFF" style={{ transform: [{ rotate: '135deg' }] }} />
-          <Text style={styles.endText}>End consultation</Text>
+          <Text style={styles.endText}>{t('End consultation')}</Text>
         </TouchableOpacity>
       )}
     </View>

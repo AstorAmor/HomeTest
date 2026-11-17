@@ -10,11 +10,14 @@ import { useRouter } from 'expo-router';
 import { MetasToday } from '@/components/metas/MetasToday';
 import { BadgesSection } from '@/components/BadgesSection';
 import { GoalEmblem } from '@/components/fine/GoalEmblem';
+import { goalHref } from '@/screens/GoalDetailScreen';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { FRow, LockTag, Pill, SecHead, TabHead } from '@/components/fine/Fine';
 import { useMetas } from '@/hooks/useMetas';
-import { GOALS, GOALS_MAX, dayMonth, selectedIds } from '@/logic/metas';
+import { GOALS, GOALS_MAX, commitProgress, dateOfKey, dayKeyOf, dayMonth, selectedIds } from '@/logic/metas';
+import { CometLine } from '@/components/CometLine';
+import { Ionicons } from '@expo/vector-icons';
 import { useSections } from '@/data/appPrefs';
 import { useFeature } from '@/data/access';
 import { computeAchievements } from '@/data/achievements';
@@ -25,7 +28,7 @@ import { planVersionRepository } from '@/data/planVersions';
 import { specialistPlans } from '@/logic/specialistPlan';
 import { useDailyWearables } from '@/wearables/dailySeries';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { num, t } from '@/i18n';
+import { dateLocale, num, t } from '@/i18n';
 import { FINE, ff, fine } from '@/theme/fine';
 
 export const PlanScreen = () => {
@@ -79,7 +82,15 @@ function GoalsRow() {
           {goals.map((g) => {
             const lg = data.lab.find((x) => x.key === g);
             return (
-              <TouchableOpacity key={g} style={[fine.tile, styles.goal]} onPress={() => router.push('/metas')} activeOpacity={0.8}>
+              // Cada objetivo abre su pantalla, con lo que lo mide (fundador, 2026-11-16; antes, todos a /metas)
+              <TouchableOpacity
+                key={g}
+                style={[fine.tile, styles.goal]}
+                onPress={() => router.push(goalHref(g))}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={lg ? `${t(GOALS[g].name)}: ${num(lg.reading.value)} ${lg.reading.unit}` : t(GOALS[g].name)}
+              >
                 {/* Su emblema: un dibujo a línea en un círculo con luz (fundador, 2026-11-16) */}
                 <GoalEmblem goal={g} lab={!!GOALS[g].lab} size={40} />
                 <Text style={styles.goalName} numberOfLines={3}>
@@ -125,11 +136,7 @@ function CommitBlock() {
       <SecHead title={t('Your commitment')} />
       {selectedIds(s).length > 0 &&
         (s.commit ? (
-          <FRow
-            title={t('Commitment signed on {date}, for {n} weeks', { date: dayMonth(s.commit.day), n: s.commit.weeks })}
-            onPress={() => router.push('/metas-firmar')}
-            last={!specialist}
-          />
+          <CommitTimeline commit={s.commit} onPress={() => router.push('/metas-firmar')} last={!specialist} />
         ) : (
           <View style={{ alignItems: 'flex-start', paddingVertical: 8 }}>
             <Pill label={t('Sign your commitment')} onPress={() => router.push('/metas-firmar')} />
@@ -144,6 +151,54 @@ function CommitBlock() {
         />
       ) : null}
     </View>
+  );
+}
+
+// Tu compromiso como línea temporal (fundador, 2026-11-16: «estaría bien que fuese una línea temporal de cuándo
+// empezó y cuándo termina y por dónde vas»): arriba la semana en la que estás y lo que queda; debajo, una línea
+// cometa en oro (el de «Semana») del día que firmaste hasta hoy, con una marca por semana; y bajo los extremos, el
+// día que empezó y el que termina. Se toca para ver o cambiar el compromiso.
+const COMMIT_TONES = ['#93713A', '#CFAE6C', '#F3E0AE'];
+function CommitTimeline({ commit, onPress, last }: { commit: { day: string; weeks: number }; onPress: () => void; last?: boolean }) {
+  const p = commitProgress(commit, dayKeyOf(new Date()));
+  const short = (k: string) => dateOfKey(k).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }).replace('.', '');
+  const status = !p.started
+    ? t('Starts on {date}', { date: dayMonth(commit.day) })
+    : p.finished
+      ? t('Finished on {date}', { date: dayMonth(p.end) })
+      : p.left === 0
+        ? t('last day')
+        : p.left === 1
+          ? t('1 day left')
+          : t('{n} days left', { n: p.left });
+  const head = p.finished ? t('{n} weeks', { n: commit.weeks }) : t('Week {n} of {total}', { n: p.week, total: commit.weeks });
+  return (
+    <TouchableOpacity
+      style={[styles.commit, !last && styles.commitLine]}
+      onPress={onPress}
+      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={`${t('Your commitment')}: ${head}, ${status}. ${short(commit.day)} – ${short(p.end)}`}
+    >
+      <View style={styles.commitHead}>
+        <Text style={styles.commitWeek}>{head}</Text>
+        <Text style={styles.commitLeft}>{status}</Text>
+        <Ionicons name="chevron-forward" size={15} color={FINE.mute} />
+      </View>
+      <View style={styles.commitTrack}>
+        <CometLine progress={p.fraction} colors={COMMIT_TONES} thickness={3.5} style={styles.commitComet} />
+        {/* Una marca por semana, de la firma al final */}
+        <View style={styles.commitTicks} pointerEvents="none">
+          {Array.from({ length: commit.weeks + 1 }, (_, i) => (
+            <View key={i} style={[styles.commitTick, i / commit.weeks <= p.fraction && styles.commitTickOn]} />
+          ))}
+        </View>
+      </View>
+      <View style={styles.commitEnds}>
+        <Text style={styles.commitEnd}>{short(commit.day)}</Text>
+        <Text style={styles.commitEnd}>{short(p.end)}</Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -216,4 +271,17 @@ const styles = StyleSheet.create({
   goal: { flex: 1, minHeight: 78, gap: 8 },
   goalName: { ...ff('medium'), color: FINE.ivory, fontSize: 14, lineHeight: 18 },
   goalFig: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, fontVariant: ['tabular-nums'] },
+  commit: { paddingTop: 12, paddingBottom: 14 },
+  commitLine: { borderBottomWidth: 1, borderBottomColor: FINE.line },
+  commitHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  commitWeek: { ...ff('medium'), flex: 1, color: FINE.ivory, fontSize: 15 },
+  commitLeft: { ...ff('regular'), color: FINE.mute, fontSize: 13, fontVariant: ['tabular-nums'] },
+  // La línea cometa deja sitio a su brillo a los lados: se saca ese margen para que vaya de borde a borde
+  commitTrack: { marginTop: 4 },
+  commitComet: { marginHorizontal: -8 },
+  commitTicks: { position: 'absolute', left: 0, right: 0, top: 13, flexDirection: 'row', justifyContent: 'space-between' },
+  commitTick: { width: 1, height: 6, backgroundColor: FINE.rule },
+  commitTickOn: { backgroundColor: 'rgba(216,185,120,0.55)' },
+  commitEnds: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
+  commitEnd: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
 });

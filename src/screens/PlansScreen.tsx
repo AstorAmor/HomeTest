@@ -54,7 +54,8 @@ const VersionCard = ({
     </TouchableOpacity>
     {open && (
       <View style={styles.items}>
-        {v.note ? <Text style={styles.note}>{v.note}</Text> : null}
+        {/* t(): la nota que pone la app («Updated from your uploaded test») se guarda en inglés; una escrita a mano sale tal cual */}
+        {v.note ? <Text style={styles.note}>{t(v.note)}</Text> : null}
         {v.items.map((it, i) => (
           <View key={`${it.title}-${i}`} style={styles.item}>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>

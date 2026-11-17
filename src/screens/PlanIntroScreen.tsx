@@ -10,9 +10,10 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import { AppIcon } from '@/components/HealthIcons';
 import { Colors, OnDark } from '@/constants/colors';
 import { buildPlan, PlanItem } from '@/data/planRepository';
 import { profileRepository } from '@/data/profileRepository';
@@ -100,7 +101,8 @@ export const PlanIntroScreen = () => {
                 nestedScrollEnabled
               >
                 <View style={styles.iconArea}>
-                  <MaterialCommunityIcons name={KIND_ART[item.kind].icon as any} size={Math.round(Math.min(110, height * 0.12))} color="rgba(255,255,255,0.95)" />
+                  {/* AppIcon: las pesas salen con el dibujo único de la app (fine/dumbbell.ts) */}
+                  <AppIcon name={`mci:${KIND_ART[item.kind].icon}`} size={Math.round(Math.min(110, height * 0.12))} color="rgba(255,255,255,0.95)" />
                 </View>
                 <Text style={styles.number}>{i + 1}</Text>
                 <Text style={styles.title}>{item.title}</Text>

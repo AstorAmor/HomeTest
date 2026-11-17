@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, SectionList, TouchableOpacity, Linki
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { formStyles } from '@/components/fine/FineForm';
 import { getAllCanonicalBiomarkers } from '@/knowledge/canonicalBiomarkers';
 import { getBiomarkerCodes } from '@/knowledge/standardCodes';
 import { CanonicalBiomarker, MeasurementType } from '@/types/knowledge';
@@ -11,10 +11,14 @@ import { getLang, t } from '@/i18n';
 import { catalogCardEs } from '@/i18n/catalogEs';
 import { BIOMARKER_CATEGORY_LABELS, biomarkerDisplayName } from '@/utils/biomarkerLabels';
 import { TAB, tabHref } from '@/constants/tabs';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Los datos de knowledge/ tienen nombres en español (canonical_name) e inglés (canonical_name_en);
 // la muestra y alguna unidad vienen en español: aquí se muestran en el idioma de la app.
+// En el lenguaje fino (src/theme/fine.ts) desde el 2026-11-17: la búsqueda en una casilla casi transparente, cada
+// categoría con su nombre pequeño en versalitas y cada biomarcador en una fila con una línea fina; abierta, sus datos
+// en filas de dos columnas y las fichas con su título pequeño. Sin etiquetas de color ni emojis: el tipo de medida va
+// en gris debajo del nombre, las limitaciones en oro y las referencias apagadas y subrayadas.
 const SAMPLE_EN: Record<string, string> = {
   Sangre: 'Blood',
   Orina: 'Urine',
@@ -33,13 +37,6 @@ const MEASUREMENT_LABEL: Record<MeasurementType, string> = {
   DERIVED: 'Calculated',
   SCORE: 'Score',
   UNKNOWN: 'Other',
-};
-
-const MEASUREMENT_COLOR: Record<MeasurementType, string> = {
-  MEASURED: Colors.accent,
-  DERIVED: Colors.warning,
-  SCORE: Colors.pulseAccent,
-  UNKNOWN: Colors.textMuted,
 };
 
 interface Section {
@@ -85,15 +82,16 @@ export const CatalogScreen = () => {
       <ScreenHeader title={t('Biomarker Catalog')} showBack backFallback={tabHref(TAB.you)} />
 
       <View style={styles.searchWrap}>
-        <Ionicons name="search" size={16} color={Colors.textMuted} />
+        <Ionicons name="search" size={15} color={FINE.mute} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[formStyles.input, styles.searchInput]}
           placeholder={t('Search biomarker...')}
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={FINE.mute}
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
           autoCorrect={false}
+          accessibilityLabel={t('Search biomarker...')}
         />
       </View>
 
@@ -103,19 +101,22 @@ export const CatalogScreen = () => {
         sections={sections}
         keyExtractor={(item) => item.canonical_id}
         contentContainerStyle={styles.listContent}
+        stickySectionHeadersEnabled={false}
         renderSectionHeader={({ section }) => (
-          <Text style={styles.sectionHeader}>{section.title}</Text>
+          <Text style={styles.sectionHeader} accessibilityRole="header">
+            {section.title}
+          </Text>
         )}
         renderItem={({ item }) => (
           <BiomarkerRow
             biomarker={item}
             expanded={expandedId === item.canonical_id}
-            onToggle={() =>
-              setExpandedId((id) => (id === item.canonical_id ? null : item.canonical_id))
-            }
+            onToggle={() => setExpandedId((id) => (id === item.canonical_id ? null : item.canonical_id))}
           />
         )}
         ListEmptyComponent={<Text style={styles.empty}>{t('No matches for “{q}”.', { q: query })}</Text>}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
@@ -128,51 +129,32 @@ interface BiomarkerRowProps {
   onToggle: () => void;
 }
 
+// La fila de un biomarcador: el nombre y el tipo de medida se tocan para abrir; lo de dentro (las referencias, que se
+// abren) va aparte, para que no quede un botón dentro de otro
 const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
-  const measurementColor = MEASUREMENT_COLOR[biomarker.measurement_type];
   const card = es() ? { ...biomarker.knowledge_card, ...catalogCardEs[biomarker.canonical_id] } : biomarker.knowledge_card;
+  const codes = getBiomarkerCodes(biomarker.canonical_id);
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onToggle} activeOpacity={0.8}>
-      <View style={styles.topRow}>
-        <Text style={styles.name} numberOfLines={expanded ? undefined : 1}>
-          {displayName(biomarker)}
-        </Text>
-        <Ionicons
-          name={expanded ? 'chevron-up' : 'chevron-down'}
-          size={16}
-          color={Colors.textMuted}
-        />
-      </View>
-
-      <View style={styles.badgeRow}>
-        <View style={[styles.badge, { backgroundColor: `${measurementColor}22` }]}>
-          <Text style={[styles.badgeText, { color: measurementColor }]}>
-            {t(MEASUREMENT_LABEL[biomarker.measurement_type])}
+    <View style={styles.item}>
+      <TouchableOpacity style={styles.topRow} onPress={onToggle} activeOpacity={0.7} accessibilityRole="button" accessibilityState={{ expanded }}>
+        <View style={styles.flex}>
+          <Text style={fine.rowTitle} numberOfLines={expanded ? undefined : 1}>
+            {displayName(biomarker)}
           </Text>
+          <Text style={fine.rowSub}>{t(MEASUREMENT_LABEL[biomarker.measurement_type])}</Text>
         </View>
-      </View>
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={15} color={FINE.mute} />
+      </TouchableOpacity>
 
       {expanded && (
         <View style={styles.detail}>
           <DetailRow label="ID" value={biomarker.canonical_id} />
-          {biomarker.aliases.length > 0 && (
-            <DetailRow label={t('Also known as')} value={biomarker.aliases.join(', ')} />
-          )}
+          {biomarker.aliases.length > 0 && <DetailRow label={t('Also known as')} value={biomarker.aliases.join(', ')} />}
           <DetailRow label={t('Sample')} value={sampleName(biomarker.sample_type)} />
-          {biomarker.common_units.length > 0 && (
-            <DetailRow label={t('Units')} value={biomarker.common_units.map(unitName).join(', ')} />
-          )}
-          <DetailRow
-            label="LOINC"
-            value={(() => {
-              const codes = getBiomarkerCodes(biomarker.canonical_id);
-              return codes?.loinc ? `${codes.loinc} · ${codes.loinc_display}` : t('Pending');
-            })()}
-          />
-          {getBiomarkerCodes(biomarker.canonical_id)?.ucum ? (
-            <DetailRow label="UCUM" value={getBiomarkerCodes(biomarker.canonical_id)!.ucum!} />
-          ) : null}
+          {biomarker.common_units.length > 0 && <DetailRow label={t('Units')} value={biomarker.common_units.map(unitName).join(', ')} />}
+          <DetailRow label="LOINC" value={codes?.loinc ? `${codes.loinc} · ${codes.loinc_display}` : t('Pending')} />
+          {codes?.ucum ? <DetailRow label="UCUM" value={codes.ucum} /> : null}
 
           {card.biological_role ? (
             <>
@@ -184,174 +166,49 @@ const BiomarkerRow = ({ biomarker, expanded, onToggle }: BiomarkerRowProps) => {
               <Text style={styles.knowledgeText}>{card.preanalytical_factors}</Text>
             </>
           ) : (
-            <Text style={styles.knowledgeText}>{t('No information for this biomarker yet.')}</Text>
+            <Text style={[styles.knowledgeText, styles.gap]}>{t('No information for this biomarker yet.')}</Text>
           )}
 
-          {card.limitations && <Text style={styles.limitationsText}>⚠ {card.limitations}</Text>}
+          {/* Lo que limita la lectura, en oro y sin el símbolo de aviso */}
+          {card.limitations ? <Text style={[formStyles.warn, styles.gap]}>{card.limitations}</Text> : null}
 
           {(biomarker.knowledge_card.references ?? []).map((r) => (
-            <TouchableOpacity key={r.url} onPress={() => Linking.openURL(r.url)}>
-              <Text style={styles.refText}>
-                📖 {r.title}
-              </Text>
+            <TouchableOpacity key={r.url} onPress={() => Linking.openURL(r.url)} accessibilityRole="link">
+              <Text style={styles.refText}>{r.title}</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
-    </TouchableOpacity>
+    </View>
   );
 };
 
+// Un dato de la ficha: el nombre apagado a la izquierda y el valor a la derecha
 const DetailRow = ({ label, value }: { label: string; value: string }) => (
-  <Text style={styles.detailRow}>
-    <Text style={styles.detailLabel}>{label}: </Text>
-    {value}
-  </Text>
+  <View style={styles.detailRow}>
+    <Text style={styles.detailLabel}>{label}</Text>
+    <Text style={styles.detailValue}>{value}</Text>
+  </View>
 );
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 10,
-  },
-  searchInput: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontFamily: INTER.regular, fontSize: 14,
-  },
-  count: {
-    color: Colors.textMuted,
-    fontFamily: INTER.regular, fontSize: 12,
-    marginHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 32,
-  },
-  sectionHeader: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontFamily: INTER.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 18,
-    marginBottom: 8,
-  },
-  empty: {
-    color: Colors.textMuted,
-    fontFamily: INTER.regular, fontSize: 13,
-    textAlign: 'center',
-    marginTop: 40,
-  },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  name: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontFamily: INTER.medium,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: Colors.backgroundElevated,
-  },
-  badgeOutline: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: 'transparent',
-  },
-  badgeText: {
-    fontSize: 10,
-    fontFamily: INTER.medium,
-  },
-  badgeTextMuted: {
-    fontSize: 10,
-    fontFamily: INTER.medium,
-    color: Colors.textMuted,
-  },
-  detail: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-    gap: 6,
-  },
-  detailRow: {
-    color: Colors.textSecondary,
-    fontFamily: INTER.regular, fontSize: 12,
-    lineHeight: 17,
-  },
-  detailLabel: {
-    color: Colors.textMuted,
-    fontFamily: INTER.medium,
-  },
-  kTitle: {
-    color: Colors.textPrimary,
-    fontSize: 12,
-    fontFamily: INTER.medium,
-    marginTop: 8,
-  },
-  refText: {
-    color: Colors.accent,
-    fontFamily: INTER.regular, fontSize: 12,
-    marginTop: 8,
-    textDecorationLine: 'underline',
-  },
-  reviewText: {
-    color: Colors.warning,
-    fontFamily: INTER.regular, fontSize: 11,
-    marginTop: 6,
-  },
-  knowledgeText: {
-    color: Colors.textSecondary,
-    fontFamily: INTER.regular, fontSize: 12,
-    lineHeight: 17,
-    marginTop: 4,
-  },
-  limitationsText: {
-    color: Colors.warning,
-    fontFamily: INTER.regular, fontSize: 11,
-    lineHeight: 16,
-    marginTop: 4,
-  },
-  sourceText: {
-    color: Colors.textMuted,
-    fontFamily: INTER.regular, fontSize: 11,
-    marginTop: 2,
-  },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  flex: { flex: 1, minWidth: 0 },
+  searchWrap: { marginHorizontal: 20, marginTop: 4, justifyContent: 'center' },
+  searchIcon: { position: 'absolute', left: 12, zIndex: 1 },
+  searchInput: { paddingLeft: 34 },
+  count: { ...ff('regular'), color: FINE.mute, fontSize: 12, marginHorizontal: 20, marginTop: 10, marginBottom: 4 },
+  listContent: { paddingHorizontal: 20, paddingBottom: 32 },
+  sectionHeader: { ...fine.secTitle, marginTop: 22, marginBottom: 2 },
+  empty: { ...ff('regular'), color: FINE.mute, fontSize: 13, textAlign: 'center', marginTop: 40 },
+  item: { borderBottomWidth: 1, borderBottomColor: FINE.line },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, minHeight: 50 },
+  detail: { paddingBottom: 14 },
+  detailRow: { flexDirection: 'row', gap: 12, paddingVertical: 5 },
+  detailLabel: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, width: 104 },
+  detailValue: { ...ff('regular'), color: FINE.ivory, fontSize: 12.5, lineHeight: 17, flex: 1 },
+  kTitle: { ...fine.kicker, marginTop: 14, marginBottom: 3 },
+  knowledgeText: { ...ff('regular'), color: '#CFD6CF', fontSize: 13, lineHeight: 18 },
+  gap: { marginTop: 12 },
+  refText: { ...ff('regular'), color: FINE.mute, fontSize: 12, lineHeight: 16, marginTop: 10, textDecorationLine: 'underline' },
 });

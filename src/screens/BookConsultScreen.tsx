@@ -5,18 +5,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { consult, isRealProfessional } from '@/data/consultations';
 import { createShare } from '@/data/sharing';
 import { Appointment, AppointmentKind, AppointmentModality, KIND_LABEL, recentAppointmentWith } from '@/data/specialistTypes';
-import { INTER } from '@/theme/fine';
+import { FMark, ON_BG } from '@/components/fine/FineForm';
+import { FINE, ff } from '@/theme/fine';
 
 const dayLabel = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 const time = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 const when = (iso: string) => `${dayLabel(iso)}, ${time(iso)}`;
 
 // Reservar una videoconsulta (o llamada) en los huecos libres del especialista.
+// En la estética fina (2026-11-16, con el resto de especialistas): chips y huecos con borde fino (jade el elegido),
+// cabeceras pequeñas en mayúsculas, la casilla de compartir como el círculo de marcar y el botón en esmeralda.
 export const BookConsultScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
@@ -77,7 +79,7 @@ export const BookConsultScreen = () => {
       }
       setState('done');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not book');
+      setError(e instanceof Error ? e.message : t('Could not book'));
       setState('error');
     }
   };
@@ -91,7 +93,7 @@ export const BookConsultScreen = () => {
       // Puede quedar otra pedida esa semana: se vuelve a mirar
       setExisting(recentAppointmentWith(await consult.myAppointments(), proId));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not cancel');
+      setError(e instanceof Error ? e.message : t('Could not cancel'));
     }
   };
 
@@ -100,16 +102,16 @@ export const BookConsultScreen = () => {
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScreenHeader title={t('Consultation requested')} showBack />
         <View style={styles.done}>
-          <Ionicons name="checkmark-circle" size={60} color={Colors.ok} />
+          <Ionicons name="checkmark-circle-outline" size={56} color={FINE.jade} />
           <Text style={styles.doneTitle}>
-            {dayLabel(slot)} at {time(slot)}
+            {t('{day} at {time}', { day: dayLabel(slot), time: time(slot) })}
           </Text>
           <Text style={styles.muted}>
-            {proName} will confirm it shortly. You'll find it in Manage your schedule, and the video link will appear there.
+            {t("{name} will confirm it shortly. You'll find it in Manage your schedule, and the video link will appear there.", { name: proName })}
           </Text>
           {replaced && <Text style={styles.muted}>{t('We have cancelled the one you had on {when}.', { when: when(replaced) })}</Text>}
           {!isRealProfessional(proId) && <Text style={styles.proto}>{t("Prototype: this specialist isn't on Kuova yet, nothing was sent.")}</Text>}
-          <TouchableOpacity style={styles.cta} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.cta} onPress={() => router.back()} accessibilityRole="button">
             <Text style={styles.ctaText}>{t('Done')}</Text>
           </TouchableOpacity>
         </View>
@@ -121,11 +123,11 @@ export const BookConsultScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Book a consultation')} showBack />
-        <Text style={styles.intro}>with {proName}</Text>
+        <Text style={styles.intro}>{t('with {name}', { name: proName })}</Text>
 
         {existing && (
           <View style={styles.existing}>
-            <Ionicons name="calendar-outline" size={18} color={Colors.accent} />
+            <Ionicons name="calendar-outline" size={18} color={FINE.jade} />
             <View style={{ flex: 1 }}>
               <Text style={styles.existingTitle}>{t('You already requested one for {when}', { when: when(existing.startsAt) })}</Text>
               <Text style={styles.existingSub}>{t(existing.status === 'confirmed' ? 'Confirmed' : 'Waiting for confirmation')}</Text>
@@ -147,7 +149,7 @@ export const BookConsultScreen = () => {
 
         <Text style={styles.section}>{t('Choose a time')}</Text>
         {slots === null ? (
-          <ActivityIndicator color={Colors.accent} />
+          <ActivityIndicator color={FINE.jade} />
         ) : days.length === 0 ? (
           <Text style={styles.muted}>{t('No free slots in the next days. Send a request instead.')}</Text>
         ) : (
@@ -159,8 +161,14 @@ export const BookConsultScreen = () => {
             </ScrollView>
             <View style={styles.slots}>
               {(currentDay ? byDay[currentDay] : []).map((s) => (
-                <TouchableOpacity key={s} style={[styles.slot, slot === s && styles.slotOn]} onPress={() => setSlot(s)}>
-                  <Text style={[styles.slotText, slot === s && { color: Colors.background }]}>{time(s)}</Text>
+                <TouchableOpacity
+                  key={s}
+                  style={[styles.slot, slot === s && styles.slotOn]}
+                  onPress={() => setSlot(s)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: slot === s }}
+                >
+                  <Text style={styles.slotText}>{time(s)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -168,11 +176,11 @@ export const BookConsultScreen = () => {
         )}
 
         <Text style={styles.section}>{t('What would you like to talk about? (optional)')}</Text>
-        <TextInput style={styles.input} multiline value={reason} onChangeText={setReason} placeholder={t('e.g. My ferritin and how to improve it')} placeholderTextColor={Colors.textMuted} />
+        <TextInput style={styles.input} multiline value={reason} onChangeText={setReason} placeholder={t('e.g. My ferritin and how to improve it')} placeholderTextColor={FINE.mute} />
 
-        <TouchableOpacity style={styles.shareRow} onPress={() => setShare((v) => !v)}>
-          <Ionicons name={share ? 'checkbox' : 'square-outline'} size={22} color={share ? Colors.accent : Colors.textMuted} />
-          <Text style={styles.shareText}>Share my profile and lab results with {proName} (you can revoke it anytime)</Text>
+        <TouchableOpacity style={styles.shareRow} onPress={() => setShare((v) => !v)} accessibilityRole="checkbox" accessibilityState={{ checked: share }}>
+          <FMark on={share} />
+          <Text style={styles.shareText}>{t('Share my profile and lab results with {name} (you can revoke it anytime)', { name: proName })}</Text>
         </TouchableOpacity>
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
@@ -181,7 +189,7 @@ export const BookConsultScreen = () => {
         disabled={!slot || state === 'saving'}
         onPress={() => (existing ? setAsking(true) : book())}
       >
-        {state === 'saving' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{slot ? `Request ${dayLabel(slot)}, ${time(slot)}` : 'Choose a time'}</Text>}
+        {state === 'saving' ? <ActivityIndicator color={FINE.ivory} /> : <Text style={styles.ctaText}>{slot ? t('Request {when}', { when: when(slot) }) : t('Choose a time')}</Text>}
       </TouchableOpacity>
 
       {/* Ya hay una pedida esta semana: cambiarla por la nueva; si está confirmada, también cancelarla */}
@@ -220,46 +228,51 @@ export const BookConsultScreen = () => {
 };
 
 const Chip = ({ on, label, icon, onPress }: { on: boolean; label: string; icon?: string; onPress: () => void }) => (
-  <TouchableOpacity style={[styles.chip, on && styles.chipOn]} onPress={onPress}>
-    {icon && <Ionicons name={icon as any} size={15} color={on ? Colors.background : Colors.textSecondary} />}
-    <Text style={[styles.chipText, on && { color: Colors.background }]}>{label}</Text>
+  <TouchableOpacity style={[styles.chip, on && styles.chipOn]} onPress={onPress} accessibilityRole="radio" accessibilityState={{ checked: on }}>
+    {icon && <Ionicons name={icon as any} size={15} color={on ? FINE.jade : FINE.mute} />}
+    <Text style={[styles.chipText, on && styles.chipTextOn]}>{label}</Text>
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24, paddingHorizontal: 20 },
-  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginTop: -6 },
-  section: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 20, marginBottom: 10 },
+  intro: { ...ff('regular'), color: FINE.mute, fontSize: 14, marginTop: -6 },
+  // Cabeceras de sección pequeñas y en mayúsculas (como fine.secTitle)
+  section: { ...ff('semibold'), color: FINE.mute, fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase', marginTop: 24, marginBottom: 10 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
-  chipOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  chipText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  // Chips con borde fino; el elegido, borde jade y letra marfil (como FChip)
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 38, borderWidth: 1, borderColor: FINE.line, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  chipOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  chipText: { ...ff('regular'), color: FINE.mute, fontSize: 13.5 },
+  chipTextOn: { color: FINE.ivory },
   days: { gap: 8, paddingBottom: 10 },
   slots: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  slot: { width: '22.5%', alignItems: 'center', borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, paddingVertical: 9 },
-  slotOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  slotText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, textAlign: 'center' },
-  input: { minHeight: 70, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, padding: 12, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, textAlignVertical: 'top' },
+  slot: { width: '22.5%', alignItems: 'center', borderWidth: 1, borderColor: FINE.line, borderRadius: 12, paddingVertical: 9 },
+  slotOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  slotText: { ...ff('regular'), color: FINE.ivory, fontSize: 14, fontVariant: ['tabular-nums'] },
+  muted: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  input: { ...ff('regular'), minHeight: 70, borderWidth: 1, borderColor: FINE.line, backgroundColor: FINE.tile, borderRadius: 14, padding: 12, color: FINE.ivory, fontSize: 14, textAlignVertical: 'top' },
   shareRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
-  shareText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flex: 1 },
-  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginTop: 10 },
-  cta: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 16, alignItems: 'center', marginHorizontal: 20, marginBottom: 12, paddingHorizontal: 20 },
-  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  shareText: { ...ff('regular'), color: FINE.ivory, fontSize: 13, lineHeight: 18, flex: 1 },
+  // Lo que no ha salido: un coral suave, sin rojo de alarma (como formStyles.error)
+  error: { ...ff('regular'), color: '#E9A48F', fontSize: 13, marginTop: 10 },
+  // Botón principal: esmeralda con la letra marfil (como FButton)
+  cta: { backgroundColor: FINE.emerald, borderRadius: 22, paddingVertical: 13, minHeight: 48, justifyContent: 'center', alignItems: 'center', marginHorizontal: 20, marginBottom: 12, paddingHorizontal: 20 },
+  ctaText: { ...ff('medium'), color: '#F0EFE6', fontSize: 15 },
   done: { alignItems: 'center', gap: 12, paddingHorizontal: 28, marginTop: 40 },
-  doneTitle: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
-  proto: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center' },
-  existing: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12 },
-  existingTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  existingSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  note: { color: Colors.ok, fontFamily: INTER.regular, fontSize: 13, marginTop: 12 },
+  doneTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 22 },
+  proto: { ...ff('regular'), color: FINE.gold, fontSize: 12, textAlign: 'center' },
+  existing: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14, backgroundColor: FINE.tile, borderWidth: 1, borderColor: FINE.line, borderRadius: 14, padding: 12 },
+  existingTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 14 },
+  existingSub: { ...ff('regular'), color: FINE.mute, fontSize: 12, marginTop: 2 },
+  note: { ...ff('regular'), color: FINE.jade, fontSize: 13, marginTop: 12 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
-  sheet: { backgroundColor: Colors.backgroundElevated, borderRadius: 20, padding: 20, gap: 4 },
-  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
-  sheetBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginTop: 6, marginBottom: 14 },
-  sheetPrimary: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 14, alignItems: 'center' },
+  sheet: { backgroundColor: FINE.deep, borderWidth: 1, borderColor: FINE.line, borderRadius: 20, padding: 20, gap: 4 },
+  sheetTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 18 },
+  sheetBody: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, marginTop: 6, marginBottom: 14 },
+  sheetPrimary: { backgroundColor: FINE.emerald, borderRadius: 22, paddingVertical: 13, minHeight: 48, justifyContent: 'center', alignItems: 'center' },
   sheetSecondary: { alignItems: 'center', paddingVertical: 12 },
-  sheetDanger: { color: Colors.danger, fontSize: 14, fontFamily: INTER.medium },
-  sheetKeep: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
+  sheetDanger: { ...ff('regular'), color: '#E9A48F', fontSize: 14 },
+  sheetKeep: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
 });

@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { Colors } from '@/constants/colors';
 import { slotLabel } from '@/data/diet/catalog';
 import type { DietDay, DietPrefs, DietTargets, MealMacroPlan, MealSlot } from '@/data/diet/types';
 import { cleanMeals, dayIssue, dayLock, mealSplit, slotAverages, slotCount, type DayField, type MacroIssue, type SplitCell, type SplitCol } from '@/logic/dietPlanner';
 import { useRevealOnFocus } from '@/components/KeyboardAwareScroll';
 import { num, t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Las calorías y los macros de un menú, como los fija el dietista: kcal, proteína, hidratos y grasa al día (vacío = lo
 // que calcula el generador, en gris) y el reparto por comida (% de las kcal y gramos de cada macro; vacío = su parte),
@@ -14,7 +13,9 @@ import { INTER } from '@/theme/fine';
 // (DietMacrosScreen; fundador, 2026-11-06: «editar los macros nosotros, como el dietista»).
 // Siempre cuadra (fundador, 2026-11-06: «que una cosa bloquee a la otra»): la casilla que sale de las otras (la cuarta
 // del día o de una comida con tres puestas, la última vacía de una columna) va con borde discontinuo y no se escribe; y
-// si lo puesto no cabe, sale en naranja con qué no cuadra (ver mealSplit y dayIssue) y las pantallas no dejan guardar.
+// si lo puesto no cabe, sale en oro con qué no cuadra (ver mealSplit y dayIssue) y las pantallas no dejan guardar.
+// Lenguaje fino (2026-11-16): casillas casi transparentes con borde fino, cabeceras pequeñas en mayúsculas, lo que no
+// cuadra en oro (sin naranja de alarma) y las acciones en jade.
 
 export type MacroFields = Pick<DietPrefs, 'kcalTarget' | 'proteinTarget' | 'carbsTarget' | 'fatTarget' | 'meals'>;
 
@@ -83,15 +84,17 @@ export const MacroTargetsPanel = ({
 
       {/* Reparto por comida: % de las kcal del día y gramos de cada macro (vacío = su parte de lo que queda) */}
       <View style={styles.mealsHead}>
-        <Text style={[styles.label, { flex: 1 }]}>{t('Per meal')}</Text>
+        <Text style={styles.mealsTitle} accessibilityRole="header">
+          {t('Per meal')}
+        </Text>
         {prefs.meals ? (
-          <TouchableOpacity onPress={() => onChange({ meals: null })} hitSlop={8}>
-            <Text style={styles.reset}>{t('Default split')}</Text>
+          <TouchableOpacity onPress={() => onChange({ meals: null })} hitSlop={8} accessibilityRole="button">
+            <Text style={[styles.reset, styles.resetHead]}>{t('Default split')}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
       <View style={styles.mealRow}>
-        <View style={styles.mealLabel} />
+        <View style={styles.mealLabelCol} />
         {[t('% kcal'), t('Prot. g'), t('Carbs g'), t('Fat g')].map((h) => (
           <Text key={h} style={styles.mealHead}>
             {h}
@@ -183,7 +186,7 @@ export const NumField = ({
           keyboardType="number-pad"
           value={value ? String(value) : ''}
           placeholder={String(Math.round(placeholder))}
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={FINE.mute}
           onChangeText={(v) => onChange(Number(v.replace(/\D/g, '').slice(0, 5)) || null)}
           onFocus={reveal}
           accessibilityLabel={label}
@@ -217,7 +220,7 @@ const MealCell = ({
       keyboardType="number-pad"
       value={value ? String(value) : ''}
       placeholder={String(Math.round(computed))}
-      placeholderTextColor={Colors.textMuted}
+      placeholderTextColor={FINE.mute}
       onChangeText={(v) => onChange(Number(v.replace(/\D/g, '').slice(0, 4)) || null)}
       onFocus={reveal}
       accessibilityLabel={label}
@@ -226,23 +229,41 @@ const MealCell = ({
 };
 
 const styles = StyleSheet.create({
-  label: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, marginTop: 12, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 9, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
-  // Sale de las otras: sin fondo, borde discontinuo y en gris
-  locked: { backgroundColor: 'transparent', borderStyle: 'dashed', borderColor: Colors.textMuted, color: Colors.textMuted },
-  bad: { borderColor: Colors.warning },
+  // La etiqueta de cada casilla del día, pequeña y apagada
+  label: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, marginTop: 12, marginBottom: 6 },
+  // Casilla casi transparente con borde fino (como las de Metas); la cifra, ligera
+  input: {
+    ...ff('regular'),
+    borderWidth: 1,
+    borderColor: FINE.line,
+    backgroundColor: FINE.tile,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    color: FINE.ivory,
+    fontSize: 15,
+    fontVariant: ['tabular-nums'],
+  },
+  // Sale de las otras: sin fondo, borde discontinuo y apagada
+  locked: { backgroundColor: 'transparent', borderStyle: 'dashed', borderColor: 'rgba(240,239,230,0.22)', color: FINE.mute },
+  // Lo que no cuadra: borde de oro, sin alarma
+  bad: { borderColor: FINE.goldLine },
   targets: { flexDirection: 'row', gap: 10 },
-  warn: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 12, lineHeight: 16, marginTop: 6 },
-  lockHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15, marginTop: 6 },
+  warn: { ...ff('regular'), color: FINE.gold, fontSize: 12.5, lineHeight: 17, marginTop: 6 },
+  lockHint: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 16, marginTop: 6 },
   issue: { gap: 2 },
-  mealsHead: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  reset: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 6 },
-  mealBlock: { marginBottom: 6 },
+  // «POR COMIDA» como una cabecera de sección pequeña, con «Reparto por defecto» en jade a la derecha
+  mealsHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 18, marginBottom: 8 },
+  mealsTitle: { ...fine.secTitle, flex: 1 },
+  reset: { ...fine.link, fontSize: 12.5, marginTop: 6 },
+  resetHead: { marginTop: 0 },
+  mealBlock: { paddingVertical: 4 },
   mealRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  mealLabel: { width: 76, color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
-  mealHead: { flex: 1, color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium, textAlign: 'center', marginBottom: 4 },
+  mealLabelCol: { width: 76 },
+  mealLabel: { width: 76, ...ff('medium'), color: FINE.ivory, fontSize: 12.5, lineHeight: 16 },
+  mealHead: { flex: 1, ...fine.kicker, fontSize: 9.5, letterSpacing: 0.6, textAlign: 'center', marginBottom: 4 },
   // width 0 + minWidth 0: en la web un campo de texto no se encoge por debajo de su ancho por defecto
-  mealCell: { flex: 1, width: 0, minWidth: 0, paddingVertical: 6, paddingHorizontal: 4, textAlign: 'center', fontFamily: INTER.regular, fontSize: 13 },
-  mealMenu: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10, marginTop: 3, marginLeft: 82 },
-  mealHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15, marginTop: 4 },
+  mealCell: { flex: 1, width: 0, minWidth: 0, paddingVertical: 7, paddingHorizontal: 4, borderRadius: 10, textAlign: 'center', fontSize: 13.5 },
+  mealMenu: { ...ff('regular'), color: FINE.mute, fontSize: 10.5, marginTop: 4, marginLeft: 82 },
+  mealHint: { ...fine.note, fontSize: 11.5, lineHeight: 16, marginTop: 6 },
 });

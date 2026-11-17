@@ -1,4 +1,4 @@
-import { BowelEntry, UrineEntry, VOID_VOLUMES } from '@/types/bathroom';
+import { BowelEntry, StoolColor, UrineEntry, VOID_VOLUMES } from '@/types/bathroom';
 
 import { t } from '@/i18n';
 // Observaciones semanales del registro digestivo y urinario. Lógica pura (sin React Native) para
@@ -298,6 +298,113 @@ export function dailyTotalNote(ml: number): Observation {
   return { id: 'total_ok', level: 'good', title: t('A usual daily amount'), body: t('Between about 0.8 and 2 litres a day is typical.') };
 }
 
+// --- Un día de muchas más veces: preguntar por qué -------------------------------------------
+// Fundador (2026-11-16): «si meas mucho un día, que te pregunte si has estado estresado o has bebido mucho
+// café (si no lo puede sacar del check-in)». Lo habitual son unas 4-10 veces al día (NHS). Un día cuenta
+// como «de muchas veces» con más de 10, o con 9 o más y al menos 4 más que tu día normal (la mediana de tus
+// 14 días anteriores, con al menos 4 apuntados). Se mira hoy (si ya ha llegado: solo puede subir) y ayer.
+// Lo que ya dicen tus datos no se pregunta: el estrés del check-in de ese día y lo que apuntaste de bebida.
+// SUPUESTO (umbrales y textos), PENDIENTE DE REVISIÓN CLÍNICA.
+
+export type BusyCause = 'coffee' | 'drinks' | 'alcohol' | 'stress' | 'none';
+export const BUSY_CAUSES: BusyCause[] = ['coffee', 'drinks', 'alcohol', 'stress', 'none'];
+export const BUSY_DAY_MAX_USUAL = 10;
+const BUSY_OVER_USUAL = 4;
+const BUSY_MIN_WITH_USUAL = 9;
+// Bebida que ya explica un día de más veces: 2,5 L, o un 25 % más que tu objetivo si es mayor
+const DRANK_A_LOT_ML = 2500;
+
+export interface BusyDayContext {
+  stressed?: boolean; // check-in de ese día con estrés
+  drinksMl?: number; // lo apuntado de agua y bebida ese día
+}
+
+export interface BusyDay {
+  day: string; // AAAA-MM-DD
+  count: number;
+  isToday: boolean;
+  usual: number | null; // tu día normal (mediana de los 14 días anteriores)
+  stressFromCheckIn: boolean;
+  drinksMl: number | null; // solo si ya explica algo
+  ask: BusyCause[]; // lo que se le pregunta (sin lo que ya sabemos)
+}
+
+const localDayKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+const median = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+
+export function urineBusyDay(
+  entries: UrineEntry[],
+  now = new Date(),
+  context: (day: string) => BusyDayContext = () => ({}),
+  drinksGoalMl = 2000
+): BusyDay | null {
+  const counts = new Map<string, number>();
+  for (const e of entries) {
+    const c = e.count ?? e.visits?.length;
+    if (c != null) counts.set(localDayKey(new Date(e.fecha)), c);
+  }
+  const today = localDayKey(now);
+  const y = new Date(now);
+  y.setDate(y.getDate() - 1);
+  for (const day of [today, localDayKey(y)]) {
+    const count = counts.get(day);
+    if (count == null) continue;
+    const before: number[] = [];
+    for (let i = 1; i <= 14; i++) {
+      const d = new Date(`${day}T12:00:00`);
+      d.setDate(d.getDate() - i);
+      const c = counts.get(localDayKey(d));
+      if (c != null) before.push(c);
+    }
+    const usual = before.length >= 4 ? median(before) : null;
+    const busy = count > BUSY_DAY_MAX_USUAL || (usual != null && count >= BUSY_MIN_WITH_USUAL && count >= usual + BUSY_OVER_USUAL);
+    if (!busy) continue;
+    const ctx = context(day);
+    const stressed = !!ctx.stressed;
+    const drankALot = (ctx.drinksMl ?? 0) >= Math.max(DRANK_A_LOT_ML, drinksGoalMl * 1.25);
+    return {
+      day,
+      count,
+      isToday: day === today,
+      usual,
+      stressFromCheckIn: stressed,
+      drinksMl: drankALot ? ctx.drinksMl! : null,
+      ask: BUSY_CAUSES.filter((c) => !(c === 'stress' && stressed) && !(c === 'drinks' && drankALot)),
+    };
+  }
+  return null;
+}
+
+// ¿Marcó estrés en el check-in de ese día? Estrés 4-5, o ánimo estresado, ansioso o acelerado, o la etiqueta
+// «Con los nervios» (nervous)
+const STRESS_MOODS = ['stressed', 'anxious', 'wired'];
+export function stressedOnDay(
+  checkIns: { fecha: string; stress?: number; mood?: string }[],
+  tags: { fecha: string; tag: string }[],
+  day: string
+): boolean {
+  const same = (fecha: string) => localDayKey(new Date(fecha)) === day;
+  return (
+    checkIns.some((c) => same(c.fecha) && ((c.stress ?? 0) >= 4 || STRESS_MOODS.includes(c.mood ?? ''))) ||
+    tags.some((x) => same(x.fecha) && x.tag === 'nervous')
+  );
+}
+
+// Lo que se le dice según lo que contestó (uno por causa marcada)
+export const BUSY_CAUSE_TEXT: Record<BusyCause, { label: string; answer: string }> = {
+  coffee: { label: 'More coffee or tea', answer: 'Coffee and tea increase urine output: it is expected on a day when you have more of them.' },
+  drinks: { label: 'More to drink than usual', answer: 'Drinking more means passing more urine: it is expected.' },
+  alcohol: { label: 'Alcohol', answer: 'Alcohol increases urine output and dehydrates: alternating it with water helps.' },
+  stress: { label: 'A stressful day', answer: 'Stress and nerves can also make you need to go more often: it is common on tense days.' },
+  none: { label: 'None of these', answer: 'If it happens again with no clear reason, especially with a lot of thirst or tiredness, mention it to a doctor.' },
+};
+
 // --- Hidratación de hoy y consejo al guardar la orina --------------------------------------
 
 // Escala de hidratación por el color (de más a menos hidratado). Marrón, rojo y turbio no
@@ -375,4 +482,38 @@ export function urineAdvice(e: Pick<UrineEntry, 'color' | 'burning' | 'explained
       body: t('It is often harmless, for example after a meal. If it keeps happening, or comes with burning, a strong smell or fever, talk to a doctor.'),
     };
   return null;
+}
+
+// --- Reglas de color y de consistencia de las heces --------------------------------------------
+// Fundador (2026-11-17): «en las heces, quiero que pongas la misma estética que la orina (con un continuo de
+// color sin tantos nombres, no como ahora con circulitos). Igual puedes poner 2 líneas: una para la escala de
+// marrones y otra para los demás colores». Se guarda lo mismo que antes (los ids de STOOL_COLORS): cada id tiene
+// su sitio en una de las dos reglas, así que lo ya apuntado se ve tal cual.
+// Marrones, de claro a muy oscuro; los demás, también de claro a oscuro para que se lean como un continuo.
+export const STOOL_BROWN_SCALE: StoolColor[] = ['light_brown', 'brown', 'dark_brown', 'black'];
+export const STOOL_OTHER_SCALE: StoolColor[] = ['pale', 'yellow', 'green', 'red'];
+
+// En cuál de las dos reglas está un color y en qué tramo (0 = el primero); null si no es de ninguna
+export function stoolRulerPosition(color: StoolColor | undefined | null): { ruler: 'brown' | 'other'; index: number } | null {
+  if (!color) return null;
+  const b = STOOL_BROWN_SCALE.indexOf(color);
+  if (b >= 0) return { ruler: 'brown', index: b };
+  const o = STOOL_OTHER_SCALE.indexOf(color);
+  return o >= 0 ? { ruler: 'other', index: o } : null;
+}
+
+// Regla de tramos seguidos (la carta de color): en qué tramo (0 … n-1) cae el punto x de una regla de `width` de
+// ancho con n tramos iguales. Fuera de la regla, el del extremo
+export function stripIndexAt(x: number, width: number, n: number): number {
+  if (!(width > 0) || n <= 1) return 0;
+  return Math.min(n - 1, Math.max(0, Math.floor((x / width) * n)));
+}
+
+// Regla de paradas (la de la consistencia): la parada (0 … n-1) más cercana al punto x de una línea que va de
+// `pad` a `width - pad` con n paradas repartidas por igual
+export function rulerStopAt(x: number, width: number, n: number, pad = 0): number {
+  if (n <= 1) return 0;
+  const span = Math.max(1, width - 2 * pad);
+  const p = Math.min(1, Math.max(0, (x - pad) / span));
+  return Math.round(p * (n - 1));
 }

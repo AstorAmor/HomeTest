@@ -22,6 +22,7 @@ import { Colors } from '@/constants/colors';
 import { postAi } from '@/utils/apiBaseUrl';
 import { saveAiLogEntry } from '@/data/aiLogRepository';
 import { MoodQuadrant, MOOD_QUADRANTS, MOOD_QUADRANT_INFO, AiLogExtraction } from '@/types/aiLog';
+import { t } from '@/i18n';
 import { INTER } from '@/theme/fine';
 
 const REQUEST_TIMEOUT_MS = 60000;
@@ -70,7 +71,7 @@ export const AiLogModule = () => {
     }
     const permission = await requestRecordingPermissionsAsync();
     if (!permission.granted) {
-      setError('Microphone permission is required to record audio.');
+      setError(t('Microphone permission is required to record audio.'));
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -107,7 +108,7 @@ export const AiLogModule = () => {
 
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? 'Error processing the entry');
+        setError(data.error ?? t('Error processing the entry'));
         return;
       }
 
@@ -134,7 +135,7 @@ export const AiLogModule = () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : t('Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -147,8 +148,8 @@ export const AiLogModule = () => {
       <View style={styles.diagramRow}>
         <View style={styles.wheelWrap}>
           <View style={styles.wheel}>
-            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelTop]}>Energy</Text>
-            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelBottom]}>Mood</Text>
+            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelTop]}>{t('Energy')}</Text>
+            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelBottom]}>{t('Mood')}</Text>
             {MOOD_QUADRANTS.map((option) => {
               const info = MOOD_QUADRANT_INFO[option];
               const selected = quadrant === option;
@@ -169,7 +170,7 @@ export const AiLogModule = () => {
                       selected && styles.quadrantLabelActive,
                     ]}
                   >
-                    {info.label}
+                    {t(info.label)}
                   </Text>
                   {selected && (
                     <View style={styles.quadrantCheck}>
@@ -202,7 +203,7 @@ export const AiLogModule = () => {
           style={styles.textInput}
           value={note}
           onChangeText={setNote}
-          placeholder="Add more detail (optional)…"
+          placeholder={t('Add more detail (optional)…')}
           placeholderTextColor={Colors.textMuted}
           multiline
           autoFocus
@@ -211,7 +212,7 @@ export const AiLogModule = () => {
 
       {recorderState.isRecording && (
         <Text style={styles.recordingText}>
-          Recording… {Math.round(recorderState.durationMillis / 1000)}s
+          {t('Recording… {n}s', { n: Math.round(recorderState.durationMillis / 1000) })}
         </Text>
       )}
 
@@ -226,7 +227,7 @@ export const AiLogModule = () => {
           {submitting ? (
             <ActivityIndicator color={Colors.background} size="small" />
           ) : (
-            <Text style={styles.logButtonText}>{saved ? 'Logged ✓' : 'Log'}</Text>
+            <Text style={styles.logButtonText}>{saved ? t('Logged ✓') : t('Log')}</Text>
           )}
         </TouchableOpacity>
 

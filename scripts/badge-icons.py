@@ -1,6 +1,9 @@
 # Saca los contornos de los iconos de Ionicons (los de las insignias) como trazos SVG.
+# YA NO SE USA para las insignias: desde el 2026-11-16 llevan emblemas dibujados a mano en
+# src/components/badges/badgeIconPaths.ts (fundador: los iconos de Ionicons «son muy de niño»). No lo ejecutes sobre
+# ese archivo: lo borraría. Se queda por si hace falta sacar otro icono de la fuente.
 # Uso: python scripts/badge-icons.py <Ionicons.ttf> <Ionicons.json> <salida.ts> nombre1 nombre2 ...
-# Ejemplo: python scripts/badge-icons.py node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json src/components/badges/badgeIconPaths.ts footsteps walk trophy barbell happy restaurant leaf
+# Ejemplo: python scripts/badge-icons.py node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/Ionicons.json src/components/badges/badgeIconPaths.ts footsteps walk trophy barbell happy restaurant leaf footsteps-outline walk-outline trophy-outline barbell-outline happy-outline restaurant-outline leaf-outline
 import json, sys
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen

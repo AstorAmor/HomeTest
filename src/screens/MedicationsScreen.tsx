@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
-import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { deleteMedication, doseRepository, medicationRepository } from '@/data/medicationRepository';
 import { confirmAsk } from '@/components/dev/confirmAsk';
@@ -14,15 +13,21 @@ import { muteUntil } from '@/logic/nudges';
 import { MUTE_OPTIONS, MuteOption } from '@/logic/nudges/types';
 import { courseEnd, courseProgress, dosesForDay, isActiveOn, isReminderMuted, MUTED_FOREVER, scheduleText } from '@/logic/medication';
 import { DoseLog, MedicationItem } from '@/types/medication';
-import { DoseRows } from '@/components/DoseRows';
-import { MedIcon } from '@/components/MedIcon';
+import { DoseRows, doseStyles } from '@/components/DoseRows';
 import { ZoneChangeBanner } from '@/components/ZoneChangeBanner';
+import { FRow, Pill, SecHead } from '@/components/fine/Fine';
+import { FChip, FLink } from '@/components/fine/FineForm';
+import { SecRow } from '@/components/fine/FineMeasure';
 import { offerPhoneReminders } from '@/data/phoneReminders';
-import { fine, INTER } from '@/theme/fine';
-
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Medicación y suplementos: las tomas de hoy (marcar tomada u omitida), lo que toma de forma
 // habitual y los tratamientos puntuales. Cada recordatorio se enciende, apaga o silencia aparte.
+// Rediseño del 2026-11-17 (lenguaje fino, src/theme/fine.ts; el fundador: «las "tomas" de medicación no están
+// actualizadas con la estética actual»): sin tarjetas ni iconos sobre círculos de color. Cada sección lleva su
+// cabecera pequeña y, debajo, filas con una línea fina; las tomas de hoy, con «Omitir» apagado y la píldora
+// esmeralda «Tomada» (DoseRows); lo que tomas, con su pauta debajo y «···» para sus opciones; y añadir, como enlace
+// en jade. Qué se guarda y cuándo avisa no cambia.
 export const MedicationsScreen = () => {
   const router = useRouter();
   const [items, setItems] = useDeepState<MedicationItem[]>([]);
@@ -84,70 +89,64 @@ export const MedicationsScreen = () => {
     return t('Reminders on');
   };
 
+  // Una opción del menú de un medicamento: texto en jade (borrar, apagado), sin caja
+  const menuLink = (label: string, onPress: () => void, quiet?: boolean) => (
+    <TouchableOpacity style={styles.menuRow} onPress={onPress} accessibilityRole="button">
+      <Text style={[styles.menuText, quiet && styles.menuQuiet]}>{label}</Text>
+    </TouchableOpacity>
+  );
+
   const renderItem = (item: MedicationItem) => {
     const progress = courseProgress(item);
     const end = courseEnd(item);
     const open = menuFor === item.id;
     return (
       <View key={item.id} style={styles.item}>
-        <TouchableOpacity
-          style={styles.itemMain}
-          onPress={() => router.push({ pathname: '/medication-setup', params: { id: item.id } })}
-          activeOpacity={0.85}
-        >
-          <MedIcon name={item.name} kind={item.kind} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.itemTitle}>
+        <View style={styles.itemMain}>
+          <TouchableOpacity
+            style={styles.itemText}
+            onPress={() => router.push({ pathname: '/medication-setup', params: { id: item.id } })}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+          >
+            <Text style={fine.rowTitle}>
               {t(item.name)}
               {item.dose ? <Text style={styles.itemDose}> · {item.dose}</Text> : null}
             </Text>
-            <Text style={styles.itemSub}>{scheduleText(item.schedule)}</Text>
+            <Text style={fine.rowSub}>{scheduleText(item.schedule)}</Text>
             {progress && end && (
-              <Text style={styles.itemSub}>
+              <Text style={fine.rowSub}>
                 {t('Day {n} of {total} · ends {date}', { n: progress.day, total: progress.total, date: new Date(end.getTime() - 1).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }) })}
               </Text>
             )}
             <Text style={styles.itemMeta}>{reminderLabel(item)}</Text>
-          </View>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setMenuFor(open ? null : item.id)}
             hitSlop={10}
             style={styles.menuButton}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: open }}
             accessibilityLabel={t('Options for {name}', { name: t(item.name) })}
           >
-            <Ionicons
-              name={item.reminders && !isReminderMuted(item) ? 'notifications-outline' : 'notifications-off-outline'}
-              size={18}
-              color={Colors.textMuted}
-            />
-            <Ionicons name="ellipsis-vertical" size={16} color={Colors.textMuted} />
+            <Ionicons name="ellipsis-horizontal" size={18} color={open ? FINE.jade : FINE.mute} />
           </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
         {open && (
           <View style={styles.menu}>
-            {item.schedule.type !== 'as_needed' && (
-              <TouchableOpacity style={styles.menuRow} onPress={() => setReminders(item, !item.reminders)}>
-                <Text style={styles.menuText}>{item.reminders ? t('Turn reminders off') : t('Turn reminders on')}</Text>
-              </TouchableOpacity>
-            )}
+            {item.schedule.type !== 'as_needed' && menuLink(item.reminders ? t('Turn reminders off') : t('Turn reminders on'), () => setReminders(item, !item.reminders))}
             {item.reminders && item.schedule.type !== 'as_needed' && (
               <>
                 <Text style={styles.menuLabel}>{t('Mute reminders for')}</Text>
                 <View style={styles.chipRow}>
                   {MUTE_OPTIONS.map((o) => (
-                    <TouchableOpacity key={o.id} style={styles.chip} onPress={() => mute(item, o.id)}>
-                      <Text style={styles.chipText}>{t(o.label)}</Text>
-                    </TouchableOpacity>
+                    <FChip key={o.id} label={t(o.label)} on={false} onPress={() => mute(item, o.id)} />
                   ))}
                 </View>
               </>
             )}
-            <TouchableOpacity style={styles.menuRow} onPress={() => stop(item)}>
-              <Text style={styles.menuText}>{t('I stopped taking it')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuRow} onPress={() => remove(item)}>
-              <Text style={[styles.menuText, { color: Colors.danger }]}>{t('Delete')}</Text>
-            </TouchableOpacity>
+            {menuLink(t('I stopped taking it'), () => stop(item))}
+            {menuLink(t('Delete'), () => remove(item), true)}
           </View>
         )}
       </View>
@@ -159,64 +158,46 @@ export const MedicationsScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Medication & supplements')} showBack />
 
-        <View style={{ marginHorizontal: 20 }}>
+        <View style={styles.body}>
           <ZoneChangeBanner onChanged={load} />
-        </View>
-        <View style={styles.titleRow}>
-          <Text style={[styles.sectionTitle, { paddingHorizontal: 0 }]}>{t('Today')}</Text>
-          <InfoButton topic="medication" />
-        </View>
-        {today.length === 0 && asNeeded.length === 0 ? (
-          <Text style={styles.empty}>{t('Nothing scheduled for today.')}</Text>
-        ) : (
-          <View style={styles.card}>
-            <DoseRows doses={today} onChange={load} />
-            {asNeeded.map((item) => (
-              <View key={item.id} style={[styles.doseRow, (today.length > 0 || item !== asNeeded[0]) && styles.divider]}>
-                <Text style={styles.doseTime}>—</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.doseName}>{t(item.name)}</Text>
-                  <Text style={styles.itemSub}>
-                    {t('When needed · {n} today', { n: logs.filter((l) => l.medId === item.id && new Date(l.fecha).toDateString() === now.toDateString()).length })}
-                  </Text>
+          <SecRow title={t('Today')} right={<InfoButton topic="medication" color={FINE.mute} />} style={styles.firstSec} />
+          {today.length === 0 && asNeeded.length === 0 ? (
+            <Text style={styles.empty}>{t('Nothing scheduled for today.')}</Text>
+          ) : (
+            <View>
+              <DoseRows doses={today} onChange={load} />
+              {asNeeded.map((item) => (
+                <View key={item.id} style={fine.row}>
+                  <Text style={doseStyles.time}>—</Text>
+                  <View style={doseStyles.main}>
+                    <Text style={fine.rowTitle} numberOfLines={2}>
+                      {t(item.name)}
+                    </Text>
+                    <Text style={fine.rowSub}>
+                      {t('When needed · {n} today', { n: logs.filter((l) => l.medId === item.id && new Date(l.fecha).toDateString() === now.toDateString()).length })}
+                    </Text>
+                  </View>
+                  <Pill label={t('Took one')} onPress={() => logNow(item)} />
                 </View>
-                <TouchableOpacity style={styles.take} onPress={() => logNow(item)}>
-                  <Text style={styles.takeText}>{t('Took one')}</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-        {items.length > 0 && (
-          <TouchableOpacity style={styles.history} onPress={() => router.push('/medication-history')} activeOpacity={0.85}>
-            <Ionicons name="calendar-outline" size={18} color={Colors.accent} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.historyTitle}>{t('History')}</Text>
-              <Text style={styles.itemSub}>{t('See each day and fix what you forgot to mark')}</Text>
+              ))}
             </View>
-            <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-          </TouchableOpacity>
-        )}
+          )}
+          {items.length > 0 && <FRow title={t('History')} sub={t('See each day and fix what you forgot to mark')} onPress={() => router.push('/medication-history')} last />}
 
-        <Text style={styles.sectionTitle}>{t('What I take regularly')}</Text>
-        {regular.length ? regular.map(renderItem) : <Text style={styles.empty}>{t('Nothing yet.')}</Text>}
-        <TouchableOpacity style={styles.add} onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'regular' } })}>
-          <Ionicons name="add-circle-outline" size={20} color={Colors.accent} />
-          <Text style={styles.addText}>{t('Add a medicine or supplement')}</Text>
-        </TouchableOpacity>
+          <SecHead title={t('What I take regularly')} />
+          {regular.length ? regular.map(renderItem) : <Text style={styles.empty}>{t('Nothing yet.')}</Text>}
+          <FLink label={t('Add a medicine or supplement')} icon="add" onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'regular' } })} style={styles.add} />
 
-        <Text style={styles.sectionTitle}>{t('Short courses')}</Text>
-        <Text style={styles.hint}>{t('For when you are ill: antibiotics, painkillers… They end on their own.')}</Text>
-        {courses.map(renderItem)}
-        {finished.map((i) => (
-          <Text key={i.id} style={styles.finished}>
-            {t('{name}: finished', { name: t(i.name) })}
-          </Text>
-        ))}
-        <TouchableOpacity style={styles.add} onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'short' } })}>
-          <Ionicons name="add-circle-outline" size={20} color={Colors.accent} />
-          <Text style={styles.addText}>{t('Add a short course')}</Text>
-        </TouchableOpacity>
+          <SecHead title={t('Short courses')} />
+          <Text style={styles.hint}>{t('For when you are ill: antibiotics, painkillers… They end on their own.')}</Text>
+          {courses.map(renderItem)}
+          {finished.map((i) => (
+            <Text key={i.id} style={styles.finished}>
+              {t('{name}: finished', { name: t(i.name) })}
+            </Text>
+          ))}
+          <FLink label={t('Add a short course')} icon="add" onPress={() => router.push({ pathname: '/medication-setup', params: { mode: 'short' } })} style={styles.add} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -225,60 +206,24 @@ export const MedicationsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 18, marginBottom: 10 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
-  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, paddingHorizontal: 20, marginTop: -4, marginBottom: 10 },
-  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 6 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    marginHorizontal: 20,
-  },
-  doseRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
-  divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  doseTime: { width: 46, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  doseName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  take: { backgroundColor: Colors.accent, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  takeText: { color: Colors.background, fontSize: 12, fontFamily: INTER.medium },
-  skip: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
-  skipText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  doneTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  doneText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  history: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginTop: 10, paddingHorizontal: 14, paddingVertical: 10 },
-  historyTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  item: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 8,
-    overflow: 'hidden',
-  },
-  itemMain: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14 },
-  itemTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  itemDose: { color: Colors.textSecondary, fontFamily: INTER.medium },
-  itemSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  itemMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 4 },
-  menu: { borderTopWidth: 1, borderTopColor: Colors.divider, padding: 12, gap: 8 },
-  menuButton: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  menuRow: { paddingVertical: 4 },
-  menuText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  menuLabel: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    backgroundColor: Colors.background,
-  },
-  chipText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
-  add: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 10 },
-  addText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  finished: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, paddingHorizontal: 20, marginBottom: 4 },
+  body: { paddingHorizontal: 20 },
+  // La primera sección va pegada a la cabecera de la pantalla
+  firstSec: { marginTop: 4 },
+  hint: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 18, marginBottom: 4 },
+  empty: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, lineHeight: 19, paddingVertical: 8 },
+  // Lo que tomas: una fila con su línea fina; el menú de opciones se abre dentro, encima de la línea
+  item: { borderBottomWidth: 1, borderBottomColor: FINE.line },
+  itemMain: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  itemText: { flex: 1, minWidth: 0, paddingVertical: 11 },
+  itemDose: { ...ff('regular'), color: FINE.mute },
+  itemMeta: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 16, marginTop: 4 },
+  menuButton: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -8, marginTop: 2 },
+  menu: { paddingBottom: 10, gap: 2 },
+  menuRow: { minHeight: 38, justifyContent: 'center' },
+  menuText: { ...ff('regular'), color: FINE.jade, fontSize: 14 },
+  menuQuiet: { color: FINE.mute },
+  menuLabel: { ...fine.kicker, marginTop: 8, marginBottom: 8 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
+  add: { alignSelf: 'flex-start', justifyContent: 'flex-start' },
+  finished: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, paddingVertical: 6 },
 });

@@ -71,29 +71,34 @@ export function KuovaAgeSection({ tourScroll }: { tourScroll?: TourScroll }) {
   );
 }
 
-// Como el prototipo: la cifra grande y ligera y, al lado, cuánto más joven (o mayor) y el cambio desde la
-// analítica anterior solo si supera el margen. Al tocarla, el detalle.
+// Como el prototipo: la cifra grande y ligera y, al lado, cómo ha cambiado desde la analítica anterior (fundador,
+// 2026-11-17: «pondría directamente vs la anterior, no vs tu edad real»): «−5,8 años vs analítica anterior», solo si
+// supera el margen de las dos (si no, «sin cambio real»), y debajo la cifra de antes y el margen. Sin analítica anterior
+// (la primera), lo único con qué compararla es tu edad real. Al tocarla, el detalle.
 const KuovaAgeHero = ({ k, previous, sample = false, onPress }: { k: KuovaAge; previous: KuovaAge | null; sample?: boolean; onPress: () => void }) => {
   const change = previous ? realChange(k, previous) : null;
+  const years = (n: number) => t(Math.abs(n) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(n).toFixed(1)) });
+  const margin = t('± {n} years margin', { n: num(k.margin.toFixed(1)) });
+  // Corto (fundador, 2026-11-17: «pondría -5,8 años vs analítica anterior… más breve»)
+  const signed = (n: number) => `${n > 0 ? '+' : '−'}${num(Math.abs(n).toFixed(1))}`;
+  // Más alta que antes (o que tu edad, en la primera): en oro, como lo demás que conviene mirar
+  const worse = previous ? change != null && change > 0 : k.diff < 0;
+  const headline = previous
+    ? change == null
+      ? t('No real change vs previous test')
+      : t('{n} years vs previous test', { n: signed(change) })
+    : t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: years(k.diff) });
+  // Con analítica anterior, solo «Antes 31,3», sin el margen (fundador, 2026-11-17: «sólo pon Antes 31,3, y punto, nada
+  // de aclaraciones»)
+  const detail = previous ? t('Before {n}', { n: num(previous.age.toFixed(1)) }) : margin;
   return (
     <View style={styles.wrap}>
       <SecHead title={sample ? `${t('Your KUOVA age')} · ${t('sample')}` : t('Your KUOVA age')} more={t('See what moves it')} onMore={onPress} />
       <TouchableOpacity style={styles.hero} onPress={onPress} activeOpacity={0.8} accessibilityRole="button">
         <Text style={styles.age}>{num(k.age.toFixed(1))}</Text>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.diff, k.diff < 0 && { color: FINE.gold }]}>
-            {t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
-          </Text>
-          <Text style={styles.meta}>
-            {t('± {n} years', { n: num(k.margin.toFixed(1)) })}
-            {previous
-              ? ` · ${
-                  change == null
-                    ? t('no real change since your previous test')
-                    : t('{n} since your previous test', { n: `${change > 0 ? '+' : '−'}${num(Math.abs(change).toFixed(1))}` })
-                }`
-              : ''}
-          </Text>
+          <Text style={[styles.diff, worse && { color: FINE.gold }]}>{headline}</Text>
+          <Text style={styles.meta}>{detail}</Text>
         </View>
       </TouchableOpacity>
     </View>

@@ -2,6 +2,7 @@ import { createMetricRepository, definedOnly } from './metricRepository';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { compressPhoto } from '@/utils/imageUpload';
 import { planHabits, PlanHabits } from '@/logic/planHabits';
+import { workoutTypeFromRow, workoutTypeToRow } from '@/logic/workoutSports';
 import { wearableRepository } from '@/wearables/wearableRepository';
 import { toDailySeries } from '@/wearables/seriesLogic';
 import { generateHuaweiDummy } from '@/wearables/providers/huaweiDummy';
@@ -23,6 +24,9 @@ export interface WorkoutEntry {
   fecha: string;
   createdAt: string;
   type: WorkoutType;
+  // Con el tipo 'sport' («Otro» al apuntarlo, fundador 2026-11-17): qué deporte, la clave de uno de la lista o el
+  // nombre que se escribió (src/logic/workoutSports.ts). Opcional: los entrenos de antes no lo llevan
+  sport?: string;
   minutes: number;
   intensity: 'easy' | 'moderate' | 'hard';
 }
@@ -48,13 +52,15 @@ export interface MindfulSession {
 }
 export const mindfulRepository = createMetricRepository<MindfulSession>('hometest:mindful_sessions');
 
+// El deporte no tiene columna en la tabla: viaja dentro de `type`, que es texto libre ('sport:tennis'), y al leer
+// se separa otra vez. Sin migración; una fila de antes ('sport') se lee igual (src/logic/workoutSports.ts)
 export const workoutRepository = createMetricRepository<WorkoutEntry>('hometest:workouts', {
   table: 'workouts',
   dateColumn: 'performed_at',
   toRow: (e) =>
     definedOnly({
       id: e.id,
-      type: e.type,
+      type: e.type === undefined ? undefined : workoutTypeToRow(e.type, e.sport),
       minutes: e.minutes,
       intensity: e.intensity,
       performed_at: e.fecha,
@@ -62,7 +68,7 @@ export const workoutRepository = createMetricRepository<WorkoutEntry>('hometest:
     }),
   fromRow: (r) => ({
     id: r.id,
-    type: r.type,
+    ...(workoutTypeFromRow(r.type) as Pick<WorkoutEntry, 'type' | 'sport'>),
     minutes: r.minutes,
     intensity: r.intensity,
     fecha: r.performed_at,

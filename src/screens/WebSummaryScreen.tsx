@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { AppIcon } from '@/components/HealthIcons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -160,7 +161,7 @@ export const WebSummaryScreen = () => {
   const taken = doses.filter((d) => d.log?.status === 'taken').length;
   const firstName = useFirstName();
   const go = (pathname: string, params?: Record<string, string>) => router.navigate({ pathname, params } as any);
-  const icon = (n: string, c: string) => <Ionicons name={n as any} size={16} color={c} />;
+  const icon = (n: string, c: string) => <AppIcon name={n} size={16} color={c} />;
   const sampleNote = isSample ? ` · ${t('sample')}` : '';
 
   // "Para hoy": hasta 3 cosas concretas que mirar, sacadas de los datos (en vez de una ficha de perfil)

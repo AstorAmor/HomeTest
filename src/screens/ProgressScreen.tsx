@@ -5,33 +5,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { compareUpload, ChangeVerdict, ProgressResult, VERDICT_LABEL } from '@/utils/progress';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useSections } from '@/data/appPrefs';
 import { LabValuesList } from '@/components/LabValuesList';
 import { OutOfRangeSummary } from '@/components/OutOfRangeSummary';
+import { FChips } from '@/components/fine/FineForm';
+import { FineButton, FineLink } from '@/components/fine/FineMeasure';
 import { getRangeStatus, rangeText } from '@/utils/rangeStatus';
 import { TAB, tabHref } from '@/constants/tabs';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
-const VERDICT_COLOR = (): Record<ChangeVerdict, string> => ({
-  back_in_range: Colors.ok,
-  improving: Colors.ok,
-  still_in_range: Colors.textSecondary,
-  stable_out: Colors.attention,
-  worsening: Colors.danger,
-  newly_out: Colors.danger,
-});
-
-const VERDICT_ICON: Record<ChangeVerdict, string> = {
-  back_in_range: 'checkmark-circle',
-  improving: 'trending-up',
-  still_in_range: 'remove-circle-outline',
-  stable_out: 'pause-circle-outline',
-  worsening: 'trending-down',
-  newly_out: 'alert-circle',
+// Sin rojos (2026-11-16): lo que mejora en jade, lo que sigue igual apagado y lo que conviene vigilar en oro
+const VERDICT_COLOR: Record<ChangeVerdict, string> = {
+  back_in_range: FINE.jade,
+  improving: FINE.jade,
+  still_in_range: FINE.mute,
+  stable_out: FINE.gold,
+  worsening: FINE.gold,
+  newly_out: FINE.gold,
 };
 
 const shortDate = (iso: string) =>
@@ -42,6 +35,8 @@ const shortDate = (iso: string) =>
 //   mismo que se vio al escanearla). Es la que se abre desde Lab → Resultados.
 // - Progreso ("Ver mi progreso"): qué ha cambiado respecto al último valor conocido de cada
 //   marcador. Solo los que se han vuelto a medir. Se abre así después de escanear (?view=progress).
+// Desde el 2026-11-16, en fino: las dos pestañas en chips con borde, los recuentos como cifras grandes y ligeras
+// sin cajas, y cada valor en una fila con línea fina y su línea de rango.
 // Recuento como en Lab: en rango, para revisar (fuera) y sin referencia
 const countUpload = (u: LabUpload) => {
   const c = { in: 0, out: 0, none: 0 };
@@ -89,7 +84,6 @@ export const ProgressScreen = () => {
     );
   }
 
-  const colors = VERDICT_COLOR();
   const better = result.changes.filter((c) => c.verdict === 'back_in_range' || c.verdict === 'improving').length;
   const worse = result.changes.filter((c) => c.verdict === 'worsening' || c.verdict === 'newly_out').length;
   const same = result.changes.length - better - worse;
@@ -99,175 +93,159 @@ export const ProgressScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.analysis)} />
-        <Text style={styles.subhead}>
+        <Text style={[fine.lead, styles.pad]}>
           {upload.testDate ? shortDate(upload.testDate) : t('Uploaded test')} · {upload.labName ?? t('User upload')}
         </Text>
 
-        <View style={styles.segment}>
-          {(
-            [
-              ['results', 'Results'],
-              ['progress', 'Progress'],
-            ] as const
-          ).map(([id, label]) => (
-            <TouchableOpacity key={id} style={[styles.segItem, tab === id && styles.segItemOn]} onPress={() => setTab(id)} activeOpacity={0.85}>
-              <Text style={[styles.segText, tab === id && styles.segTextOn]}>{t(label)}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <FChips
+          options={[
+            { id: 'results' as const, label: t('Results') },
+            { id: 'progress' as const, label: t('Progress') },
+          ]}
+          value={tab}
+          onChange={setTab}
+          style={styles.tabs}
+        />
 
         {tab === 'results' && (
           <>
             <View style={styles.summary}>
-              <Stat value={counts.in} label={t('In range')} color={Colors.ok} onPress={() => jumpTo('in')} />
-              <Stat value={counts.out} label={t('To review')} color={counts.out ? Colors.attention : Colors.textSecondary} onPress={() => jumpTo('out')} />
-              {counts.none > 0 && <Stat value={counts.none} label={t('No reference')} color={Colors.textSecondary} onPress={() => jumpTo('none')} />}
+              <Stat value={counts.in} label={t('In range')} color={FINE.jade} onPress={() => jumpTo('in')} />
+              <Stat value={counts.out} label={t('To review')} color={counts.out ? FINE.gold : FINE.ivory} onPress={() => jumpTo('out')} />
+              {counts.none > 0 && <Stat value={counts.none} label={t('No reference')} color={FINE.ivory} onPress={() => jumpTo('none')} />}
             </View>
-            {/* Agrupados por estado, en el mismo orden que los bloques de arriba */}
+            {/* Agrupados por estado, en el mismo orden que los recuentos de arriba */}
             <View onLayout={(e) => (groupY.current.out = e.nativeEvent.layout.y)}>
               <OutOfRangeSummary report={upload.data} uploadId={upload.id} />
             </View>
-            <View style={styles.table} onLayout={(e) => (groupY.current.in = e.nativeEvent.layout.y)}>
+            <View style={styles.pad} onLayout={(e) => (groupY.current.in = e.nativeEvent.layout.y)}>
               <LabValuesList report={upload.data} group="in" title={t('In range')} uploadId={upload.id} />
             </View>
-            <View style={styles.table} onLayout={(e) => (groupY.current.none = e.nativeEvent.layout.y)}>
+            <View style={styles.pad} onLayout={(e) => (groupY.current.none = e.nativeEvent.layout.y)}>
               <LabValuesList report={upload.data} group="none" title={t('No reference')} uploadId={upload.id} />
             </View>
           </>
         )}
 
         {tab === 'progress' && (
-        <>
-        <Text style={styles.intro}>
-          {t("Compared with the last value we had for each marker. Markers that weren't in this test stay as they were.")}
-        </Text>
-
-        <View style={styles.summary}>
-          <Stat value={better} label={t('Better')} color={Colors.ok} />
-          <Stat value={same} label={t('No change')} color={Colors.textSecondary} />
-          <Stat value={worse} label={t('To watch')} color={worse ? Colors.danger : Colors.textSecondary} />
-        </View>
-
-        {result.changes.length === 0 && (
-          <Text style={styles.empty}>{t('None of these markers had an earlier value to compare with.')}</Text>
-        )}
-
-        {result.changes.map((c) => (
-          <View key={c.markerId} style={styles.card}>
-            <View style={styles.row}>
-              <Ionicons name={VERDICT_ICON[c.verdict] as any} size={18} color={colors[c.verdict]} />
-              <Text style={styles.name}>{c.name}</Text>
-              <Text style={[styles.verdict, { color: colors[c.verdict] }]}>{t(VERDICT_LABEL[c.verdict])}</Text>
-            </View>
-            <View style={styles.values}>
-              <Text style={styles.before}>
-                {c.before} <Text style={styles.unit}>{c.unit}</Text>
-              </Text>
-              <Ionicons name="arrow-forward" size={14} color={Colors.textMuted} />
-              <Text style={[styles.after, { color: c.afterStatus === 'in' ? Colors.ok : Colors.attention }]}>
-                {c.after} <Text style={styles.unit}>{c.unit}</Text>
-              </Text>
-            </View>
-            <Text style={styles.meta}>
-              {t('Before: {date} ({source})', { date: shortDate(c.beforeDate), source: c.beforeSource })}
-              {rangeText(c.low, c.high) ? ` · ${t('Range: {range}', { range: rangeText(c.low, c.high)! })}` : ''}
+          <View style={styles.pad}>
+            <Text style={[fine.note, styles.intro]}>
+              {t("Compared with the last value we had for each marker. Markers that weren't in this test stay as they were.")}
             </Text>
-          </View>
-        ))}
 
-        {(result.firstTime.length > 0 || result.notCompared.length > 0) && (
-          <TouchableOpacity style={styles.othersToggle} onPress={() => setShowOthers((v) => !v)}>
-            <Text style={styles.othersText}>
-              {result.firstTime.length + result.notCompared.length === 1
-                ? t('1 other value not compared')
-                : t('{n} other values not compared', { n: result.firstTime.length + result.notCompared.length })}
-            </Text>
-            <Ionicons name={showOthers ? 'chevron-up' : 'chevron-down'} size={16} color={Colors.textSecondary} />
-          </TouchableOpacity>
-        )}
-        {showOthers && (
-          <View style={styles.others}>
-            {result.firstTime.map((f) => (
-              <Text key={`f-${f.name}`} style={styles.otherLine}>
-                {f.name}: {f.value} {f.unit} · {t('first time measured')}
-              </Text>
+            <View style={[styles.summary, styles.summaryIn]}>
+              <Stat value={better} label={t('Better')} color={better ? FINE.jade : FINE.ivory} />
+              <Stat value={same} label={t('No change')} color={FINE.ivory} />
+              <Stat value={worse} label={t('To watch')} color={worse ? FINE.gold : FINE.ivory} />
+            </View>
+
+            {result.changes.length === 0 && <Text style={fine.note}>{t('None of these markers had an earlier value to compare with.')}</Text>}
+
+            {result.changes.map((c, i) => (
+              <View key={c.markerId} style={[fine.row, i === 0 && styles.firstRow]}>
+                <View style={styles.flex}>
+                  <View style={styles.changeHead}>
+                    <Text style={[fine.rowTitle, styles.flex]} numberOfLines={2}>
+                      {c.name}
+                    </Text>
+                    <Text style={[styles.verdict, { color: VERDICT_COLOR[c.verdict] }]}>{t(VERDICT_LABEL[c.verdict])}</Text>
+                  </View>
+                  <View style={styles.values}>
+                    <Text style={styles.before}>
+                      {c.before} <Text style={styles.unit}>{c.unit}</Text>
+                    </Text>
+                    <Ionicons name="arrow-forward" size={13} color={FINE.mute} />
+                    <Text style={[styles.after, { color: c.afterStatus === 'in' ? FINE.ivory : FINE.gold }]}>
+                      {c.after} <Text style={styles.unit}>{c.unit}</Text>
+                    </Text>
+                  </View>
+                  <Text style={fine.rowSub}>
+                    {t('Before: {date} ({source})', { date: shortDate(c.beforeDate), source: c.beforeSource })}
+                    {rangeText(c.low, c.high) ? ` · ${t('Range: {range}', { range: rangeText(c.low, c.high)! })}` : ''}
+                  </Text>
+                </View>
+              </View>
             ))}
-            {result.notCompared.map((n, i) => (
-              <Text key={`n-${n.name}-${i}`} style={styles.otherLine}>
-                {n.name} · {n.reason}
-              </Text>
-            ))}
+
+            {(result.firstTime.length > 0 || result.notCompared.length > 0) && (
+              <TouchableOpacity
+                style={styles.othersToggle}
+                onPress={() => setShowOthers((v) => !v)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showOthers }}
+              >
+                <Text style={fine.link}>
+                  {result.firstTime.length + result.notCompared.length === 1
+                    ? t('1 other value not compared')
+                    : t('{n} other values not compared', { n: result.firstTime.length + result.notCompared.length })}
+                </Text>
+                <Ionicons name={showOthers ? 'chevron-up' : 'chevron-down'} size={14} color={FINE.jade} />
+              </TouchableOpacity>
+            )}
+            {showOthers && (
+              <View style={styles.others}>
+                {result.firstTime.map((f) => (
+                  <Text key={`f-${f.name}`} style={styles.otherLine}>
+                    {f.name}: {f.value} {f.unit} · {t('first time measured')}
+                  </Text>
+                ))}
+                {result.notCompared.map((n, i) => (
+                  <Text key={`n-${n.name}-${i}`} style={styles.otherLine}>
+                    {n.name} · {n.reason}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
-        )}
-        </>
         )}
       </ScrollView>
 
       {/* Desde el 2026-11-06 ya no hay «Actualizar mi plan»: la analítica recomienda objetivos (Tus objetivos) y,
           si quieres un plan, lo hace un especialista */}
-      {show('plan') && (
-        <TouchableOpacity style={styles.cta} onPress={() => router.push('/metas-objetivos')}>
-          <Ionicons name="flag-outline" size={18} color={Colors.background} />
-          <Text style={styles.ctaText}>{t('Review my goals')}</Text>
-        </TouchableOpacity>
-      )}
-      <TouchableOpacity style={styles.doctor} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} hitSlop={8}>
-        <Ionicons name="medkit-outline" size={16} color={Colors.accent} />
-        <Text style={styles.doctorText}>{t('Ask a doctor to review it')}</Text>
-      </TouchableOpacity>
+      <View style={styles.footer}>
+        {show('plan') && <FineButton label={t('Review my goals')} onPress={() => router.push('/metas-objetivos')} />}
+        <FineLink label={t('Ask a doctor to review it')} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} />
+      </View>
     </SafeAreaView>
   );
 };
 
+// Un recuento: la cifra grande y ligera y su nombre pequeño debajo; al tocarlo, baja a su grupo
 const Stat = ({ value, label, color, onPress }: { value: number; label: string; color: string; onPress?: () => void }) => (
-  <TouchableOpacity style={styles.stat} onPress={onPress} disabled={!onPress || value === 0} activeOpacity={0.8} accessibilityRole="button">
+  <TouchableOpacity
+    style={styles.stat}
+    onPress={onPress}
+    disabled={!onPress || value === 0}
+    activeOpacity={0.7}
+    accessibilityRole="button"
+    accessibilityLabel={`${value} · ${label}`}
+  >
     <Text style={[styles.statValue, { color }]}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
+    <Text style={fine.kicker}>{label}</Text>
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
-  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginHorizontal: 20, marginBottom: 14 },
-  subhead: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginHorizontal: 20, marginBottom: 12 },
-  segment: { flexDirection: 'row', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 4, marginHorizontal: 20, marginBottom: 14 },
-  segItem: { flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center' },
-  segItemOn: { backgroundColor: Colors.accent },
-  segText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  segTextOn: { color: Colors.background },
-  table: { marginHorizontal: 20 },
-  allTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginHorizontal: 20, marginBottom: 10 },
-  summary: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 16 },
-  stat: { flex: 1, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingVertical: 12, alignItems: 'center' },
-  statValue: { fontSize: 24, fontFamily: INTER.medium },
-  statLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginHorizontal: 20 },
-  card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14, marginHorizontal: 20, marginBottom: 8, gap: 6 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, flex: 1 },
-  verdict: { fontSize: 12, fontFamily: INTER.medium },
-  values: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  before: { color: Colors.textSecondary, fontSize: 16, fontFamily: INTER.medium },
-  after: { fontSize: 18, fontFamily: INTER.medium },
-  unit: { fontSize: 11, fontFamily: INTER.regular, color: Colors.textMuted },
-  meta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
-  othersToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: 20, marginTop: 10 },
-  othersText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  others: { marginHorizontal: 20, marginTop: 8, gap: 4 },
-  otherLine: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
-  cta: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  doctor: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 12 },
-  doctorText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  pad: { marginHorizontal: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  tabs: { marginHorizontal: 20, marginTop: 14 },
+  intro: { marginTop: 18 },
+  summary: { flexDirection: 'row', gap: 12, marginHorizontal: 20, marginTop: 18 },
+  summaryIn: { marginHorizontal: 0, marginBottom: 6 },
+  stat: { flex: 1, gap: 2 },
+  statValue: { ...fine.num, fontSize: 36, lineHeight: 42 },
+  firstRow: { borderTopWidth: 1, borderTopColor: FINE.rule, marginTop: 12 },
+  changeHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  verdict: { ...ff('regular'), fontSize: 12.5 },
+  values: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  before: { ...ff('light'), color: FINE.mute, fontSize: 17, fontVariant: ['tabular-nums'] },
+  after: { ...ff('light'), fontSize: 20, fontVariant: ['tabular-nums'] },
+  unit: { ...ff('regular'), fontSize: 11.5, color: FINE.mute },
+  othersToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
+  others: { marginTop: 8, gap: 4 },
+  otherLine: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 18 },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6, gap: 4 },
 });

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LotusIcon } from '@/components/fine/LotusIcon';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutChangeEvent } from 'react-native';
 import Svg, { Path, Circle, Line, Rect } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,11 +21,12 @@ import {
   type DayValues,
   type SeriesId,
 } from '@/logic/dayChart';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // La gráfica de «Tus últimos días»: ánimo y energía por defecto y las medidas que añadas debajo, cada una en su
 // escala (logic/dayChart.ts). A las mujeres, la fase del ciclo de cada día en una franja bajo la gráfica.
-// Tocarla muestra los valores de ese día.
+// Tocarla muestra los valores de ese día. Desde el 2026-11-16, en fino: líneas de guía apenas marcadas, las
+// medidas en chips con borde (la elegida, con el borde de su color) y las notas apagadas.
 
 // Ánimo y energía, como en Hoy (oro y verde). Las que más se juntan con ellas (sueño, pasos, VFC, pulso),
 // de tonos bien distintos; el estrés, gris
@@ -141,10 +143,10 @@ export const DaysChart = ({ keys, values, selected, onChange, cycle, sample }: P
         {width > 0 && (
           <Svg width={width} height={height}>
             {[0, 0.5, 1].map((g) => (
-              <Line key={g} x1={0} x2={width} y1={PAD_TOP + g * PLOT_H} y2={PAD_TOP + g * PLOT_H} stroke={Colors.divider} strokeWidth={1} strokeDasharray="3 5" />
+              <Line key={g} x1={0} x2={width} y1={PAD_TOP + g * PLOT_H} y2={PAD_TOP + g * PLOT_H} stroke={FINE.line} strokeWidth={1} strokeDasharray="3 5" />
             ))}
             {at != null && (
-              <Line x1={x(at)} x2={x(at)} y1={PAD_TOP - 6} y2={PAD_TOP + PLOT_H} stroke={Colors.textSecondary} strokeWidth={1} strokeDasharray="2 3" />
+              <Line x1={x(at)} x2={x(at)} y1={PAD_TOP - 6} y2={PAD_TOP + PLOT_H} stroke={FINE.mute} strokeWidth={1} strokeDasharray="2 3" />
             )}
             {selected.map((id) => {
               const vs = values[id];
@@ -225,7 +227,7 @@ export const DaysChart = ({ keys, values, selected, onChange, cycle, sample }: P
 
       {showCycle && (
         <View style={styles.phases}>
-          <Ionicons name="rose-outline" size={13} color={Colors.pulseAccent} />
+          <LotusIcon size={13} color={FINE.mute} />
           {phasesShown.map((p) => (
             <View key={p} style={styles.phase}>
               <View style={[styles.phaseDot, { backgroundColor: PHASE_COLORS[p] }]} />
@@ -244,14 +246,14 @@ export const DaysChart = ({ keys, values, selected, onChange, cycle, sample }: P
           return (
             <TouchableOpacity
               key={d.id}
-              style={[styles.chip, on ? { backgroundColor: withAlpha(color, 0.16), borderColor: color } : !data && styles.chipNoData]}
+              style={[styles.chip, on ? { borderColor: withAlpha(color, 0.75) } : !data && styles.chipNoData]}
               onPress={() => toggle(d.id)}
               activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
               accessibilityLabel={`${t(SERIES_BY_ID[d.id].label)}${on ? '' : `: ${t('add to the chart')}`}`}
             >
-              {on ? <View style={[styles.chipDot, { backgroundColor: color }]} /> : <Ionicons name="add" size={14} color={Colors.textMuted} />}
+              {on ? <View style={[styles.chipDot, { backgroundColor: color }]} /> : <Ionicons name="add" size={14} color={FINE.mute} />}
               <Text style={[styles.chipText, on && styles.chipTextOn]}>{t(d.label)}</Text>
               {on && <Text style={styles.chipScale}>{data ? scaleText(d.id, scales[d.id]) : t('no data')}</Text>}
             </TouchableOpacity>
@@ -269,42 +271,44 @@ export const DaysChart = ({ keys, values, selected, onChange, cycle, sample }: P
 
 const styles = StyleSheet.create({
   empty: { position: 'absolute', left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
+  emptyText: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
   tip: {
     position: 'absolute',
     top: -4,
     width: 158,
-    backgroundColor: withAlpha(Colors.backgroundElevated, 0.96),
+    backgroundColor: 'rgba(11,41,33,0.96)',
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    borderColor: FINE.line,
+    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     gap: 1,
   },
-  tipDate: { color: Colors.textSecondary, fontSize: 10, fontFamily: INTER.medium },
-  tipRow: { fontSize: 12, fontFamily: INTER.medium },
+  tipDate: { ...ff('regular'), color: FINE.mute, fontSize: 10.5 },
+  tipRow: { ...ff('medium'), fontSize: 12 },
   xLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  xLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
+  xLabel: { ...ff('regular'), color: FINE.mute, fontSize: 10.5 },
   phases: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 8 },
   phase: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   phaseDot: { width: 8, height: 8, borderRadius: 4, opacity: 0.8 },
-  phaseText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11 },
+  phaseText: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
+  // Las medidas, en chips con borde (prototipo, `.chipsw`)
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 14 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    minHeight: 34,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingHorizontal: 10,
+    borderColor: FINE.line,
+    borderRadius: 20,
+    paddingHorizontal: 11,
     paddingVertical: 6,
   },
   chipNoData: { opacity: 0.55 },
-  chipDot: { width: 8, height: 8, borderRadius: 4 },
-  chipText: { color: Colors.textSecondary, fontSize: 12.5, fontFamily: INTER.medium },
-  chipTextOn: { color: Colors.textPrimary, fontFamily: INTER.medium },
-  chipScale: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
-  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11.5, lineHeight: 16, marginTop: 10 },
+  chipDot: { width: 7, height: 7, borderRadius: 4 },
+  chipText: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  chipTextOn: { color: FINE.ivory },
+  chipScale: { ...ff('regular'), color: FINE.mute, fontSize: 11 },
+  note: { ...fine.note, fontSize: 12, lineHeight: 17, marginTop: 10 },
 });

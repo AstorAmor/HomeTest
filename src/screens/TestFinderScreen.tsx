@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TestCard } from '@/components/TestCard';
-import { Colors, withAlpha } from '@/constants/colors';
+import { SecHead } from '@/components/fine/Fine';
+import { FButton, FLink, FOption, formStyles } from '@/components/fine/FineForm';
+import { StepsBar } from '@/components/fine/FineSteps';
 import { CATALOG, formatPrice, localizeTest, MEMBERSHIP, totalPrice } from '@/data/testCatalog';
 import { getMySubscription } from '@/data/orders';
 import { profileRepository, Sex } from '@/data/profileRepository';
@@ -20,21 +21,21 @@ import {
   visibleOptions,
 } from '@/logic/testFinder';
 import { TAB, tabHref } from '@/constants/tabs';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 const TOP = 3;
-
-const OptionIcon = ({ icon, color }: { icon: string; color: string }) =>
-  icon.startsWith('mci:') ? (
-    <MaterialCommunityIcons name={icon.slice(4) as any} size={17} color={color} />
-  ) : (
-    <Ionicons name={icon as any} size={17} color={color} />
-  );
 
 // "¿Te sientes diferente y no sabes qué analítica pedir?": 4 preguntas rápidas y, al final,
 // las pruebas del catálogo que encajan, con la misma ficha que la tienda, para marcarlas y
 // pedirlas juntas, y lo que ya mide el análisis anual de la suscripción. No es consejo médico:
 // el aviso y el acceso al médico salen siempre.
+// En el lenguaje fino (src/theme/fine.ts) desde el 2026-11-17; el fundador: «¿no sabes cuál pedir? → Tiene la
+// estética antigua». Las preguntas, como los otros cuestionarios (Conoce tus raíces, el del ciclo): arriba la barra
+// con ‹ en jade y el avance como una línea cometa (StepsBar), la pregunta grande y ligera, las respuestas en filas con
+// una línea fina y su marca redonda, sin iconos, y el botón de seguir en esmeralda. El resultado, sin tarjetas de
+// color: las pruebas en filas (TestCard), los avisos que salen de lo contestado en una tarjeta casi transparente con
+// borde de oro y el resto como notas apagadas bajo una cabecera pequeña. Las preguntas, el cálculo y lo que se pide
+// no cambian.
 export const TestFinderScreen = () => {
   const router = useRouter();
   const scroll = useRef<ScrollView>(null);
@@ -63,6 +64,8 @@ export const TestFinderScreen = () => {
   const step = FINDER_STEPS[stepIndex];
   const chosen = answers[step.id] ?? [];
 
+  const close = () => (router.canGoBack() ? router.back() : router.replace(tabHref(TAB.analysis) as any));
+
   const next = () => {
     if (stepIndex < FINDER_STEPS.length - 1) setStepIndex(stepIndex + 1);
     else {
@@ -75,6 +78,13 @@ export const TestFinderScreen = () => {
     scroll.current?.scrollTo({ y: 0, animated: false });
   };
 
+  const back = () => {
+    if (stepIndex > 0) {
+      setStepIndex(stepIndex - 1);
+      scroll.current?.scrollTo({ y: 0, animated: false });
+    } else close();
+  };
+
   const restart = () => {
     setDone(false);
     setStepIndex(0);
@@ -84,58 +94,30 @@ export const TestFinderScreen = () => {
   const toggleSelected = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
   const total = totalPrice(selected.map((id) => tests.get(id)!).filter(Boolean));
 
-  const DoctorButton = () => (
-    <TouchableOpacity style={styles.doctorBtn} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-      <Ionicons name="medkit-outline" size={18} color={Colors.accent} />
-      <Text style={styles.doctorBtnText}>{t('Talk to a specialist')}</Text>
-    </TouchableOpacity>
-  );
-
   // ---- Preguntas ----
   if (!done) {
+    const options = visibleOptions(step, sex);
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.analysis)} />
-        <View style={styles.progressRow}>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${((stepIndex + 1) / FINDER_STEPS.length) * 100}%` }]} />
-          </View>
-          <Text style={styles.progressText}>{t('{a} of {b}', { a: stepIndex + 1, b: FINDER_STEPS.length })}</Text>
-        </View>
+        <StepsBar index={stepIndex} total={FINDER_STEPS.length} onBack={back} />
         <ScrollView ref={scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>{t(step.title)}</Text>
-          <Text style={styles.subtitle}>{t(step.subtitle)}</Text>
-          <View style={styles.chips}>
-            {visibleOptions(step, sex).map((o) => {
-              const on = chosen.includes(o.id);
-              return (
-                <TouchableOpacity
-                  key={o.id}
-                  style={[styles.chip, on && styles.chipOn]}
-                  onPress={() => setAnswers((a) => ({ ...a, [step.id]: toggleOption(step, a[step.id] ?? [], o.id) }))}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: on }}
-                >
-                  <OptionIcon icon={o.icon} color={on ? Colors.accent : Colors.textSecondary} />
-                  <Text style={[styles.chipText, on && styles.chipTextOn]}>{label(o)}</Text>
-                </TouchableOpacity>
-              );
-            })}
+          <Text style={styles.q}>{t(step.title)}</Text>
+          <Text style={styles.lead}>{t(step.subtitle)}</Text>
+          <View>
+            {options.map((o, i) => (
+              <FOption
+                key={o.id}
+                multi
+                title={label(o)}
+                on={chosen.includes(o.id)}
+                onPress={() => setAnswers((a) => ({ ...a, [step.id]: toggleOption(step, a[step.id] ?? [], o.id) }))}
+                last={i === options.length - 1}
+              />
+            ))}
           </View>
         </ScrollView>
         <View style={styles.footer}>
-          {stepIndex > 0 && (
-            <TouchableOpacity style={styles.backBtn} onPress={() => setStepIndex(stepIndex - 1)}>
-              <Ionicons name="chevron-back" size={18} color={Colors.textPrimary} />
-              <Text style={styles.backText}>{t('Back')}</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.nextBtn} onPress={next}>
-            <Text style={styles.nextText}>
-              {stepIndex === FINDER_STEPS.length - 1 ? t('See my tests') : chosen.length ? t('Next') : t('Skip')}
-            </Text>
-            <Ionicons name="arrow-forward" size={18} color={Colors.background} />
-          </TouchableOpacity>
+          <FButton label={stepIndex === FINDER_STEPS.length - 1 ? t('See my tests') : chosen.length ? t('Next') : t('Skip')} onPress={next} />
         </View>
       </SafeAreaView>
     );
@@ -167,144 +149,130 @@ export const TestFinderScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView ref={scroll} contentContainerStyle={styles.results} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Which test should I take?')} showBack backFallback={tabHref(TAB.analysis)} />
+        <ScreenHeader title={t('Test finder')} showBack backFallback={tabHref(TAB.analysis)} />
 
-        <View style={styles.resultHead}>
-          <Text style={styles.title}>{picks.length ? t('These tests could help you') : t('Your yearly analysis already looks at this')}</Text>
-          <Text style={styles.subtitle}>
+        <View style={styles.pad}>
+          <Text style={styles.q}>{picks.length ? t('Suggested tests') : t('Already in the yearly analysis')}</Text>
+          <Text style={styles.lead}>
             {picks.length
-              ? t('Based on what you told us. Tick the ones you want and order them together.')
-              : t('Based on what you told us, no separate test adds much: what usually explains it is already in the yearly analysis.')}
+              ? t('Based on your answers. Select the ones to order together.')
+              : t('Based on your answers, no separate test adds much: the usual causes are already in the yearly analysis.')}
           </Text>
-        </View>
 
-        {flags.includes('mood') && (
-          <View style={[styles.note, styles.noteMood]}>
-            <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.violet} />
-            <View style={{ flex: 1, gap: 6 }}>
-              <Text style={styles.noteText}>
+          {/* Lo que conviene hablar también con alguien, por lo contestado: tarjeta casi transparente con borde de oro,
+              sin icono ni color de alarma */}
+          {flags.includes('mood') && (
+            <View style={styles.notice}>
+              <Text style={styles.noticeText}>
                 {t("If you've felt down for weeks, talk to a professional too. If you ever think about harming yourself, call 024 (free, 24 h, Spain).")}
               </Text>
-              <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'psychologist' } })}>
-                <Text style={styles.noteLink}>{t('See psychologists')}</Text>
-              </TouchableOpacity>
+              <FLink
+                label={`${t('See psychologists')} ›`}
+                onPress={() => router.push({ pathname: '/professionals', params: { role: 'psychologist' } })}
+                style={styles.noticeLink}
+              />
             </View>
-          </View>
-        )}
+          )}
 
-        {flags.includes('weight_loss') && (
-          <View style={styles.note}>
-            <Ionicons name="medkit-outline" size={18} color={Colors.attention} />
-            <View style={{ flex: 1, gap: 6 }}>
-              <Text style={styles.noteText}>
+          {flags.includes('weight_loss') && (
+            <View style={styles.notice}>
+              <Text style={styles.noticeText}>
                 {t('Losing weight without trying (around 5% of your weight in 6 to 12 months) is worth telling a doctor about too, even if you feel well.')}
               </Text>
-              <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-                <Text style={styles.noteLink}>{t('Talk to a doctor')}</Text>
-              </TouchableOpacity>
+              <FLink
+                label={`${t('Talk to a doctor')} ›`}
+                onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}
+                style={styles.noticeLink}
+              />
             </View>
-          </View>
-        )}
+          )}
 
-        {top.map((p) => card(p.id, p.reasons))}
+          {picks.length > 0 && <View style={styles.list}>{top.map((p) => card(p.id, p.reasons))}</View>}
 
-        {rest.length > 0 && (
-          <>
-            {showMore && rest.map((p) => card(p.id, p.reasons))}
-            <TouchableOpacity style={styles.moreBtn} onPress={() => setShowMore((v) => !v)}>
-              <Text style={styles.moreText}>
-                {showMore ? t('See fewer options') : t('See more options ({n})', { n: rest.length })}
-              </Text>
-              <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={Colors.accent} />
-            </TouchableOpacity>
-          </>
-        )}
-
-        {flags.includes('allergy') && (
-          <View style={styles.note}>
-            <Ionicons name="flower-outline" size={18} color={Colors.green} />
-            <Text style={[styles.noteText, { flex: 1 }]}>
-              {t('Being sensitised to something is not the same as being allergic: an allergist reads the allergy test together with your symptoms.')}
-            </Text>
-          </View>
-        )}
-
-        {flags.includes('stress_sleep') && (
-          <View style={styles.note}>
-            <Ionicons name="moon-outline" size={18} color={Colors.violet} />
-            <Text style={[styles.noteText, { flex: 1 }]}>
-              {t('No blood test measures stress or sleep. The yearly analysis does look at what often lies behind tiredness: iron, B12, TSH and vitamin D.')}
-            </Text>
-          </View>
-        )}
-
-        {/* La suscripción cubre la mayoría: se ofrece como alternativa, o se recuerda si ya la tiene */}
-        {covered.length > 0 &&
-          (subscribed ? (
-            <View style={styles.note}>
-              <Ionicons name="star-outline" size={18} color={Colors.amber} />
-              <Text style={[styles.noteText, { flex: 1 }]}>
-                {t('Your yearly analysis already measures {list}. If anything comes out of range, you can measure it again in your follow-up, 6 months later.', {
-                  list: coveredText,
-                })}
-              </Text>
-            </View>
-          ) : (
+          {rest.length > 0 && (
             <>
-              <Text style={styles.sectionTitle}>{picks.length ? t('Would you rather check everything?') : t('What the subscription measures')}</Text>
-              <Text style={styles.sectionSub}>
-                {t("The subscription's yearly Kuova Baseline analysis measures {list} and much more, and the follow-up 6 months later shows whether it changes.", {
-                  list: coveredText,
-                })}
-              </Text>
-              <TestCard
-                test={localizeTest(MEMBERSHIP)}
-                featured
-                open
-                onOrder={() => router.push({ pathname: '/checkout', params: { id: MEMBERSHIP.id } })}
+              {showMore && rest.map((p) => card(p.id, p.reasons))}
+              <FLink
+                label={showMore ? t('See fewer options') : t('See more options ({n})', { n: rest.length })}
+                onPress={() => setShowMore((v) => !v)}
+                style={styles.more}
               />
             </>
-          ))}
+          )}
 
-        <View style={styles.disclaimer}>
-          <View style={styles.disclaimerHead}>
-            <Ionicons name="information-circle-outline" size={20} color={Colors.attention} />
-            <Text style={styles.disclaimerTitle}>{t('This is not medical advice')}</Text>
-          </View>
-          <Text style={styles.disclaimerText}>
+          {/* Lo que conviene saber de lo contestado: notas apagadas, sin icono */}
+          {flags.includes('allergy') && (
+            <Text style={styles.aside}>
+              {t('Being sensitised to something is not the same as being allergic: an allergist reads the allergy test together with your symptoms.')}
+            </Text>
+          )}
+          {flags.includes('stress_sleep') && (
+            <Text style={styles.aside}>
+              {t('No blood test measures stress or sleep. The yearly analysis does look at what often lies behind tiredness: iron, B12, TSH and vitamin D.')}
+            </Text>
+          )}
+
+          {/* La suscripción cubre la mayoría: se ofrece como alternativa, o se recuerda si ya la tiene */}
+          {covered.length > 0 &&
+            (subscribed ? (
+              <>
+                <SecHead title={t('Your yearly analysis')} />
+                <Text style={styles.p}>
+                  {t('Your yearly analysis already measures {list}. If anything comes out of range, you can measure it again in your follow-up, 6 months later.', {
+                    list: coveredText,
+                  })}
+                </Text>
+              </>
+            ) : (
+              <>
+                <SecHead title={picks.length ? t('Alternative: the subscription') : t('What the subscription measures')} />
+                <Text style={[styles.p, styles.pGap]}>
+                  {t("The subscription's yearly Kuova Baseline analysis measures {list} and much more, and the follow-up 6 months later shows whether it changes.", {
+                    list: coveredText,
+                  })}
+                </Text>
+                <TestCard
+                  test={localizeTest(MEMBERSHIP)}
+                  featured
+                  open
+                  onOrder={() => router.push({ pathname: '/checkout', params: { id: MEMBERSHIP.id } })}
+                />
+              </>
+            ))}
+
+          {/* No es consejo médico: siempre, al final, con el acceso al médico */}
+          <SecHead title={t('This is not medical advice')} />
+          <Text style={styles.note}>
             {t('These suggestions are based on your answers and on the most common causes; they are not a diagnosis. For a precise recommendation, talk to a doctor.')}
           </Text>
-          <Text style={styles.disclaimerText}>
+          <Text style={styles.note}>
             {t("If you have chest pain, shortness of breath, blood in your stools or a lot of weight loss for no reason, don't wait for a test: see your doctor or go to A&E.")}
           </Text>
-          <DoctorButton />
-        </View>
+          <FLink
+            label={`${t('Talk to a specialist')} ›`}
+            onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}
+            style={styles.leftLink}
+          />
 
-        <View style={styles.links}>
-          <TouchableOpacity onPress={() => router.push({ pathname: '/store', params: { view: 'tests' } })}>
-            <Text style={styles.link}>{t('See the whole catalogue')}</Text>
-          </TouchableOpacity>
-          <Text style={styles.linkDot}>·</Text>
-          <TouchableOpacity onPress={restart}>
-            <Text style={styles.link}>{t('Change my answers')}</Text>
-          </TouchableOpacity>
+          <View style={styles.links}>
+            <FLink label={t('See the whole catalogue')} onPress={() => router.push({ pathname: '/store', params: { view: 'tests' } })} />
+            <Text style={styles.linkDot}>·</Text>
+            <FLink label={t('Change my answers')} onPress={restart} />
+          </View>
         </View>
       </ScrollView>
 
       {picks.length > 0 && (
-        <View style={styles.orderBar}>
-          <TouchableOpacity
-            style={[styles.orderBtn, !selected.length && styles.orderBtnOff]}
+        <View style={[styles.footer, styles.orderBar]}>
+          <FButton
             disabled={!selected.length}
             onPress={() => router.push({ pathname: '/checkout', params: { ids: selected.join(',') } })}
-          >
-            <Ionicons name="bag-check-outline" size={18} color={selected.length ? Colors.background : Colors.textMuted} />
-            <Text style={[styles.orderText, !selected.length && { color: Colors.textMuted }]}>
-              {selected.length
+            label={
+              selected.length
                 ? `${tn(selected.length, 'Order {n} test', 'Order {n} tests')}${total != null ? ` · ${formatPrice(total)}` : ''}`
-                : t('Tick at least one test')}
-            </Text>
-          </TouchableOpacity>
+                : t('Tick at least one test')
+            }
+          />
         </View>
       )}
     </SafeAreaView>
@@ -313,110 +281,25 @@ export const TestFinderScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingBottom: 4 },
-  progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
-  progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.accent },
-  progressText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  body: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 24 },
-  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, marginBottom: 6 },
-  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 20 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    maxWidth: '100%',
-  },
-  chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium, flexShrink: 1 },
-  chipTextOn: { color: Colors.textPrimary },
-  footer: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 26,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  backText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  nextBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.accent,
-    borderRadius: 26,
-    paddingVertical: 14,
-  },
-  nextText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
+  body: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
+  pad: { paddingHorizontal: 20 },
+  // La pregunta (o el título del resultado) y su explicación, como en los otros cuestionarios
+  q: { ...formStyles.q },
+  lead: { ...formStyles.lead, marginBottom: 14 },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
+  // La barra de pedir del resultado: una línea fina encima, porque la lista pasa por debajo
+  orderBar: { borderTopWidth: 1, borderTopColor: FINE.line },
   results: { paddingBottom: 24 },
-  resultHead: { paddingHorizontal: 20, paddingTop: 4 },
-  note: {
-    flexDirection: 'row',
-    gap: 10,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-  },
-  noteMood: { borderColor: withAlpha(Colors.violet, 0.45) },
-  noteText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  noteLink: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  moreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, marginBottom: 10 },
-  moreText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 10 },
-  sectionSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, paddingHorizontal: 20, marginTop: 4, marginBottom: 12 },
-  disclaimer: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.attention, 0.5),
-    backgroundColor: withAlpha(Colors.attention, 0.06),
-    gap: 8,
-  },
-  disclaimerHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  disclaimerTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  disclaimerText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  doctorBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    borderRadius: 24,
-    paddingVertical: 12,
-    marginTop: 4,
-  },
-  doctorBtnText: { color: Colors.accent, fontSize: 15, fontFamily: INTER.medium },
-  links: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 18 },
-  link: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, textDecorationLine: 'underline' },
-  linkDot: { color: Colors.textMuted },
-  orderBar: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12, borderTopWidth: 1, borderTopColor: Colors.divider, backgroundColor: Colors.background },
-  orderBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.accent,
-    borderRadius: 28,
-    paddingVertical: 15,
-  },
-  orderBtnOff: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder },
-  orderText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
+  notice: { ...fine.tile, borderColor: FINE.goldLine, marginBottom: 12 },
+  noticeText: { ...ff('regular'), color: FINE.ivory, fontSize: 13.5, lineHeight: 19 },
+  noticeLink: { alignSelf: 'flex-start', justifyContent: 'flex-start', minHeight: 36, paddingVertical: 6 },
+  list: { borderTopWidth: 1, borderTopColor: FINE.line },
+  more: { alignSelf: 'flex-start', justifyContent: 'flex-start', marginTop: 4 },
+  aside: { ...fine.note, marginTop: 12 },
+  p: { ...ff('regular'), color: '#CFD6CF', fontSize: 14, lineHeight: 20 },
+  pGap: { marginBottom: 14 },
+  note: { ...fine.note, marginTop: 0, marginBottom: 8 },
+  leftLink: { alignSelf: 'flex-start', justifyContent: 'flex-start', minHeight: 38, paddingVertical: 8 },
+  links: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 18 },
+  linkDot: { ...ff('regular'), color: FINE.mute },
 });

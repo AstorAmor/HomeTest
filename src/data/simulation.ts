@@ -33,6 +33,7 @@ import { basalTemperatureRepository, thermometerRepository } from './temperature
 import { cholesterolRepository } from './cholesterolRepository';
 import { cortisolRepository } from './cortisolRepository';
 import { vo2maxRepository } from './vo2maxRepository';
+import { gripStrengthRepository } from './gripStrengthRepository';
 import { kegelRepository } from './kegelRepository';
 import { checkInTagRepository } from './checkInTagRepository';
 
@@ -143,6 +144,7 @@ const LOG_REPOSITORIES = [
   cholesterolRepository,
   cortisolRepository,
   vo2maxRepository,
+  gripStrengthRepository,
   kegelRepository,
   checkInTagRepository,
 ];

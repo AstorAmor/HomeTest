@@ -1,37 +1,26 @@
 import React, { forwardRef } from 'react';
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
-import { Achievement, formatAchievementValue, TIER_GRADIENTS } from '@/data/achievements';
+import Svg, { Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
+import { Achievement, achievementCategory, formatAchievementValue, formatReachedDay, TIER_NAMES } from '@/data/achievements';
+import { GlowRingArt, ringTones } from '@/components/GlowRing';
+import { BadgeGlyph, badgeEmblemMetrics, badgeProgress, badgeTone } from './BadgeEmblem';
 import { t } from '@/i18n';
-import { BADGE_ICON_PATHS } from './badgeIconPaths';
 
-// Tarjeta de una insignia para verla a pantalla completa y compartirla (Instagram, WhatsApp,
-// TikTok…). Todo en SVG para poder convertirla en imagen tal cual se ve: en el móvil con
-// toDataURL de react-native-svg y en la web pasando el <svg> a un canvas (utils/shareBadge).
-// Formato 4:5 (1080 × 1350), el vertical de Instagram. El icono de la insignia va como trazo (sacado de
-// Ionicons con scripts/badge-icons.py) y la marca es el logotipo de KUOVA (los trazos de KuovaLogo.tsx):
-// una fuente de iconos o de letra no saldría igual en la imagen.
+// La imagen que se comparte de una insignia (Instagram, WhatsApp…). Desde el 2026-11-16, como la insignia en
+// grande (fundador: «más especial, seria y formal»): un diploma sobrio en esmeralda hondo, con un marco fino de
+// oro, el mismo emblema que en la app (el aro de GlowRing y el grabado de la insignia con BadgeGlyph, en el color de
+// su nivel y en las mismas proporciones que BadgeEmblem), el antetítulo en mayúsculas espaciadas, el nombre en letra
+// fina, una raya corta, por qué se concedió y el día. Sin estrellas, destellos ni cintas.
+// Todo en SVG para convertirla en imagen tal cual (utils/shareBadge: toDataURL en el móvil, un canvas en la web);
+// por eso el dibujo va como trazo (badgeIconPaths.ts) y la marca con los trazos del logotipo: una fuente de iconos o
+// de letra cargada no saldría en la imagen. Formato 4:5 (1080 × 1350), el vertical de Instagram.
 
 export const CARD_W = 1080;
 export const CARD_H = 1350;
 
-const LOCKED: [string, string, string] = ['#33413D', '#66766F', '#A7B4AE'];
 const FONT = 'Helvetica, Arial, sans-serif';
-
-// Estrella de 5 puntas centrada en (cx, cy)
-const star = (cx: number, cy: number, outer: number, inner: number) => {
-  const pts: string[] = [];
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? outer : inner;
-    const a = -Math.PI / 2 + (i * Math.PI) / 5;
-    pts.push(`${(cx + r * Math.cos(a)).toFixed(1)},${(cy + r * Math.sin(a)).toFixed(1)}`);
-  }
-  return `M${pts.join('L')}Z`;
-};
-
-// Destello de 4 puntas
-const sparkle = (cx: number, cy: number, r: number) =>
-  `M${cx},${cy - r} Q${cx + r * 0.18},${cy - r * 0.18} ${cx + r},${cy} Q${cx + r * 0.18},${cy + r * 0.18} ${cx},${cy + r} Q${cx - r * 0.18},${cy + r * 0.18} ${cx - r},${cy} Q${cx - r * 0.18},${cy - r * 0.18} ${cx},${cy - r}Z`;
-
+const IVORY = '#F0EFE6';
+const MUTE = '#8D9E95';
+const GOLD = '#D8B978';
 
 // Logotipo KUOVA (mismos trazos que KuovaWordmark): viewBox 226 189 1556 276
 const KuovaMark = ({ cx, top, width, color }: { cx: number; top: number; width: number; color: string }) => {
@@ -47,109 +36,77 @@ const KuovaMark = ({ cx, top, width, color }: { cx: number; top: number; width: 
   );
 };
 
-// Icono de la insignia centrado en (cx, cy) y de `size` de ancho/alto máximo (la fuente tiene el eje Y hacia arriba)
-const BadgeIcon = ({ name, cx, cy, size, fill, stroke }: { name: string; cx: number; cy: number; size: number; fill: string; stroke: string }) => {
-  const icon = BADGE_ICON_PATHS[name];
-  if (!icon) return <Path d={star(cx, cy, size / 2, size / 4.6)} fill={fill} stroke={stroke} strokeWidth={6} strokeLinejoin="round" />;
-  const [x0, y0, x1, y1] = icon.box;
-  const k = size / Math.max(x1 - x0, y1 - y0);
-  return (
-    <G transform={`translate(${cx} ${cy}) scale(${k} ${-k}) translate(${-(x0 + x1) / 2} ${-(y0 + y1) / 2})`}>
-      <Path d={icon.d} fill={fill} stroke={stroke} strokeWidth={10 / k} strokeLinejoin="round" />
-    </G>
-  );
-};
-
-const SPARKLES = [
-  [170, 220, 26],
-  [905, 300, 34],
-  [220, 760, 20],
-  [880, 820, 24],
-  [120, 470, 14],
-  [960, 560, 16],
-  [330, 140, 12],
-  [760, 150, 18],
-] as const;
-
 export const BadgeShareCard = forwardRef<any, { achievement: Achievement; width: number }>(({ achievement: a, width }, ref) => {
-  const [shade, mid, light] = a.tier ? TIER_GRADIENTS[a.tier] : LOCKED;
+  const earned = a.level > 0 && !!a.tier;
+  const metal = badgeTone(a);
   const id = `bc-${a.id}`;
   const cx = CARD_W / 2;
-  const cy = 500;
-  const studs = Array.from({ length: 28 }, (_, i) => (i * 2 * Math.PI) / 28);
-  const tierText = (a.tier ? t(a.tier) : t('Locked')).toUpperCase();
-  const valueText = formatAchievementValue(a, a.value);
+  const cy = 470;
+  const S = 470; // el emblema, como BadgeEmblem a este tamaño
+  const m = badgeEmblemMetrics(S);
+  const category = achievementCategory(a);
+  const kicker = [t('Badge'), category].filter(Boolean).join(' · ').toUpperCase();
+  const tierLine = earned
+    ? `${t(a.tier!)} · ${t('Level {n} of {total}', { n: a.level, total: TIER_NAMES.length })}`.toUpperCase()
+    : t('Not yet earned').toUpperCase();
+  const day = earned ? a.reachedOn?.[a.level - 1] : null;
+  // Por qué se concedió (lo que cuenta y la cifra del nivel) y desde cuándo
+  const reason = earned ? `${a.description}: ${formatAchievementValue(a, a.thresholds[a.level - 1])}` : a.description;
+  const detail = earned ? (day ? formatReachedDay(day) : '') : `${t('Now')}: ${formatAchievementValue(a, a.value)}`;
+  // El nombre, en una línea: más pequeño si es largo
+  const titleSize = Math.min(78, Math.round(900 / Math.max(1, a.title.length * 0.52)));
+  const reasonSize = Math.min(32, Math.round(920 / Math.max(1, reason.length * 0.5)));
 
   return (
     <Svg ref={ref} width={width} height={(width * CARD_H) / CARD_W} viewBox={`0 0 ${CARD_W} ${CARD_H}`}>
       <Defs>
-        <LinearGradient id={`${id}-bg`} x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#0B231D" />
-          <Stop offset="1" stopColor="#06120F" />
+        <LinearGradient id={`${id}-bg`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#0B2921" />
+          <Stop offset="0.55" stopColor="#08201A" />
+          <Stop offset="1" stopColor="#061A16" />
         </LinearGradient>
         <RadialGradient id={`${id}-glow`} cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor={mid} stopOpacity={a.tier ? 0.55 : 0.2} />
-          <Stop offset="1" stopColor={mid} stopOpacity={0} />
+          <Stop offset="0" stopColor="#17634B" stopOpacity={0.55} />
+          <Stop offset="0.5" stopColor="#17634B" stopOpacity={0.22} />
+          <Stop offset="1" stopColor="#17634B" stopOpacity={0} />
         </RadialGradient>
-        <LinearGradient id={`${id}-ring`} x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={light} />
-          <Stop offset="0.45" stopColor={mid} />
-          <Stop offset="1" stopColor={shade} />
-        </LinearGradient>
-        <RadialGradient id={`${id}-face`} cx="40%" cy="35%" r="75%">
-          <Stop offset="0" stopColor={light} />
-          <Stop offset="0.55" stopColor={mid} />
-          <Stop offset="1" stopColor={shade} />
-        </RadialGradient>
-        <LinearGradient id={`${id}-ribbon`} x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={shade} />
-          <Stop offset="1" stopColor={mid} />
-        </LinearGradient>
       </Defs>
 
       <Rect x={0} y={0} width={CARD_W} height={CARD_H} fill={`url(#${id}-bg)`} />
-      <Circle cx={cx} cy={cy} r={470} fill={`url(#${id}-glow)`} />
-      {a.tier &&
-        SPARKLES.map(([x, y, r], i) => <Path key={i} d={sparkle(x, y, r)} fill={light} opacity={0.85} />)}
+      <Ellipse cx={cx} cy={cy} rx={560} ry={520} fill={`url(#${id}-glow)`} />
+      {/* Marco fino de oro, como un diploma */}
+      <Rect x={44} y={44} width={CARD_W - 88} height={CARD_H - 88} rx={26} fill="none" stroke={GOLD} strokeOpacity={0.32} strokeWidth={2} />
 
-      {/* Cintas */}
-      <Path d={`M${cx - 150},${cy + 150} L${cx - 240},${cy + 300} L${cx - 170},${cy + 280} L${cx - 135},${cy + 335} L${cx - 40},${cy + 210} Z`} fill={`url(#${id}-ribbon)`} />
-      <Path d={`M${cx + 150},${cy + 150} L${cx + 240},${cy + 300} L${cx + 170},${cy + 280} L${cx + 135},${cy + 335} L${cx + 40},${cy + 210} Z`} fill={`url(#${id}-ribbon)`} />
-
-      {/* Medalla */}
-      <Circle cx={cx} cy={cy} r={262} fill={shade} opacity={0.6} />
-      <Circle cx={cx} cy={cy} r={250} fill={`url(#${id}-ring)`} />
-      <Circle cx={cx} cy={cy} r={206} fill={`url(#${id}-face)`} stroke={light} strokeOpacity={0.6} strokeWidth={4} />
-      <G>
-        {studs.map((ang, i) => (
-          <Circle key={i} cx={cx + 228 * Math.cos(ang)} cy={cy + 228 * Math.sin(ang)} r={6} fill={light} opacity={0.9} />
-        ))}
-      </G>
-      <BadgeIcon name={a.icon} cx={cx} cy={cy - 14} size={235} fill={a.tier ? light : '#C4CEC9'} stroke={shade} />
-      {/* Una estrellita por nivel conseguido, bajo el icono */}
-      {Array.from({ length: a.level }, (_, i) => (
-        <Path key={i} d={star(cx + (i - (a.level - 1) / 2) * 40, cy + 150, 15, 6.5)} fill={shade} />
-      ))}
-
-      {/* Textos */}
-      <SvgText x={cx} y={925} textAnchor="middle" fontFamily={FONT} fontSize={40} fontWeight="700" fill={mid} letterSpacing={10}>
-        {tierText}
+      <SvgText x={cx} y={168} textAnchor="middle" fontFamily={FONT} fontSize={26} fill={MUTE} letterSpacing={9}>
+        {kicker}
       </SvgText>
-      <SvgText x={cx} y={1010} textAnchor="middle" fontFamily={FONT} fontSize={76} fontWeight="800" fill="#FFFFFF">
+
+      {/* El emblema: el mismo de la app (BadgeEmblem), quieto */}
+      <G transform={`translate(${cx - S / 2} ${cy - S / 2})`}>
+        <GlowRingArt id={`${id}-ring`} progress={badgeProgress(a)} colors={ringTones(metal)} size={S} stroke={m.stroke} />
+      </G>
+      <BadgeGlyph a={a} x={cx - m.icon / 2} y={cy - m.icon / 2} size={m.icon} color={metal} />
+
+      <SvgText x={cx} y={790} textAnchor="middle" fontFamily={FONT} fontSize={26} fill={metal} letterSpacing={9}>
+        {tierLine}
+      </SvgText>
+      <SvgText x={cx} y={884} textAnchor="middle" fontFamily={FONT} fontSize={titleSize} fontWeight="300" fill={IVORY}>
         {a.title}
       </SvgText>
-      <SvgText x={cx} y={1076} textAnchor="middle" fontFamily={FONT} fontSize={44} fontWeight="700" fill="#F0B84D">
-        {valueText}
+      <Rect x={cx - 56} y={928} width={112} height={2} fill={GOLD} opacity={0.6} />
+      <SvgText x={cx} y={1000} textAnchor="middle" fontFamily={FONT} fontSize={reasonSize} fill="#CFD6CF">
+        {reason}
       </SvgText>
-      <SvgText x={cx} y={1126} textAnchor="middle" fontFamily={FONT} fontSize={30} fill="#A9C4BB">
-        {a.description}
-      </SvgText>
+      {detail ? (
+        <SvgText x={cx} y={1050} textAnchor="middle" fontFamily={FONT} fontSize={27} fill={MUTE}>
+          {detail}
+        </SvgText>
+      ) : null}
 
       {/* Marca */}
-      <Rect x={cx - 60} y={1180} width={120} height={3} fill="#F0B84D" opacity={0.7} />
-      <KuovaMark cx={cx} top={1208} width={250} color="#FFFFFF" />
-      <SvgText x={cx} y={1298} textAnchor="middle" fontFamily={FONT} fontSize={26} fill="#A9C4BB" letterSpacing={4}>
-        kuovahealth.com
+      <KuovaMark cx={cx} top={1158} width={196} color={IVORY} />
+      <SvgText x={cx} y={1250} textAnchor="middle" fontFamily={FONT} fontSize={21} fill={MUTE} letterSpacing={6}>
+        KUOVAHEALTH.COM
       </SvgText>
     </Svg>
   );

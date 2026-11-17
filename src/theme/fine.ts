@@ -26,6 +26,8 @@ export const FINE = {
   emerald: '#17634B',
   deep: L ? '#EDE8DC' : '#0B2921',
   line: L ? 'rgba(42,42,42,0.10)' : 'rgba(240,239,230,0.09)',
+  // La raya entre secciones, algo más clara que la de las filas (fundador, 2026-11-16: «un separador más claro»)
+  rule: L ? 'rgba(42,42,42,0.18)' : 'rgba(240,239,230,0.17)',
   tile: L ? 'rgba(42,42,42,0.035)' : 'rgba(240,239,230,0.045)',
   goldLine: 'rgba(216,185,120,0.5)',
   jadeLine: 'rgba(131,214,180,0.4)',
@@ -36,7 +38,18 @@ export const fine = StyleSheet.create({
   title: { ...ff('medium'), fontSize: 26, lineHeight: 32, letterSpacing: -0.3, color: FINE.ivory },
   lead: { ...ff('regular'), fontSize: 13, lineHeight: 18, color: FINE.mute, marginTop: 2 },
   // Cabecera de sección: «ESTA SEMANA                Tu plan ›»
-  secHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 28, marginBottom: 6, minHeight: 32 },
+  // Cada sección empieza con una raya fina a lo ancho y su título debajo
+  secHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 24,
+    marginBottom: 6,
+    paddingTop: 14,
+    minHeight: 46,
+    borderTopWidth: 1,
+    borderTopColor: FINE.rule,
+  },
   secTitle: { ...ff('semibold'), fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase', color: FINE.mute },
   secMore: { ...ff('regular'), fontSize: 12.5, color: FINE.jade, marginLeft: 'auto' },
   // Fila con una línea fina debajo

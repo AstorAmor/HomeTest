@@ -1,19 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionToggles } from '@/components/SectionToggles';
-import { Colors, withAlpha } from '@/constants/colors';
+import { SecHead } from '@/components/fine/Fine';
+import { FineMark } from '@/components/fine/FineMeasure';
 import { appPrefs, isSectionVisible, PURPOSE_OPTIONS, SECTION_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { t } from '@/i18n';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Tú → Configure my experience: para qué usa Kuova (una o varias cosas; aplica una configuración
 // de secciones), qué partes ve y, desde cada una, su guía con vista previa. El fundador pidió
 // (2026-10-30) que quede claro que esa respuesta define la experiencia: qué partes, tarjetas,
 // opciones y avisos salen; por eso el aviso de arriba y el recuento que cambia al elegir.
+// Desde el 2026-11-16, como «Tu experiencia» del prototipo: cada respuesta, una opción con borde fino (jade
+// la elegida) y su marca redonda; las partes, en filas con línea fina y su interruptor. Sin el icono de cada
+// respuesta desde el 2026-11-17 (el fundador, en Ajustes: «de repente tengo mil iconos»).
 export const AppSectionsScreen = () => {
   const router = useRouter();
   const prefs = useAppPrefs();
@@ -25,16 +28,13 @@ export const AppSectionsScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Configure my experience')} showBack backFallback="/settings" />
 
-        <Text style={styles.sectionTitle}>{t('What do you use Kuova for?')}</Text>
-        <View style={styles.explain}>
-          <Ionicons name="information-circle-outline" size={18} color={Colors.accent} />
-          <Text style={styles.explainText}>
+        <View style={styles.body}>
+          <SecHead title={t('What do you use Kuova for?')} style={styles.firstSec} />
+          <Text style={styles.explain}>
             {t(
               'Your answer shapes your experience: it decides which parts, cards and options appear in Today, Plan, Analysis and the rest of the app, and which reminders you get. Pick one or more.',
             )}
           </Text>
-        </View>
-        <View style={styles.list}>
           {PURPOSE_OPTIONS.map((o) => {
             const selected = prefs.purposes.includes(o.id);
             return (
@@ -45,40 +45,30 @@ export const AppSectionsScreen = () => {
                   appPrefs.setPurposes(selected ? prefs.purposes.filter((p) => p !== o.id) : [...prefs.purposes, o.id])
                 }
                 activeOpacity={0.85}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: selected }}
               >
-                <Ionicons name={o.icon as any} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.purposeTitle}>{t(o.title)}</Text>
-                  <Text style={styles.purposeSubtitle}>{t(o.subtitle)}</Text>
+                <View style={styles.flex}>
+                  <Text style={fine.rowTitle}>{t(o.title)}</Text>
+                  <Text style={fine.rowSub}>{t(o.subtitle)}</Text>
                 </View>
-                <Ionicons
-                  name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-                  size={22}
-                  color={selected ? Colors.accent : Colors.textMuted}
-                />
+                <FineMark on={selected} />
               </TouchableOpacity>
             );
           })}
-        </View>
-        <Text style={styles.summary}>
-          {prefs.purposes.length
-            ? t('With your answer you see {n} of {total} parts of the app.', count)
-            : t('No answer yet: you see {n} of {total} parts of the app.', count)}
-        </Text>
+          <Text style={styles.summary}>
+            {prefs.purposes.length
+              ? t('With your answer you see {n} of {total} parts of the app.', count)
+              : t('No answer yet: you see {n} of {total} parts of the app.', count)}
+          </Text>
 
-        <View style={styles.headerRow}>
-          <Text style={[styles.sectionTitle, styles.inline]}>{t('What you see')}</Text>
-          <TouchableOpacity onPress={() => router.push('/feature-guide')}>
-            <Text style={styles.link}>{t('How each part works')}</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.hint}>
-          {t('This comes from your answer above. Turn each part on or off as you like; if you change your answer, this list is set again.')}
-        </Text>
-        <View style={{ marginHorizontal: 20 }}>
+          <SecHead title={t('What you see')} more={t('How each part works')} onMore={() => router.push('/feature-guide')} />
+          <Text style={styles.hint}>
+            {t('This comes from your answer above. Turn each part on or off as you like; if you change your answer, this list is set again.')}
+          </Text>
           <SectionToggles isOn={(id) => isSectionVisible(prefs, id)} onToggle={(id, on) => appPrefs.setSectionVisible(id, on)} />
+          <Text style={fine.note}>{t('Your results, tests, sharing and professionals are always there.')}</Text>
         </View>
-        <Text style={styles.footnote}>{t('Your results, tests, sharing and professionals are always there.')}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -87,43 +77,24 @@ export const AppSectionsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  sectionTitle: { ...fine.secTitle, marginHorizontal: 20, marginBottom: 10 },
-  inline: { marginHorizontal: 0, marginBottom: 0 },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 4,
-  },
-  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginBottom: 12 },
-  explain: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: withAlpha(Colors.accent, 0.08),
-  },
-  explainText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
-  summary: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, marginHorizontal: 20, marginTop: 10 },
-  list: { marginHorizontal: 20, gap: 10 },
+  body: { paddingHorizontal: 20 },
+  flex: { flex: 1 },
+  firstSec: { marginTop: 8 },
+  explain: { ...fine.note, marginTop: 0, marginBottom: 4 },
+  // Cada respuesta, una opción con borde fino (prototipo, `.opt`); la elegida, con el borde en jade
   purpose: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 12,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    marginTop: 10,
+    minHeight: 64,
+    padding: 14,
     borderRadius: 14,
-    padding: 16,
+    borderWidth: 1,
+    borderColor: FINE.line,
+    backgroundColor: FINE.tile,
   },
-  purposeSelected: { borderColor: Colors.accent, backgroundColor: withAlpha(Colors.accent, 0.08) },
-  purposeTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  purposeSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 3 },
-  footnote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginHorizontal: 20, marginTop: 12 },
+  purposeSelected: { borderColor: FINE.jade },
+  summary: { ...ff('regular'), color: FINE.ivory, fontSize: 13, lineHeight: 18, marginTop: 12 },
+  hint: { ...fine.note, marginTop: 0, marginBottom: 4 },
 });

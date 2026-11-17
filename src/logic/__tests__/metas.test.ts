@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   areaScore,
+  dayFills,
+  weekScore,
   bedtimeOnTime,
   cfgWithPer,
   cfgWithTobaccoUnit,
@@ -117,6 +119,28 @@ describe('El donut de cada área', () => {
     expect(scores[scores.length - 1]).toBe(1);
   });
 
+  it('la semana es la media de las áreas que cuentan (Hoy y Plan dan lo mismo)', () => {
+    const s = st({ sel: { ej: [], al: ['fruta'], ha: ['own-1'] }, custom: [{ id: 'own-1', area: 'ha', name: 'Leer', kind: 'yesno', unit: '', max: 1 }], cfg: { 'own-1': { tgt: 1, per: 'day' } } });
+    const vals: ValuesById = { fruta: [3, 3, 3, 3, 3, 3, 3], 'own-1': [null, null, null, null, null, 0, null] };
+    expect(weekScore(s, vals)).toBeCloseTo((areaScore(s, 'al', vals)! + areaScore(s, 'ha', vals)!) / 2);
+    expect(weekScore(st(), {})).toBeNull();
+  });
+
+  it('día a día: lo hecho de las metas diarias; sin datos o futuro, nada; hoy cuenta aunque no marques', () => {
+    const s = st({
+      sel: { ej: [], al: ['fruta'], ha: ['own-1'] },
+      custom: [{ id: 'own-1', area: 'ha', name: 'Leer', kind: 'yesno', unit: '', max: 1 }],
+      cfg: { 'own-1': { tgt: 1, per: 'day' } },
+    });
+    const w = { days: ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20', '2026-11-21', '2026-11-22'], from: 0, to: 2, current: true };
+    const vals: ValuesById = { fruta: [3, null, null, null, null, null, null], 'own-1': [0, null, null, null, null, null, null] };
+    const f = dayFills(s, vals, w);
+    expect(f[0]).toBeCloseTo((1 + 0) / 2); // las 3 frutas sí, leer no
+    expect(f[1]).toBeNull(); // un día pasado sin nada marcado
+    expect(f[2]).toBe(0); // hoy, aún nada
+    expect(f.slice(3)).toEqual([null, null, null, null]); // aún no han llegado
+  });
+
   it('una meta tuya cuenta en su área desde el primer día que la marcas', () => {
     const s = st({
       custom: [{ id: 'own-1', area: 'ha', name: 'Leer antes de dormir', kind: 'yesno', unit: '', max: 1 }],
@@ -224,11 +248,11 @@ describe('Objetivos', () => {
 
 describe('Fumar, beber y cafeína (fundador, 2026-11-06)', () => {
   it('salen a todo el mundo; a quien no ha marcado que fuma o bebe, al final', () => {
-    expect(pickList('ha', st(), NOBODY)).toEqual(['paseo', 'hora', 'dormir', 'checkin', 'cafeina', 'sinhumo', 'tabaco', 'alcohol']);
-    expect(pickList('ha', st(), BOTH)).toEqual(['sinhumo', 'tabaco', 'alcohol', 'paseo', 'hora', 'dormir', 'checkin', 'cafeina']);
+    expect(pickList('ha', st(), NOBODY)).toEqual(['paseo', 'hora', 'dormir', 'checkin', 'cafeina', 'estirar', 'respirar', 'pantallas', 'kegel', 'sinhumo', 'tabaco', 'alcohol']);
+    expect(pickList('ha', st(), BOTH)).toEqual(['sinhumo', 'tabaco', 'alcohol', 'paseo', 'hora', 'dormir', 'checkin', 'cafeina', 'estirar', 'respirar', 'pantallas', 'kegel']);
     // Elegida sin haberlo marcado: se queda en su sitio (marcarla no la sube). Y las tuyas, detrás
     const own = st({ sel: { ej: [], al: [], ha: ['tabaco'] }, custom: [{ id: 'own-1', area: 'ha', name: 'Leer', kind: 'yesno', unit: '', max: 1 }] });
-    expect(pickList('ha', own, NOBODY)).toEqual(['paseo', 'hora', 'dormir', 'checkin', 'cafeina', 'sinhumo', 'tabaco', 'alcohol', 'own-1']);
+    expect(pickList('ha', own, NOBODY)).toEqual(['paseo', 'hora', 'dormir', 'checkin', 'cafeina', 'estirar', 'respirar', 'pantallas', 'kegel', 'sinhumo', 'tabaco', 'alcohol', 'own-1']);
   });
 
   it('sus frases', () => {

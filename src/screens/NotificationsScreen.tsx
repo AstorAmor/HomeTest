@@ -1,13 +1,16 @@
 import { dateLocale, t } from '@/i18n';
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Href, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { InfoButton } from '@/components/InfoButton';
 import { DeliveryHelp } from '@/components/DeliveryHelp';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Chev, FRow, Pill, SecHead } from '@/components/fine/Fine';
+import { FChip, FLink } from '@/components/fine/FineForm';
+import { SecRow } from '@/components/fine/FineMeasure';
+import { SetRow, SwitchRow, settingsStyles } from '@/components/settings/SettingsParts';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { InboxItem, nudgeStore } from '@/data/nudgeStore';
@@ -24,14 +27,15 @@ import {
   turnOnPhoneReminders,
   upcomingPhoneReminders,
 } from '@/data/phoneReminders';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
+// Sin rojo ni naranja: lo enviado en jade, lo retenido en oro (para mirarlo) y lo demás apagado
 const STATUS: Record<NudgeDecision['status'], { label: string; color: string }> = {
-  send: { label: 'Sent now', color: Colors.ok },
-  muted: { label: 'Muted', color: Colors.textMuted },
-  cooldown: { label: 'Waiting', color: Colors.gold },
-  daily_limit: { label: 'Daily limit', color: Colors.attention },
-  not_due: { label: 'Not due', color: Colors.textMuted },
+  send: { label: 'Sent now', color: FINE.jade },
+  muted: { label: 'Muted', color: FINE.mute },
+  cooldown: { label: 'Waiting', color: FINE.gold },
+  daily_limit: { label: 'Daily limit', color: FINE.gold },
+  not_due: { label: 'Not due', color: FINE.mute },
 };
 
 // Qué avisa cada notificación y qué sección de la app necesita para poder mandarse: sin esa
@@ -91,11 +95,16 @@ const ago = (iso: string) => {
 
 const label = (id: NudgeId) => t(NUDGE_RULES.find((r) => r.id === id)?.label ?? id);
 const sectionTitle = (s: AppSection) => t(SECTION_OPTIONS.find((o) => o.id === s)?.title ?? s);
+const mutedUntil = (until: string) =>
+  t('Muted until {date}', { date: new Date(until).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' }) });
 
 // Avisos: los recientes arriba y, debajo, todos los tipos de aviso desplegados con su
 // interruptor. Apagar = silenciar para siempre; los silencios temporales (7 días, 1 mes…)
 // se ponen desde cada aviso recibido. En el modo demo, "Why these notifications?" enseña cada
 // regla con su motivo: lo mismo que npm run simulate, con los datos que hay ahora en la app.
+// Desde el 2026-11-17, en el lenguaje fino de Ajustes: cabeceras pequeñas y filas con línea fina (sin tarjetas);
+// cada grupo de avisos con su nombre pequeño encima; «En el móvil» como una sección más, con la píldora esmeralda
+// para activarlo; el usuario simulado, una línea en oro; y los estados del modo demo sin rojo ni naranja.
 export const NotificationsScreen = () => {
   const router = useRouter();
   const { authMode } = useAuth();
@@ -152,223 +161,229 @@ export const NotificationsScreen = () => {
 
   const recent = inbox.filter((i) => Date.now() - new Date(i.at).getTime() < 30 * 86400000);
 
+  // «Necesita X: actívala» (lleva a Configura tu experiencia), en jade debajo de la explicación
+  const needsLink = (text: string) => (
+    <TouchableOpacity onPress={() => router.push('/app-sections')} hitSlop={6} style={styles.needs} accessibilityRole="link">
+      <Text style={styles.needsText}>{text}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Notifications')} showBack backFallback="/settings" />
-        <View style={styles.introRow}>
-          <Text style={styles.intro}>{t('At most two a day, and you can switch off any of them.')}</Text>
-          <InfoButton topic="notifications" />
-        </View>
 
-        {phone.status !== 'unsupported' && (
-          <View style={styles.phoneCard}>
-            <View style={styles.phoneHead}>
-              <Ionicons name="phone-portrait-outline" size={18} color={Colors.textPrimary} />
-              <Text style={styles.ruleTitle}>{t('On your phone')}</Text>
-            </View>
-            {phone.status === 'on' ? (
-              <>
-                <Text style={styles.ruleBody}>
-                  {t('On, even with the app closed. Dose reminders do not count towards the two a day.')}
-                </Text>
-                <Text style={styles.phoneSub}>{t('Next reminders')}</Text>
-                {phone.upcoming.length ? (
-                  phone.upcoming.map((u) => (
-                    <View key={u.id} style={styles.upcomingRow}>
-                      <Text style={styles.upcomingWhen}>{upcomingWhen(u.at)}</Text>
-                      <Text style={styles.upcomingTitle} numberOfLines={1}>
-                        {u.title}
-                      </Text>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.ruleBody}>{t('Nothing scheduled for the next few days.')}</Text>
-                )}
-                <TouchableOpacity onPress={turnOffPhone} hitSlop={8}>
-                  <Text style={styles.phoneOff}>{t('Turn off on this phone')}</Text>
-                </TouchableOpacity>
-              </>
-            ) : phone.status === 'blocked' ? (
-              <>
-                <Text style={styles.ruleBody}>{t('Kuova notifications are off in your phone settings.')}</Text>
-                <TouchableOpacity style={styles.phoneButton} onPress={openPhoneSettings} activeOpacity={0.85}>
-                  <Text style={styles.phoneButtonText}>{t('Open settings')}</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Text style={styles.ruleBody}>{t('Get your reminders even when the app is closed.')}</Text>
-                <TouchableOpacity style={styles.phoneButton} onPress={turnOnPhone} activeOpacity={0.85}>
-                  <Text style={styles.phoneButtonText}>{t('Turn on')}</Text>
-                </TouchableOpacity>
-              </>
-            )}
+        <View style={settingsStyles.body}>
+          <View style={styles.introRow}>
+            <Text style={styles.intro}>{t('At most two a day, and you can switch off any of them.')}</Text>
+            <InfoButton topic="notifications" color={FINE.mute} />
           </View>
-        )}
-        {phone.status === 'on' && <DeliveryHelp />}
 
-        {sim && (
-          <TouchableOpacity style={styles.simBanner} onPress={() => router.push('/simulation')} activeOpacity={0.85}>
-            <Ionicons name="flask-outline" size={18} color={Colors.gold} />
-            <Text style={styles.simText}>{t('Simulated user: {name}. Tap to see the full timeline.', { name: sim.name })}</Text>
-          </TouchableOpacity>
-        )}
-
-        <Text style={styles.sectionTitle}>{t('Latest')}</Text>
-        {recent.length === 0 ? (
-          <Text style={styles.empty}>{t('Nothing new. We only write when something is worth telling you.')}</Text>
-        ) : (
-          recent.map((item) => {
-            const key = `${item.id}-${item.at}`;
-            const isMuted = !!prefs.muted[item.id];
-            return (
-              <View key={key} style={styles.item}>
-                <TouchableOpacity
-                  style={styles.itemMain}
-                  onPress={() => item.route && router.push(item.route as Href)}
-                  activeOpacity={0.85}
-                >
-                  <View style={[styles.dot, !item.read && styles.dotUnread]} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.itemTitle}>{t(item.title)}</Text>
-                    {!!item.body && <Text style={styles.itemBody}>{t(item.body)}</Text>}
-                    <Text style={styles.itemMeta}>
-                      {ago(item.at)}
-                      {isMuted ? ` · ${t('muted')}` : ''}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setOpenMenu(openMenu === key ? null : key)} hitSlop={10}>
-                    <Ionicons name="notifications-off-outline" size={20} color={Colors.textMuted} />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-                {openMenu === key && (
-                  <View style={styles.muteMenu}>
-                    <Text style={styles.muteTitle}>{t('Mute "{name}" for', { name: label(item.id) })}</Text>
-                    <View style={styles.muteRow}>
-                      {MUTE_OPTIONS.map((o) => (
-                        <TouchableOpacity key={o.id} style={styles.muteChip} onPress={() => mute(item.id, o.id)}>
-                          <Text style={styles.muteChipText}>{t(o.label)}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </View>
-            );
-          })
-        )}
-
-        <Text style={styles.sectionTitle}>{t('What we can tell you about')}</Text>
-        <Text style={styles.sectionIntro}>
-          {t('They appear here and on Today. Each one only works with the part of the app it needs switched on.')}
-        </Text>
-        {CATEGORY_ORDER.map((cat) => {
-          const rules = NUDGE_RULES.filter((r) => r.category === cat);
-          if (!rules.length) return null;
-          return (
-            <View key={cat} style={styles.group}>
-              <Text style={styles.groupTitle}>{t(CATEGORY_LABEL[cat])}</Text>
-              {rules.map((r, i) => {
-                const info = NUDGE_INFO[r.id];
-                const needs = info.needs ?? [];
-                const available = needs.length === 0 || needs.some(show);
-                const m = prefs.muted[r.id];
-                const on = available && !m;
-                return (
-                  <View key={r.id} style={[styles.ruleRow, i > 0 && styles.ruleDivider]}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.ruleTitle, !available && styles.ruleOff]}>{t(r.label)}</Text>
-                      <Text style={styles.ruleBody}>{t(info.description)}</Text>
-                      {!available ? (
-                        <TouchableOpacity onPress={() => router.push('/app-sections')}>
-                          <Text style={styles.ruleNeeds}>
-                            {t('Needs {section}: switch it on', { section: needs.map(sectionTitle).join(t(' or ')) })}
-                          </Text>
-                        </TouchableOpacity>
-                      ) : m?.until ? (
-                        <Text style={styles.itemMeta}>
-                          {t('Muted until {date}', { date: new Date(m.until).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' }) })}
+          {phone.status !== 'unsupported' && (
+            <>
+              <SecHead title={t('On your phone')} />
+              {phone.status === 'on' ? (
+                <>
+                  <Text style={styles.text}>{t('On, even with the app closed. Dose reminders do not count towards the two a day.')}</Text>
+                  <Text style={styles.kicker}>{t('Next reminders')}</Text>
+                  {phone.upcoming.length ? (
+                    phone.upcoming.map((u, i) => (
+                      <View key={u.id} style={[styles.upcomingRow, i === phone.upcoming.length - 1 && settingsStyles.noLine]}>
+                        <Text style={styles.upcomingWhen}>{upcomingWhen(u.at)}</Text>
+                        <Text style={styles.upcomingTitle} numberOfLines={1}>
+                          {u.title}
                         </Text>
-                      ) : null}
-                    </View>
-                    <Switch
-                      value={on}
-                      disabled={!available}
-                      onValueChange={(v) => toggle(r.id, v)}
-                      trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
-                      thumbColor={on ? Colors.accent : Colors.textMuted}
-                    />
-                  </View>
-                );
-              })}
-            </View>
-          );
-        })}
-
-        {phone.status !== 'unsupported' && (
-          <View style={styles.group}>
-            <Text style={styles.groupTitle}>{t('On your phone')}</Text>
-            {PHONE_ROWS.map((row, i) => {
-              const available = !row.needs || show(row.needs);
-              const m = row.id === 'doses' ? undefined : prefs.muted[row.id];
-              const on = available && !m;
-              return (
-                <View key={row.id} style={[styles.ruleRow, i > 0 && styles.ruleDivider]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.ruleTitle, !available && styles.ruleOff]}>{t(row.label)}</Text>
-                    <Text style={styles.ruleBody}>{t(row.description)}</Text>
-                    {!available && row.needs ? (
-                      <TouchableOpacity onPress={() => router.push('/app-sections')}>
-                        <Text style={styles.ruleNeeds}>{t('Needs {section}: switch it on', { section: sectionTitle(row.needs) })}</Text>
-                      </TouchableOpacity>
-                    ) : m?.until ? (
-                      <Text style={styles.itemMeta}>
-                        {t('Muted until {date}', { date: new Date(m.until).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long' }) })}
-                      </Text>
-                    ) : null}
-                  </View>
-                  {row.id === 'doses' ? (
-                    available && (
-                      <TouchableOpacity onPress={() => router.push('/medications')} hitSlop={10} accessibilityLabel={t(row.label)}>
-                        <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
-                      </TouchableOpacity>
-                    )
+                      </View>
+                    ))
                   ) : (
-                    <Switch
-                      value={on}
-                      disabled={!available}
-                      onValueChange={(v) => toggle(row.id as ReminderId, v)}
-                      trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
-                      thumbColor={on ? Colors.accent : Colors.textMuted}
-                    />
+                    <Text style={styles.text}>{t('Nothing scheduled for the next few days.')}</Text>
+                  )}
+                  <FLink label={t('Turn off on this phone')} onPress={turnOffPhone} muted style={settingsStyles.linkLeft} />
+                </>
+              ) : phone.status === 'blocked' ? (
+                <>
+                  <Text style={styles.text}>{t('Kuova notifications are off in your phone settings.')}</Text>
+                  <View style={styles.pillRow}>
+                    <Pill label={t('Open settings')} onPress={openPhoneSettings} />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.text}>{t('Get your reminders even when the app is closed.')}</Text>
+                  <View style={styles.pillRow}>
+                    <Pill label={t('Turn on')} onPress={turnOnPhone} />
+                  </View>
+                </>
+              )}
+              {phone.status === 'on' && <DeliveryHelp />}
+            </>
+          )}
+
+          {/* Probadores: el usuario simulado cargado, en oro (es algo que mirar) */}
+          {sim && (
+            <TouchableOpacity style={styles.simRow} onPress={() => router.push('/simulation')} activeOpacity={0.7} accessibilityRole="button">
+              <Text style={styles.simText}>{t('Simulated user: {name}. Tap to see the full timeline.', { name: sim.name })}</Text>
+              <Chev />
+            </TouchableOpacity>
+          )}
+
+          <SecHead title={t('Latest')} />
+          {recent.length === 0 ? (
+            <Text style={styles.empty}>{t('Nothing new. We only write when something is worth telling you.')}</Text>
+          ) : (
+            recent.map((item, idx) => {
+              const key = `${item.id}-${item.at}`;
+              const isMuted = !!prefs.muted[item.id];
+              const open = openMenu === key;
+              return (
+                <View key={key} style={[styles.item, idx === recent.length - 1 && settingsStyles.noLine]}>
+                  {/* El texto abre lo suyo y la campana va aparte (en la web un botón no puede llevar otro dentro) */}
+                  <View style={styles.itemMain}>
+                    <View style={[styles.dot, !item.read && styles.dotUnread]} />
+                    <TouchableOpacity
+                      style={styles.itemText}
+                      onPress={() => item.route && router.push(item.route as Href)}
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                    >
+                      <Text style={fine.rowTitle}>{t(item.title)}</Text>
+                      {!!item.body && <Text style={fine.rowSub}>{t(item.body)}</Text>}
+                      <Text style={styles.meta}>
+                        {ago(item.at)}
+                        {isMuted ? ` · ${t('muted')}` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setOpenMenu(open ? null : key)}
+                      hitSlop={10}
+                      style={styles.menuButton}
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded: open }}
+                      accessibilityLabel={t('Mute "{name}" for', { name: label(item.id) })}
+                    >
+                      <Ionicons name="notifications-off-outline" size={18} color={open ? FINE.jade : FINE.mute} />
+                    </TouchableOpacity>
+                  </View>
+                  {open && (
+                    <View style={styles.muteMenu}>
+                      <Text style={fine.rowSub}>{t('Mute "{name}" for', { name: label(item.id) })}</Text>
+                      <View style={styles.chipRow}>
+                        {MUTE_OPTIONS.map((o) => (
+                          <FChip key={o.id} label={t(o.label)} on={false} onPress={() => mute(item.id, o.id)} />
+                        ))}
+                      </View>
+                    </View>
                   )}
                 </View>
               );
-            })}
-          </View>
-        )}
+            })
+          )}
 
-        {authMode === 'demo' && (
-          <>
-            <TouchableOpacity style={styles.whyHeader} onPress={() => setShowWhy((v) => !v)}>
-              <Text style={styles.sectionTitleInline}>{t('Why these notifications?')}</Text>
-              <Ionicons name={showWhy ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
-            </TouchableOpacity>
-            {showWhy &&
-              decisions.map((d) => (
-                <View key={d.id} style={styles.whyRow}>
-                  <View style={[styles.statusPill, { backgroundColor: withAlpha(STATUS[d.status].color, 0.14) }]}>
-                    <Text style={[styles.statusText, { color: STATUS[d.status].color }]}>{t(STATUS[d.status].label)}</Text>
+          <SecHead title={t('What we can tell you about')} />
+          <Text style={styles.hint}>{t('They appear here and on Today. Each one only works with the part of the app it needs switched on.')}</Text>
+          {CATEGORY_ORDER.map((cat) => {
+            const rules = NUDGE_RULES.filter((r) => r.category === cat);
+            if (!rules.length) return null;
+            return (
+              <View key={cat}>
+                <Text style={styles.groupTitle}>{t(CATEGORY_LABEL[cat])}</Text>
+                {rules.map((r, i) => {
+                  const info = NUDGE_INFO[r.id];
+                  const needs = info.needs ?? [];
+                  const available = needs.length === 0 || needs.some(show);
+                  const m = prefs.muted[r.id];
+                  const on = available && !m;
+                  return (
+                    <SwitchRow
+                      key={r.id}
+                      title={t(r.label)}
+                      sub={t(info.description)}
+                      dim={!available}
+                      value={on}
+                      disabled={!available}
+                      onValueChange={(v) => toggle(r.id, v)}
+                      last={i === rules.length - 1}
+                    >
+                      {!available ? (
+                        needsLink(t('Needs {section}: switch it on', { section: needs.map(sectionTitle).join(t(' or ')) }))
+                      ) : m?.until ? (
+                        <Text style={styles.meta}>{mutedUntil(m.until)}</Text>
+                      ) : null}
+                    </SwitchRow>
+                  );
+                })}
+              </View>
+            );
+          })}
+
+          {phone.status !== 'unsupported' && (
+            <View>
+              <Text style={styles.groupTitle}>{t('On your phone')}</Text>
+              {PHONE_ROWS.map((row, i) => {
+                const available = !row.needs || show(row.needs);
+                const m = row.id === 'doses' ? undefined : prefs.muted[row.id];
+                const on = available && !m;
+                const last = i === PHONE_ROWS.length - 1;
+                const extra =
+                  !available && row.needs ? (
+                    needsLink(t('Needs {section}: switch it on', { section: sectionTitle(row.needs) }))
+                  ) : m?.until ? (
+                    <Text style={styles.meta}>{mutedUntil(m.until)}</Text>
+                  ) : null;
+                // Las tomas se eligen en cada medicamento: la fila entera lleva a Medicación
+                if (row.id === 'doses') {
+                  return available ? (
+                    <FRow key={row.id} title={t(row.label)} sub={t(row.description)} onPress={() => router.push('/medications')} last={last} />
+                  ) : (
+                    <SetRow key={row.id} title={t(row.label)} sub={t(row.description)} dim last={last}>
+                      {extra}
+                    </SetRow>
+                  );
+                }
+                return (
+                  <SwitchRow
+                    key={row.id}
+                    title={t(row.label)}
+                    sub={t(row.description)}
+                    dim={!available}
+                    value={on}
+                    disabled={!available}
+                    onValueChange={(v) => toggle(row.id as ReminderId, v)}
+                    last={last}
+                  >
+                    {extra}
+                  </SwitchRow>
+                );
+              })}
+            </View>
+          )}
+
+          {authMode === 'demo' && (
+            <>
+              <TouchableOpacity
+                onPress={() => setShowWhy((v) => !v)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showWhy }}
+              >
+                <SecRow
+                  title={t('Why these notifications?')}
+                  right={<Ionicons name={showWhy ? 'chevron-up' : 'chevron-down'} size={16} color={FINE.mute} />}
+                />
+              </TouchableOpacity>
+              {showWhy &&
+                decisions.map((d, i) => (
+                  <View key={d.id} style={[fine.row, styles.whyRow, i === decisions.length - 1 && settingsStyles.noLine]}>
+                    <Text style={[styles.status, { color: STATUS[d.status].color }]}>{t(STATUS[d.status].label)}</Text>
+                    <View style={styles.flex}>
+                      <Text style={fine.rowTitle}>{t(d.label)}</Text>
+                      <Text style={fine.rowSub}>{d.reason}</Text>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.whyTitle}>{t(d.label)}</Text>
-                    <Text style={styles.itemBody}>{d.reason}</Text>
-                  </View>
-                </View>
-              ))}
-          </>
-        )}
+                ))}
+            </>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -377,103 +392,34 @@ export const NotificationsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  introRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, marginBottom: 4 },
-  intro: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
-  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 20 },
-  simBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: withAlpha(Colors.gold, 0.12),
-    borderRadius: 14,
-    padding: 12,
-    marginHorizontal: 20,
-    marginTop: 10,
-  },
-  simText: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  phoneCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginTop: 12,
-    padding: 14,
-    gap: 4,
-  },
-  phoneHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  phoneSub: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', marginTop: 10 },
-  upcomingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 3 },
-  upcomingWhen: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, minWidth: 104 },
-  upcomingTitle: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  phoneButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.accent,
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginTop: 8,
-  },
-  phoneButtonText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
-  phoneOff: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium, marginTop: 10 },
-  item: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 10,
-    overflow: 'hidden',
-  },
-  itemMain: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14 },
-  dot: { width: 8, height: 8, borderRadius: 4, marginTop: 6, backgroundColor: 'transparent' },
-  dotUnread: { backgroundColor: Colors.green },
-  itemTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  itemBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginTop: 2 },
-  itemMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 6 },
-  muteMenu: { borderTopWidth: 1, borderTopColor: Colors.divider, padding: 12, gap: 8 },
-  muteTitle: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  muteRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  muteChip: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    backgroundColor: Colors.background,
-  },
-  muteChipText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
-  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
-  sectionIntro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, paddingHorizontal: 20, marginTop: -4, marginBottom: 12 },
-  sectionTitleInline: { ...fine.secTitle },
-  group: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 12,
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  groupTitle: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', marginBottom: 4 },
-  ruleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
-  ruleDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  ruleTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  ruleOff: { color: Colors.textMuted },
-  ruleBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  ruleNeeds: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 4 },
-  whyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 10,
-  },
-  whyRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 20, marginBottom: 12 },
-  statusPill: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, minWidth: 74, alignItems: 'center' },
-  statusText: { fontSize: 11, fontFamily: INTER.medium },
-  whyTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  flex: { flex: 1, minWidth: 0 },
+  introRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
+  intro: { ...ff('regular'), flex: 1, color: FINE.mute, fontSize: 13, lineHeight: 18 },
+  text: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18 },
+  hint: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 18, marginBottom: 2 },
+  empty: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, lineHeight: 19, paddingVertical: 8 },
+  kicker: { ...fine.kicker, marginTop: 14, marginBottom: 2 },
+  pillRow: { flexDirection: 'row', marginTop: 12 },
+  // Los próximos recordatorios: cuándo, apagado y en cifras iguales; qué, en marfil
+  upcomingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  upcomingWhen: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, minWidth: 110, fontVariant: ['tabular-nums'] },
+  upcomingTitle: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 13.5 },
+  simRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 18, minHeight: 44, paddingVertical: 8 },
+  simText: { ...ff('regular'), flex: 1, color: FINE.gold, fontSize: 13, lineHeight: 18 },
+  // Cada aviso: el punto jade si no lo has visto, su texto y la campana para silenciarlo
+  item: { borderBottomWidth: 1, borderBottomColor: FINE.line },
+  itemMain: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  itemText: { flex: 1, minWidth: 0, paddingVertical: 11 },
+  dot: { width: 6, height: 6, borderRadius: 3, marginTop: 18, backgroundColor: 'transparent' },
+  dotUnread: { backgroundColor: FINE.jade },
+  meta: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 16, marginTop: 4 },
+  menuButton: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -8, marginTop: 2 },
+  muteMenu: { paddingBottom: 12, paddingLeft: 16, gap: 8 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // El nombre de cada grupo de avisos, pequeño y en mayúsculas, encima de sus filas
+  groupTitle: { ...fine.kicker, marginTop: 20, marginBottom: 2 },
+  needs: { alignSelf: 'flex-start', marginTop: 4 },
+  needsText: { ...ff('regular'), color: FINE.jade, fontSize: 12.5, lineHeight: 17 },
+  whyRow: { alignItems: 'flex-start' },
+  status: { ...ff('regular'), fontSize: 11.5, lineHeight: 20, minWidth: 74 },
 });

@@ -89,13 +89,19 @@ export const CATALOG: Record<string, MetaDef> = {
   hora: { id: 'hora', area: 'ha', short: 'Same bedtime', kind: 'yesno', per: 'day', tgt: 1, name: 'Go to bed at the same time (±30 min)', doneLabels: ['At your time', 'Off your time'], auto: 'watch' },
   dormir: { id: 'dormir', area: 'ha', short: 'Sleep hours', kind: 'amount', per: 'day', fixedPer: true, tgt: 7, tstep: 0.5, unit: { one: 'h', many: 'h', step: 0.5, max: 12 }, phrase: 'Sleep {n} or more', auto: 'watch' },
   checkin: { id: 'checkin', area: 'ha', short: 'Check-in', kind: 'yesno', per: 'day', tgt: 1, name: 'Do your check-in', doneLabels: ['Check-in done', 'No check-in'], auto: 'checkin' },
+  // Más hábitos (fundador, 2026-11-16: «en hábitos estaría bien añadir estiramientos, ejercicios de Kegel…»)
+  estirar: { id: 'estirar', area: 'ha', short: 'Stretching', kind: 'yesno', per: 'day', tgt: 1, name: 'Stretch for 10 minutes', doneLabels: ['Stretched', 'No stretching'] },
+  kegel: { id: 'kegel', area: 'ha', short: 'Kegel exercises', kind: 'yesno', per: 'day', tgt: 1, name: 'Do your pelvic floor (Kegel) exercises', doneLabels: ['Done', 'Not today'] },
+  respirar: { id: 'respirar', area: 'ha', short: 'Breathing or meditation', kind: 'yesno', per: 'day', tgt: 1, name: 'Breathe calmly or meditate for 10 minutes', doneLabels: ['Done', 'Not today'] },
+  pantallas: { id: 'pantallas', area: 'ha', short: 'No screens before bed', kind: 'yesno', per: 'day', tgt: 1, name: 'No screens in the 30 minutes before bed', doneLabels: ['No screens', 'With screens'] },
 };
 
 export const ORDER: Record<Area, string[]> = {
   ej: ['pasos', 'cardio', 'fuerza'],
   al: ['fruta', 'verdura', 'frutos', 'legumbre', 'embutido', 'carne'],
   // La cafeína, al final: así no cambia lo que se recomienda con los empates (Dormir mejor sigue con paseo y hora)
-  ha: ['sinhumo', 'tabaco', 'alcohol', 'paseo', 'hora', 'dormir', 'checkin', 'cafeina'],
+  // Los nuevos (2026-11-16), detrás: tampoco cambian lo que ya se recomendaba
+  ha: ['sinhumo', 'tabaco', 'alcohol', 'paseo', 'hora', 'dormir', 'checkin', 'cafeina', 'estirar', 'respirar', 'pantallas', 'kegel'],
 };
 
 export const TOBACCO: Record<TobaccoUnit, { label: string; one: string; many: string; f: number; step: number; max: number }> = {
@@ -132,10 +138,10 @@ export const GOALS: Record<GoalKey, GoalDef> = {
   glucosa: { key: 'glucosa', name: 'Lower your glucose', icon: 'flask-outline', lab: true, items: ['paseo', 'pasos', 'cardio', 'fuerza', 'legumbre', 'verdura', 'dormir', 'alcohol'], track: LAB_TRACK },
   hdl: { key: 'hdl', name: 'Raise your HDL', icon: 'flask-outline', lab: true, items: ['cardio', 'pasos', 'fuerza', 'tabaco', 'frutos'], track: LAB_TRACK },
   energia: { key: 'energia', name: 'Feel more energy', icon: 'flash-outline', items: ['dormir', 'hora', 'pasos', 'fruta', 'verdura', 'alcohol', 'checkin', 'cardio'], track: 'Your energy in the check-in, from 1 to 5.' },
-  animo: { key: 'animo', name: 'Improve your mood', icon: 'happy-outline', items: ['pasos', 'cardio', 'fuerza', 'dormir', 'hora', 'checkin', 'alcohol', 'paseo'], track: 'Your mood in the check-in, from 1 to 5.' },
-  sueno: { key: 'sueno', name: 'Sleep better', icon: 'moon-outline', items: ['dormir', 'hora', 'cafeina', 'alcohol', 'paseo', 'cardio', 'checkin'], track: 'Your sleep with the watch: duration and regularity.' },
+  animo: { key: 'animo', name: 'Improve your mood', icon: 'happy-outline', items: ['pasos', 'cardio', 'fuerza', 'dormir', 'hora', 'checkin', 'alcohol', 'paseo', 'respirar'], track: 'Your mood in the check-in, from 1 to 5.' },
+  sueno: { key: 'sueno', name: 'Sleep better', icon: 'moon-outline', items: ['dormir', 'hora', 'cafeina', 'alcohol', 'paseo', 'cardio', 'checkin', 'pantallas', 'respirar'], track: 'Your sleep with the watch: duration and regularity.' },
   peso: { key: 'peso', name: 'Lose weight', icon: 'scale-outline', items: ['pasos', 'cardio', 'fuerza', 'fruta', 'verdura', 'legumbre', 'embutido', 'carne', 'alcohol', 'paseo'], track: 'Your weight, once a week.' },
-  estres: { key: 'estres', name: 'Less stress', icon: 'leaf-outline', items: ['checkin', 'dormir', 'hora', 'pasos', 'paseo', 'alcohol', 'tabaco'], track: 'Your stress in the check-in and your watch HRV.' },
+  estres: { key: 'estres', name: 'Less stress', icon: 'leaf-outline', items: ['checkin', 'dormir', 'hora', 'pasos', 'paseo', 'alcohol', 'tabaco', 'respirar', 'estirar'], track: 'Your stress in the check-in and your watch HRV.' },
   forma: { key: 'forma', name: 'Get fitter', icon: 'barbell-outline', items: ['cardio', 'fuerza', 'pasos', 'dormir'], track: 'Your VO2max and resting heart rate, with the watch.' },
   tabaco: { key: 'tabaco', name: 'Quit smoking', icon: 'ban-outline', only: 'smoker', items: ['sinhumo', 'tabaco', 'pasos', 'checkin'], track: 'What you smoke, in Habits.' },
   alcohol: { key: 'alcohol', name: 'Drink less alcohol', icon: 'wine-outline', only: 'drinker', items: ['alcohol', 'dormir', 'checkin'], track: 'What you drink, in Habits.' },
@@ -474,6 +480,31 @@ export function areaScore(s: MetasState, area: Area, vals: ValuesById, w?: WeekP
   return scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
 }
 
+// Cómo va la semana: la media de las áreas que cuentan. Es el círculo «Semana» de Hoy y la cifra grande de Plan,
+// que tienen que dar lo mismo (el uno lleva al otro)
+export function weekScore(s: MetasState, vals: ValuesById, w?: WeekPart, known: Record<string, boolean> = {}): number | null {
+  const xs = AREAS.map((a) => areaScore(s, a, vals, w, known)).filter((x): x is number => x != null);
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+}
+
+// Día a día (Plan): de tus metas de cada día, cuánto hiciste ese día, de 0 a 1 (la media de las que tienen
+// dato). null: sin datos, fuera de la parte de la semana que cuenta o aún no ha llegado. Hoy cuenta aunque no
+// hayas marcado nada, salvo lo que llega solo del reloj. Las metas a la semana no entran: no son de un día.
+export function dayFills(s: MetasState, vals: ValuesById, w: Pick<Week, 'days' | 'from' | 'to' | 'current'>): (number | null)[] {
+  const daily = selectedIds(s)
+    .map((id) => resolveMeta(s, id))
+    .filter((m): m is Meta => !!m && m.per === 'day');
+  const T = w.current ? w.to : -1;
+  return w.days.map((_, i) => {
+    if (i < w.from || i > w.to) return null;
+    const xs = daily.flatMap((m) => {
+      const v = vals[m.id]?.[i] ?? null;
+      return v == null && (i !== T || m.autoOn) ? [] : [dayScore(m, v)];
+    });
+    return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+  });
+}
+
 // Recomendadas: las metas del área que más se repiten entre tus objetivos (2 como mucho). «Mejorar tu
 // salud general» y «Envejecer mejor» valen para todas, así que no deciden.
 export function recommended(area: Area, goals: GoalKey[], who: Who): string[] {
@@ -520,6 +551,35 @@ export function weekOf(day: string, s: Pick<MetasState, 'weekStart' | 'commit'>,
   const from = !since || since <= days[0] ? 0 : since > days[6] ? 7 : days.indexOf(since);
   const to = today > days[6] ? 6 : today < days[0] ? -1 : days.indexOf(today);
   return { days, from, to, current: today >= days[0] && today <= days[6], share: (7 - from) / 7 };
+}
+
+// Por dónde vas en tu compromiso (fundador, 2026-11-16: «una línea temporal de cuándo empezó, cuándo termina y
+// por dónde vas»). El día que firmas cuenta como el primero; el último es el día antes de cumplir las semanas.
+export interface CommitProgress {
+  end: string; // el último día
+  total: number; // los días que dura
+  days: number; // los días que llevas (hoy incluido), de 0 a total
+  fraction: number; // days / total
+  week: number; // la semana en la que estás, de 1 a weeks (antes de empezar, 1)
+  left: number; // los días que quedan después de hoy
+  started: boolean;
+  finished: boolean; // ya pasó el último día
+}
+export function commitProgress(c: { day: string; weeks: number }, today: string): CommitProgress {
+  const total = Math.max(1, Math.round(c.weeks * 7));
+  const end = addDays(c.day, total - 1);
+  const since = Math.round((dateOfKey(today).getTime() - dateOfKey(c.day).getTime()) / DAY_MS) + 1;
+  const days = Math.max(0, Math.min(total, since));
+  return {
+    end,
+    total,
+    days,
+    fraction: days / total,
+    week: Math.min(Math.max(1, Math.ceil(days / 7)), Math.max(1, c.weeks)),
+    left: total - days,
+    started: today >= c.day,
+    finished: today > end,
+  };
 }
 
 // La semana que se acaba de cerrar (la anterior a la de hoy), si ya habías empezado en ella

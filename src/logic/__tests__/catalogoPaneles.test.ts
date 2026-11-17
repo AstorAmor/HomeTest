@@ -4,6 +4,8 @@ import { metasEs } from '@/i18n/metasEs';
 import { workoutsEs } from '@/i18n/workoutsEs';
 import { dietEs } from '@/i18n/dietEs';
 import { historialEs } from '@/i18n/historialEs';
+import { rootsEs } from '@/i18n/rootsEs';
+import { storeEs } from '@/i18n/storeEs';
 import { CATALOG, CATEGORY_INTRO, CATEGORY_LABEL, PLANS } from '@/data/testCatalog';
 import { TEST_GUIDE } from '@/data/testGuide';
 import { CATEGORY_INTRO_ES, CATEGORY_LABEL_ES, TEST_COPY_ES } from '@/i18n/testCatalogEs';
@@ -13,7 +15,9 @@ import { PANEL_BOTH, PANEL_FIRST_YEAR, PANEL_PREMIUM, PANEL_PREMIUM_MALE, PANEL_
 import { getAllCanonicalBiomarkers } from '@/knowledge/canonicalBiomarkers';
 
 // La tienda con el catálogo real de paneles (2026-11-08): src/data/testCatalog.ts y sus textos.
-const ES: Record<string, string> = { ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...es };
+// rootsEs: lo nuevo de «Conoce tus raíces» (KnowYourRootsScreen, que también se revisa aquí), desde el 2026-11-17
+// storeEs: la tienda, el buscador y la suscripción en el lenguaje fino (2026-11-17); como en index.ts, va después de es.ts
+const ES: Record<string, string> = { ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...rootsEs, ...es, ...storeEs };
 const ALL = [...PLANS, ...CATALOG];
 
 // Todo lo que la persona puede leer de cada producto, en inglés y en español

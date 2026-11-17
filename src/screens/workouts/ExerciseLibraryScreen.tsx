@@ -4,10 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
-import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
 
-// Biblioteca de ejercicios para el usuario: buscar y ver cómo se hace cada uno
+// Biblioteca de ejercicios para el usuario: buscar y ver cómo se hace cada uno (en el lenguaje fino desde el
+// 2026-11-16: el estilo va en ExerciseLibrary)
 export const ExerciseLibraryScreen = () => {
   const router = useRouter();
   return (
@@ -22,5 +22,5 @@ export const ExerciseLibraryScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingHorizontal: 20, paddingBottom: 40 },
+  content: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 40 },
 });

@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { AppIcon } from '@/components/HealthIcons';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -14,7 +15,7 @@ import { basalTemperatureRepository, temperatureReadings } from '@/data/temperat
 import { wearableRepository } from '@/wearables/wearableRepository';
 import { CYCLE_GOAL_OPTIONS, CycleGoalAnswers } from '@/types/cycleGoal';
 import { dailyTemps, detectTempShift, FertilityAdvice, fertilityAdvice, TempReading, TempShift } from '@/logic/fertility';
-import { t as tr } from '@/i18n';
+import { num, t as tr } from '@/i18n';
 import { INTER } from '@/theme/fine';
 
 const ageFrom = (dob?: string) => {
@@ -100,7 +101,7 @@ export const CycleGoalPanel = () => {
   return (
     <View style={styles.wrap}>
       <TouchableOpacity style={styles.goalRow} onPress={() => router.push('/cycle-goal')} activeOpacity={0.85}>
-        <Ionicons name={(option?.icon ?? 'rose-outline') as any} size={20} color={Colors.pulseAccent} />
+        <AppIcon name={option?.icon ?? 'lotus'} size={20} color={Colors.pulseAccent} />
         <View style={{ flex: 1 }}>
           <Text style={styles.goalLabel}>{tr('Your goal')}</Text>
           <Text style={styles.goalTitle}>{option ? tr(option.title) : tr('Tell us what you are looking for')}</Text>
@@ -138,8 +139,8 @@ export const CycleGoalPanel = () => {
               height={90}
               labels={chartDays.map((d) => shortDay(d.date))}
               series={series}
-              formatY={(v) => v.toFixed(1)}
-              formatValue={(v) => `${v.toFixed(2)} °C`}
+              formatY={(v) => num(v.toFixed(1))}
+              formatValue={(v) => `${num(v.toFixed(2))} °C`}
               interactive
             />
           ) : (

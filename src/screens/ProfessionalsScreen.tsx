@@ -1,12 +1,13 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScreenHeader } from '@/components/ScreenHeader';
-import { Avatar } from '@/components/Avatar';
-import { Colors } from '@/constants/colors';
 import { Image } from 'expo-image';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { Chev, SecHead } from '@/components/fine/Fine';
+import { FChip, FLink, ON_BG } from '@/components/fine/FineForm';
+import { Monogram, RoleIcon } from '@/components/fine/RoleEmblem';
 import { mockProfessionals, ProfessionalRole, ROLE_INFO } from '@/data/servicesMock';
 import { listVerifiedProfessionals, ProfessionalAccount } from '@/data/sharing';
 import { isRemoteActive } from '@/lib/supabase';
@@ -14,10 +15,15 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { num, t } from '@/i18n';
 import { formatPrice } from '@/data/testCatalog';
 import { TAB, tabHref } from '@/constants/tabs';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 const ROLES = Object.keys(ROLE_INFO) as ProfessionalRole[];
+const AVATAR = 44; // la foto o la inicial de cada fila
 
+// Profesionales (/professionals): buscar, filtrar por especialidad e idioma y abrir la ficha. En la estética fina
+// (fundador, 2026-11-16: los iconos de los especialistas «se ven muy gordos y no alineados con la estética»): chips con
+// borde y el dibujo a línea de cada rol (components/fine/RoleEmblem.tsx) en lugar de los iconos rellenos, filas con una
+// línea fina debajo en lugar de tarjetas, la inicial en un aro fino y la valoración en texto («4,9 · 128 valoraciones»).
 export const ProfessionalsScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ role?: string }>();
@@ -49,142 +55,153 @@ export const ProfessionalsScreen = () => {
   );
   const allLanguages = Array.from(new Set([...mockProfessionals.flatMap((p) => p.languages), ...real.flatMap((p) => p.languages)])).sort();
   const activeFilters = langs.length + (videoOnly ? 1 : 0);
+  const filtersOn = showFilters || activeFilters > 0;
+  const open = (id: string) => router.push({ pathname: '/professional-detail', params: { id } });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <ScreenHeader title={t('Professionals')} showBack backFallback={tabHref(TAB.you)} />
-        <Text style={styles.intro}>
+        <Text style={[fine.lead, styles.pad, styles.intro]}>
           {t('Doctors, psychologists, dietitians, trainers, genetic counsellors and more, all with access to your results if you allow it.')}
         </Text>
 
-        <View style={styles.searchRow}>
+        <View style={[styles.pad, styles.searchRow]}>
           <View style={styles.search}>
-            <Ionicons name="search" size={16} color={Colors.textMuted} />
+            <Ionicons name="search-outline" size={16} color={FINE.mute} />
             <TextInput
               style={styles.searchInput}
               placeholder={t('Search by name or specialty')}
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={FINE.mute}
               value={query}
               onChangeText={setQuery}
               autoCorrect={false}
+              accessibilityLabel={t('Search by name or specialty')}
             />
             {query ? (
-              <TouchableOpacity onPress={() => setQuery('')} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color={Colors.textMuted} />
+              <TouchableOpacity onPress={() => setQuery('')} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('Clear search')}>
+                <Ionicons name="close-outline" size={18} color={FINE.mute} />
               </TouchableOpacity>
             ) : null}
           </View>
-          <TouchableOpacity style={[styles.filterBtn, (showFilters || activeFilters > 0) && styles.filterActive]} onPress={() => setShowFilters((v) => !v)}>
-            <Ionicons name="options-outline" size={18} color={showFilters || activeFilters > 0 ? Colors.background : Colors.textPrimary} />
+          <TouchableOpacity
+            style={[styles.filterBtn, filtersOn && styles.filterBtnOn]}
+            onPress={() => setShowFilters((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={t('Filters')}
+            accessibilityState={{ expanded: showFilters }}
+          >
+            <Ionicons name="options-outline" size={18} color={filtersOn ? FINE.jade : FINE.ivory} />
             {activeFilters > 0 && <Text style={styles.filterCount}>{activeFilters}</Text>}
           </TouchableOpacity>
         </View>
 
         {showFilters && (
-          <View style={styles.panel}>
-            <Text style={styles.panelLabel}>{t('Languages')}</Text>
-            <View style={styles.chips}>
+          <View style={[styles.pad, styles.panel]}>
+            <Text style={[fine.kicker, styles.panelLabel]}>{t('Languages')}</Text>
+            <View style={styles.chipsWrap}>
               {allLanguages.map((l) => {
                 const on = langs.includes(l);
-                return (
-                  <TouchableOpacity key={l} style={[styles.filter, on && styles.filterActive]} onPress={() => setLangs((prev) => (on ? prev.filter((x) => x !== l) : [...prev, l]))}>
-                    <Text style={[styles.filterText, on && styles.filterTextActive]}>{l}</Text>
-                  </TouchableOpacity>
-                );
+                return <FChip key={l} label={t(l)} on={on} multi check onPress={() => setLangs((prev) => (on ? prev.filter((x) => x !== l) : [...prev, l]))} />;
               })}
             </View>
-            <View style={styles.switchRow}>
-              <Ionicons name="videocam-outline" size={18} color={Colors.accent} />
-              <Text style={styles.switchLabel}>{t('Offers video consultations')}</Text>
-              <Switch value={videoOnly} onValueChange={setVideoOnly} trackColor={{ true: Colors.accent, false: Colors.cardBorder }} />
+            <View style={[fine.row, styles.switchRow]}>
+              <Ionicons name="videocam-outline" size={18} color={FINE.jade} />
+              <Text style={[fine.rowTitle, styles.flex]}>{t('Offers video consultations')}</Text>
+              <Switch
+                value={videoOnly}
+                onValueChange={setVideoOnly}
+                trackColor={{ false: 'rgba(240,239,230,0.14)', true: FINE.emerald }}
+                thumbColor={FINE.ivory}
+                accessibilityLabel={t('Offers video consultations')}
+              />
             </View>
             {activeFilters > 0 && (
-              <TouchableOpacity onPress={() => { setLangs([]); setVideoOnly(false); }}>
-                <Text style={styles.clear}>{t('Clear filters')}</Text>
-              </TouchableOpacity>
+              <FLink
+                label={t('Clear filters')}
+                onPress={() => {
+                  setLangs([]);
+                  setVideoOnly(false);
+                }}
+                style={styles.clear}
+              />
             )}
           </View>
         )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
-          <TouchableOpacity style={[styles.filter, role === 'all' && styles.filterActive]} onPress={() => setRole('all')}>
-            <Text style={[styles.filterText, role === 'all' && styles.filterTextActive]}>{t('All')}</Text>
-          </TouchableOpacity>
+        {/* Especialidades: chips con borde y el dibujo a línea del rol; la elegida, borde jade */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roles} accessibilityRole="radiogroup">
+          <RoleChip label={t('All specialists')} on={role === 'all'} onPress={() => setRole('all')} />
           {ROLES.map((r) => (
-            <TouchableOpacity key={r} style={[styles.filter, role === r && styles.filterActive]} onPress={() => setRole(r)}>
-              <MaterialCommunityIcons name={ROLE_INFO[r].icon as any} size={15} color={role === r ? Colors.background : Colors.textSecondary} />
-              <Text style={[styles.filterText, role === r && styles.filterTextActive]}>{ROLE_INFO[r].label}</Text>
-            </TouchableOpacity>
+            <RoleChip key={r} role={r} label={ROLE_INFO[r].label} on={role === r} onPress={() => setRole(r)} />
           ))}
         </ScrollView>
 
-        {realList.length > 0 && (
-          <>
-            <Text style={styles.groupTitle}>{t('On Kuova')}</Text>
-            <View style={[styles.list, { marginBottom: 20 }]}>
-              {realList.map((p) => (
+        <View style={[styles.pad, styles.list]}>
+          {realList.length > 0 && (
+            <>
+              <SecHead title={t('On Kuova')} style={styles.firstHead} />
+              {realList.map((p, i) => (
                 <TouchableOpacity
                   key={p.id}
-                  style={styles.card}
-                  onPress={() => router.push({ pathname: '/professional-detail', params: { id: p.id } })}
-                  activeOpacity={0.85}
+                  style={[fine.row, styles.proRow, i === realList.length - 1 && styles.noLine]}
+                  onPress={() => open(p.id)}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${p.displayName}. ${p.specialty ?? ROLE_INFO[p.role as ProfessionalRole]?.label ?? p.role}`}
                 >
-                  {p.photoUrl ? (
-                    <Image source={{ uri: p.photoUrl }} style={styles.photo} contentFit="cover" />
-                  ) : (
-                    <Avatar nombre={p.displayName.replace(/^Dra?\.\s*/, '')} size={52} />
-                  )}
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.name}>{p.displayName}</Text>
-                    <Text style={styles.specialty}>{p.specialty ?? ROLE_INFO[p.role as ProfessionalRole]?.label ?? p.role}</Text>
+                  {p.photoUrl ? <Image source={{ uri: p.photoUrl }} style={styles.photo} contentFit="cover" /> : <Monogram name={p.displayName} size={AVATAR} />}
+                  <View style={styles.flex}>
+                    <Text style={fine.rowTitle} numberOfLines={1}>
+                      {p.displayName}
+                    </Text>
+                    <Text style={fine.rowSub} numberOfLines={1}>
+                      {p.specialty ?? ROLE_INFO[p.role as ProfessionalRole]?.label ?? p.role}
+                    </Text>
                     <View style={styles.metaRow}>
-                      <Ionicons name="shield-checkmark" size={12} color={Colors.ok} />
-                      <Text style={styles.meta}>{t('Verified')}{p.hourlyRateEur ? ` · ${formatPrice(p.hourlyRateEur)} / h` : ''}</Text>
+                      <Ionicons name="shield-checkmark-outline" size={12} color={FINE.jade} />
+                      <Text style={[styles.meta, { color: FINE.jade }]}>{t('Verified')}</Text>
+                      {p.hourlyRateEur ? <Text style={styles.meta}>{` · ${formatPrice(p.hourlyRateEur)} / h`}</Text> : null}
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                  <Chev />
                 </TouchableOpacity>
               ))}
-            </View>
-            <Text style={styles.groupTitle}>{t('Examples')}</Text>
-          </>
-        )}
+              <SecHead title={t('Examples')} />
+            </>
+          )}
 
-        {realList.length === 0 && list.length === 0 && <Text style={styles.empty}>{t('No specialists match your search.')}</Text>}
+          {realList.length === 0 && list.length === 0 && <Text style={[fine.note, styles.empty]}>{t('No specialists match your search.')}</Text>}
 
-        <View style={styles.list}>
-          {list.map((p) => (
+          {list.map((p, i) => (
             <TouchableOpacity
               key={p.id}
-              style={styles.card}
-              onPress={() => router.push({ pathname: '/professional-detail', params: { id: p.id } })}
-              activeOpacity={0.85}
+              style={[fine.row, styles.proRow, i === list.length - 1 && styles.noLine]}
+              onPress={() => open(p.id)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${p.name}. ${p.specialty}`}
             >
-              <Avatar nombre={p.name.replace(/^Dra?\.\s*/, '')} size={52} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{p.name}</Text>
-                <Text style={styles.specialty}>{p.specialty}</Text>
-                <View style={styles.metaRow}>
+              <Monogram name={p.name} size={AVATAR} />
+              <View style={styles.flex}>
+                <Text style={fine.rowTitle} numberOfLines={1}>
+                  {p.name}
+                </Text>
+                <Text style={fine.rowSub} numberOfLines={1}>
+                  {p.specialty}
+                </Text>
+                {/* Valoración y precio en texto, sin estrellas: «4,9 · 128 valoraciones · 100 € / 15 min» */}
+                <Text style={[styles.meta, styles.metaLine]} numberOfLines={2}>
                   {p.rating > 0 ? (
-                    <>
-                      <Ionicons name="star" size={12} color={Colors.amber} />
-                      <Text style={styles.meta}>
-                        {num(p.rating.toFixed(1))}
-                        {p.reviews ? ` (${p.reviews})` : ''}
-                      </Text>
-                    </>
+                    `${num(p.rating.toFixed(1))}${p.reviews ? ` · ${t('{n} reviews', { n: p.reviews })}` : ''}`
                   ) : (
-                    <Text style={[styles.meta, { color: Colors.accent }]}>{t('New on Kuova')}</Text>
+                    <Text style={{ color: FINE.jade }}>{t('New on Kuova')}</Text>
                   )}
-                  <Text style={styles.metaDot}>·</Text>
-                  <Text style={styles.meta}>
-                    {formatPrice(p.pricePerSession)} / {p.sessionMinutes} min
-                  </Text>
-                </View>
+                  {` · ${formatPrice(p.pricePerSession)} / ${p.sessionMinutes} min`}
+                </Text>
                 <Text style={styles.next}>{t('Next: {when}', { when: p.nextAvailable })}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+              <Chev />
             </TouchableOpacity>
           ))}
         </View>
@@ -193,54 +210,58 @@ export const ProfessionalsScreen = () => {
   );
 };
 
+// Un chip de especialidad: borde fino, el dibujo a línea del rol y el nombre; elegido, borde jade y letra marfil
+// (como FChip)
+function RoleChip({ role, label, on, onPress }: { role?: ProfessionalRole; label: string; on: boolean; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={[styles.chip, on && styles.chipOn]}
+      onPress={onPress}
+      activeOpacity={0.8}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: on }}
+      accessibilityLabel={label}
+    >
+      {role ? <RoleIcon role={role} size={18} color={on ? FINE.jade : FINE.mute} /> : null}
+      <Text style={[styles.chipText, on && styles.chipTextOn]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingBottom: 32 },
-  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, paddingHorizontal: 20, marginBottom: 14 },
-  filters: { paddingHorizontal: 20, gap: 8, paddingBottom: 16 },
-  filter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  filterActive: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  filterText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  filterTextActive: { color: Colors.background },
-  list: { paddingHorizontal: 20, gap: 12 },
-  searchRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 12 },
-  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12 },
-  searchInput: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, paddingVertical: 10 },
-  filterBtn: { width: 44, borderRadius: 14, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
-  filterCount: { position: 'absolute', top: 4, right: 6, color: Colors.background, fontSize: 10, fontFamily: INTER.medium },
-  panel: { marginHorizontal: 20, marginBottom: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, gap: 10 },
-  panelLabel: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  switchLabel: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, flex: 1 },
-  clear: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, paddingHorizontal: 20, marginBottom: 10 },
-  groupTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 10 },
-  photo: { width: 52, height: 52, borderRadius: 26 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
-  },
-  name: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  specialty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
-  metaDot: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
-  next: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 4 },
+  content: { paddingBottom: 40 },
+  pad: { paddingHorizontal: 20 },
+  intro: { marginTop: 0, marginBottom: 14 },
+  flex: { flex: 1, minWidth: 0 },
+  // Buscador: casi transparente con borde fino (como las casillas de FineForm)
+  searchRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: FINE.tile, borderWidth: 1, borderColor: FINE.line, borderRadius: 14, paddingHorizontal: 12, minHeight: 44 },
+  searchInput: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 14, paddingVertical: 10 },
+  filterBtn: { width: 44, minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: FINE.line, alignItems: 'center', justifyContent: 'center' },
+  filterBtnOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  filterCount: { ...ff('medium'), position: 'absolute', top: 3, right: 6, color: FINE.jade, fontSize: 10 },
+  // Filtros: sin tarjeta, una cabecera pequeña, los idiomas en chips y la videoconsulta en una fila
+  panel: { marginBottom: 14 },
+  panelLabel: { marginBottom: 10 },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  switchRow: { marginTop: 6, borderBottomWidth: 0 },
+  clear: { alignSelf: 'flex-start', paddingVertical: 4, minHeight: 32 },
+  // Especialidades
+  roles: { paddingHorizontal: 20, gap: 8, paddingBottom: 6 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 38, paddingHorizontal: 13, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: FINE.line },
+  chipOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  chipText: { ...ff('regular'), color: FINE.mute, fontSize: 13.5 },
+  chipTextOn: { color: FINE.ivory },
+  // Lista
+  list: { marginTop: 4 },
+  firstHead: { marginTop: 10 },
+  empty: { marginTop: 18, textAlign: 'center' },
+  proRow: { gap: 14, paddingVertical: 14 },
+  noLine: { borderBottomWidth: 0 },
+  photo: { width: AVATAR, height: AVATAR, borderRadius: AVATAR / 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 5 },
+  meta: { ...ff('regular'), color: FINE.mute, fontSize: 12, lineHeight: 16 },
+  metaLine: { marginTop: 5 },
+  next: { ...ff('regular'), color: FINE.jade, fontSize: 12, lineHeight: 16, marginTop: 3 },
 });

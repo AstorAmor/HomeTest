@@ -7,7 +7,7 @@ import { consult } from '@/data/consultations';
 import { Appointment, KIND_LABEL } from '@/data/specialistTypes';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
 import { INTER } from '@/theme/fine';
 const when = (iso: string) =>
   new Date(iso).toLocaleString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -39,18 +39,18 @@ export const NextConsultationCard = () => {
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>
           {KIND_LABEL[next.kind]}
-          {next.professionalName ? ` with ${next.professionalName}` : ''}
+          {next.professionalName ? ` ${t('with')} ${next.professionalName}` : ''}
         </Text>
         <Text style={styles.sub}>
-          {when(next.startsAt)} · {next.status === 'confirmed' ? 'Confirmed' : 'Waiting for confirmation'}
+          {when(next.startsAt)} · {next.status === 'confirmed' ? t('Confirmed') : t('Waiting for confirmation')}
         </Text>
       </View>
       {canJoin && (
         <TouchableOpacity
           style={styles.join}
-          onPress={() => router.push({ pathname: '/video', params: { appt: next.id, title: next.professionalName ?? 'Video consultation' } })}
+          onPress={() => router.push({ pathname: '/video', params: { appt: next.id, title: next.professionalName ?? t('Video consultation') } })}
         >
-          <Text style={styles.joinText}>Join</Text>
+          <Text style={styles.joinText}>{t('Join')}</Text>
         </TouchableOpacity>
       )}
     </View>

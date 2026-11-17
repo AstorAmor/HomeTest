@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
-import { ChoiceChips } from '@/components/ChoiceChips';
+import { CometLine } from '@/components/CometLine';
 import { InfoButton } from '@/components/InfoButton';
+import { SecHead, Tag } from '@/components/fine/Fine';
+import { FButton, FChip, FChips, FLink, FOption, formStyles, ON_BG } from '@/components/fine/FineForm';
+import { CheckRow } from '@/components/fine/FineMeasure';
 import { evidenceTopic } from '@/data/evidence';
 import { familyHistoryStore } from '@/data/familyHistoryStore';
 import { profileRepository } from '@/data/profileRepository';
@@ -23,57 +25,60 @@ import {
   TriageId,
   YesNo,
 } from '@/types/familyHistory';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // "Know your roots": embudo como en la primera visita a un asesor genético.
 // Bloque 1, cribado rápido (sí / no / no lo sé, inspirado en el PAT): si todo es negativo, termina.
 // Bloque 2, solo si algo es positivo: quién, qué cáncer y a qué edad (lo que pide el Ontario FHAT).
 // Bloque 3, resultado: PAT + FHAT + Manchester + criterios de Lynch (src/logic/genetics.ts).
 // Cada respuesta se guarda al momento (user_flags) para retomar en la misma pregunta.
+// Rediseño del 2026-11-17 (lenguaje fino, src/theme/fine.ts). El fundador: «Conoce tus raíces… tampoco está
+// actualizado el formato» y, de «Quién cuenta»: «lo pondría como pie de página, porque se repite en cada pregunta y es
+// una chapa tremenda». La barra de arriba es la de los otros cuestionarios (‹ en jade y el avance como una línea
+// cometa), las respuestas van en filas con una línea fina y su marca redonda o en chips con borde, sin iconos, y el
+// botón de seguir, en esmeralda. «Quién cuenta» sale una sola vez, como nota apagada al pie de la primera pregunta de
+// familia que se ve. El resultado, sin tarjetas de color: el nivel con su etiqueta (oro si conviene consultarlo), lo
+// que decir al médico en una tarjeta casi transparente con borde de oro y el resto en secciones con cabecera pequeña.
+// Las preguntas, lo que se guarda, el orden de los pasos y el cálculo no cambian.
 
 type TriageStep = TriageId | 'ashkenazi';
 
 // `who`: la pregunta va de familiares, así que se aclara quién cuenta. Son los mismos que se pueden
 // elegir después en "¿Quién tuvo cáncer?" (RELATION_GROUPS): el PAT, el FHAT y el Manchester piden
 // el parentesco y el lado de la familia, por eso aquí basta con un sí/no y el quién va después.
-const TRIAGE: { id: TriageStep; title: string; hint?: string; icon: string; who?: boolean }[] = [
-  { id: 'breast', title: 'Has anyone in your family had breast cancer?', hint: 'Women and men.', icon: 'ribbon', who: true },
-  { id: 'ovarian', title: 'Has anyone in your family had ovarian cancer?', hint: 'Including cancer of the fallopian tubes or the peritoneum.', icon: 'flower-outline', who: true },
+const TRIAGE: { id: TriageStep; title: string; hint?: string; who?: boolean }[] = [
+  { id: 'breast', title: 'Has anyone in your family had breast cancer?', hint: 'Women and men.', who: true },
+  { id: 'ovarian', title: 'Has anyone in your family had ovarian cancer?', hint: 'Including cancer of the fallopian tubes or the peritoneum.', who: true },
   {
     id: 'bowel',
     title: 'Has anyone in your family had bowel or womb cancer?',
     hint: 'Colorectal or endometrial cancer. Also cancer of the small intestine, the stomach, or the kidney pelvis or ureter.',
-    icon: 'stomach',
     who: true,
   },
-  { id: 'pancreas_prostate', title: 'Has anyone in your family had pancreatic or prostate cancer?', icon: 'account-group-outline', who: true },
+  { id: 'pancreas_prostate', title: 'Has anyone in your family had pancreatic or prostate cancer?', who: true },
   {
     id: 'variant',
     title: 'Has a relative had a genetic test that found a change linked to cancer?',
     hint: 'For example in BRCA1, BRCA2 or a Lynch syndrome gene.',
-    icon: 'dna',
     who: true,
   },
-  { id: 'ashkenazi', title: 'Is any of your family of Ashkenazi Jewish origin?', hint: 'Some inherited changes are more common in this ancestry.', icon: 'earth' },
-  { id: 'self_cancer', title: 'Have you yourself ever had cancer?', hint: 'Any cancer, even if it was a long time ago.', icon: 'account-outline' },
+  { id: 'ashkenazi', title: 'Is any of your family of Ashkenazi Jewish origin?', hint: 'Some inherited changes are more common in this ancestry.' },
+  { id: 'self_cancer', title: 'Have you yourself ever had cancer?', hint: 'Any cancer, even if it was a long time ago.' },
   {
     id: 'heart_early',
     title: 'Did a parent, brother, sister or child have heart disease or a stroke young?',
     hint: 'A heart attack, a stent or bypass, or a stroke before 55 in men or before 65 in women.',
-    icon: 'heart-pulse',
   },
   {
     id: 'cholesterol',
     title: 'Does very high cholesterol run in your family?',
     hint: 'Your parents, brothers, sisters or children, or your grandparents, aunts or uncles. For example, someone told they have familial hypercholesterolaemia.',
-    icon: 'water-outline',
   },
   {
     // "Antes de los 50": el antecedente familiar de la AHA (muerte súbita prematura por el corazón)
     id: 'sudden_death',
     title: 'Did a relative die suddenly at a young age, without a clear cause?',
     hint: 'Before 50, for example while sleeping or doing sport. Parents, brothers and sisters, children, grandparents, aunts, uncles or first cousins.',
-    icon: 'heart-flash',
   },
 ];
 
@@ -143,7 +148,7 @@ async function shareSummary(message: string) {
   } catch {
     try {
       await (globalThis as any).navigator?.clipboard?.writeText(message);
-      (globalThis as any).alert?.('Copied. Paste it in a message or an email to your doctor.');
+      (globalThis as any).alert?.(tr('Copied. Paste it in a message or an email to your doctor.'));
     } catch {
       // nada más que hacer
     }
@@ -151,6 +156,52 @@ async function shareSummary(message: string) {
 }
 
 const pronoun = (r: Relative) => (r.relation === 'self' ? 'you' : RELATIONS[r.relation].sex === 'M' ? 'he' : 'she');
+
+// Puntos de una lista (lo que decir al médico, lo del corazón…): un punto apagado y el texto, sin iconos
+function Dots({ items }: { items: string[] }) {
+  return (
+    <View style={styles.dots}>
+      {items.map((p) => (
+        <View key={p} style={styles.dotRow}>
+          <View style={styles.dot} />
+          <Text style={styles.dotText}>{p}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// Un familiar que puede ser más de uno (tías, primos…), ya elegido: el chip con «−» y «+» a los lados
+function CountChip({
+  label,
+  n,
+  onLess,
+  onMore,
+  lessLabel,
+  moreLabel,
+}: {
+  label: string;
+  n: number;
+  onLess: () => void;
+  onMore: () => void;
+  lessLabel: string;
+  moreLabel: string;
+}) {
+  return (
+    <View style={styles.count}>
+      <TouchableOpacity style={styles.countButton} onPress={onLess} hitSlop={8} accessibilityRole="button" accessibilityLabel={lessLabel}>
+        <Ionicons name="remove" size={16} color={FINE.jade} />
+      </TouchableOpacity>
+      <Text style={styles.countText}>
+        {label}
+        {n > 1 ? ` ×${n}` : ''}
+      </Text>
+      <TouchableOpacity style={styles.countButton} onPress={onMore} hitSlop={8} accessibilityRole="button" accessibilityLabel={moreLabel}>
+        <Ionicons name="add" size={16} color={FINE.jade} />
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export const KnowYourRootsScreen = () => {
   const router = useRouter();
@@ -161,6 +212,8 @@ export const KnowYourRootsScreen = () => {
   const [resumeAt, setResumeAt] = useState<string | null>(null);
   const [selfSex, setSelfSex] = useState<'female' | 'male' | undefined>();
   const [showScores, setShowScores] = useState(false);
+  // La primera pregunta de familia que se ve en esta visita (normalmente la del cáncer de mama): solo ahí, al pie,
+  // sale «Quién cuenta». Si retoma más adelante (p. ej. en la de ovario), sale en esa
   const viewOnly = params.view === 'result';
   const savedResult = useRef(false);
 
@@ -299,161 +352,162 @@ export const KnowYourRootsScreen = () => {
 
   const shareText = () =>
     [
-      'Family history (Kuova · Know your roots)',
+      tr('Family history (Kuova · Know your roots)'),
       '',
       LEVEL_TEXT[result.level].title,
       '',
       ...(result.level === 'moderate' || result.level === 'high' ? [REFERRAL_INTRO, ''] : []),
       ...result.keyPoints.map((p) => `• ${p}`),
-      ...(result.heart.points.length ? ['', 'Heart:', ...result.heart.points.map((p) => `• ${p}`)] : []),
+      ...(result.heart.points.length ? ['', tr('Heart:'), ...result.heart.points.map((p) => `• ${p}`)] : []),
       '',
-      'This is guidance from validated screening tools (PAT, Ontario FHAT, Manchester, Amsterdam II / Bethesda), not a diagnosis.',
+      tr('This is guidance from validated screening tools (PAT, Ontario FHAT, Manchester, Amsterdam II / Bethesda), not a diagnosis.'),
     ].join('\n');
 
-  // ── Barra de progreso: 3 tramos fijos, el actual se llena ──
+  // ── Avance: 3 tramos fijos (el número de pasos crece con lo contestado); el actual se llena según su paso ──
   const block = blockOf(step);
   const blockSteps = steps.filter((s) => blockOf(s) === block);
   const inBlock = blockSteps.indexOf(step);
   const fill = (b: number) => (b < block ? 1 : b > block ? 0 : block === 3 ? 1 : (inBlock + 1) / Math.max(1, blockSteps.length));
+  const progress = block === 0 ? 0 : (fill(1) + fill(2) + fill(3)) / 3;
+  const blockLabel = block > 0 ? tr('{n} of 3 · {what}', { n: block, what: tr(BLOCKS[block - 1]) }) : '';
+
+  const triage = step.startsWith('t:') ? TRIAGE.find((t) => `t:${t.id}` === step) : undefined;
+  // «Quién cuenta», al pie de cada pregunta que habla de «alguien de tu familia» (fundador, 2026-11-17: «lo puedes
+  // repetir siempre que digas "alguien de tu familia", porque puede olvidarse»), como nota discreta, no como caja
+  const showWho = !!triage?.who;
 
   if (!loaded) return <SafeAreaView style={styles.safeArea} />;
 
-  const triage = step.startsWith('t:') ? TRIAGE.find((t) => `t:${t.id}` === step) : undefined;
   const sources = evidenceTopic('family_history')?.sources ?? [];
+  const triageOptions: { id: string; label: string }[] = triage?.id === 'ashkenazi' ? ASHKENAZI : YES_NO;
+  const triageValue = triage ? (triage.id === 'ashkenazi' ? answers.ashkenazi : answers.triage[triage.id as TriageId]) : undefined;
+  const concern = result.level === 'moderate' || result.level === 'high';
+  const toCounsellor = () => router.push({ pathname: '/professionals', params: { role: 'geneticist' } });
+  const back = index > 0 && !viewOnly;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={viewOnly ? () => router.back() : goBack} accessibilityLabel={tr('Back')}>
-          <Ionicons name={index > 0 && !viewOnly ? 'chevron-back' : 'close'} size={22} color={Colors.textPrimary} />
+      {/* La barra de los cuestionarios (como fine/FineSteps): ‹ en jade, la línea cometa con el tramo debajo y, a la
+          derecha, «Guardar y salir» */}
+      <View style={styles.bar}>
+        <TouchableOpacity
+          style={styles.side}
+          onPress={viewOnly ? () => router.back() : goBack}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={back ? tr('Back') : tr('Close')}
+        >
+          <Ionicons name={back ? 'chevron-back' : 'close'} size={24} color={FINE.jade} />
         </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <View style={styles.segments}>
-            {[1, 2, 3].map((b) => (
-              <View key={b} style={styles.segment}>
-                <View style={[styles.segmentFill, { width: `${fill(b) * 100}%` }]} />
-              </View>
-            ))}
-          </View>
-          {block > 0 && <Text style={styles.blockLabel}>{tr('{n} of 3 · {what}', { n: block, what: tr(BLOCKS[block - 1]) })}</Text>}
+        <View
+          style={styles.line}
+          accessible
+          accessibilityRole="progressbar"
+          accessibilityLabel={blockLabel || tr('Know your roots')}
+          accessibilityValue={{ min: 0, max: 100, now: Math.round(progress * 100) }}
+        >
+          <CometLine progress={progress} colors={['#2F8F70', FINE.jade]} thickness={3} />
+          {blockLabel ? <Text style={styles.blockLabel}>{blockLabel}</Text> : null}
         </View>
         {step !== 'intro' && step !== 'result' ? (
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+          <TouchableOpacity style={styles.exitBox} onPress={() => router.back()} hitSlop={8} accessibilityRole="button">
             <Text style={styles.exit}>{tr('Save & exit')}</Text>
           </TouchableOpacity>
         ) : (
-          <View style={{ width: 40 }} />
+          <View style={styles.side} />
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {step === 'intro' && (
           <>
-            <MaterialCommunityIcons name="family-tree" size={40} color={Colors.gold} style={styles.icon} />
-            <Text style={[styles.title, { textAlign: 'center' }]}>{tr('Know your roots')}</Text>
-            <Text style={[styles.subtitle, { textAlign: 'center' }]}>
+            <Text style={styles.title}>{tr('Know your roots')}</Text>
+            <Text style={styles.lead}>
               {tr('The questions a genetic counsellor asks at a first visit. Your answers show whether your family history is worth talking about with a professional.')}
             </Text>
             {resumeAt && (
               <View style={styles.resume}>
-                <Ionicons name="bookmark-outline" size={18} color={Colors.gold} />
                 <Text style={styles.resumeText}>
-                  You stopped at question {Math.max(1, buildSteps(answers).indexOf(resumeAt))}. Your answers are saved.
+                  {tr('You stopped at question {n}. Your answers are saved.', { n: Math.max(1, buildSteps(answers).indexOf(resumeAt)) })}
                 </Text>
               </View>
             )}
-            <View style={styles.card}>
-              <View style={styles.timeHeader}>
-                <Ionicons name="time-outline" size={18} color={Colors.accent} />
-                <Text style={styles.timeTitle}>{tr('About 4–6 minutes')}</Text>
-              </View>
-              {[
-                ['1', 'Quick check', 'About 1 minute · 10 yes/no questions'],
-                ['2', 'Your family', '2–4 minutes · only if something comes up'],
-                ['3', 'Your result', '1 minute · what to tell your doctor'],
-              ].map(([n, t, s]) => (
-                <View key={n} style={styles.timeRow}>
-                  <Text style={styles.timeNum}>{n}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.timeRowTitle}>{tr(t)}</Text>
-                    <Text style={styles.timeRowSub}>{tr(s)}</Text>
-                  </View>
+            {/* Los tres tramos: el número fino a la izquierda, sin círculo de color */}
+            <SecHead title={tr('About 4–6 minutes')} style={styles.firstSec} />
+            {[
+              ['1', 'Quick check', 'About 1 minute · 10 yes/no questions'],
+              ['2', 'Your family', '2–4 minutes · only if something comes up'],
+              ['3', 'Your result', '1 minute · what to tell your doctor'],
+            ].map(([n, t, s], i, all) => (
+              <View key={n} style={[fine.row, i === all.length - 1 && styles.lastRow]}>
+                <Text style={styles.stepNum}>{n}</Text>
+                <View style={styles.flex}>
+                  <Text style={fine.rowTitle}>{tr(t)}</Text>
+                  <Text style={fine.rowSub}>{tr(s)}</Text>
                 </View>
-              ))}
-              <Text style={styles.small}>
-                {tr('When we ask about your family we mean blood relatives on both sides, up to first cousins, nieces and nephews.')}
-              </Text>
-              <Text style={styles.small}>{tr('Every answer is saved as you go. You can close the app and continue at the same question.')}</Text>
-            </View>
-            <View style={styles.note}>
-              <Ionicons name="lock-closed-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.noteText}>
+              </View>
+            ))}
+            <Text style={fine.note}>{tr('When we ask about your family we mean blood relatives on both sides, up to first cousins, nieces and nephews.')}</Text>
+            <Text style={fine.note}>{tr('Every answer is saved as you go. You can close the app and continue at the same question.')}</Text>
+            {/* La privacidad y que no es un diagnóstico, como notas apagadas debajo (antes, con su icono) */}
+            <View style={styles.aside}>
+              <Text style={fine.note}>
                 {tr('Only you see this. Family history is sensitive health data: it is never shared unless you choose to share it.')}
               </Text>
-            </View>
-            <View style={styles.note}>
-              <Ionicons name="information-circle-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.noteText}>{tr('Guidance to talk to a professional, not a diagnosis.')}</Text>
+              <Text style={fine.note}>{tr('Guidance to talk to a professional, not a diagnosis.')}</Text>
             </View>
           </>
         )}
 
         {triage && (
           <>
-            <MaterialCommunityIcons name={triage.icon as any} size={34} color={Colors.gold} style={styles.icon} />
-            <Text style={styles.title}>{tr(triage.title)}</Text>
-            {triage.hint ? <Text style={styles.subtitle}>{tr(triage.hint)}</Text> : <View style={{ height: 12 }} />}
-            {triage.who && (
-              <View style={styles.whoBox}>
-                <Ionicons name="people-outline" size={18} color={Colors.gold} />
-                <View style={{ flex: 1, gap: 4 }}>
-                  <Text style={styles.whoTitle}>{tr('Who counts')}</Text>
-                  <Text style={styles.whoText}>
-                    {tr('Blood relatives on both sides (your mother’s and your father’s): parents, brothers and sisters, children, grandparents, aunts and uncles, first cousins, nieces and nephews. Partners and in-laws do not count.')}
-                  </Text>
-                  <Text style={styles.whoText}>{tr('If you answer yes, next we ask who it was and at what age.')}</Text>
-                </View>
+            <Text style={[styles.title, !triage.hint && styles.titleGap]}>{tr(triage.title)}</Text>
+            {triage.hint ? <Text style={styles.lead}>{tr(triage.hint)}</Text> : null}
+            <View>
+              {triageOptions.map((o, i) => (
+                <FOption
+                  key={o.id}
+                  title={tr(o.label)}
+                  on={triageValue === o.id}
+                  onPress={() => answerTriage(triage.id, o.id)}
+                  last={i === triageOptions.length - 1}
+                />
+              ))}
+            </View>
+            {/* «Quién cuenta», al pie de cada pregunta de familia (fundador, 2026-11-17): nota discreta, no la caja de oro de antes */}
+            {showWho && (
+              <View style={styles.who}>
+                <Text style={fine.kicker}>{tr('Who counts')}</Text>
+                <Text style={styles.whoText}>
+                  {tr('Blood relatives on both sides (your mother’s and your father’s): parents, brothers and sisters, children, grandparents, aunts and uncles, first cousins, nieces and nephews. Partners and in-laws do not count.')}
+                </Text>
+                <Text style={styles.whoText}>{tr('If you answer yes, next we ask who it was and at what age.')}</Text>
               </View>
             )}
-            {(triage.id === 'ashkenazi' ? ASHKENAZI : YES_NO).map((o) => {
-              const value = triage.id === 'ashkenazi' ? answers.ashkenazi : answers.triage[triage.id as TriageId];
-              const on = value === o.id;
-              return (
-                <TouchableOpacity
-                  key={o.id}
-                  style={[styles.option, on && styles.optionOn]}
-                  onPress={() => answerTriage(triage.id, o.id)}
-                  activeOpacity={0.85}
-                >
-                  <Text style={[styles.optionText, on && styles.optionTextOn]}>{tr(o.label)}</Text>
-                  <Ionicons name={on ? 'radio-button-on' : 'radio-button-off'} size={20} color={on ? Colors.gold : Colors.textMuted} />
-                </TouchableOpacity>
-              );
-            })}
           </>
         )}
 
         {step === 'genes' && (
           <>
-            <MaterialCommunityIcons name="dna" size={34} color={Colors.gold} style={styles.icon} />
             <Text style={styles.title}>{tr('Which gene was it?')}</Text>
-            <Text style={styles.subtitle}>{tr('If you have the report, it is worth bringing to your appointment. Optional.')}</Text>
+            <Text style={styles.lead}>{tr('If you have the report, it is worth bringing to your appointment. Optional.')}</Text>
             <View style={styles.chips}>
               {GENES.map((g) => {
                 const on = (answers.knownGenes ?? []).includes(g.id);
                 return (
-                  <TouchableOpacity
+                  <FChip
                     key={g.id}
-                    style={[styles.chip, on && styles.chipOn]}
+                    multi
+                    check
+                    label={tr(g.label)}
+                    on={on}
                     onPress={() =>
                       update((a) => ({
                         ...a,
                         knownGenes: on ? (a.knownGenes ?? []).filter((x) => x !== g.id) : [...(a.knownGenes ?? []), g.id],
                       }))
                     }
-                  >
-                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{on ? `✓ ${tr(g.label)}` : tr(g.label)}</Text>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
@@ -463,40 +517,31 @@ export const KnowYourRootsScreen = () => {
         {step === 'people' && (
           <>
             <Text style={styles.title}>{tr('Who had cancer?')}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.lead}>
               {tr('Tap everyone you know of. If there were two aunts, add two. Only blood relatives; great-grandparents and second cousins are not needed.')}
             </Text>
-            {RELATION_GROUPS.map((g) => (
-              <View key={g.title} style={{ marginBottom: 14 }}>
-                <Text style={styles.groupTitle}>{tr(g.title)}</Text>
+            {RELATION_GROUPS.map((g, gi) => (
+              <View key={g.title}>
+                <SecHead title={tr(g.title)} style={[styles.groupHead, gi === 0 && styles.firstGroup]} />
                 <View style={styles.chips}>
                   {g.ids.map((id) => {
                     const n = countOf(id);
                     const info = RELATIONS[id];
                     if (n > 0 && info.plural) {
                       return (
-                        <View key={id} style={[styles.chip, styles.chipOn, styles.counter]}>
-                          <TouchableOpacity onPress={() => removeRelative(id)} hitSlop={8} accessibilityLabel={tr('One less: {who}', { who: tr(info.short) })}>
-                            <Ionicons name="remove-circle-outline" size={20} color={Colors.gold} />
-                          </TouchableOpacity>
-                          <Text style={[styles.chipText, styles.chipTextOn]}>
-                            {tr(info.short)}
-                            {n > 1 ? ` ×${n}` : ''}
-                          </Text>
-                          <TouchableOpacity onPress={() => addRelative(id)} hitSlop={8} accessibilityLabel={tr('One more: {who}', { who: tr(info.short) })}>
-                            <Ionicons name="add-circle-outline" size={20} color={Colors.gold} />
-                          </TouchableOpacity>
-                        </View>
+                        <CountChip
+                          key={id}
+                          label={tr(info.short)}
+                          n={n}
+                          onLess={() => removeRelative(id)}
+                          onMore={() => addRelative(id)}
+                          lessLabel={tr('One less: {who}', { who: tr(info.short) })}
+                          moreLabel={tr('One more: {who}', { who: tr(info.short) })}
+                        />
                       );
                     }
                     return (
-                      <TouchableOpacity
-                        key={id}
-                        style={[styles.chip, n > 0 && styles.chipOn]}
-                        onPress={() => (n > 0 ? removeRelative(id) : addRelative(id))}
-                      >
-                        <Text style={[styles.chipText, n > 0 && styles.chipTextOn]}>{n > 0 ? `✓ ${info.short}` : info.short}</Text>
-                      </TouchableOpacity>
+                      <FChip key={id} multi check label={tr(info.short)} on={n > 0} onPress={() => (n > 0 ? removeRelative(id) : addRelative(id))} />
                     );
                   })}
                 </View>
@@ -507,18 +552,20 @@ export const KnowYourRootsScreen = () => {
 
         {step.startsWith('types:') && (
           <>
-            <Text style={styles.position}>{current ? relTitle(current) : tr('You')}</Text>
+            <Text style={styles.kicker}>{current ? relTitle(current) : tr('You')}</Text>
             <Text style={styles.title}>{step === 'types:self' ? tr('Which cancer did you have?') : tr(`Which cancer did ${current ? pronoun(current) : 'they'} have?`)}</Text>
-            <Text style={styles.subtitle}>{tr('Pick one or more.')}</Text>
+            <Text style={styles.lead}>{tr('Pick one or more.')}</Text>
             <View style={styles.chips}>
-              {cancerTypesFor(answers, step === 'types:self', step === 'types:self' ? 'self' : RELATIONS[current?.relation ?? 'mother'].sex, selfSex).map((t) => {
-                const on = !!current?.cancers.some((c) => c.type === t);
-                return (
-                  <TouchableOpacity key={t} style={[styles.chip, on && styles.chipOn]} onPress={() => toggleType(step.slice(6), t)}>
-                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{on ? `✓ ${tr(CANCER_LABEL[t])}` : tr(CANCER_LABEL[t])}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {cancerTypesFor(answers, step === 'types:self', step === 'types:self' ? 'self' : RELATIONS[current?.relation ?? 'mother'].sex, selfSex).map((t) => (
+                <FChip
+                  key={t}
+                  multi
+                  check
+                  label={tr(CANCER_LABEL[t])}
+                  on={!!current?.cancers.some((c) => c.type === t)}
+                  onPress={() => toggleType(step.slice(6), t)}
+                />
+              ))}
             </View>
           </>
         )}
@@ -529,25 +576,23 @@ export const KnowYourRootsScreen = () => {
           const self = current.relation === 'self';
           return (
             <>
-              <Text style={styles.position}>
+              <Text style={styles.kicker}>
                 {relTitle(current)} · {tr(CANCER_LABEL[type])}
               </Text>
               <Text style={styles.title}>{self ? tr('How old were you when it was diagnosed?') : tr(`How old was ${pronoun(current)} when it was diagnosed?`)}</Text>
-              <Text style={styles.subtitle}>{tr('A rough guess is fine. The age is what changes the risk most.')}</Text>
-              <ChoiceChips
+              <Text style={styles.lead}>{tr('A rough guess is fine. The age is what changes the risk most.')}</Text>
+              <FChips
                 options={AGES.map((a) => ({ id: a, label: tr(AGE_LABEL[a]) }))}
                 value={cancer?.ageGiven ? cancer.age : undefined}
-                onChange={(v) => setCancer(step.split(':')[1], type, { age: v as AgeBand })}
+                onChange={(v) => setCancer(step.split(':')[1], type, { age: v })}
               />
               {type === 'breast' && (
-                <TouchableOpacity
-                  style={styles.checkRow}
+                <CheckRow
+                  label={tr('It was in both breasts (or in several places in one)')}
+                  on={!!cancer?.bilateral}
                   onPress={() => setCancer(step.split(':')[1], type, { bilateral: !cancer?.bilateral })}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name={cancer?.bilateral ? 'checkbox' : 'square-outline'} size={22} color={cancer?.bilateral ? Colors.gold : Colors.textMuted} />
-                  <Text style={styles.checkText}>{tr('It was in both breasts (or in several places in one)')}</Text>
-                </TouchableOpacity>
+                  style={styles.checkRow}
+                />
               )}
             </>
           );
@@ -555,25 +600,25 @@ export const KnowYourRootsScreen = () => {
 
         {step === 'heart-who' && (
           <>
-            <MaterialCommunityIcons name="heart-pulse" size={34} color={Colors.gold} style={styles.icon} />
             <Text style={styles.title}>{tr('Who had heart disease young?')}</Text>
-            <Text style={styles.subtitle}>{tr('Optional, but it helps your doctor.')}</Text>
+            <Text style={styles.lead}>{tr('Optional, but it helps your doctor.')}</Text>
             <View style={styles.chips}>
               {FIRST_DEGREE.map((id) => {
                 const on = (answers.heartRelatives ?? []).includes(id);
                 return (
-                  <TouchableOpacity
+                  <FChip
                     key={id}
-                    style={[styles.chip, on && styles.chipOn]}
+                    multi
+                    check
+                    label={tr(RELATIONS[id].short)}
+                    on={on}
                     onPress={() =>
                       update((a) => ({
                         ...a,
                         heartRelatives: on ? (a.heartRelatives ?? []).filter((x) => x !== id) : [...(a.heartRelatives ?? []), id],
                       }))
                     }
-                  >
-                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{on ? `✓ ${RELATIONS[id].short}` : RELATIONS[id].short}</Text>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </View>
@@ -582,130 +627,104 @@ export const KnowYourRootsScreen = () => {
 
         {step === 'result' && (
           <>
-            <MaterialCommunityIcons name="dna" size={34} color={Colors.gold} style={styles.icon} />
-            <Text style={[styles.title, { textAlign: 'center' }]}>{tr('Your family history')}</Text>
-            <View
-              style={[
-                styles.levelCard,
-                (result.level === 'moderate' || result.level === 'high') && { borderColor: withAlpha(Colors.gold, result.level === 'high' ? 0.9 : 0.5) },
-              ]}
-            >
-              <View style={[styles.levelTag, { backgroundColor: withAlpha(result.level === 'population' || result.level === 'low' ? Colors.green : Colors.gold, 0.16) }]}>
-                <Text style={[styles.levelTagText, { color: result.level === 'population' || result.level === 'low' ? Colors.green : Colors.gold }]}>
-                  {result.level === 'population' ? tr('Population risk') : result.level === 'low' ? tr('Low risk') : result.level === 'moderate' ? tr('Moderate risk') : tr('High risk')}
-                </Text>
-              </View>
-              <Text style={styles.levelTitle}>{LEVEL_TEXT[result.level].title}</Text>
-              <Text style={styles.levelBody}>{LEVEL_TEXT[result.level].body}</Text>
-              {result.reasons.length > 0 && result.level !== 'low' && (
-                <View style={{ marginTop: 8, gap: 6 }}>
-                  {result.reasons.map((r) => (
-                    <View key={r} style={styles.bullet}>
-                      <Ionicons name="ellipse" size={6} color={Colors.textMuted} style={{ marginTop: 7 }} />
-                      <Text style={styles.bulletText}>{r}</Text>
-                    </View>
-                  ))}
-                </View>
-              )}
+            <Text style={styles.title}>{tr('Your family history')}</Text>
+            {/* El nivel: su etiqueta con borde (jade, o oro si conviene consultarlo), el título y lo que significa */}
+            <View style={styles.tagRow}>
+              <Tag
+                gold={concern}
+                label={result.level === 'population' ? tr('Population risk') : result.level === 'low' ? tr('Low risk') : result.level === 'moderate' ? tr('Moderate risk') : tr('High risk')}
+              />
             </View>
+            <Text style={styles.levelTitle}>{LEVEL_TEXT[result.level].title}</Text>
+            <Text style={styles.p}>{LEVEL_TEXT[result.level].body}</Text>
+            {result.reasons.length > 0 && result.level !== 'low' && <Dots items={result.reasons} />}
 
-            {(result.level === 'moderate' || result.level === 'high') && (
-              <View style={styles.card}>
-                <Text style={styles.referral}>{REFERRAL_INTRO}</Text>
-                {result.keyPoints.map((p) => (
-                  <View key={p} style={styles.bullet}>
-                    <Ionicons name="checkmark-circle-outline" size={16} color={Colors.gold} style={{ marginTop: 2 }} />
-                    <Text style={styles.bulletText}>{p}</Text>
-                  </View>
-                ))}
-                <TouchableOpacity
-                  style={styles.primaryButton}
-                  onPress={() => router.push({ pathname: '/professionals', params: { role: 'geneticist' } })}
-                >
-                  <MaterialCommunityIcons name="dna" size={18} color={Colors.background} />
-                  <Text style={styles.primaryButtonText}>{tr('Find a genetic counsellor')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.secondaryButton} onPress={() => shareSummary(shareText())}>
-                  <Ionicons name="share-outline" size={18} color={Colors.accent} />
-                  <Text style={styles.secondaryButtonText}>{tr('Share with my doctor')}</Text>
-                </TouchableOpacity>
+            {/* Lo que decir al médico: una tarjeta casi transparente con borde de oro, como en el cuestionario del ciclo */}
+            {concern && (
+              <View style={[styles.block, styles.blockGold]}>
+                <Text style={styles.blockLead}>{REFERRAL_INTRO}</Text>
+                <Dots items={result.keyPoints} />
+                <FLink label={`${tr('Find a genetic counsellor')} ›`} onPress={toCounsellor} style={styles.blockLink} />
+                <FLink label={`${tr('Share with my doctor')} ›`} onPress={() => shareSummary(shareText())} style={styles.blockLink} />
               </View>
             )}
 
-            {(result.level === 'population' || result.level === 'low') && result.keyPoints.length > 0 && (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>{tr('Worth remembering')}</Text>
-                {result.keyPoints.map((p) => (
-                  <View key={p} style={styles.bullet}>
-                    <Ionicons name="ellipse" size={6} color={Colors.textMuted} style={{ marginTop: 7 }} />
-                    <Text style={styles.bulletText}>{p}</Text>
-                  </View>
-                ))}
-              </View>
+            {!concern && result.keyPoints.length > 0 && (
+              <>
+                <SecHead title={tr('Worth remembering')} />
+                <Dots items={result.keyPoints} />
+              </>
             )}
 
             {result.heart.flagged && (
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <MaterialCommunityIcons name="heart-pulse" size={18} color={Colors.coral} />
-                  <Text style={styles.cardTitle}>{tr('Your heart')}</Text>
-                </View>
-                {result.heart.points.map((p) => (
-                  <View key={p} style={styles.bullet}>
-                    <Ionicons name="ellipse" size={6} color={Colors.textMuted} style={{ marginTop: 7 }} />
-                    <Text style={styles.bulletText}>{p}</Text>
-                  </View>
-                ))}
-              </View>
+              <>
+                <SecHead title={tr('Your heart')} />
+                <Dots items={result.heart.points} />
+              </>
             )}
 
             {/* Para cualquier resultado (fundador, 2026-11-09): de cara a tener hijos, el test de portadores */}
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <MaterialCommunityIcons name="baby-carriage" size={18} color={Colors.accent} />
-                <Text style={styles.cardTitle}>{tr('If you are thinking about having children')}</Text>
-              </View>
-              <Text style={styles.levelBody}>
-                {tr(
-                  'A carrier test is highly recommended: it shows whether you and your partner carry hereditary conditions that give you no symptoms but could pass to your children. A genetic counsellor explains it and helps you decide.',
-                )}
-              </Text>
-              <TouchableOpacity style={styles.primaryButton} onPress={() => router.push({ pathname: '/professionals', params: { role: 'geneticist' } })}>
-                <Ionicons name="chatbubbles-outline" size={18} color={Colors.background} />
-                <Text style={styles.primaryButtonText}>{tr('Talk to a genetic counsellor')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push({ pathname: '/store', params: { view: 'tests', category: 'genetic', open: 'gen_carrier' } })}>
-                <MaterialCommunityIcons name="dna" size={18} color={Colors.accent} />
-                <Text style={styles.secondaryButtonText}>{tr('See the carrier test')}</Text>
-              </TouchableOpacity>
-            </View>
+            <SecHead title={tr('If you are thinking about having children')} />
+            <Text style={styles.p}>
+              {tr(
+                'A carrier test is highly recommended: it shows whether you and your partner carry hereditary conditions that give you no symptoms but could pass to your children. A genetic counsellor explains it and helps you decide.',
+              )}
+            </Text>
+            <FLink label={`${tr('Talk to a genetic counsellor')} ›`} onPress={toCounsellor} style={styles.inlineLink} />
+            <FLink
+              label={`${tr('See the carrier test')} ›`}
+              onPress={() => router.push({ pathname: '/store', params: { view: 'tests', category: 'genetic', open: 'gen_carrier' } })}
+              style={styles.inlineLink}
+            />
 
-            <TouchableOpacity style={styles.howRow} onPress={() => setShowScores((v) => !v)} activeOpacity={0.85}>
-              <Text style={styles.howText}>{tr('How we got this')}</Text>
-              <InfoButton topic="family_history" />
-              <View style={{ flex: 1 }} />
-              <Ionicons name={showScores ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
-            </TouchableOpacity>
+            {/* Cómo lo hemos calculado: la cabecera abre y cierra las puntuaciones; el (i), aparte (un botón no va dentro de otro) */}
+            <View style={fine.secHead}>
+              <TouchableOpacity
+                style={styles.howToggle}
+                onPress={() => setShowScores((v) => !v)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: showScores }}
+              >
+                <Text style={fine.secTitle}>{tr('How we got this')}</Text>
+                <Ionicons name={showScores ? 'chevron-up' : 'chevron-down'} size={15} color={FINE.mute} />
+              </TouchableOpacity>
+              <InfoButton topic="family_history" size={17} color={FINE.mute} />
+            </View>
             {showScores && (
-              <View style={styles.card}>
+              <View>
                 {[
-                  ['Pedigree Assessment Tool', `Mother's side ${result.pat.maternal} · Father's side ${result.pat.paternal}`, `Referral from ${result.pat.threshold}`],
-                  ['Ontario FHAT', `Mother's side ${result.fhat.maternal} · Father's side ${result.fhat.paternal}`, `Referral from ${result.fhat.threshold}`],
+                  // Los nombres de las herramientas (Pedigree Assessment Tool, Ontario FHAT) se quedan como son
                   [
-                    'Manchester score',
-                    `Mother's side ${result.manchester.maternal.combined} · Father's side ${result.manchester.paternal.combined} (BRCA1 ${result.manchester.best.brca1}, BRCA2 ${result.manchester.best.brca2})`,
-                    '15 ≈ 10% chance in the affected relative; 20 for relatives without cancer',
+                    'Pedigree Assessment Tool',
+                    tr("Mother's side {m} · Father's side {p}", { m: result.pat.maternal, p: result.pat.paternal }),
+                    tr('Referral from {n}', { n: result.pat.threshold }),
                   ],
                   [
-                    'Lynch syndrome criteria',
+                    'Ontario FHAT',
+                    tr("Mother's side {m} · Father's side {p}", { m: result.fhat.maternal, p: result.fhat.paternal }),
+                    tr('Referral from {n}', { n: result.fhat.threshold }),
+                  ],
+                  [
+                    tr('Manchester score'),
+                    tr("Mother's side {m} · Father's side {p} (BRCA1 {b1}, BRCA2 {b2})", {
+                      m: result.manchester.maternal.combined,
+                      p: result.manchester.paternal.combined,
+                      b1: result.manchester.best.brca1,
+                      b2: result.manchester.best.brca2,
+                    }),
+                    tr('15 ≈ 10% chance in the affected relative; 20 for relatives without cancer'),
+                  ],
+                  [
+                    tr('Lynch syndrome criteria'),
                     result.lynch.amsterdamLike ? tr('Amsterdam II pattern') : result.lynch.bethesdaLike ? tr('Bethesda criteria met') : tr('Not met'),
-                    'Bowel, womb and related cancers',
+                    tr('Bowel, womb and related cancers'),
                   ],
-                ].map(([t, v, s]) => (
-                  <View key={t} style={styles.scoreRow}>
+                ].map(([t, v, s], i, all) => (
+                  <View key={t} style={[styles.score, i === all.length - 1 && styles.lastRow]}>
                     <Text style={styles.scoreTitle}>{t}</Text>
                     <Text style={styles.scoreValue}>{v}</Text>
-                    <Text style={styles.scoreSub}>{s}</Text>
+                    <Text style={fine.rowSub}>{s}</Text>
                   </View>
                 ))}
               </View>
@@ -715,183 +734,129 @@ export const KnowYourRootsScreen = () => {
               {tr('This is not a diagnosis. Only a genetic test, interpreted by a professional, can confirm whether there is an inherited change in your family. Scoring pending review by our medical advisor.')}
             </Text>
 
-            <Text style={styles.refsTitle}>{tr('References')}</Text>
+            {/* Las referencias, apagadas y subrayadas: se pueden abrir pero no compiten con lo de arriba */}
+            <Text style={[fine.kicker, styles.refsHead]}>{tr('References')}</Text>
             {sources.map((s) => (
-              <TouchableOpacity key={s.label} onPress={() => s.url && Linking.openURL(s.url)} disabled={!s.url}>
+              <TouchableOpacity key={s.label} onPress={() => s.url && Linking.openURL(s.url)} disabled={!s.url} accessibilityRole="link">
                 <Text style={styles.ref}>{s.label}</Text>
               </TouchableOpacity>
             ))}
 
-            {!viewOnly && (
-              <TouchableOpacity style={styles.linkRow} onPress={() => setStep('t:breast')}>
-                <Text style={styles.link}>{tr('Change my answers')}</Text>
-              </TouchableOpacity>
-            )}
+            {!viewOnly && <FLink label={tr('Change my answers')} onPress={() => setStep('t:breast')} style={styles.change} />}
           </>
         )}
       </ScrollView>
 
       {!triage && (
-        <TouchableOpacity
-          style={[styles.cta, !canContinue && styles.ctaDisabled]}
-          disabled={!canContinue}
-          onPress={() => {
-            if (step === 'result') return router.back();
-            if (step === 'intro' && resumeAt) {
-              setStep(resumeAt);
-              setResumeAt(null);
-              return;
+        <View style={styles.footer}>
+          <FButton
+            label={
+              step === 'intro'
+                ? resumeAt
+                  ? tr('Continue where I left off')
+                  : tr('Start')
+                : step === 'result'
+                  ? tr('Done')
+                  : (step === 'genes' && !(answers.knownGenes ?? []).length) || (step === 'heart-who' && !(answers.heartRelatives ?? []).length)
+                    ? tr('Skip')
+                    : tr('Continue')
             }
-            goNext();
-          }}
-        >
-          <Text style={styles.ctaText}>
-            {step === 'intro'
-              ? resumeAt
-                ? tr('Continue where I left off')
-                : tr('Start')
-              : step === 'result'
-                ? tr('Done')
-                : (step === 'genes' && !(answers.knownGenes ?? []).length) || (step === 'heart-who' && !(answers.heartRelatives ?? []).length)
-                  ? tr('Skip')
-                  : tr('Continue')}
-          </Text>
-        </TouchableOpacity>
-      )}
-      {step === 'intro' && resumeAt && (
-        <TouchableOpacity
-          style={styles.linkRow}
-          onPress={() => {
-            setAnswers(EMPTY);
-            setResumeAt(null);
-            familyHistoryStore.clearDraft();
-            setStep('t:breast');
-          }}
-        >
-          <Text style={styles.link}>{tr('Start again')}</Text>
-        </TouchableOpacity>
+            disabled={!canContinue}
+            onPress={() => {
+              if (step === 'result') return router.back();
+              if (step === 'intro' && resumeAt) {
+                setStep(resumeAt);
+                setResumeAt(null);
+                return;
+              }
+              goNext();
+            }}
+          />
+          {step === 'intro' && resumeAt && (
+            <FLink
+              label={tr('Start again')}
+              onPress={() => {
+                setAnswers(EMPTY);
+                setResumeAt(null);
+                familyHistoryStore.clearDraft();
+                setStep('t:breast');
+              }}
+            />
+          )}
+        </View>
       )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  whoBox: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: withAlpha(Colors.gold, 0.08),
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.gold, 0.3),
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 14,
-  },
-  whoTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  whoText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 8 },
-  circleButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.card, justifyContent: 'center', alignItems: 'center' },
-  segments: { flexDirection: 'row', gap: 4 },
-  segment: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
-  segmentFill: { height: 6, borderRadius: 3, backgroundColor: Colors.gold },
-  blockLabel: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium, marginTop: 5 },
-  exit: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  content: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 28 },
-  icon: { alignSelf: 'center', marginBottom: 10 },
-  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, marginBottom: 8 },
-  subtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 18 },
-  position: { color: Colors.gold, fontSize: 12, fontFamily: INTER.semibold, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
-  card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 16, marginBottom: 14, gap: 8 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  timeHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  timeTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  timeRow: { flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 4 },
-  timeNum: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    textAlign: 'center',
-    lineHeight: 24,
-    overflow: 'hidden',
-    backgroundColor: withAlpha(Colors.gold, 0.16),
-    color: Colors.gold,
-    fontFamily: INTER.medium,
-    fontSize: 12,
-  },
-  timeRowTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  timeRowSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
-  small: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 4 },
-  resume: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: withAlpha(Colors.gold, 0.12), borderRadius: 12, padding: 12, marginBottom: 14 },
-  resumeText: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  note: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginBottom: 8, paddingHorizontal: 2 },
-  noteText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 15,
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
-  optionOn: { borderColor: Colors.gold, backgroundColor: withAlpha(Colors.gold, 0.1) },
-  optionText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  optionTextOn: { color: Colors.textPrimary, fontFamily: INTER.medium },
-  groupTitle: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  // La barra de arriba, con las mismas medidas que la de fine/FineSteps
+  bar: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 10, paddingRight: 20, paddingTop: 6, minHeight: 50 },
+  side: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
+  line: { flex: 1, justifyContent: 'center' },
+  // El tramo, debajo de la línea y alineado con su cola
+  blockLabel: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 15, marginTop: 1, paddingLeft: 7 },
+  exitBox: { minWidth: 40, height: 44, justifyContent: 'center', alignItems: 'flex-end' },
+  exit: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  // flexGrow: con poco contenido, «Quién cuenta» queda abajo del todo, como pie de página
+  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
+  flex: { flex: 1, minWidth: 0 },
+  // La pregunta de cada paso y su explicación, como en el cuestionario del ciclo
+  title: { ...formStyles.q },
+  titleGap: { marginBottom: 14 }, // sin explicación entre la pregunta y las respuestas
+  lead: { ...formStyles.lead, marginBottom: 18 },
+  // De quién se pregunta («Tía (2) · Cáncer de mama»), pequeño y en jade encima de la pregunta
+  kicker: { ...fine.kicker, color: FINE.jade, marginBottom: 8 },
+  firstSec: { marginTop: 8 },
+  lastRow: { borderBottomWidth: 0 },
+  // Entrada: dónde lo dejó, en una tarjeta casi transparente con borde de oro (es lo que hay que mirar)
+  resume: { ...fine.tile, borderColor: FINE.goldLine, marginBottom: 4 },
+  resumeText: { ...ff('regular'), color: FINE.ivory, fontSize: 13.5, lineHeight: 19 },
+  stepNum: { ...fine.num, fontSize: 24, lineHeight: 28, width: 24 },
+  aside: { marginTop: 20, paddingTop: 6, borderTopWidth: 1, borderTopColor: FINE.line },
+  // «Quién cuenta»: nota apagada al pie, sobre una línea fina
+  who: { marginTop: 'auto', paddingTop: 14, borderTopWidth: 1, borderTopColor: FINE.line },
+  whoText: { ...fine.note, marginTop: 6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 20, paddingVertical: 9, paddingHorizontal: 14 },
-  chipOn: { borderColor: Colors.gold, backgroundColor: withAlpha(Colors.gold, 0.12) },
-  chipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  chipTextOn: { color: Colors.textPrimary },
-  counter: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10 },
-  checkRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 18 },
-  checkText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
-  levelCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, padding: 16, marginVertical: 14, gap: 6 },
-  levelTag: { alignSelf: 'flex-start', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  levelTagText: { fontSize: 12, fontFamily: INTER.medium },
-  levelTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
-  levelBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  referral: { color: Colors.textPrimary, fontSize: 14, lineHeight: 20, fontFamily: INTER.medium },
-  bullet: { flexDirection: 'row', gap: 8 },
-  bulletText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  primaryButton: {
+  // Los grupos de familiares: la cabecera pequeña de sección, algo más junta que en las pestañas
+  groupHead: { marginTop: 16, marginBottom: 12, paddingTop: 12, minHeight: 0 },
+  firstGroup: { marginTop: 4 },
+  // El chip elegido con «−» y «+» (como FChip elegido: borde jade y el fondo apenas marcado)
+  count: {
     flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.accent,
-    borderRadius: 24,
-    paddingVertical: 12,
-    marginTop: 8,
-  },
-  primaryButtonText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
-  secondaryButton: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    gap: 6,
+    minHeight: 38,
+    paddingHorizontal: 8,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.accent,
-    borderRadius: 24,
-    paddingVertical: 11,
+    borderColor: FINE.jade,
+    backgroundColor: ON_BG,
   },
-  secondaryButtonText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  howRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10 },
-  howText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  scoreRow: { paddingVertical: 4 },
-  scoreTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  scoreValue: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
-  scoreSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
-  disclaimer: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, marginTop: 6 },
-  refsTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, marginTop: 16, marginBottom: 6 },
-  ref: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11, lineHeight: 16, marginBottom: 6, textDecorationLine: 'underline' },
-  linkRow: { alignItems: 'center', paddingVertical: 10 },
-  link: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  cta: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 15, alignItems: 'center', marginHorizontal: 20, marginBottom: 12 },
-  ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
+  countButton: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  countText: { ...ff('regular'), color: FINE.ivory, fontSize: 13.5, fontVariant: ['tabular-nums'] },
+  checkRow: { marginTop: 18, borderTopWidth: 1, borderTopColor: FINE.line },
+  // Resultado
+  tagRow: { flexDirection: 'row', marginTop: 8, marginBottom: 10 },
+  levelTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 18, lineHeight: 24, marginBottom: 6 },
+  p: { ...ff('regular'), color: '#CFD6CF', fontSize: 14, lineHeight: 20 },
+  dots: { gap: 6, marginTop: 10 },
+  dotRow: { flexDirection: 'row', gap: 10 },
+  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: FINE.mute, marginTop: 8 },
+  dotText: { flex: 1, ...ff('regular'), color: '#CFD6CF', fontSize: 13.5, lineHeight: 19 },
+  block: { ...fine.tile, padding: 14, gap: 4, marginTop: 20 },
+  blockGold: { borderColor: FINE.goldLine },
+  blockLead: { ...ff('medium'), color: FINE.ivory, fontSize: 14.5, lineHeight: 21 },
+  blockLink: { alignSelf: 'flex-start', justifyContent: 'flex-start', minHeight: 36, paddingVertical: 6 },
+  inlineLink: { alignSelf: 'flex-start', justifyContent: 'flex-start', minHeight: 38, paddingVertical: 8 },
+  howToggle: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 32 },
+  score: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  scoreTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 14, lineHeight: 19 },
+  scoreValue: { ...ff('regular'), color: '#CFD6CF', fontSize: 13.5, lineHeight: 19, marginTop: 2, fontVariant: ['tabular-nums'] },
+  disclaimer: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 16, marginTop: 20 },
+  refsHead: { marginTop: 18, marginBottom: 8 },
+  ref: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 16, marginBottom: 6, textDecorationLine: 'underline' },
+  change: { marginTop: 10 },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
 });

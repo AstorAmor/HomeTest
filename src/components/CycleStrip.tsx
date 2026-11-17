@@ -1,4 +1,5 @@
 import React, { useId, useState } from 'react';
+import { LotusIcon } from '@/components/fine/LotusIcon';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Path, RadialGradient, Stop } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
@@ -109,7 +110,7 @@ export const CycleStrip = ({ info, onPress, variant = 'card' }: CycleStripProps)
     <TouchableOpacity style={variant === 'line' ? styles.line : styles.card} onPress={onPress} disabled={!onPress} activeOpacity={0.85}>
       <View style={styles.header}>
         <View style={styles.phaseRow}>
-          <Ionicons name="rose-outline" size={16} color={Colors.pulseAccent} />
+          <LotusIcon size={16} color={Colors.pulseAccent} />
           <Text style={[styles.phase, { color: PHASE_COLORS[info.phase] }]}>{t(info.label)}</Text>
         </View>
         <Text style={styles.day}>

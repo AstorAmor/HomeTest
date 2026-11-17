@@ -78,4 +78,21 @@ export const META_EVIDENCE: Record<string, [Evidence, string][]> = {
     ['Studied', 'Sleeping little is linked to more hunger, worse mood and worse glucose.'],
   ],
   checkin: [['Little studied', 'Stopping to look at how you are helps you see patterns.']],
+  // Los hábitos nuevos (2026-11-16), también PENDIENTES de revisión médica
+  estirar: [
+    ['Studied', 'Stretching regularly improves flexibility and range of movement.'],
+    ['Little studied', 'It may ease the stiffness of sitting for a long time.'],
+  ],
+  kegel: [
+    ['Well studied', 'Pelvic floor exercises help prevent and reduce urine leaks.'],
+    ['Studied', 'The effect usually shows after a few weeks of doing them every day.'],
+  ],
+  respirar: [
+    ['Studied', 'Slow breathing and meditation can lower the stress you feel.'],
+    ['Little studied', 'A few minutes before bed may help you fall asleep.'],
+  ],
+  pantallas: [
+    ['Studied', 'Using screens just before bed is linked to taking longer to fall asleep.'],
+    ['Studied', 'Bright light late in the evening can delay your body clock.'],
+  ],
 };

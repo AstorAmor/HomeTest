@@ -1,15 +1,16 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { SecHead } from '@/components/fine/Fine';
+import { FChip } from '@/components/fine/FineForm';
 import { CATALOG, categoryIntro, categoryLabel, CatalogTest, localizeTest, PLANS, TestCategory } from '@/data/testCatalog';
 import { TestCard } from '@/components/TestCard';
 import { getMySubscription, listMyPaidProducts } from '@/data/orders';
 import { t as tr } from '@/i18n';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, fine } from '@/theme/fine';
 
 // Los niveles del catálogo, en el orden en que se piensan: lo que va con tu seguimiento, confirmar un
 // resultado, objetivos concretos y lo que pida un médico
@@ -22,6 +23,9 @@ const FILTERS: (TestCategory | 'all')[] = ['all', ...GROUPS];
 // ?view=tests = catálogo de pruebas sin las suscripciones (desde "My subscription").
 // ?category=genetic (u otro grupo) = abre con ese filtro, y ?open=<id> con esa ficha abierta (desde Aprende y
 // Conoce tus raíces, junto con view=tests).
+// En el lenguaje fino (src/theme/fine.ts) desde el 2026-11-17: las suscripciones en tarjetas casi transparentes con
+// borde de oro, los filtros en chips con borde y cada grupo con su cabecera pequeña en versalitas y sus pruebas en
+// filas con una línea fina (TestCard).
 export const StoreScreen = () => {
   const router = useRouter();
   const { view, category, open } = useLocalSearchParams<{ view?: string; category?: string; open?: string }>();
@@ -38,8 +42,10 @@ export const StoreScreen = () => {
     }, []),
   );
 
-  const Card = ({ t, featured }: { t: CatalogTest; featured?: boolean }) => (
+  // Funciones y no componentes: un componente definido aquí dentro se montaría de nuevo en cada render
+  const card = (t: CatalogTest, featured?: boolean) => (
     <TestCard
+      key={t.id}
       test={t}
       featured={featured}
       open={openId === t.id}
@@ -51,15 +57,13 @@ export const StoreScreen = () => {
     />
   );
 
-  const Group = ({ category, title }: { category: TestCategory; title: boolean }) => {
+  const group = (category: TestCategory, title: boolean) => {
     const intro = categoryIntro(category);
     return (
-      <View style={styles.group}>
-        {title && <Text style={styles.groupTitle}>{categoryLabel(category)}</Text>}
-        {!!intro && <Text style={styles.groupIntro}>{intro}</Text>}
-        {CATALOG.filter((p) => p.category === category).map((p) => (
-          <Card key={p.id} t={localizeTest(p)} />
-        ))}
+      <View key={category}>
+        {title ? <SecHead title={categoryLabel(category)} /> : null}
+        {!!intro && <Text style={[styles.intro, !title && styles.introAlone]}>{intro}</Text>}
+        {CATALOG.filter((p) => p.category === category).map((p) => card(localizeTest(p)))}
       </View>
     );
   };
@@ -69,26 +73,26 @@ export const StoreScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={testsOnly ? tr('Test catalogue') : tr('Tests & panels')} showBack />
 
-        {!testsOnly &&
-          PLANS.filter((p) => !(currentPlan === 'premium' && p.id === 'membership')).map((p) => (
-            <Card key={p.id} t={localizeTest(p)} featured />
-          ))}
+        {!testsOnly && (
+          <View style={styles.pad}>
+            <SecHead title={tr('Subscriptions')} style={styles.firstSec} />
+            {PLANS.filter((p) => !(currentPlan === 'premium' && p.id === 'membership')).map((p) => card(localizeTest(p), true))}
+          </View>
+        )}
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} style={!testsOnly && styles.filtersGap}>
           {FILTERS.map((f) => (
-            <TouchableOpacity key={f} style={[styles.filter, filter === f && styles.filterOn]} onPress={() => setFilter(f)}>
-              <Text style={[styles.filterText, filter === f && styles.filterTextOn]}>
-                {f === 'all' ? tr('All') : categoryLabel(f)}
-              </Text>
-            </TouchableOpacity>
+            <FChip key={f} label={f === 'all' ? tr('All') : categoryLabel(f)} on={filter === f} onPress={() => setFilter(f)} />
           ))}
         </ScrollView>
 
-        {filter === 'all' ? GROUPS.map((g) => <Group key={g} category={g} title />) : <Group category={filter} title={false} />}
+        <View style={styles.pad}>
+          {filter === 'all' ? GROUPS.map((g) => group(g, true)) : group(filter, false)}
 
-        <Text style={styles.footnote}>
-          {tr('Prices for individual tests are still to be confirmed. Payments are processed by Revolut; until they are switched on, ordering is simulated and nothing is charged.')}
-        </Text>
+          <Text style={styles.footnote}>
+            {tr('Prices for individual tests are still to be confirmed. Payments are processed by Revolut; until they are switched on, ordering is simulated and nothing is charged.')}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -97,13 +101,12 @@ export const StoreScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  filters: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },
-  filter: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
-  filterOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  filterText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  filterTextOn: { color: Colors.background },
-  group: { marginBottom: 8 },
-  groupTitle: { ...fine.secTitle, marginHorizontal: 20, marginTop: 10 },
-  groupIntro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginHorizontal: 20, marginTop: 4, marginBottom: 10 },
-  footnote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', paddingHorizontal: 30, marginTop: 10 },
+  pad: { paddingHorizontal: 20 },
+  firstSec: { marginTop: 4, marginBottom: 12 },
+  filters: { paddingHorizontal: 20, gap: 8, paddingBottom: 2 },
+  filtersGap: { marginTop: 12 },
+  // Cuándo tiene sentido cada grupo: nota apagada bajo su cabecera
+  intro: { ...fine.note, marginTop: 0, marginBottom: 4 },
+  introAlone: { marginTop: 16 },
+  footnote: { ...fine.note, fontSize: 11.5, lineHeight: 16, color: FINE.mute, marginTop: 24 },
 });

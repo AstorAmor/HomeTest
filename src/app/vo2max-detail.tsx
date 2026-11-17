@@ -5,7 +5,7 @@ import { Vo2maxInfo } from '@/screens/Vo2maxInfo';
 import { vo2maxRepository } from '@/data/vo2maxRepository';
 import { profileRepository } from '@/data/profileRepository';
 import { VO2_BAND_LABEL, vo2Band } from '@/logic/vo2max';
-import { Colors } from '@/constants/colors';
+import { FINE } from '@/theme/fine';
 import { t } from '@/i18n';
 
 const ageOf = (dob?: string) => {
@@ -15,7 +15,7 @@ const ageOf = (dob?: string) => {
 };
 
 // VO2max: se mide en una prueba con un especialista y aquí se apunta; la ficha dice cómo queda
-// frente a la gente de tu edad y sexo (registro FRIEND).
+// frente a la gente de tu edad y sexo (registro FRIEND). La curva en jade, como las demás fichas en fino (2026-11-17).
 export default function Vo2maxDetail() {
   const router = useRouter();
   const [who, setWho] = useState<{ age: number | null; sex: 'male' | 'female' | null }>({ age: null, sex: null });
@@ -29,7 +29,7 @@ export default function Vo2maxDetail() {
   return (
     <SimpleMetricDetailScreen
       title={t('VO2max')}
-      color={Colors.sky}
+      color={FINE.jade}
       icon="mci:lungs"
       loadEntries={() => vo2maxRepository.getAll()}
       onAddPress={() => router.push('/log-vo2max')}

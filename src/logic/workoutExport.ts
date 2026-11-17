@@ -6,6 +6,7 @@ import { isCustomProgram } from './customRoutine';
 import { plannedSets } from './setPlan';
 import { estimateMinutes } from './workoutGenerator';
 import { byMonth, setsByExercise, workoutHistory, type HistoryEntry, type LoggedWorkout } from './workoutHistory';
+import { workoutLabel } from './workoutSports';
 import { daysText } from './workoutWeek';
 
 // Exportar el entrenamiento (fundador, 2026-11-09: «exportar tanto el plan como el histórico… para compartirlo con
@@ -96,7 +97,7 @@ const nameOf = (id: string) => exerciseName(getExercise(id)) || id.replace(/_/g,
 // En los lastrados el peso es el lastre: «+10 kg × 6», como en la rutina (si no, una IA lo leería como el peso total)
 const withPlus = (id: string, text: string) => (getExercise(id)?.load === 'added' ? text.replace(/(^|[^\d+.,])(\d+(?:[.,]\d+)?) kg/g, '$1+$2 kg') : text);
 
-const TYPE_LABEL: Record<LoggedWorkout['type'], string> = { strength: 'Strength', cardio: 'Cardio', mobility: 'Mobility', sport: 'Sport' };
+// El nombre de un entreno apuntado (su tipo o, con «Otro», su deporte): workoutLabel, en workoutSports.ts
 const INTENSITY_LABEL: Record<LoggedWorkout['intensity'], string> = { easy: 'Easy', moderate: 'Moderate', hard: 'Hard' };
 
 export const sourceLine = (p: Pick<WorkoutProgram, 'source' | 'professionalName'>) =>
@@ -200,7 +201,7 @@ export function historyPart(
   const weeks = Math.max(1, (now.getTime() - since) / (7 * 864e5));
   const item = (e: HistoryEntry): HistoryItem => {
     if (e.kind === 'logged') {
-      return { when: whenText(e.at), title: t(TYPE_LABEL[e.type]), program: null, minutes: e.minutes, facts: [t(INTENSITY_LABEL[e.intensity])], exercises: [] };
+      return { when: whenText(e.at), title: workoutLabel(e), program: null, minutes: e.minutes, facts: [t(INTENSITY_LABEL[e.intensity])], exercises: [] };
     }
     const p = programs.find((x) => x.id === e.programId);
     const own = !!p && isCustomProgram(p);

@@ -1,19 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, withAlpha } from '@/constants/colors';
 import { WheelPicker } from './WheelPicker';
 import { ChoiceChips } from './ChoiceChips';
-import { BristolShape, ColorSwatches, UrineDrop } from './BathroomVisuals';
+import { BristolRuler, StoolColorPicker, UrineColorPicker } from './BathroomVisuals';
+import { Pill, SecHead } from './fine/Fine';
+import { FLink, FMark } from './fine/FineForm';
 import { dayKey } from '@/data/bathroomRepository';
-import { BRISTOL_TYPES, BristolType, STOOL_COLORS, URINE_COLORS } from '@/types/bathroom';
+import { BRISTOL_TYPES, BristolType, STOOL_COLORS, StoolColor, URINE_COLORS } from '@/types/bathroom';
 import { dateLocale, t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Las veces de un día en Orina y Heces (pantalla del día): arriba cuántas veces en total, con − y +, y
 // debajo cada vez suelta con su hora y lo que quieras apuntar (color y escozor; o forma, color y prisa).
 // Se añaden y se editan aquí mismo, sin cambiar de pantalla. Las sueltas cuentan dentro del total: el −
 // se queda gris cuando ya hay tantas sueltas como veces.
+// Desde el 2026-11-16, en el lenguaje fino del prototipo (src/theme/fine.ts): «− cifra +» con botones redondos de
+// línea fina y la cifra grande y ligera, cada vez en una fila con línea fina debajo, «Añadir una vez» en jade y la
+// vez que se edita en una tarjeta casi transparente con borde jade, sin cajas de color.
+// Desde el 2026-11-17 (fundador: en «Cada vez» «rompes la coherencia y vuelves a poner las gotitas en forma de gota
+// y el color. Lo pondría como "El día en general" y no pondría el color seleccionado (que se vea en la regla)»):
+// al editar una vez, el color se elige con la misma regla que en «El día en general» (y en Heces, las dos reglas de
+// color y la de la consistencia), sin gotas ni circulitos; y en la fila de cada vez ya no sale la muestra del color
+// ni su nombre: solo la hora y, en palabras, lo demás.
 
 export type Visit = { at: string; color?: string; burning?: boolean; consistency?: BristolType; urgent?: boolean };
 type Kind = 'urine' | 'bowel';
@@ -30,6 +39,7 @@ const defaultTime = (day: string) => {
   return d.toISOString();
 };
 
+// «− 4 +» (prototipo, `.stp`); «—» apagado mientras no se ha dicho cuántas
 export const DayCountStepper = ({
   count,
   min,
@@ -50,18 +60,24 @@ export const DayCountStepper = ({
           style={[styles.stepButton, !canDown && styles.stepButtonOff]}
           onPress={() => onChange(count === null ? 0 : count - 1)}
           disabled={!canDown}
+          hitSlop={4}
+          accessibilityRole="button"
           accessibilityLabel={t('One time less')}
         >
-          <Ionicons name="remove" size={20} color={canDown ? Colors.textPrimary : Colors.textMuted} />
+          <Text style={styles.stepSign}>−</Text>
         </TouchableOpacity>
-        <Text style={styles.stepValue}>{count ?? '—'}</Text>
+        <Text style={[styles.stepValue, count === null && styles.stepValueEmpty]} accessibilityLiveRegion="polite">
+          {count ?? '—'}
+        </Text>
         <TouchableOpacity
           style={[styles.stepButton, !canUp && styles.stepButtonOff]}
           onPress={() => onChange((count ?? 0) + 1)}
           disabled={!canUp}
+          hitSlop={4}
+          accessibilityRole="button"
           accessibilityLabel={t('One time more')}
         >
-          <Ionicons name="add" size={20} color={canUp ? Colors.textPrimary : Colors.textMuted} />
+          <Text style={styles.stepSign}>+</Text>
         </TouchableOpacity>
       </View>
       {min > 0 && <Text style={styles.stepHint}>{t('{n} of them with details below', { n: min })}</Text>}
@@ -94,7 +110,6 @@ const VisitEditor = ({
     x.setHours(hh, mm * 5, 0, 0);
     onChange({ ...draft, at: x.toISOString() });
   };
-  const shape = BRISTOL_TYPES.find((b) => b.id === draft.consistency);
   return (
     <View style={styles.editor}>
       <Text style={styles.editorTitle}>{isNew ? t('New time') : t('Edit this time')}</Text>
@@ -107,33 +122,17 @@ const VisitEditor = ({
       {kind === 'bowel' && (
         <>
           <Text style={styles.fieldLabel}>{t('Consistency')}</Text>
-          <View style={styles.shapes}>
-            {BRISTOL_TYPES.map((b) => {
-              const on = draft.consistency === b.id;
-              return (
-                <TouchableOpacity
-                  key={b.id}
-                  style={[styles.shape, on && styles.shapeOn]}
-                  onPress={() => onChange({ ...draft, consistency: b.id })}
-                  accessibilityLabel={t(b.label)}
-                >
-                  <BristolShape type={b.id} size={28} />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          {shape && <Text style={styles.shapeLabel}>{t(shape.label)}</Text>}
+          <BristolRuler value={draft.consistency} onChange={(b) => onChange({ ...draft, consistency: b })} />
         </>
       )}
 
+      {/* El color, con la misma regla que en «El día en general» y sin repetir debajo el elegido: se ve en la regla */}
       <Text style={styles.fieldLabel}>{t('Colour')}</Text>
-      <ColorSwatches
-        options={colorsOf(kind)}
-        value={draft.color}
-        onChange={(c) => onChange({ ...draft, color: c })}
-        center
-        shape={kind === 'urine' ? 'drop' : 'circle'}
-      />
+      {kind === 'urine' ? (
+        <UrineColorPicker options={colorsOf(kind)} value={draft.color} onChange={(c) => onChange({ ...draft, color: c })} compact />
+      ) : (
+        <StoolColorPicker value={draft.color as StoolColor | undefined} onChange={(c) => onChange({ ...draft, color: c })} compact />
+      )}
 
       {kind === 'urine' ? (
         <>
@@ -146,19 +145,21 @@ const VisitEditor = ({
           />
         </>
       ) : (
-        <TouchableOpacity style={[styles.urgent, draft.urgent && styles.urgentOn]} onPress={() => onChange({ ...draft, urgent: !draft.urgent || undefined })}>
-          <Ionicons name={draft.urgent ? 'checkbox' : 'square-outline'} size={20} color={draft.urgent ? Colors.accent : Colors.textMuted} />
-          <Text style={styles.urgentText}>{t('I had to rush (urgency)')}</Text>
+        <TouchableOpacity
+          style={styles.urgent}
+          onPress={() => onChange({ ...draft, urgent: !draft.urgent || undefined })}
+          activeOpacity={0.75}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: !!draft.urgent }}
+        >
+          <Text style={[fine.rowTitle, styles.flex]}>{t('I had to rush (urgency)')}</Text>
+          <FMark on={!!draft.urgent} />
         </TouchableOpacity>
       )}
 
       <View style={styles.editorButtons}>
-        <TouchableOpacity onPress={onCancel} hitSlop={8}>
-          <Text style={styles.cancel}>{t('Cancel')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.saveVisit} onPress={onSave} activeOpacity={0.85}>
-          <Text style={styles.saveVisitText}>{t('Save this time')}</Text>
-        </TouchableOpacity>
+        <FLink label={t('Cancel')} onPress={onCancel} muted />
+        <Pill label={t('Save this time')} onPress={onSave} />
       </View>
     </View>
   );
@@ -189,13 +190,17 @@ export const VisitsSection = ({
     setEditing(null);
   };
 
-  const summary = (v: Visit) => {
+  // Lo de cada vez, en palabras seguidas por comas («Lisa y blanda, con prisa»). `withColour`: también el color, solo
+  // para los lectores de pantalla; en la fila no sale (se ve en la regla al abrir esa vez)
+  const summary = (v: Visit, withColour = false) => {
     const colour = colorsOf(kind).find((c) => c.id === v.color);
     const parts =
       kind === 'urine'
-        ? [colour && t(colour.label), v.burning && t('Burning')]
-        : [v.consistency && t(BRISTOL_TYPES.find((b) => b.id === v.consistency)!.label), colour && t(colour.label), v.urgent && t('Urgency')];
-    return parts.filter(Boolean).join(' · ') || t('No details');
+        ? [withColour && colour && t(colour.label), v.burning && t('Burning')]
+        : [v.consistency && t(BRISTOL_TYPES.find((b) => b.id === v.consistency)!.label), withColour && colour && t(colour.label), v.urgent && t('Urgency')];
+    const words = parts.filter(Boolean) as string[];
+    if (!words.length) return colour ? '' : t('No details');
+    return words.map((w, i) => (i ? w.charAt(0).toLowerCase() + w.slice(1) : w)).join(', ');
   };
 
   const editor = (
@@ -212,28 +217,36 @@ export const VisitsSection = ({
 
   return (
     <View>
-      <Text style={styles.label}>{t('Each time')}</Text>
+      <SecHead title={t('Each time')} />
       {sorted.length === 0 && !editing && <Text style={styles.empty}>{t('Optional: the time and details of each time.')}</Text>}
       {sorted.map(({ v, i }) =>
         editing?.index === i ? (
           <View key={i}>{editor}</View>
         ) : (
-          <View key={i} style={styles.row}>
-            <TouchableOpacity style={styles.rowMain} onPress={() => setEditing({ index: i, draft: v })} disabled={!!editing} activeOpacity={0.8}>
+          <View key={i} style={[fine.row, !!editing && styles.dimmed]}>
+            <TouchableOpacity
+              style={styles.rowMain}
+              onPress={() => setEditing({ index: i, draft: v })}
+              disabled={!!editing}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={[timeText(v.at), summary(v, true)].filter(Boolean).join(', ')}
+              accessibilityHint={t('Edit this time')}
+            >
               <Text style={styles.time}>{timeText(v.at)}</Text>
-              {kind === 'bowel' && v.consistency ? <BristolShape type={v.consistency} size={22} /> : null}
-              {v.color && kind === 'urine' ? (
-                <UrineDrop color={colorsOf(kind).find((c) => c.id === v.color)?.swatch ?? Colors.textMuted} size={18} cloudy={v.color === 'cloudy'} />
-              ) : v.color ? (
-                <View style={[styles.dot, { backgroundColor: colorsOf(kind).find((c) => c.id === v.color)?.swatch }]} />
-              ) : null}
               <Text style={styles.rowText} numberOfLines={1}>
                 {summary(v)}
               </Text>
-              <Ionicons name="create-outline" size={16} color={Colors.textMuted} />
+              <Ionicons name="create-outline" size={15} color={FINE.mute} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => onChange(visits.filter((_, k) => k !== i))} hitSlop={8} disabled={!!editing} accessibilityLabel={t('Remove')}>
-              <Ionicons name="close" size={18} color={Colors.textMuted} />
+            <TouchableOpacity
+              onPress={() => onChange(visits.filter((_, k) => k !== i))}
+              hitSlop={10}
+              disabled={!!editing}
+              accessibilityRole="button"
+              accessibilityLabel={t('Remove')}
+            >
+              <Ionicons name="close" size={18} color={FINE.mute} />
             </TouchableOpacity>
           </View>
         ),
@@ -242,91 +255,61 @@ export const VisitsSection = ({
         ? editor
         : !editing &&
           visits.length < max && (
-            <TouchableOpacity style={styles.addOne} onPress={() => setEditing({ index: null, draft: { at: defaultTime(day) } })} activeOpacity={0.85}>
-              <Ionicons name="add" size={18} color={Colors.accent} />
-              <Text style={styles.addOneText}>{t('Add one time')}</Text>
-            </TouchableOpacity>
+            <FLink icon="add" label={t('Add one time')} onPress={() => setEditing({ index: null, draft: { at: defaultTime(day) } })} style={styles.addOne} />
           )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  stepperWrap: { alignItems: 'center', gap: 6 },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 18 },
+  flex: { flex: 1 },
+  // «− cifra +» (prototipo, `.stp`): botones redondos con línea fina y la cifra grande y ligera
+  stepperWrap: { alignItems: 'center', gap: 6, marginTop: 4 },
+  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14 },
   stepButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.card,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
+    borderColor: 'rgba(240,239,230,0.16)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepButtonOff: { opacity: 0.4 },
-  stepValue: { color: Colors.textPrimary, fontSize: 28, fontFamily: INTER.medium, minWidth: 40, textAlign: 'center' },
-  stepHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 22, marginBottom: 10 },
-  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 8,
-  },
+  stepButtonOff: { opacity: 0.35 },
+  stepSign: { ...ff('light'), fontSize: 24, lineHeight: 28, color: FINE.ivory, marginTop: -2 },
+  // Ancho fijo: así el + no se mueve al pasar de 9 a 10
+  stepValue: { ...ff('light'), width: 96, textAlign: 'center', fontSize: 44, lineHeight: 52, color: FINE.ivory, fontVariant: ['tabular-nums'] },
+  stepValueEmpty: { color: FINE.mute },
+  stepHint: { ...fine.note, marginTop: 0 },
+  empty: { ...fine.note, marginTop: 0 },
+  dimmed: { opacity: 0.5 },
   rowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  time: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, minWidth: 46 },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Colors.cardBorder },
-  rowText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
-  addOne: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.6),
-    borderRadius: 22,
-    paddingVertical: 10,
-    marginTop: 4,
-  },
-  addOneText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  time: { ...ff('regular'), color: FINE.ivory, fontSize: 14.5, width: 50, fontVariant: ['tabular-nums'] },
+  rowText: { ...ff('regular'), flex: 1, color: FINE.mute, fontSize: 13 },
+  addOne: { marginTop: 2 },
+  // La vez que se edita: tarjeta casi transparente con un borde jade
   editor: {
-    backgroundColor: Colors.card,
+    backgroundColor: FINE.tile,
     borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.5),
+    borderColor: FINE.jadeLine,
     borderRadius: 14,
     padding: 14,
-    marginBottom: 8,
+    marginVertical: 8,
   },
-  editorTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, textAlign: 'center' },
+  editorTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 15, textAlign: 'center' },
   wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  colon: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginHorizontal: 4 },
-  fieldLabel: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, marginTop: 14, marginBottom: 8 },
-  shapes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 4 },
-  shape: { width: 38, height: 38, borderRadius: 10, borderWidth: 1, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center' },
-  shapeOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  shapeLabel: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, textAlign: 'center', marginTop: 6 },
+  colon: { ...ff('light'), color: FINE.ivory, fontSize: 24, marginHorizontal: 4 },
+  fieldLabel: { ...fine.kicker, textAlign: 'center', marginTop: 16, marginBottom: 8 },
   urgent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     marginTop: 14,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 12,
-    padding: 10,
+    paddingVertical: 10,
+    minHeight: 48,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: FINE.line,
   },
-  urgentOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  urgentText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  editorButtons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
-  cancel: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  saveVisit: { backgroundColor: Colors.accent, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 10 },
-  saveVisitText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
+  editorButtons: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 },
 });

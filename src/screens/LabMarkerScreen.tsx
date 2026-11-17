@@ -1,14 +1,13 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
-import { RangeBar } from '@/components/RangeBar';
 import { UnitLabel } from '@/components/UnitLabel';
-import { statusColor, statusIcon } from '@/components/LabValueRow';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Chev, FRow, SecHead } from '@/components/fine/Fine';
+import { measureStyles } from '@/components/fine/FineMeasure';
+import { LabFigure, LabGauge, labStyles, rangeTone, StatusWord } from '@/components/fine/FineLab';
 import { TAB, tabHref } from '@/constants/tabs';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { labUploadRepository } from '@/data/labUploads';
@@ -21,13 +20,16 @@ import { rangeStatusLabel, rangeText } from '@/utils/rangeStatus';
 import { chartBand, chartPoints, isOut, markerHistory, pointState, pointsFromReports, pointsFromUploads, sourceParam, type MarkerPoint } from '@/logic/labMarkers';
 import { GOALS, labGoalForMarker } from '@/logic/metas';
 import { dateLocale, num, t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Un marcador de tus analíticas en Mis datos (/lab-marker?key=…&from=…), fundador 2026-11-06: «pinchar en
 // las analíticas y mostrar el marcador en tus datos». El último valor frente al rango de su laboratorio,
 // la gráfica con todos los que hay en la misma unidad, la lista de analíticas (cada una se abre), qué es y
 // qué puede moverlo y, fuera de rango, qué se ha asociado a mejores valores y su objetivo, si lo tiene.
 // Textos neutros: un valor fuera del rango no es un diagnóstico.
+// Desde el 2026-11-16, como la ficha de un biomarcador del prototipo: la cifra grande y ligera con su estado al
+// lado (jade en rango, oro fuera), la línea de rango fina, la evolución sin tarjeta y lo demás en secciones
+// pequeñas con filas de línea fina.
 
 const longDate = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 const shortLabel = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString(dateLocale(), { month: 'short', year: '2-digit' });
@@ -59,7 +61,6 @@ export const LabMarkerScreen = () => {
   }
 
   const state = pointState(latest);
-  const color = statusColor(state);
   const range = rangeText(latest.low, latest.high);
   const chart = chartPoints(history);
   // Un límite inferior de 0 es «menos de …»: cuenta como sin límite
@@ -79,112 +80,110 @@ export const LabMarkerScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={name} showBack backFallback={tabHref(TAB.analysis)} />
-        <Text style={styles.kicker}>{t('In your lab tests')}</Text>
 
-        {/* El último valor */}
-        <View style={styles.card}>
-          <Text style={styles.meta}>
-            {t('Latest value')} · {longDate(latest.date)} · {labOf(latest)}
-          </Text>
-          <View style={styles.valueRow}>
-            <Text style={styles.value}>{valueText(latest)}</Text>
-            <UnitLabel unit={latest.unit} style={styles.unit} />
-            <View style={{ flex: 1 }} />
-            <View style={[styles.badge, { backgroundColor: withAlpha(color, 0.12) }]}>
-              <Ionicons name={statusIcon(state) as any} size={14} color={color} />
-              <Text style={[styles.badgeText, { color }]}>{rangeStatusLabel(state)}</Text>
-            </View>
-          </View>
-          <Text style={styles.rangeLine}>
+        <View style={styles.body}>
+          <Text style={fine.kicker}>{t('In your lab tests')}</Text>
+
+          {/* El último valor: la cifra, su unidad, de cuándo y de qué laboratorio, y su estado */}
+          <LabFigure
+            value={valueText(latest)}
+            unit={latest.unit ? <UnitLabel unit={latest.unit} style={labStyles.unit} /> : undefined}
+            lines={[`${t('Latest value')} · ${longDate(latest.date)}`, labOf(latest)]}
+            status={rangeStatusLabel(state)}
+            tone={rangeTone(state)}
+            style={styles.figure}
+          />
+          <LabGauge value={latest.value} low={latest.low} high={latest.high} style={styles.gauge} />
+          <Text style={fine.note}>
             {range ? t('Lab range: {range} {unit}', { range, unit: latest.unit }).trim() : t('This lab gives no reference range for it.')}
           </Text>
-          {latest.value != null && <RangeBar value={latest.value} min={latest.low} max={latest.high} />}
-        </View>
 
-        {/* Todos sus valores */}
-        {chart.points.length >= 2 && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t('How it has changed')}</Text>
-            <TrendChart
-              labels={chart.points.map((p) => shortLabel(p.date))}
-              series={[{ color: Colors.accent, values: chart.points.map((p) => p.value as number) }]}
-              height={130}
-              band={band}
-              formatValue={(v) => num(Math.round(v * 100) / 100)}
-            />
-            {band && <Text style={styles.note}>{t('The shaded band is the range of your latest lab.')}</Text>}
-            {chart.otherUnits > 0 && (
-              <Text style={styles.note}>
-                {t(chart.otherUnits === 1 ? '1 value comes in another unit and is not in the chart.' : '{n} values come in another unit and are not in the chart.', { n: chart.otherUnits })}
-              </Text>
-            )}
-          </View>
-        )}
+          {/* Todos sus valores */}
+          {chart.points.length >= 2 && (
+            <>
+              <SecHead title={t('How it has changed')} />
+              <TrendChart
+                labels={chart.points.map((p) => shortLabel(p.date))}
+                series={[{ color: FINE.jade, values: chart.points.map((p) => p.value as number) }]}
+                height={140}
+                band={band}
+                formatValue={(v) => num(Math.round(v * 100) / 100)}
+              />
+              {band && <Text style={fine.note}>{t('The shaded band is the range of your latest lab.')}</Text>}
+              {chart.otherUnits > 0 && (
+                <Text style={fine.note}>
+                  {t(chart.otherUnits === 1 ? '1 value comes in another unit and is not in the chart.' : '{n} values come in another unit and are not in the chart.', { n: chart.otherUnits })}
+                </Text>
+              )}
+            </>
+          )}
 
-        <Text style={styles.section}>{t(history.length === 1 ? 'Your result' : 'Your {n} results', { n: history.length })}</Text>
-        <View style={[styles.card, { paddingVertical: 4 }]}>
-          {[...history].reverse().map((p, i) => {
+          <SecHead title={t(history.length === 1 ? 'Your result' : 'Your {n} results', { n: history.length })} />
+          {[...history].reverse().map((p, i, list) => {
             const s = pointState(p);
             const here = from === sourceParam(p.source);
+            const r = rangeText(p.low, p.high);
             return (
-              <TouchableOpacity key={`${sourceParam(p.source)}-${i}`} style={[styles.row, i > 0 && styles.divider]} onPress={() => openAnalysis(p)} activeOpacity={0.8}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>
+              <TouchableOpacity
+                key={`${sourceParam(p.source)}-${i}`}
+                style={[fine.row, i === list.length - 1 && styles.noLine]}
+                onPress={() => openAnalysis(p)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${longDate(p.date)}, ${valueText(p)} ${p.unit}, ${rangeStatusLabel(s)}`}
+              >
+                <View style={styles.flex}>
+                  <Text style={fine.rowTitle}>
                     {longDate(p.date)}
                     {here ? <Text style={styles.here}>{`  ·  ${t('this test')}`}</Text> : null}
                   </Text>
-                  <Text style={styles.rowSub}>
+                  <Text style={fine.rowSub}>
                     {labOf(p)}
-                    {rangeText(p.low, p.high) ? ` · ${t('range {range}', { range: rangeText(p.low, p.high)! })}` : ''}
+                    {r ? ` · ${t('range {range}', { range: r })}` : ''}
                   </Text>
                 </View>
-                <Text style={[styles.rowValue, isOut(s) && { color: Colors.attention }]}>
-                  {valueText(p)} <Text style={styles.rowUnit}>{p.unit}</Text>
-                </Text>
-                <Ionicons name={statusIcon(s) as any} size={18} color={statusColor(s)} />
-                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                <View style={styles.right}>
+                  <Text style={[fine.rowValue, isOut(s) && { color: FINE.gold }]}>
+                    {valueText(p)} <Text style={styles.rowUnit}>{p.unit}</Text>
+                  </Text>
+                  <StatusWord label={rangeStatusLabel(s)} tone={rangeTone(s)} />
+                </View>
+                <Chev />
               </TouchableOpacity>
             );
           })}
-        </View>
-        <Text style={styles.hint}>{t('Tap a result to open that lab test.')}</Text>
+          <Text style={fine.note}>{t('Tap a result to open that lab test.')}</Text>
 
-        {/* Qué es (base de conocimiento, pendiente de revisión médica) */}
-        <View style={styles.card}>
-          <Text style={styles.label}>{t('What it is')}</Text>
-          <Text style={styles.text}>{card.role}</Text>
+          {/* Qué es (base de conocimiento, pendiente de revisión médica) */}
+          <SecHead title={t('What it is')} />
+          <Text style={measureStyles.p}>{card.role}</Text>
           {card.relevance ? (
             <>
-              <Text style={styles.label}>{t('Why it is measured')}</Text>
-              <Text style={styles.text}>{card.relevance}</Text>
+              <SecHead title={t('Why it is measured')} style={styles.infoHead} />
+              <Text style={measureStyles.p}>{card.relevance}</Text>
             </>
           ) : null}
           {card.factors ? (
             <>
-              <Text style={styles.label}>{t('What can move it')}</Text>
-              <Text style={styles.text}>{card.factors}</Text>
+              <SecHead title={t('What can move it')} style={styles.infoHead} />
+              <Text style={measureStyles.p}>{card.factors}</Text>
             </>
           ) : null}
           {isOut(state) && (
             <>
-              <Text style={styles.label}>{evidence ? t('What has been associated with better values') : t('What to do')}</Text>
-              <Text style={styles.text}>{evidence ? t(evidence) : t('Talk to a doctor about this result before changing anything.')}</Text>
+              <SecHead title={evidence ? t('What has been associated with better values') : t('What to do')} style={styles.infoHead} />
+              <Text style={measureStyles.p}>{evidence ? t(evidence) : t('Talk to a doctor about this result before changing anything.')}</Text>
             </>
           )}
+
           <View style={styles.links}>
             {goal && show('plan') && (
-              <TouchableOpacity style={styles.link} onPress={() => router.push('/metas-objetivos')}>
-                <Ionicons name="flag-outline" size={16} color={Colors.accent} />
-                <Text style={styles.linkText}>{t('Your goal for this: {goal}', { goal: t(GOALS[goal].name) })}</Text>
-              </TouchableOpacity>
+              <FRow title={t('Your goal for this: {goal}', { goal: t(GOALS[goal].name) })} onPress={() => router.push('/metas-objetivos')} />
             )}
-            <TouchableOpacity style={styles.link} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-              <Ionicons name="medkit-outline" size={16} color={Colors.accent} />
-              <Text style={styles.linkText}>{t('Talk to a doctor')}</Text>
-            </TouchableOpacity>
+            <FRow title={t('Talk to a doctor')} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} last />
           </View>
+          <Text style={fine.note}>{t('A value out of range is not a diagnosis. Your doctor puts it in context.')}</Text>
         </View>
-        <Text style={styles.hint}>{t('A value out of range is not a diagnosis. Your doctor puts it in context.')}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -193,30 +192,15 @@ export const LabMarkerScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginHorizontal: 20 },
-  kicker: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.8, marginHorizontal: 20, marginBottom: 10 },
-  card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 16, marginHorizontal: 20, marginBottom: 12, gap: 6 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginBottom: 4 },
-  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
-  valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 2 },
-  value: { color: Colors.textPrimary, fontSize: 30, fontFamily: INTER.medium },
-  unit: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'center' },
-  badgeText: { fontSize: 12, fontFamily: INTER.medium },
-  rangeLine: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
-  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15, marginTop: 4 },
-  section: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, marginHorizontal: 20, marginTop: 6, marginBottom: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11 },
-  divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  here: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium },
-  rowSub: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  rowValue: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  rowUnit: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
-  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: -4, marginBottom: 14 },
-  label: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', marginTop: 6 },
-  text: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  links: { gap: 10, marginTop: 10 },
-  link: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  linkText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, flexShrink: 1 },
+  body: { paddingHorizontal: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  noLine: { borderBottomWidth: 0 },
+  empty: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, marginHorizontal: 20 },
+  figure: { marginTop: 8 },
+  gauge: { marginTop: 14 },
+  here: { ...ff('regular'), color: FINE.jade, fontSize: 12.5 },
+  right: { alignItems: 'flex-end', gap: 2 },
+  rowUnit: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
+  infoHead: { marginTop: 16 },
+  links: { marginTop: 18, borderTopWidth: 1, borderTopColor: FINE.line },
 });

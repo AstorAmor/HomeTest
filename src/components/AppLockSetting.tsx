@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { AppState, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
+import { AppState, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { t } from '@/i18n';
 import { disableAppLock, enableAppLock, setLockAfter, useAppLockPrefs } from '@/data/appLock';
 import { LOCK_AFTER_OPTIONS, lockOnFor, unlockProblem, type BiometricKind, type LockAfter } from '@/logic/appLock';
 import { authenticate, biometricStatus, type BiometricStatus } from '@/utils/biometrics';
-import { INTER } from '@/theme/fine';
+import { FChip, formStyles } from '@/components/fine/FineForm';
+import { SetRow, FineSwitch } from '@/components/settings/SettingsParts';
+import { fine } from '@/theme/fine';
 
 // Ajustes → Cuenta → «Bloquear Kuova con Face ID / huella» (apagado de serie). Solo con el módulo nativo (APK o
 // app de iPhone desde el 2026-11-11). Si el móvil no tiene huella ni cara configuradas, una línea lo explica.
 // Al activarlo se pide la cara o el dedo una vez. Cómo bloquea: src/components/AppLock.tsx.
+// Desde el 2026-11-17, en el lenguaje fino de Ajustes: fila con línea fina y su interruptor, sin icono, y el «cuándo
+// bloquear» en chips con borde. Un fallo, en coral suave (sin rojo).
 
 const TITLE: Record<BiometricKind, string> = {
   face_id: 'Lock Kuova with Face ID',
@@ -53,43 +55,29 @@ export function AppLockSetting() {
     else if (unlockProblem(r.error)) setError(t('Could not check it. Try again.'));
   };
 
+  const title = t(TITLE[status.kind]);
   return (
     <>
-      <View style={[styles.row, styles.divider]}>
-        <Ionicons name={status.kind === 'face_id' || status.kind === 'face' ? 'scan-outline' : 'finger-print'} size={22} color={Colors.accent} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.rowTitle}>{t(TITLE[status.kind])}</Text>
-          <Text style={styles.rowSub}>
-            {ready
-              ? t('Kuova asks for it when you open it and when you come back after a while. It does not replace two-step verification.')
-              : status.state === 'not_enrolled'
-                ? t('To use it, first set up your fingerprint or face in your phone settings.')
-                : t('This phone has no fingerprint reader or face recognition.')}
-          </Text>
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-        </View>
-        {ready && (
-          <Switch value={on} onValueChange={toggle} disabled={busy} trackColor={{ true: Colors.accent, false: Colors.cardBorder }} />
-        )}
-      </View>
+      <SetRow
+        title={title}
+        sub={
+          ready
+            ? t('Kuova asks for it when you open it and when you come back after a while. It does not replace two-step verification.')
+            : status.state === 'not_enrolled'
+              ? t('To use it, first set up your fingerprint or face in your phone settings.')
+              : t('This phone has no fingerprint reader or face recognition.')
+        }
+        right={ready ? <FineSwitch value={on} onValueChange={toggle} disabled={busy} accessibilityLabel={title} /> : undefined}
+      >
+        {error ? <Text style={[formStyles.error, styles.error]}>{error}</Text> : null}
+      </SetRow>
       {on && prefs && (
-        <View style={[styles.after, styles.divider]}>
-          <Text style={styles.afterTitle}>{t('Lock when you come back')}</Text>
-          <View style={styles.chips}>
-            {LOCK_AFTER_OPTIONS.map((ms) => {
-              const sel = prefs.afterMs === ms;
-              return (
-                <TouchableOpacity
-                  key={ms}
-                  style={[styles.chip, sel && styles.chipOn]}
-                  onPress={() => setLockAfter(ms)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: sel }}
-                >
-                  <Text style={[styles.chipText, sel && styles.chipTextOn]}>{t(AFTER_LABEL[ms])}</Text>
-                </TouchableOpacity>
-              );
-            })}
+        <View style={[fine.row, styles.after]}>
+          <Text style={fine.rowSub}>{t('Lock when you come back')}</Text>
+          <View style={styles.chips} accessibilityRole="radiogroup">
+            {LOCK_AFTER_OPTIONS.map((ms) => (
+              <FChip key={ms} label={t(AFTER_LABEL[ms])} on={prefs.afterMs === ms} onPress={() => setLockAfter(ms)} />
+            ))}
           </View>
         </View>
       )}
@@ -98,16 +86,8 @@ export function AppLockSetting() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  rowSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 4 },
-  after: { paddingHorizontal: 16, paddingVertical: 12 },
-  afterTitle: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, marginBottom: 8 },
-  chips: { flexDirection: 'row', gap: 8 },
-  chip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: Colors.cardBorder },
-  chipOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  chipText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  chipTextOn: { color: Colors.background },
+  error: { marginTop: 4 },
+  // «Bloquear al volver»: la línea y, debajo, los chips
+  after: { flexDirection: 'column', alignItems: 'stretch', gap: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

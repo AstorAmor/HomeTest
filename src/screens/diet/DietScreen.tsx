@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { confirmAsk } from '@/components/dev/confirmAsk';
@@ -9,8 +9,10 @@ import { RecipeImage } from '@/components/diet/RecipeImage';
 import { MacroDonut } from '@/components/diet/MacroDonut';
 import { DIET_FEATURE, DietLocked } from '@/components/diet/TodayMenuCard';
 import { SubscribePopup } from '@/components/SubscribePopup';
+import { CometLine } from '@/components/CometLine';
+import { Chev, Pill, SecHead } from '@/components/fine/Fine';
+import { FButton, FChips, FLink, FMark, ON_BG, formStyles } from '@/components/fine/FineForm';
 import { useFeature } from '@/data/access';
-import { Colors } from '@/constants/colors';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getRecipe, recipeName, slotLabel } from '@/data/diet/catalog';
 import { loadDietContext } from '@/data/diet/context';
@@ -21,11 +23,13 @@ import { weekKcalTarget } from '@/logic/dietDayMacros';
 import { num, t } from '@/i18n';
 import { menuFileName, menuToHtml, shoppingText } from '@/utils/menuPdf';
 import { shareHtmlPdf } from '@/utils/shareHtml';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // "Tu menú de la semana": por día (fotos grandes, toca para ver la receta) o la semana entera como un
 // calendario. Arriba, por qué es así (analíticas y respuestas) y, en tus menús, «Calorías y macros» (/diet-macros:
 // tus números, como el dietista); abajo, la lista de la compra.
+// Rediseño del 2026-11-16 (lenguaje fino del prototipo): sin tarjetas; filas con línea fina, cabeceras pequeñas,
+// los días en círculos, las comidas como foto y texto, las cifras de la semana grandes y ligeras.
 
 export const WEEKDAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 export const WEEKDAYS_LONG = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -96,7 +100,7 @@ export const DietScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScreenHeader title={t('Weekly menu')} showBack backFallback="/nutrients" />
-        <ActivityIndicator color={Colors.accent} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={FINE.jade} style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -107,16 +111,13 @@ export const DietScreen = () => {
         <ScreenHeader title={t('Weekly menu')} showBack backFallback="/nutrients" />
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.hero}>
-            <MaterialCommunityIcons name="silverware-fork-knife" size={28} color={Colors.accent} />
-            <Text style={styles.heroTitle}>{t('A week of meals made for you')}</Text>
-            <Text style={styles.heroText}>
+            <Ionicons name="restaurant-outline" size={26} color={FINE.jade} />
+            <Text style={formStyles.q}>{t('A week of meals made for you')}</Text>
+            <Text style={formStyles.lead}>
               {t('We ask what you like, what sits badly, your budget and how much you cook, and we take your blood tests into account. You get breakfast, lunch, dinner and snacks for the week, with recipes and the shopping list.')}
             </Text>
           </View>
-          <TouchableOpacity style={styles.primary} onPress={() => router.push('/diet-new')}>
-            <Ionicons name="sparkles-outline" size={18} color={Colors.background} />
-            <Text style={styles.primaryText}>{t('Create my menu')}</Text>
-          </TouchableOpacity>
+          <FButton label={t('Create my menu')} icon="sparkles-outline" onPress={() => router.push('/diet-new')} />
         </ScrollView>
       </SafeAreaView>
     );
@@ -131,15 +132,17 @@ export const DietScreen = () => {
   const current = plan.days[day];
   const totals = current ? dayTotals(current) : null;
   const slots = plan.days[0]?.meals.map((m) => m.slot) ?? [];
+  const isToday = day === todayIndex();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScreenHeader title={t('Weekly menu')} showBack backFallback="/nutrients" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Lo que hay que mirar con el médico: en oro, sin alarma, con sus dos salidas */}
         {cautions.length ? (
           <View style={styles.caution}>
             <View style={styles.cautionHead}>
-              <Ionicons name="medkit-outline" size={18} color={Colors.accent} />
+              <Ionicons name="medkit-outline" size={17} color={FINE.gold} />
               <Text style={styles.cautionTitle}>{t('To discuss with your doctor')}</Text>
             </View>
             {cautions.map((r) => (
@@ -150,69 +153,95 @@ export const DietScreen = () => {
             ))}
             <Text style={styles.cautionFoot}>{t('This menu is adapted to it, but it is general guidance: it does not replace your doctor.')}</Text>
             <View style={styles.cautionBtns}>
-              <TouchableOpacity style={styles.cautionBtn} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-                <Text style={styles.cautionBtnText}>{t('Find a doctor')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cautionBtnGhost} onPress={() => router.push({ pathname: '/professionals', params: { role: 'dietitian' } })}>
-                <Text style={styles.cautionGhostText}>{t('Find a dietitian')}</Text>
+              <Pill gold label={t('Find a doctor')} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} />
+              <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'dietitian' } })} hitSlop={8} accessibilityRole="button">
+                <Text style={fine.link}>{t('Find a dietitian')} ›</Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : null}
-        <View style={styles.headCard}>
-          <Text style={styles.badge}>{plan.source === 'professional' ? t('From {name}', { name: plan.professionalName || t('your dietitian') }) : t('Made for you')}</Text>
-          <Text style={styles.headText}>
-            {t('About {kcal} kcal and {protein} g of protein a day', tp)}
-          </Text>
+
+        {/* De quién es el menú y cuánto lleva al día; debajo, tus números y por qué es así */}
+        <Text style={styles.kicker}>{plan.source === 'professional' ? t('From {name}', { name: plan.professionalName || t('your dietitian') }) : t('Made for you')}</Text>
+        <Text style={styles.headText}>{t('About {kcal} kcal and {protein} g of protein a day', tp)}</Text>
+        {plan.note ? <Text style={styles.quote}>“{plan.note}”</Text> : null}
+        <View style={styles.headRows}>
           {/* Tus propias kcal y macros, con el panel del dietista (en el menú de un dietista, los pone él) */}
           {plan.source !== 'professional' && (
-            <TouchableOpacity style={styles.whyRow} onPress={() => router.push('/diet-macros')}>
-              <Ionicons name="options-outline" size={16} color={Colors.accent} />
-              <Text style={styles.whyTitle}>
+            <TouchableOpacity style={fine.row} onPress={() => router.push('/diet-macros')} accessibilityRole="button">
+              <Ionicons name="options-outline" size={17} color={FINE.jade} />
+              <Text style={[fine.rowTitle, { flex: 1 }]}>
                 {ownMacros(plan.prefs) || plan.days.some((d) => cleanDayTargets(d.targets)) ? t('Your calories and macros') : t('Adjust calories and macros')}
               </Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+              <Chev />
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={styles.whyRow} onPress={() => setShowWhy((v) => !v)}>
-            <Ionicons name="information-circle-outline" size={16} color={Colors.accent} />
-            <Text style={styles.whyTitle}>{t('Why this menu')}</Text>
-            <Ionicons name={showWhy ? 'chevron-up' : 'chevron-down'} size={16} color={Colors.textMuted} />
+          <TouchableOpacity
+            style={[fine.row, showWhy && { borderBottomWidth: 0 }]}
+            onPress={() => setShowWhy((v) => !v)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showWhy }}
+          >
+            <Ionicons name="information-circle-outline" size={17} color={FINE.jade} />
+            <Text style={[fine.rowTitle, { flex: 1 }]}>{t('Why this menu')}</Text>
+            <Ionicons name={showWhy ? 'chevron-up' : 'chevron-down'} size={15} color={FINE.mute} />
           </TouchableOpacity>
-          {showWhy &&
-            plan.reasons.filter((r) => !r.caution).map((r) => (
-              <View key={r.id} style={styles.reason}>
-                <Text style={styles.reasonTitle}>{t(r.title)}</Text>
-                <Text style={styles.reasonText}>{t(r.detail, tp)}</Text>
-              </View>
-            ))}
-          {plan.note ? <Text style={styles.note}>“{plan.note}”</Text> : null}
+          {showWhy ? (
+            <View style={styles.reasons}>
+              {plan.reasons.filter((r) => !r.caution).map((r) => (
+                <View key={r.id} style={styles.reason}>
+                  <Text style={styles.reasonTitle}>{t(r.title)}</Text>
+                  <Text style={styles.reasonText}>{t(r.detail, tp)}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
 
-        <View style={styles.toggle}>
-          {(['day', 'week'] as const).map((v) => (
-            <TouchableOpacity key={v} style={[styles.toggleBtn, view === v && styles.toggleOn]} onPress={() => setView(v)}>
-              <Text style={[styles.toggleText, view === v && styles.toggleTextOn]}>{v === 'day' ? t('Day') : t('Week')}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <FChips
+          style={styles.toggle}
+          options={[
+            { id: 'day' as const, label: t('Day') },
+            { id: 'week' as const, label: t('Week') },
+          ]}
+          value={view}
+          onChange={setView}
+        />
 
         {view === 'day' ? (
           <>
+            {/* Los 7 días en círculos (como en Metas); hoy, con un punto */}
             <View style={styles.days}>
-              {WEEKDAYS_SHORT.map((d, i) => (
-                <TouchableOpacity key={d} style={[styles.dayChip, i === day && styles.dayChipOn]} onPress={() => setDay(i)}>
-                  <Text style={[styles.dayText, i === day && styles.dayTextOn]}>{t(d)}</Text>
-                  {i === todayIndex() ? <View style={styles.todayDot} /> : null}
-                </TouchableOpacity>
-              ))}
+              {WEEKDAYS_SHORT.map((d, i) => {
+                const on = i === day;
+                return (
+                  <TouchableOpacity
+                    key={d}
+                    style={styles.dayCol}
+                    onPress={() => setDay(i)}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: on }}
+                    accessibilityLabel={t(WEEKDAYS_LONG[i])}
+                  >
+                    <View style={[styles.dayDot, on && styles.dayDotOn]}>
+                      <Text style={[styles.dayText, on && styles.dayTextOn]}>{t(d)}</Text>
+                    </View>
+                    <View style={[styles.todayMark, i === todayIndex() && styles.todayMarkOn]} />
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-            <Text style={styles.dayTitle}>{t(WEEKDAYS_LONG[day])}</Text>
-            {day === todayIndex() && current ? (
-              <Text style={styles.eatenCount}>{t('{done} of {total} meals eaten today', { done: eaten.length, total: current.meals.length })}</Text>
+            <Text style={styles.dayTitle} accessibilityRole="header">
+              {t(WEEKDAYS_LONG[day])}
+            </Text>
+            {isToday && current ? (
+              <>
+                <Text style={styles.eatenCount}>{t('{done} of {total} meals eaten today', { done: eaten.length, total: current.meals.length })}</Text>
+                <CometLine progress={current.meals.length ? eaten.length / current.meals.length : 0} colors={['#2F8F70', FINE.jade]} style={styles.comet} />
+              </>
             ) : null}
             {totals && (
-              <View style={styles.dayCard}>
+              <View style={styles.dayTotalsBox}>
                 <MacroDonut m={totals} size={96} />
                 <Text style={styles.dayTotals}>
                   {t('Target')}: {num(current ? dayKcalTarget(plan, current) : plan.targets.kcal)} kcal · {t('fibre')} {Math.round(totals.fiber)} g
@@ -223,8 +252,16 @@ export const DietScreen = () => {
               {current?.meals.map((m, i) => {
                 const r = getRecipe(m.recipeId);
                 if (!r) return null;
+                const on = eaten.includes(i);
                 return (
-                  <TouchableOpacity key={`${m.slot}-${i}`} style={[styles.meal, wide && styles.mealWide]} activeOpacity={0.88} onPress={() => openMeal(day, m)}>
+                  <TouchableOpacity
+                    key={`${m.slot}-${i}`}
+                    style={[styles.meal, wide && styles.mealWide]}
+                    activeOpacity={0.88}
+                    onPress={() => openMeal(day, m)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${slotLabel(m.slot, plan.prefs)}: ${recipeName(r)}`}
+                  >
                     <RecipeImage recipeId={r.id} slot={m.slot} height={wide ? 150 : 170} radius={14} />
                     <View style={styles.mealBody}>
                       <Text style={styles.slot}>
@@ -241,10 +278,17 @@ export const DietScreen = () => {
                         />
                       </View>
                       {m.note ? <Text style={styles.mealNote}>“{m.note}”</Text> : null}
-                      {day === todayIndex() ? (
-                        <TouchableOpacity style={[styles.eatBtn, eaten.includes(i) && styles.eatBtnOn]} onPress={() => toggleEaten(i)} hitSlop={6}>
-                          <Ionicons name={eaten.includes(i) ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={eaten.includes(i) ? Colors.background : Colors.accent} />
-                          <Text style={[styles.eatText, eaten.includes(i) && styles.eatTextOn]}>{eaten.includes(i) ? t('Eaten') : t('Mark as eaten')}</Text>
+                      {isToday ? (
+                        <TouchableOpacity
+                          style={[styles.eatBtn, on && styles.eatBtnOn]}
+                          onPress={() => toggleEaten(i)}
+                          hitSlop={6}
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked: on }}
+                          accessibilityLabel={on ? t('Eaten') : t('Mark as eaten')}
+                        >
+                          <FMark on={on} size={18} />
+                          <Text style={[styles.eatText, on && styles.eatTextOn]}>{on ? t('Eaten') : t('Mark as eaten')}</Text>
                         </TouchableOpacity>
                       ) : null}
                     </View>
@@ -259,8 +303,17 @@ export const DietScreen = () => {
               <View style={styles.weekRow}>
                 <View style={styles.weekLabel} />
                 {WEEKDAYS_SHORT.map((d, i) => (
-                  <TouchableOpacity key={d} style={[styles.weekHead, wide && styles.weekCellWide]} onPress={() => { setDay(i); setView('day'); }}>
-                    <Text style={[styles.weekHeadText, i === todayIndex() && { color: Colors.accent }]}>{t(d)}</Text>
+                  <TouchableOpacity
+                    key={d}
+                    style={[styles.weekHead, wide && styles.weekCellWide]}
+                    onPress={() => {
+                      setDay(i);
+                      setView('day');
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={t(WEEKDAYS_LONG[i])}
+                  >
+                    <Text style={[styles.weekHeadText, i === todayIndex() && { color: FINE.jade }]}>{t(d)}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -273,7 +326,14 @@ export const DietScreen = () => {
                     const m = d.meals[si];
                     const r = m && getRecipe(m.recipeId);
                     return (
-                      <TouchableOpacity key={d.day} style={[styles.weekCell, wide && styles.weekCellWide]} onPress={() => m && openMeal(d.day, m)} disabled={!m}>
+                      <TouchableOpacity
+                        key={d.day}
+                        style={[styles.weekCell, wide && styles.weekCellWide]}
+                        onPress={() => m && openMeal(d.day, m)}
+                        disabled={!m}
+                        accessibilityRole="button"
+                        accessibilityLabel={r ? `${t(WEEKDAYS_LONG[d.day])}, ${slotLabel(slot, plan.prefs)}: ${recipeName(r)}` : undefined}
+                      >
                         {r ? (
                           <>
                             <RecipeImage recipeId={r.id} slot={slot} size={wide ? 104 : 76} radius={10} />
@@ -291,34 +351,28 @@ export const DietScreen = () => {
           </ScrollView>
         )}
 
+        {/* La semana en cifras, grandes y ligeras (prototipo, `.nums`) */}
+        <SecHead title={t('This week')} />
         <View style={styles.stats}>
-          <Stat icon="fish" label={t('Oily fish')} value={String(summary.oilyFish)} />
-          <Stat icon="seed-outline" label={t('Legumes')} value={String(summary.legumes)} />
-          <Stat icon="food-steak" label={t('Red meat')} value={String(summary.redMeat)} />
-          <Stat icon="cart-outline" label={t('Week')} value={`~${Math.round(summary.cost)} €`} />
+          <Stat label={t('Oily fish')} value={String(summary.oilyFish)} />
+          <Stat label={t('Legumes')} value={String(summary.legumes)} />
+          <Stat label={t('Red meat')} value={String(summary.redMeat)} />
+          <Stat label={t('Week')} value={`~${Math.round(summary.cost)} €`} />
         </View>
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.primary} onPress={() => router.push({ pathname: '/shopping-list', params: { plan: plan.id } })}>
-            <Ionicons name="cart-outline" size={18} color={Colors.background} />
-            <Text style={styles.primaryText}>{t('Shopping list')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.secondary}
-            onPress={() =>
-              shareHtmlPdf({ html: menuToHtml(plan), fileName: menuFileName(), fallbackText: shoppingText(plan), dialogTitle: t('Send your menu') }).catch(() => undefined)
-            }
-          >
-            <Ionicons name="document-text-outline" size={18} color={Colors.accent} />
-            <Text style={styles.secondaryText}>{t('Menu and list as PDF')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondary} onPress={another} disabled={busy}>
-            {busy ? <ActivityIndicator color={Colors.accent} /> : <Ionicons name="shuffle" size={18} color={Colors.accent} />}
-            <Text style={styles.secondaryText}>{t('Another version')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.link} onPress={() => router.push('/diet-new')}>
-            <Text style={styles.linkText}>{t('Change my answers')}</Text>
-          </TouchableOpacity>
+          <FButton label={t('Shopping list')} icon="cart-outline" onPress={() => router.push({ pathname: '/shopping-list', params: { plan: plan.id } })} />
+          <View style={styles.links}>
+            <FLink
+              label={t('Menu and list as PDF')}
+              icon="document-text-outline"
+              onPress={() =>
+                shareHtmlPdf({ html: menuToHtml(plan), fileName: menuFileName(), fallbackText: shoppingText(plan), dialogTitle: t('Send your menu') }).catch(() => undefined)
+              }
+            />
+            <FLink label={t('Another version')} icon="shuffle-outline" onPress={another} busy={busy} />
+          </View>
+          <FLink label={t('Change my answers')} muted onPress={() => router.push('/diet-new')} />
         </View>
 
         <Text style={styles.safety}>
@@ -329,84 +383,72 @@ export const DietScreen = () => {
   );
 };
 
-const Stat = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
-  <View style={styles.stat}>
-    <MaterialCommunityIcons name={icon as any} size={18} color={Colors.accent} />
+const Stat = ({ label, value }: { label: string; value: string }) => (
+  <View style={styles.stat} accessible accessibilityLabel={`${label}: ${value}`}>
     <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
+    <Text style={styles.statLabel} numberOfLines={2}>
+      {label}
+    </Text>
   </View>
 );
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  hero: { gap: 8, marginBottom: 18 },
-  heroTitle: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium },
-  heroText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  headCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 6, marginBottom: 12 },
-  badge: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
-  headText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  whyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
-  whyTitle: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  reason: { borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 8, gap: 2 },
-  eatenCount: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: -4, marginBottom: 10 },
-  eatBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6, borderWidth: 1, borderColor: Colors.accent, borderRadius: 18, paddingVertical: 6, paddingHorizontal: 12, marginTop: 10 },
-  eatBtnOn: { backgroundColor: Colors.accent },
-  eatText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  eatTextOn: { color: Colors.background },
-  caution: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderLeftWidth: 3, borderLeftColor: Colors.accent, borderRadius: 16, padding: 14, gap: 10, marginBottom: 12 },
+  hero: { gap: 8, marginTop: 8, marginBottom: 22 },
+  kicker: { ...fine.kicker, marginTop: 6 },
+  headText: { ...ff('medium'), color: FINE.ivory, fontSize: 17, lineHeight: 23, marginTop: 4 },
+  quote: { ...fine.note, color: '#CFD6CF', marginTop: 6 },
+  headRows: { marginTop: 8, borderTopWidth: 1, borderTopColor: FINE.line },
+  reasons: { gap: 12, paddingBottom: 14, paddingLeft: 27, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  reason: { gap: 2 },
+  eatenCount: { ...fine.rowSub, marginTop: 2 },
+  comet: { marginTop: 4, marginHorizontal: -8 },
+  eatBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, minHeight: 36, borderWidth: 1, borderColor: FINE.jadeLine, borderRadius: 20, paddingVertical: 6, paddingLeft: 8, paddingRight: 14, marginTop: 12 },
+  eatBtnOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  eatText: { ...ff('regular'), color: FINE.jade, fontSize: 13 },
+  eatTextOn: { color: FINE.ivory },
+  caution: { gap: 10, paddingTop: 4, paddingBottom: 18, marginBottom: 14, borderBottomWidth: 1, borderBottomColor: FINE.line },
   cautionHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cautionTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, flex: 1 },
-  cautionFoot: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
-  cautionBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  cautionBtn: { backgroundColor: Colors.accentSoft, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14 },
-  cautionBtnText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  cautionBtnGhost: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 14 },
-  cautionGhostText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  reasonTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  reasonText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
-  note: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, fontStyle: 'italic', marginTop: 4 },
-  toggle: { flexDirection: 'row', alignSelf: 'flex-start', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, padding: 3, marginBottom: 10 },
-  toggleBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 15 },
-  toggleOn: { backgroundColor: Colors.accent },
-  toggleText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  toggleTextOn: { color: Colors.background },
-  days: { flexDirection: 'row', justifyContent: 'space-between', gap: 4, marginBottom: 10 },
-  dayChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card },
-  dayChipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  dayText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  dayTextOn: { color: Colors.textPrimary },
-  todayDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.accent, marginTop: 3 },
-  dayTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
-  dayCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 12, gap: 8, marginTop: 6, marginBottom: 12 },
-  dayTotals: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
-  mealMacros: { marginTop: 6 },
-  mealGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  meal: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, overflow: 'hidden', marginBottom: 12 },
-  mealWide: { width: '48%', marginBottom: 0 },
-  mealBody: { padding: 12, gap: 2 },
-  slot: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
-  mealName: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  mealMeta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
-  mealNote: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12, fontStyle: 'italic', marginTop: 2 },
-  weekRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 8 },
+  cautionTitle: { ...ff('medium'), color: FINE.gold, fontSize: 15, flex: 1 },
+  cautionFoot: { ...fine.note, marginTop: 0 },
+  cautionBtns: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18 },
+  reasonTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 14 },
+  reasonText: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18 },
+  toggle: { marginTop: 22, marginBottom: 14 },
+  days: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  dayCol: { flex: 1, alignItems: 'center', gap: 4, minHeight: 48 },
+  dayDot: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(240,239,230,0.22)', alignItems: 'center', justifyContent: 'center' },
+  dayDotOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  dayText: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
+  dayTextOn: { ...ff('medium'), color: FINE.ivory },
+  todayMark: { width: 4, height: 4, borderRadius: 2 },
+  todayMarkOn: { backgroundColor: FINE.jade },
+  dayTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 19, lineHeight: 24, marginTop: 6 },
+  dayTotalsBox: { gap: 10, paddingVertical: 14, marginBottom: 6, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  dayTotals: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  mealMacros: { marginTop: 8 },
+  mealGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  meal: { paddingTop: 16, paddingBottom: 18, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  mealWide: { width: '48%' },
+  mealBody: { paddingTop: 12, gap: 2 },
+  slot: { ...fine.kicker },
+  mealName: { ...ff('medium'), color: FINE.ivory, fontSize: 16, lineHeight: 21, marginTop: 2 },
+  mealMeta: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  mealNote: { ...fine.note, color: '#CFD6CF', marginTop: 6 },
+  weekRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginBottom: 10 },
   weekLabel: { width: 64, paddingTop: 6 },
-  weekLabelText: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
-  weekHead: { width: 84, alignItems: 'center' },
-  weekHeadText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
-  weekCell: { width: 84, gap: 4 },
+  weekLabelText: { ...fine.kicker, fontSize: 10 },
+  weekHead: { width: 84, alignItems: 'center', paddingVertical: 4 },
+  weekHeadText: { ...ff('medium'), color: FINE.ivory, fontSize: 12 },
+  weekCell: { width: 84, gap: 5 },
   weekCellWide: { width: 112 },
-  weekName: { color: Colors.textPrimary, fontSize: 10, fontFamily: INTER.medium },
-  stats: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  stat: { flex: 1, alignItems: 'center', gap: 2, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingVertical: 10 },
-  statValue: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  statLabel: { color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium, textAlign: 'center' },
-  buttons: { gap: 10, marginTop: 16 },
-  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13 },
-  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  link: { alignItems: 'center', paddingVertical: 8 },
-  linkText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  safety: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 14 },
+  weekName: { ...ff('regular'), color: '#CFD6CF', fontSize: 10.5, lineHeight: 13 },
+  stats: { flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
+  stat: { flex: 1, paddingVertical: 12, paddingRight: 6, gap: 2 },
+  statValue: { ...fine.num, fontSize: 24, lineHeight: 30 },
+  statLabel: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 15 },
+  buttons: { gap: 4, marginTop: 24 },
+  links: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 22, marginTop: 6 },
+  safety: { ...fine.note, marginTop: 18 },
 });

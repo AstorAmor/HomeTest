@@ -20,8 +20,10 @@ export interface Professional {
   online: boolean;
 }
 
-// Icono de cada tipo de profesional (MaterialCommunityIcons): el mismo en Today (carrusel), en el
-// filtro de Professionals y donde aparezca el rol.
+// Nombre de cada tipo de profesional. `icon` (MaterialCommunityIcons) y `palette` son la ilustración de antes con
+// manchas de color (BlobArt), que ya no se pinta: desde el 2026-11-16 el carrusel, el filtro de Professionals y
+// «Habla con un especialista» usan el dibujo a línea de cada rol (components/fine/RoleEmblem.tsx). Se quedan por si
+// vuelve la ilustración.
 export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string; palette: [string, string, string] }> = {
   doctor: { label: t('Doctors'), icon: 'stethoscope', palette: ['#0E2A24', '#2E6B57', '#C9A36B'] },
   psychologist: { label: t('Psychologists'), icon: 'head-heart-outline', palette: ['#1E2A4A', '#4B5BA6', '#C7B6F2'] },

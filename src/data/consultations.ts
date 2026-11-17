@@ -112,7 +112,7 @@ export const consult = {
       modality: input.modality,
       reason: input.reason ?? null,
     });
-    if (error?.code === '23P01') throw new Error('That time was just taken. Please choose another one.');
+    if (error?.code === '23P01') throw new Error(t('That time was just taken. Please choose another one.'));
     fail(error);
   },
 

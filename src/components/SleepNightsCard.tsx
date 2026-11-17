@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
-import { StatsRow } from '@/components/MetricDetailParts';
+import { FRow, SecHead } from '@/components/fine/Fine';
 import { dateLocale, t } from '@/i18n';
 import { formatClock, formatSleep, shortDate, SleepNight } from '@/wearables/dailySeries';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Detalle de cada noche en la ficha del sueño: una barra por noche con sus fases (tocarla la elige; en
 // 6M, una por semana con la media de esa semana),
 // los minutos de cada fase de la noche elegida, la hora de dormirte y de despertarte, y la media de
 // esas horas en el periodo. Una noche sin fases (la fuente solo da la sesión) enseña solo la
 // duración y las horas, sin barra de fases.
+// Desde el 2026-11-16, en fino como el resto de la ficha: sin tarjeta, sin la luna ni el sol de colores, las horas
+// y las medias en filas con línea fina. Va dentro del margen de la ficha (no pone el suyo).
 
 type StageKey = 'deep' | 'light' | 'rem' | 'other' | 'awake' | 'outOfBed';
 
@@ -59,125 +60,104 @@ export const SleepNightsCard = ({ nights, weekly = false }: { nights: SleepNight
   const starts = nights.flatMap((n) => (n.start != null ? [n.start] : []));
   const ends = nights.flatMap((n) => (n.end != null ? [n.end] : []));
   const mid = Math.floor((nights.length - 1) / 2);
+  const withBars = showBars && staged && nights.length > 1;
 
   return (
     <>
-      <Text style={styles.sectionTitle}>{t(staged ? 'Sleep stages' : 'Bed and wake times')}</Text>
-      <View style={styles.card}>
-        {showBars && staged && nights.length > 1 && (
-          <>
-            <View style={styles.bars}>
-              {nights.map((n) => (
-                <TouchableOpacity
-                  key={n.date}
-                  style={[styles.barSlot, n.date !== night.date && styles.barDim]}
-                  onPress={() => setPicked(n.date)}
-                  accessibilityLabel={labelOf(n.date)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.bar, { height: (total(n) / max) * BARS_HEIGHT }]}>
-                    {n.stages ? (
-                      STAGES.filter((s) => n.stages![s.key] > 0).map((s) => (
-                        <View key={s.key} style={{ flex: n.stages![s.key], backgroundColor: s.color() }} />
-                      ))
-                    ) : (
-                      <View style={{ flex: 1, backgroundColor: withAlpha(Colors.violet, 0.45) }} />
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <View style={styles.xLabels}>
-              <Text style={styles.xLabel}>{shortDate(nights[0].date)}</Text>
-              {nights.length > 2 && <Text style={styles.xLabel}>{shortDate(nights[mid].date)}</Text>}
-              <Text style={styles.xLabel}>{shortDate(nights[nights.length - 1].date)}</Text>
-            </View>
-            <Text style={styles.hint}>{weekly ? t('Weekly averages · tap a week to see it') : t('Tap a night to see its stages')}</Text>
-          </>
-        )}
-
-        <View style={[styles.nightHead, showBars && staged && nights.length > 1 && styles.nightHeadSpaced]}>
-          <Text style={styles.nightTitle}>{labelOf(night.date)}</Text>
-          <Text style={styles.nightTotal}>{formatSleep(night.asleep)}</Text>
-        </View>
-
-        {night.start != null && night.end != null && (
-          <View style={styles.times}>
-            <View style={styles.time}>
-              <Ionicons name="moon-outline" size={15} color={Colors.violet} />
-              <Text style={styles.timeLabel}>{t('Fell asleep')}</Text>
-              <Text style={styles.timeValue}>{formatClock(night.start)}</Text>
-            </View>
-            <View style={styles.time}>
-              <Ionicons name="sunny-outline" size={15} color={Colors.amber} />
-              <Text style={styles.timeLabel}>{t('Woke up')}</Text>
-              <Text style={styles.timeValue}>{formatClock(night.end)}</Text>
-            </View>
-          </View>
-        )}
-
-        {night.stages ? (
-          <>
-            <View style={styles.stageBar}>
-              {STAGES.filter((s) => night.stages![s.key] > 0).map((s) => (
-                <View key={s.key} style={{ flex: night.stages![s.key], backgroundColor: s.color() }} />
-              ))}
-            </View>
-            {STAGES.filter((s) => s.always || night.stages![s.key] > 0).map((s) => (
-              <View key={s.key} style={styles.stageRow}>
-                <View style={[styles.dot, { backgroundColor: s.color() }]} />
-                <Text style={styles.stageLabel}>{t(s.label)}</Text>
-                <Text style={styles.stageValue}>{formatStage(night.stages![s.key])}</Text>
-              </View>
+      <SecHead title={t(staged ? 'Sleep stages' : 'Bed and wake times')} />
+      {withBars && (
+        <>
+          <View style={styles.bars}>
+            {nights.map((n) => (
+              <TouchableOpacity
+                key={n.date}
+                style={[styles.barSlot, n.date !== night.date && styles.barDim]}
+                onPress={() => setPicked(n.date)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: n.date === night.date }}
+                accessibilityLabel={labelOf(n.date)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.bar, { height: (total(n) / max) * BARS_HEIGHT }]}>
+                  {n.stages ? (
+                    STAGES.filter((s) => n.stages![s.key] > 0).map((s) => (
+                      <View key={s.key} style={{ flex: n.stages![s.key], backgroundColor: s.color() }} />
+                    ))
+                  ) : (
+                    <View style={{ flex: 1, backgroundColor: withAlpha(Colors.violet, 0.45) }} />
+                  )}
+                </View>
+              </TouchableOpacity>
             ))}
-          </>
-        ) : (
-          staged && <Text style={styles.noStages}>{t('No sleep stages for this night.')}</Text>
-        )}
+          </View>
+          <View style={styles.xLabels}>
+            <Text style={styles.xLabel}>{shortDate(nights[0].date)}</Text>
+            {nights.length > 2 && <Text style={styles.xLabel}>{shortDate(nights[mid].date)}</Text>}
+            <Text style={styles.xLabel}>{shortDate(nights[nights.length - 1].date)}</Text>
+          </View>
+          <Text style={styles.hint}>{weekly ? t('Weekly averages · tap a week to see it') : t('Tap a night to see its stages')}</Text>
+        </>
+      )}
+
+      <View style={[styles.nightHead, withBars && styles.nightHeadSpaced]}>
+        <Text style={styles.nightTitle}>{labelOf(night.date)}</Text>
+        <Text style={styles.nightTotal}>{formatSleep(night.asleep)}</Text>
       </View>
 
+      {night.stages ? (
+        <>
+          <View style={styles.stageBar}>
+            {STAGES.filter((s) => night.stages![s.key] > 0).map((s) => (
+              <View key={s.key} style={{ flex: night.stages![s.key], backgroundColor: s.color() }} />
+            ))}
+          </View>
+          {STAGES.filter((s) => s.always || night.stages![s.key] > 0).map((s) => (
+            <View key={s.key} style={styles.stageRow}>
+              <View style={[styles.dot, { backgroundColor: s.color() }]} />
+              <Text style={styles.stageLabel}>{t(s.label)}</Text>
+              <Text style={styles.stageValue}>{formatStage(night.stages![s.key])}</Text>
+            </View>
+          ))}
+        </>
+      ) : (
+        staged && <Text style={styles.noStages}>{t('No sleep stages for this night.')}</Text>
+      )}
+
+      {night.start != null && night.end != null && (
+        <View style={styles.times}>
+          <FRow title={t('Fell asleep')} value={formatClock(night.start)} />
+          <FRow title={t('Woke up')} value={formatClock(night.end)} last={!(starts.length > 0 && ends.length > 0)} />
+        </View>
+      )}
+
       {starts.length > 0 && ends.length > 0 && (
-        <StatsRow
-          items={[
-            { label: 'Bedtime (average)', value: formatClock(mean(starts)) },
-            { label: 'Wake-up (average)', value: formatClock(mean(ends)) },
-          ]}
-        />
+        <View style={night.start != null && night.end != null ? undefined : styles.times}>
+          <FRow title={t('Bedtime (average)')} value={formatClock(mean(starts))} />
+          <FRow title={t('Wake-up (average)')} value={formatClock(mean(ends))} last />
+        </View>
       )}
     </>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-  },
-  bars: { flexDirection: 'row', alignItems: 'flex-end', height: BARS_HEIGHT, gap: 3 },
+  bars: { flexDirection: 'row', alignItems: 'flex-end', height: BARS_HEIGHT, gap: 3, marginTop: 6 },
   barSlot: { flex: 1, height: '100%', justifyContent: 'flex-end' },
   barDim: { opacity: 0.45 },
   // De abajo arriba: profundo abajo, despierto arriba
   bar: { borderRadius: 3, overflow: 'hidden', flexDirection: 'column-reverse', minHeight: 2 },
   xLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  xLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
-  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 8 },
-  nightHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  nightHeadSpaced: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: Colors.divider },
-  nightTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  nightTotal: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  times: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 4, marginTop: 8 },
-  time: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  timeLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
-  timeValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  stageBar: { flexDirection: 'row', height: 12, borderRadius: 6, overflow: 'hidden', marginTop: 14, marginBottom: 6 },
+  xLabel: { ...ff('regular'), color: FINE.mute, fontSize: 10 },
+  hint: { ...fine.note, textAlign: 'center', marginTop: 6 },
+  nightHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 },
+  nightHeadSpaced: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: FINE.line },
+  nightTitle: { ...fine.rowTitle, flex: 1 },
+  nightTotal: { ...fine.num, fontSize: 20, lineHeight: 24 },
+  stageBar: { flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 12, marginBottom: 6 },
   stageRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 5 },
-  dot: { width: 9, height: 9, borderRadius: 5, marginRight: 8 },
-  stageLabel: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
-  stageValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  noStages: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 10 },
+  dot: { width: 7, height: 7, borderRadius: 4, marginRight: 9 },
+  stageLabel: { ...ff('regular'), flex: 1, color: FINE.mute, fontSize: 13.5 },
+  stageValue: { ...ff('regular'), color: FINE.ivory, fontSize: 13.5, fontVariant: ['tabular-nums'] },
+  noStages: { ...fine.note },
+  times: { marginTop: 10, borderTopWidth: 1, borderTopColor: FINE.line },
 });

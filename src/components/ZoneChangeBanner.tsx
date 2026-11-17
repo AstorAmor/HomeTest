@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors, withAlpha } from '@/constants/colors';
 import { medicationRepository } from '@/data/medicationRepository';
 import { userFlags } from '@/data/userFlags';
 import { currentZone, isActiveOn, offsetText, shiftSchedule, ZoneStamp, zoneChange } from '@/logic/medication';
 import { t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // "Hemos notado un cambio de hora": si el móvil cambia de zona horaria (un viaje) y hay tomas
 // programadas, se pregunta si mantener las horas del reloj o moverlas para que caigan en el mismo
 // momento que en casa. La zona conocida se guarda en user_flags ("med_zone").
+// Desde el 2026-11-17, en el lenguaje fino como el resto de la medicación: una tarjeta casi transparente con el
+// borde de oro (algo que hay que revisar), sin icono ni fondo de color; la opción principal, en la píldora
+// esmeralda y la otra, con borde fino.
 
 const KEY = 'med_zone';
 const place = (zone: string) => zone.split('/').pop()?.replace(/_/g, ' ') ?? zone;
@@ -52,16 +53,16 @@ export function ZoneChangeBanner({ onChanged }: { onChanged?: () => void }) {
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Ionicons name="time-outline" size={18} color={Colors.gold} />
-        <Text style={styles.title}>{t('We noticed a time change')}</Text>
-      </View>
+      <Text style={styles.title}>{t('We noticed a time change')}</Text>
       <Text style={styles.body}>
-        Your phone moved from {place(change.from.zone)} to {place(change.to.zone)} ({offsetText(change.diff)}). Do you want
-        to adjust your medication times?
+        {t('Your phone moved from {from} to {to} ({offset}). Do you want to adjust your medication times?', {
+          from: place(change.from.zone),
+          to: place(change.to.zone),
+          offset: offsetText(change.diff),
+        })}
       </Text>
       <TouchableOpacity style={styles.primary} onPress={shift} activeOpacity={0.85}>
-        <Text style={styles.primaryText}>Same moment as at home ({offsetText(change.diff)})</Text>
+        <Text style={styles.primaryText}>{t('Same moment as at home ({offset})', { offset: offsetText(change.diff) })}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.secondary} onPress={keep} activeOpacity={0.85}>
         <Text style={styles.secondaryText}>{t('Keep the same clock times')}</Text>
@@ -72,21 +73,12 @@ export function ZoneChangeBanner({ onChanged }: { onChanged?: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: withAlpha(Colors.gold, 0.08),
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.gold, 0.45),
-    borderRadius: 14,
-    padding: 14,
-    gap: 8,
-    marginBottom: 10,
-  },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  primary: { backgroundColor: Colors.accent, borderRadius: 20, paddingVertical: 10, alignItems: 'center', marginTop: 2 },
-  primaryText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
-  secondary: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 20, paddingVertical: 9, alignItems: 'center' },
-  secondaryText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, lineHeight: 15 },
+  card: { ...fine.tile, borderColor: FINE.goldLine, padding: 14, gap: 8, marginBottom: 10 },
+  title: { ...ff('medium'), color: FINE.ivory, fontSize: 15, lineHeight: 20 },
+  body: { ...ff('regular'), color: '#CFD6CF', fontSize: 13.5, lineHeight: 19 },
+  primary: { ...fine.pill, minHeight: 40, marginTop: 2 },
+  primaryText: { ...fine.pillText },
+  secondary: { minHeight: 40, borderWidth: 1, borderColor: 'rgba(240,239,230,0.16)', borderRadius: 20, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' },
+  secondaryText: { ...ff('regular'), color: FINE.ivory, fontSize: 13 },
+  note: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 16 },
 });

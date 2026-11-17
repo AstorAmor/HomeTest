@@ -3,21 +3,22 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
-import { WheelPicker } from '@/components/WheelPicker';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { FineStepper } from '@/components/metas/FineStepper';
+import { CloseButton, FineButton, FineChip, FineLink, measureStyles, SecRow } from '@/components/fine/FineMeasure';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dayKey } from '@/data/bathroomRepository';
 import { addWater, GLASS_ML, litres, waterOnDay, waterRepository, waterUsual } from '@/data/waterRepository';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
 import { dateLocale, t } from '@/i18n';
-import { logScreenStyles } from './LogBowelScreen';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
-// Apuntar una bebida con la rueda, como el resto de mediciones: de 50 en 50 ml, hasta 2 L. Los botones
-// de arriba colocan la rueda en un vaso, una lata o una botella; se parte de la última cantidad. «Usar en
-// el +» la deja como tu medida (tu botella, tu cantimplora): la que apunta el «+» de Hoy y de Hidratación.
-// Debajo, lo apuntado ese día, con una × para quitar lo que sobre (p. ej. un «+» de más).
-// ?day=YYYY-MM-DD para otro día (desde la semana de Hidratación).
+// Apuntar una bebida, de 50 en 50 ml, hasta 2 L. Los botones de arriba ponen un vaso, una lata o una botella;
+// se parte de la última cantidad. «Usar en el +» la deja como tu medida (tu botella, tu cantimplora): la que
+// apunta el «+» de Hoy y de Hidratación. Debajo, lo apuntado ese día, con una × para quitar lo que sobre (p. ej.
+// un «+» de más). ?day=YYYY-MM-DD para otro día (desde la semana de Hidratación).
+// Desde el 2026-11-16, como en el prototipo: chips con borde, la cantidad grande y ligera con «− +» (en vez de la
+// rueda), lo del día en filas con línea fina y un solo botón de Guardar abajo.
 const VOLUMES = Array.from({ length: 40 }, (_, i) => (i + 1) * 50);
 const PRESETS = [
   { label: 'Glass', ml: GLASS_ML },
@@ -33,7 +34,6 @@ export const LogWaterScreen = () => {
   const today = dayKey(new Date());
   const day = dayParam && /^\d{4}-\d{2}-\d{2}$/.test(dayParam) ? dayParam : today;
   const [index, setIndex] = useState(indexOf(GLASS_ML));
-  const [wheelKey, setWheelKey] = useState(0); // recolocar la rueda al cargar o al tocar un botón
   const [entries, setEntries] = useDeepState<SimpleMetricEntry[]>([]);
   const [saving, setSaving] = useState(false);
   const [usual, setUsual] = useState(GLASS_ML);
@@ -44,26 +44,20 @@ export const LogWaterScreen = () => {
     setEntries(all);
     return all;
   }, [setEntries]);
-  // La primera vez, la rueda en la última cantidad apuntada
+  // La primera vez, en la última cantidad apuntada
   const [placed, setPlaced] = useState(false);
   useReloadOnFocus(
     useCallback(() => {
       load().then((all) => {
         if (placed || !all.length) return;
         const last = all.reduce((a, x) => (x.createdAt > a.createdAt ? x : a));
-        if (VOLUMES.includes(last.valor)) {
-          setIndex(indexOf(last.valor));
-          setWheelKey((k) => k + 1);
-        }
+        if (VOLUMES.includes(last.valor)) setIndex(indexOf(last.valor));
         setPlaced(true);
       });
     }, [load, placed]),
   );
 
-  const pick = (ml: number) => {
-    setIndex(indexOf(ml));
-    setWheelKey((k) => k + 1);
-  };
+  const pick = (ml: number) => setIndex(indexOf(ml));
 
   const save = async () => {
     setSaving(true);
@@ -90,124 +84,72 @@ export const LogWaterScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={() => router.back()} accessibilityLabel={t('Close')}>
-          <Ionicons name="close" size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.circleButton, styles.circleButtonActive]} onPress={save} disabled={saving} accessibilityLabel={t('Save')}>
-          <Ionicons name="checkmark" size={22} color={Colors.background} />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title={t('Add a drink')} right={<CloseButton onPress={() => router.back()} />} />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <View style={[styles.iconBadge, { backgroundColor: withAlpha(Colors.water, 0.14) }]}>
-            <Ionicons name="water-outline" size={26} color={Colors.water} />
-          </View>
-          <Text style={styles.title}>{t('Add a drink')}</Text>
-          <Text style={styles.subtitle}>
-            {day === today
-              ? t('Water, and also tea, coffee, milk or other drinks: they all count.')
-              : t('For {day}. Water, and also tea, coffee, milk or other drinks: they all count.', { day: dayLabel })}
-          </Text>
-        </View>
+        <Text style={styles.lead}>
+          {day === today
+            ? t('Water, and also tea, coffee, milk or other drinks: they all count.')
+            : t('For {day}. Water, and also tea, coffee, milk or other drinks: they all count.', { day: dayLabel })}
+        </Text>
 
         <View style={styles.presets}>
-          {[...(PRESETS.some((p) => p.ml === usual) ? [] : [{ label: 'Yours', ml: usual }]), ...PRESETS].map((p) => {
-            const on = VOLUMES[index] === p.ml;
-            return (
-              <TouchableOpacity key={p.label} style={[styles.preset, on && styles.presetOn]} onPress={() => pick(p.ml)} activeOpacity={0.85}>
-                <Text style={[styles.presetLabel, on && styles.presetLabelOn]}>{t(p.label)}</Text>
-                <Text style={[styles.presetMl, on && styles.presetLabelOn]}>{p.ml} ml</Text>
-              </TouchableOpacity>
-            );
-          })}
+          {[...(PRESETS.some((p) => p.ml === usual) ? [] : [{ label: 'Yours', ml: usual }]), ...PRESETS].map((p) => (
+            <FineChip key={p.label} label={t(p.label)} sub={`${p.ml} ml`} on={VOLUMES[index] === p.ml} onPress={() => pick(p.ml)} style={styles.preset} />
+          ))}
         </View>
 
-        <View style={styles.wheels} key={wheelKey}>
-          <WheelPicker items={VOLUMES.map(String)} selectedIndex={index} onChange={setIndex} width={110} />
-          <Text style={styles.wheelUnit}>ml</Text>
-        </View>
+        <FineStepper
+          value={String(VOLUMES[index])}
+          unit="ml"
+          onMinus={() => setIndex((i) => Math.max(0, i - 1))}
+          onPlus={() => setIndex((i) => Math.min(VOLUMES.length - 1, i + 1))}
+          canMinus={index > 0}
+          canPlus={index < VOLUMES.length - 1}
+          style={styles.stepper}
+        />
 
         {VOLUMES[index] === usual ? (
           <Text style={styles.usualText}>{t('This is the amount the + adds.')}</Text>
         ) : (
-          <TouchableOpacity style={styles.usualButton} onPress={makeUsual} activeOpacity={0.85}>
-            <Ionicons name="star-outline" size={16} color={Colors.water} />
-            <Text style={styles.usualButtonText}>{t('Use {ml} ml for the +', { ml: VOLUMES[index] })}</Text>
-          </TouchableOpacity>
+          <FineLink icon="star-outline" label={t('Use {ml} ml for the +', { ml: VOLUMES[index] })} onPress={makeUsual} style={styles.usualLink} />
         )}
 
-        <View style={styles.askCard}>
-          <View style={styles.dayHead}>
-            <Text style={styles.askTitle}>{dayLabel}</Text>
-            <Text style={styles.dayTotal}>{litres(waterOnDay(entries, day))}</Text>
-          </View>
-          {ofDay.length === 0 ? (
-            <Text style={styles.askText}>{t('Nothing logged yet.')}</Text>
-          ) : (
-            <View style={styles.chips}>
-              {ofDay.map((e) => (
-                <View key={e.id} style={styles.chip}>
-                  <Text style={styles.chipText}>
-                    {new Date(e.fecha).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })} · {e.valor} ml
-                  </Text>
-                  <TouchableOpacity onPress={() => remove(e.id)} hitSlop={8} accessibilityLabel={t('Remove')}>
-                    <Ionicons name="close" size={14} color={Colors.textMuted} />
-                  </TouchableOpacity>
-                </View>
-              ))}
+        {/* Lo de ese día, en filas con línea fina; el total, a la derecha de la cabecera */}
+        <SecRow title={dayLabel} right={<Text style={styles.dayTotal}>{litres(waterOnDay(entries, day))}</Text>} />
+        {ofDay.length === 0 ? (
+          <Text style={styles.empty}>{t('Nothing logged yet.')}</Text>
+        ) : (
+          ofDay.map((e, i) => (
+            <View key={e.id} style={[fine.row, i === ofDay.length - 1 && styles.lastRow]}>
+              <Text style={styles.entryTime}>{new Date(e.fecha).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' })}</Text>
+              <Text style={styles.entryMl}>{e.valor} ml</Text>
+              <TouchableOpacity onPress={() => remove(e.id)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('Remove')}>
+                <Ionicons name="close" size={18} color={FINE.mute} />
+              </TouchableOpacity>
             </View>
-          )}
-        </View>
+          ))
+        )}
       </ScrollView>
+
+      <View style={measureStyles.footer}>
+        <FineButton label={t('Save')} onPress={save} disabled={saving} />
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  ...logScreenStyles,
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  content: { paddingHorizontal: 20, paddingBottom: 24 },
+  lead: { ...fine.note, marginTop: 0 },
   presets: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 18 },
-  preset: {
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    minWidth: 74,
-  },
-  presetOn: { backgroundColor: Colors.water, borderColor: Colors.water },
-  presetLabel: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  presetMl: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11, marginTop: 2 },
-  presetLabelOn: { color: Colors.background },
-  wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 18 },
-  wheelUnit: { color: Colors.textSecondary, fontSize: 16, fontFamily: INTER.medium, marginLeft: 8 },
-  usualText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 10 },
-  usualButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    gap: 6,
-    marginTop: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.water, 0.5),
-  },
-  usualButtonText: { color: Colors.water, fontSize: 13, fontFamily: INTER.medium },
-  dayHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  dayTotal: { color: Colors.water, fontSize: 15, fontFamily: INTER.medium },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    backgroundColor: withAlpha(Colors.water, 0.12),
-  },
-  chipText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
+  preset: { alignItems: 'center', minWidth: 74, borderRadius: 14 },
+  stepper: { marginTop: 24 },
+  usualText: { ...fine.note, textAlign: 'center', marginTop: 12 },
+  usualLink: { marginTop: 8 },
+  dayTotal: { ...ff('regular'), color: FINE.ivory, fontSize: 14, fontVariant: ['tabular-nums'] },
+  empty: { ...fine.note, marginTop: 0 },
+  lastRow: { borderBottomWidth: 0 },
+  entryTime: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, width: 56, fontVariant: ['tabular-nums'] },
+  entryMl: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 15, fontVariant: ['tabular-nums'] },
 });

@@ -34,7 +34,7 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
     setError('');
     const perm = await requestRecordingPermissionsAsync();
     if (!perm.granted) {
-      setError('Allow microphone access to record a voice note.');
+      setError(t('Allow microphone access to record a voice note.'));
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -70,7 +70,7 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
   if (state === 'done' && uri) {
     return (
       <View style={styles.row}>
-        <AudioPlayerButton uri={uri} label={`Voice note · ${mmss(seconds)}`} />
+        <AudioPlayerButton uri={uri} label={`${t('Voice note')} · ${mmss(seconds)}`} />
         <TouchableOpacity onPress={discard} hitSlop={8} accessibilityLabel={t('Delete voice note')}>
           <Ionicons name="trash-outline" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
@@ -83,11 +83,11 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
       <TouchableOpacity
         style={[styles.recordBtn, state === 'recording' && styles.recording]}
         onPress={state === 'recording' ? stop : start}
-        accessibilityLabel={state === 'recording' ? 'Stop recording' : 'Record a voice note'}
+        accessibilityLabel={state === 'recording' ? t('Stop recording') : t('Record a voice note')}
       >
         <Ionicons name={state === 'recording' ? 'stop' : 'mic'} size={20} color={state === 'recording' ? '#FFFFFF' : Colors.accent} />
         <Text style={[styles.recordText, state === 'recording' && { color: '#FFFFFF' }]}>
-          {state === 'recording' ? `Recording… ${mmss(seconds)} · tap to stop` : 'Record a voice note instead'}
+          {state === 'recording' ? t('Recording… {time} · tap to stop', { time: mmss(seconds) }) : t('Record a voice note instead')}
         </Text>
       </TouchableOpacity>
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -97,7 +97,7 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
 };
 
 // Botón para escuchar un audio (local o URL firmada).
-export const AudioPlayerButton = ({ uri, label = 'Voice note' }: { uri: string; label?: string }) => {
+export const AudioPlayerButton = ({ uri, label = t('Voice note') }: { uri: string; label?: string }) => {
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
   const playing = status.playing;

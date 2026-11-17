@@ -3,48 +3,22 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { AppIcon } from '@/components/HealthIcons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Colors, withAlpha } from '@/constants/colors';
 import { mockPatient } from '@/data/mockData';
 import { useAuth } from '@/context/AuthContext';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { ageFromDob, CONDITION_OPTIONS, GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
+import { GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 import { PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
 import { removeAvatar, setAvatar, useAvatar } from '@/data/avatar';
 import { confirmAsk } from '@/components/dev/confirmAsk';
+import { AboutField, AboutYouRows, AboutYouSheet } from '@/components/profile/AboutYou';
 import { fine, INTER } from '@/theme/fine';
-
-// Se evalúa con el idioma ya cargado (index.js); cambiar de idioma recarga la app.
-const LABELS: Record<string, string> = {
-  female: t('Female'),
-  male: t('Male'),
-  other: t('Other'),
-  undisclosed: t('Prefer not to say'),
-  sedentary: t('Mostly sitting'),
-  light: t('Light activity'),
-  active: t('Fairly active'),
-  very_active: t('Very active'),
-  lt6: t('< 6 h'),
-  '6to7': t('6–7 h'),
-  '7to8': t('7–8 h'),
-  gt8: t('> 8 h'),
-  never: t('Never'),
-  former: t('Used to'),
-  current: t('Yes'),
-  occasional: t('Occasionally'),
-  weekly: t('Every week'),
-  daily: t('Daily'),
-  lt5k: t('Fewer than 5,000'),
-  '5to7k': t('5,000-7,500'),
-  '7to10k': t('7,500-10,000'),
-  gt10k: t('More than 10,000'),
-  unknown: t("I don't know"),
-};
-const daysText = (n?: number) => (n == null ? undefined : n === 0 ? t('None') : n >= 3 ? t('3 or more a week') : n === 1 ? t('1 day a week') : t('{n} days a week', { n }));
 
 export const ProfileScreen = () => {
   const router = useRouter();
@@ -85,125 +59,105 @@ export const ProfileScreen = () => {
 
   useReloadOnFocus(load);
 
-  const age = ageFromDob(profile?.dateOfBirth);
-  const rows: { label: string; value?: string }[] = [
-    { label: t('Age'), value: age != null ? `${age}` : undefined },
-    { label: t('Sex'), value: profile?.sex && LABELS[profile.sex] },
-    { label: t('Height'), value: profile?.heightCm ? `${profile.heightCm} cm` : undefined },
-    { label: t('Weight'), value: profile?.weightKg ? `${profile.weightKg} kg` : undefined },
-    { label: t('Activity'), value: profile?.activity && LABELS[profile.activity] },
-    { label: t('Strength'), value: daysText(profile?.strengthDays) },
-    { label: t('Cardio'), value: daysText(profile?.cardioDays) },
-    { label: t('Steps a day'), value: profile?.stepsBand && LABELS[profile.stepsBand] },
-    { label: t('Sleep'), value: profile?.sleep && LABELS[profile.sleep] },
-    { label: t('Smoking'), value: profile?.smoking && LABELS[profile.smoking] },
-    { label: t('Alcohol'), value: profile?.alcohol && LABELS[profile.alcohol] },
-    {
-      label: t('Medication'),
-      value:
-        profile?.takesMedication === undefined
-          ? undefined
-          : profile.takesMedication
-            ? profile.medications || t('Yes')
-            : t('None'),
-    },
-    {
-      label: t('Conditions'),
-      value: profile?.conditions?.length
-        ? profile.conditions
-            .map((c) => (c === 'other' ? profile.conditionsOther || t('Other') : t(CONDITION_OPTIONS.find((o) => o.id === c)?.label ?? c)))
-            .join(', ')
-        : undefined,
-    },
-  ];
+  // El dato de «Sobre ti» que se está cambiando (su hoja va por encima de la pantalla). Con ?edit=height se abre
+  // directamente la altura (desde «Añade tu altura» del IMC en Peso, 2026-11-16)
+  const { edit } = useLocalSearchParams<{ edit?: string }>();
+  const [editing, setEditing] = useState<AboutField | null>(edit === 'height' ? 'height' : null);
+  const closeSheet = useCallback(() => setEditing(null), []);
+
   const goals = GOAL_OPTIONS.filter((g) => profile?.goals.includes(g.id));
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My Profile')} showBack backFallback={tabHref(TAB.you)} />
+    <View style={styles.screen}>
+      <SafeAreaView style={styles.safeArea} edges={['top']} importantForAccessibility={editing ? 'no-hide-descendants' : 'auto'}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScreenHeader title={t('My Profile')} showBack backFallback={tabHref(TAB.you)} />
 
-        <View style={styles.hero}>
-          {/* Tocar la foto: elegir otra de la galería */}
-          <TouchableOpacity onPress={pickPhoto} disabled={photoBusy} activeOpacity={0.85} accessibilityLabel={t('Change photo')}>
-            <UserAvatar size={84} />
-            <View style={styles.cameraBadge}>
-              {photoBusy ? <ActivityIndicator size="small" color={Colors.background} /> : <Ionicons name="camera" size={15} color={Colors.background} />}
-            </View>
-          </TouchableOpacity>
-          {photo && !photoBusy && (
-            <TouchableOpacity onPress={dropPhoto} hitSlop={8}>
-              <Text style={styles.photoLink}>{t('Remove photo')}</Text>
+          <View style={styles.hero}>
+            {/* Tocar la foto: elegir otra de la galería */}
+            <TouchableOpacity onPress={pickPhoto} disabled={photoBusy} activeOpacity={0.85} accessibilityLabel={t('Change photo')}>
+              <UserAvatar size={84} />
+              <View style={styles.cameraBadge}>
+                {photoBusy ? <ActivityIndicator size="small" color={Colors.background} /> : <Ionicons name="camera" size={15} color={Colors.background} />}
+              </View>
             </TouchableOpacity>
+            {photo && !photoBusy && (
+              <TouchableOpacity onPress={dropPhoto} hitSlop={8}>
+                <Text style={styles.photoLink}>{t('Remove photo')}</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* El alias tiene su propia pantalla (/your-name), también en Ajustes → Cuenta */}
+            <TouchableOpacity style={styles.nameRow} onPress={() => router.push('/your-name')} accessibilityLabel={t('Change your name')}>
+              <Text style={styles.name}>{user?.nombre ?? mockPatient.nombre}</Text>
+              <Ionicons name="pencil" size={15} color={Colors.accent} />
+            </TouchableOpacity>
+            <Text style={styles.email}>{user?.email ?? mockPatient.email}</Text>
+            {heroError ? <Text style={styles.heroError}>{heroError}</Text> : null}
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('What you use Kuova for')}</Text>
+            <TouchableOpacity onPress={() => router.push('/app-sections')}>
+              <Text style={styles.edit}>{t('Change')}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.card, styles.purposeCard]}>
+            <Ionicons name={(purpose?.icon ?? 'apps-outline') as any} size={20} color={Colors.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.purposeTitle}>{chosen.length ? chosen.map((c) => t(c.title)).join(' · ') : t('Everything')}</Text>
+              <Text style={styles.purposeSubtitle}>
+                {prefs.hidden.length
+                  ? t(prefs.hidden.length === 1 ? '{n} section hidden' : '{n} sections hidden', { n: prefs.hidden.length })
+                  : t('All sections visible')}
+              </Text>
+            </View>
+          </View>
+
+          {/* Sobre ti: cada dato se cambia con un toque en su fila, sin pasar por la pantalla de editar (fundador,
+              2026-11-16). Por eso ya no lleva «Editar». */}
+          <View style={[styles.sectionHeader, styles.afterCard]}>
+            <Text style={styles.sectionTitle}>{t('About you')}</Text>
+          </View>
+          <View style={styles.aboutRows}>
+            <AboutYouRows profile={profile} onEdit={setEditing} />
+          </View>
+
+          {!prefs.hidden.includes('plan') && (
+            <>
+              {/* Los objetivos se siguen cambiando en el cuestionario completo (el «Editar» que antes iba en Sobre ti) */}
+              <View style={[styles.sectionHeader, styles.afterCard]}>
+                <Text style={styles.sectionTitle}>{t('Your goals')}</Text>
+                <TouchableOpacity onPress={() => router.push('/onboarding')} hitSlop={8} accessibilityRole="button">
+                  <Text style={styles.edit}>{t('Edit')}</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.goals}>
+                {goals.length ? (
+                  goals.map((g) => (
+                    <View key={g.id} style={styles.goalChip}>
+                      {/* AppIcon: las pesas salen con el dibujo único de la app (fine/dumbbell.ts) */}
+                      <AppIcon name={g.icon} size={14} color={Colors.accent} />
+                      <Text style={styles.goalText}>{t(g.label)}</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.rowEmpty}>{t('No goals yet. Tap Edit to add them.')}</Text>
+                )}
+              </View>
+            </>
           )}
 
-          {/* El alias tiene su propia pantalla (/your-name), también en Ajustes → Cuenta */}
-          <TouchableOpacity style={styles.nameRow} onPress={() => router.push('/your-name')} accessibilityLabel={t('Change your name')}>
-            <Text style={styles.name}>{user?.nombre ?? mockPatient.nombre}</Text>
-            <Ionicons name="pencil" size={15} color={Colors.accent} />
-          </TouchableOpacity>
-          <Text style={styles.email}>{user?.email ?? mockPatient.email}</Text>
-          {heroError ? <Text style={styles.heroError}>{heroError}</Text> : null}
-        </View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('What you use Kuova for')}</Text>
-          <TouchableOpacity onPress={() => router.push('/app-sections')}>
-            <Text style={styles.edit}>{t('Change')}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.card, styles.purposeCard]}>
-          <Ionicons name={(purpose?.icon ?? 'apps-outline') as any} size={20} color={Colors.accent} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.purposeTitle}>{chosen.length ? chosen.map((c) => t(c.title)).join(' · ') : t('Everything')}</Text>
-            <Text style={styles.purposeSubtitle}>
-              {prefs.hidden.length
-                ? t(prefs.hidden.length === 1 ? '{n} section hidden' : '{n} sections hidden', { n: prefs.hidden.length })
-                : t('All sections visible')}
-            </Text>
-          </View>
-        </View>
-
-        <View style={[styles.sectionHeader, styles.afterCard]}>
-          <Text style={styles.sectionTitle}>{t('About you')}</Text>
-          <TouchableOpacity onPress={() => router.push('/onboarding')}>
-            <Text style={styles.edit}>{t('Edit')}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.card}>
-          {rows.map((r, i) => (
-            <View key={r.label} style={[styles.row, i > 0 && styles.rowDivider]}>
-              <Text style={styles.rowLabel}>{r.label}</Text>
-              <Text style={[styles.rowValue, styles.rowValueWrap, !r.value && styles.rowEmpty]}>{r.value ?? t('Not answered')}</Text>
-            </View>
-          ))}
-        </View>
-
-        {!prefs.hidden.includes('plan') && (
-          <>
-            <Text style={[styles.sectionTitle, styles.spaced]}>{t('Your goals')}</Text>
-            <View style={styles.goals}>
-              {goals.length ? (
-                goals.map((g) => (
-                  <View key={g.id} style={styles.goalChip}>
-                    <Ionicons name={g.icon as any} size={14} color={Colors.accent} />
-                    <Text style={styles.goalText}>{t(g.label)}</Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.rowEmpty}>{t('No goals yet. Tap Edit to add them.')}</Text>
-              )}
-            </View>
-          </>
-        )}
-
-
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+      {editing && profile ? <AboutYouSheet key={editing} field={editing} profile={profile} onClose={closeSheet} onSaved={setProfile} /> : null}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  screen: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 24 },
@@ -233,7 +187,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: { ...fine.secTitle },
-  spaced: { paddingHorizontal: 20, marginTop: 22, marginBottom: 10 },
   edit: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   afterCard: { marginTop: 22 },
   purposeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
@@ -247,11 +200,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginHorizontal: 20,
   },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 13 },
-  rowDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14 },
-  rowValue: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  rowValueWrap: { flexShrink: 1, textAlign: 'right', marginLeft: 16 },
+  // Sobre ti: filas con una línea fina, sin tarjeta (lenguaje fino del prototipo)
+  aboutRows: { paddingHorizontal: 20 },
   rowEmpty: { color: Colors.textMuted, fontSize: 13, fontFamily: INTER.regular },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   goalChip: {

@@ -5,12 +5,15 @@ import { workoutsEs } from '@/i18n/workoutsEs';
 import { dietEs } from '@/i18n/dietEs';
 import { historialEs } from '@/i18n/historialEs';
 import { authEs } from '@/i18n/authEs';
+import { symptomsEs } from '@/i18n/symptomsEs';
+import { measuresEs } from '@/i18n/measuresEs';
 import { TAB } from '@/constants/tabs';
 
 // La app en 4 pestañas (2026-11-16, borradores/app-estructura/ESPECIFICACION.md): cada texto nuevo o movido de
 // las pantallas tocadas tiene su traducción, y las pestañas son las que dice la especificación.
-// Igual que src/i18n/index.ts: es.ts gana a los demás
-const ES: Record<string, string> = { ...authEs, ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...es };
+// Igual que src/i18n/index.ts: es.ts gana a los demás (symptomsEs: la opción «Síntoma» del botón K, 2026-11-17)
+// measuresEs va después de es.ts, como en index.ts (Mediciones y fuerza de agarre, 2026-11-17)
+const ES: Record<string, string> = { ...authEs, ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...symptomsEs, ...es, ...measuresEs };
 
 type Fs = { readFileSync: (p: string, enc: 'utf8') => string };
 const FILES = [

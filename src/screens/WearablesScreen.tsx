@@ -1,4 +1,4 @@
-import { dateLocale, t } from '@/i18n';
+import { dateLocale, num, t } from '@/i18n';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -76,7 +76,7 @@ const formatValue = (metric: WearableMetric, value: number) => {
   if (metric === 'steps') return value.toLocaleString(dateLocale());
   if (metric === 'distance') return `${(value / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 })} km`;
   const unit = METRIC_LABEL[metric].unit;
-  return unit ? `${value} ${unit}` : String(value);
+  return unit ? `${num(value)} ${unit}` : num(value);
 };
 
 const formatDate = (iso: string) =>
@@ -124,7 +124,8 @@ export const WearablesScreen = () => {
     try {
       setMessage(await fn());
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : t('Something went wrong'));
+      // t(): los avisos propios («Health Connect is not available on this device.») salen traducidos; el resto, tal cual
+      setMessage(err instanceof Error ? t(err.message) : t('Something went wrong'));
     } finally {
       setBusy(null);
     }

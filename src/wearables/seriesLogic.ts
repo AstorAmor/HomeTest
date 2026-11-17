@@ -102,6 +102,11 @@ const sd = (xs: number[]) => {
 const LUTEAL_RHR_BPM = 2;
 const LUTEAL_HRV_LN = 0.07;
 
+// El peso de cada parte y desde qué cifra va cada frase. «Cómo lo calculamos» (EvidenceScreen) los pinta de aquí,
+// así la explicación no se separa de la fórmula.
+export const READINESS_WEIGHTS: Record<ReadinessPart, number> = { sleep: 0.4, hrv: 0.35, restingHr: 0.25 };
+export const READINESS_BANDS = { ready: 80, steady: 60 } as const;
+
 // Daily readiness (0-100). Como hacen Oura o WHOOP, cada parte frente a lo TUYO, no frente a una media:
 // - VFC (en escala logarítmica, como se analiza en deporte) y pulso en reposo de hoy frente a tus 28
 //   días anteriores: cuántas desviaciones típicas te separan de lo habitual (z). Un día normal da 65 y
@@ -143,15 +148,16 @@ export function computeReadiness(series: DailySeries, now = new Date(), opts: Re
   if (sleepScore == null && rhrScore == null) return null;
 
   const parts: [ReadinessPart, number | null, number][] = [
-    ['sleep', sleepScore, 0.4],
-    ['hrv', hrvScore, 0.35],
-    ['restingHr', rhrScore, 0.25],
+    ['sleep', sleepScore, READINESS_WEIGHTS.sleep],
+    ['hrv', hrvScore, READINESS_WEIGHTS.hrv],
+    ['restingHr', rhrScore, READINESS_WEIGHTS.restingHr],
   ];
   const used = parts.filter(([, v]) => v != null) as [ReadinessPart, number, number][];
   const weight = used.reduce((a, [, , w]) => a + w, 0);
   const score = Math.round(used.reduce((a, [, v, w]) => a + v * w, 0) / weight);
 
-  const label = score >= 80 ? 'Ready to go' : score >= 60 ? 'Take it steady' : 'Prioritise recovery';
+  // Un nivel, no un consejo coloquial (fundador, 2026-11-17: «A tope es súper malo»; tono preciso y condensado)
+  const label = score >= READINESS_BANDS.ready ? 'High' : score >= READINESS_BANDS.steady ? 'Moderate' : 'Low';
   return {
     score,
     label,

@@ -6,17 +6,20 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { RecipeImage } from '@/components/diet/RecipeImage';
 import { MacroDonut } from '@/components/diet/MacroDonut';
-import { Colors } from '@/constants/colors';
+import { Chev, SecHead } from '@/components/fine/Fine';
+import { FLink } from '@/components/fine/FineForm';
 import { amountText, FOODS, foodName, getRecipe, recipeName, recipeSteps, scale, slotLabel } from '@/data/diet/catalog';
 import { loadDietContext } from '@/data/diet/context';
 import { dietRepository } from '@/data/diet/dietRepository';
 import type { DietPlan, MealSlot, Recipe } from '@/data/diet/types';
 import { alternativesForSlot, LabFlag, portionFor } from '@/logic/dietPlanner';
 import { num, t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Ficha de un plato: foto grande, cuánto lleva tu ración, nutrientes, por qué te conviene y cómo se
 // hace. Si viene del menú, se puede cambiar por otro que también encaje.
+// Rediseño del 2026-11-16 (lenguaje fino): etiquetas con borde, secciones con su cabecera pequeña, ingredientes y
+// platos para cambiar en filas con línea fina y cada paso con su número a línea. Sin cajas de color.
 
 const DIET_LABEL: Record<Recipe['diet'], string> = { vegan: 'Vegan', vegetarian: 'Vegetarian', pescatarian: 'Fish, no meat', omnivore: 'With meat' };
 const SKILL_LABEL = ['', 'Easy to make', 'Basic cooking', 'Takes some skill'];
@@ -103,8 +106,8 @@ export const RecipeScreen = () => {
           {r.tags.includes('batch') ? <Tag icon="repeat-outline" text={t('Good for two days')} /> : null}
         </View>
 
+        <SecHead title={t('Your serving')} />
         <View style={styles.macroCard}>
-          <Text style={styles.macroTitle}>{t('Your serving')}</Text>
           <MacroDonut m={n} size={104} />
           <Text style={styles.fibre}>
             {t('Fibre')} {Math.round(n.fiber)} g · {t('Salt')} {num(Math.round((n.sodium * 2.5) / 100) / 10)} g
@@ -113,24 +116,27 @@ export const RecipeScreen = () => {
 
         {hl.length ? (
           <View style={styles.why}>
-            <Text style={styles.whyTitle}>{t('Why it suits you')}</Text>
+            <SecHead title={t('Why it suits you')} />
             {hl.map((h) => (
-              <Text key={h} style={styles.whyItem}>
-                • {h}
-              </Text>
+              <View key={h} style={styles.whyRow}>
+                <Ionicons name="leaf-outline" size={14} color={FINE.jade} style={{ marginTop: 3 }} />
+                <Text style={styles.whyItem}>{h}</Text>
+              </View>
             ))}
           </View>
         ) : null}
 
         <View style={styles.ingHead}>
-          <Text style={[styles.section, { marginTop: 0, marginBottom: 0 }]}>{t('Ingredients')}</Text>
+          <Text style={fine.secTitle} accessibilityRole="header">
+            {t('Ingredients')}
+          </Text>
           <View style={styles.stepper}>
-            <TouchableOpacity onPress={() => setPeople((x) => Math.max(1, x - 1))} hitSlop={8} accessibilityLabel={t('Fewer people')}>
-              <Ionicons name="remove-circle-outline" size={24} color={Colors.accent} />
+            <TouchableOpacity onPress={() => setPeople((x) => Math.max(1, x - 1))} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('Fewer people')}>
+              <Ionicons name="remove-circle-outline" size={24} color={FINE.jade} />
             </TouchableOpacity>
             <Text style={styles.portionValue}>{people === 1 ? t('for you') : t('for {n} people', { n: people })}</Text>
-            <TouchableOpacity onPress={() => setPeople((x) => Math.min(8, x + 1))} hitSlop={8} accessibilityLabel={t('More people')}>
-              <Ionicons name="add-circle-outline" size={24} color={Colors.accent} />
+            <TouchableOpacity onPress={() => setPeople((x) => Math.min(8, x + 1))} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('More people')}>
+              <Ionicons name="add-circle-outline" size={24} color={FINE.jade} />
             </TouchableOpacity>
           </View>
         </View>
@@ -141,7 +147,7 @@ export const RecipeScreen = () => {
           </View>
         ))}
 
-        <Text style={styles.section}>{t('How to make it')}</Text>
+        <SecHead title={t('How to make it')} />
         {recipeSteps(r).map((s, i) => (
           <View key={i} style={styles.step}>
             <Text style={styles.stepNum}>{i + 1}</Text>
@@ -151,21 +157,24 @@ export const RecipeScreen = () => {
 
         {plan && slot ? (
           <>
-            <TouchableOpacity style={styles.secondary} onPress={() => setSwapping((v) => !v)}>
-              <Ionicons name="swap-horizontal" size={18} color={Colors.accent} />
-              <Text style={styles.secondaryText}>{t('Swap this dish')}</Text>
-            </TouchableOpacity>
+            <FLink label={t('Swap this dish')} icon="swap-horizontal-outline" onPress={() => setSwapping((v) => !v)} style={styles.swap} />
             {swapping &&
-              alternatives.map((a) => (
-                <TouchableOpacity key={a.id} style={styles.alt} onPress={() => swap(a.id)}>
-                  <RecipeImage recipeId={a.id} slot={slot} size={56} radius={10} />
+              alternatives.map((a, i) => (
+                <TouchableOpacity
+                  key={a.id}
+                  style={[fine.row, i === alternatives.length - 1 && { borderBottomWidth: 0 }]}
+                  onPress={() => swap(a.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={recipeName(a)}
+                >
+                  <RecipeImage recipeId={a.id} slot={slot} size={52} radius={10} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.altName}>{recipeName(a)}</Text>
-                    <Text style={styles.altMeta}>
+                    <Text style={fine.rowTitle}>{recipeName(a)}</Text>
+                    <Text style={fine.rowSub}>
                       {a.minutes} min · ~{num(Math.round(a.cost * 100) / 100)} €
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                  <Chev />
                 </TouchableOpacity>
               ))}
           </>
@@ -178,7 +187,7 @@ export const RecipeScreen = () => {
 
 const Tag = ({ icon, text }: { icon: string; text: string }) => (
   <View style={styles.tag}>
-    <Ionicons name={icon as any} size={13} color={Colors.textSecondary} />
+    <Ionicons name={icon as any} size={13} color={FINE.mute} />
     <Text style={styles.tagText}>{text}</Text>
   </View>
 );
@@ -186,30 +195,26 @@ const Tag = ({ icon, text }: { icon: string; text: string }) => (
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  name: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium, marginTop: 14 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 },
-  tagText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  macroCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 10, marginTop: 14 },
-  macroTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  fibre: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
-  ingHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 18, marginBottom: 8 },
+  name: { ...ff('medium'), color: FINE.ivory, fontSize: 24, lineHeight: 30, marginTop: 16 },
+  // Etiquetas con borde, sin relleno
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: FINE.line, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  tagText: { ...ff('regular'), color: FINE.mute, fontSize: 12 },
+  macroCard: { gap: 10, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  fibre: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  ingHead: { ...fine.secHead, justifyContent: 'space-between' },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  portionValue: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, minWidth: 90, textAlign: 'center' },
-  why: { backgroundColor: Colors.accentSoft, borderRadius: 14, padding: 12, gap: 4, marginTop: 12 },
-  whyTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  whyItem: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
-  section: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, marginTop: 18, marginBottom: 8 },
-  ing: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  ingName: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
-  ingAmount: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  step: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10 },
-  stepNum: { width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.accent, color: Colors.background, textAlign: 'center', lineHeight: 22, fontSize: 12, fontFamily: INTER.medium, overflow: 'hidden' },
-  stepText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12, marginTop: 16, marginBottom: 8 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  alt: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 8, marginBottom: 8 },
-  altName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  altMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
-  credit: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 18 },
+  portionValue: { ...ff('regular'), color: FINE.ivory, fontSize: 13.5, minWidth: 90, textAlign: 'center' },
+  why: { gap: 6 },
+  whyRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  whyItem: { flex: 1, ...fine.body, fontSize: 14, lineHeight: 20 },
+  ing: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, paddingVertical: 10, minHeight: 44, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  ingName: { flex: 1, ...fine.body, fontSize: 14.5 },
+  ingAmount: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, fontVariant: ['tabular-nums'] },
+  // Cada paso con su número a línea, en jade
+  step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginBottom: 12 },
+  stepNum: { ...ff('regular'), width: 24, height: 24, borderRadius: 12, borderWidth: 1, borderColor: FINE.jadeLine, color: FINE.jade, textAlign: 'center', lineHeight: 22, fontSize: 12, overflow: 'hidden' },
+  stepText: { flex: 1, ...fine.body, fontSize: 14.5, lineHeight: 21 },
+  swap: { marginTop: 14, marginBottom: 4, borderTopWidth: 1, borderTopColor: FINE.line, paddingTop: 14 },
+  credit: { ...fine.note, fontSize: 11.5, marginTop: 20 },
 });

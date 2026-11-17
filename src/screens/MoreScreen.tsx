@@ -6,7 +6,6 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, type Href } from 'expo-router';
 import { useFirstName } from '@/components/UserAvatar';
-import { SpecialistCarousel } from '@/components/SpecialistCarousel';
 import { Chev, FRow, SecHead, TabHead } from '@/components/fine/Fine';
 import { LEARNING_TOPICS } from '@/data/learning';
 import { useAuth } from '@/context/AuthContext';
@@ -20,7 +19,7 @@ import { t } from '@/i18n';
 
 // Pestaña Tú (antes Más; 2026-11-16, borradores/app-estructura/ESPECIFICACION.md §6). Arriba, quién eres y tu
 // suscripción; debajo, por grupos: tu ficha (perfil, alergias, grupo, vacunas, historia clínica, tarjeta de
-// emergencia y perfil genético), compartir, conexiones, aprende (el carrusel que estaba en Hoy) y ajustes.
+// emergencia y perfil genético), compartir, conexiones, aprende (lecturas cortas; antes, el carrusel de Hoy) y ajustes.
 // Entrenamientos y Menús se fueron a Plan; seguir tus pruebas, a Análisis. Con el lenguaje fino del prototipo
 // (src/theme/fine.ts): filas con línea, sin iconos de color.
 
@@ -50,6 +49,12 @@ const SETTINGS: MenuItem[] = [
   { id: 'tutorial', title: 'Tutorial', subtitle: 'A quick tour of the main parts of the app' },
   { id: 'catalog', title: 'Biomarker Catalog', subtitle: '118 biomarkers, canonical knowledge base (dev)', to: '/catalogo' },
 ];
+
+// Aprende: tres lecturas y la fila de todos los temas, en filas finas como el prototipo (fundador, 2026-11-16: Aprende
+// no se había pasado a la estética nueva; antes era el carrusel de manchas de color)
+const LEARN_PICKS = ['sleep', 'nutrition', 'heart_health']
+  .map((id) => LEARNING_TOPICS.find((x) => x.id === id))
+  .filter((x): x is NonNullable<typeof x> => !!x);
 
 // Solo para administradores de Kuova
 const ADMIN_ITEMS: MenuItem[] = [
@@ -135,17 +140,22 @@ export const MoreScreen = () => {
         </View>
 
         {show('learning') && (
-          <>
-            <SecHead title={t('Learn')} style={styles.padM} />
+          <View style={styles.pad}>
+            <SecHead title={t('Learn')} />
             <TourTarget id="you.learning" scroll={tourScroll}>
-              <SpecialistCarousel
-                loop
-                items={LEARNING_TOPICS.filter((x) => x.featured)}
-                onSelect={(x) => router.push({ pathname: '/learn', params: { topic: x.id } })}
-                more={{ label: t('More'), subtitle: t('All topics'), onPress: () => router.push('/learn-all') }}
-              />
+              <View>
+                {LEARN_PICKS.map((x) => (
+                  <FRow key={x.id} title={t(x.label)} sub={t(x.subtitle)} onPress={() => router.push({ pathname: '/learn', params: { topic: x.id } })} />
+                ))}
+                <FRow
+                  title={t('All topics')}
+                  sub={t('{n} short reads: stress, training, genetics and more', { n: LEARNING_TOPICS.length })}
+                  onPress={() => router.push('/learn-all')}
+                  last
+                />
+              </View>
             </TourTarget>
-          </>
+          </View>
         )}
 
         <View style={styles.pad}>
@@ -164,7 +174,6 @@ const styles = StyleSheet.create({
   },
   content: { paddingBottom: 40 },
   pad: { paddingHorizontal: 20 },
-  padM: { marginHorizontal: 20 },
   // La línea jade de debajo del nombre (como «Próximo análisis · 26 mar» del prototipo)
   subLine: {
     flexDirection: 'row',

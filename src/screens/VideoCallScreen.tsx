@@ -19,7 +19,7 @@ export const VideoCallScreen = () => {
   useEffect(() => {
     getVideoJoinUrl(appt)
       .then(setJoinUrl)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Could not open the video'));
+      .catch((e) => setError(e instanceof Error ? e.message : t('Could not open the video')));
   }, [appt]);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -28,7 +28,7 @@ export const VideoCallScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <Text style={styles.title} numberOfLines={1}>
-          {title ?? 'Video consultation'}
+          {title ?? t('Video consultation')}
         </Text>
         <TouchableOpacity onPress={close} hitSlop={10} accessibilityLabel={t('Close')}>
           <Ionicons name="close" size={26} color={OnDark.text} />

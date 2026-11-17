@@ -14,14 +14,18 @@ export interface SpecialistCard {
   // Sin foto (o si se prefiere la ilustración): icono sobre degradado con manchas (BlobArt)
   icon?: string;
   palette?: [string, string, string];
+  // Especialistas: el dibujo a línea de su rol (components/fine/RoleEmblem.tsx); el carrusel lo prefiere al icono
+  role?: ProfessionalRole;
 }
 
-// Especialistas del carrusel de Today: ilustración con el icono de su rol (ROLE_INFO), sin fotos
-// (al fundador le parecían irreales). Las fotos siguen en assets/images/specialists por si vuelven.
+// Especialistas del carrusel (Análisis → «Habla con un especialista»): el dibujo a línea de su rol, sin fotos (al
+// fundador le parecían irreales) ni manchas de color (fundador, 2026-11-16: los iconos «se ven muy gordos»). Las fotos
+// siguen en assets/images/specialists por si vuelven. `icon` y `palette` se quedan por si vuelve la ilustración.
 const roleCard = (id: ProfessionalRole, label: string, subtitle: string): SpecialistCard => ({
   id,
   label,
   subtitle,
+  role: id,
   icon: ROLE_INFO[id].icon,
   palette: ROLE_INFO[id].palette,
 });

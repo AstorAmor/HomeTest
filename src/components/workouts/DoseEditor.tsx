@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { Colors } from '@/constants/colors';
-import { ChoiceChips } from '@/components/ChoiceChips';
 import { WheelPicker } from '@/components/WheelPicker';
+import { FButton, FChips, formStyles } from '@/components/fine/FineForm';
 import type { WorkoutExercise } from '@/data/workouts/types';
 import { isTimedReps, timedSeconds, timeText } from '@/logic/workoutTimer';
 import { parseKg } from '@/logic/workoutLog';
 import { num, t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Cambiar un ejercicio de la sesión: series, por repeticiones o por tiempo, el peso (si lleva) y el
 // descanso. Con ruedas, como el resto de la app; el peso, escrito (22,5). Si no se toca la rueda de
 // repeticiones se queda el rango que había ("10–12").
+// Lenguaje fino (2026-11-16): chips con borde, cabeceras pequeñas en mayúsculas, la casilla del peso casi
+// transparente con la cifra ligera, «Guardar» en esmeralda y «Cancelar» con borde fino.
 
 type Dose = Pick<WorkoutExercise, 'sets' | 'reps' | 'restSec' | 'weightKg'>;
 
@@ -71,8 +72,8 @@ export const DoseEditor = ({
   // y el peso debajo. Si había que deslizar la ventana, el dedo caía en una rueda y se quedaba atascada.
   return (
     <View>
-      <ChoiceChips
-        center
+      <FChips
+        style={styles.modes}
         options={[
           { id: 'reps' as const, label: t('By reps') },
           { id: 'time' as const, label: t('By time') },
@@ -123,7 +124,7 @@ export const DoseEditor = ({
             onChangeText={(v) => setKg(v.replace(/[^\d.,]/g, '').slice(0, 6))}
             keyboardType="decimal-pad"
             placeholder={t('No weight')}
-            placeholderTextColor={Colors.textMuted}
+            placeholderTextColor={FINE.mute}
             accessibilityLabel={t('Weight per set')}
             selectTextOnFocus
           />
@@ -132,40 +133,27 @@ export const DoseEditor = ({
       ) : null}
 
       <View style={styles.buttons}>
-        <TouchableOpacity style={styles.secondary} onPress={onCancel}>
+        <TouchableOpacity style={styles.secondary} onPress={onCancel} activeOpacity={0.75} accessibilityRole="button">
           <Text style={styles.secondaryText}>{t('Cancel')}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.primary} onPress={save}>
-          <Text style={styles.primaryText}>{t('Save')}</Text>
-        </TouchableOpacity>
+        <FButton label={t('Save')} onPress={save} style={styles.primary} />
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  cols: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: 14 },
-  col: { alignItems: 'center', gap: 4 },
-  colLabel: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase' },
-  weightRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 14 },
-  weightLabel: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  unit: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
-  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 6 },
-  kg: {
-    width: 96,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    paddingVertical: 8,
-    color: Colors.textPrimary,
-    fontSize: 18,
-    fontFamily: INTER.medium,
-    textAlign: 'center',
-  },
+  modes: { justifyContent: 'center' },
+  cols: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: 16 },
+  col: { alignItems: 'center', gap: 6 },
+  colLabel: { ...fine.kicker },
+  weightRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 16 },
+  weightLabel: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  unit: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  hint: { ...fine.note, textAlign: 'center', marginTop: 8 },
+  kg: { ...formStyles.input, ...ff('light'), width: 96, fontSize: 20, textAlign: 'center', fontVariant: ['tabular-nums'] },
   buttons: { flexDirection: 'row', gap: 10, marginTop: 22 },
-  primary: { flex: 1, alignItems: 'center', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13 },
-  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  secondary: { flex: 1, alignItems: 'center', borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 13 },
-  secondaryText: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
+  primary: { flex: 1 },
+  secondary: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: FINE.line, borderRadius: 22 },
+  secondaryText: { ...ff('regular'), color: FINE.mute, fontSize: 15 },
 });

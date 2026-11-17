@@ -2,6 +2,7 @@ import { FOOD_GROUPS, FoodGroup, mealGroups } from './foodGroups';
 import type { DigestionEntry, GutSafetyAnswers, GutSymptom, SafetyQuestionId, UsualFoods, UsualFrequency } from '@/types/digestion';
 import { USUAL_FREQUENCIES } from '@/types/digestion';
 import type { BowelEntry } from '@/types/bathroom';
+import { effectiveSafetyAnswers } from './gutSafety';
 import { num, t } from '@/i18n';
 
 // Lo que vemos en tu digestión. Cada vez que el usuario apunta una molestia en Digestión, le
@@ -286,10 +287,11 @@ export interface GutContext {
 
 const rank: Record<Confidence, number> = { clear: 3, probable: 2, hint: 1 };
 
+// Cómo se enseña: «Fiabilidad alta / media / baja», más formal que «Bastante claro» (fundador, 2026-11-16)
 export const CONFIDENCE_LABEL: Record<Confidence, string> = {
-  clear: 'Quite clear',
-  probable: 'Likely',
-  hint: 'A hint',
+  clear: 'High reliability',
+  probable: 'Medium reliability',
+  hint: 'Low reliability',
 };
 
 const FACTOR_TITLE: Record<Factor, string> = {
@@ -451,7 +453,8 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
 
   // ---- Alarmas ----
   const alarms: GutAlarm[] = [];
-  const answers = ctx.safety?.answers ?? {};
+  // Lo de «empezaron después de los 50» no cuenta (vale «no») si el perfil dice que tiene menos de 50
+  const answers = effectiveSafetyAnswers(ctx.safety?.answers ?? {}, ctx.age);
   (['weight_loss', 'blood', 'anaemia', 'night', 'swallow_vomit', 'onset_after_50', 'family'] as SafetyQuestionId[]).forEach((id) => {
     if (answers[id]) alarms.push(alarm(id));
   });

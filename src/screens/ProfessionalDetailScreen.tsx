@@ -5,15 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Avatar } from '@/components/Avatar';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Chev, SecHead } from '@/components/fine/Fine';
+import { Monogram } from '@/components/fine/RoleEmblem';
 import { useAuth } from '@/context/AuthContext';
 import { mockProfessionals, ROLE_INFO } from '@/data/servicesMock';
 import { listVerifiedProfessionals, roleLabel } from '@/data/sharing';
 import { consult, isRealProfessional, ProCapabilities } from '@/data/consultations';
 import { num, t } from '@/i18n';
 import { formatPrice } from '@/data/testCatalog';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 interface ProView {
   id: string;
@@ -74,6 +74,9 @@ async function loadPro(id: string): Promise<ProView | null> {
 
 // Ficha de un especialista para el paciente: videoconsulta, solicitud y chat
 // (el chat solo si el especialista lo tiene habilitado).
+// En la estética fina (fundador, 2026-11-16: lo de los especialistas «no alineado con la estética»): la inicial en un
+// aro fino en lugar del círculo relleno, las cifras ligeras entre líneas finas sin iconos de color, la verificación
+// como una marca a línea y las acciones en filas con su icono a línea (oro la consulta, que es de pago; jade el resto).
 export const ProfessionalDetailScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
@@ -100,117 +103,146 @@ export const ProfessionalDetailScreen = () => {
     router.push({ pathname: '/chat', params: { conversation: conv, title: pro.name, side: 'patient' } });
   };
 
+  // Las acciones que ofrece, en filas; la última sin línea debajo
+  const actions: ActionProps[] = [
+    ...(caps.video
+      ? [
+          {
+            icon: 'videocam-outline',
+            title: t('Book a video consultation'),
+            sub: `${pro.minutes} min · ${pro.price ? formatPrice(pro.price) : t('price on request')} · ${t('pick a free slot')}`,
+            gold: true,
+            onPress: () => router.push({ pathname: '/consult-book', params }),
+          },
+        ]
+      : []),
+    ...(caps.requests
+      ? [
+          {
+            icon: 'paper-plane-outline',
+            title: t('Send a request'),
+            sub: t('A question or a results review, answered in the app'),
+            onPress: () => router.push({ pathname: '/consult-request', params }),
+          },
+        ]
+      : []),
+    ...(caps.chat ? [{ icon: 'chatbubbles-outline', title: t('Chat'), sub: t('Message them directly'), onPress: openChat }] : []),
+  ];
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={pro.roleTitle} showBack />
 
-        <View style={styles.hero}>
-          {pro.photoUrl ? (
-            <Image source={{ uri: pro.photoUrl }} style={styles.photo} contentFit="cover" />
-          ) : (
-            <Avatar nombre={pro.name.replace(/^Dra?\.\s*/, '')} size={84} />
-          )}
-          <Text style={styles.name}>{pro.name}</Text>
-          <Text style={styles.specialty}>{pro.specialty}</Text>
-          {pro.real && (
-            <View style={styles.verified}>
-              <Ionicons name="shield-checkmark" size={13} color={Colors.ok} />
-              <Text style={styles.verifiedText}>{t('Verified by Kuova')}</Text>
-            </View>
-          )}
-          <View style={styles.statsRow}>
-            {pro.rating !== null ? (
-              <Stat icon="star" color={Colors.amber} value={num(pro.rating.toFixed(1))} label={pro.reviews ? t('{n} reviews', { n: pro.reviews }) : t('Rating')} />
-            ) : (
-              !pro.real && <Stat icon="star-outline" color={Colors.amber} value="—" label={t('No reviews yet')} />
+        <View style={styles.pad}>
+          <View style={styles.hero}>
+            {pro.photoUrl ? <Image source={{ uri: pro.photoUrl }} style={styles.photo} contentFit="cover" /> : <Monogram name={pro.name} size={80} />}
+            <Text style={styles.name} accessibilityRole="header">
+              {pro.name}
+            </Text>
+            <Text style={styles.specialty}>{pro.specialty}</Text>
+            {pro.real && (
+              <View style={styles.verified}>
+                <Ionicons name="shield-checkmark-outline" size={13} color={FINE.jade} />
+                <Text style={styles.verifiedText}>{t('Verified by Kuova')}</Text>
+              </View>
             )}
-            <Stat icon="cash-outline" color={Colors.accent} value={pro.price ? formatPrice(pro.price) : '—'} label={`${pro.minutes} min`} />
-            <Stat icon={pro.online ? 'videocam-outline' : 'location-outline'} color={Colors.violet} value={pro.online ? t('Online') : t('In person')} label={pro.city || t('Spain')} />
           </View>
-        </View>
 
-        {pro.bio ? (
-          <>
-            <Text style={styles.sectionTitle}>{t('About')}</Text>
-            <Text style={styles.bio}>{pro.bio}</Text>
-          </>
-        ) : null}
-        {pro.languages.length > 0 && <Text style={styles.languages}>Speaks {pro.languages.join(' and ')}</Text>}
+          {/* Valoración, precio y modalidad: cifras ligeras entre dos líneas finas, sin iconos */}
+          <View style={styles.stats}>
+            {pro.rating !== null ? (
+              <Stat value={num(pro.rating.toFixed(1))} label={pro.reviews ? t('{n} reviews', { n: pro.reviews }) : t('Rating')} />
+            ) : (
+              !pro.real && <Stat value="—" label={t('No reviews yet')} />
+            )}
+            <Stat value={pro.price ? formatPrice(pro.price) : '—'} label={`${pro.minutes} min`} />
+            <Stat value={pro.online ? t('Online') : t('In person')} label={pro.city || t('Spain')} last />
+          </View>
 
-        <Text style={styles.sectionTitle}>{t('How can {name} help you?', { name: pro.name.split(' ').slice(0, 2).join(' ') })}</Text>
-        <View style={styles.actions}>
-          {caps.video && (
-            <Action
-              icon="videocam"
-              title={t('Book a video consultation')}
-              sub={`${pro.minutes} min · ${pro.price ? formatPrice(pro.price) : t('price on request')} · ${t('pick a free slot')}`}
-              primary
-              onPress={() => router.push({ pathname: '/consult-book', params })}
-            />
-          )}
-          {caps.requests && (
-            <Action icon="paper-plane-outline" title={t('Send a request')} sub={t('A question or a results review, answered in the app')} onPress={() => router.push({ pathname: '/consult-request', params })} />
-          )}
-          {caps.chat ? (
-            <Action icon="chatbubbles-outline" title={t('Chat')} sub={t('Message them directly')} onPress={openChat} />
-          ) : (
+          {pro.bio ? (
+            <>
+              <SecHead title={t('About')} />
+              <Text style={styles.bio}>{pro.bio}</Text>
+            </>
+          ) : null}
+          {pro.languages.length > 0 && <Text style={fine.note}>{`${t('Languages')}: ${pro.languages.map((l) => t(l)).join(', ')}`}</Text>}
+
+          <SecHead title={t('How can {name} help you?', { name: pro.name.split(' ').slice(0, 2).join(' ') })} />
+          {actions.map((a, i) => (
+            <Action key={a.title} {...a} last={i === actions.length - 1} />
+          ))}
+          {!caps.chat && (
             <View style={styles.chatOff}>
-              <Ionicons name="chatbubbles-outline" size={16} color={Colors.textMuted} />
-              <Text style={styles.chatOffText}>{t("This specialist doesn't offer chat. Use a request instead.")}</Text>
+              <Ionicons name="chatbubbles-outline" size={15} color={FINE.mute} />
+              <Text style={[fine.note, styles.chatOffText]}>{t("This specialist doesn't offer chat. Use a request instead.")}</Text>
             </View>
           )}
+          {!pro.real && <Text style={[fine.note, styles.proto]}>{t('Example specialist: bookings and messages stay on your phone.')}</Text>}
         </View>
-        {!pro.real && <Text style={styles.proto}>{t('Example specialist: bookings and messages stay on your phone.')}</Text>}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const Action = ({ icon, title, sub, onPress, primary }: { icon: string; title: string; sub: string; onPress: () => void; primary?: boolean }) => (
-  <TouchableOpacity style={[styles.action, primary && styles.actionPrimary]} onPress={onPress} activeOpacity={0.85}>
-    <View style={[styles.actionIcon, primary && { backgroundColor: withAlpha(Colors.background, 0.2) }]}>
-      <Ionicons name={icon as any} size={20} color={primary ? Colors.background : Colors.accent} />
-    </View>
-    <View style={{ flex: 1 }}>
-      <Text style={[styles.actionTitle, primary && { color: Colors.background }]}>{title}</Text>
-      <Text style={[styles.actionSub, primary && { color: Colors.background, opacity: 0.85 }]}>{sub}</Text>
-    </View>
-    <Ionicons name="chevron-forward" size={18} color={primary ? Colors.background : Colors.textMuted} />
-  </TouchableOpacity>
-);
+type ActionProps = { icon: string; title: string; sub: string; onPress: () => void; gold?: boolean; last?: boolean };
 
-const Stat = ({ icon, color, value, label }: { icon: string; color: string; value: string; label: string }) => (
-  <View style={styles.stat}>
-    <Ionicons name={icon as any} size={18} color={color} />
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
+// Una acción: su icono a línea en un aro fino (oro si es de pago), el título, la explicación y la flecha
+const Action = ({ icon, title, sub, onPress, gold, last }: ActionProps) => {
+  const c = gold ? FINE.gold : FINE.jade;
+  return (
+    <TouchableOpacity
+      style={[fine.row, styles.action, last && styles.noLine]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${sub}`}
+    >
+      <View style={[styles.actionRing, { borderColor: gold ? FINE.goldLine : FINE.jadeLine }]}>
+        <Ionicons name={icon as any} size={17} color={c} />
+      </View>
+      <View style={styles.flex}>
+        <Text style={fine.rowTitle}>{title}</Text>
+        <Text style={fine.rowSub}>{sub}</Text>
+      </View>
+      <Chev />
+    </TouchableOpacity>
+  );
+};
+
+const Stat = ({ value, label, last }: { value: string; label: string; last?: boolean }) => (
+  <View style={[styles.stat, !last && styles.statLine]}>
+    <Text style={styles.statValue} numberOfLines={1}>
+      {value}
+    </Text>
+    <Text style={styles.statLabel} numberOfLines={1}>
+      {label}
+    </Text>
   </View>
 );
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingBottom: 32 },
-  hero: { alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
-  photo: { width: 84, height: 84, borderRadius: 42 },
-  name: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginTop: 12 },
-  specialty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginTop: 4, textAlign: 'center' },
-  verified: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  verifiedText: { color: Colors.ok, fontSize: 12, fontFamily: INTER.medium },
-  statsRow: { flexDirection: 'row', alignSelf: 'stretch', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingVertical: 14, marginTop: 18 },
-  stat: { flex: 1, alignItems: 'center', gap: 3 },
-  statValue: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  statLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
-  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 8, marginTop: 8 },
-  bio: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 21, paddingHorizontal: 20 },
-  languages: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, paddingHorizontal: 20, marginTop: 6, marginBottom: 16 },
-  actions: { paddingHorizontal: 20, gap: 10 },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14 },
-  actionPrimary: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  actionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  actionTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  actionSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  chatOff: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 6 },
-  chatOffText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, flex: 1 },
-  proto: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 16, paddingHorizontal: 30 },
+  content: { paddingBottom: 40 },
+  pad: { paddingHorizontal: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  hero: { alignItems: 'center', paddingTop: 4, marginBottom: 20 },
+  photo: { width: 80, height: 80, borderRadius: 40 },
+  name: { ...ff('medium'), color: FINE.ivory, fontSize: 22, lineHeight: 28, letterSpacing: -0.2, marginTop: 14, textAlign: 'center' },
+  specialty: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, marginTop: 3, textAlign: 'center' },
+  verified: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 8 },
+  verifiedText: { ...ff('regular'), color: FINE.jade, fontSize: 12.5 },
+  // Las tres cifras entre dos líneas finas, separadas por otra vertical
+  stats: { flexDirection: 'row', borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line, paddingVertical: 14 },
+  stat: { flex: 1, alignItems: 'center', gap: 2, paddingHorizontal: 6 },
+  statLine: { borderRightWidth: 1, borderRightColor: FINE.line },
+  statValue: { ...ff('light'), color: FINE.ivory, fontSize: 20, lineHeight: 26, fontVariant: ['tabular-nums'] },
+  statLabel: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
+  bio: { ...ff('regular'), color: FINE.ivory, fontSize: 14.5, lineHeight: 21 },
+  action: { gap: 12, paddingVertical: 13 },
+  actionRing: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  noLine: { borderBottomWidth: 0 },
+  chatOff: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
+  chatOffText: { flex: 1, marginTop: 0 },
+  proto: { textAlign: 'center', marginTop: 22, paddingHorizontal: 10 },
 });

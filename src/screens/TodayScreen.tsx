@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { InfoButton } from '@/components/InfoButton';
 import { GlowRing, mixHex, ringTones, type RingColors } from '@/components/GlowRing';
+import { CometLine } from '@/components/CometLine';
 import { FirstAnalysisCard } from '@/components/FirstAnalysisCard';
-import { SecHead } from '@/components/fine/Fine';
+import { Pill, SecHead } from '@/components/fine/Fine';
+import { FineGauge } from '@/components/fine/FineGauge';
 import { INTER, FINE, ff, fine } from '@/theme/fine';
 import { currentReport } from '@/data/reportRepository';
 import { MetasToday } from '@/components/metas/MetasToday';
@@ -35,8 +37,7 @@ import { WelcomePrompts } from '@/components/WelcomePrompts';
 import { nudgeStore } from '@/data/nudgeStore';
 import { addBowelVisit, addUrineVisit, bowelRepository, dayKey, entryForDay, urineRepository } from '@/data/bathroomRepository';
 import { hydrationFromUrine, HYDRATION_SCALE } from '@/logic/bathroom';
-import { BowelEntry, STOOL_COLORS, UrineEntry, URINE_COLORS } from '@/types/bathroom';
-import { GaugeBar } from '@/components/GaugeBar';
+import { BowelEntry, STOOL_COLORS, UrineEntry } from '@/types/bathroom';
 import { thermometerRepository } from '@/data/temperatureRepository';
 import { doseRepository, medicationRepository } from '@/data/medicationRepository';
 import { dosesForDay, isActiveOn } from '@/logic/medication';
@@ -58,7 +59,7 @@ import { buildPlan } from '@/data/planRepository';
 import { labUploadRepository } from '@/data/labUploads';
 import { labReports } from '@/utils/labReportView';
 import { useMetas } from '@/hooks/useMetas';
-import { AREAS, areaScore } from '@/logic/metas';
+import { weekScore as weekScoreOf } from '@/logic/metas';
 import { goToTab, TAB } from '@/constants/tabs';
 import { computeReadiness, formatSleep, latest, shortDate, todayValue, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { useWebShell } from '@/web/webMode';
@@ -238,25 +239,56 @@ export const TodayScreen = () => {
   // Desde las 4 pestañas (2026-11-16) son números solos: lo de hoy y la meta («6.240 / 8.000»). Sin reloj,
   // solo el agua (lo demás llega del reloj)
   const km = (m: number) => `${(m / 1000).toLocaleString(dateLocale(), { maximumFractionDigits: 1 })} km`;
+  const share = (v: number | null | undefined, goal: number) => (v != null && goal > 0 ? v / goal : null);
   const goalNums = [
-    hasAny && shownGoals.steps && { key: 'steps', value: steps.toLocaleString(dateLocale()), goal: goals.steps.toLocaleString(dateLocale()), label: t('Steps') },
+    hasAny &&
+      shownGoals.steps && {
+        key: 'steps',
+        value: steps.toLocaleString(dateLocale()),
+        goal: goals.steps.toLocaleString(dateLocale()),
+        label: t('Steps'),
+        progress: share(steps, goals.steps),
+        color: GOAL_COLORS.steps,
+      },
     hasAny && shownGoals.activeKcal && !distanceForKcal && {
       key: 'kcal',
       value: calories != null ? `${calories}` : '—',
       goal: `${goals.activeKcal.toLocaleString(dateLocale())} kcal`,
       label: t('Active kcal'),
+      progress: share(calories, goals.activeKcal),
+      color: GOAL_COLORS.kcal,
     },
-    hasAny && (shownGoals.distanceM || distanceForKcal) && { key: 'distance', value: distanceKm != null ? km(distanceKm) : '—', goal: km(goals.distanceM), label: t('Distance') },
-    hasAny && shownGoals.sleepMin && { key: 'sleep', value: sleep ? formatSleep(sleep) : '—', goal: formatSleep(goals.sleepMin), label: t('Sleep') },
-    shownGoals.waterMl && { key: 'water', value: litres(water.total), goal: litres(goals.waterMl), label: t('Water') },
+    hasAny &&
+      (shownGoals.distanceM || distanceForKcal) && {
+        key: 'distance',
+        value: distanceKm != null ? km(distanceKm) : '—',
+        goal: km(goals.distanceM),
+        label: t('Distance'),
+        progress: share(distanceKm != null ? distanceKm * 1000 : null, goals.distanceM),
+        color: GOAL_COLORS.distance,
+      },
+    hasAny &&
+      shownGoals.sleepMin && {
+        key: 'sleep',
+        value: sleep ? formatSleep(sleep) : '—',
+        goal: formatSleep(goals.sleepMin),
+        label: t('Sleep'),
+        progress: share(sleep || null, goals.sleepMin),
+        color: GOAL_COLORS.sleep,
+      },
+    shownGoals.waterMl && {
+      key: 'water',
+      value: litres(water.total),
+      goal: litres(goals.waterMl),
+      label: t('Water'),
+      progress: share(water.total, goals.waterMl),
+      color: GOAL_COLORS.water,
+    },
   ].filter((r) => !!r) as GoalNumProps[];
 
   // Los tres círculos: Hoy (tu estado), Semana (tus metas) y Ciclo (mujeres, con reglas)
-  const weekScore = (() => {
-    if (!metas.data) return null;
-    const scores = AREAS.map((a) => areaScore(metas.data!.state, a, metas.vals, metas.week ?? undefined, metas.known)).filter((x): x is number => x != null);
-    return scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
-  })();
+  // La misma cifra que la de arriba de Plan (weekScore), adonde lleva este círculo
+  const weekScore = metas.data ? weekScoreOf(metas.data.state, metas.vals, metas.week ?? undefined, metas.known) : null;
   const circles = [
     show('readiness') && {
       key: 'today',
@@ -316,6 +348,7 @@ export const TodayScreen = () => {
             : t('Next: {day}', { day: weight.next ? weight.next.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric' }) : '' })
       }
       color={weight?.due ? Colors.accent : Colors.textMuted}
+      due={!!weight?.due}
       onPress={() => router.push(weight?.last ? '/weight-detail' : '/log-weight')}
     />
   );
@@ -341,31 +374,34 @@ export const TodayScreen = () => {
         {/* 3. Lo siguiente: citas, logística y resultados (sin nombrar categorías); «Ver» lleva a la cita o al
             análisis. Sin nada previsto y sin ningún análisis, «Empieza por tu primer análisis» */}
         {summary.length > 0 ? (
-        <>
-        <Text style={styles.sectionTitle}>{t('Up next')}</Text>
+        // Como el prototipo (`.next`): una caja fina con «LO SIGUIENTE» dentro, cada cosa en una línea y su
+        // «Ver» (en oro la que pide tu atención, p. ej. resultados nuevos); sin iconos de colores
         <View style={styles.summaryCard}>
-          {summary.map((l, i) => (
+          <Text style={styles.summaryKicker}>{t('Up next')}</Text>
+          {summary.map((l, i) => {
+            const open = () => {
+              if (l.id === 'results-new') {
+                // Visto: el aviso desaparece ya (al volver atrás no reaparece)
+                setReportSeen(true);
+                setSummary(summary.filter((x) => x.id !== 'results-new'));
+                userFlags.set(reportSeenKey(currentReport.report_id));
+              }
+              router.push(l.target as any);
+            };
+            return (
               <TouchableOpacity
                 key={l.id}
                 style={[styles.summaryRow, i > 0 && styles.summaryDivider]}
-                onPress={() => {
-                  if (l.id === 'results-new') {
-                    // Visto: el aviso desaparece ya (al volver atrás no reaparece)
-                    setReportSeen(true);
-                    setSummary(summary.filter((x) => x.id !== 'results-new'));
-                    userFlags.set(reportSeenKey(currentReport.report_id));
-                  }
-                  router.push(l.target as any);
-                }}
+                onPress={open}
                 activeOpacity={0.8}
+                accessibilityRole="button"
               >
-                <Ionicons name={l.icon as any} size={18} color={l.highlight ? Colors.gold : Colors.accent} />
                 <Text style={[styles.summaryText, l.highlight && styles.summaryHighlight]}>{l.text}</Text>
-                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+                <Pill gold={!!l.highlight} label={t('See')} onPress={open} />
               </TouchableOpacity>
-            ))}
+            );
+          })}
         </View>
-        </>
         ) : firstCard ? (
           <FirstAnalysisCard
             variant="today"
@@ -409,13 +445,20 @@ export const TodayScreen = () => {
         {/* 5. Tres círculos: Hoy, Semana y Ciclo */}
         {!web && circles.length > 0 && (
           <View style={styles.circles}>
-            {circles.map(({ key, ...c }) => (
-              <Circle key={key} {...c} />
-            ))}
+            {circles.map(({ key, ...c }) =>
+              key === 'week' ? (
+                <TourTarget key={key} id="today.week" scroll={tourScroll}>
+                  <Circle {...c} />
+                </TourTarget>
+              ) : (
+                <Circle key={key} {...c} />
+              ),
+            )}
           </View>
         )}
 
-        {/* 6. Esta semana: las 3 áreas en barra (cada una abre su área) */}
+        {/* 6. Al cerrar la semana, la enhorabuena o el ánimo. «Esta semana» con las 3 áreas ya no va aquí
+            (fundador, 2026-11-16: «me sobra»): el círculo Semana lleva a Plan, donde está todo */}
         {show('plan') && <MetasToday tourScroll={tourScroll} />}
 
         {!web && (
@@ -536,29 +579,15 @@ export const TodayScreen = () => {
                 name={t('Temperature')}
                 icon="thermometer-outline"
                 iconColor={Colors.pinkSoft}
-                value={temp != null ? temp.toFixed(1) : '—'}
+                value={temp != null ? num(temp.toFixed(1)) : '—'}
                 unit="°C"
                 status={temp == null ? '—' : temp >= 36.1 && temp <= 37.2 ? t('Normal') : t('Check')}
                 color={temp == null ? Colors.textMuted : temp >= 36.1 && temp <= 37.2 ? Colors.accent : Colors.warning}
                 onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}
-                wide
               >
-                {/* Franja normal (36,1–37,2 °C) y el punto en el valor de hoy */}
-                <GaugeBar
-                  min={35.5}
-                  max={38.5}
-                  value={temp ?? null}
-                  range={[36.1, 37.2]}
-                  rangeLabel={t('Normal 36.1–37.2')}
-                  stops={[
-                    { at: 35.5, color: Colors.sky },
-                    { at: 36.1, color: Colors.green },
-                    { at: 37.2, color: Colors.green },
-                    { at: 38.5, color: Colors.coral },
-                  ]}
-                  leftLabel="35.5"
-                  rightLabel="38.5 °C"
-                />
+                {/* Franja normal (36,1–37,2 °C) y el punto en el valor de hoy. A media pantalla, como las demás
+                    (fundador, 2026-11-16: «no veo necesidad de que ocupen más»): sin los extremos de la escala */}
+                <FineGauge min={35.5} max={38.5} value={temp ?? null} range={[36.1, 37.2]} rangeLabel={t('Normal 36.1–37.2')} />
               </BiomarkerCard>
             </>
           )}
@@ -615,15 +644,8 @@ export const TodayScreen = () => {
                 onAdd={() => addUrineVisit().then(reloadBathroom)}
                 addLabel={t('Add one time you peed')}
               >
-                {/* Regla de hidratación: del color más claro al más oscuro de la orina */}
-                <GaugeBar
-                  min={0}
-                  max={HYDRATION_SCALE.length - 1}
-                  value={h.position}
-                  stops={HYDRATION_SCALE.map((c, i) => ({ at: i, color: URINE_COLORS.find((x) => x.id === c)!.swatch }))}
-                  leftLabel={t('Hydrated')}
-                  rightLabel={t('Drink more')}
-                />
+                {/* Regla de hidratación: del color más claro al más oscuro de la orina, a línea fina */}
+                <FineGauge min={0} max={HYDRATION_SCALE.length - 1} value={h.position} leftLabel={t('Hydrated')} rightLabel={t('Drink more')} />
               </BiomarkerCard>
             );
           })()}
@@ -653,19 +675,34 @@ const Circle = ({ label, progress, tones, center, onPress, a11y }: Omit<CirclePr
   </TouchableOpacity>
 );
 
-// Una meta del día como número solo: lo de hoy y la meta («6.240 / 8.000»), con su nombre encima
-type GoalNumProps = { key: string; value: string; goal: string; label: string };
-const GoalNum = ({ value, goal, label }: Omit<GoalNumProps, 'key'>) => (
-  <View style={styles.goalNum} accessible accessibilityLabel={`${label}: ${value} / ${goal}`}>
-    <Text style={styles.goalNumLabel} numberOfLines={1}>
-      {label}
-    </Text>
-    <Text style={styles.goalNumValue} numberOfLines={1} adjustsFontSizeToFit>
-      {value}
-      <Text style={styles.goalNumGoal}> / {goal}</Text>
-    </Text>
-  </View>
-);
+// Una meta del día como número solo: lo de hoy y la meta («6.240 / 8.000»), con su nombre encima y, debajo, su
+// línea de progreso en su color (fundador, 2026-11-16: «barra de progreso debajo de cada uno, cada uno con un
+// color»). Es una línea cometa, como los aros: estrecha y apagada al principio, más ancha hacia la punta y un
+// punto de luz en la cabeza («estilo igual que los dónuts, con el círculo brillante»). Hace de línea de separación.
+type GoalNumProps = { key: string; value: string; goal: string; label: string; progress: number | null; color: string };
+const GoalNum = ({ value, goal, label, progress, color }: Omit<GoalNumProps, 'key'>) => {
+  const p = progress == null ? 0 : Math.max(0, Math.min(1, progress));
+  return (
+    <View style={styles.goalNum} accessible accessibilityLabel={`${label}: ${value} / ${goal}`}>
+      <Text style={styles.goalNumLabel} numberOfLines={1}>
+        {label}
+      </Text>
+      <Text style={styles.goalNumValue} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+        <Text style={styles.goalNumGoal}> / {goal}</Text>
+      </Text>
+      <CometLine progress={p} colors={goalTones(color)} thickness={3.5} style={styles.goalComet} />
+    </View>
+  );
+};
+
+// Los tonos de la línea de una meta: de su color hundido en el fondo, a él, y a una punta más clara (como los
+// aros de las áreas)
+const goalTones = (c: string) => [mixHex(c, FINE.deep, 0.5), c, mixHex(c, '#FFFFFF', 0.3)];
+
+// Un color por meta, apagados y de luz parecida (sobre el esmeralda): pasos jade, kcal oro, distancia turquesa,
+// sueño lavanda y agua azul
+const GOAL_COLORS = { steps: FINE.jade, kcal: FINE.gold, distance: '#5CC7C9', sleep: '#A9A5E6', water: '#74B9E8' } as const;
 
 const BiomarkerCard = ({
   name,
@@ -683,6 +720,7 @@ const BiomarkerCard = ({
   above,
   onAdd,
   addLabel,
+  due,
 }: {
   name: string;
   icon: string;
@@ -699,9 +737,20 @@ const BiomarkerCard = ({
   above?: React.ReactNode; // primera capa, encima del valor (p. ej. Digestión: cómo te sienta)
   onAdd?: () => void; // «+» junto al valor: una vez más hoy
   addLabel?: string;
+  due?: boolean; // la que toca hoy
 }) => {
+  // Sin rojos ni naranjas (textos neutros, como el prototipo): lo de siempre en jade, lo que toca o pide una
+  // mirada en oro, sin dato apagado. La que toca hoy (pesarse), con el borde en oro
+  const tone = due ? FINE.gold : color === Colors.textMuted ? FINE.mute : [Colors.ok, Colors.accent, Colors.green].includes(color) ? FINE.jade : FINE.gold;
   const card = (
-  <TouchableOpacity style={[styles.biomarkerCard, wide && styles.biomarkerCardWide, tourId ? styles.biomarkerCardInSlot : null]} onPress={onPress} activeOpacity={0.85}>
+  <TouchableOpacity
+    style={[styles.biomarkerCard, wide && styles.biomarkerCardWide, tourId ? styles.biomarkerCardInSlot : null, due && styles.biomarkerDue]}
+    onPress={onPress}
+    activeOpacity={0.85}
+    // Con botones dentro (caras, «+») no se marca entera como botón: en la web no puede haber un botón dentro de otro
+    accessibilityRole={above || onAdd ? undefined : 'button'}
+    accessibilityLabel={above || onAdd ? undefined : `${name}: ${value} ${unit.split(' ')[0]}, ${status}`}
+  >
     <View style={styles.biomarkerHead}>
       <Text style={styles.biomarkerName}>{name}</Text>
     </View>
@@ -717,7 +766,7 @@ const BiomarkerCard = ({
         </TouchableOpacity>
       ) : null}
     </View>
-    <Text style={[styles.biomarkerStatus, { color }]}>{status}</Text>
+    <Text style={[styles.biomarkerStatus, { color: tone }]}>{status}</Text>
     {children ? <View style={{ marginTop: 10 }}>{children}</View> : null}
   </TouchableOpacity>
   );
@@ -744,7 +793,9 @@ const styles = StyleSheet.create({
   stateLine: { ...ff('regular'), color: FINE.ivory, fontSize: 15, lineHeight: 21 },
   // Las metas del día, números solos en rejilla de dos
   goalNums: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginTop: 4 },
-  goalNum: { width: '47%', paddingVertical: 10, minHeight: 58, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  goalNum: { width: '47%', paddingTop: 10, paddingBottom: 8, minHeight: 64 },
+  // La línea cometa deja sitio a su brillo en los dos extremos: se saca ese margen para que empiece donde el texto
+  goalComet: { marginTop: 4, marginHorizontal: -8, marginBottom: -4 },
   goalNumLabel: { ...ff('regular'), color: FINE.mute, fontSize: 12 },
   goalNumValue: { ...ff('regular'), color: FINE.ivory, fontSize: 20, marginTop: 2, fontVariant: ['tabular-nums'] },
   goalNumGoal: { ...ff('regular'), color: FINE.mute, fontSize: 12 },
@@ -755,18 +806,21 @@ const styles = StyleSheet.create({
   // A todo lo ancho de la tarjeta (centrada): si no, los cuatro círculos se juntan en medio
   ringsTap: { alignSelf: 'stretch' },
   summaryCard: {
-    backgroundColor: 'rgba(240,239,230,0.05)',
+    backgroundColor: FINE.tile,
     borderWidth: 1,
     borderColor: FINE.line,
     borderRadius: 14,
     paddingHorizontal: 14,
+    paddingTop: 12,
     marginHorizontal: 20,
+    marginTop: 14,
     marginBottom: 8,
   },
-  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
+  summaryKicker: { ...fine.kicker },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
   summaryDivider: { borderTopWidth: 1, borderTopColor: FINE.line },
-  summaryText: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 14, lineHeight: 19 },
-  summaryHighlight: { ...ff('medium'), color: FINE.gold },
+  summaryText: { ...ff('medium'), flex: 1, color: FINE.ivory, fontSize: 14.5, lineHeight: 20 },
+  summaryHighlight: { color: FINE.gold },
   // Sin tarjeta (rediseño «Emerald Luxury», 2026-11-15): la nebulosa flota sobre el fondo y los 7 días
   // quedan debajo de un separador fino
   checkInWrap: {
@@ -1048,16 +1102,18 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     marginTop: 12,
   },
+  // Dos columnas fijas: la que se queda sola en su fila (p. ej. la VFC) no se estira a todo el ancho (fundador,
+  // 2026-11-16: «que sea coherente con media pantalla»)
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    gap: 10,
+    rowGap: 10,
     marginBottom: 8,
   },
   biomarkerCard: {
-    width: '47%',
-    flexGrow: 1,
+    width: '48.5%',
     backgroundColor: FINE.tile,
     borderWidth: 1,
     borderColor: FINE.line,
@@ -1068,7 +1124,8 @@ const styles = StyleSheet.create({
   biomarkerCardWide: {
     width: '100%',
   },
-  biomarkerSlot: { width: '47%', flexGrow: 1 },
+  biomarkerDue: { borderColor: FINE.goldLine },
+  biomarkerSlot: { width: '48.5%' },
   // Las dos capas de Digestión e Hidratación: lo de arriba, una raya, y las veces con su «+»
   biomarkerAbove: { paddingBottom: 10, marginBottom: 10, borderBottomWidth: 1, borderBottomColor: FINE.line },
   biomarkerValueLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -1119,18 +1176,16 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   // La (i) va justo detrás del título, como en «Cumple tus objetivos» (fundador, 2026-11-11)
+  // Como los demás títulos de sección (fine.secHead): la raya arriba y el título con su (i) debajo
   sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    ...fine.secHead,
     gap: 6,
-    paddingRight: 20,
-    marginTop: 28,
-    marginBottom: 8,
+    marginHorizontal: 20,
   },
   sectionTitleInline: {
     marginTop: 0,
     marginBottom: 0,
-    paddingRight: 0,
+    paddingHorizontal: 0,
   },
   planCategory: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.4 },
   planIcon: {

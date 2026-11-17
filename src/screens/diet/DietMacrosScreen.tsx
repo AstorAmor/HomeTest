@@ -8,7 +8,7 @@ import { KeyboardAwareScroll } from '@/components/KeyboardAwareScroll';
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { MacroDonut } from '@/components/diet/MacroDonut';
 import { MacroTargetsPanel, type MacroFields } from '@/components/diet/MacroTargetsPanel';
-import { Colors } from '@/constants/colors';
+import { FButton, FLink, ON_BG, formStyles } from '@/components/fine/FineForm';
 import { loadDietContext } from '@/data/diet/context';
 import { dietRepository } from '@/data/diet/dietRepository';
 import type { DayTargets, DietPlan, DietTargets } from '@/data/diet/types';
@@ -16,7 +16,7 @@ import { cleanDayTargets, dayTotals, dietTargets, generateDiet, macroIssues, sel
 import { allSame, commonDraft, dayDrafts, draftPrefs, fitDrafts, sameDraft, saveDrafts, type DayDrafts } from '@/logic/dietDayMacros';
 import { WEEKDAYS_LONG, WEEKDAYS_SHORT } from '@/screens/diet/DietScreen';
 import { num, t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // «Calorías y macros» de tu menú, día a día, con el mismo panel que el dietista tiene en el portal (MacroTargetsPanel).
 // Fundador, 2026-11-06: «editar los macros nosotros, como el dietista» y luego «poder configurar lo de breakfast, lunch…
@@ -31,6 +31,8 @@ import { INTER } from '@/theme/fine';
 // (selfKcalFloor: el suelo del propio generador) y se sugiere un dietista. Tampoco si los números de algún día no
 // cuadran (macroIssues: el panel dice qué es; ese día, en naranja). Con «Para comentar con tu médico» en el menú, un
 // aviso neutro encima.
+// Rediseño del 2026-11-16 (lenguaje fino): sin tarjetas; el día elegido con borde jade, el resumen entre líneas finas,
+// «Aplicar a todos los días» como etiqueta con borde y los avisos en oro, sin alarma.
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const todayIndex = () => (new Date().getDay() + 6) % 7;
@@ -89,7 +91,7 @@ export const DietMacrosScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <ScreenHeader title={t('Calories and macros')} showBack backFallback="/diet" />
-        <ActivityIndicator color={Colors.accent} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={FINE.jade} style={{ marginTop: 40 }} />
       </SafeAreaView>
     );
   }
@@ -104,9 +106,7 @@ export const DietMacrosScreen = () => {
               ? t('Create your menu first: then you can set its calories and macros.')
               : t('{name} set the numbers of this menu. To change them, ask them.', { name: plan.professionalName || t('Your dietitian') })}
           </Text>
-          <TouchableOpacity style={styles.primary} onPress={() => (plan && fitted.length ? done() : router.replace('/diet-new'))}>
-            <Text style={styles.primaryText}>{plan && fitted.length ? t('Back to my menu') : t('Create my menu')}</Text>
-          </TouchableOpacity>
+          <FButton label={plan && fitted.length ? t('Back to my menu') : t('Create my menu')} onPress={() => (plan && fitted.length ? done() : router.replace('/diet-new'))} style={{ marginTop: 8 }} />
         </View>
       </SafeAreaView>
     );
@@ -169,7 +169,7 @@ export const DietMacrosScreen = () => {
         <Text style={styles.intro}>{t('Choose a day and set its numbers, as a dietitian would. Leave a box empty and we work it out from your answers.')}</Text>
         {cautions && (
           <View style={styles.caution}>
-            <Ionicons name="medkit-outline" size={16} color={Colors.accent} />
+            <Ionicons name="medkit-outline" size={16} color={FINE.gold} />
             <Text style={styles.cautionText}>{t('Your menu has points to discuss with your doctor. Check these numbers with them or with a dietitian before changing them.')}</Text>
           </View>
         )}
@@ -205,9 +205,16 @@ export const DietMacrosScreen = () => {
         <View style={styles.panel}>
           <View style={styles.panelHead}>
             <Text style={styles.panelTitle}>{t(WEEKDAYS_LONG[day.day])}</Text>
-            <TouchableOpacity style={[styles.applyBtn, same && styles.applyOff]} onPress={applyToAll} disabled={same} accessibilityLabel={t('Apply to all days')}>
-              <Ionicons name="copy-outline" size={14} color={same ? Colors.textMuted : Colors.accent} />
-              <Text style={[styles.applyText, same && { color: Colors.textMuted }]}>{t('Apply to all days')}</Text>
+            <TouchableOpacity
+              style={[styles.applyBtn, same && styles.applyOff]}
+              onPress={applyToAll}
+              disabled={same}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: same }}
+              accessibilityLabel={t('Apply to all days')}
+            >
+              <Ionicons name="copy-outline" size={14} color={same ? FINE.mute : FINE.jade} />
+              <Text style={[styles.applyText, same && { color: FINE.mute }]}>{t('Apply to all days')}</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.status}>{applied ? t('Done: every day has these numbers now.') : same ? t('Every day has the same numbers.') : ' '}</Text>
@@ -219,7 +226,7 @@ export const DietMacrosScreen = () => {
             hint={t('Empty boxes share what is left of the day. Your dishes stay and their portions follow your numbers.')}
           />
           {cleanDayTargets(draft) ? (
-            <TouchableOpacity onPress={() => setDay({ kcalTarget: null, proteinTarget: null, carbsTarget: null, fatTarget: null, meals: null })} hitSlop={8} style={{ marginTop: 10 }}>
+            <TouchableOpacity onPress={() => setDay({ kcalTarget: null, proteinTarget: null, carbsTarget: null, fatTarget: null, meals: null })} hitSlop={8} style={{ marginTop: 10 }} accessibilityRole="button">
               <Text style={styles.reset}>{t('Use the calculated ones for this day')}</Text>
             </TouchableOpacity>
           ) : null}
@@ -228,7 +235,7 @@ export const DietMacrosScreen = () => {
         {tooLow ? (
           <View style={styles.low}>
             <Text style={styles.lowText}>{t('Menus under {n} kcal a day are not made here. If you need one, a dietitian can make it for you.', { n: num(floor) })}</Text>
-            <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'dietitian' } })} hitSlop={8}>
+            <TouchableOpacity onPress={() => router.push({ pathname: '/professionals', params: { role: 'dietitian' } })} hitSlop={8} accessibilityRole="button">
               <Text style={styles.reset}>{t('Find a dietitian')}</Text>
             </TouchableOpacity>
           </View>
@@ -238,13 +245,8 @@ export const DietMacrosScreen = () => {
         ) : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <TouchableOpacity style={[styles.primary, (blocked || saving) && styles.disabled]} onPress={() => save(false)} disabled={blocked || saving}>
-          {saving ? <ActivityIndicator size="small" color={Colors.background} /> : <Text style={styles.primaryText}>{t('Save')}</Text>}
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.secondary, (blocked || saving) && styles.disabled]} onPress={() => save(true)} disabled={blocked || saving}>
-          <Ionicons name="sparkles-outline" size={16} color={Colors.accent} />
-          <Text style={styles.secondaryText}>{t('Save and choose new dishes')}</Text>
-        </TouchableOpacity>
+        <FButton label={t('Save')} onPress={() => save(false)} disabled={blocked || saving} busy={saving} style={{ marginTop: 8 }} />
+        <FLink label={t('Save and choose new dishes')} icon="sparkles-outline" onPress={() => save(true)} disabled={blocked || saving} />
       </KeyboardAwareScroll>
     </SafeAreaView>
   );
@@ -284,39 +286,37 @@ const CompareTable = ({ target, menu }: { target: DietTargets; menu: { kcal: num
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  content: { padding: 20, paddingBottom: 40, gap: 12 },
-  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  caution: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderWidth: 1, borderColor: Colors.accent, borderRadius: 12, padding: 12 },
-  cautionText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
-  days: { flexDirection: 'row', gap: 4 },
-  dayChip: { flex: 1, minWidth: 0, alignItems: 'center', gap: 2, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card },
-  dayChipOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  dayChipLow: { borderColor: Colors.warning },
-  dayName: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
-  dayKcal: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium, fontVariant: ['tabular-nums'] },
-  dayTextOn: { color: Colors.background },
-  summaryCard: { gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14 },
-  table: { gap: 4, borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 10 },
+  content: { padding: 20, paddingTop: 4, paddingBottom: 40, gap: 12 },
+  intro: { ...formStyles.lead, marginTop: 0 },
+  // Aviso para el médico: en oro, entre líneas finas, sin caja
+  caution: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', paddingVertical: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
+  cautionText: { flex: 1, ...ff('regular'), color: FINE.gold, fontSize: 13, lineHeight: 18 },
+  // Los 7 días con sus kcal; el elegido, con borde jade
+  days: { flexDirection: 'row', gap: 4, marginTop: 4 },
+  dayChip: { flex: 1, minWidth: 0, alignItems: 'center', gap: 3, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: 'transparent' },
+  dayChipOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  dayChipLow: { borderColor: FINE.goldLine },
+  dayName: { ...ff('regular'), color: FINE.mute, fontSize: 11 },
+  dayKcal: { ...ff('light'), color: FINE.ivory, fontSize: 13, fontVariant: ['tabular-nums'] },
+  dayTextOn: { ...ff('medium'), color: FINE.ivory },
+  // El donut y la tablita, entre líneas finas (debajo uno de otro: en una fila quedaba un hueco enorme)
+  summaryCard: { gap: 12, paddingVertical: 14, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
+  table: { gap: 6, borderTopWidth: 1, borderTopColor: FINE.line, paddingTop: 10 },
   tRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tLabelCol: { width: 82 },
-  tLabel: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
-  tHead: { flex: 1, color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium, textAlign: 'center' },
-  tCell: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, textAlign: 'center', fontVariant: ['tabular-nums'] },
-  panel: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14 },
+  tLabel: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  tHead: { flex: 1, ...fine.kicker, fontSize: 9.5, textAlign: 'center' },
+  tCell: { flex: 1, ...ff('regular'), color: FINE.ivory, fontSize: 13.5, textAlign: 'center', fontVariant: ['tabular-nums'] },
+  panel: { paddingTop: 6 },
   panelHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  panelTitle: { flex: 1, color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  applyBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: Colors.accent, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
-  applyOff: { borderColor: Colors.cardBorder },
-  applyText: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium },
-  status: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 6 },
-  reset: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  low: { gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 12, padding: 12 },
-  lowText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
-  badText: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginTop: 10 },
-  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13 },
-  primary: { alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14, marginTop: 4 },
-  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  disabled: { opacity: 0.5 },
+  panelTitle: { flex: 1, ...ff('medium'), color: FINE.ivory, fontSize: 19, lineHeight: 24 },
+  applyBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 32, borderWidth: 1, borderColor: FINE.jadeLine, borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5 },
+  applyOff: { borderColor: FINE.line },
+  applyText: { ...ff('regular'), color: FINE.jade, fontSize: 12.5 },
+  status: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, marginTop: 6 },
+  reset: { ...fine.link },
+  low: { gap: 6, paddingVertical: 10, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
+  lowText: { ...formStyles.warn },
+  badText: { ...formStyles.warn, marginTop: 10 },
+  error: { ...formStyles.error },
 });

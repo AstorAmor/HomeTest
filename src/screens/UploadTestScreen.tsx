@@ -143,7 +143,7 @@ export const UploadTestScreen = () => {
       const isAbort = err instanceof Error && err.name === 'AbortError';
       setErrorText(
         isAbort
-          ? `A batch took longer than ${REQUEST_TIMEOUT_MS / 1000}s and was canceled. Try fewer pages per batch or lighter photos.`
+          ? t('A batch took longer than {n}s and was canceled. Try fewer pages per batch or lighter photos.', { n: REQUEST_TIMEOUT_MS / 1000 })
           : isNetworkError(err)
             ? t('Could not connect to Kuova. Check that you have internet (Wi-Fi or mobile data) and tap Analyse again: your photos are still here.')
             : err instanceof Error

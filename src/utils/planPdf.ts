@@ -1,4 +1,4 @@
-import { dateLocale } from '@/i18n';
+import { dateLocale, getLang, t } from '@/i18n';
 import { currentReport, findMarkerInCurrentReport } from '@/data/reportRepository';
 import {
   getActionPlanContentEn,
@@ -36,6 +36,7 @@ export interface PlanDoc {
   actions: PlanDocAction[];
 }
 
+// La etiqueta entera («High confidence», «Medium confidence», «Low confidence») pasa por t() al armar el HTML
 const CONFIDENCE_EN: Record<string, string> = { alta: 'High', media: 'Medium', baja: 'Low' };
 
 export function buildPlanDoc(patientName: string, generatedAt = new Date()): PlanDoc {
@@ -105,15 +106,15 @@ function projectionSvg(p: PlanDocAction['projection']): string {
   const band = [...curve.map((c) => xy(c.month, c.high)), ...[...curve].reverse().map((c) => xy(c.month, c.low))].join(' ');
   const line = curve.map((c, i) => `${i ? 'L' : 'M'}${xy(c.month, c.expected)}`).join(' ');
   const last = curve[curve.length - 1];
-  return `<svg viewBox="0 0 ${W} ${H + 18}" class="chart" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Projection for ${esc(p.markerName)}">
+  return `<svg viewBox="0 0 ${W} ${H + 18}" class="chart" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(t('Projection for {marker}', { marker: p.markerName }))}">
   <line x1="${x(3)}" x2="${x(3)}" y1="4" y2="${H - 4}" stroke="#D9D2C5" stroke-dasharray="3,4"/>
   <polygon points="${band}" fill="#C9A36B" fill-opacity="0.22"/>
   <path d="${line}" fill="none" stroke="#0E2A24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="${x(0)}" cy="${y(p.current)}" r="3.5" fill="#748A82"/>
   <circle cx="${x(last.month)}" cy="${y(last.expected)}" r="4.5" fill="#0E2A24"/>
-  <text x="${x(0)}" y="${H + 14}" font-size="10" fill="#5E6B66">Now · ${esc(withUnit(p.current, p.unit))}</text>
-  <text x="${x(3)}" y="${H + 14}" font-size="10" fill="#5E6B66" text-anchor="middle">3 months</text>
-  <text x="${x(HORIZON_MONTHS)}" y="${H + 14}" font-size="10" fill="#5E6B66" text-anchor="end">6 months · ~${esc(withUnit(p.expected, p.unit))}</text>
+  <text x="${x(0)}" y="${H + 14}" font-size="10" fill="#5E6B66">${esc(t('Now'))} · ${esc(withUnit(p.current, p.unit))}</text>
+  <text x="${x(3)}" y="${H + 14}" font-size="10" fill="#5E6B66" text-anchor="middle">${esc(t('3 months'))}</text>
+  <text x="${x(HORIZON_MONTHS)}" y="${H + 14}" font-size="10" fill="#5E6B66" text-anchor="end">${esc(t('6 months'))} · ~${esc(withUnit(p.expected, p.unit))}</text>
 </svg>`;
 }
 
@@ -133,7 +134,7 @@ export function planToHtml(doc: PlanDoc): string {
       return `<section class="action">
   <div class="action-head">
     <h2><span class="num">${i + 1}</span>${esc(a.title)}</h2>
-    <span class="badge">${esc(a.confidence)} confidence</span>
+    <span class="badge">${esc(t(`${a.confidence} confidence`))}</span>
   </div>
   ${a.why.map((w) => `<p class="why">${esc(w)}</p>`).join('\n  ')}
   ${a.how.length ? `<ul class="how">${a.how.map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
@@ -141,18 +142,18 @@ export function planToHtml(doc: PlanDoc): string {
   <div class="projection">
     <div class="projection-head">
       <strong>${esc(p.markerName)}</strong>
-      <span>${esc(withUnit(p.current, p.unit))} → ~${esc(withUnit(p.expected, p.unit))} in 6 months
-        <em>(expected ${p.low}–${p.high}${p.unit ? ` ${esc(p.unit)}` : ''})</em></span>
+      <span>${esc(t('{from} → ~{to} in 6 months', { from: withUnit(p.current, p.unit), to: withUnit(p.expected, p.unit) }))}
+        <em>${esc(t('(expected {range})', { range: `${p.low}–${p.high}${p.unit ? ` ${p.unit}` : ''}` }))}</em></span>
     </div>
     ${projectionSvg(p)}
-    ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
+    ${p.note ? `<p class="note">${esc(t(p.note))}</p>` : ''}
   </div>
 </section>`;
     })
     .join('\n');
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${getLang()}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -191,18 +192,18 @@ export function planToHtml(doc: PlanDoc): string {
 <body>
 <header>
   <div class="brand">${WORDMARK}<small>HEALTH</small></div>
-  <div class="doc-title"><h1>Personalised plan</h1><span>What you can do and what we expect to improve</span></div>
+  <div class="doc-title"><h1>${esc(t('Personalised plan'))}</h1><span>${esc(t('What you can do and what we expect to improve'))}</span></div>
 </header>
 <div class="meta">
-  <div>Name<strong>${esc(doc.patientName)}</strong></div>
-  <div>Based on the blood test of<strong>${esc(longDate(isoToDate(doc.testDate)))}</strong></div>
-  <div>Generated<strong>${esc(longDate(doc.generatedAt))}</strong></div>
+  <div>${esc(t('Name'))}<strong>${esc(doc.patientName)}</strong></div>
+  <div>${esc(t('Based on the blood test of'))}<strong>${esc(longDate(isoToDate(doc.testDate)))}</strong></div>
+  <div>${esc(t('Generated'))}<strong>${esc(longDate(doc.generatedAt))}</strong></div>
 </div>
-<p class="intro">Each action explains why it matters for you, how to do it, and where the related marker could be at your next test in about ${HORIZON_MONTHS} months. The shaded band is the expected range: it widens over time because it is an estimate, not a promise.</p>
+<p class="intro">${esc(t('Each action explains why it matters for you, how to do it, and where the related marker could be at your next test in about {n} months. The shaded band is the expected range: it widens over time because it is an estimate, not a promise.', { n: HORIZON_MONTHS }))}</p>
 ${actions}
 <footer>
-  These are estimates based on your results and habits, not a diagnosis. Talk to your doctor before starting supplements or changing any medication.
-  Generated with Kuova Health · kuovahealth.com
+  ${esc(t('These are estimates based on your results and habits, not a diagnosis. Talk to your doctor before starting supplements or changing any medication.'))}
+  ${esc(t('Generated with Kuova Health · kuovahealth.com'))}
 </footer>
 </body>
 </html>`;
@@ -211,8 +212,8 @@ ${actions}
 // Versión en texto (para compartir sin PDF cuando el móvil no tiene el módulo de impresión).
 export function planToText(doc: PlanDoc): string {
   const lines = [
-    `Personalised plan · ${doc.patientName}`,
-    `Based on the blood test of ${longDate(isoToDate(doc.testDate))}`,
+    `${t('Personalised plan')} · ${doc.patientName}`,
+    `${t('Based on the blood test of')} ${longDate(isoToDate(doc.testDate))}`,
     '',
   ];
   doc.actions.forEach((a, i) => {
@@ -220,9 +221,9 @@ export function planToText(doc: PlanDoc): string {
     lines.push(`${i + 1}. ${a.title}`);
     a.how.forEach((h) => lines.push(`   • ${h}`));
     a.caveats.forEach((c) => lines.push(`   ⚠ ${c}`));
-    lines.push(`   ${p.markerName}: ${withUnit(p.current, p.unit)} → ~${withUnit(p.expected, p.unit)} in 6 months`);
+    lines.push(`   ${p.markerName}: ${t('{from} → ~{to} in 6 months', { from: withUnit(p.current, p.unit), to: withUnit(p.expected, p.unit) })}`);
     lines.push('');
   });
-  lines.push('Estimates, not a diagnosis. Generated with Kuova Health.');
+  lines.push(t('Estimates, not a diagnosis. Generated with Kuova Health.'));
   return lines.join('\n');
 }

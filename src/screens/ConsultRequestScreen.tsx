@@ -4,8 +4,8 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
+import { AppIcon } from '@/components/HealthIcons';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { consult, isRealProfessional } from '@/data/consultations';
 import { ConsultRequest, REQUEST_KIND_LABEL, RequestKind } from '@/data/specialistTypes';
@@ -14,7 +14,8 @@ import { StoredAudio, VoiceRecorder } from '@/components/VoiceNote';
 import { createShare, DataShare, isShareActive, listMyShares, scopeLabel, SHARE_SCOPES, ShareScope } from '@/data/sharing';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
-import { INTER } from '@/theme/fine';
+import { FOption, ON_BG } from '@/components/fine/FineForm';
+import { FINE, ff } from '@/theme/fine';
 
 const KINDS: { id: RequestKind; icon: string; hint: string }[] = [
   { id: 'question', icon: 'help-circle-outline', hint: 'A quick question about your health or plan' },
@@ -26,6 +27,8 @@ const shortDate = (iso: string) => new Date(iso).toLocaleDateString(dateLocale()
 
 // "Send request": pregunta o petición que el especialista contesta cuando puede
 // (sin cita). Debajo, las solicitudes anteriores con este especialista y su respuesta.
+// En la estética fina (2026-11-16, con el resto de especialistas): el tipo en filas con una línea fina y el círculo
+// de marcar, chips con borde fino (jade lo elegido), cabeceras pequeñas en mayúsculas y el botón en esmeralda.
 export const ConsultRequestScreen = () => {
   const { user } = useAuth();
   const { pro: proId, name: proName } = useLocalSearchParams<{ pro: string; name: string }>();
@@ -79,7 +82,7 @@ export const ConsultRequestScreen = () => {
       setState('sent');
       load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send');
+      setError(e instanceof Error ? e.message : tr('Could not send'));
       setState('error');
     }
   };
@@ -88,18 +91,19 @@ export const ConsultRequestScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ScreenHeader title={tr('Send a request')} showBack />
-        <Text style={styles.intro}>to {proName}. They'll answer in the app, usually within 48 h.</Text>
+        <Text style={styles.intro}>{tr("to {name}. They'll answer in the app, usually within 48 h.", { name: proName })}</Text>
 
-        <View style={{ gap: 8 }}>
-          {KINDS.map((k) => (
-            <TouchableOpacity key={k.id} style={[styles.kind, kind === k.id && styles.kindOn]} onPress={() => setKind(k.id)}>
-              <Ionicons name={k.icon as any} size={20} color={kind === k.id ? Colors.accent : Colors.textSecondary} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.kindTitle}>{REQUEST_KIND_LABEL[k.id]}</Text>
-                <Text style={styles.kindHint}>{k.hint}</Text>
-              </View>
-              {kind === k.id && <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />}
-            </TouchableOpacity>
+        <View accessibilityRole="radiogroup">
+          {KINDS.map((k, i) => (
+            <FOption
+              key={k.id}
+              title={REQUEST_KIND_LABEL[k.id]}
+              hint={tr(k.hint)}
+              on={kind === k.id}
+              onPress={() => setKind(k.id)}
+              left={<Ionicons name={k.icon as any} size={20} color={kind === k.id ? FINE.jade : FINE.mute} />}
+              last={i === KINDS.length - 1}
+            />
           ))}
         </View>
 
@@ -112,18 +116,18 @@ export const ConsultRequestScreen = () => {
             if (state === 'sent') setState('idle');
           }}
           placeholder={tr('Write your message')}
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={FINE.mute}
         />
         <View style={{ marginTop: 10 }}>
           <VoiceRecorder key={recorderKey} onChange={setAudioUri} />
         </View>
 
-        <Text style={styles.section}>Share your data with {proName}</Text>
+        <Text style={styles.section}>{tr('Share your data with {name}', { name: proName })}</Text>
         {share ? (
           <View style={styles.shared}>
-            <Ionicons name="shield-checkmark" size={18} color={Colors.ok} />
+            <Ionicons name="shield-checkmark-outline" size={18} color={FINE.jade} />
             <Text style={styles.sharedText}>
-              You share: {share.scopes.map(scopeLabel).join(', ')}. Change it in More → Sharing & privacy.
+              {tr('You share: {what}. Change it in You → Sharing & privacy.', { what: share.scopes.map(scopeLabel).join(', ') })}
             </Text>
           </View>
         ) : localShared ? (
@@ -139,23 +143,26 @@ export const ConsultRequestScreen = () => {
                     key={s.id}
                     style={[styles.scope, on && styles.scopeOn]}
                     onPress={() => setScopes((prev) => (on ? prev.filter((x) => x !== s.id) : [...prev, s.id]))}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on }}
                   >
-                    <Ionicons name={s.icon as any} size={14} color={on ? Colors.background : Colors.textSecondary} />
-                    <Text style={[styles.scopeText, on && { color: Colors.background }]}>{s.label}</Text>
+                    {/* AppIcon: las pesas («Actividad y entrenos») salen con el dibujo único de la app (fine/dumbbell.ts) */}
+                    <AppIcon name={s.icon} size={14} color={on ? FINE.jade : FINE.mute} />
+                    <Text style={[styles.scopeText, on && styles.scopeTextOn]}>{s.label}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
             <TouchableOpacity style={[styles.shareBtn, scopes.length === 0 && { opacity: 0.5 }]} disabled={scopes.length === 0 || shareState === 'saving'} onPress={doShare}>
-              <Ionicons name="share-social-outline" size={16} color={Colors.accent} />
-              <Text style={styles.shareBtnText}>{shareState === 'saving' ? tr('Sharing…') : `Share with ${proName}`}</Text>
+              <Ionicons name="share-social-outline" size={16} color={FINE.jade} />
+              <Text style={styles.shareBtnText}>{shareState === 'saving' ? tr('Sharing…') : tr('Share with {name}', { name: proName })}</Text>
             </TouchableOpacity>
             {shareState === 'error' ? <Text style={styles.error}>{tr('Could not share. Try again.')}</Text> : null}
           </>
         )}
         {state === 'sent' && (
           <Text style={styles.sent}>
-            Sent ✓ {isRealProfessional(proId) ? '' : '(prototype: this specialist isn’t on Kuova yet)'}
+            {real ? tr('Sent ✓') : tr('Sent ✓ (prototype: this specialist isn’t on Kuova yet)')}
           </Text>
         )}
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -182,7 +189,7 @@ export const ConsultRequestScreen = () => {
       </KeyboardAwareScrollView>
       <KeyboardFooter>
         <TouchableOpacity style={[styles.cta, !message.trim() && !audioUri && { opacity: 0.5 }]} disabled={(!message.trim() && !audioUri) || state === 'sending'} onPress={send}>
-          {state === 'sending' ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.ctaText}>{tr('Send request')}</Text>}
+          {state === 'sending' ? <ActivityIndicator color={FINE.ivory} /> : <Text style={styles.ctaText}>{tr('Send request')}</Text>}
         </TouchableOpacity>
       </KeyboardFooter>
     </SafeAreaView>
@@ -192,29 +199,30 @@ export const ConsultRequestScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
-  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginTop: -6, marginBottom: 16 },
-  kind: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12 },
-  kindOn: { borderColor: Colors.accent },
-  kindTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  kindHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 1 },
-  input: { minHeight: 110, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, padding: 12, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, textAlignVertical: 'top', marginTop: 16 },
-  sent: { color: Colors.ok, fontSize: 13, fontFamily: INTER.medium, marginTop: 8 },
-  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginTop: 8 },
-  section: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 24, marginBottom: 10 },
-  card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, marginBottom: 8, gap: 6 },
-  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
-  msg: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  answer: { borderLeftWidth: 3, borderLeftColor: Colors.accent, paddingLeft: 10 },
-  answerText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  shared: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: Colors.card, borderRadius: 12, padding: 12 },
-  sharedText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flex: 1, lineHeight: 18 },
-  shareHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginBottom: 8 },
+  intro: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, marginTop: -6, marginBottom: 8 },
+  input: { ...ff('regular'), minHeight: 110, borderWidth: 1, borderColor: FINE.line, backgroundColor: FINE.tile, borderRadius: 14, padding: 12, color: FINE.ivory, fontSize: 14, textAlignVertical: 'top', marginTop: 16 },
+  sent: { ...ff('regular'), color: FINE.jade, fontSize: 13, marginTop: 8 },
+  // Lo que no ha salido: un coral suave, sin rojo de alarma (como formStyles.error)
+  error: { ...ff('regular'), color: '#E9A48F', fontSize: 13, marginTop: 8 },
+  // Cabeceras de sección pequeñas y en mayúsculas (como fine.secTitle)
+  section: { ...ff('semibold'), color: FINE.mute, fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase', marginTop: 26, marginBottom: 10 },
+  card: { backgroundColor: FINE.tile, borderWidth: 1, borderColor: FINE.line, borderRadius: 14, padding: 12, marginBottom: 8, gap: 6 },
+  meta: { ...ff('regular'), color: FINE.mute, fontSize: 12 },
+  msg: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 20 },
+  answer: { borderLeftWidth: 1, borderLeftColor: FINE.jade, paddingLeft: 10 },
+  answerText: { ...ff('regular'), color: FINE.ivory, fontSize: 13, lineHeight: 19 },
+  shared: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: FINE.tile, borderWidth: 1, borderColor: FINE.line, borderRadius: 14, padding: 12 },
+  sharedText: { ...ff('regular'), color: FINE.ivory, fontSize: 13, flex: 1, lineHeight: 18 },
+  shareHint: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 18, marginBottom: 10 },
   scopes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  scope: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
-  scopeOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  scopeText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 10, borderWidth: 1, borderColor: Colors.accent, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8 },
-  shareBtnText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  cta: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 16, alignItems: 'center', marginHorizontal: 20, marginBottom: 12 },
-  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  // Chips con borde fino; elegido, borde jade y letra marfil (como FChip)
+  scope: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 34, borderWidth: 1, borderColor: FINE.line, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+  scopeOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  scopeText: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  scopeTextOn: { color: FINE.ivory },
+  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginTop: 12, minHeight: 36, borderWidth: 1, borderColor: FINE.jadeLine, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  shareBtnText: { ...ff('regular'), color: FINE.jade, fontSize: 13 },
+  // Botón principal: esmeralda con la letra marfil (como FButton)
+  cta: { backgroundColor: FINE.emerald, borderRadius: 22, paddingVertical: 13, minHeight: 48, justifyContent: 'center', alignItems: 'center', marginHorizontal: 20, marginBottom: 12 },
+  ctaText: { ...ff('medium'), color: '#F0EFE6', fontSize: 15 },
 });

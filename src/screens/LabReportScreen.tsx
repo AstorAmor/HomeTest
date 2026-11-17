@@ -4,18 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { DonutChart } from '@/components/DonutChart';
-import { MarkerRangeBar } from '@/components/MarkerRangeBar';
-import { Colors } from '@/constants/colors';
+import { Chev } from '@/components/fine/Fine';
+import { DonutLegend, FineDonut, LabGauge, labStyles, StatusWord } from '@/components/fine/FineLab';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import { FLAG_LABEL, categoryLabel } from '@/utils/reportDisplay';
-import { findLabReport, flagColor, formatReportDate, markerNameEn, rangePosition, reportCounts } from '@/utils/labReportView';
+import { findLabReport, formatReportDate, markerNameEn, reportCounts } from '@/utils/labReportView';
 import { t } from '@/i18n';
 import { markerHref } from '@/utils/markerLinks';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Resultados de un informe por secciones (se usa para informes anteriores;
 // el último abre el recorrido completo de report-summary).
+// Desde el 2026-11-16, en fino como «Tu informe» del prototipo: el rosco de jade y oro con su leyenda, cada
+// sección con su raya y su título pequeño (se abre y se cierra) y cada valor en una fila con su línea de rango.
 export const LabReportScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,67 +40,69 @@ export const LabReportScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Lab Results')} showBack />
 
-        <View style={styles.summary}>
-          <DonutChart
-            size={96}
-            strokeWidth={11}
-            segments={[
-              { value: counts.inRange, color: Colors.ok },
-              { value: counts.needsReview, color: Colors.attention },
-            ]}
-            centerLabel={`${counts.inRange}`}
-            centerSubLabel={t('of {n}', { n: counts.total })}
-          />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.date}>
-              {formatReportDate(report.test_date)} · {entry.lab}
-            </Text>
-            <Text style={styles.counts}>
-              <Text style={{ color: Colors.ok }}>{t('{n} in range', { n: counts.inRange })}</Text>
-              {'  ·  '}
-              <Text style={{ color: Colors.attention }}>{t('{n} need a look', { n: counts.needsReview })}</Text>
-            </Text>
+        <View style={styles.body}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={fine.rowSub}>
+            {formatReportDate(report.test_date)} · {entry.lab}
+          </Text>
+          <View style={styles.donutRow}>
+            <FineDonut size={112} inRange={counts.inRange} review={counts.needsReview} label={`${counts.inRange}`} sub={t('of {n}', { n: counts.total })} />
+            <DonutLegend inRange={counts.inRange} review={counts.needsReview} />
           </View>
-        </View>
 
-        {report.sections.map((section) => {
-          const isOpen = open.has(section.category_id);
-          const flagged = section.markers.filter((m) => m.flag !== 'en_rango').length;
-          return (
-            <View key={section.category_id} style={styles.section}>
-              <TouchableOpacity style={styles.sectionHeader} onPress={() => toggle(section.category_id)}>
-                <Text style={styles.sectionTitle}>{categoryLabel(section.category_id)}</Text>
-                <Text style={[styles.sectionCount, flagged > 0 && { color: Colors.attention }]}>
-                  {flagged > 0 ? t('{n} to review', { n: flagged }) : t('{n} in range', { n: section.markers.length })}
-                </Text>
-                <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
-              </TouchableOpacity>
-              {isOpen &&
-                section.markers.map((m) => {
-                  const pos = rangePosition(m);
-                  const content = (
-                    <>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.markerName}>{markerNameEn(m)}</Text>
-                        <Text style={[styles.markerFlag, { color: flagColor(m) }]}>{t(FLAG_LABEL[m.flag])}</Text>
-                      </View>
-                      <View style={styles.markerRight}>
-                        <Text style={styles.markerValue}>{getMarkerValueTextEn(m.value, m.unit)}</Text>
-                        {pos !== null && <MarkerRangeBar position={pos} color={flagColor(m)} width={84} />}
-                      </View>
-                    </>
-                  );
-                  // Al tocarlo, ese marcador en Mis datos con todos sus valores (fundador, 2026-11-06)
-                  return (
-                    <TouchableOpacity key={m.marker_id} style={styles.markerRow} onPress={() => router.push(markerHref(m.marker_id, `report:${reportId}`))}>
-                      {content}
-                    </TouchableOpacity>
-                  );
-                })}
-            </View>
-          );
-        })}
+          {report.sections.map((section) => {
+            const isOpen = open.has(section.category_id);
+            const flagged = section.markers.filter((m) => m.flag !== 'en_rango').length;
+            return (
+              <View key={section.category_id}>
+                <TouchableOpacity
+                  style={[fine.secHead, styles.sectionHead]}
+                  onPress={() => toggle(section.category_id)}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isOpen }}
+                >
+                  <Text style={[fine.secTitle, styles.flex]} accessibilityRole="header">
+                    {categoryLabel(section.category_id)}
+                  </Text>
+                  <Text style={[styles.sectionCount, flagged > 0 && { color: FINE.gold }]}>
+                    {flagged > 0 ? t('{n} to review', { n: flagged }) : t('{n} in range', { n: section.markers.length })}
+                  </Text>
+                  <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={15} color={FINE.mute} />
+                </TouchableOpacity>
+                {isOpen &&
+                  section.markers.map((m, i) => {
+                    const v = typeof m.value === 'number' ? m.value : Number(m.value);
+                    const out = m.flag !== 'en_rango';
+                    // Al tocarlo, ese marcador en Mis datos con todos sus valores (fundador, 2026-11-06)
+                    return (
+                      <TouchableOpacity
+                        key={m.marker_id}
+                        style={[fine.row, i === section.markers.length - 1 && styles.noLine]}
+                        onPress={() => router.push(markerHref(m.marker_id, `report:${reportId}`))}
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${markerNameEn(m)}, ${getMarkerValueTextEn(m.value, m.unit)}, ${t(FLAG_LABEL[m.flag])}`}
+                      >
+                        <View style={styles.flex}>
+                          <Text style={fine.rowTitle} numberOfLines={2}>
+                            {markerNameEn(m)}
+                          </Text>
+                          <LabGauge value={Number.isNaN(v) ? null : v} low={m.range.low} high={m.range.high} style={labStyles.rowGauge} />
+                        </View>
+                        <View style={styles.right}>
+                          <Text style={fine.rowValue}>{getMarkerValueTextEn(m.value, m.unit)}</Text>
+                          <StatusWord label={t(FLAG_LABEL[m.flag])} tone={out ? 'out' : 'in'} />
+                        </View>
+                        <Chev />
+                      </TouchableOpacity>
+                    );
+                  })}
+              </View>
+            );
+          })}
+          <Text style={fine.note}>{t('The band on each line is the range of the lab; the dot is your result.')}</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -108,38 +111,13 @@ export const LabReportScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  summary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 18,
-    marginHorizontal: 20,
-    marginBottom: 20,
-  },
-  title: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium },
-  date: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
-  counts: { fontSize: 13, fontFamily: INTER.medium, marginTop: 6, color: Colors.textMuted },
-  section: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 10,
-    paddingHorizontal: 16,
-  },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14 },
-  sectionTitle: { ...fine.secTitle, flex: 1 },
-  sectionCount: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
-  markerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-  },
-  markerName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  markerFlag: { fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  markerRight: { alignItems: 'flex-end', gap: 6 },
-  markerValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  body: { paddingHorizontal: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  noLine: { borderBottomWidth: 0 },
+  title: { ...ff('light'), color: FINE.ivory, fontSize: 24, lineHeight: 30, letterSpacing: -0.2 },
+  donutRow: { flexDirection: 'row', alignItems: 'center', gap: 22, marginTop: 18, marginBottom: 4 },
+  // Las secciones van seguidas (se abren y se cierran): menos aire que una cabecera suelta
+  sectionHead: { marginTop: 14, marginBottom: 0 },
+  sectionCount: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  right: { alignItems: 'flex-end', gap: 2 },
 });

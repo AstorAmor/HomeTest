@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
 import { exerciseName, isLoadable, kgHead } from '@/data/workouts/catalog';
 import { blockLabel, doseText, restText } from '@/data/workouts/labels';
 import type { CatalogExercise, WorkoutExercise } from '@/data/workouts/types';
@@ -10,8 +9,9 @@ import { isTimedReps, timeText } from '@/logic/workoutTimer';
 import { useRevealOnFocus } from '@/components/KeyboardAwareScroll';
 import { ExerciseLoop } from './ExerciseLoop';
 import { REST_OPTIONS } from './ExerciseBlock';
+import { FChip, ON_BG, formStyles } from '@/components/fine/FineForm';
 import { t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Un ejercicio en el editor de rutina, como «Edit Routine» de Hevy: en el sitio, sin ir a otra pantalla.
 // Miniatura y nombre (tocar = cómo se hace), ⋮ para subir, bajar, cambiar o quitar,
@@ -22,6 +22,8 @@ import { INTER } from '@/theme/fine';
 // 2 min»), y al tocarlo se abre todo lo de arriba (fundador, 2026-11-06: «más condensados, a modo lista… no que aparezca
 // todo desplegado de un principio»). Sin `onToggle`, siempre abierto (la hoja de «Ver las sesiones»). El ⋮ sale si hay
 // algo que hacer con él (subir, bajar, cambiar o quitar).
+// Con el lenguaje fino (2026-11-16): fila con línea fina, nombre en marfil, chips con borde y casillas casi
+// transparentes; «Añadir serie» en jade, sin caja.
 
 export const RoutineExerciseCard = ({
   item,
@@ -68,7 +70,7 @@ export const RoutineExerciseCard = ({
   return (
     <View style={[styles.card, !open && styles.cardClosed]}>
       <View style={styles.head}>
-        <TouchableOpacity onPress={onOpen} accessibilityLabel={exerciseName(ex)}>
+        <TouchableOpacity onPress={onOpen} accessibilityRole="button" accessibilityLabel={exerciseName(ex)}>
           <ExerciseLoop exercise={ex} size={46} radius={23} />
         </TouchableOpacity>
         <TouchableOpacity
@@ -83,28 +85,28 @@ export const RoutineExerciseCard = ({
               {exerciseName(ex)}
             </Text>
             {!open && (
-              <Text style={styles.summary} numberOfLines={2}>
+              <Text style={fine.rowSub} numberOfLines={2}>
                 {summary}
               </Text>
             )}
             {item.block !== 'main' ? <Text style={styles.block}>{blockLabel(item.block)}</Text> : null}
           </View>
-          {onToggle ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} /> : null}
+          {onToggle ? <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={16} color={FINE.mute} /> : null}
         </TouchableOpacity>
         {hasMenu && (
-          <TouchableOpacity onPress={() => setMenu((v) => !v)} hitSlop={10} accessibilityLabel={t('More options')} accessibilityState={{ expanded: menu }}>
-            <Ionicons name="ellipsis-vertical" size={20} color={Colors.textPrimary} />
+          <TouchableOpacity onPress={() => setMenu((v) => !v)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('More options')} accessibilityState={{ expanded: menu }}>
+            <Ionicons name="ellipsis-vertical" size={19} color={menu ? FINE.jade : FINE.mute} />
           </TouchableOpacity>
         )}
       </View>
 
       {menu && hasMenu && (
         <View style={styles.menu}>
-          {!first && onMove && <MenuItem icon="arrow-up" label={t('Move up')} onPress={() => onMove(-1)} />}
-          {!last && onMove && <MenuItem icon="arrow-down" label={t('Move down')} onPress={() => onMove(1)} />}
+          {!first && onMove && <MenuItem icon="arrow-up-outline" label={t('Move up')} onPress={() => onMove(-1)} />}
+          {!last && onMove && <MenuItem icon="arrow-down-outline" label={t('Move down')} onPress={() => onMove(1)} />}
           {onReplace && (
             <MenuItem
-              icon="swap-horizontal"
+              icon="swap-horizontal-outline"
               label={t('Replace')}
               onPress={() => {
                 setMenu(false);
@@ -119,41 +121,50 @@ export const RoutineExerciseCard = ({
       {open && (
         <>
           <View style={styles.chips}>
-            <TouchableOpacity style={[styles.chip, restOpen && styles.chipOn]} onPress={() => setRestOpen((v) => !v)} accessibilityState={{ expanded: restOpen }}>
-              <Ionicons name="timer-outline" size={16} color={Colors.textPrimary} />
-              <Text style={styles.chipText}>{item.restSec ? t('Rest: {time}', { time: timeText(item.restSec) }) : t('Rest: off')}</Text>
+            <TouchableOpacity
+              style={[styles.chip, restOpen && styles.chipOn]}
+              onPress={() => setRestOpen((v) => !v)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: restOpen }}
+            >
+              <Ionicons name="timer-outline" size={15} color={restOpen ? FINE.jade : FINE.mute} />
+              <Text style={[styles.chipText, restOpen && styles.chipTextOn]}>
+                {item.restSec ? t('Rest: {time}', { time: timeText(item.restSec) }) : t('Rest: off')}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.chip, noteOpen && styles.chipOn]} onPress={() => setNoteOpen((v) => !v)}>
-              <Ionicons name="document-text-outline" size={16} color={Colors.textPrimary} />
-              <Text style={styles.chipText}>{t('Note')}</Text>
+            <TouchableOpacity
+              style={[styles.chip, noteOpen && styles.chipOn]}
+              onPress={() => setNoteOpen((v) => !v)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: noteOpen }}
+            >
+              <Ionicons name="document-text-outline" size={15} color={noteOpen ? FINE.jade : FINE.mute} />
+              <Text style={[styles.chipText, noteOpen && styles.chipTextOn]}>{t('Note')}</Text>
             </TouchableOpacity>
           </View>
           {restOpen && (
             <View style={styles.options}>
-              {REST_OPTIONS.map((sec) => {
-                const on = item.restSec === sec;
-                return (
-                  <TouchableOpacity
-                    key={sec}
-                    style={[styles.option, on && styles.chipOn]}
-                    onPress={() => {
-                      onChange({ restSec: sec });
-                      setRestOpen(false);
-                    }}
-                  >
-                    <Text style={[styles.optionText, on && { color: Colors.textPrimary }]}>{sec ? timeText(sec) : t('No rest')}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {REST_OPTIONS.map((sec) => (
+                <FChip
+                  key={sec}
+                  label={sec ? timeText(sec) : t('No rest')}
+                  on={item.restSec === sec}
+                  onPress={() => {
+                    onChange({ restSec: sec });
+                    setRestOpen(false);
+                  }}
+                />
+              ))}
             </View>
           )}
           {noteOpen && (
             <TextInput
-              style={styles.note}
+              style={[formStyles.input, styles.note]}
               value={item.note ?? ''}
               onChangeText={(v) => onChange({ note: v.slice(0, 200) || undefined })}
               placeholder={t('Add a note')}
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={FINE.mute}
+              accessibilityLabel={t('Note')}
               onFocus={reveal}
               multiline
             />
@@ -162,9 +173,14 @@ export const RoutineExerciseCard = ({
           <View style={styles.tableHead}>
             <Text style={[styles.h, styles.colSet]}>{t('Set')}</Text>
             {withKg && <Text style={[styles.h, styles.colBox]}>{kgHead(ex)}</Text>}
-            <TouchableOpacity style={[styles.colBox, styles.repsHead]} onPress={onToggleTimed} accessibilityLabel={timed ? t('Count by reps') : t('Count by time')}>
-              <Text style={styles.h}>{timed ? t('Seconds') : 'Reps'}</Text>
-              <Ionicons name="caret-down" size={12} color={Colors.textMuted} />
+            <TouchableOpacity
+              style={[styles.colBox, styles.repsHead]}
+              onPress={onToggleTimed}
+              accessibilityRole="button"
+              accessibilityLabel={timed ? t('Count by reps') : t('Count by time')}
+            >
+              <Text style={[styles.h, { color: FINE.jade }]}>{timed ? t('Seconds') : 'Reps'}</Text>
+              <Ionicons name="chevron-down" size={12} color={FINE.jade} />
             </TouchableOpacity>
           </View>
           {draft.map((d, i) => (
@@ -183,7 +199,7 @@ export const RoutineExerciseCard = ({
                   value={d.kg}
                   onChangeText={(v) => setRow(i, { kg: v.replace(/[^\d.,]/g, '').slice(0, 6) })}
                   placeholder="–"
-                  placeholderTextColor={Colors.textMuted}
+                  placeholderTextColor={FINE.mute}
                   keyboardType="decimal-pad"
                   selectTextOnFocus
                   onFocus={reveal}
@@ -195,7 +211,7 @@ export const RoutineExerciseCard = ({
                 value={d.reps}
                 onChangeText={(v) => setRow(i, { reps: v.replace(timed ? /\D/g : /[^\d–-]/g, '').slice(0, 7) })}
                 placeholder="–"
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={FINE.mute}
                 keyboardType="number-pad"
                 selectTextOnFocus
                 onFocus={reveal}
@@ -203,8 +219,12 @@ export const RoutineExerciseCard = ({
               />
             </View>
           ))}
-          <TouchableOpacity style={styles.addSet} onPress={() => onDraft([...draft, { ...(draft[draft.length - 1] ?? { kg: '', reps: timed ? '30' : '10' }) }])}>
-            <Ionicons name="add" size={18} color={Colors.textPrimary} />
+          <TouchableOpacity
+            style={styles.addSet}
+            onPress={() => onDraft([...draft, { ...(draft[draft.length - 1] ?? { kg: '', reps: timed ? '30' : '10' }) }])}
+            accessibilityRole="button"
+          >
+            <Ionicons name="add" size={17} color={FINE.jade} />
             <Text style={styles.addSetText}>{t('Add set')}</Text>
           </TouchableOpacity>
         </>
@@ -214,55 +234,54 @@ export const RoutineExerciseCard = ({
 };
 
 const MenuItem = ({ icon, label, onPress, danger }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void; danger?: boolean }) => (
-  <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-    <Ionicons name={icon} size={16} color={danger ? Colors.danger : Colors.textPrimary} />
-    <Text style={[styles.menuText, danger && { color: Colors.danger }]}>{label}</Text>
+  <TouchableOpacity style={styles.menuItem} onPress={onPress} accessibilityRole="button">
+    <Ionicons name={icon} size={15} color={danger ? DANGER : FINE.mute} />
+    <Text style={[styles.menuText, danger && { color: DANGER }]}>{label}</Text>
   </TouchableOpacity>
 );
 
 const H = 44;
+const DANGER = formStyles.error.color; // «Quitar», sin rojo de alarma
 
 const styles = StyleSheet.create({
-  card: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: Colors.divider, gap: 10 },
+  card: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: FINE.line, gap: 10 },
   cardClosed: { paddingVertical: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   headMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { color: Colors.accent, fontSize: 17, fontFamily: INTER.medium },
-  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
-  block: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  name: { ...ff('medium'), color: FINE.ivory, fontSize: 16, lineHeight: 21 },
+  block: { ...ff('regular'), color: FINE.mute, fontSize: 12, marginTop: 2 },
   menu: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  menuText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: FINE.line, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7, minHeight: 36 },
+  menuText: { ...ff('regular'), color: FINE.ivory, fontSize: 13.5 },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: FINE.line, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7, minHeight: 36 },
+  chipOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  chipText: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
+  chipTextOn: { color: FINE.ivory },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  option: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  optionText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  note: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 10, backgroundColor: Colors.card, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44 },
+  note: { fontSize: 14, minHeight: 44 },
   tableHead: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 2, marginTop: 4 },
-  h: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', textAlign: 'center' },
-  repsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 4 },
+  h: { ...ff('regular'), color: FINE.mute, fontSize: 10.5, letterSpacing: 0.9, textTransform: 'uppercase', textAlign: 'center' },
+  repsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 4, minHeight: 28 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 2, paddingVertical: 4 },
   colSet: { width: 40 },
   // minWidth 0: en la web una casilla de texto no encoge por debajo de su ancho natural
   colBox: { flex: 1, minWidth: 0 },
-  setNo: { height: H, borderRadius: 8, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
-  setNoText: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  setNo: { height: H, alignItems: 'center', justifyContent: 'center' },
+  setNoText: { ...ff('regular'), color: FINE.ivory, fontSize: 15, fontVariant: ['tabular-nums'] },
   box: {
+    ...ff('regular'),
     height: H,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 8,
-    backgroundColor: Colors.background,
-    color: Colors.textPrimary,
+    borderColor: FINE.line,
+    borderRadius: 10,
+    backgroundColor: FINE.tile,
+    color: FINE.ivory,
     fontSize: 17,
-    fontFamily: INTER.medium,
     textAlign: 'center',
     paddingHorizontal: 4,
     fontVariant: ['tabular-nums'],
   },
-  addSet: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, borderRadius: 10, backgroundColor: Colors.card, marginTop: 4 },
-  addSetText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  addSet: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 44, marginTop: 2 },
+  addSetText: { ...ff('regular'), color: FINE.jade, fontSize: 14 },
 });

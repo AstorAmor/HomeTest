@@ -24,18 +24,24 @@ import { FINE, ff, fine } from '@/theme/fine';
 type QuestionId = 'sleep' | 'energy' | 'stress' | 'dayRating' | 'mood';
 type ScaleId = Exclude<QuestionId, 'mood'>;
 
-// Qué se pregunta según el momento del día (primera respuesta del check-in).
+// Qué se pregunta según el momento del día (primera respuesta del check-in). La energía va siempre arriba, que
+// es la pregunta que se repite en los tres momentos (fundador, 2026-11-16: «dejaría que arriba esté siempre la
+// energía»); debajo, la propia de cada momento.
 const QUESTIONS: Record<DayMoment, QuestionId[]> = {
-  just_woke_up: ['sleep', 'energy', 'mood'],
+  just_woke_up: ['energy', 'sleep', 'mood'],
   mid_day: ['energy', 'stress', 'mood'],
-  winding_down: ['dayRating', 'energy', 'mood'],
+  winding_down: ['energy', 'dayRating', 'mood'],
 };
 
+// Cada escala, una etiqueta y los números 1 a 5, sin preguntas ni palabras coloquiales (fundador, 2026-11-17: «más
+// preciso, más científico… «A tope» es súper malo»; «Energía y la regla, Estrés y la regla»). Se guarda lo mismo, de 1 a 5:
+// la base de datos solo acepta 1-5 y el fundador eligió números 1-5 antes que una migración a 0-10.
+const SCALE_STEPS = ['1', '2', '3', '4', '5'];
 const QUESTION_TEXT: Record<ScaleId, { title: string; labels: string[] }> = {
-  sleep: { title: 'How did you sleep?', labels: ['Terrible', 'Poor', 'OK', 'Good', 'Great'] },
-  energy: { title: "How's your energy level?", labels: ['Drained', 'Low', 'OK', 'Good', 'Full'] },
-  stress: { title: 'How stressed do you feel?', labels: ['Not at all', 'A little', 'Some', 'Quite', 'Very'] },
-  dayRating: { title: 'How was your day?', labels: ['Rough', 'Meh', 'OK', 'Good', 'Great'] },
+  sleep: { title: 'Sleep quality', labels: SCALE_STEPS },
+  energy: { title: 'Energy', labels: SCALE_STEPS },
+  stress: { title: 'Stress', labels: SCALE_STEPS },
+  dayRating: { title: 'Day rating', labels: SCALE_STEPS },
 };
 
 // El nombre corto de cada momento en sus pestañas, como en el prototipo (Mañana · Mediodía · Noche); el largo
@@ -256,7 +262,7 @@ export const CheckInScreen = () => {
             </View>
             {pastMidnight && <Text style={fine.note}>{t('It is the small hours, so it counts for yesterday.')}</Text>}
 
-            {/* Cada escala, una regla de 5 posiciones: se guarda lo mismo que antes, de 1 a 5 */}
+            {/* Cada escala, una regla de 5 posiciones numeradas: se guarda lo mismo que antes, de 1 a 5 */}
             {scales.map((q) => (
               <Ruler
                 key={q}
@@ -267,10 +273,10 @@ export const CheckInScreen = () => {
               />
             ))}
 
-            <SecHead title={t('How are you feeling?')} />
+            <SecHead title={t('Mood')} />
             <MoodFaces value={mood} onChange={setMood} />
 
-            <SecHead title={t('Anything else? (optional)')} />
+            <SecHead title={t('Tags (optional)')} />
             {/* Etiquetas para marcar con un toque: quedan registradas con el check-in (2026-11-16) */}
             <View style={styles.chips}>
               {tagsFor(sex).map((tag) => {

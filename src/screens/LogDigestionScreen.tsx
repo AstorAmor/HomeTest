@@ -3,10 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Colors } from '@/constants/colors';
-import { IntestineIcon } from '@/components/IntestineIcon';
-import { ChoiceChips } from '@/components/ChoiceChips';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
+import { SecHead } from '@/components/fine/Fine';
+import { CheckRow, CloseButton, FineButton, FineChip, FineChips, FineLink, measureStyles } from '@/components/fine/FineMeasure';
 import { dayKey, noonOf } from '@/data/bathroomRepository';
 import { digestionRepository, usualFoodsStore } from '@/data/digestionRepository';
 import { FOOD_GROUPS, FoodGroup, inferFoodGroups } from '@/logic/foodGroups';
@@ -24,8 +25,7 @@ import {
   UsualFoods,
 } from '@/types/digestion';
 import { dateLocale, t } from '@/i18n';
-import { logScreenStyles } from './LogBowelScreen';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Cuándo empezó: hoy, "hace un rato"; otro día, la parte del día (hora aproximada)
 const AGO = [
@@ -46,6 +46,9 @@ const PART_OF_DAY = [
 // antes y cuánto). No se pregunta nada de comida antes de que pase algo, ni se usan las comidas de
 // "Tus nutrientes". "Hoy, bien" también se apunta: sin los días buenos no se puede comparar.
 // ?day=AAAA-MM-DD para otro día (desde las barras de la semana); ?id= abre la comida de un apunte.
+// Desde el 2026-11-16, en el lenguaje fino del prototipo: sin icono en círculo de color, cada molestia en una
+// fila con línea fina y su escala (Nada · Leve · Moderado · Fuerte) como la del check-in, las preguntas con
+// cabecera pequeña, chips con borde y un solo botón de Guardar abajo.
 export const LogDigestionScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ day?: string; id?: string }>();
@@ -160,77 +163,59 @@ export const LogDigestionScreen = () => {
 
   const dayLabel = new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
 
+  // La × de cerrar (con un enlace directo no hay pantalla anterior: lleva a Digestión)
+  const closeButton = <CloseButton onPress={close} />;
+
   if (step === 'food') {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.topBar}>
-          <TouchableOpacity style={styles.circleButton} onPress={close}>
-            <Ionicons name="close" size={22} color={Colors.textPrimary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.circleButton, answeredFood && styles.circleButtonActive]} onPress={saveFood} disabled={saving}>
-            <Ionicons name="checkmark" size={22} color={answeredFood ? Colors.background : Colors.textMuted} />
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader title={t('What did you eat before?')} right={closeButton} />
 
         <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <View style={styles.iconBadge}>
-              <Ionicons name="restaurant-outline" size={24} color={Colors.green} />
-            </View>
-            <Text style={styles.title}>{t('What did you eat before?')}</Text>
-            <Text style={styles.subtitle}>
-              {params.id
-                ? t('The last meal or snack before you noticed it.')
-                : t('Saved. Now the last meal or snack before you noticed it: it helps us see what disagrees with you.')}
-            </Text>
-          </View>
+          <Text style={styles.lead}>
+            {params.id
+              ? t('The last meal or snack before you noticed it.')
+              : t('Saved. Now the last meal or snack before you noticed it: it helps us see what disagrees with you.')}
+          </Text>
 
-          <TouchableOpacity style={[styles.toggle, fasted && styles.toggleOn]} onPress={() => setFasted(!fasted)} activeOpacity={0.85}>
-            <Ionicons name={fasted ? 'checkbox' : 'square-outline'} size={20} color={fasted ? Colors.accent : Colors.textMuted} />
-            <Text style={styles.toggleText}>{t('I had not eaten for hours')}</Text>
-          </TouchableOpacity>
+          <CheckRow label={t('I had not eaten for hours')} on={fasted} onPress={() => setFasted(!fasted)} style={styles.firstRow} />
 
           {!fasted && (
             <>
-              <Text style={styles.label}>{t('What was it?')}</Text>
+              <SecHead title={t('What was it?')} />
               <TextInput
-                style={styles.note}
+                style={measureStyles.input}
                 value={description}
                 onChangeText={setDescription}
                 placeholder={t('For example: coffee with milk and toast')}
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={FINE.mute}
                 multiline
+                accessibilityLabel={t('What was it?')}
               />
 
-              <Text style={styles.label}>{t('Did it have any of these?')}</Text>
+              <SecHead title={t('Did it have any of these?')} />
               {!!description.trim() && <Text style={styles.foodHint}>{t('We filled it in from what you wrote. Tap to fix it.')}</Text>}
-              <View style={styles.groups}>
-                {FOOD_GROUPS.map((g) => {
-                  const on = selected.includes(g.id);
-                  return (
-                    <TouchableOpacity key={g.id} style={[styles.group, on && styles.groupOn]} onPress={() => toggleGroup(g.id)} activeOpacity={0.85}>
-                      <Ionicons name={on ? 'checkbox' : 'square-outline'} size={18} color={on ? Colors.accent : Colors.textMuted} />
-                      <Text style={styles.groupText}>{t(g.label)}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
+              <View style={styles.chips}>
+                {FOOD_GROUPS.map((g) => (
+                  <FineChip key={g.id} label={t(g.label)} on={selected.includes(g.id)} onPress={() => toggleGroup(g.id)} multi />
+                ))}
               </View>
 
-              <Text style={styles.label}>{t('How long before you noticed it?')}</Text>
-              <ChoiceChips options={MINUTES_BEFORE.map((o) => ({ id: o.id, label: t(o.label) }))} value={minutesBefore} onChange={setMinutesBefore} />
+              <SecHead title={t('How long before you noticed it?')} />
+              <FineChips options={MINUTES_BEFORE.map((o) => ({ id: o.id, label: t(o.label) }))} value={minutesBefore} onChange={setMinutesBefore} />
 
-              <Text style={styles.label}>{t('How much did you eat?')}</Text>
-              <ChoiceChips options={MEAL_AMOUNTS.map((o) => ({ id: o.id, label: t(o.label) }))} value={amount} onChange={setAmount} />
+              <SecHead title={t('How much did you eat?')} />
+              <FineChips options={MEAL_AMOUNTS.map((o) => ({ id: o.id, label: t(o.label) }))} value={amount} onChange={setAmount} />
 
               {/* Solo la primera vez que sale cada grupo: es con lo que comparamos */}
               {askUsual.length > 0 && (
                 <>
-                  <Text style={styles.label}>{t('How often do you usually have it?')}</Text>
+                  <SecHead title={t('How often do you usually have it?')} />
                   <Text style={styles.foodHint}>{t('Only the first time: it tells us whether it shows up more than usual.')}</Text>
-                  {askUsual.map((g) => (
-                    <View key={g} style={styles.usual}>
-                      <Text style={styles.usualTitle}>{t(FOOD_GROUPS.find((x) => x.id === g)!.label)}</Text>
-                      <ChoiceChips
+                  {askUsual.map((g, i) => (
+                    <View key={g} style={[styles.usual, i === askUsual.length - 1 && styles.lastRow]}>
+                      <Text style={fine.rowTitle}>{t(FOOD_GROUPS.find((x) => x.id === g)!.label)}</Text>
+                      <FineChips
                         options={USUAL_FREQUENCIES.map((o) => ({ id: o.id, label: t(o.label) }))}
                         value={usualNew[g]}
                         onChange={(v) => setUsualNew((u) => ({ ...u, [g]: v }))}
@@ -241,45 +226,36 @@ export const LogDigestionScreen = () => {
               )}
             </>
           )}
-
-          <TouchableOpacity style={styles.skip} onPress={close}>
-            <Text style={styles.skipText}>{t('Not now')}</Text>
-          </TouchableOpacity>
         </KeyboardAwareScrollView>
+
+        <KeyboardFooter>
+          <View style={measureStyles.footer}>
+            {/* Como el ✓ de antes: apagado hasta contestar algo, pero pulsarlo sin nada cierra */}
+            <FineButton label={t('Save')} onPress={saveFood} disabled={saving} dim={!answeredFood} />
+            <FineLink label={t('Not now')} onPress={close} style={styles.skip} />
+          </View>
+        </KeyboardFooter>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={close}>
-          <Ionicons name="close" size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.circleButton, any && styles.circleButtonActive]} onPress={save} disabled={saving || !any}>
-          <Ionicons name="checkmark" size={22} color={any ? Colors.background : Colors.textMuted} />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader title={isToday ? t('What do you feel?') : dayLabel} right={closeButton} />
 
       <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <View style={styles.iconBadge}>
-            <IntestineIcon size={26} color={Colors.green} />
-          </View>
-          <Text style={styles.title}>{isToday ? t('What do you feel?') : dayLabel}</Text>
-          <Text style={styles.subtitle}>
-            {t('Only what you feel in your tummy; stools go in Stools. Then we ask what you ate before.')}
-          </Text>
-        </View>
+        <Text style={styles.lead}>{t('Only what you feel in your tummy; stools go in Stools. Then we ask what you ate before.')}</Text>
 
-        {/* Los días buenos cuentan tanto como los malos */}
+        {/* Los días buenos cuentan tanto como los malos: botón con borde jade, secundario */}
         <TouchableOpacity
           style={[styles.okButton, dayOk && styles.okButtonDone]}
           onPress={saveDayOk}
           disabled={saving || dayOk}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: saving || dayOk }}
         >
-          <Ionicons name={dayOk ? 'checkmark-circle' : 'happy-outline'} size={20} color={Colors.ok} />
+          <Ionicons name={dayOk ? 'checkmark-circle-outline' : 'happy-outline'} size={18} color={FINE.jade} />
           <Text style={styles.okText}>
             {dayOk
               ? t('Marked as a good day')
@@ -294,136 +270,109 @@ export const LogDigestionScreen = () => {
         </TouchableOpacity>
         <Text style={styles.okHint}>{t('Good days matter too: without them we cannot compare.')}</Text>
 
-        {GUT_SYMPTOMS.map((s) => (
-          <View key={s.id} style={styles.symptom}>
-            <Text style={styles.symptomTitle}>{t(s.label)}</Text>
-            <Text style={styles.symptomHint}>{t(s.hint)}</Text>
-            {/* Nada · Leve · Moderado · Fuerte en una sola fila, para que sea rápido */}
-            <View style={styles.levels}>
-              {[{ id: 0, label: 'Not at all' }, ...INTENSITIES].map((o) => {
-                const on = (levels[s.id] ?? 0) === o.id;
-                return (
-                  <TouchableOpacity
-                    key={o.id}
-                    style={[styles.level, on && (o.id ? styles.levelOn : styles.levelNone)]}
-                    onPress={() => setLevels((l) => ({ ...l, [s.id]: o.id ? (o.id as Intensity) : undefined }))}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={[styles.levelText, on && styles.levelTextOn]} numberOfLines={1}>
-                      {t(o.label)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+        <View style={styles.symptoms}>
+          {GUT_SYMPTOMS.map((s, i) => (
+            <View key={s.id} style={[styles.symptom, i === GUT_SYMPTOMS.length - 1 && styles.lastRow]}>
+              <Text style={fine.rowTitle}>{t(s.label)}</Text>
+              <Text style={fine.rowSub}>{t(s.hint)}</Text>
+              {/* Nada · Leve · Moderado · Fuerte en una sola fila, para que sea rápido (la escala del check-in) */}
+              <View style={styles.levels} accessibilityRole="radiogroup" accessibilityLabel={t(s.label)}>
+                {[{ id: 0, label: 'Not at all' }, ...INTENSITIES].map((o) => {
+                  const on = (levels[s.id] ?? 0) === o.id;
+                  return (
+                    <TouchableOpacity
+                      key={o.id}
+                      style={[styles.level, on && (o.id ? styles.levelOn : styles.levelNone)]}
+                      onPress={() => setLevels((l) => ({ ...l, [s.id]: o.id ? (o.id as Intensity) : undefined }))}
+                      activeOpacity={0.8}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: on }}
+                    >
+                      <Text style={[styles.levelText, on && styles.levelTextOn]} numberOfLines={1}>
+                        {t(o.label)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-          </View>
-        ))}
+          ))}
+        </View>
 
         {any && (
           <>
-            <Text style={styles.label}>{isToday ? t('When did it start?') : t('Roughly when?')}</Text>
-            <ChoiceChips options={(isToday ? AGO : PART_OF_DAY).map((o) => ({ id: o.id, label: t(o.label) }))} value={when} onChange={setWhen} />
-            <TouchableOpacity style={[styles.toggle, woke && styles.toggleOn]} onPress={() => setWoke(!woke)} activeOpacity={0.85}>
-              <Ionicons name={woke ? 'checkbox' : 'square-outline'} size={20} color={woke ? Colors.accent : Colors.textMuted} />
-              <Text style={styles.toggleText}>{t('It woke me up at night')}</Text>
-            </TouchableOpacity>
+            <SecHead title={isToday ? t('When did it start?') : t('Roughly when?')} />
+            <FineChips options={(isToday ? AGO : PART_OF_DAY).map((o) => ({ id: o.id, label: t(o.label) }))} value={when} onChange={setWhen} />
+            <CheckRow label={t('It woke me up at night')} on={woke} onPress={() => setWoke(!woke)} style={styles.wokeRow} />
 
-            <Text style={styles.label}>{t('Anything else? (optional)')}</Text>
+            <SecHead title={t('Anything else? (optional)')} />
             <TextInput
-              style={styles.note}
+              style={measureStyles.input}
               value={note}
               onChangeText={setNote}
               placeholder={t('Stress, period, travelling…')}
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor={FINE.mute}
               multiline
+              accessibilityLabel={t('Anything else? (optional)')}
             />
           </>
         )}
       </KeyboardAwareScrollView>
+
+      <KeyboardFooter>
+        <View style={measureStyles.footer}>
+          <FineButton label={t('Save')} onPress={save} disabled={saving || !any} />
+        </View>
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  ...logScreenStyles,
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  content: { paddingHorizontal: 20, paddingBottom: 24 },
+  lead: { ...fine.note, marginTop: 0 },
+  lastRow: { borderBottomWidth: 0 },
+  firstRow: { marginTop: 10, borderTopWidth: 1, borderTopColor: FINE.line },
+  wokeRow: { marginTop: 8, borderTopWidth: 1, borderTopColor: FINE.line },
+  // «Hoy, bien»: píldora con borde jade, centrada (acción secundaria)
   okButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
     gap: 8,
-    marginTop: 16,
-    paddingVertical: 13,
-    borderRadius: 14,
+    marginTop: 18,
+    minHeight: 42,
+    paddingHorizontal: 18,
+    borderRadius: 21,
     borderWidth: 1,
-    borderColor: Colors.ok,
-    backgroundColor: Colors.card,
+    borderColor: FINE.jadeLine,
   },
-  okButtonDone: { opacity: 0.7 },
-  okText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  okHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 6, marginBottom: 6 },
-  symptom: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 12,
-    marginTop: 10,
-    gap: 6,
-  },
-  symptomTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  symptomHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginBottom: 4 },
-  levels: { flexDirection: 'row', gap: 6 },
+  okButtonDone: { opacity: 0.6 },
+  okText: { ...ff('medium'), color: FINE.jade, fontSize: 14 },
+  okHint: { ...fine.note, textAlign: 'center', marginTop: 8 },
+  // Cada molestia, una fila con línea fina y su escala debajo
+  symptoms: { marginTop: 14, borderTopWidth: 1, borderTopColor: FINE.line },
+  symptom: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  // La escala del check-in (prototipo, `.scale`): casillas con línea fina; la elegida, esmeralda con borde jade
+  levels: { flexDirection: 'row', gap: 6, marginTop: 10 },
   level: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 12,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: 2,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.background,
+    borderColor: FINE.line,
   },
-  levelNone: { borderColor: Colors.textMuted },
-  levelOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  levelText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  levelTextOn: { color: Colors.textPrimary },
-  toggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 14,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-  },
-  toggleOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  toggleText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  foodHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 10 },
-  groups: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  group: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-  },
-  groupOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  groupText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
-  usual: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 8,
-    gap: 8,
-  },
-  usualTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  skip: { alignItems: 'center', paddingVertical: 14, marginTop: 10 },
-  skipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium, textDecorationLine: 'underline' },
+  levelNone: { borderColor: 'rgba(240,239,230,0.3)' },
+  levelOn: { borderColor: FINE.jade, backgroundColor: FINE.emerald },
+  levelText: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
+  levelTextOn: { color: FINE.ivory },
+  foodHint: { ...fine.note, marginTop: -2, marginBottom: 10 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  usual: { gap: 8, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  skip: { marginTop: 4 },
 });

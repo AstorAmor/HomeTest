@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
+import { AppIcon } from '@/components/HealthIcons';
 import { WheelPicker } from '@/components/WheelPicker';
 import {
   ActivityLevel,
@@ -20,18 +21,30 @@ import {
   profileRepository,
 } from '@/data/profileRepository';
 import { AppPurpose, appPrefs, PURPOSE_OPTIONS } from '@/data/appPrefs';
-import { sectionsFromAnswers } from '@/data/goalEffects';
 import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { requestTourAfterOnboarding } from '@/components/tour/tourStore';
+// Opciones, ruedas y lo que se enciende al guardar: compartido con «Sobre ti» de Mi perfil (2026-11-16)
+import {
+  ACTIVITY_OPTIONS,
+  ALCOHOL_OPTIONS,
+  applyProfileSections,
+  DAYS,
+  DAYS_OPTIONS,
+  dobFromWheels,
+  HEIGHTS,
+  MONTHS,
+  SEX_OPTIONS,
+  SLEEP_OPTIONS,
+  SMOKING_OPTIONS,
+  STEPS_OPTIONS,
+  toggleConditionIn,
+  WEIGHTS,
+  wheelsFromDob,
+  YEARS,
+} from '@/components/profile/profileFields';
 import { INTER } from '@/theme/fine';
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
-const YEARS = Array.from({ length: 81 }, (_, i) => String(1930 + i));
-const HEIGHTS = Array.from({ length: 71 }, (_, i) => String(140 + i));
-const WEIGHTS = Array.from({ length: 111 }, (_, i) => String(40 + i));
 
 type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'activity' | 'habits' | 'health' | 'goals';
 
@@ -39,14 +52,6 @@ type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'activity' | 'habits' | 'health
 // app no se pregunta: sale de estas respuestas (src/data/goalEffects.ts) y se ajusta luego en
 // More → Configure my experience.
 const STEPS: Step[] = ['purpose', 'dob', 'sex', 'body', 'activity', 'habits', 'health', 'goals'];
-
-// Días a la semana de fuerza y de cardio («3» = 3 o más): sin entrenos registrados, el plan parte de aquí
-const DAYS_OPTIONS = [
-  { id: '0', label: 'None' },
-  { id: '1', label: '1 day' },
-  { id: '2', label: '2 days' },
-  { id: '3', label: '3 or more' },
-];
 
 interface ChipOption<T extends string> {
   id: T;
@@ -114,11 +119,11 @@ export const OnboardingScreen = () => {
     profileRepository
       .get()
       .then((p) => {
-        if (p.dateOfBirth) {
-          const [y, m, d] = p.dateOfBirth.split('-').map(Number);
-          if (YEARS.includes(String(y))) setYear(YEARS.indexOf(String(y)));
-          setMonth(m - 1);
-          setDay(d - 1);
+        const dob = wheelsFromDob(p.dateOfBirth);
+        if (dob) {
+          setYear(dob.year);
+          setMonth(dob.month);
+          setDay(dob.day);
         }
         if (p.sex) setSex(p.sex);
         if (p.heightCm && HEIGHTS.includes(String(p.heightCm))) setHeight(HEIGHTS.indexOf(String(p.heightCm)));
@@ -147,7 +152,7 @@ export const OnboardingScreen = () => {
     const current = await profileRepository.get();
     const profile: UserProfile = { ...current, goals };
     if (answered.has('dob')) {
-      profile.dateOfBirth = `${YEARS[year]}-${String(month + 1).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}`;
+      profile.dateOfBirth = dobFromWheels(day, month, year);
     }
     if (sex) profile.sex = sex;
     if (answered.has('body')) {
@@ -166,9 +171,7 @@ export const OnboardingScreen = () => {
 
   // Enciende lo que piden sus respuestas (p. ej. medicación si toma alguna, el ciclo si cuida su
   // salud reproductiva y es mujer); lo demás queda como esté
-  const applySections = async (profile: UserProfile) => {
-    for (const section of sectionsFromAnswers(profile)) await appPrefs.setSectionVisible(section, true);
-  };
+  const applySections = applyProfileSections;
 
   const skipAll = async () => {
     if (purposes.length) await appPrefs.setPurposes(purposes);
@@ -196,12 +199,7 @@ export const OnboardingScreen = () => {
     router.replace('/(tabs)');
   };
 
-  const toggleCondition = (id: ConditionId) =>
-    setConditions((prev) => {
-      if (id === 'none') return prev.includes('none') ? [] : ['none'];
-      const without = prev.filter((c) => c !== 'none');
-      return without.includes(id) ? without.filter((c) => c !== id) : [...without, id];
-    });
+  const toggleCondition = (id: ConditionId) => setConditions((prev) => toggleConditionIn(prev, id));
 
   const toggleGoal = (id: GoalId) =>
     setGoals((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
@@ -278,14 +276,7 @@ export const OnboardingScreen = () => {
             <Text style={styles.title}>{tr("What's your biological sex?")}</Text>
             <Text style={styles.subtitle}>{tr('Many markers (iron, hormones…) have different ranges.')}</Text>
             <View style={styles.bigOptions}>
-              {(
-                [
-                  { id: 'female', label: 'Female', icon: 'female' },
-                  { id: 'male', label: 'Male', icon: 'male' },
-                  { id: 'other', label: 'Other', icon: 'male-female' },
-                  { id: 'undisclosed', label: 'Prefer not to say', icon: 'remove-circle-outline' },
-                ] as const
-              ).map((o) => {
+              {SEX_OPTIONS.map((o) => {
                 const selected = sex === o.id;
                 return (
                   <TouchableOpacity
@@ -326,32 +317,13 @@ export const OnboardingScreen = () => {
               {tr('Roughly is fine. If you log your workouts or connect a watch, your plan will use that instead.')}
             </Text>
             <Text style={styles.question}>{tr('How active are you?')}</Text>
-            <ChipGroup
-              value={activity}
-              onChange={setActivity}
-              options={[
-                { id: 'sedentary', label: 'Mostly sitting' },
-                { id: 'light', label: 'Light activity' },
-                { id: 'active', label: 'Fairly active' },
-                { id: 'very_active', label: 'Very active' },
-              ]}
-            />
+            <ChipGroup value={activity} onChange={setActivity} options={ACTIVITY_OPTIONS} />
             <Text style={styles.question}>{tr('How many days a week do you do strength training?')}</Text>
             <ChipGroup value={strengthDays != null ? String(strengthDays) : undefined} onChange={(v) => setStrengthDays(Number(v))} options={DAYS_OPTIONS} />
             <Text style={styles.question}>{tr('And cardio (running, cycling, swimming…)?')}</Text>
             <ChipGroup value={cardioDays != null ? String(cardioDays) : undefined} onChange={(v) => setCardioDays(Number(v))} options={DAYS_OPTIONS} />
             <Text style={styles.question}>{tr('How many steps do you walk a day?')}</Text>
-            <ChipGroup
-              value={stepsBand}
-              onChange={setStepsBand}
-              options={[
-                { id: 'lt5k', label: 'Fewer than 5,000' },
-                { id: '5to7k', label: '5,000-7,500' },
-                { id: '7to10k', label: '7,500-10,000' },
-                { id: 'gt10k', label: 'More than 10,000' },
-                { id: 'unknown', label: "I don't know" },
-              ]}
-            />
+            <ChipGroup value={stepsBand} onChange={setStepsBand} options={STEPS_OPTIONS} />
           </>
         )}
 
@@ -360,38 +332,11 @@ export const OnboardingScreen = () => {
             <Text style={styles.title}>{tr('Your habits')}</Text>
             <Text style={styles.subtitle}>{tr('Knowing where you start from helps us build a plan that fits you.')}</Text>
             <Text style={styles.question}>{tr('How much do you usually sleep?')}</Text>
-            <ChipGroup
-              value={sleep}
-              onChange={setSleep}
-              options={[
-                { id: 'lt6', label: '< 6 h' },
-                { id: '6to7', label: '6–7 h' },
-                { id: '7to8', label: '7–8 h' },
-                { id: 'gt8', label: '> 8 h' },
-              ]}
-            />
+            <ChipGroup value={sleep} onChange={setSleep} options={SLEEP_OPTIONS} />
             <Text style={styles.question}>{tr('Do you smoke?')}</Text>
-            <ChipGroup
-              value={smoking}
-              onChange={setSmoking}
-              options={[
-                { id: 'never', label: 'Never' },
-                { id: 'former', label: 'I used to' },
-                { id: 'occasional', label: 'Occasionally' },
-                { id: 'current', label: 'Yes' },
-              ]}
-            />
+            <ChipGroup value={smoking} onChange={setSmoking} options={SMOKING_OPTIONS} />
             <Text style={styles.question}>{tr('Alcohol')}</Text>
-            <ChipGroup
-              value={alcohol}
-              onChange={setAlcohol}
-              options={[
-                { id: 'never', label: 'Never' },
-                { id: 'occasional', label: 'Occasionally' },
-                { id: 'weekly', label: 'Every week' },
-                { id: 'daily', label: 'Daily' },
-              ]}
-            />
+            <ChipGroup value={alcohol} onChange={setAlcohol} options={ALCOHOL_OPTIONS} />
           </>
         )}
 
@@ -460,7 +405,8 @@ export const OnboardingScreen = () => {
                     style={[styles.goalRow, selected && styles.bigOptionSelected]}
                     onPress={() => toggleGoal(g.id)}
                   >
-                    <Ionicons name={g.icon as any} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
+                    {/* AppIcon: las pesas («Rendir más») salen con el dibujo único de la app (fine/dumbbell.ts) */}
+                    <AppIcon name={g.icon} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
                     <Text style={[styles.goalText, selected && { color: Colors.accent }]}>{tr(g.label)}</Text>
                     <Ionicons
                       name={selected ? 'checkmark-circle' : 'ellipse-outline'}

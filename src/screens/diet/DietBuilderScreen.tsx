@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { CometLine } from '@/components/CometLine';
+import { FButton, FChip, FLink, FOption, formStyles } from '@/components/fine/FineForm';
 import { DietContext, loadDietContext } from '@/data/diet/context';
 import { dietRepository } from '@/data/diet/dietRepository';
 import {
@@ -27,25 +28,21 @@ import { t } from '@/i18n';
 import { DIET_FEATURE, DietLocked } from '@/components/diet/TodayMenuCard';
 import { SubscribePopup } from '@/components/SubscribePopup';
 import { useFeature } from '@/data/access';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // "Crear mi menú": una pregunta cada vez, como una conversación. Parte de lo que ya sabemos (perfil,
 // analíticas, diario de Digestión) y de lo que contestó la última vez.
+// Rediseño del 2026-11-16 (lenguaje fino): opciones en filas con línea fina y un círculo, chips con borde, el avance
+// como una línea cometa y el botón de seguir en esmeralda.
 
 type Option<T> = { id: T; label: string; hint?: string };
 
 function Single<T extends string | number>({ options, value, onChange }: { options: Option<T>[]; value: T; onChange: (v: T) => void }) {
   return (
-    <View style={styles.options}>
-      {options.map((o) => {
-        const on = o.id === value;
-        return (
-          <TouchableOpacity key={String(o.id)} style={[styles.option, on && styles.optionOn]} onPress={() => onChange(o.id)}>
-            <Text style={[styles.optionTitle, on && styles.optionTitleOn]}>{t(o.label)}</Text>
-            {o.hint ? <Text style={styles.optionHint}>{t(o.hint)}</Text> : null}
-          </TouchableOpacity>
-        );
-      })}
+    <View accessibilityRole="radiogroup">
+      {options.map((o, i) => (
+        <FOption key={String(o.id)} title={t(o.label)} hint={o.hint ? t(o.hint) : undefined} on={o.id === value} onPress={() => onChange(o.id)} last={i === options.length - 1} />
+      ))}
     </View>
   );
 }
@@ -53,19 +50,10 @@ function Single<T extends string | number>({ options, value, onChange }: { optio
 function Multi<T extends string>({ options, value, onChange, noneLabel }: { options: Option<T>[]; value: T[]; onChange: (v: T[]) => void; noneLabel?: string }) {
   return (
     <View style={styles.chips}>
-      {noneLabel ? (
-        <TouchableOpacity style={[styles.chip, value.length === 0 && styles.chipOn]} onPress={() => onChange([])}>
-          <Text style={[styles.chipText, value.length === 0 && styles.chipTextOn]}>{t(noneLabel)}</Text>
-        </TouchableOpacity>
-      ) : null}
+      {noneLabel ? <FChip label={t(noneLabel)} on={value.length === 0} onPress={() => onChange([])} multi /> : null}
       {options.map((o) => {
         const on = value.includes(o.id);
-        return (
-          <TouchableOpacity key={o.id} style={[styles.chip, on && styles.chipOn]} onPress={() => onChange(on ? value.filter((x) => x !== o.id) : [...value, o.id])}>
-            {on ? <Ionicons name="checkmark" size={14} color={Colors.accent} /> : null}
-            <Text style={[styles.chipText, on && styles.chipTextOn]}>{t(o.label)}</Text>
-          </TouchableOpacity>
-        );
+        return <FChip key={o.id} label={t(o.label)} on={on} check multi onPress={() => onChange(on ? value.filter((x) => x !== o.id) : [...value, o.id])} />;
       })}
     </View>
   );
@@ -78,6 +66,7 @@ const NumField = ({ label, value, unit, onChange }: { label: string; value: numb
       <TextInput
         style={styles.numInput}
         keyboardType="number-pad"
+        accessibilityLabel={t(label)}
         value={value === null ? '' : String(value)}
         onChangeText={(v) => {
           const n = Number(v.replace(/[^\d]/g, ''));
@@ -158,7 +147,7 @@ export const DietBuilderScreen = () => {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScreenHeader title={t('Weekly menu')} showBack backFallback="/diet" />
         <ScrollView contentContainerStyle={styles.content}>
-          <Ionicons name="medkit-outline" size={34} color={Colors.accent} />
+          <Ionicons name="medkit-outline" size={28} color={FINE.gold} style={{ marginTop: 8 }} />
           <Text style={styles.q}>{t('This one is better with a dietitian')}</Text>
           {referral.map((r) => (
             <Text key={r} style={styles.text}>
@@ -166,12 +155,8 @@ export const DietBuilderScreen = () => {
             </Text>
           ))}
           <Text style={styles.text}>{t('An automatic menu could get it wrong for you. A dietitian on Kuova can see your results and make the menu with you.')}</Text>
-          <TouchableOpacity style={styles.primary} onPress={() => router.push({ pathname: '/professionals', params: { role: 'dietitian' } })}>
-            <Text style={styles.primaryText}>{t('Find a dietitian')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.link} onPress={() => setReferral(null)}>
-            <Text style={styles.linkText}>{t('Change my answers')}</Text>
-          </TouchableOpacity>
+          <FButton label={t('Find a dietitian')} onPress={() => router.push({ pathname: '/professionals', params: { role: 'dietitian' } })} style={{ marginTop: 24 }} />
+          <FLink label={t('Change my answers')} muted onPress={() => setReferral(null)} style={{ marginTop: 4 }} />
         </ScrollView>
       </SafeAreaView>
     );
@@ -237,20 +222,19 @@ export const DietBuilderScreen = () => {
         <View style={{ gap: 14 }}>
           <Single options={SKILLS} value={p.skill} onChange={(skill) => set({ skill })} />
           <Text style={styles.sub}>{t('Time to cook a meal')}</Text>
-          <View style={styles.chips}>
+          <View style={styles.chips} accessibilityRole="radiogroup">
             {[15, 30, 45, 60].map((m) => (
-              <TouchableOpacity key={m} style={[styles.chip, p.minutes === m && styles.chipOn]} onPress={() => set({ minutes: m })}>
-                <Text style={[styles.chipText, p.minutes === m && styles.chipTextOn]}>{m === 60 ? t('1 hour or more') : `${m} min`}</Text>
-              </TouchableOpacity>
+              <FChip key={m} label={m === 60 ? t('1 hour or more') : `${m} min`} on={p.minutes === m} onPress={() => set({ minutes: m })} />
             ))}
           </View>
-          <TouchableOpacity style={styles.toggle} onPress={() => set({ batch: !p.batch })}>
-            <Ionicons name={p.batch ? 'checkbox' : 'square-outline'} size={20} color={Colors.accent} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.toggleTitle}>{t('Cook once, eat twice')}</Text>
-              <Text style={styles.optionHint}>{t('Tonight’s dinner is tomorrow’s lunch, when the dish allows it')}</Text>
-            </View>
-          </TouchableOpacity>
+          <FOption
+            multi
+            last
+            title={t('Cook once, eat twice')}
+            hint={t('Tonight’s dinner is tomorrow’s lunch, when the dish allows it')}
+            on={p.batch}
+            onPress={() => set({ batch: !p.batch })}
+          />
         </View>
       ),
     },
@@ -305,11 +289,10 @@ export const DietBuilderScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScreenHeader title={t('Create my menu')} showBack backFallback="/diet" />
-      <View style={styles.progress}>
-        <View style={[styles.progressFill, { width: `${((step + 1) / steps.length) * 100}%` }]} />
-      </View>
+      {/* El avance, como una línea cometa */}
+      <CometLine progress={(step + 1) / steps.length} colors={['#2F8F70', FINE.jade]} thickness={3} style={styles.progress} />
       {!ctx ? (
-        <ActivityIndicator color={Colors.accent} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={FINE.jade} style={{ marginTop: 40 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text style={styles.q}>{t(s.title)}</Text>
@@ -318,17 +301,14 @@ export const DietBuilderScreen = () => {
         </ScrollView>
       )}
       <View style={styles.bottom}>
-        {step > 0 ? (
-          <TouchableOpacity style={styles.back} onPress={() => setStep((x) => x - 1)}>
-            <Ionicons name="chevron-back" size={18} color={Colors.textPrimary} />
-            <Text style={styles.backText}>{t('Back')}</Text>
-          </TouchableOpacity>
-        ) : (
-          <View />
-        )}
-        <TouchableOpacity style={[styles.next, saving && { opacity: 0.6 }]} disabled={!ctx || saving} onPress={() => (last ? finish() : setStep((x) => x + 1))}>
-          {saving ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.nextText}>{last ? t('Create my menu') : step === 0 ? t('Start') : t('Next')}</Text>}
-        </TouchableOpacity>
+        {step > 0 ? <FLink label={t('Back')} icon="chevron-back" muted onPress={() => setStep((x) => x - 1)} /> : <View />}
+        <FButton
+          label={last ? t('Create my menu') : step === 0 ? t('Start') : t('Next')}
+          disabled={!ctx}
+          busy={saving}
+          onPress={() => (last ? finish() : setStep((x) => x + 1))}
+          style={styles.next}
+        />
       </View>
     </SafeAreaView>
   );
@@ -337,40 +317,21 @@ export const DietBuilderScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 30 },
-  progress: { height: 4, backgroundColor: Colors.cardBorder, marginHorizontal: 20, borderRadius: 2, overflow: 'hidden', marginBottom: 14 },
-  progressFill: { height: 4, backgroundColor: Colors.accent },
-  q: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, marginTop: 8 },
-  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginTop: 6 },
-  sub: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  options: { gap: 8 },
-  option: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11 },
-  optionOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  optionTitle: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
-  optionTitleOn: { color: Colors.textPrimary },
-  optionHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  progress: { marginHorizontal: 12, marginBottom: 10 },
+  q: { ...formStyles.q, marginTop: 8 },
+  text: { ...formStyles.lead },
+  sub: { ...fine.secTitle, marginTop: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 18, paddingHorizontal: 13, paddingVertical: 8 },
-  chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  chipTextOn: { color: Colors.textPrimary },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  toggleTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  known: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, gap: 4 },
-  knownTitle: { color: Colors.accent, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
-  knownItem: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
-  numGrid: { flexDirection: 'row', gap: 10 },
-  numField: { flex: 1, gap: 4 },
-  numLabel: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  numRow: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 10, paddingHorizontal: 10 },
-  numInput: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 16, paddingVertical: 8 },
-  numUnit: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
-  bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: Colors.divider },
-  back: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: 10 },
-  backText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  next: { backgroundColor: Colors.accent, borderRadius: 24, paddingHorizontal: 26, paddingVertical: 13, minWidth: 140, alignItems: 'center' },
-  nextText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  primary: { backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, alignItems: 'center', marginTop: 20 },
-  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  link: { alignItems: 'center', paddingVertical: 12 },
-  linkText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
+  // Lo que ya sabemos: sin caja, con su cabecera pequeña y una línea fina debajo
+  known: { gap: 4, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  knownTitle: { ...fine.secTitle, marginBottom: 2 },
+  knownItem: { ...fine.body, fontSize: 14 },
+  numGrid: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  numField: { flex: 1, gap: 6 },
+  numLabel: { ...fine.kicker },
+  numRow: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: FINE.line, backgroundColor: FINE.tile, borderRadius: 14, paddingHorizontal: 12 },
+  numInput: { ...ff('light'), flex: 1, color: FINE.ivory, fontSize: 20, paddingVertical: 8, fontVariant: ['tabular-nums'] },
+  numUnit: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: FINE.line },
+  next: { minWidth: 150, paddingHorizontal: 26 },
 });

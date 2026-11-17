@@ -148,7 +148,7 @@ export const BookLabScreen = () => {
                   <Text style={styles.apptText}>
                     {longDate(a.date)} · {a.time}
                     {'\n'}
-                    <Text style={styles.muted}>{c ? `${c.network} ${c.name}` : 'Lab'}</Text>
+                    <Text style={styles.muted}>{c ? `${c.network} ${c.name}` : t('Lab')}</Text>
                   </Text>
                   <TouchableOpacity onPress={() => cancel(a.id)}>
                     <Text style={styles.cancel}>{t('Cancel')}</Text>

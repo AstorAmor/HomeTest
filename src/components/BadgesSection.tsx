@@ -1,33 +1,27 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Achievement, TIER_COLORS } from '@/data/achievements';
+import { Achievement } from '@/data/achievements';
 import { t } from '@/i18n';
 import { BadgeModal } from './badges/BadgeModal';
-import { GlowRing, ringTones } from './GlowRing';
-import { FINE, fine, ff } from '@/theme/fine';
-
-const SIZE = 66;
-// El dibujo a línea (como el resto de iconos de la app nueva) si existe; si no, el de siempre
-const lineIcon = (name: string) => (`${name}-outline` in Ionicons.glyphMap ? `${name}-outline` : name) as keyof typeof Ionicons.glyphMap;
+import { BadgeEmblem, badgeTone } from './badges/BadgeEmblem';
+import { FINE, ff } from '@/theme/fine';
+import { holdTabsProps } from '@/constants/tabs';
 
 // «Insignias y rachas»: una por logro, con su nivel (bronce → diamante) y lo que falta para el siguiente. Con los
 // mismos aros cometa con luz que los círculos de Hoy (fundador, 2026-11-16: «los badges están un poco pobres, no
 // se han adaptado a que las circunferencias carguen así, modo brillante»): el aro se llena hasta el siguiente
-// nivel con el color del nivel que tienes; sin ninguno, apagado. Tocar una la abre a pantalla completa.
+// nivel con el color del nivel que tienes; sin ninguno, apagado. Tocar una la abre a pantalla completa, con el mismo
+// emblema en grande (BadgeEmblem: el mismo dibujo y el mismo color en las dos).
 export const BadgesSection = ({ achievements }: { achievements: Achievement[] }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = achievements.find((a) => a.id === selectedId) ?? null;
-  const earned = achievements.filter((a) => a.level > 0).length;
 
   return (
     <View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} {...holdTabsProps}>
         {achievements.map((a) => {
           const on = a.level > 0;
-          const color = on && a.tier ? TIER_COLORS[a.tier] : FINE.mute;
-          // Todos los niveles: el aro entero; si no, lo que falta para el siguiente
-          const progress = a.nextThreshold === null ? 1 : a.progressToNext;
+          const color = badgeTone(a);
           return (
             <TouchableOpacity
               key={a.id}
@@ -37,20 +31,19 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
               accessibilityRole="button"
               accessibilityLabel={`${a.title}: ${a.tier ? t(a.tier) : t('Locked')}`}
             >
-              <GlowRing progress={progress} colors={ringTones(color)} size={SIZE} stroke={4}>
-                <Ionicons name={lineIcon(a.icon)} size={22} color={on ? color : FINE.mute} style={!on && { opacity: 0.7 }} />
-              </GlowRing>
+              <BadgeEmblem achievement={a} />
               <Text style={[styles.badgeTitle, !on && { color: FINE.mute }]} numberOfLines={2}>
                 {a.title}
               </Text>
-              <Text style={[styles.badgeTier, { color: on ? color : FINE.mute }]}>{a.tier ? t(a.tier) : t('Locked')}</Text>
+              {/* Sin conseguir, nada debajo (fundador, 2026-11-17: en lugar de «Bloqueada», que no aparezca nada); el
+                  lector de pantalla sí lo dice */}
+              {a.tier ? <Text style={[styles.badgeTier, { color: on ? color : FINE.mute }]}>{t(a.tier)}</Text> : null}
             </TouchableOpacity>
           );
         })}
       </ScrollView>
-      <Text style={[fine.note, styles.summary]}>
-        {t('{n} of {total} unlocked · tap a badge to see it full screen and share it', { n: earned, total: achievements.length })}
-      </Text>
+      {/* Sin la línea «N de M desbloqueadas · toca…» (fundador, 2026-11-17: «no pongas nada de 1 de 7 desbloqueadas ni
+          de toca para ver»): las insignias se explican solas */}
 
       <BadgeModal achievement={selected} onClose={() => setSelectedId(null)} />
     </View>
@@ -58,7 +51,6 @@ export const BadgesSection = ({ achievements }: { achievements: Achievement[] })
 };
 
 const styles = StyleSheet.create({
-  summary: { paddingHorizontal: 20 },
   row: { paddingHorizontal: 20, gap: 12, paddingTop: 4 },
   badge: { width: 80, alignItems: 'center' },
   badgeTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 11.5, lineHeight: 15, marginTop: 7, textAlign: 'center' },

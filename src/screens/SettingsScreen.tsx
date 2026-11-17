@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Linking, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { PreferencesBlock } from '@/components/PreferencesBlock';
 import { WeekStartSetting } from '@/components/metas/WeekStartSetting';
 import { AppLockSetting } from '@/components/AppLockSetting';
+import { FRow, SecHead } from '@/components/fine/Fine';
+import { FLink } from '@/components/fine/FineForm';
+import { SwitchRow, settingsStyles } from '@/components/settings/SettingsParts';
 import { Colors } from '@/constants/colors';
 import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
@@ -14,18 +16,21 @@ import { TAB, tabHref } from '@/constants/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { isRealAccount, setRealAccount } from '@/data/dataMode';
 import { reloadKeepingPlace } from '@/theme/appearance';
-import { INTER } from '@/theme/fine';
+import { fine } from '@/theme/fine';
 
-const PERMISSIONS: { icon: string; title: string; why: string }[] = [
-  { icon: 'notifications-outline', title: 'Notifications', why: 'Reminders for your medication, check-ins and tests.' },
-  { icon: 'fitness-outline', title: 'Health data', why: Platform.OS === 'ios' ? 'Read sleep, heart rate and steps from Apple Health or your wearable.' : 'Read sleep, heart rate and steps from Health Connect or your wearable.' },
-  { icon: 'camera-outline', title: 'Camera', why: 'Scan a lab report to add it to your files.' },
-  { icon: 'document-outline', title: 'Photos and files', why: 'Upload a PDF or a photo of your results.' },
-  { icon: 'location-outline', title: 'Location', why: 'Show the labs closest to you. Only while you use that screen.' },
+const PERMISSIONS: { title: string; why: string }[] = [
+  { title: 'Notifications', why: 'Reminders for your medication, check-ins and tests.' },
+  { title: 'Health data', why: Platform.OS === 'ios' ? 'Read sleep, heart rate and steps from Apple Health or your wearable.' : 'Read sleep, heart rate and steps from Health Connect or your wearable.' },
+  { title: 'Camera', why: 'Scan a lab report to add it to your files.' },
+  { title: 'Photos and files', why: 'Upload a PDF or a photo of your results.' },
+  { title: 'Location', why: 'Show the labs closest to you. Only while you use that screen.' },
 ];
 
-// Settings: apariencia, idioma, tamaño de letra, permisos, lo que ves (Configure my experience) y
-// notificaciones. Tema, idioma y letra recargan la app con un fundido y vuelven aquí.
+// Settings: idioma, tamaño de letra, la semana, lo que ves (Configure my experience), notificaciones, permisos
+// y la cuenta. Idioma y letra recargan la app con un fundido y vuelven aquí.
+// Desde el 2026-11-17, en el lenguaje fino (como la pestaña Tú; el fundador: «Ajustes parece que dentro tampoco está
+// actualizado… de repente tengo mil iconos»): cabeceras pequeñas, filas con línea fina, título y explicación
+// apagada, sin iconos ni tarjetas; «Cerrar sesión», un enlace apagado (sin rojo).
 export const SettingsScreen = () => {
   const router = useRouter();
   const exit = useLogout();
@@ -42,105 +47,73 @@ export const SettingsScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Settings')} showBack backFallback={tabHref(TAB.you)} />
 
-        <PreferencesBlock returnTo="/settings" />
+        <View style={settingsStyles.body}>
+          <PreferencesBlock returnTo="/settings" fine />
 
-        <WeekStartSetting />
+          <WeekStartSetting />
 
-        <Text style={styles.section}>{t('Your experience')}</Text>
-        <View style={styles.card}>
-          {[
-            { icon: 'options-outline', title: 'Configure my experience', sub: 'What you use Kuova for sets what you see and which options appear', to: '/app-sections' },
-            { icon: 'notifications-outline', title: 'Notifications', sub: 'What we send you, and mute anything you do not want', to: '/notifications' },
-          ].map((r, i) => (
-            <TouchableOpacity key={r.to} style={[styles.row, i > 0 && styles.divider]} onPress={() => router.push(r.to as any)}>
-              <Ionicons name={r.icon as any} size={22} color={Colors.accent} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rowTitle}>{t(r.title)}</Text>
-                <Text style={styles.rowSub}>{t(r.sub)}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-            </TouchableOpacity>
-          ))}
-        </View>
+          <SecHead title={t('Your experience')} />
+          <FRow
+            title={t('Configure my experience')}
+            sub={t('What you use Kuova for sets what you see and which options appear')}
+            onPress={() => router.push('/app-sections')}
+          />
+          <FRow
+            title={t('Notifications')}
+            sub={t('What we send you, and mute anything you do not want')}
+            onPress={() => router.push('/notifications')}
+            last
+          />
 
-        <Text style={styles.section}>{t('Permissions')}</Text>
-        <View style={styles.card}>
-          {PERMISSIONS.map((p, i) => (
-            <View key={p.title} style={[styles.row, i > 0 && styles.divider]}>
-              <Ionicons name={p.icon as any} size={22} color={Colors.textSecondary} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rowTitle}>{t(p.title)}</Text>
-                <Text style={styles.rowSub}>{t(p.why)}</Text>
-              </View>
-            </View>
+          <SecHead title={t('Permissions')} />
+          {PERMISSIONS.map((p) => (
+            <FRow key={p.title} title={t(p.title)} sub={t(p.why)} />
           ))}
           {Platform.OS === 'web' ? (
-            <Text style={styles.permNote}>{t('Your browser asks for each permission the first time it is needed.')}</Text>
+            <Text style={fine.note}>{t('Your browser asks for each permission the first time it is needed.')}</Text>
           ) : (
-            <TouchableOpacity style={styles.systemButton} onPress={() => Linking.openSettings()}>
-              <Text style={styles.systemButtonText}>{t('Change them in your phone settings')}</Text>
-            </TouchableOpacity>
+            <FLink label={t('Change them in your phone settings')} onPress={() => Linking.openSettings()} style={settingsStyles.linkLeft} />
           )}
-        </View>
 
-        {authMode === 'supabase' && (
-          <>
-            <Text style={styles.section}>{t('Account')}</Text>
-            <View style={styles.card}>
-              <TouchableOpacity style={styles.row} onPress={() => router.push('/your-name')}>
-                <Ionicons name="person-circle-outline" size={22} color={Colors.accent} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{t('Your name')}</Text>
-                  <Text style={styles.rowSub}>{user?.nombre}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.row, styles.divider]} onPress={() => router.push('/security' as any)}>
-                <Ionicons name="key-outline" size={22} color={Colors.accent} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{t('Two-step verification')}</Text>
-                  <Text style={styles.rowSub}>{t('A code from an authenticator app when you sign in')}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-              </TouchableOpacity>
+          {authMode === 'supabase' && (
+            <>
+              <SecHead title={t('Account')} />
+              <FRow title={t('Your name')} sub={user?.nombre} onPress={() => router.push('/your-name')} />
+              <FRow
+                title={t('Two-step verification')}
+                sub={t('A code from an authenticator app when you sign in')}
+                onPress={() => router.push('/security' as any)}
+              />
               {/* Face ID / huella: solo con el módulo nativo (APK o app de iPhone desde el 2026-11-11) */}
               <AppLockSetting />
               {/* Cuenta real ↔ de prueba y casos de prueba: solo probadores (admins y sus «+alias») */}
               {isTester && (
-              <View style={[styles.row, styles.divider]}>
-                <Ionicons name="shield-checkmark-outline" size={22} color={Colors.accent} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{t('Real account')}</Text>
-                  <Text style={styles.rowSub}>
-                    {real
+                <SwitchRow
+                  title={t('Real account')}
+                  sub={
+                    real
                       ? t('Only your own data. Nothing is filled in with examples.')
-                      : t('Test account: where you have no data yet, Kuova shows examples.')}
-                  </Text>
-                </View>
-                <Switch value={real} onValueChange={toggleReal} trackColor={{ true: Colors.accent, false: Colors.cardBorder }} />
-              </View>
+                      : t('Test account: where you have no data yet, Kuova shows examples.')
+                  }
+                  value={real}
+                  onValueChange={toggleReal}
+                  last={real}
+                />
               )}
               {/* Solo cuentas de prueba: cargar un caso (tensión alta, energía baja…) o vaciarla */}
               {isTester && !real && (
-                <TouchableOpacity style={[styles.row, styles.divider]} onPress={() => router.push('/simulation')}>
-                  <Ionicons name="flask-outline" size={22} color={Colors.gold} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowTitle}>{t('Test scenarios')}</Text>
-                    <Text style={styles.rowSub}>
-                      {t('Load a case into this test account (high blood pressure, low energy, skipped medication…) or clear it.')}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-                </TouchableOpacity>
+                <FRow
+                  title={t('Test scenarios')}
+                  sub={t('Load a case into this test account (high blood pressure, low energy, skipped medication…) or clear it.')}
+                  onPress={() => router.push('/simulation')}
+                  last
+                />
               )}
-            </View>
-          </>
-        )}
+            </>
+          )}
 
-        <TouchableOpacity style={styles.logout} onPress={exit}>
-          <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
-          <Text style={styles.logoutText}>{t('Log out')}</Text>
-        </TouchableOpacity>
+          <FLink label={t('Log out')} onPress={exit} muted style={styles.logout} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -149,23 +122,5 @@ export const SettingsScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  section: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.semibold, marginHorizontal: 20, marginTop: 18, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
-  block: { marginHorizontal: 20 },
-  card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, overflow: 'hidden' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowTitle: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  rowSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  soon: { color: Colors.textMuted, fontSize: 12, fontFamily: INTER.medium },
-  sizes: { flexDirection: 'row', gap: 8, marginHorizontal: 20 },
-  size: { flex: 1, alignItems: 'center', gap: 2, paddingVertical: 10, borderRadius: 14, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder },
-  sizeOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  sizeSample: { color: Colors.textPrimary, fontFamily: INTER.medium },
-  sizeLabel: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
-  sizeTextOn: { color: Colors.background },
-  permNote: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, paddingHorizontal: 16, paddingBottom: 14 },
-  systemButton: { margin: 12, marginTop: 4, borderWidth: 1, borderColor: Colors.accent, borderRadius: 22, paddingVertical: 10, alignItems: 'center' },
-  systemButtonText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 28, paddingVertical: 12 },
-  logoutText: { color: Colors.danger, fontSize: 15, fontFamily: INTER.medium },
+  logout: { marginTop: 28 },
 });

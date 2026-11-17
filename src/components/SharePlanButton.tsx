@@ -40,7 +40,7 @@ export const SharePlanButton = () => {
       else await printPlan(doc);
       setOpen(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.');
+      setError(e instanceof Error ? e.message : t('Something went wrong. Try again.'));
       setOpen(true);
     } finally {
       setBusy(null);

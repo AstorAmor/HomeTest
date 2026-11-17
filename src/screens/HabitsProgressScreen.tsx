@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/HealthIcons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
 import { Colors } from '@/constants/colors';
@@ -39,7 +40,7 @@ const SAMPLE_STATS: HabitStat[] = [
     unit: 'h',
     higherIsBetter: true,
     decimals: 1,
-    note: `Bedtime moved from ${userProfile.typical_bedtime.baseline} to ${userProfile.typical_bedtime.current}`,
+    note: t('Bedtime moved from {from} to {to}', { from: userProfile.typical_bedtime.baseline, to: userProfile.typical_bedtime.current }),
   },
   {
     key: 'sleep_regularity',
@@ -290,7 +291,8 @@ export const HabitsProgressScreen = () => {
               return (
                 <View key={stat.key} style={styles.statCard}>
                   <View style={styles.statHeader}>
-                    <Ionicons name={stat.icon} size={18} color={Colors.accent} />
+                    {/* AppIcon: las pesas salen con el dibujo único de la app (fine/dumbbell.ts) */}
+                    <AppIcon name={stat.icon} size={18} color={Colors.accent} />
                     {improved && <Ionicons name="trending-up" size={14} color={Colors.accent} />}
                   </View>
                   <Text style={styles.statValue}>{formatStat(stat, stat.current)}</Text>

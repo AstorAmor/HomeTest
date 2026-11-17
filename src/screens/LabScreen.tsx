@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, type Href } from 'expo-router';
 import { getRangeStatus } from '@/utils/rangeStatus';
-import { MarkerRangeBar } from '@/components/MarkerRangeBar';
+import { LabGauge } from '@/components/fine/FineLab';
 import { SpecialistCarousel } from '@/components/SpecialistCarousel';
 import { KuovaAgeSection } from '@/components/KuovaAgeSection';
 import { FirstAnalysisCard } from '@/components/FirstAnalysisCard';
@@ -21,14 +21,13 @@ import { buildSchedule, SCHEDULE_COLORS, type ScheduleEvent } from '@/data/sched
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
+import { markerHref } from '@/utils/markerLinks';
 import { FINE, ff, fine } from '@/theme/fine';
 import {
   labReports,
-  flagColor,
   flaggedMarkers,
   formatReportDate,
   markerNameEn,
-  rangePosition,
   reportCounts,
 } from '@/utils/labReportView';
 
@@ -134,15 +133,22 @@ export const LabScreen = () => {
         <KuovaAgeSection tourScroll={tourScroll} />
 
         <View style={styles.pad}>
-          {/* 3. Tu último informe: el recuento y lo que conviene mirar, con su línea de rango */}
+          {/* 3. Tu último informe: el recuento y TODO lo que conviene mirar, con su línea de rango. La cabecera y el
+              recuento abren el informe completo; cada marcador, su ficha con todos sus valores (fundador, 2026-11-17:
+              «Pon todos los que estén para revisar. Al pinchar en ellos, llévame al detalle de ese marcador […] Al
+              informe total quiero ir cuando pinche en "tu último informe"») */}
           {hasAny && (
             <>
-              <SecHead title={t('Your latest report')} />
+              <SecHead
+                title={t('Your latest report')}
+                more={latestReport ? t('Full report') : undefined}
+                onPress={latestReport ? () => openReport(latestReport.id) : undefined}
+              />
               {latestReport ? (
                 (() => {
                   const { id, title, lab, report } = latestReport;
                   const counts = reportCounts(report);
-                  const flagged = flaggedMarkers(report);
+                  const flagged = flaggedMarkers(report, Infinity);
                   return (
                     <>
                       <TouchableOpacity style={fine.row} onPress={() => openReport(id)} activeOpacity={0.7}>
@@ -158,16 +164,30 @@ export const LabScreen = () => {
                         <Chev />
                       </TouchableOpacity>
                       {flagged.map((m) => {
-                        const pos = rangePosition(m);
+                        // Lo que conviene mirar, con su línea de rango fina (sin rojos). Fuera del rango, el valor en oro y
+                        // «Por encima/debajo»; dentro pero cerca del límite, en marfil y dicho así, como en su ficha (que
+                        // pone «En rango»)
+                        const v = typeof m.value === 'number' ? m.value : Number(m.value);
+                        const near = m.flag === 'limite_alto' || m.flag === 'limite_bajo';
+                        const status = near ? t('In range, close to the limit') : m.flag === 'bajo' ? t('Below range') : t('Above range');
                         return (
-                          <TouchableOpacity key={m.marker_id} style={fine.row} onPress={() => openReport(id)} activeOpacity={0.7}>
+                          <TouchableOpacity
+                            key={m.marker_id}
+                            style={fine.row}
+                            onPress={() => router.push(markerHref(m.marker_id, `report:${id}`))}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                          >
                             <View style={{ flex: 1 }}>
                               <Text style={styles.paramName} numberOfLines={1}>
                                 {markerNameEn(m)}
                               </Text>
-                              <Text style={[styles.paramValue, { color: flagColor(m) }]}>{getMarkerValueTextEn(m.value, m.unit)}</Text>
+                              <Text style={[styles.paramValue, !near && { color: FINE.gold }]}>
+                                {getMarkerValueTextEn(m.value, m.unit)}
+                                <Text style={styles.paramStatus}> · {status}</Text>
+                              </Text>
                             </View>
-                            {pos !== null && <MarkerRangeBar position={pos} color={flagColor(m)} />}
+                            <LabGauge value={Number.isNaN(v) ? null : v} low={m.range.low} high={m.range.high} style={styles.gauge} />
                           </TouchableOpacity>
                         );
                       })}
@@ -291,6 +311,8 @@ const styles = StyleSheet.create({
   pad: { paddingHorizontal: 20 },
   padM: { marginHorizontal: 20 },
   paramName: { ...ff('regular'), color: FINE.ivory, fontSize: 14 },
-  paramValue: { ...ff('regular'), fontSize: 12.5, marginTop: 1, fontVariant: ['tabular-nums'] },
+  paramValue: { ...ff('regular'), color: FINE.ivory, fontSize: 12.5, marginTop: 1, fontVariant: ['tabular-nums'] },
+  paramStatus: { ...ff('regular'), color: FINE.mute },
+  gauge: { width: 96 },
   agendaDot: { width: 7, height: 7, borderRadius: 4 },
 });

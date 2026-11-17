@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { View } from 'react-native';
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop, Ellipse } from 'react-native-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { DumbbellIcon, isWeightsIcon } from '@/components/fine/DumbbellIcon';
 
 // Ilustración provisional para temas y especialistas (sustituye a las fotos): un degradado de
 // fondo con manchas suaves de color y un icono grande encima. Determinista por `seed`: la misma
@@ -67,7 +68,12 @@ export const BlobArt = ({
       </Svg>
       {icon ? (
         <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-          <MaterialCommunityIcons name={icon as any} size={iconSize ?? Math.round(Math.min(w, h) * 0.36)} color="rgba(255,255,255,0.95)" />
+          {/* Las pesas, con el dibujo único de la app (fine/dumbbell.ts), no con el de la librería */}
+          {isWeightsIcon(icon) ? (
+            <DumbbellIcon size={iconSize ?? Math.round(Math.min(w, h) * 0.36)} color="rgba(255,255,255,0.95)" />
+          ) : (
+            <MaterialCommunityIcons name={icon as any} size={iconSize ?? Math.round(Math.min(w, h) * 0.36)} color="rgba(255,255,255,0.95)" />
+          )}
         </View>
       ) : null}
     </View>

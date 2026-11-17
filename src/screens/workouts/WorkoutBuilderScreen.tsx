@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { ChoiceChips } from '@/components/ChoiceChips';
-import { Colors } from '@/constants/colors';
+import { SecHead } from '@/components/fine/Fine';
+import { FButton, FChip, FChips, FLink, FOption, formStyles } from '@/components/fine/FineForm';
 import { EQUIPMENT, getExercise, exerciseName } from '@/data/workouts/catalog';
 import { GOALS, LEVELS, PLACES, doseText, goalLabel, sessionTitle } from '@/data/workouts/labels';
 import { programRepository } from '@/data/workouts/programRepository';
@@ -13,10 +12,12 @@ import type { Equipment, WorkoutPrefs, WorkoutSession } from '@/data/workouts/ty
 import { DEFAULT_PREFS, equipmentForPlace, estimateMinutes, generateProgram, newProgram } from '@/logic/workoutGenerator';
 import { ExerciseLoop } from '@/components/workouts/ExerciseLoop';
 import { t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // "Crear mi entrenamiento": unas pocas preguntas (objetivo, nivel, días, minutos, dónde y con qué) y
 // el programa al momento. Se puede pedir otra variación antes de guardarlo.
+// Rediseño del 2026-11-16 (lenguaje fino): cada pregunta con su cabecera pequeña, las opciones en filas con línea fina
+// y un círculo, los números en chips con borde y la vista previa en filas, sin tarjetas.
 
 const HOME_KIT: Equipment[] = ['dumbbells', 'kettlebell', 'bands', 'bench', 'bar'];
 
@@ -24,8 +25,10 @@ const SessionPreview = ({ s }: { s: WorkoutSession }) => {
   const main = s.exercises.filter((e) => e.block === 'main' || e.block === 'finisher');
   return (
     <View style={styles.preview}>
-      <View style={styles.previewHead}>
-        <Text style={styles.previewTitle}>{sessionTitle(s)}</Text>
+      <View style={fine.secHead}>
+        <Text style={fine.secTitle} accessibilityRole="header">
+          {sessionTitle(s)}
+        </Text>
         <Text style={styles.previewMeta}>~{estimateMinutes(s)} min</Text>
       </View>
       {main.map((e, i) => {
@@ -33,7 +36,7 @@ const SessionPreview = ({ s }: { s: WorkoutSession }) => {
         if (!ex) return null;
         return (
           <View key={`${e.exerciseId}-${i}`} style={styles.row}>
-            <ExerciseLoop exercise={ex} size={48} radius={10} />
+            <ExerciseLoop exercise={ex} size={44} radius={10} />
             <Text style={styles.rowName} numberOfLines={2}>
               {exerciseName(ex)}
             </Text>
@@ -95,21 +98,11 @@ export const WorkoutBuilderScreen = () => {
             <SessionPreview key={s.id} s={s} />
           ))}
           <View style={styles.buttons}>
-            <TouchableOpacity style={styles.primary} onPress={save} disabled={saving}>
-              {saving ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.primaryText}>{t('Save and follow it')}</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondary} onPress={() => set({ seed: prefs.seed + 1 })}>
-              <Ionicons name="shuffle" size={18} color={Colors.accent} />
-              <Text style={styles.secondaryText}>{t('Another version')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.link} onPress={() => setStep('ask')}>
-              <Text style={styles.linkText}>{t('Change my answers')}</Text>
-            </TouchableOpacity>
+            <FButton label={t('Save and follow it')} onPress={save} busy={saving} />
+            <FLink label={t('Another version')} icon="shuffle-outline" onPress={() => set({ seed: prefs.seed + 1 })} />
+            <FLink label={t('Change my answers')} muted onPress={() => setStep('ask')} />
             {/* Descartar (fundador, 2026-11-06): vuelve sin guardar nada */}
-            <TouchableOpacity style={styles.discard} onPress={discard} accessibilityRole="button">
-              <Ionicons name="close-circle-outline" size={18} color={Colors.textSecondary} />
-              <Text style={styles.discardText}>{t('Discard this workout')}</Text>
-            </TouchableOpacity>
+            <FLink label={t('Discard this workout')} icon="close-circle-outline" muted onPress={discard} />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -120,71 +113,53 @@ export const WorkoutBuilderScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScreenHeader title={t('Create my workout')} showBack backFallback="/workouts" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.q}>{t('What do you want most?')}</Text>
-        <View style={styles.options}>
-          {GOALS.map((g) => {
-            const on = prefs.goal === g.id;
-            return (
-              <TouchableOpacity key={g.id} style={[styles.option, on && styles.optionOn]} onPress={() => set({ goal: g.id })}>
-                <Text style={[styles.optionTitle, on && { color: Colors.textPrimary }]}>{t(g.label)}</Text>
-                <Text style={styles.optionHint}>{t(g.hint)}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        <SecHead title={t('What do you want most?')} style={styles.firstHead} />
+        <View accessibilityRole="radiogroup">
+          {GOALS.map((g, i) => (
+            <FOption key={g.id} title={t(g.label)} hint={t(g.hint)} on={prefs.goal === g.id} onPress={() => set({ goal: g.id })} last={i === GOALS.length - 1} />
+          ))}
         </View>
 
-        <Text style={styles.q}>{t('Your level')}</Text>
-        <View style={styles.options}>
-          {LEVELS.map((l) => {
-            const on = prefs.level === l.id;
-            return (
-              <TouchableOpacity key={l.id} style={[styles.option, on && styles.optionOn]} onPress={() => set({ level: l.id })}>
-                <Text style={[styles.optionTitle, on && { color: Colors.textPrimary }]}>{t(l.label)}</Text>
-                <Text style={styles.optionHint}>{t(l.hint)}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        <SecHead title={t('Your level')} />
+        <View accessibilityRole="radiogroup">
+          {LEVELS.map((l, i) => (
+            <FOption key={l.id} title={t(l.label)} hint={t(l.hint)} on={prefs.level === l.id} onPress={() => set({ level: l.id })} last={i === LEVELS.length - 1} />
+          ))}
         </View>
 
-        <Text style={styles.q}>{t('Days a week')}</Text>
-        <ChoiceChips options={[2, 3, 4, 5].map((n) => ({ id: n, label: String(n) }))} value={prefs.daysPerWeek} onChange={(n) => set({ daysPerWeek: n })} />
+        <SecHead title={t('Days a week')} />
+        <FChips options={[2, 3, 4, 5].map((n) => ({ id: n, label: String(n) }))} value={prefs.daysPerWeek} onChange={(n) => set({ daysPerWeek: n })} />
 
-        <Text style={styles.q}>{t('Minutes per session')}</Text>
-        <ChoiceChips options={[20, 30, 45, 60].map((n) => ({ id: n, label: `${n} min` }))} value={prefs.minutes} onChange={(n) => set({ minutes: n })} />
+        <SecHead title={t('Minutes per session')} />
+        <FChips options={[20, 30, 45, 60].map((n) => ({ id: n, label: `${n} min` }))} value={prefs.minutes} onChange={(n) => set({ minutes: n })} />
 
-        <Text style={styles.q}>{t('Where do you train?')}</Text>
-        <ChoiceChips options={PLACES.map((p) => ({ id: p.id, label: t(p.label) }))} value={prefs.place} onChange={(place) => set({ place })} />
+        <SecHead title={t('Where do you train?')} />
+        <FChips options={PLACES.map((p) => ({ id: p.id, label: t(p.label) }))} value={prefs.place} onChange={(place) => set({ place })} />
 
         {prefs.place === 'home_kit' && (
           <>
-            <Text style={styles.q}>{t('What do you have?')}</Text>
+            <SecHead title={t('What do you have?')} />
             <View style={styles.kit}>
-              {EQUIPMENT.filter((e) => HOME_KIT.includes(e.id)).map((e) => {
-                const on = kit.includes(e.id);
-                return (
-                  <TouchableOpacity key={e.id} style={[styles.kitItem, on && styles.optionOn]} onPress={() => toggleKit(e.id)}>
-                    <Ionicons name={on ? 'checkbox' : 'square-outline'} size={18} color={on ? Colors.accent : Colors.textMuted} />
-                    <Text style={styles.kitText}>{t(e.label)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {EQUIPMENT.filter((e) => HOME_KIT.includes(e.id)).map((e) => (
+                <FChip key={e.id} label={t(e.label)} on={kit.includes(e.id)} check multi onPress={() => toggleKit(e.id)} />
+              ))}
             </View>
           </>
         )}
 
-        <TouchableOpacity style={styles.toggle} onPress={() => set({ lowImpact: !prefs.lowImpact })}>
-          <Ionicons name={prefs.lowImpact ? 'checkbox' : 'square-outline'} size={20} color={Colors.accent} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.toggleTitle}>{t('No jumping')}</Text>
-            <Text style={styles.optionHint}>{t('Easier on the knees, the pelvic floor and the neighbours')}</Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.toggle}>
+          <FOption
+            multi
+            last
+            title={t('No jumping')}
+            hint={t('Easier on the knees, the pelvic floor and the neighbours')}
+            on={prefs.lowImpact}
+            onPress={() => set({ lowImpact: !prefs.lowImpact })}
+          />
+        </View>
 
         <View style={styles.buttons}>
-          <TouchableOpacity style={styles.primary} onPress={() => setStep('preview')}>
-            <Ionicons name="sparkles-outline" size={18} color={Colors.background} />
-            <Text style={styles.primaryText}>{t('Create my workout')}</Text>
-          </TouchableOpacity>
+          <FButton label={t('Create my workout')} icon="sparkles-outline" onPress={() => setStep('preview')} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -194,33 +169,16 @@ export const WorkoutBuilderScreen = () => {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 14 },
-  q: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginTop: 18, marginBottom: 10 },
-  options: { gap: 8 },
-  option: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10 },
-  optionOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  optionTitle: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
-  optionHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  firstHead: { marginTop: 8 },
+  intro: { ...formStyles.lead, marginTop: 4, marginBottom: 4 },
   kit: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  kitItem: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
-  kitText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  toggle: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20 },
-  toggleTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  buttons: { gap: 10, marginTop: 24 },
-  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14 },
-  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  secondary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
-  link: { alignItems: 'center', paddingVertical: 8 },
-  linkText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  discard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 11 },
-  discardText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
-  preview: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginBottom: 12, gap: 8 },
-  previewHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  previewTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  previewMeta: { color: Colors.textMuted, fontSize: 13, fontFamily: INTER.medium },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  rowName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  rowDose: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
-  previewFoot: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
+  toggle: { marginTop: 20, borderTopWidth: 1, borderTopColor: FINE.line },
+  buttons: { gap: 4, marginTop: 24 },
+  // Vista previa: cada sesión con su cabecera pequeña y sus ejercicios en filas
+  preview: { marginBottom: 4 },
+  previewMeta: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, marginLeft: 'auto', fontVariant: ['tabular-nums'] },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  rowName: { flex: 1, ...fine.rowTitle, fontSize: 14.5 },
+  rowDose: { ...ff('regular'), color: FINE.mute, fontSize: 13, fontVariant: ['tabular-nums'] },
+  previewFoot: { ...fine.note },
 });

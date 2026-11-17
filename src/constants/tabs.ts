@@ -16,3 +16,28 @@ export const onGoToTab = (fn: (n: number) => void) => {
     tabListeners.delete(fn);
   };
 };
+
+// Mientras deslizas de lado una fila dentro de una pestaña (el carrusel de especialistas, las insignias…), las
+// pestañas no se mueven: si no, a veces el gesto se lo quedaba la pestaña y cambiabas de pantalla (fundador,
+// 2026-11-16: «el carrusel… a veces me cambia de pantalla»). Lo escucha MainTabsScreen (scrollEnabled del pager).
+const swipeListeners = new Set<(on: boolean) => void>();
+let safety: ReturnType<typeof setTimeout> | null = null;
+export const holdTabSwipe = (hold: boolean) => {
+  // Por si no llega el «soltar» (un toque que se cancela sin mover), se suelta solo a los 4 s
+  if (safety) clearTimeout(safety);
+  safety = hold ? setTimeout(() => swipeListeners.forEach((fn) => fn(true)), 4000) : null;
+  swipeListeners.forEach((fn) => fn(!hold));
+};
+export const onTabSwipe = (fn: (on: boolean) => void) => {
+  swipeListeners.add(fn);
+  return () => {
+    swipeListeners.delete(fn);
+  };
+};
+// Para la fila que se desliza de lado: se sujeta al tocarla y se suelta al levantar el dedo o al pararse
+export const holdTabsProps = {
+  onTouchStart: () => holdTabSwipe(true),
+  onTouchEnd: () => holdTabSwipe(false),
+  onScrollEndDrag: () => holdTabSwipe(false),
+  onMomentumScrollEnd: () => holdTabSwipe(false),
+};

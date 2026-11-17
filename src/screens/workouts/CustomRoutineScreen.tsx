@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { confirmAsk } from '@/components/dev/confirmAsk';
 import { KeyboardAwareScroll, useRevealOnFocus } from '@/components/KeyboardAwareScroll';
-import { Colors } from '@/constants/colors';
+import { FButton, FLink, ON_BG, formStyles } from '@/components/fine/FineForm';
 import { exerciseName, getExercise } from '@/data/workouts/catalog';
 import { moveActiveWorkout } from '@/data/workouts/activeWorkout';
 import { programRepository } from '@/data/workouts/programRepository';
@@ -32,7 +32,7 @@ import { RoutineExerciseCard } from '@/components/workouts/RoutineExerciseCard';
 import { WorkoutModal } from '@/components/workouts/WorkoutModal';
 import { ExerciseDetail } from './ExerciseInfoScreen';
 import { num, t, tn } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // "Crear mi propio entrenamiento" y «Editar» de cualquier programa, como «Edit Routine» de Hevy, con varias rutinas
 // (fundador, 2026-11-06: «un entrenamiento con varias rutinas que pueden repetirse varios días cada una»):
@@ -46,6 +46,8 @@ import { INTER } from '@/theme/fine';
 // su rutina. Con ?program= se cambia uno que ya existe (también los del generador y los del entrenador: «Álex verá el
 // cambio»); ?day=B abre esa rutina. El teclado no tapa la casilla (KeyboardAwareScroll) y salir con cambios sin
 // guardar pregunta antes.
+// Con el lenguaje fino del prototipo (rediseño del 2026-11-16): cabeceras pequeñas en mayúsculas, rutinas y días en chips
+// con borde (la elegida en jade), la rutina abierta separada por una línea fina y «Guardar» en píldora esmeralda.
 
 const MAX_ROUTINES = 7;
 
@@ -225,18 +227,24 @@ export const CustomRoutineScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.top}>
-        <TouchableOpacity onPress={cancel} hitSlop={10}>
+        <TouchableOpacity onPress={cancel} hitSlop={10} accessibilityRole="button">
           <Text style={styles.cancel}>{t('Cancel')}</Text>
         </TouchableOpacity>
-        <Text style={styles.topTitle} numberOfLines={1}>
+        <Text style={styles.topTitle} numberOfLines={1} accessibilityRole="header">
           {!base ? t('Create my own workout') : routine ? t('Edit workout') : t('Edit programme')}
         </Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={() => save(base ? base.active : true)} disabled={saving || !loaded}>
-          {saving ? <ActivityIndicator size="small" color={Colors.background} /> : <Text style={styles.saveText}>{t('Save')}</Text>}
+        <TouchableOpacity
+          style={[fine.pill, styles.saveBtn]}
+          onPress={() => save(base ? base.active : true)}
+          disabled={saving || !loaded}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: saving || !loaded, busy: saving }}
+        >
+          {saving ? <ActivityIndicator size="small" color={FINE.ivory} /> : <Text style={fine.pillText}>{t('Save')}</Text>}
         </TouchableOpacity>
       </View>
       {!loaded ? (
-        <ActivityIndicator color={Colors.accent} style={{ marginTop: 40 }} />
+        <ActivityIndicator color={FINE.jade} style={{ marginTop: 40 }} />
       ) : (
         <KeyboardAwareScroll contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {base?.source === 'professional' && (
@@ -247,7 +255,9 @@ export const CustomRoutineScreen = () => {
           {/* Tu semana: qué rutina toca cada día (tocar un día abre su rutina) */}
           {scheduled && (
             <>
-              <Text style={styles.label}>{t('Your week')}</Text>
+              <Text style={styles.label} accessibilityRole="header">
+                {t('Your week')}
+              </Text>
               <View style={styles.week}>
                 {WEEK_ORDER.map((wd) => {
                   const i = days.findIndex((d) => routineDays(d).includes(wd));
@@ -257,11 +267,12 @@ export const CustomRoutineScreen = () => {
                       style={styles.weekCol}
                       disabled={i < 0}
                       onPress={() => setCurrent(i)}
+                      accessibilityRole="button"
                       accessibilityLabel={`${weekdayShort(wd)}: ${i < 0 ? t('Rest') : routineLabel(days[i], i)}`}
                     >
                       <Text style={styles.weekDay}>{weekdayShort(wd)}</Text>
                       <View style={[styles.weekBadge, i < 0 && styles.weekRest, i === at && styles.weekBadgeOn]}>
-                        <Text style={[styles.weekLetter, i < 0 && { color: Colors.textMuted }, i === at && { color: Colors.background }]}>{i < 0 ? '–' : dayLetter(i)}</Text>
+                        <Text style={[styles.weekLetter, i < 0 && { color: FINE.mute }, i === at && { color: FINE.ivory }]}>{i < 0 ? '–' : dayLetter(i)}</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -270,7 +281,9 @@ export const CustomRoutineScreen = () => {
             </>
           )}
 
-          <Text style={styles.label}>{t('Routines')}</Text>
+          <Text style={styles.label} accessibilityRole="header">
+            {t('Routines')}
+          </Text>
           <Text style={styles.hint}>{t('Each routine is one session. Give it a name and choose the days you do it: it can repeat on several days.')}</Text>
           <View style={styles.routines}>
             {days.map((d, i) => {
@@ -280,14 +293,15 @@ export const CustomRoutineScreen = () => {
                   key={d.key}
                   style={[styles.routine, on && styles.routineOn]}
                   onPress={() => setCurrent(i)}
+                  accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
                   accessibilityLabel={routineLabel(d, i)}
                 >
                   <View style={[styles.letter, on && styles.letterOn]}>
-                    <Text style={[styles.letterText, on && { color: Colors.background }]}>{dayLetter(i)}</Text>
+                    <Text style={[styles.letterText, on && { color: FINE.ivory }]}>{dayLetter(i)}</Text>
                   </View>
                   <View style={{ flexShrink: 1 }}>
-                    <Text style={styles.routineName} numberOfLines={1}>
+                    <Text style={[styles.routineName, !on && { color: '#CFD6CF' }]} numberOfLines={1}>
                       {routineLabel(d, i)}
                     </Text>
                     <Text style={styles.routineSub} numberOfLines={1}>
@@ -298,8 +312,8 @@ export const CustomRoutineScreen = () => {
               );
             })}
             {days.length < MAX_ROUTINES && (
-              <TouchableOpacity style={styles.addRoutine} onPress={addRoutine}>
-                <Ionicons name="add" size={18} color={Colors.accent} />
+              <TouchableOpacity style={styles.addRoutine} onPress={addRoutine} accessibilityRole="button">
+                <Ionicons name="add" size={17} color={FINE.jade} />
                 <Text style={styles.addRoutineText}>{t('Add routine')}</Text>
               </TouchableOpacity>
             )}
@@ -309,7 +323,7 @@ export const CustomRoutineScreen = () => {
           <View style={styles.panel}>
             <View style={styles.panelHead}>
               <View style={[styles.letter, styles.letterOn]}>
-                <Text style={[styles.letterText, { color: Colors.background }]}>{letter}</Text>
+                <Text style={[styles.letterText, { color: FINE.ivory }]}>{letter}</Text>
               </View>
               <RoutineNameInput
                 key={day.key}
@@ -318,12 +332,14 @@ export const CustomRoutineScreen = () => {
                 onChange={(v) => updateDay((d) => ({ ...d, title: v.slice(0, 60) }))}
               />
               {days.length > 1 && (
-                <TouchableOpacity style={styles.iconBtn} onPress={removeRoutine} accessibilityLabel={t('Remove this routine?')}>
-                  <Ionicons name="trash-outline" size={18} color={Colors.textMuted} />
+                <TouchableOpacity style={styles.iconBtn} onPress={removeRoutine} accessibilityRole="button" accessibilityLabel={t('Remove this routine?')}>
+                  <Ionicons name="trash-outline" size={18} color={FINE.mute} />
                 </TouchableOpacity>
               )}
             </View>
-            <Text style={styles.panelLabel}>{t('Days')}</Text>
+            <Text style={styles.panelLabel} accessibilityRole="header">
+              {t('Days')}
+            </Text>
             <View style={styles.weekdays}>
               {WEEK_ORDER.map((wd) => {
                 const owner = days.findIndex((d) => routineDays(d).includes(wd));
@@ -339,7 +355,7 @@ export const CustomRoutineScreen = () => {
                     accessibilityLabel={other ? `${weekdayShort(wd)} · ${routineLabel(days[owner], owner)}` : weekdayShort(wd)}
                   >
                     <Text style={[styles.wdText, on && styles.wdTextOn]}>{weekdayShort(wd)}</Text>
-                    <Text style={[styles.wdOther, on && { color: Colors.background }]}>{other ? dayLetter(owner) : on ? letter : ' '}</Text>
+                    <Text style={[styles.wdOther, on && { color: FINE.ivory }]}>{other ? dayLetter(owner) : on ? letter : ' '}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -383,18 +399,9 @@ export const CustomRoutineScreen = () => {
           })}
 
           {!count && <Text style={styles.empty}>{t('Add exercises from the library: search by name, muscle or equipment.')}</Text>}
-          <TouchableOpacity style={styles.add} onPress={() => setPicking(true)}>
-            <Ionicons name="add" size={20} color={Colors.background} />
-            <Text style={styles.addText} numberOfLines={1}>
-              {t('Add exercises to {name}', { name: routineLabel(day, at) })}
-            </Text>
-          </TouchableOpacity>
+          <FButton label={t('Add exercises to {name}', { name: routineLabel(day, at) })} icon="add" onPress={() => setPicking(true)} style={styles.add} />
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          {!base && (
-            <TouchableOpacity style={styles.link} onPress={() => save(false)} disabled={saving}>
-              <Text style={styles.linkText}>{t('Save without following it')}</Text>
-            </TouchableOpacity>
-          )}
+          {!base && <FLink label={t('Save without following it')} muted onPress={() => save(false)} disabled={saving} style={{ marginTop: 6 }} />}
         </KeyboardAwareScroll>
       )}
 
@@ -404,9 +411,11 @@ export const CustomRoutineScreen = () => {
         onClose={closePicker}
         footer={
           replaceAt === null ? (
-            <TouchableOpacity style={[styles.primary, !chosen.length && styles.disabled]} onPress={addChosen} disabled={!chosen.length}>
-              <Text style={styles.primaryText}>{chosen.length ? tn(chosen.length, 'Add {n} exercise', 'Add {n} exercises') : t('Choose one or more')}</Text>
-            </TouchableOpacity>
+            <FButton
+              label={chosen.length ? tn(chosen.length, 'Add {n} exercise', 'Add {n} exercises') : t('Choose one or more')}
+              onPress={addChosen}
+              disabled={!chosen.length}
+            />
           ) : undefined
         }
       >
@@ -418,7 +427,7 @@ export const CustomRoutineScreen = () => {
       </WorkoutModal>
 
       <WorkoutModal visible={!!info} title={info ? exerciseName(info) : ''} onClose={() => setInfo(null)}>
-        {info && <ExerciseDetail ex={info} onOpenSimilar={setInfo} />}
+        {info && <ExerciseDetail ex={info} onOpenSimilar={setInfo} fineLook />}
       </WorkoutModal>
     </SafeAreaView>
   );
@@ -434,13 +443,13 @@ const NameInput = ({ value, onChange, placeholder }: { value: string; onChange: 
         value={value}
         onChangeText={(v) => onChange(v.slice(0, 120))}
         placeholder={placeholder}
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={FINE.mute}
         onFocus={reveal}
         accessibilityLabel={placeholder}
       />
       {value ? (
-        <TouchableOpacity style={styles.clear} onPress={() => onChange('')} hitSlop={8} accessibilityLabel={t('Clear the name')}>
-          <Ionicons name="close" size={16} color={Colors.textSecondary} />
+        <TouchableOpacity style={styles.clear} onPress={() => onChange('')} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('Clear the name')}>
+          <Ionicons name="close" size={15} color={FINE.mute} />
         </TouchableOpacity>
       ) : null}
     </View>
@@ -451,11 +460,11 @@ const RoutineNameInput = ({ value, placeholder, onChange }: { value: string; pla
   const reveal = useRevealOnFocus();
   return (
     <TextInput
-      style={styles.routineInput}
+      style={[formStyles.input, styles.routineInput]}
       value={value}
       onChangeText={onChange}
       placeholder={placeholder}
-      placeholderTextColor={Colors.textMuted}
+      placeholderTextColor={FINE.mute}
       onFocus={reveal}
       accessibilityLabel={t('Routine name')}
     />
@@ -464,24 +473,24 @@ const RoutineNameInput = ({ value, placeholder, onChange }: { value: string; pla
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  cancel: { color: Colors.accent, fontSize: 16, fontFamily: INTER.medium },
-  topTitle: { flex: 1, color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, textAlign: 'center' },
-  saveBtn: { backgroundColor: Colors.accent, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9, minWidth: 80, alignItems: 'center' },
-  saveText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  // Arriba: «Cancelar» en jade, el título en Inter media y «Guardar» en píldora esmeralda
+  top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10, minHeight: 56, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  cancel: { ...ff('regular'), color: FINE.jade, fontSize: 15.5 },
+  topTitle: { ...ff('medium'), flex: 1, color: FINE.ivory, fontSize: 16, textAlign: 'center' },
+  saveBtn: { minWidth: 76 },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.divider, marginTop: 6 },
-  name: { flex: 1, color: Colors.textPrimary, fontSize: 21, fontFamily: INTER.medium, paddingVertical: 6 },
-  clear: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.card, alignItems: 'center', justifyContent: 'center' },
-  label: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginTop: 18, marginBottom: 6 },
-  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginBottom: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: FINE.line, marginTop: 6 },
+  name: { ...ff('medium'), flex: 1, color: FINE.ivory, fontSize: 21, paddingVertical: 6 },
+  clear: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: FINE.line, alignItems: 'center', justifyContent: 'center' },
+  label: { ...fine.secTitle, marginTop: 24, marginBottom: 8 },
+  hint: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18, marginBottom: 8 },
   week: { flexDirection: 'row', justifyContent: 'space-between', gap: 4 },
-  weekCol: { flex: 1, alignItems: 'center', gap: 4 },
-  weekDay: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
-  weekBadge: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: Colors.accent, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
-  weekBadgeOn: { backgroundColor: Colors.accent },
-  weekRest: { borderColor: Colors.cardBorder, backgroundColor: Colors.card },
-  weekLetter: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  weekCol: { flex: 1, alignItems: 'center', gap: 4, minHeight: 44 },
+  weekDay: { ...ff('regular'), color: FINE.mute, fontSize: 11 },
+  weekBadge: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: FINE.jadeLine, alignItems: 'center', justifyContent: 'center' },
+  weekBadgeOn: { backgroundColor: FINE.emerald, borderColor: FINE.jade },
+  weekRest: { borderColor: FINE.line },
+  weekLetter: { ...ff('medium'), color: FINE.jade, fontSize: 13 },
   routines: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   routine: {
     flexDirection: 'row',
@@ -489,63 +498,36 @@ const styles = StyleSheet.create({
     gap: 8,
     maxWidth: '100%',
     borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    paddingLeft: 8,
-    paddingRight: 12,
-    paddingVertical: 7,
+    borderColor: FINE.line,
+    borderRadius: 24,
+    paddingLeft: 6,
+    paddingRight: 14,
+    paddingVertical: 6,
+    minHeight: 44,
   },
-  routineOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  routineName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, maxWidth: 160 },
-  routineSub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, maxWidth: 160 },
-  letter: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
-  letterOn: { backgroundColor: Colors.accent },
-  letterText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  addRoutine: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderStyle: 'dashed', borderColor: Colors.accent, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 12 },
-  addRoutineText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
-  panel: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.accent, borderRadius: 16, padding: 12, marginTop: 14, marginBottom: 4 },
+  routineOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  routineName: { ...ff('medium'), color: FINE.ivory, fontSize: 14, maxWidth: 160 },
+  routineSub: { ...ff('regular'), color: FINE.mute, fontSize: 12, maxWidth: 160 },
+  letter: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: FINE.jadeLine, alignItems: 'center', justifyContent: 'center' },
+  letterOn: { backgroundColor: FINE.emerald, borderColor: FINE.jade },
+  letterText: { ...ff('medium'), color: FINE.jade, fontSize: 13 },
+  addRoutine: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderStyle: 'dashed', borderColor: FINE.jadeLine, borderRadius: 24, paddingHorizontal: 14, minHeight: 44 },
+  addRoutineText: { ...ff('regular'), color: FINE.jade, fontSize: 13.5 },
+  // La rutina abierta: separada por una línea fina, sin tarjeta
+  panel: { marginTop: 22, paddingTop: 16, borderTopWidth: 1, borderTopColor: FINE.line, marginBottom: 4 },
   panelHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  routineInput: {
-    flex: 1,
-    minWidth: 0,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.background,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontFamily: INTER.medium,
-  },
+  routineInput: { flex: 1, minWidth: 0, ...ff('medium'), fontSize: 16, paddingVertical: 9 },
   iconBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  panelLabel: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12, marginBottom: 6 },
+  panelLabel: { ...fine.secTitle, fontSize: 11, marginTop: 16, marginBottom: 8 },
   weekdays: { flexDirection: 'row', gap: 5, marginBottom: 8 },
-  wd: { flex: 1, minWidth: 0, alignItems: 'center', borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, paddingVertical: 6 },
-  wdOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  wdText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
-  wdTextOn: { color: Colors.background },
-  wdOther: { color: Colors.textMuted, fontSize: 10, fontFamily: INTER.medium, marginTop: 1 },
-  meta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
-  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginVertical: 12 },
-  add: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Colors.accent,
-    borderRadius: 12,
-    paddingVertical: 13,
-    paddingHorizontal: 12,
-    marginTop: 18,
-  },
-  addText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium, flexShrink: 1 },
-  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginTop: 12 },
-  proHint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18, marginTop: 8 },
-  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14 },
-  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
-  disabled: { opacity: 0.45 },
-  link: { alignItems: 'center', paddingVertical: 12 },
-  linkText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium },
+  wd: { flex: 1, minWidth: 0, alignItems: 'center', borderWidth: 1, borderColor: FINE.line, borderRadius: 12, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
+  wdOn: { backgroundColor: FINE.emerald, borderColor: FINE.jade },
+  wdText: { ...ff('regular'), color: FINE.mute, fontSize: 12 },
+  wdTextOn: { color: FINE.ivory },
+  wdOther: { ...ff('regular'), color: FINE.mute, fontSize: 10, marginTop: 1 },
+  meta: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
+  empty: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, marginVertical: 12 },
+  add: { marginTop: 18 },
+  error: { ...formStyles.error, marginTop: 12 },
+  proHint: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18, marginTop: 8 },
 });

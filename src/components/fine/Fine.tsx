@@ -20,7 +20,27 @@ export function TabHead({ title, lead, right }: { title: string; lead?: string; 
   );
 }
 
-export function SecHead({ title, more, onMore, style }: { title: string; more?: string; onMore?: () => void; style?: StyleProp<ViewStyle> }) {
+export function SecHead({
+  title,
+  more,
+  onMore,
+  onPress,
+  style,
+}: {
+  title: string;
+  more?: string;
+  onMore?: () => void;
+  onPress?: () => void; // toda la cabecera (título y enlace) abre lo mismo, p. ej. «Tu último informe» → el informe
+  style?: StyleProp<ViewStyle>;
+}) {
+  if (onPress) {
+    return (
+      <TouchableOpacity style={[fine.secHead, style]} onPress={onPress} activeOpacity={0.7} accessibilityRole="link" accessibilityLabel={more ? `${title}. ${more}` : title}>
+        <Text style={fine.secTitle}>{title}</Text>
+        <Text style={[fine.secMore, { marginLeft: 'auto' }]}>{more ? `${more} ›` : '›'}</Text>
+      </TouchableOpacity>
+    );
+  }
   return (
     <View style={[fine.secHead, style]}>
       <Text style={fine.secTitle} accessibilityRole="header">
@@ -90,6 +110,21 @@ export function FRow({ title, sub, value, right, onPress, last, style }: RowProp
     </>
   );
   const s = [fine.row, last && { borderBottomWidth: 0 }, style];
+  // Con algo pulsable a la derecha (la píldora «Tomada» de las tomas de Hoy), la fila entera no puede ser un botón:
+  // en la web un botón no puede llevar otro dentro. Abre el texto; lo de la derecha va aparte
+  if (onPress && right) {
+    return (
+      <View style={s}>
+        <TouchableOpacity style={{ flex: 1, minWidth: 0, alignSelf: 'stretch', justifyContent: 'center' }} onPress={onPress} activeOpacity={0.7} accessibilityRole="button">
+          <Text style={fine.rowTitle} numberOfLines={2}>
+            {title}
+          </Text>
+          {sub ? <Text style={fine.rowSub}>{sub}</Text> : null}
+        </TouchableOpacity>
+        {right}
+      </View>
+    );
+  }
   return onPress ? (
     <TouchableOpacity style={s} onPress={onPress} activeOpacity={0.7} accessibilityRole="button">
       {inner}

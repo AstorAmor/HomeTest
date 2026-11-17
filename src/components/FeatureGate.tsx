@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { AppIcon } from '@/components/HealthIcons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { useFeature } from '@/data/access';
@@ -34,7 +35,8 @@ export const FeatureLocked = ({ feature }: { feature: GatedScreen }) => {
         <View style={styles.card}>
           <View style={styles.icon}>
             <Ionicons name="lock-closed" size={13} color={Colors.background} style={styles.lock} />
-            <Ionicons name={info.icon} size={26} color={Colors.gold} />
+            {/* AppIcon: las pesas salen con el dibujo único de la app (fine/dumbbell.ts) */}
+            <AppIcon name={info.icon} size={26} color={Colors.gold} />
           </View>
           <Text style={styles.title}>{t(info.head)}</Text>
           <Text style={styles.text}>{t(info.text)}</Text>

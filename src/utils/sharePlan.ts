@@ -2,6 +2,7 @@ import { Share } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import * as FileSystem from 'expo-file-system/legacy';
 import { PlanDoc, planFileName, planToHtml, planToText } from './planPdf';
+import { t } from '@/i18n';
 
 // Móvil: el plan se convierte en PDF (expo-print) y se abre el menú de compartir del
 // sistema (expo-sharing) → WhatsApp, correo, Drive, el médico… La web tiene su propia
@@ -32,7 +33,7 @@ export const planShareSupport = () => ({ sendPdf: true, print: loadNative() !== 
 export async function sharePlanPdf(doc: PlanDoc): Promise<void> {
   const native = loadNative();
   if (!native || !(await native.Sharing.isAvailableAsync())) {
-    await Share.share({ title: 'My personalised plan', message: planToText(doc) });
+    await Share.share({ title: t('My personalised plan'), message: planToText(doc) });
     return;
   }
   const { uri } = await native.Print.printToFileAsync({ html: planToHtml(doc), ...PAGE });
@@ -46,12 +47,12 @@ export async function sharePlanPdf(doc: PlanDoc): Promise<void> {
   await native.Sharing.shareAsync(file, {
     mimeType: 'application/pdf',
     UTI: 'com.adobe.pdf',
-    dialogTitle: 'Send your plan',
+    dialogTitle: t('Send your plan'),
   });
 }
 
 export async function printPlan(doc: PlanDoc): Promise<void> {
   const native = loadNative();
-  if (!native) throw new Error('Printing needs the latest version of the app.');
+  if (!native) throw new Error(t('Printing needs the latest version of the app.'));
   await native.Print.printAsync({ html: planToHtml(doc), ...PAGE });
 }

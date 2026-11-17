@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { LotusIcon } from '@/components/fine/LotusIcon';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -35,7 +36,7 @@ const PROMPTS: Record<PromptId, { icon: React.ReactNode; title: string; body: st
     href: '/know-your-roots',
   },
   cycle: {
-    icon: <Ionicons name="flower-outline" size={30} color={Colors.gold} />,
+    icon: <LotusIcon size={30} color={Colors.gold} />,
     title: 'Tell us about your period',
     body: 'A few questions about your cycle and what you want (just to track it, to get pregnant or to avoid it), so predictions and tips fit you.',
     cta: 'Answer the questions',

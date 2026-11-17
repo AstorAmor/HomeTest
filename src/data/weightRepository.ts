@@ -42,6 +42,14 @@ export async function latestBodyComp(): Promise<{ fecha: string; values: BodyCom
   return { fecha: latest, values };
 }
 
+// La última grasa apuntada de la báscula (con su fecha): una de las cifras entre las que elige la composición
+// corporal de Peso, junto a las estimaciones de las medidas (pickBodyFat en src/logic/bodyComposition.ts)
+export async function latestBodyFat(): Promise<{ fecha: string; pct: number } | null> {
+  const all = await bodyCompRepositories.body_fat.getAll();
+  const last = all.reduce<SimpleMetricEntry | null>((a, e) => (!a || e.fecha > a.fecha ? e : a), null);
+  return last ? { fecha: last.fecha, pct: last.valor } : null;
+}
+
 // Guarda (o actualiza) una pesada con su composición. Si es la más reciente, también es el peso del perfil
 // (lo usan el menú semanal y otros cálculos).
 export async function saveWeighIn(p: { id?: string; kg: number; fecha: string; comp: BodyComp }) {

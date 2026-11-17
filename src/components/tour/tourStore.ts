@@ -26,8 +26,7 @@ const BLADDER: Href = { pathname: '/digestive', params: { part: 'bladder' } };
 export const TOUR_STEPS: TourStep[] = [
   { target: 'tab.0', tab: TAB.today, title: 'Today', text: 'Your day: your check-in, how your week is going and what you measure.' },
   { target: 'today.checkin', tab: TAB.today, title: 'Your check-in', text: 'How you feel: energy and mood in a few seconds. The ring fills with up to 3 check-ins a day: morning, midday and night.' },
-  { target: 'today.plan', tab: TAB.today, title: 'This week', text: 'Your targets in three areas: exercise, food and habits. Each bar is how your targets are going this week.' },
-  { target: 'today.plan.ej', tab: TAB.today, title: 'Exercise', text: 'Your exercise targets: steps, cardio or strength. Tap it to see each day and mark today.' },
+  { target: 'today.week', tab: TAB.today, title: 'Week', text: 'How your weekly targets are going, in one figure. Tap it to open your plan.' },
   { target: 'today.readiness', tab: TAB.today, title: 'Today', text: 'How you are today, from the sleep, heart rate and activity of your watch.' },
   { target: 'today.goals', tab: TAB.today, title: 'Your daily goals', text: 'Steps, active calories, sleep and water against your goals. Tap them to change them.' },
   { target: 'goals.first', tab: TAB.today, route: '/daily-goals', title: 'Change a goal', text: 'Use − and + to set your own goal, for example how many steps you aim for. Underneath, what we suggest and why.' },
@@ -41,6 +40,8 @@ export const TOUR_STEPS: TourStep[] = [
   { target: 'today.medication', tab: TAB.today, always: true, title: 'Medication & supplements', text: 'Note what you take and, if you want, get a reminder for each dose. If you do not see it in Today, turn it on in You → Configure my experience.' },
   { target: 'tab.log', tab: TAB.today, title: 'Log', text: 'The K button: log anything from any tab, like a check-in, your weight, blood pressure, a meal, a workout or a report.' },
   { target: 'tab.1', tab: TAB.plan, title: 'Plan', text: 'Your goals, your weekly targets, your commitment and your badges. Workouts and meals too.' },
+  { target: 'plan.targets', tab: TAB.plan, title: 'Your week', text: 'The same figure as the Week circle in Today, with each area, the days left and how each day went.' },
+  { target: 'plan.targets.ej', tab: TAB.plan, title: 'Exercise', text: 'Your exercise targets: steps, cardio or strength. Tap it to see each day and mark today.' },
   { target: 'tab.2', tab: TAB.analysis, title: 'Analysis', text: 'Your next test, your results, your appointments and how to order a test.' },
   { target: 'analysis.age', tab: TAB.analysis, title: 'Your KUOVA age', text: 'The age your blood test shows. Tap it to see what moves it.' },
   { target: 'lab.upload', tab: TAB.analysis, title: 'Your files', text: 'Your reports, and where you upload one you already have: a photo or the PDF.' },

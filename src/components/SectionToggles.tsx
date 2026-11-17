@@ -1,14 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
-import { AppIcon } from '@/components/HealthIcons';
 import { useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
 import { AppSection, SECTION_OPTIONS } from '@/data/appPrefs';
 import { t } from '@/i18n';
-import { INTER } from '@/theme/fine';
+import { FINE, fine } from '@/theme/fine';
 
 // Lista de partes de la app con su interruptor. Tocar la fila abre su guía con vista previa.
-// La usan Configure my experience y el último paso del onboarding.
+// La usa Configure my experience. Desde el 2026-11-16, como en el prototipo («Tu experiencia»): filas con
+// una línea fina debajo, sin tarjeta ni icono de color, y el interruptor esmeralda.
 export const SectionToggles = ({
   sections = SECTION_OPTIONS.map((o) => o.id),
   isOn,
@@ -21,30 +20,29 @@ export const SectionToggles = ({
   const router = useRouter();
   const options = SECTION_OPTIONS.filter((o) => sections.includes(o.id));
   return (
-    <View style={styles.card}>
+    <View>
       {options.map((o, i) => {
         const on = isOn(o.id);
         return (
-          <View key={o.id} style={[styles.row, i > 0 && styles.rowDivider]}>
+          <View key={o.id} style={[fine.row, i === options.length - 1 && styles.lastRow]}>
             <TouchableOpacity
               style={styles.rowMain}
               onPress={() => router.push({ pathname: '/feature-guide', params: { id: o.id } })}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityHint={t('See how it works')}
             >
-              <AppIcon name={o.icon} size={20} color={on ? Colors.accent : Colors.textMuted} />
-              <View style={{ flex: 1 }}>
-                <View style={styles.titleRow}>
-                  <Text style={styles.rowTitle}>{t(o.title)}</Text>
-                </View>
-                <Text style={styles.rowSubtitle}>{t(o.subtitle)}</Text>
-                <Text style={styles.more}>{t('See how it works')}</Text>
-              </View>
+              <Text style={fine.rowTitle}>{t(o.title)}</Text>
+              <Text style={fine.rowSub}>{t(o.subtitle)}</Text>
+              <Text style={styles.more}>{t('See how it works')} ›</Text>
             </TouchableOpacity>
             <Switch
               value={on}
               onValueChange={(v) => onToggle(o.id, v)}
-              trackColor={{ false: Colors.cardBorder, true: withAlpha(Colors.accent, 0.6) }}
-              thumbColor={on ? Colors.accent : Colors.textMuted}
+              trackColor={{ false: 'rgba(240,239,230,0.14)', true: FINE.emerald }}
+              thumbColor={FINE.ivory}
+              ios_backgroundColor="rgba(240,239,230,0.14)"
+              accessibilityLabel={t(o.title)}
             />
           </View>
         );
@@ -54,28 +52,7 @@ export const SectionToggles = ({
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-  },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
-  rowMain: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  rowDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  rowTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
-  optional: {
-    color: Colors.gold,
-    fontSize: 10,
-    fontFamily: INTER.semibold,
-    textTransform: 'uppercase',
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.gold, 0.5),
-    borderRadius: 6,
-    paddingHorizontal: 5,
-  },
-  rowSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  more: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 4 },
+  rowMain: { flex: 1, minWidth: 0, paddingRight: 6 },
+  lastRow: { borderBottomWidth: 0 },
+  more: { ...fine.link, fontSize: 12.5, marginTop: 4 },
 });

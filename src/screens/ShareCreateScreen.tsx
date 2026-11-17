@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { AppIcon } from '@/components/HealthIcons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, withAlpha } from '@/constants/colors';
 import {
@@ -55,7 +56,7 @@ export const ShareCreateScreen = () => {
     if (forSupport) return;
     listVerifiedProfessionals()
       .then(setProfessionals)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load professionals'));
+      .catch((err) => setError(err instanceof Error ? err.message : t('Could not load professionals')));
   }, [forSupport]);
 
   const toggleScope = (id: ShareScope) =>
@@ -84,7 +85,7 @@ export const ShareCreateScreen = () => {
       }
       router.back();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not share');
+      setError(err instanceof Error ? err.message : t('Could not share'));
       setSaving(false);
     }
   };
@@ -138,7 +139,7 @@ export const ShareCreateScreen = () => {
                   <Text style={styles.optionTitle}>{p.displayName}</Text>
                   <Text style={styles.optionSubtitle}>
                     {roleLabel(p.role)}
-                    {p.specialty ? ` · ${p.specialty}` : ''} · Verified
+                    {p.specialty ? ` · ${p.specialty}` : ''} · {t('Verified')}
                   </Text>
                 </View>
                 <Ionicons
@@ -170,7 +171,8 @@ export const ShareCreateScreen = () => {
               style={[styles.option, selected && styles.optionSelected]}
               onPress={() => toggleScope(s.id)}
             >
-              <Ionicons name={s.icon as any} size={20} color={selected ? Colors.accent : Colors.textSecondary} />
+              {/* AppIcon: las pesas («Actividad y entrenos») salen con el dibujo único de la app (fine/dumbbell.ts) */}
+              <AppIcon name={s.icon} size={20} color={selected ? Colors.accent : Colors.textSecondary} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.optionTitle}>{s.label}</Text>
                 <Text style={styles.optionSubtitle}>{s.description}</Text>
@@ -210,7 +212,7 @@ export const ShareCreateScreen = () => {
                   date: new Date(Date.now() + (days ?? 7) * 24 * 3600 * 1000).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' }),
                 })
             : pro
-              ? `${pro.displayName} will be able to read ${scopes.size} categor${scopes.size === 1 ? 'y' : 'ies'}. You can revoke it anytime.`
+              ? t('{name} will be able to read {what}. You can revoke it anytime.', { name: pro.displayName, what: tn(scopes.size, '{n} category', '{n} categories') })
               : t('Choose a professional to continue.')}
         </Text>
         <TouchableOpacity style={[styles.cta, !canSubmit && styles.ctaDisabled]} disabled={!canSubmit} onPress={submit}>

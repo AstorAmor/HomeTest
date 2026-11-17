@@ -1,4 +1,5 @@
 import { dateLocale, t } from '@/i18n';
+import { LotusIcon } from '@/components/fine/LotusIcon';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -93,7 +94,7 @@ export const LogCycleScreen = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View style={styles.iconBadge}>
-            <Ionicons name="rose-outline" size={26} color={Colors.pulseAccent} />
+            <LotusIcon size={26} color={Colors.pulseAccent} />
           </View>
           <Text style={styles.title}>{t('Log period')}</Text>
           <Text style={styles.subtitle}>
