@@ -1,5 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { expectSystemUi } from './systemUi';
 
 // Elegir una foto de la galería para el fondo de pantalla de la tarjeta: se recorta al centro a la
 // medida del fondo (1080 × 2340, como cubrir la pantalla) y se comprime. Devuelve un data URI (lo
@@ -8,6 +9,8 @@ export const WALL_W = 1080;
 export const WALL_H = 2340;
 
 export async function pickWallpaperPhoto(): Promise<string | null> {
+  // La galería sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+  expectSystemUi();
   const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
   const a = r.canceled ? null : r.assets?.[0];
   if (!a) return null;

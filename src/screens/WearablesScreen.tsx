@@ -2,9 +2,10 @@ import { dateLocale, num, t } from '@/i18n';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { FRow, SecHead, Tag } from '@/components/fine/Fine';
+import { FLink } from '@/components/fine/FineForm';
+import { SetRow, settingsStyles } from '@/components/settings/SettingsParts';
 import { DailyWearableRecord, WearableMetric } from '@/wearables/types';
 import { wearableRepository } from '@/wearables/wearableRepository';
 import { generateHuaweiDummy } from '@/wearables/providers/huaweiDummy';
@@ -31,31 +32,36 @@ import {
   lastAppleHealthSync,
   openAppleHealth,
 } from '@/wearables/providers/appleHealth';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
+
+// Wearables en el lenguaje fino desde el 2026-11-17 (el fundador: «En Wearables, mantienes los iconos antiguos y la
+// estética antigua»). Antes: tarjetas con borde, un icono de color por fuente y por métrica y botones esmeralda a todo
+// el ancho. Ahora, como Ajustes: cabeceras pequeñas, filas con una línea fina y sin iconos. Solo la conexión activa va
+// en una caja casi transparente, porque guarda un estado (conectada y cuándo se sincronizó por última vez).
 
 // En iPhone, Apple Salud; en Android, Health Connect; en la web se explican las dos
 const IS_IOS = Platform.OS === 'ios';
 const SHOW_HC = !IS_IOS;
 const SHOW_APPLE = Platform.OS !== 'android';
 
-// Con el mismo icono y color que en Hoy (círculos y tarjetas)
-const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string; icon: string; color: () => string }> = {
-  steps: { label: 'Steps', unit: '', icon: 'footsteps', color: () => Colors.sky },
-  resting_heart_rate: { label: 'Resting heart rate', unit: 'bpm', icon: 'heart-outline', color: () => Colors.coral },
-  heart_rate_avg: { label: 'Average heart rate', unit: 'bpm', icon: 'heart', color: () => Colors.coral },
-  hrv: { label: 'HRV', unit: 'ms', icon: 'pulse-outline', color: () => Colors.accent },
-  sleep_duration: { label: 'Sleep', unit: '', icon: 'moon', color: () => Colors.violet },
-  sleep_deep: { label: 'Deep sleep', unit: '', icon: 'moon', color: () => Colors.violet },
-  sleep_light: { label: 'Light sleep', unit: '', icon: 'moon-outline', color: () => Colors.sky },
-  sleep_rem: { label: 'REM sleep', unit: '', icon: 'eye-outline', color: () => Colors.pulseAccent },
-  sleep_awake: { label: 'Awake', unit: '', icon: 'sunny-outline', color: () => Colors.amber },
-  sleep_out_of_bed: { label: 'Out of bed', unit: '', icon: 'walk-outline', color: () => Colors.textMuted },
-  sleep_start: { label: 'Fell asleep', unit: '', icon: 'moon-outline', color: () => Colors.violet },
-  sleep_end: { label: 'Woke up', unit: '', icon: 'sunny-outline', color: () => Colors.amber },
-  active_energy: { label: 'Active energy', unit: 'kcal', icon: 'flame', color: () => Colors.coral },
-  body_temperature: { label: 'Body temperature', unit: '°C', icon: 'thermometer-outline', color: () => Colors.pinkSoft },
-  distance: { label: 'Distance', unit: 'km', icon: 'navigate-outline', color: () => Colors.amber },
-  other: { label: 'Other', unit: '', icon: 'ellipse-outline', color: () => Colors.textMuted },
+// Nombre y unidad de cada métrica (sin icono ni color: los días recientes van en filas con línea fina)
+const METRIC_LABEL: Record<WearableMetric, { label: string; unit: string }> = {
+  steps: { label: 'Steps', unit: '' },
+  resting_heart_rate: { label: 'Resting heart rate', unit: 'bpm' },
+  heart_rate_avg: { label: 'Average heart rate', unit: 'bpm' },
+  hrv: { label: 'HRV', unit: 'ms' },
+  sleep_duration: { label: 'Sleep', unit: '' },
+  sleep_deep: { label: 'Deep sleep', unit: '' },
+  sleep_light: { label: 'Light sleep', unit: '' },
+  sleep_rem: { label: 'REM sleep', unit: '' },
+  sleep_awake: { label: 'Awake', unit: '' },
+  sleep_out_of_bed: { label: 'Out of bed', unit: '' },
+  sleep_start: { label: 'Fell asleep', unit: '' },
+  sleep_end: { label: 'Woke up', unit: '' },
+  active_energy: { label: 'Active energy', unit: 'kcal' },
+  body_temperature: { label: 'Body temperature', unit: '°C' },
+  distance: { label: 'Distance', unit: 'km' },
+  other: { label: 'Other', unit: '' },
 };
 const METRIC_ORDER: WearableMetric[] = ['steps', 'sleep_duration', 'resting_heart_rate', 'heart_rate_avg', 'hrv', 'active_energy', 'distance', 'body_temperature', 'other'];
 
@@ -89,6 +95,64 @@ const timeAgo = (iso: string) => {
   const h = Math.round(min / 60);
   return h < 24 ? t('{n} h ago', { n: h }) : t('{n} d ago', { n: Math.round(h / 24) });
 };
+
+// Píldora esmeralda con su rueda mientras trabaja (Pill no la lleva). `a11y`: lo que oye el lector de pantalla
+// («Conectar Apple Salud» y no solo «Conectar»)
+function ActionPill({ label, a11y, onPress, busy, disabled }: { label: string; a11y?: string; onPress: () => void; busy?: boolean; disabled?: boolean }) {
+  return (
+    <TouchableOpacity
+      style={[fine.pill, styles.pill, disabled && !busy && styles.off]}
+      onPress={onPress}
+      disabled={disabled || busy}
+      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={a11y ?? label}
+      accessibilityState={{ disabled: !!(disabled || busy), busy: !!busy }}
+    >
+      {busy ? <ActivityIndicator size="small" color={FINE.ivory} /> : <Text style={fine.pillText}>{label}</Text>}
+    </TouchableOpacity>
+  );
+}
+
+// La conexión activa: nombre, «Conectado», la última sincronización y las dos acciones (sincronizar y permisos o
+// abrir Salud). La píldora y el enlace van uno al lado del otro, nunca uno dentro del otro.
+function ConnectedBox({
+  name,
+  lastSync,
+  syncing,
+  locked,
+  onSync,
+  more,
+  onMore,
+}: {
+  name: string;
+  lastSync: string | null;
+  syncing: boolean;
+  locked: boolean; // otra acción en marcha
+  onSync: () => void;
+  more: string;
+  onMore: () => void;
+}) {
+  return (
+    <View style={[fine.tile, styles.box]}>
+      <View style={styles.boxHead}>
+        <Text style={[fine.rowTitle, styles.flex]} numberOfLines={1}>
+          {name}
+        </Text>
+        <Tag label={t('Connected')} />
+      </View>
+      <View style={styles.boxRow}>
+        <Text style={styles.boxLabel}>{t('Last sync')}</Text>
+        <Text style={styles.boxValue}>{lastSync ? timeAgo(lastSync) : t('Not yet')}</Text>
+      </View>
+      <Text style={styles.boxNote}>{t('Syncs automatically each time Today opens.')}</Text>
+      <View style={styles.boxActions}>
+        <ActionPill label={t('Sync now')} onPress={onSync} busy={syncing} disabled={locked} />
+        <FLink label={more} onPress={onMore} disabled={locked} />
+      </View>
+    </View>
+  );
+}
 
 export const WearablesScreen = () => {
   const [records, setRecords] = useState<DailyWearableRecord[]>([]);
@@ -134,7 +198,7 @@ export const WearablesScreen = () => {
   const loadDummy = () =>
     run('dummy', async () => {
       setRecords(await wearableRepository.upsertRecords(generateHuaweiDummy(14)));
-      return t('Loaded 14 days of dummy Huawei Health data.');
+      return t('Loaded 14 days of sample Huawei Health data.');
     });
 
   const sync = () =>
@@ -214,184 +278,195 @@ export const WearablesScreen = () => {
       .map(([date, rows]) => [date, rows.sort((a, b) => METRIC_ORDER.indexOf(a.metric) - METRIC_ORDER.indexOf(b.metric))] as const);
   }, [records]);
 
-  // `grow`: reparte el ancho con otro botón de la misma fila. Solo, el botón no lleva flex (en una
-  // columna de alto automático, flex: 1 lo encogía y el texto no quedaba centrado).
-  const Button = ({ label, onPress, id, disabled, ghost, grow }: { label: string; onPress: () => void; id: string; disabled?: boolean; ghost?: boolean; grow?: boolean }) => (
-    <TouchableOpacity
-      style={[styles.button, grow && styles.buttonGrow, ghost && styles.buttonGhost, disabled && styles.buttonDisabled]}
-      onPress={onPress}
-      disabled={disabled || busy !== null}
-    >
-      {busy === id ? (
-        <ActivityIndicator color={ghost ? Colors.accent : Colors.background} />
-      ) : (
-        <Text style={[styles.buttonText, ghost && styles.buttonGhostText]}>{label}</Text>
-      )}
-    </TouchableOpacity>
-  );
+  const locked = busy !== null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Wearables')} showBack backFallback={tabHref(TAB.you)} />
 
-        {SHOW_APPLE && (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Ionicons name="heart-outline" size={24} color={Colors.accent} />
-              <Text style={styles.cardTitle}>{t('Apple Health')}</Text>
-              {IS_IOS && connected && (
-                <View style={styles.okPill}>
-                  <Ionicons name="checkmark" size={12} color={Colors.ok} />
-                  <Text style={styles.okPillText}>{t('Connected')}</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.cardText}>{t('Apple Watch and the apps that write to Health on your iPhone: Oura, Garmin, WHOOP, Huawei Health and others.')}</Text>
-            {appleAvailable === false ? (
-              <Text style={styles.warning}>{t('Apple Health only works in the Kuova app for iPhone (not in the browser or Expo Go).')}</Text>
-            ) : connected ? (
-              <>
-                <View style={styles.row}>
-                  <Button id="apple-sync" label={t('Sync now')} onPress={syncApple} grow />
-                  <Button id="apple-open" label={t('Open Health')} onPress={openAppleHealth} ghost grow />
-                </View>
-                <Text style={styles.syncText}>
-                  {lastSync ? t('Last sync {ago}. It also syncs by itself when you open Today.', { ago: timeAgo(lastSync) }) : t('It syncs by itself when you open Today.')}
-                </Text>
-              </>
+        <View style={settingsStyles.body}>
+          {/* Conexiones: la activa en su caja; las demás, filas con su explicación y «Conectar» a la derecha */}
+          <SecHead title={t('Connections')} style={settingsStyles.firstSec} />
+
+          {SHOW_APPLE &&
+            (appleAvailable !== false && connected ? (
+              <ConnectedBox
+                name={t('Apple Health')}
+                lastSync={lastSync}
+                syncing={busy === 'apple-sync'}
+                locked={locked}
+                onSync={syncApple}
+                more={t('Open Health')}
+                onMore={openAppleHealth}
+              />
             ) : (
-              <Button id="apple-connect" label={t('Connect Apple Health')} onPress={connectApple} disabled={!appleAvailable} />
-            )}
-          </View>
-        )}
+              <SetRow
+                title={t('Apple Health')}
+                sub={t('Apple Watch and the apps that write to Health on your iPhone: Oura, Garmin, WHOOP, Huawei Health and others.')}
+                right={
+                  appleAvailable === false ? undefined : (
+                    <ActionPill
+                      label={t('Connect')}
+                      a11y={t('Connect Apple Health')}
+                      onPress={connectApple}
+                      busy={busy === 'apple-connect'}
+                      disabled={locked || !appleAvailable}
+                    />
+                  )
+                }
+              >
+                {appleAvailable === false ? (
+                  <Text style={styles.rowNote}>{t('Apple Health only works in the Kuova app for iPhone (not in the browser or Expo Go).')}</Text>
+                ) : null}
+              </SetRow>
+            ))}
 
-        {SHOW_HC && (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="fitness-outline" size={24} color={Colors.accent} />
-            <Text style={styles.cardTitle}>{t('Health Connect')}</Text>
-            {connected && (
-              <View style={styles.okPill}>
-                <Ionicons name="checkmark" size={12} color={Colors.ok} />
-                <Text style={styles.okPillText}>{t('Connected')}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.cardText}>{t('Fitbit, Xiaomi, Garmin, Oura, Samsung, Google and others that sync to Health Connect.')}</Text>
-          {hcAvailable === false ? (
-            <Text style={styles.warning}>{t('Health Connect only works in the Kuova app for Android (not in the browser or Expo Go).')}</Text>
-          ) : connected ? (
+          {SHOW_HC &&
+            (hcAvailable !== false && connected ? (
+              <ConnectedBox
+                name={t('Health Connect')}
+                lastSync={lastSync}
+                syncing={busy === 'hc-sync'}
+                locked={locked}
+                onSync={sync}
+                more={t('Permissions')}
+                onMore={openHealthConnectSettings}
+              />
+            ) : (
+              <SetRow
+                title={t('Health Connect')}
+                sub={t('Fitbit, Xiaomi, Garmin, Oura, Samsung, Google and others that sync to Health Connect.')}
+                right={
+                  hcAvailable === false ? undefined : (
+                    <ActionPill
+                      label={t('Connect')}
+                      a11y={t('Connect Health Connect')}
+                      onPress={connect}
+                      busy={busy === 'hc-connect'}
+                      disabled={locked || !hcAvailable}
+                    />
+                  )
+                }
+              >
+                {hcAvailable === false ? (
+                  <Text style={styles.rowNote}>{t('Health Connect only works in the Kuova app for Android (not in the browser or Expo Go).')}</Text>
+                ) : null}
+              </SetRow>
+            ))}
+
+          {/* Huawei Health: sin conexión directa todavía; en la demo, datos de ejemplo con la forma que enviará */}
+          <SetRow
+            title={t('Huawei Health')}
+            sub={
+              samples
+                ? t('Direct connection coming soon. Until then, load test data with the same shape Huawei will send.')
+                : IS_IOS
+                  ? t('On iPhone, Huawei Health can share with Apple Health: turn it on in the Huawei Health app and Kuova reads it from there.')
+                  : t('Direct connection coming soon. Huawei Health does not share with Health Connect yet.')
+            }
+            last
+          >
+            {samples ? (
+              <FLink
+                label={t('Load sample Huawei data')}
+                onPress={loadDummy}
+                busy={busy === 'dummy'}
+                disabled={locked}
+                style={[settingsStyles.linkLeft, styles.inlineLink]}
+              />
+            ) : null}
+          </SetRow>
+
+          {message ? (
+            <Text style={styles.message} accessibilityLiveRegion="polite">
+              {message}
+            </Text>
+          ) : null}
+
+          {/* Qué llega de cada tipo: días con dato y de qué apps; a la derecha, los días o por qué no llega */}
+          {connected && (
             <>
-              <View style={styles.row}>
-                <Button id="hc-sync" label={t('Sync now')} onPress={sync} grow />
-                <Button id="hc-settings" label={t('Permissions')} onPress={openHealthConnectSettings} ghost grow />
-              </View>
-              <Text style={styles.syncText}>
-                {lastSync ? t('Last sync {ago}. It also syncs by itself when you open Today.', { ago: timeAgo(lastSync) }) : t('It syncs by itself when you open Today.')}
-              </Text>
-            </>
-          ) : (
-            <Button id="hc-connect" label={t('Connect Health Connect')} onPress={connect} disabled={!hcAvailable} />
-          )}
-        </View>
-        )}
-
-        {message ? <Text style={styles.message}>{message}</Text> : null}
-
-        {connected && (
-          <>
-            <Text style={styles.sectionTitle}>{t('What arrives (last 30 days)')}</Text>
-            <View style={styles.card}>
-              {coverage.map((c) => (
-                <View key={c.type} style={styles.coverRow}>
-                  <Ionicons
-                    name={!c.allowed ? 'lock-closed-outline' : c.days ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={18}
-                    color={!c.allowed ? Colors.textMuted : c.days ? Colors.ok : Colors.warning}
+              <SecHead title={t('Data received · 30 days')} />
+              {coverage.map((c, i) => {
+                const arriving = c.allowed && c.days > 0;
+                return (
+                  <FRow
+                    key={c.type}
+                    title={t(typeLabel[c.type])}
+                    sub={arriving ? `${sourceLabel(c.sources)}${c.estimated ? ` · ${t('estimated from heart rate')}` : ''}` : undefined}
+                    right={
+                      <Text style={[fine.rowValue, !arriving && styles.muted]} numberOfLines={1}>
+                        {!c.allowed ? t('No permission') : c.days ? t(c.days === 1 ? '{n} day' : '{n} days', { n: c.days }) : t('No data')}
+                      </Text>
+                    }
+                    last={i === coverage.length - 1}
                   />
-                  <Text style={styles.coverLabel}>{t(typeLabel[c.type])}</Text>
-                  <Text style={styles.coverValue} numberOfLines={2}>
-                    {!c.allowed
-                      ? t('No permission')
-                      : c.days
-                        ? `${t(c.days === 1 ? '{n} day' : '{n} days', { n: c.days })} · ${sourceLabel(c.sources)}${c.estimated ? ` · ${t('estimated from heart rate')}` : ''}`
-                        : t('No data')}
-                  </Text>
-                </View>
-              ))}
+                );
+              })}
               {onlyPhone && (
-                <Text style={styles.hint}>
+                <Text style={fine.note}>
                   {IS_IOS
-                    ? t('Only your iPhone is sending data. If you wear a watch or a ring, open its app (Oura, Garmin Connect, WHOOP, Huawei Health…) and turn on sharing with Apple Health. Then tap Sync now.')
-                    : t('Only your phone is sending data (steps). If you wear a watch, open its app (Fitbit, Mi Fitness, Samsung Health…) and turn on sharing with Health Connect. Then tap Sync now.')}
+                    ? t('Only the iPhone is sending data. For a watch or ring, turn on sharing with Apple Health in its app (Oura, Garmin Connect, WHOOP, Huawei Health…), then sync.')
+                    : t('Only the phone is sending data (steps). For a watch, turn on sharing with Health Connect in its app (Fitbit, Mi Fitness, Samsung Health…), then sync.')}
                 </Text>
               )}
               {anyMissing && (
-                <Text style={styles.hint}>
-                  {t('Something shows No data? Allow it in Health → your photo → Apps → Kuova, and check that your watch or ring app writes it to Health.')}
+                <Text style={fine.note}>
+                  {t('Types with no data: allow them in Health → your photo → Apps → Kuova, and check that the watch or ring app writes them to Health.')}
                 </Text>
               )}
               {missingPermissions && (
                 <>
-                  <Text style={styles.hint}>{t('Some types have no permission yet. Allow them so Kuova can use them.')}</Text>
-                  <Button id="hc-connect" label={t('Allow the missing ones')} onPress={connect} />
+                  <Text style={fine.note}>{t('Types without permission are not read.')}</Text>
+                  <FLink
+                    label={t('Allow the missing ones')}
+                    onPress={connect}
+                    busy={busy === 'hc-connect'}
+                    disabled={locked}
+                    style={settingsStyles.linkLeft}
+                  />
                 </>
               )}
-            </View>
-          </>
-        )}
+            </>
+          )}
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="watch-outline" size={24} color={Colors.accent} />
-            <Text style={styles.cardTitle}>{t('Huawei Health')}</Text>
-          </View>
-          <Text style={styles.cardText}>
-            {samples
-              ? t('Direct connection coming soon. Until then, load test data with the same shape Huawei will send.')
-              : IS_IOS
-                ? t('On iPhone, Huawei Health can share with Apple Health: turn it on in the Huawei Health app and Kuova reads it from there.')
-                : t('Direct connection coming soon. Huawei Health does not share with Health Connect yet.')}
-          </Text>
-          {samples && <Button id="dummy" label={t('Load dummy Huawei data')} onPress={loadDummy} />}
-        </View>
-
-        <Text style={styles.sectionTitle}>{t('Your last days')}</Text>
-        {byDate.length === 0 ? (
-          <Text style={styles.cardText}>{t('No wearable data yet.')}</Text>
-        ) : (
-          byDate.map(([date, rows]) => (
-            <View key={date} style={styles.dayCard}>
-              <Text style={styles.dayTitle}>{formatDate(date)}</Text>
-              {rows.map((r) => (
-                <View key={`${r.metric}|${r.sourceName}|${r.rawTypeId}`} style={styles.metricRow}>
-                  <View style={styles.metricLabelWrap}>
-                    <Ionicons name={METRIC_LABEL[r.metric].icon as any} size={16} color={METRIC_LABEL[r.metric].color()} />
+          {/* Los últimos 7 días con datos: la fecha pequeña y, debajo, una fila por métrica con su valor y su fuente */}
+          <SecHead title={t('Recent days')} />
+          {byDate.length === 0 ? (
+            <Text style={fine.note}>{t('No wearable data yet.')}</Text>
+          ) : (
+            byDate.map(([date, rows], di) => (
+              <View key={date}>
+                <Text style={[styles.dayTitle, di === 0 && styles.dayFirst]}>{formatDate(date)}</Text>
+                {rows.map((r, i) => (
+                  <View
+                    key={`${r.metric}|${r.sourceName}|${r.rawTypeId}`}
+                    style={[styles.metricRow, di === byDate.length - 1 && i === rows.length - 1 && styles.noLine]}
+                  >
                     <Text style={styles.metricLabel} numberOfLines={1}>
                       {t(METRIC_LABEL[r.metric].label)}
                     </Text>
+                    <View style={styles.metricRight}>
+                      <Text style={fine.rowValue} numberOfLines={1}>
+                        {formatValue(r.metric, r.value)}
+                      </Text>
+                      <Text style={styles.metricSource} numberOfLines={1}>
+                        {sourceLabel(r.sourceName)}
+                        {r.rawTypeId.includes(':') ? ` · ${t('estimated')}` : ''}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.metricRight}>
-                    <Text style={styles.metricValue} numberOfLines={1}>
-                      {formatValue(r.metric, r.value)}
-                    </Text>
-                    <Text style={styles.metricSource} numberOfLines={1}>
-                      {sourceLabel(r.sourceName)}
-                      {r.rawTypeId.includes(':') ? ` · ${t('estimated')}` : ''}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ))
-        )}
+                ))}
+              </View>
+            ))
+          )}
 
-        {records.length > 0 && (
-          <TouchableOpacity onPress={clearAll} style={styles.clear}>
-            <Text style={styles.clearText}>{t('Clear wearable data')}</Text>
-          </TouchableOpacity>
-        )}
+          {/* Borrar: un enlace apagado, sin rojo (como «Cerrar sesión» en Ajustes) */}
+          {records.length > 0 && (
+            <FLink label={t('Clear wearable data')} onPress={clearAll} muted busy={busy === 'clear'} disabled={locked} style={styles.clear} />
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -399,69 +474,49 @@ export const WearablesScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  content: { paddingBottom: 40, paddingHorizontal: 20, gap: 12 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    gap: 10,
-  },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  cardTitle: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium, flexShrink: 1 },
-  okPill: {
-    marginLeft: 'auto',
+  content: { paddingBottom: 40 },
+  flex: { flex: 1, minWidth: 0 },
+  off: { opacity: 0.45 },
+  muted: { color: FINE.mute },
+  // La píldora no cambia de ancho al salir la rueda
+  pill: { minWidth: 96, paddingHorizontal: 16 },
+  // Debajo de la explicación de una fila: dónde funciona, o el enlace de los datos de ejemplo
+  rowNote: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, marginTop: 6 },
+  inlineLink: { marginTop: 2, minHeight: 36, paddingVertical: 6 },
+  // La caja de la conexión activa: casi transparente, con borde jade
+  box: { borderColor: FINE.jadeLine, padding: 14, marginTop: 4, marginBottom: 4 },
+  boxHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  boxRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: Colors.ok,
+    gap: 10,
+    marginTop: 10,
+    paddingVertical: 9,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: FINE.line,
   },
-  okPillText: { color: Colors.ok, fontSize: 12, fontFamily: INTER.medium },
-  cardText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  syncText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
-  warning: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
-  hint: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19, marginTop: 4 },
-  row: { flexDirection: 'row', gap: 10 },
-  // Texto centrado también cuando ocupa dos líneas (letra grande o botones en fila)
-  button: {
-    minHeight: 48,
-    backgroundColor: Colors.accent,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+  boxLabel: { ...ff('regular'), color: FINE.mute, fontSize: 13, flex: 1 },
+  boxValue: { ...ff('regular'), color: FINE.ivory, fontSize: 13, fontVariant: ['tabular-nums'] },
+  boxNote: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, marginTop: 8 },
+  boxActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18, marginTop: 10 },
+  message: { ...ff('regular'), color: FINE.ivory, fontSize: 13, lineHeight: 18, marginTop: 12 },
+  // Días recientes: la fecha pequeña en mayúsculas y las métricas en filas con línea fina
+  dayTitle: { ...fine.kicker, marginTop: 18, marginBottom: 2 },
+  dayFirst: { marginTop: 4 },
+  metricRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 9,
+    minHeight: 46,
+    borderBottomWidth: 1,
+    borderBottomColor: FINE.line,
   },
-  buttonGrow: { flex: 1 },
-  buttonGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.accent },
-  buttonDisabled: { opacity: 0.4 },
-  buttonText: { color: Colors.background, fontFamily: INTER.medium, fontSize: 15, textAlign: 'center' },
-  buttonGhostText: { color: Colors.accent },
-  message: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20 },
-  sectionTitle: { ...fine.secTitle, marginTop: 8 },
-  coverRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  coverLabel: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, width: 120 },
-  coverValue: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, flex: 1, textAlign: 'right' },
-  dayCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
-    gap: 8,
-  },
-  dayTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  metricRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  metricLabelWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
-  metricLabel: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, flexShrink: 1 },
+  metricLabel: { ...ff('regular'), color: FINE.ivory, fontSize: 14, flexShrink: 1 },
   metricRight: { alignItems: 'flex-end', flexShrink: 1, maxWidth: '60%' },
-  metricValue: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
-  metricSource: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
-  clear: { alignSelf: 'center', paddingVertical: 12 },
-  clearText: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 14 },
+  metricSource: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 15, marginTop: 1 },
+  noLine: { borderBottomWidth: 0 },
+  clear: { marginTop: 24 },
 });

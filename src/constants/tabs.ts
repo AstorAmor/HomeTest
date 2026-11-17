@@ -17,6 +17,27 @@ export const onGoToTab = (fn: (n: number) => void) => {
   };
 };
 
+// Ir a una sección dentro de una pestaña (fundador, 2026-11-17: el círculo «Semana» de Hoy lleva a Plan, pero a la
+// altura de «Tu semana», no arriba del todo). La petición se guarda hasta que la pestaña la recoge: la pestaña puede
+// no estar montada aún (pestañas perezosas) o su contenido puede estar cargando.
+export type TabSection = 'week';
+let pendingSection: { tab: number; section: TabSection; at: number } | null = null;
+const sectionListeners = new Set<() => void>();
+export const goToTabSection = (n: number, section: TabSection) => {
+  pendingSection = { tab: n, section, at: Date.now() };
+  goToTab(n);
+  sectionListeners.forEach((fn) => fn());
+};
+// La sección pedida para esta pestaña en los últimos `windowMs` (mientras el contenido se recoloca al cargar), o null
+export const pendingTabSection = (n: number, windowMs = 2000): TabSection | null =>
+  pendingSection && pendingSection.tab === n && Date.now() - pendingSection.at < windowMs ? pendingSection.section : null;
+export const onTabSection = (fn: () => void) => {
+  sectionListeners.add(fn);
+  return () => {
+    sectionListeners.delete(fn);
+  };
+};
+
 // Mientras deslizas de lado una fila dentro de una pestaña (el carrusel de especialistas, las insignias…), las
 // pestañas no se mueven: si no, a veces el gesto se lo quedaba la pestaña y cambiabas de pantalla (fundador,
 // 2026-11-16: «el carrusel… a veces me cambia de pantalla»). Lo escucha MainTabsScreen (scrollEnabled del pager).

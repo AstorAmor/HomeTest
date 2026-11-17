@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { t } from '@/i18n';
+import { withSystemUi } from '@/utils/systemUi';
 import { DeliverySetting, deliverySettings, manualSteps, oemFamily, openByDefault } from '@/logic/deliveryHelp';
 import { openDeliverySetting, sendTestReminder } from '@/data/phoneReminders';
 import { FLink } from '@/components/fine/FineForm';
@@ -83,7 +84,7 @@ export function DeliveryHelp() {
                   {i + 1}. {t(step)}
                 </Text>
               ))}
-              <FLink label={t('Open Kuova’s settings')} onPress={() => Linking.openSettings()} style={settingsStyles.linkLeft} />
+              <FLink label={t('Open Kuova’s settings')} onPress={() => withSystemUi(() => Linking.openSettings())} style={settingsStyles.linkLeft} />
             </View>
           )}
 

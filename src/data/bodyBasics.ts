@@ -1,5 +1,5 @@
 import { showSamples } from './dataMode';
-import { ageFromDob, profileRepository } from './profileRepository';
+import { ageFromDob, profileRepository, type UserProfile } from './profileRepository';
 import { withSampleBasics, type BodyBasics } from '@/logic/bodyComposition';
 
 // Lo que las pantallas del peso y de las medidas necesitan saber de la persona: sexo, edad, altura y el peso del
@@ -11,7 +11,17 @@ import { withSampleBasics, type BodyBasics } from '@/logic/bodyComposition';
 export type { BodyBasics };
 
 export async function loadBodyBasics(): Promise<BodyBasics> {
-  const profile = await profileRepository.get().catch(() => null);
+  return bodyBasicsFrom(await profileRepository.get().catch(() => null));
+}
+
+// Lo mismo con el perfil leído la última vez, sin esperar a la red (undefined si aún no se ha leído; en la demo,
+// undefined también): para pintar al momento el IMC y las estimaciones (fundador, 2026-11-17)
+export function peekBodyBasics(): BodyBasics | undefined {
+  const profile = profileRepository.peek();
+  return profile ? bodyBasicsFrom(profile) : undefined;
+}
+
+export function bodyBasicsFrom(profile: UserProfile | null): BodyBasics {
   const age = ageFromDob(profile?.dateOfBirth);
   return withSampleBasics(
     {

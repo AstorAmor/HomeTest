@@ -14,21 +14,30 @@ export const measureRepositories: Record<string, MeasureRepository> = Object.fro
   MEASURE_SITES.map((s) => [s.kind, createMetricRepository<SimpleMetricEntry>(`hometest:${s.kind}_entries`, simpleMetricRemote(s.kind))]),
 );
 
-// Todo lo apuntado, por kind
+// Todo lo apuntado, por kind. Los 14 sitios salen en una sola petición (src/data/metricBatch.ts; antes eran 14)
 export async function loadMeasureReadings(): Promise<MeasureReadings> {
   const lists = await Promise.all(MEASURE_SITES.map((s) => measureRepositories[s.kind].getAll().catch(() => [] as SimpleMetricEntry[])));
   return Object.fromEntries(MEASURE_SITES.map((s, i) => [s.kind, lists[i]]));
 }
 
-// Guarda las medidas de una vez (solo las que tienen valor). Devuelve el id de la sesión
+// Lo último leído de todos los sitios, sin esperar a la red (undefined si falta alguno): para pintar al momento
+export function peekMeasureReadings(): MeasureReadings | undefined {
+  const lists = MEASURE_SITES.map((s) => measureRepositories[s.kind].peek());
+  if (lists.some((l) => !l)) return undefined;
+  return Object.fromEntries(MEASURE_SITES.map((s, i) => [s.kind, lists[i]!]));
+}
+
+// Guarda las medidas de una vez (solo las que tienen valor), todas a la vez en vez de una detrás de otra. Devuelve
+// el id de la sesión
 export async function saveMeasureSession(p: { fecha: string; values: Partial<Record<string, number>> }): Promise<string> {
   const session = `m${Date.now()}`;
   const now = new Date().toISOString();
-  for (const s of MEASURE_SITES) {
-    const v = p.values[s.kind];
-    if (v == null) continue;
-    await measureRepositories[s.kind].save({ id: `${session}-${s.kind}`, valor: v, unidad: s.unit, fecha: p.fecha, createdAt: now });
-  }
+  await Promise.all(
+    MEASURE_SITES.flatMap((s) => {
+      const v = p.values[s.kind];
+      return v == null ? [] : [measureRepositories[s.kind].save({ id: `${session}-${s.kind}`, valor: v, unidad: s.unit, fecha: p.fecha, createdAt: now })];
+    }),
+  );
   return session;
 }
 

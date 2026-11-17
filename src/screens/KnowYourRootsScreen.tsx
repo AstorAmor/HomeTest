@@ -14,6 +14,7 @@ import { profileRepository } from '@/data/profileRepository';
 import { AGE_LABEL, CANCER_LABEL, RELATION_GROUPS, RELATIONS } from '@/data/genetics/scoring';
 import { assessFamilyHistory, cancerTypesFor, LEVEL_TEXT, REFERRAL_INTRO } from '@/logic/genetics';
 import { t as tr } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import {
   AgeBand,
   AshkenaziAnswer,
@@ -144,6 +145,8 @@ function effective(a: FamilyHistoryAnswers): FamilyHistoryAnswers {
 // Compartir el resumen; en un navegador sin "compartir", se copia
 async function shareSummary(message: string) {
   try {
+    // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     await Share.share({ message });
   } catch {
     try {

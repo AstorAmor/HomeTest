@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, AppState, Linking, Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import { getCurrentUserId } from '@/lib/supabase';
 import { appPrefs, isSectionVisible } from './appPrefs';
 import { checkInRepository } from './checkInRepository';
@@ -141,6 +142,8 @@ export async function turnOnPhoneReminders(): Promise<PhoneStatus> {
   await ensureChannels(N);
   let p = toPermission(N, await N.getPermissionsAsync());
   if (p !== 'granted' && p !== 'blocked') {
+    // El diálogo del permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     p = toPermission(N, await N.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } }));
   }
   if (p !== 'granted') return p === 'blocked' ? 'blocked' : 'off';
@@ -158,6 +161,7 @@ export async function turnOffPhoneReminders(): Promise<void> {
 // Bloqueadas en el móvil: quien va a sus ajustes es que las quiere; al volver ya quedan activadas
 export async function openPhoneSettings(): Promise<void> {
   await setOptIn(true);
+  expectSystemUi();
   await Linking.openSettings().catch(() => undefined);
 }
 
@@ -411,6 +415,7 @@ export async function openDeliverySetting(setting: DeliverySetting): Promise<voi
   if (Platform.OS !== 'android') return;
   const pkg = appPackage();
   const extras = setting === 'lock_screen' && pkg ? [{ key: 'android.provider.extra.APP_PACKAGE', value: pkg }] : undefined;
+  expectSystemUi();
   try {
     await Linking.sendIntent(SETTINGS_INTENT[setting], extras);
   } catch {

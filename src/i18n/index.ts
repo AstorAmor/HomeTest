@@ -16,6 +16,7 @@ import { checkinEs } from './checkinEs';
 import { measuresEs } from './measuresEs';
 import { guideEs } from './guideEs';
 import { storeEs } from './storeEs';
+import { wearablesEs } from './wearablesEs';
 
 // Idiomas de la app. El texto fuente es el inglés: t('Today') devuelve la traducción del idioma
 // elegido o, si aún no la hay, el inglés. Así se traduce pantalla a pantalla sin romper nada.
@@ -34,7 +35,7 @@ export const LANGUAGES: { id: Lang; name: string; ready: boolean }[] = [
 ];
 
 const KEY = 'language.v1';
-const DICTS: Partial<Record<Lang, Record<string, string>>> = { es: { ...authEs, ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...bodyEs, ...gutEs, ...careEs, ...symptomsEs, ...rootsEs, ...settingsEs, ...es, ...checkinEs, ...measuresEs, ...guideEs, ...storeEs } };
+const DICTS: Partial<Record<Lang, Record<string, string>>> = { es: { ...authEs, ...workoutsEs, ...dietEs, ...metasEs, ...historialEs, ...bodyEs, ...gutEs, ...careEs, ...symptomsEs, ...rootsEs, ...settingsEs, ...es, ...checkinEs, ...measuresEs, ...guideEs, ...storeEs, ...wearablesEs } };
 
 let current: Lang = 'en';
 

@@ -1,11 +1,20 @@
 import { useRouter } from 'expo-router';
 import { GenericMetricEntry, SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
-import { getGlucoseEntries } from '@/data/glucoseRepository';
-import { MEAL_TYPE_LABEL } from '@/types/glucose';
+import { getGlucoseEntries, glucoseRepository } from '@/data/glucoseRepository';
+import { GlucoseEntry, MEAL_TYPE_LABEL } from '@/types/glucose';
 import { Colors } from '@/constants/colors';
 import { sampleSimpleEntries } from '@/data/sampleReadings';
 import { t } from '@/i18n';
-import { LAB_VALUE_LABEL, labValues } from '@/data/labUploadValues';
+import { peekWithLabValues, withLabValues } from '@/data/labUploadValues';
+
+const rows = (entries: GlucoseEntry[]) =>
+  entries.map((e): GenericMetricEntry => ({
+    id: e.id,
+    valor: e.valor,
+    unidad: e.unidad,
+    fecha: e.fecha,
+    extra: t(MEAL_TYPE_LABEL[e.mealType]),
+  }));
 
 export default function GlucoseDetail() {
   const router = useRouter();
@@ -16,18 +25,12 @@ export default function GlucoseDetail() {
       color={Colors.accent}
       icon="glucose"
       band={{ low: 70, high: 99 }}
-      loadEntries={async () => {
-        const entries = await getGlucoseEntries();
-        return entries.map((e): GenericMetricEntry => ({
-          id: e.id,
-          valor: e.valor,
-          unidad: e.unidad,
-          fecha: e.fecha,
-          extra: t(MEAL_TYPE_LABEL[e.mealType]),
-        })).concat(
-          // Lo que trae cada analítica subida (no se edita aquí: abre la analítica)
-          (await labValues('glucose')).map((l) => ({ id: l.id, valor: l.valor, unidad: l.unidad, fecha: l.fecha, extra: LAB_VALUE_LABEL(), uploadId: l.uploadId })),
-        );
+      // Lo apuntado más lo que trae cada analítica subida (no se edita aquí: abre la analítica); con lo último
+      // leído, al momento
+      loadEntries={() => withLabValues(getGlucoseEntries().then(rows), 'glucose')}
+      peekEntries={() => {
+        const own = glucoseRepository.peek();
+        return peekWithLabValues(own && rows(own), 'glucose');
       }}
       onAddPress={() => router.push('/log-glucose')}
       sample={sampleSimpleEntries('sugar', 'mg/dL')}

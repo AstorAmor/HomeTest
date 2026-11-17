@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   type SharedValue,
   Easing,
@@ -56,6 +56,15 @@ const GAP_WORD = 12;
 const HEALTH_H = 14;
 // Las mismas medidas para el bloqueo con Face ID / huella (AppLock): la K no cambia de sitio ni de tamaño
 export const BRAND = { K_W, K_H, GAP_K, WORD_H, GAP_WORD, HEALTH_H };
+
+// El alto de la pantalla de la app, en el que esta entrada centra la K. Lo mide la raíz (index.js) y lo usa el
+// bloqueo (AppLock) para poner su K a la misma altura sin fiarse del alto que trae su Modal en el primer fotograma
+// (2026-11-17). Hasta que se mide, el de la pantalla: con la app de borde a borde de Android es el mismo.
+let appHeight = 0;
+export function setAppHeight(h: number) {
+  if (h > 0) appHeight = h;
+}
+export const brandFrameHeight = () => appHeight || Dimensions.get('screen').height;
 // La K se queda quieta en el centro, donde estaba la nativa, y el nombre aparece debajo (2026-11-10: Astor
 // vio raro que la K subiera para dejarle sitio)
 

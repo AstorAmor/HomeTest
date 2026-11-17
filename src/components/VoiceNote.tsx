@@ -13,6 +13,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { audioUrl } from '@/data/consultations';
 
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import { INTER } from '@/theme/fine';
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const MAX_SECONDS = 180;
@@ -32,6 +33,8 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
 
   const start = async () => {
     setError('');
+    // El diálogo del permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const perm = await requestRecordingPermissionsAsync();
     if (!perm.granted) {
       setError(t('Allow microphone access to record a voice note.'));

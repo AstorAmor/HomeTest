@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
+import { readCache } from '@/data/readCache';
 import { DailyWearableRecord, WearableProviderId } from './types';
 
 // Registros diarios en el formato PROPIO de HomeTest. Con sesión de Supabase se
@@ -33,6 +34,22 @@ const fail = (error: { message: string } | null) => {
   if (error) throw new Error(error.message);
 };
 
+// Con cuenta, lo leído pasa por la caché (src/data/readCache.ts): Hoy, sus metas, los avisos y el plan piden lo del
+// reloj a la vez y sale UNA petición; lo último leído se guarda también en el móvil para pintar al momento. Solo las
+// columnas que se usan (sin user_id ni created_at).
+const CACHE_KEY = 'wearable_daily';
+const COLUMNS = 'date, metric, value, source_name, provider, raw_type_id, raw_type_name';
+
+async function fetchRemoteRecords(): Promise<DailyWearableRecord[]> {
+  const { data, error } = await supabase!
+    .from('wearable_daily')
+    .select(COLUMNS)
+    .eq('user_id', getCurrentUserId()!)
+    .order('date', { ascending: false });
+  fail(error);
+  return (data ?? []).map(fromRow);
+}
+
 async function getLocalRecords(): Promise<DailyWearableRecord[]> {
   const raw = await AsyncStorage.getItem(RECORDS_KEY);
   if (!raw) return [];
@@ -55,16 +72,14 @@ export const wearableRepository = {
   },
 
   async getRecords(): Promise<DailyWearableRecord[]> {
-    if (isRemoteActive()) {
-      const { data, error } = await supabase!
-        .from('wearable_daily')
-        .select('*')
-        .eq('user_id', getCurrentUserId()!)
-        .order('date', { ascending: false });
-      fail(error);
-      return (data ?? []).map(fromRow);
-    }
+    if (isRemoteActive()) return (await readCache.load(CACHE_KEY, fetchRemoteRecords, { persist: true })).slice();
     return getLocalRecords();
+  },
+
+  // Lo último leído de la cuenta, sin esperar a la red (undefined si aún no hay nada o en la demo): para pintar al
+  // momento mientras getRecords trae lo de ahora
+  peekRecords(): DailyWearableRecord[] | undefined {
+    return isRemoteActive() ? readCache.peek<DailyWearableRecord[]>(CACHE_KEY)?.slice() : undefined;
   },
 
   // Fusiona sin duplicar: la clave es fecha + métrica + fuente + tipo del proveedor.
@@ -75,6 +90,7 @@ export const wearableRepository = {
           onConflict: 'user_id,date,metric,source_name,provider,raw_type_id',
         });
         fail(error);
+        readCache.invalidate(CACHE_KEY);
       }
       return this.getRecords();
     }
@@ -103,6 +119,7 @@ export const wearableRepository = {
         .eq('provider', provider)
         .gte('date', fromDate);
       fail(error);
+      readCache.invalidate(CACHE_KEY);
       return this.upsertRecords(incoming);
     }
     const kept = (await getLocalRecords()).filter((r) => !(r.provider === provider && r.date >= fromDate));
@@ -114,6 +131,7 @@ export const wearableRepository = {
     if (isRemoteActive()) {
       const { error } = await supabase!.from('wearable_daily').delete().eq('user_id', getCurrentUserId()!);
       fail(error);
+      readCache.invalidate<DailyWearableRecord[]>(CACHE_KEY, () => []);
       return;
     }
     await AsyncStorage.removeItem(RECORDS_KEY);

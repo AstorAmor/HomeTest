@@ -13,8 +13,13 @@ import { FINE, ff, fine } from '@/theme/fine';
 // persona resaltada. En fino, como Vo2maxInfo: cabeceras pequeñas, la tabla en filas con línea fina y los niveles
 // sin colores de semáforo.
 export const GripStrengthInfo = () => {
-  const [sex, setSex] = useState<GripSex>('male');
-  const [age, setAge] = useState<number | null>(null);
+  // Con el perfil leído la última vez, la fila resaltada sale al momento (fundador, 2026-11-17)
+  const [cached] = useState(() => profileRepository.peek());
+  const [sex, setSex] = useState<GripSex>(cached?.sex === 'female' ? 'female' : 'male');
+  const [age, setAge] = useState<number | null>(() => {
+    const a = ageFromDob(cached?.dateOfBirth);
+    return a != null && Number.isFinite(a) ? a : null;
+  });
 
   useEffect(() => {
     profileRepository

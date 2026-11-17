@@ -12,6 +12,7 @@ import { SwitchRow, settingsStyles } from '@/components/settings/SettingsParts';
 import { Colors } from '@/constants/colors';
 import { useLogout } from '@/hooks/useLogout';
 import { t } from '@/i18n';
+import { withSystemUi } from '@/utils/systemUi';
 import { TAB, tabHref } from '@/constants/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { isRealAccount, setRealAccount } from '@/data/dataMode';
@@ -72,7 +73,7 @@ export const SettingsScreen = () => {
           {Platform.OS === 'web' ? (
             <Text style={fine.note}>{t('Your browser asks for each permission the first time it is needed.')}</Text>
           ) : (
-            <FLink label={t('Change them in your phone settings')} onPress={() => Linking.openSettings()} style={settingsStyles.linkLeft} />
+            <FLink label={t('Change them in your phone settings')} onPress={() => withSystemUi(() => Linking.openSettings())} style={settingsStyles.linkLeft} />
           )}
 
           {authMode === 'supabase' && (

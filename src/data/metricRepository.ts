@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { emitDataChange } from './dataEvents';
+import { readCache } from './readCache';
+import { loadMetricKind } from './metricBatch';
 
 export interface BaseMetricEntry {
   id: string;
@@ -15,6 +17,9 @@ export interface RemoteTable<T> {
   match?: Record<string, string>; // filtro fijo, p. ej. { kind: 'cortisol' } en metric_readings
   toRow: (entry: Partial<T>) => Record<string, unknown>;
   fromRow: (row: any) => T;
+  // Guardar en el móvil lo último leído, para pintarlo al abrir la app sin esperar a la red (src/data/readCache.ts).
+  // Solo las mediciones; lo demás queda en memoria.
+  persist?: boolean;
 }
 
 // Quita los undefined para que un update parcial no pise columnas con null.
@@ -66,8 +71,12 @@ function remoteRepository<T extends BaseMetricEntry>(remote: RemoteTable<T>) {
     if (error) throw new Error(error.message);
   };
 
+  // metric_readings con un solo `kind`: se pide junto con los demás kinds que se pidan a la vez (src/data/metricBatch.ts)
+  const kind = remote.table === 'metric_readings' && remote.match && Object.keys(remote.match).length === 1 ? remote.match.kind : undefined;
+
   return {
     async getAll(): Promise<T[]> {
+      if (kind) return (await loadMetricKind(kind)).map(remote.fromRow);
       const { data, error } = await supabase!
         .from(remote.table)
         .select('*')
@@ -116,22 +125,34 @@ function remoteRepository<T extends BaseMetricEntry>(remote: RemoteTable<T>) {
 export function createMetricRepository<T extends BaseMetricEntry>(storageKey: string, remote?: RemoteTable<T>) {
   const local = localRepository<T>(storageKey);
   const cloud = remote ? remoteRepository<T>(remote) : null;
-  const backend = () => (cloud && isRemoteActive() ? cloud : local);
-  // Tras guardar se avisa (src/data/dataEvents.ts): p. ej. los recordatorios del móvil se reprograman
-  const changed = (p: Promise<void>) => p.then(() => emitDataChange(storageKey));
+  const onCloud = () => !!cloud && isRemoteActive();
+  // Con cuenta, la lectura pasa por la caché (src/data/readCache.ts): si la misma tabla ya va en camino se comparte,
+  // y lo último leído queda para pintar al momento. Cada quien recibe su copia de la lista.
+  const readCloud = () => readCache.load(storageKey, () => cloud!.getAll(), { persist: !!remote?.persist }).then((xs) => xs.slice());
+  const getAll = (): Promise<T[]> => (onCloud() ? readCloud() : local.getAll());
+  // Tras guardar se avisa (src/data/dataEvents.ts): p. ej. los recordatorios del móvil se reprograman. Con cuenta,
+  // lo último leído se corrige ya (`patch`) y la siguiente lectura vuelve a la red.
+  const changed = (p: Promise<void>, patch?: (prev: T[]) => T[]) =>
+    p.then(() => {
+      if (onCloud()) readCache.invalidate<T[]>(storageKey, patch);
+      emitDataChange(storageKey);
+    });
 
   return {
-    getAll: (): Promise<T[]> => backend().getAll(),
-    save: (entry: T): Promise<void> => changed(backend().save(entry)),
-    update: (id: string, updated: Partial<T>): Promise<void> => changed(backend().update(id, updated)),
-    remove: (id: string): Promise<void> => changed(backend().remove(id)),
+    getAll,
+    // Lo último leído de la cuenta, sin esperar a la red (undefined si aún no se ha leído nada o en la demo). Para
+    // pintar al momento; lo de verdad llega con getAll.
+    peek: (): T[] | undefined => (onCloud() ? readCache.peek<T[]>(storageKey)?.slice() : undefined),
+    save: (entry: T): Promise<void> => changed(onCloud() ? cloud!.save(entry) : local.save(entry), (prev) => [entry, ...prev.filter((e) => e.id !== entry.id)]),
+    update: (id: string, updated: Partial<T>): Promise<void> =>
+      changed(onCloud() ? cloud!.update(id, updated) : local.update(id, updated), (prev) => prev.map((e) => (e.id === id ? { ...e, ...updated } : e))),
+    remove: (id: string): Promise<void> => changed(onCloud() ? cloud!.remove(id) : local.remove(id), (prev) => prev.filter((e) => e.id !== id)),
     // Varias entradas de golpe (upsert por id). Para cargar un usuario simulado.
-    saveMany: (entries: T[]): Promise<void> =>
-      changed(cloud && isRemoteActive() ? cloud.upsertMany(entries) : local.saveMany(entries)),
+    saveMany: (entries: T[]): Promise<void> => changed(onCloud() ? cloud!.upsertMany(entries) : local.saveMany(entries)),
     // Vacía la tabla del usuario (o, sin sesión, lo guardado en el móvil). Solo cuentas de prueba.
-    clearAll: (): Promise<void> => changed(backend().clearAll()),
+    clearAll: (): Promise<void> => changed(onCloud() ? cloud!.clearAll() : local.clearAll(), () => []),
     async getLatest(): Promise<T | null> {
-      const entries = await backend().getAll();
+      const entries = await getAll();
       if (!entries.length) return null;
       return entries.reduce((latest, e) =>
         new Date(e.fecha).getTime() > new Date(latest.fecha).getTime() ? e : latest
@@ -142,6 +163,7 @@ export function createMetricRepository<T extends BaseMetricEntry>(storageKey: st
       if (!cloud || !isRemoteActive()) return 0;
       const entries = await local.getAll();
       await cloud.upsertMany(entries);
+      readCache.invalidate(storageKey);
       return entries.length;
     },
   };

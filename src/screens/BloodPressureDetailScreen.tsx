@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -9,7 +9,7 @@ import { Chev, FRow, Pill, SecHead } from '@/components/fine/Fine';
 import { BigFigure, FineRangeTabs } from '@/components/fine/FineMeasure';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { BloodPressureEntry } from '@/types/bloodPressure';
-import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
+import { bloodPressureRepository, getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { sampleBloodPressure } from '@/data/sampleReadings';
 import { bpLabel, bpLevel, BpLevel } from '@/logic/bloodPressure';
 import { dateLocale, t } from '@/i18n';
@@ -53,10 +53,22 @@ const DIA = '#5CC7C9';
 // «Añadir medición» en píldora esmeralda y el historial en filas con su marca.
 export const BloodPressureDetailScreen = () => {
   const router = useRouter();
-  const [entries, setEntries] = useDeepState<BloodPressureEntry[]>([]);
+  // Con cuenta, la ficha nace con las tomas leídas la última vez (en Hoy, en Mediciones o al abrir la app) y las
+  // refresca de la red detrás, en vez de empezar vacía (fundador, 2026-11-17: «las medidas tardan en cargar»)
+  const [initial] = useState(() => bloodPressureRepository.peek());
+  const [entries, setEntries] = useDeepState<BloodPressureEntry[]>(initial ?? []);
   const [range, setRange] = useState<RangeId>('1M');
+  const firstLoad = useRef(true);
 
-  const load = useCallback(() => getBloodPressureEntries().then(setEntries), [setEntries]);
+  const load = useCallback(() => {
+    // Al volver de apuntar una toma, ya sale (lo último leído lleva lo nuevo); la red lo confirma detrás
+    if (!firstLoad.current) {
+      const snap = bloodPressureRepository.peek();
+      if (snap) setEntries(snap);
+    }
+    firstLoad.current = false;
+    return getBloodPressureEntries().then(setEntries);
+  }, [setEntries]);
   useReloadOnFocus(load);
 
   // Sin registros propios: los de ejemplo (los mismos que enseña Mis datos), sin poder editarlos

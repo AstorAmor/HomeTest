@@ -60,7 +60,7 @@ import { labUploadRepository } from '@/data/labUploads';
 import { labReports } from '@/utils/labReportView';
 import { useMetas } from '@/hooks/useMetas';
 import { weekScore as weekScoreOf } from '@/logic/metas';
-import { goToTab, TAB } from '@/constants/tabs';
+import { goToTabSection, TAB } from '@/constants/tabs';
 import { computeReadiness, formatSleep, latest, shortDate, todayValue, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { useWebShell } from '@/web/webMode';
 
@@ -139,8 +139,12 @@ export const TodayScreen = () => {
   // puede cerrar (se recuerda en la cuenta)
   const [firstCard, setFirstCard] = useState(false);
 
-  // Peso: el último y cuándo toca pesarse (una vez por semana)
-  const [weight, setWeight] = useState<WeighAdvice | null>(null);
+  // Peso: el último y cuándo toca pesarse (una vez por semana). Con cuenta, desde lo último leído (al abrir la app,
+  // lo guardado en el móvil) y la red lo refresca detrás (fundador, 2026-11-17: «las medidas tardan en cargar»)
+  const [weight, setWeight] = useState<WeighAdvice | null>(() => {
+    const all = weightRepository.peek();
+    return all ? weighAdvice(all) : null;
+  });
   const [savedShown, setSavedShown] = useState<Partial<GoalsShown> | null>(null);
   const water = useWaterToday();
   // La semana de tus metas (el círculo «Semana»): la media de las tres áreas
@@ -153,6 +157,16 @@ export const TodayScreen = () => {
         .catch(() => undefined),
     [setBathroomToday],
   );
+  // Las tomas de hoy. Al marcar una en MedToday solo se leen estas, no Hoy entero (fundador, 2026-11-17: «al marcar
+  // la medicación como tomada también tiene como un glitch»); ahí, si falla la red, se queda la lista que había
+  const readDoses = useCallback(
+    () =>
+      Promise.all([medicationRepository.getAll(), doseRepository.getAll()]).then(([m, l]) =>
+        setDosesToday(dosesForDay(m.filter((i) => isActiveOn(i, new Date())), new Date(), l)),
+      ),
+    [setDosesToday],
+  );
+  const reloadDoses = useCallback(() => readDoses().catch(() => undefined), [readDoses]);
   const load = useCallback(async () => {
     getLiveBiomarkers().then(setBiomarkers);
     Promise.all([
@@ -178,12 +192,7 @@ export const TodayScreen = () => {
       .refresh()
       .catch((e) => console.warn('Notifications not refreshed', e));
     // Sin la tabla de medicación (migración pendiente) simplemente no hay tomas que enseñar
-    Promise.all([medicationRepository.getAll(), doseRepository.getAll()])
-      .then(([m, l]) => {
-        const active = m.filter((i) => isActiveOn(i, new Date()));
-        setDosesToday(dosesForDay(active, new Date(), l));
-      })
-      .catch(() => setDosesToday([]));
+    readDoses().catch(() => setDosesToday([]));
     dailyGoalsStore.get().then(setSavedGoals);
     goalsShownStore.get().then(setSavedShown);
     weightRepository
@@ -204,7 +213,7 @@ export const TodayScreen = () => {
     setCheckInsToday(checkIns.filter((c) => checkInDayKey(c) === todayKey).length);
     const cycleGoal = p.sex === 'female' ? await cycleGoalStore.get().catch(() => null) : null;
     setCycle(p.sex === 'female' ? currentCyclePhase(cycleEntries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null);
-  }, [setBiomarkers, setProfile, setCycle, reloadBathroom, setDosesToday, setThermo, setSummary, demoMode]);
+  }, [setBiomarkers, setProfile, setCycle, reloadBathroom, readDoses, setDosesToday, setThermo, setSummary, demoMode]);
 
   useReloadOnFocus(load);
 
@@ -310,7 +319,8 @@ export const TodayScreen = () => {
           {weekScore != null && <Text style={styles.circleUnit}>%</Text>}
         </Text>
       ),
-      onPress: () => goToTab(TAB.plan),
+      // A Plan, a la altura de «Tu semana» (fundador, 2026-11-17)
+      onPress: () => goToTabSection(TAB.plan, 'week'),
       a11y: t('Your week: {n} percent', { n: weekScore == null ? 0 : Math.round(weekScore * 100) }),
     },
     cycle && show('cycle') && {
@@ -437,7 +447,7 @@ export const TodayScreen = () => {
           <TourTarget id="today.medication" scroll={tourScroll} inset={20}>
             <View style={styles.medBlock}>
               <ZoneChangeBanner onChanged={load} />
-              <MedToday doses={dosesToday} onChange={load} />
+              <MedToday doses={dosesToday} onChange={reloadDoses} />
             </View>
           </TourTarget>
         )}

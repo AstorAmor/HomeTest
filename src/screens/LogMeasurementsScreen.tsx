@@ -228,7 +228,7 @@ export const LogMeasurementsScreen = () => {
                 accessible={false}
               >
                 <View style={styles.rowText}>
-                  <Text style={[fine.rowTitle, styles.rowTitle]} numberOfLines={2}>
+                  <Text style={[fine.rowTitle, styles.rowTitle]} numberOfLines={2} maxFontSizeMultiplier={1.15}>
                     {t(s.label)}
                   </Text>
                   {on ? (
@@ -258,10 +258,13 @@ export const LogMeasurementsScreen = () => {
                     placeholder="—"
                     placeholderTextColor={FINE.mute}
                     selectTextOnFocus
+                    maxFontSizeMultiplier={1.2}
                     accessibilityLabel={`${t(s.label)}, ${unitOf(s)}`}
                     accessibilityHint={t(s.hint)}
                   />
-                  <Text style={styles.unit}>{unitOf(s)}</Text>
+                  <Text style={styles.unit} numberOfLines={1} maxFontSizeMultiplier={1.15}>
+                    {unitOf(s)}
+                  </Text>
                 </View>
               </TouchableOpacity>
             );
@@ -360,14 +363,17 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 9, minHeight: 54, borderBottomWidth: 1, borderBottomColor: FINE.line },
   lastRow: { borderBottomWidth: 0 },
   rowText: { flex: 1, minWidth: 0 },
-  rowTitle: { fontSize: 14.5 },
+  rowTitle: { fontSize: 14 },
   hint: { ...ff('regular'), fontSize: 12, lineHeight: 16, color: FINE.jade, marginTop: 2 },
   // La casilla de cada medida: casi transparente con borde fino; la del sitio elegido, en jade
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    width: 84,
+    // Sin ancho fijo para la unidad: con la letra del sistema grande, «cm» y «mm» caían partidos en dos líneas («c» / «m»,
+    // «m» / «m»; fundador, 2026-11-17). La casilla crece lo justo y no encoge
+    minWidth: 92,
+    flexShrink: 0,
     borderWidth: 1,
     borderColor: FINE.line,
     backgroundColor: FINE.tile,
@@ -379,7 +385,7 @@ const styles = StyleSheet.create({
   inputBad: { borderColor: '#E9A48F' },
   // Ancho fijo: en la web un campo de texto sin ancho ocupa de más
   input: { ...ff('regular'), width: 48, color: FINE.ivory, fontSize: 16, paddingVertical: 7, textAlign: 'right', fontVariant: ['tabular-nums'] },
-  unit: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, width: 22 },
+  unit: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, minWidth: 22, flexShrink: 0 },
   after: { marginTop: 8 },
   result: { marginTop: 14, paddingTop: 10, borderTopWidth: 1, borderTopColor: FINE.rule, gap: 4 },
   resultRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },

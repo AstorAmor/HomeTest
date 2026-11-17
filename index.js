@@ -13,7 +13,7 @@ import { takePendingFade, ThemeVeil } from './src/theme/transition';
 import { loadTextSize } from './src/theme/textSize';
 import { loadLanguage } from './src/i18n';
 import { Colors } from './src/constants/colors';
-import { LaunchIntro } from './src/components/LaunchIntro';
+import { LaunchIntro, setAppHeight } from './src/components/LaunchIntro';
 import * as Font from 'expo-font';
 
 // Inter, la letra del prototipo de las 4 pestañas (src/theme/fine.ts): solo los cuatro pesos que se usan, cada uno
@@ -54,7 +54,8 @@ function Root() {
 
   if (veil === undefined) return null;
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.background }}>
+    // El alto de la app: el bloqueo con Face ID / huella pone su K a la misma altura que la entrada (LaunchIntro)
+    <View style={{ flex: 1, backgroundColor: Colors.background }} onLayout={(e) => setAppHeight(e.nativeEvent.layout.height)}>
       {App ? <App /> : null}
       {/* Entrada con la marca al abrir en frío (no tras cambiar el tema; en la web solo con ?intro=1) */}
       {App && veil === null && showIntro ? <LaunchIntro /> : null}

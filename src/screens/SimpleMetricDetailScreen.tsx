@@ -32,6 +32,10 @@ interface SimpleMetricDetailScreenProps {
   icon: string; // nombre de AppIcon (p. ej. 'glucose'); desde el 2026-11-16 la ficha ya no lo pinta
   band?: { low: number; high: number }; // franja de referencia en la gráfica
   loadEntries: () => Promise<GenericMetricEntry[]>;
+  // Lo último leído, sin esperar a la red (undefined si aún no hay nada): la ficha nace con ello y, al volver de
+  // apuntar una medición, lo enseña al momento mientras loadEntries trae lo de ahora (fundador, 2026-11-17: «las
+  // medidas tardan en cargar»)
+  peekEntries?: () => GenericMetricEntry[] | undefined;
   onAddPress: () => void;
   onEditPress: (id: string) => void;
   // Registros de ejemplo cuando aún no hay ninguno propio (no se pueden editar)
@@ -52,6 +56,7 @@ export const SimpleMetricDetailScreen = ({
   color,
   band,
   loadEntries,
+  peekEntries,
   onAddPress,
   onEditPress,
   sample,
@@ -59,14 +64,26 @@ export const SimpleMetricDetailScreen = ({
   extra,
 }: SimpleMetricDetailScreenProps) => {
   const router = useRouter();
-  const [entries, setEntries] = useDeepState<GenericMetricEntry[]>([]);
+  const [initial] = useState(() => peekEntries?.());
+  const [entries, setEntries] = useDeepState<GenericMetricEntry[]>(initial ?? []);
   const loadEntriesRef = useRef(loadEntries);
+  const peekEntriesRef = useRef(peekEntries);
+  const firstLoad = useRef(true);
   const [range, setRange] = useState<RangeId>('1M');
 
   useEffect(() => {
     loadEntriesRef.current = loadEntries;
+    peekEntriesRef.current = peekEntries;
   });
-  const load = useCallback(() => loadEntriesRef.current().then(setEntries), [setEntries]);
+  const load = useCallback(() => {
+    // Al volver a la ficha, lo último leído ya (tras apuntar, ya lleva lo nuevo); la red lo confirma detrás
+    if (!firstLoad.current) {
+      const snap = peekEntriesRef.current?.();
+      if (snap) setEntries(snap);
+    }
+    firstLoad.current = false;
+    return loadEntriesRef.current().then(setEntries);
+  }, [setEntries]);
   useReloadOnFocus(load);
 
   const isSample = entries.length === 0 && !!sample?.length;

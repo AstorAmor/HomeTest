@@ -6,6 +6,7 @@ import { AuthUser } from '@/types';
 import { mockPatient } from '@/data/mockData';
 import { isSupabaseConfigured, setCurrentUserId, supabase } from '@/lib/supabase';
 import { amITester, loadDataMode, resetDataMode } from '@/data/dataMode';
+import { readCache } from '@/data/readCache';
 import {
   amIAdmin,
   getMyProfessionalAccount,
@@ -162,6 +163,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const apply = async (session: Session | null) => {
       // El id se fija antes que el estado para que los repositorios ya lean de la nube
       setCurrentUserId(session?.user.id ?? null);
+      // Lo último leído de esta cuenta y guardado en el móvil (src/data/readCache.ts), para que las mediciones se
+      // pinten al momento al abrir la app. Va a la vez que las comprobaciones de abajo y está antes de la primera
+      // pantalla. Sin sesión, fuera todo lo guardado
+      const cacheReady = session ? readCache.hydrate(session.user.id) : readCache.clear();
       if (!session) {
         setProfessional(null);
         setIsAdmin(false);
@@ -185,6 +190,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // probador puede tener cuenta de prueba: las demás entran directas a los cuestionarios
         setRealAccount(await loadDataMode(tester));
       }
+      await cacheReady;
       setUser(userFromSession(session));
     };
     supabase.auth.getSession().then(async ({ data }) => {
@@ -303,6 +309,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Fuera ya, sin esperar al aviso de Supabase: si no, «/» volvía a entrar en las pestañas con la
       // sesión aún puesta y, al cerrarse, se quedaba dentro sin cuenta (con lo guardado en el móvil)
       setCurrentUserId(null);
+      // Lo guardado de esta cuenta para pintar rápido (mediciones, perfil…) no se queda en el móvil
+      readCache.clear();
       setUser(null);
       setProfessional(null);
       setIsAdmin(false);

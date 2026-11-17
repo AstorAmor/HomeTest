@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { DailyWearableRecord, WearableMetric } from './types';
@@ -39,42 +39,82 @@ const recentSources = (records: DailyWearableRecord[]) => {
   return [...names].sort((a, b) => Number(a === PHONE_SOURCE) - Number(b === PHONE_SOURCE));
 };
 
+// Las series de unos registros. Hoy, sus metas, el plan y Mediciones reciben los mismos registros (la misma lectura,
+// src/data/readCache.ts): se calculan una vez y se reutilizan mientras no lleguen otros (fundador, 2026-11-17: «las
+// medidas tardan en cargar»). La lista es una copia por pantalla, pero los registros son los mismos objetos.
+const seriesMemo = new WeakMap<object, { length: number; last: object; series: DailySeries }>();
+function seriesOf(records: DailyWearableRecord[]): DailySeries {
+  const first = records[0];
+  const last = records[records.length - 1];
+  const hit = first ? seriesMemo.get(first) : undefined;
+  if (hit && hit.length === records.length && hit.last === last) return hit.series;
+  const series = toDailySeries(records);
+  if (first) seriesMemo.set(first, { length: records.length, last, series });
+  return series;
+}
+
+// Los días de ejemplo, una vez al día (son siempre los mismos para el mismo día)
+let sampleMemo: { day: string; series: DailySeries } | null = null;
+function sampleSeries(): DailySeries {
+  const day = localDayKey(new Date());
+  if (sampleMemo?.day !== day) sampleMemo = { day, series: toDailySeries(generateHuaweiDummy(SAMPLE_DAYS)) };
+  return sampleMemo.series;
+}
+
+interface WearableView {
+  series: DailySeries;
+  isSample: boolean;
+  sources: string[];
+  hasAny: boolean;
+}
+
+// Lo que enseña una pantalla con estos registros: los suyos; sin ninguno, los de ejemplo (demo y cuentas de prueba)
+// o nada (cuenta real)
+function viewOf(stored: DailyWearableRecord[], days: number): WearableView {
+  if (stored.length > 0) return { series: lastDays(seriesOf(stored), days), sources: recentSources(stored), isSample: false, hasAny: true };
+  if (showSamples()) return { series: lastDays(sampleSeries(), days), sources: ['Huawei Health'], isSample: true, hasAny: true };
+  return { series: {}, sources: [], isSample: false, hasAny: false };
+}
+
 // Hook para Today, My Data y el detalle de métrica: lee lo sincronizado y, si todavía no hay nada,
 // usa el dummy de Huawei EN MEMORIA (sin guardarlo) para que la demo no salga vacía; en una cuenta
 // real, no (sale vacío). `days` recorta al periodo que enseña cada pantalla. Con `autoSync`, además,
 // trae lo nuevo de Health Connect (Android) o de Apple Salud (iPhone) en segundo plano (como mucho
 // cada 10 minutos) y repinta.
+// Con cuenta, la pantalla nace con lo último leído (en memoria o guardado en el móvil) y lo refresca de la red
+// detrás, en vez de empezar vacía (fundador, 2026-11-17).
 export function useDailyWearables(days = 14, opts?: { autoSync?: boolean }) {
-  const [series, setSeries] = useDeepState<DailySeries>({});
-  const [isSample, setIsSample] = useDeepState(false);
-  const [sources, setSources] = useDeepState<string[]>([]);
-  const [hasAny, setHasAny] = useDeepState(false);
+  const [initial] = useState<WearableView | null>(() => {
+    const snap = wearableRepository.peekRecords();
+    return snap ? viewOf(snap, days) : null;
+  });
+  const [series, setSeries] = useDeepState<DailySeries>(initial?.series ?? {});
+  const [isSample, setIsSample] = useDeepState(initial?.isSample ?? false);
+  const [sources, setSources] = useDeepState<string[]>(initial?.sources ?? []);
+  const [hasAny, setHasAny] = useDeepState(initial?.hasAny ?? false);
   const autoSync = !!opts?.autoSync;
+  const firstLoad = useRef(true);
 
   const apply = useCallback(
     (stored: DailyWearableRecord[]) => {
-      if (stored.length > 0) {
-        setSeries(lastDays(toDailySeries(stored), days));
-        setSources(recentSources(stored));
-        setIsSample(false);
-        setHasAny(true);
-      } else if (showSamples()) {
-        setSeries(lastDays(toDailySeries(generateHuaweiDummy(SAMPLE_DAYS)), days));
-        setSources(['Huawei Health']);
-        setIsSample(true);
-        setHasAny(true);
-      } else {
-        setSeries({});
-        setSources([]);
-        setIsSample(false);
-        setHasAny(false);
-      }
+      const v = viewOf(stored, days);
+      setSeries(v.series);
+      setSources(v.sources);
+      setIsSample(v.isSample);
+      setHasAny(v.hasAny);
     },
     [setSeries, setIsSample, setSources, setHasAny, days],
   );
 
   const load = useCallback(async () => {
-    apply(await wearableRepository.getRecords().catch(() => []));
+    // Al volver a la pantalla, lo último leído por cualquiera (p. ej. tras sincronizar en Hoy) se ve ya
+    if (!firstLoad.current) {
+      const snap = wearableRepository.peekRecords();
+      if (snap) apply(snap);
+    }
+    firstLoad.current = false;
+    // Sin red, se queda lo último leído (si lo hay) en vez de vaciar la pantalla
+    apply(await wearableRepository.getRecords().catch(() => wearableRepository.peekRecords() ?? []));
     if (autoSync) {
       syncWearablesIfDue()
         .then(async (changed) => {

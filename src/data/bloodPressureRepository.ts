@@ -6,6 +6,7 @@ const STORAGE_KEY = 'hometest:blood_pressure_entries';
 export const bloodPressureRepository = createMetricRepository<BloodPressureEntry>(STORAGE_KEY, {
   table: 'blood_pressure_readings',
   dateColumn: 'measured_at',
+  persist: true, // lo último leído también en el móvil, para pintarlo al abrir (src/data/readCache.ts)
   toRow: (e) =>
     definedOnly({
       id: e.id,

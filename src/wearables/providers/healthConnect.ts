@@ -20,6 +20,7 @@ import { DailyWearableRecord, WearableMetric } from '../types';
 
 import { joinSources, originName, PHONE_SOURCE } from '../sources';
 import { summarizeSleepSessions } from '../seriesLogic';
+import { expectSystemUi } from '@/utils/systemUi';
 
 export { originName, PHONE_SOURCE };
 
@@ -70,6 +71,8 @@ export async function connectHealthConnect(): Promise<string[]> {
   const lib = loadLib();
   if (!lib) throw new Error('Health Connect is not available on this device.');
   await lib.initialize();
+  // El permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+  expectSystemUi();
   await lib.requestPermission(readTypes().map((recordType) => ({ accessType: 'read', recordType })));
   return grantedTypes();
 }
@@ -89,6 +92,7 @@ export async function grantedTypes(): Promise<string[]> {
 
 export function openHealthConnectSettings() {
   try {
+    expectSystemUi();
     loadLib()?.openHealthConnectSettings();
   } catch {
     // sin Health Connect no hay ajustes que abrir

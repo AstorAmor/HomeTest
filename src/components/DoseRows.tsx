@@ -18,9 +18,15 @@ const DARK = '#061A16'; // la marca sobre el jade
 
 const hhmm = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
-export async function markDose(dose: ScheduledDose, status: DoseLog['status']) {
+// La toma marcada ahora, antes de guardarla: Hoy (MedToday) la pinta ya, sin esperar a recargar, y con su id la
+// puede deshacer
+export function doseLogFor(dose: ScheduledDose, status: DoseLog['status']): DoseLog {
   const at = new Date().toISOString();
-  await doseRepository.save({ id: `${Date.now()}`, fecha: at, createdAt: at, medId: dose.medId, scheduledFor: dose.at.toISOString(), status });
+  return { id: `${Date.now()}`, fecha: at, createdAt: at, medId: dose.medId, scheduledFor: dose.at.toISOString(), status };
+}
+
+export async function markDose(dose: ScheduledDose, status: DoseLog['status']) {
+  await doseRepository.save(doseLogFor(dose, status));
 }
 
 const doseKey = (d: ScheduledDose) => `${d.medId}-${d.at.toISOString()}`;

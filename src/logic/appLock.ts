@@ -32,12 +32,28 @@ export function parseLockPrefs(raw: string | null | undefined): AppLockPrefs | n
 export const lockOnFor = (prefs: AppLockPrefs | null, userId: string | null | undefined): prefs is AppLockPrefs =>
   !!prefs && !!userId && prefs.userId === userId;
 
+// Las hojas del sistema que abre la propia app (compartir, elegir una foto o un archivo, la cámara, un permiso, el
+// navegador de dentro, los ajustes del móvil): en Android la app pasa «a segundo plano» aunque se siga viendo detrás
+// (fundador, 2026-11-17: al compartir el informe de evolución salía la K en medio de la pantalla). Quien las abre
+// lo avisa justo antes (expectSystemUi, src/utils/systemUi.ts); si la app sale en los SYSTEM_UI_WINDOW_MS
+// siguientes, es esa hoja: sin la capa de la marca y, al volver, solo se bloquea si se ha estado fuera más de
+// SYSTEM_UI_GRACE_MS (o del rato elegido, si es mayor). Quien se va de verdad desde ahí y tarda, se la encuentra
+// bloqueada igual.
+export const SYSTEM_UI_WINDOW_MS = 4_000;
+export const SYSTEM_UI_GRACE_MS = 180_000;
+
+export function isExpectedLeave(expectedAt: number | null, now: number): boolean {
+  if (expectedAt === null) return false;
+  const since = now - expectedAt;
+  return since >= 0 && since < SYSTEM_UI_WINDOW_MS;
+}
+
 // Al volver de segundo plano: ¿ha pasado el rato elegido? Si el reloj va hacia atrás (cambio de hora a mano),
-// se bloquea: ante la duda, pedirlo.
-export function shouldLockOnReturn(afterMs: LockAfter, backgroundAt: number | null, now: number): boolean {
+// se bloquea: ante la duda, pedirlo. `expected`: la salida era una hoja del sistema abierta por la app.
+export function shouldLockOnReturn(afterMs: LockAfter, backgroundAt: number | null, now: number, expected = false): boolean {
   if (backgroundAt === null) return false;
   const away = now - backgroundAt;
-  return away < 0 || away >= afterMs;
+  return away < 0 || away >= (expected ? Math.max(afterMs, SYSTEM_UI_GRACE_MS) : afterMs);
 }
 
 // Qué decir si no se ha podido desbloquear (códigos de expo-local-authentication). null = no decir nada (lo ha

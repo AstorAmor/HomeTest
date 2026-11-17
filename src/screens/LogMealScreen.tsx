@@ -10,6 +10,7 @@ import { GlowRing, ringTones } from '@/components/GlowRing';
 import { FButton, FChip, FLink, formStyles } from '@/components/fine/FineForm';
 import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
 import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { FINE, ff, fine } from '@/theme/fine';
@@ -46,11 +47,14 @@ export const LogMealScreen = () => {
     setError('');
     try {
       if (Platform.OS !== 'web') {
+        // La hoja del sistema sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+        expectSystemUi();
         const perm = await ImagePicker.requestCameraPermissionsAsync();
         if (!perm.granted) {
           setError(t('Camera permission is needed to snap your meal.'));
           return;
         }
+        expectSystemUi();
         const result = await ImagePicker.launchCameraAsync({ quality: 0.6 });
         if (!result.canceled) setPhotoUri(result.assets[0].uri);
       } else {
@@ -63,6 +67,7 @@ export const LogMealScreen = () => {
   };
 
   const pickFromGallery = async () => {
+    expectSystemUi();
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.6 });
     if (!result.canceled) setPhotoUri(result.assets[0].uri);
   };

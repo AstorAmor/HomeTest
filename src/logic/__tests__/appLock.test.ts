@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LOCK_AFTER, biometricKind, lockOnFor, parseLockPrefs, shouldLockOnReturn, unlockProblem } from '@/logic/appLock';
+import {
+  DEFAULT_LOCK_AFTER,
+  SYSTEM_UI_GRACE_MS,
+  SYSTEM_UI_WINDOW_MS,
+  biometricKind,
+  isExpectedLeave,
+  lockOnFor,
+  parseLockPrefs,
+  shouldLockOnReturn,
+  unlockProblem,
+} from '@/logic/appLock';
 
 describe('bloqueo con Face ID / huella', () => {
   it('lee la preferencia guardada y se defiende de basura', () => {
@@ -30,6 +40,26 @@ describe('bloqueo con Face ID / huella', () => {
     expect(shouldLockOnReturn(0, null, t0)).toBe(false);
     // reloj hacia atrás: ante la duda, se pide
     expect(shouldLockOnReturn(300_000, t0, t0 - 5_000)).toBe(true);
+  });
+
+  it('una hoja del sistema abierta por la app (compartir, una foto…) no es irse', () => {
+    const t0 = 1_000_000;
+    // la app sale justo después del aviso: es la hoja
+    expect(isExpectedLeave(t0, t0 + 300)).toBe(true);
+    expect(isExpectedLeave(t0, t0 + SYSTEM_UI_WINDOW_MS - 1)).toBe(true);
+    // sin aviso, o uno viejo, o de después de salir: irse de verdad
+    expect(isExpectedLeave(null, t0)).toBe(false);
+    expect(isExpectedLeave(t0, t0 + SYSTEM_UI_WINDOW_MS)).toBe(false);
+    expect(isExpectedLeave(t0 + 10, t0)).toBe(false);
+    // «al momento»: al volver de compartir no se bloquea…
+    expect(shouldLockOnReturn(0, t0, t0 + 40_000, true)).toBe(false);
+    // …salvo que se haya estado fuera mucho rato
+    expect(shouldLockOnReturn(0, t0, t0 + SYSTEM_UI_GRACE_MS, true)).toBe(true);
+    // con un rato elegido mayor, manda ese
+    expect(shouldLockOnReturn(300_000, t0, t0 + SYSTEM_UI_GRACE_MS + 1, true)).toBe(false);
+    expect(shouldLockOnReturn(300_000, t0, t0 + 300_000, true)).toBe(true);
+    // reloj hacia atrás: también se pide
+    expect(shouldLockOnReturn(0, t0, t0 - 1, true)).toBe(true);
   });
 
   it('qué decir si no se desbloquea', () => {

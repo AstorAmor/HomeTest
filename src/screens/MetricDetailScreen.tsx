@@ -163,7 +163,10 @@ export const MetricDetailScreen = () => {
   const nightOf = new Map(nights.map((n) => [n.date, n]));
 
   // Lecturas con termómetro (solo en la temperatura)
-  const [thermo, setThermo] = useState<SimpleMetricEntry[]>([]);
+  // (con lo último leído, al momento; la red lo refresca detrás)
+  const [thermo, setThermo] = useState<SimpleMetricEntry[]>(() =>
+    kind === 'body_temperature' ? [...(thermometerRepository.peek() ?? [])].sort((a, b) => b.fecha.localeCompare(a.fecha)) : [],
+  );
   useReloadOnFocus(
     useCallback(async () => {
       if (kind !== 'body_temperature') return;

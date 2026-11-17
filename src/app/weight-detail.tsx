@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { WeightInfo } from '@/screens/WeightInfo';
 import { weightRepository } from '@/data/weightRepository';
-import { loadBodyBasics } from '@/data/bodyBasics';
+import { loadBodyBasics, peekBodyBasics, type BodyBasics } from '@/data/bodyBasics';
 import { bmi, BMI_RANGE, weightTrend } from '@/logic/weight';
 import { Colors } from '@/constants/colors';
 import { num, t } from '@/i18n';
@@ -15,10 +15,20 @@ import { fine } from '@/theme/fine';
 // de cada cuánto pesarse. El IMC, neutro (fundador, 2026-11-16: «el peso que te dé el IMC también»): la cifra y
 // el rango de la OMS en texto; sin altura, «Añade tu altura» lleva a editarla en el perfil. En la demo, sin altura
 // en el perfil, sale con una de ejemplo (src/data/bodyBasics.ts); que es de ejemplo lo dice WeightInfo, debajo.
+const personOf = (basics: BodyBasics) => ({ heightCm: basics.heightCm, minor: basics.age !== null && basics.age < 18 });
+
 export default function WeightDetail() {
   const router = useRouter();
-  const [trend, setTrend] = React.useState<ReturnType<typeof weightTrend> | null>(null);
-  const [person, setPerson] = React.useState<{ heightCm?: number; minor: boolean } | null>(null);
+  // Con lo último leído (las pesadas y la altura del perfil), la ficha nace con la tendencia y el IMC; la red los
+  // refresca detrás (fundador, 2026-11-17: «las medidas tardan en cargar»)
+  const [trend, setTrend] = React.useState<ReturnType<typeof weightTrend> | null>(() => {
+    const all = weightRepository.peek();
+    return all ? weightTrend(all) : null;
+  });
+  const [person, setPerson] = React.useState<{ heightCm?: number; minor: boolean } | null>(() => {
+    const basics = peekBodyBasics();
+    return basics ? personOf(basics) : null;
+  });
   return (
     <SimpleMetricDetailScreen
       title={t('Weight')}
@@ -27,9 +37,10 @@ export default function WeightDetail() {
       loadEntries={async () => {
         const [all, basics] = await Promise.all([weightRepository.getAll(), loadBodyBasics()]);
         setTrend(weightTrend(all));
-        setPerson({ heightCm: basics.heightCm, minor: basics.age !== null && basics.age < 18 });
+        setPerson(personOf(basics));
         return all;
       }}
+      peekEntries={() => weightRepository.peek()}
       onAddPress={() => router.push('/log-weight')}
       onEditPress={(id) => router.push({ pathname: '/log-weight', params: { id } })}
       describe={(latest) => {

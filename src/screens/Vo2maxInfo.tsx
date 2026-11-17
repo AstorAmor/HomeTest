@@ -24,8 +24,10 @@ const ageOf = (dob?: string) => {
 // píldora con borde de oro y la tabla en filas con línea fina (los niveles, sin colores de semáforo).
 export const Vo2maxInfo = () => {
   const router = useRouter();
-  const [sex, setSex] = useState<Vo2Sex>('male');
-  const [age, setAge] = useState<number | null>(null);
+  // Con el perfil leído la última vez, la fila resaltada sale al momento (fundador, 2026-11-17)
+  const [cached] = useState(() => profileRepository.peek());
+  const [sex, setSex] = useState<Vo2Sex>(cached?.sex === 'female' ? 'female' : 'male');
+  const [age, setAge] = useState<number | null>(() => ageOf(cached?.dateOfBirth));
 
   useEffect(() => {
     profileRepository

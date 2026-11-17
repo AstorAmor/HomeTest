@@ -14,6 +14,7 @@ import { shoppingList } from '@/logic/dietPlanner';
 import { num, t } from '@/i18n';
 import { menuFileName, menuToHtml, shoppingText } from '@/utils/menuPdf';
 import { shareHtmlPdf } from '@/utils/shareHtml';
+import { expectSystemUi } from '@/utils/systemUi';
 import { FINE, ff, fine } from '@/theme/fine';
 
 // Lista de la compra de la semana, por secciones del súper, con casillas y el coste aproximado.
@@ -61,6 +62,8 @@ export const ShoppingListScreen = () => {
       }
       return;
     }
+    // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     await Share.share({ message });
   };
 

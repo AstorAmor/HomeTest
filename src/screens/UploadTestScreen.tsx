@@ -20,6 +20,7 @@ import { isNetworkError, postAi } from '@/utils/apiBaseUrl';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
 import { prepareImage, chunk } from '@/utils/imageUpload';
+import { expectSystemUi } from '@/utils/systemUi';
 import { useRouter } from 'expo-router';
 import { labUploadRepository, saveOriginals } from '@/data/labUploads';
 import { useSections } from '@/data/appPrefs';
@@ -156,6 +157,8 @@ export const UploadTestScreen = () => {
   };
 
   const pickDocument = async () => {
+    // La hoja del sistema sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf'],
       copyToCacheDirectory: true,
@@ -183,6 +186,7 @@ export const UploadTestScreen = () => {
   };
 
   const pickFromGallery = async () => {
+    expectSystemUi();
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
@@ -190,6 +194,7 @@ export const UploadTestScreen = () => {
       return;
     }
 
+    expectSystemUi();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.8,
@@ -210,6 +215,7 @@ export const UploadTestScreen = () => {
   };
 
   const addPhoto = async () => {
+    expectSystemUi();
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
@@ -217,6 +223,7 @@ export const UploadTestScreen = () => {
       return;
     }
 
+    expectSystemUi();
     const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
 
     if (result.canceled || !result.assets?.[0]) return;

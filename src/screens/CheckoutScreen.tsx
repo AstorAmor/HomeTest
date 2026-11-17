@@ -10,6 +10,7 @@ import { PathEmblem } from '@/components/fine/RoleEmblem';
 import { CHECK_PATH } from '@/components/PlanComparison';
 import { CatalogTest, findTest, formatPrice, localizeTest, totalPrice } from '@/data/testCatalog';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import { getOrderStatus, startCheckout } from '@/data/orders';
 import { FINE, ff, fine } from '@/theme/fine';
 
@@ -74,6 +75,8 @@ export const CheckoutScreen = () => {
         setSimulated(true);
         return setStage('simulated');
       }
+      // La pasarela sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+      expectSystemUi();
       const result = await WebBrowser.openAuthSessionAsync(start.url, start.returnUrl);
       if (result.type !== 'success') return setStage('review');
       const { queryParams } = Linking.parse(result.url);

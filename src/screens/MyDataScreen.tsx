@@ -1,9 +1,9 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { labUploadRepository } from '@/data/labUploads';
+import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { labValuesFrom } from '@/data/labUploadValues';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -14,8 +14,8 @@ import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mock
 import { loadSeedData } from '@/data/seedData';
 import { importLocalDataToAccount } from '@/data/importLocalData';
 import { useAuth } from '@/context/AuthContext';
-import { getGlucoseEntries } from '@/data/glucoseRepository';
-import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
+import { getGlucoseEntries, glucoseRepository } from '@/data/glucoseRepository';
+import { bloodPressureRepository, getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
 import { vo2maxRepository } from '@/data/vo2maxRepository';
@@ -55,6 +55,8 @@ import { SecRow } from '@/components/fine/FineMeasure';
 import { labToneColor, rangeTone, StatusWord } from '@/components/fine/FineLab';
 import { rangeStatusLabel } from '@/utils/rangeStatus';
 import { FINE, ff, fine } from '@/theme/fine';
+import { SimpleMetricEntry } from '@/types/simpleMetric';
+import { BloodPressureEntry } from '@/types/bloodPressure';
 
 // El estado de una prueba de ejemplo, en los tonos finos (sin rojo): bien en jade, en espera apagado, para
 // mirar en oro
@@ -134,6 +136,110 @@ function manualChart(entries: DatedValue[], sample: number[]): ChartData | null 
   return showSamples() ? { labels: lastMonths(sample.length), series: [{ color: FINE.jade, values: sample }], latest: '—', isSample: true } : null;
 }
 
+// Las líneas de ejemplo del VO2max y de la fuerza de agarre (apagadas, sin mediciones)
+const VO2_SAMPLE = [37, 38.5, 39, 40.5, 41];
+const GRIP_SAMPLE = [41, 42, 42.5, 43.5, 44];
+
+// El peso: las últimas pesadas en jade; sin ninguna, nada
+function weightChart(all: SimpleMetricEntry[]): ChartData | null {
+  const asc = [...all].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+  return asc.length
+    ? { labels: asc.map((e) => shortDate(e.fecha)), series: [{ color: FINE.jade, values: asc.map((e) => e.valor) }], latest: num(asc[asc.length - 1].valor.toFixed(1)), isSample: false }
+    : null;
+}
+
+// La tensión: la alta en jade y la baja en turquesa. Sin tomas, en una cuenta real la tarjeta vacía (invita a
+// registrar la primera); en la demo, una línea de ejemplo
+function bpChart(entries: BloodPressureEntry[]): ChartData {
+  const bpAsc = [...entries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+  if (bpAsc.length >= 2 || (bpAsc.length === 1 && !showSamples())) {
+    return {
+      labels: bpAsc.map((e) => shortDate(e.fecha)),
+      series: [
+        { label: t('Systolic (high)'), color: FINE.jade, values: bpAsc.map((e) => e.systolic) },
+        { label: t('Diastolic (low)'), color: TURQUOISE, values: bpAsc.map((e) => e.diastolic) },
+      ],
+      latest: `${bpAsc[bpAsc.length - 1].systolic}/${bpAsc[bpAsc.length - 1].diastolic}`,
+      isSample: false,
+    };
+  }
+  if (!showSamples()) return { labels: [], series: [], latest: '—', isSample: false };
+  const sys = [118, 122, 119, 125, 121, 120];
+  const dia = [78, 81, 77, 83, 80, 80];
+  return {
+    labels: lastMonths(sys.length),
+    series: [
+      { label: t('Systolic (high)'), color: FINE.jade, values: sys },
+      { label: t('Diastolic (low)'), color: TURQUOISE, values: dia },
+    ],
+    latest: '120/80',
+    isSample: true,
+  };
+}
+
+// Mediciones (lo que apuntas a mano): cada gráfica por su lado, porque cada una llega cuando llega
+interface MeasureCharts {
+  weight?: ChartData | null;
+  weighIn?: WeighAdvice;
+  bp?: ChartData;
+  vo2?: ChartData | null;
+  grip?: ChartData | null;
+}
+
+// Las de lo último leído, sin esperar a la red (fundador, 2026-11-17: «las medidas tardan en cargar»): de Hoy a «Ver
+// todas» o al volver de apuntar algo se pintan al momento; las que aún no se han leído nunca, no
+function measureChartsFromCache(): MeasureCharts {
+  const out: MeasureCharts = {};
+  const w = weightRepository.peek();
+  if (w) {
+    out.weight = weightChart(w);
+    out.weighIn = weighAdvice(w);
+  }
+  const bp = bloodPressureRepository.peek();
+  if (bp) out.bp = bpChart(bp);
+  const vo = vo2maxRepository.peek();
+  if (vo) out.vo2 = manualChart(vo, VO2_SAMPLE);
+  const gr = gripStrengthRepository.peek();
+  if (gr) out.grip = manualChart(gr, GRIP_SAMPLE);
+  return out;
+}
+
+// Tus biomarcadores: las tres gráficas propias y los valores de tus analíticas
+interface Analyses {
+  list: MarkerSummary[];
+  last: MarkerPoint | null;
+  any: boolean;
+  points: MarkerPoint[];
+}
+const NO_ANALYSES: Analyses = { list: [], last: null, any: false, points: [] };
+interface LabCharts {
+  glucose: ChartData | null;
+  cholesterol: ChartData | null;
+  cortisol: ChartData | null;
+  analyses: Analyses;
+}
+
+function labChartsFrom(g: DatedValue[], chol: DatedValue[], cort: DatedValue[], uploads: LabUpload[]): LabCharts {
+  const points = [...pointsFromUploads(uploads), ...pointsFromReports(labReports())];
+  return {
+    // Lo apuntado a mano más lo que traen las analíticas subidas (glucosa, colesterol total, cortisol)
+    glucose: simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent),
+    cholesterol: simpleChart([...chol, ...labValuesFrom(uploads, 'total_cholesterol')], 'cholesterol', Colors.amber),
+    cortisol: simpleChart([...cort, ...labValuesFrom(uploads, 'cortisol_am')], 'cortisol', Colors.violet),
+    // Todos, también azúcar, colesterol total y cortisol: su ojo pone o quita su tarjeta de arriba
+    analyses: { list: markerSummaries(points, (p) => markerName(p.key, p.name)), last: latestAnalysis(points), any: points.length > 0, points },
+  };
+}
+
+// Las de lo último leído (undefined si falta algo por leer)
+function labChartsFromCache(): LabCharts | undefined {
+  const g = glucoseRepository.peek();
+  const chol = cholesterolRepository.peek();
+  const cort = cortisolRepository.peek();
+  const uploads = labUploadRepository.peek();
+  return g && chol && cort && uploads ? labChartsFrom(g, chol, cort, uploads) : undefined;
+}
+
 // Lo que quedaba de «Mis datos», que dejó de ser pestaña el 2026-11-16 (borradores/app-estructura): dos
 // pantallas sueltas. `measurements`: tus mediciones con su línea en el tiempo (pasos, sueño, tensión, peso…;
 // «Ver todas» desde Hoy). `biomarkers`: los valores de tus analíticas con sus gráficas y la lista entera
@@ -146,92 +252,93 @@ export const MyDataScreen = ({ part }: { part: 'measurements' | 'biomarkers' }) 
   // Web del paciente en escritorio: las tarjetas van en 2 columnas en vez de una debajo de otra
   const grid = useWebShell();
   const [seedStatus, setSeedStatus] = useState('');
-  const [glucose, setGlucose] = useDeepState<ChartData | null>(null);
-  const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(null);
-  const [cortisol, setCortisol] = useDeepState<ChartData | null>(null);
-  const [vo2, setVo2] = useDeepState<ChartData | null>(null);
+  // Con cuenta, la pantalla nace con lo último leído (fundador, 2026-11-17: «las medidas tardan en cargar») y lo
+  // refresca de la red detrás. Cada parte lee solo lo que enseña: Mediciones no espera a las analíticas.
+  const [cached] = useState(() =>
+    part === 'measurements' ? { m: measureChartsFromCache(), lab: undefined } : { m: {} as MeasureCharts, lab: labChartsFromCache() },
+  );
+  const [glucose, setGlucose] = useDeepState<ChartData | null>(cached.lab?.glucose ?? null);
+  const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(cached.lab?.cholesterol ?? null);
+  const [cortisol, setCortisol] = useDeepState<ChartData | null>(cached.lab?.cortisol ?? null);
+  const [vo2, setVo2] = useDeepState<ChartData | null>(cached.m.vo2 ?? null);
   // Fuerza de agarre (fundador, 2026-11-17: «añade otra sección (como VO2max) para "fuerza de agarre"»)
-  const [grip, setGrip] = useDeepState<ChartData | null>(null);
-  const [bp, setBp] = useDeepState<ChartData | null>(null);
+  const [grip, setGrip] = useDeepState<ChartData | null>(cached.m.grip ?? null);
+  const [bp, setBp] = useDeepState<ChartData | null>(cached.m.bp ?? null);
   // Peso (fundador, 2026-11-06: salía en Hoy pero no aquí) y cuándo toca pesarse
-  const [weight, setWeight] = useDeepState<ChartData | null>(null);
-  const [weighIn, setWeighIn] = useState<WeighAdvice | null>(null);
+  const [weight, setWeight] = useDeepState<ChartData | null>(cached.m.weight ?? null);
+  const [weighIn, setWeighIn] = useState<WeighAdvice | null>(cached.m.weighIn ?? null);
   // «Analíticas»: el último valor de cada marcador de tus analíticas (los de la demo, en las de prueba)
-  const [analyses, setAnalyses] = useDeepState<{ list: MarkerSummary[]; last: MarkerPoint | null; any: boolean; points: MarkerPoint[] }>({ list: [], last: null, any: false, points: [] });
+  const [analyses, setAnalyses] = useDeepState<Analyses>(cached.lab?.analyses ?? NO_ANALYSES);
   // Qué gráficas se ven en Analíticas: el ojo de cada una (fundador, 2026-11-06)
   const [charts, setCharts] = useState<string[]>(DEFAULT_CHARTS);
   const tourScroll = useMemo(makeTourScroll, []);
+  const firstLoad = useRef(true);
+
+  const applyMeasures = useCallback(
+    (c: MeasureCharts) => {
+      if (c.weighIn) setWeighIn(c.weighIn);
+      if (c.weight !== undefined) setWeight(c.weight);
+      if (c.bp) setBp(c.bp);
+      if (c.vo2 !== undefined) setVo2(c.vo2);
+      if (c.grip !== undefined) setGrip(c.grip);
+    },
+    [setWeight, setBp, setVo2, setGrip],
+  );
+  const applyLab = useCallback(
+    (l: LabCharts) => {
+      setGlucose(l.glucose);
+      setCholesterol(l.cholesterol);
+      setCortisol(l.cortisol);
+      setAnalyses(l.analyses);
+    },
+    [setGlucose, setCholesterol, setCortisol, setAnalyses],
+  );
 
   const load = useCallback(async () => {
-    weightRepository
-      .getAll()
-      .then((all) => {
-        setWeighIn(weighAdvice(all));
-        const asc = [...all].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
-        setWeight(
-          asc.length
-            ? { labels: asc.map((e) => shortDate(e.fecha)), series: [{ color: FINE.jade, values: asc.map((e) => e.valor) }], latest: num(asc[asc.length - 1].valor.toFixed(1)), isSample: false }
-            : null,
-        );
-      })
-      .catch(() => setWeight(null));
-    const [g, bpEntries, chol, cort, vo, gr, uploads] = await Promise.all([
-      getGlucoseEntries(),
-      getBloodPressureEntries(),
-      cholesterolRepository.getAll(),
-      cortisolRepository.getAll(),
-      vo2maxRepository.getAll().catch(() => []),
-      gripStrengthRepository.getAll().catch(() => []),
-      labUploadRepository.getAll().catch(() => []),
-    ]);
-    // Lo apuntado a mano más lo que traen las analíticas subidas (glucosa, colesterol total, cortisol)
-    setGlucose(simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent));
-    setCholesterol(simpleChart([...chol, ...labValuesFrom(uploads, 'total_cholesterol')], 'cholesterol', Colors.amber));
-    setCortisol(simpleChart([...cort, ...labValuesFrom(uploads, 'cortisol_am')], 'cortisol', Colors.violet));
-    const points = [...pointsFromUploads(uploads), ...pointsFromReports(labReports())];
-    setAnalyses({
-      // Todos, también azúcar, colesterol total y cortisol: su ojo pone o quita su tarjeta de arriba
-      list: markerSummaries(points, (p) => markerName(p.key, p.name)),
-      last: latestAnalysis(points),
-      any: points.length > 0,
-      points,
-    });
+    // Al volver a la pantalla (p. ej. tras apuntar un peso), lo último leído se ve ya y la red lo confirma detrás. Al
+    // abrirla, eso ya lo trae el estado inicial
+    const again = !firstLoad.current;
+    firstLoad.current = false;
+    if (part === 'measurements') {
+      if (again) applyMeasures(measureChartsFromCache());
+      // Cada una por su lado, en cuanto llega (antes esperaban todas a la más lenta, también a las analíticas, que
+      // aquí no salen). Sin red, se queda lo último leído
+      weightRepository
+        .getAll()
+        .then((all) => applyMeasures({ weight: weightChart(all), weighIn: weighAdvice(all) }))
+        .catch(() => {
+          if (!weightRepository.peek()) setWeight(null);
+        });
+      getBloodPressureEntries()
+        .then((e) => setBp(bpChart(e)))
+        .catch(() => undefined);
+      // VO2max y fuerza de agarre: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
+      vo2maxRepository
+        .getAll()
+        .catch(() => vo2maxRepository.peek() ?? [])
+        .then((vo) => setVo2(manualChart(vo, VO2_SAMPLE)));
+      gripStrengthRepository
+        .getAll()
+        .catch(() => gripStrengthRepository.peek() ?? [])
+        .then((gr) => setGrip(manualChart(gr, GRIP_SAMPLE)));
+      return;
+    }
+    if (again) {
+      const l = labChartsFromCache();
+      if (l) applyLab(l);
+    }
     userFlags
       .get(CHARTS_FLAG)
       .then((v) => setCharts(normalizeCharts(v)))
       .catch(() => undefined);
-    // VO2max y fuerza de agarre: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
-    setVo2(manualChart(vo, [37, 38.5, 39, 40.5, 41]));
-    setGrip(manualChart(gr, [41, 42, 42.5, 43.5, 44]));
-
-    const bpAsc = [...bpEntries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
-    if (bpAsc.length >= 2 || (bpAsc.length === 1 && !showSamples())) {
-      setBp({
-        labels: bpAsc.map((e) => shortDate(e.fecha)),
-        series: [
-          { label: t('Systolic (high)'), color: FINE.jade, values: bpAsc.map((e) => e.systolic) },
-          { label: t('Diastolic (low)'), color: TURQUOISE, values: bpAsc.map((e) => e.diastolic) },
-        ],
-        latest: `${bpAsc[bpAsc.length - 1].systolic}/${bpAsc[bpAsc.length - 1].diastolic}`,
-        isSample: false,
-      });
-    } else if (!showSamples()) {
-      // Cuenta real sin tomas: la tarjeta, vacía, invita a registrar la primera
-      setBp({ labels: [], series: [], latest: '—', isSample: false });
-    } else {
-      const sys = [118, 122, 119, 125, 121, 120];
-      const dia = [78, 81, 77, 83, 80, 80];
-      setBp({
-        labels: lastMonths(sys.length),
-        series: [
-          { label: t('Systolic (high)'), color: FINE.jade, values: sys },
-          { label: t('Diastolic (low)'), color: TURQUOISE, values: dia },
-        ],
-        latest: '120/80',
-        isSample: true,
-      });
-    }
-  }, [setGlucose, setCholesterol, setCortisol, setVo2, setGrip, setBp, setWeight, setAnalyses]);
+    const [g, chol, cort, uploads] = await Promise.all([
+      getGlucoseEntries(),
+      cholesterolRepository.getAll(),
+      cortisolRepository.getAll(),
+      labUploadRepository.getAll().catch(() => [] as LabUpload[]),
+    ]);
+    applyLab(labChartsFrom(g, chol, cort, uploads));
+  }, [part, applyMeasures, applyLab, setBp, setVo2, setGrip, setWeight]);
 
   useReloadOnFocus(load);
 

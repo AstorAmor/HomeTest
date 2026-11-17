@@ -5,6 +5,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { OnDark } from '@/constants/colors';
 import { t } from '@/i18n';
 import { INTER } from '@/theme/fine';
+import { expectSystemUi } from '@/utils/systemUi';
 
 // Móvil: la sala de Daily se abre en la ventana segura del navegador integrado (Chrome
 // Custom Tabs / Safari) por encima de la app. Al colgar, se vuelve a la pantalla.
@@ -14,6 +15,8 @@ export const DailyCall = ({ joinUrl, onClose, patientName }: { joinUrl: string; 
 
   const open = async () => {
     setOpened(true);
+    // Sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     await WebBrowser.openBrowserAsync(joinUrl, {
       presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
       toolbarColor: '#0A1D19',

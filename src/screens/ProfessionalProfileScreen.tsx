@@ -19,6 +19,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import {
   LANGUAGES,
   Modality,
@@ -80,6 +81,8 @@ export const ProfessionalProfileScreen = () => {
 
   const pickPhoto = async () => {
     setMessage('');
+    // La hoja del sistema sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,

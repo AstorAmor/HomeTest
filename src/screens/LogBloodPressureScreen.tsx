@@ -15,6 +15,7 @@ import { formStyles } from '@/components/fine/FineForm';
 import { FineNumber, useNumbersReady } from '@/components/fine/FineNumber';
 import { postAi } from '@/utils/apiBaseUrl';
 import { prepareImage } from '@/utils/imageUpload';
+import { expectSystemUi } from '@/utils/systemUi';
 import { ExtractedBloodPressure } from '@/types/bloodPressure';
 import {
   saveBloodPressureEntry,
@@ -130,8 +131,10 @@ export const LogBloodPressureScreen = () => {
 
   const takePhoto = async () => {
     Keyboard.dismiss();
+    expectSystemUi();
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) return;
+    expectSystemUi();
     const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
     if (result.canceled || !result.assets?.[0]) return;
     await extractFromImage(result.assets[0].uri);

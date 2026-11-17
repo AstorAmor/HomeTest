@@ -914,7 +914,9 @@ const styles = StyleSheet.create({
   delete: { alignSelf: 'center', paddingVertical: 14, marginTop: 4 },
   deleteText: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
   ev: { gap: 6, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: FINE.line, alignItems: 'flex-start' },
-  commitSec: { marginTop: 18 },
+  // Sin la línea de sección: con la de debajo de la última meta del área quedaban dos seguidas; solo la fina entre
+  // metas (fundador, 2026-11-17)
+  commitSec: { marginTop: 18, borderTopWidth: 0, paddingTop: 0, minHeight: 0 },
   signed: {
     flexDirection: 'row',
     alignSelf: 'center',

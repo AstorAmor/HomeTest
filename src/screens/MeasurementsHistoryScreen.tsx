@@ -10,8 +10,8 @@ import { Pill, SecHead } from '@/components/fine/Fine';
 import { BigFigure } from '@/components/fine/FineMeasure';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { useLengthUnit } from '@/data/lengthUnit';
-import { loadMeasureReadings, sampleMeasureReadings } from '@/data/measurementsRepository';
-import { loadBodyBasics, type BodyBasics } from '@/data/bodyBasics';
+import { loadMeasureReadings, peekMeasureReadings, sampleMeasureReadings } from '@/data/measurementsRepository';
+import { loadBodyBasics, peekBodyBasics, type BodyBasics } from '@/data/bodyBasics';
 import {
   fatSeries,
   jp3Sites,
@@ -61,21 +61,35 @@ interface Item {
 const longDate = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
 const fmt = (v: number, decimals: number) => num(Number(v.toFixed(decimals)));
 
+type MeasureData = BodyBasics & { readings: MeasureReadings; sample: boolean };
+
+// Sin medidas propias, las de ejemplo (demo y cuentas de prueba), que nunca se guardan
+function measureDataFrom(readings: MeasureReadings, basics: BodyBasics): MeasureData {
+  const own = summarize(readings).length > 0;
+  const sample = own ? null : sampleMeasureReadings();
+  return { ...basics, readings: sample ?? readings, sample: !!sample };
+}
+
 export const MeasurementsHistoryScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{ kind?: string }>();
   const initial = typeof params.kind === 'string' ? params.kind : undefined;
   const [tool, setTool] = useState<MeasureTool>(initial?.startsWith('skinfold_') || initial === 'fat' ? 'fold' : 'tape');
   const [selected, setSelected] = useState<string | null>(initial ?? null);
-  const [data, setData] = useState<(BodyBasics & { readings: MeasureReadings; sample: boolean }) | null>(null);
+  // Con cuenta, nace con las medidas y el perfil leídos la última vez (en la ficha del peso) y los refresca de la red
+  // detrás (fundador, 2026-11-17: «las medidas tardan en cargar»)
+  const [data, setData] = useState<MeasureData | null>(() => {
+    const readings = peekMeasureReadings();
+    const basics = peekBodyBasics();
+    return readings && basics ? measureDataFrom(readings, basics) : null;
+  });
   const [lengthUnit] = useLengthUnit();
 
   useReloadOnFocus(
     useCallback(async () => {
+      // Los 14 sitios salen en una sola petición (src/data/metricBatch.ts)
       const [readings, basics] = await Promise.all([loadMeasureReadings().catch(() => ({}) as MeasureReadings), loadBodyBasics()]);
-      const own = summarize(readings).length > 0;
-      const sample = own ? null : sampleMeasureReadings();
-      setData({ ...basics, readings: sample ?? readings, sample: !!sample });
+      setData(measureDataFrom(readings, basics));
     }, []),
   );
 
@@ -190,10 +204,13 @@ export const MeasurementsHistoryScreen = () => {
                         accessibilityState={{ selected: on }}
                       >
                         <View style={[styles.itemMark, on && styles.itemMarkOn]} />
-                        <Text style={[styles.itemLabel, on && styles.itemLabelOn]} numberOfLines={2}>
+                        {/* En el móvil, con la letra del sistema grande, el nombre se partía y la unidad caía a la línea de
+                            abajo («c» / «m»): el nombre encoge y baja de línea; la cifra con su unidad, siempre en una
+                            (fundador, 2026-11-17) */}
+                        <Text style={[styles.itemLabel, on && styles.itemLabelOn]} numberOfLines={2} maxFontSizeMultiplier={1.15}>
                           {it.label}
                         </Text>
-                        <Text style={styles.itemValue}>
+                        <Text style={styles.itemValue} numberOfLines={1} maxFontSizeMultiplier={1.15}>
                           {fmt(last.valor, it.decimals)}
                           {it.unit ? <Text style={styles.itemUnit}>{` ${it.unit}`}</Text> : null}
                         </Text>
@@ -276,10 +293,10 @@ const styles = StyleSheet.create({
   // La elegida: una raya de jade a la izquierda y el nombre en marfil
   itemMark: { width: 2, alignSelf: 'stretch', borderRadius: 1, backgroundColor: 'transparent' },
   itemMarkOn: { backgroundColor: FINE.jade },
-  itemLabel: { ...ff('regular'), flex: 1, minWidth: 0, fontSize: 13, lineHeight: 17, color: FINE.mute },
+  itemLabel: { ...ff('regular'), flex: 1, minWidth: 0, fontSize: 12.5, lineHeight: 16, color: FINE.mute },
   itemLabelOn: { color: FINE.ivory },
-  itemValue: { ...ff('regular'), fontSize: 14, color: FINE.ivory, fontVariant: ['tabular-nums'] },
-  itemUnit: { ...ff('regular'), fontSize: 11.5, color: FINE.mute },
+  itemValue: { ...ff('regular'), flexShrink: 0, fontSize: 14, color: FINE.ivory, fontVariant: ['tabular-nums'] },
+  itemUnit: { ...ff('regular'), fontSize: 11, color: FINE.mute },
   tapHint: { ...fine.note, fontSize: 11.5, marginTop: 6 },
   change: { ...ff('regular'), fontSize: 14, lineHeight: 20, color: FINE.ivory, marginTop: 8 },
   chart: { marginTop: 14 },

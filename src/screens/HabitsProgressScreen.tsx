@@ -12,6 +12,7 @@ import { showSamples } from '@/data/dataMode';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { ChangeVerdict, classifyChange, compareUpload } from '@/utils/progress';
+import { expectSystemUi } from '@/utils/systemUi';
 import { DailyPoint, formatSleep, useDailyWearables } from '@/wearables/dailySeries';
 import { dateLocale, num, t } from '@/i18n';
 import { fine, INTER } from '@/theme/fine';
@@ -222,6 +223,8 @@ export const HabitsProgressScreen = () => {
     if (moves.length) lines.push('', t('Two tests are not a trend: values change from day to day and between labs.'));
     const message = lines.join('\n');
     try {
+      // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (fundador, 2026-11-17)
+      expectSystemUi();
       await Share.share({ message });
     } catch {
       try {

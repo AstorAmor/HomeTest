@@ -23,6 +23,7 @@ import { postAi } from '@/utils/apiBaseUrl';
 import { saveAiLogEntry } from '@/data/aiLogRepository';
 import { MoodQuadrant, MOOD_QUADRANTS, MOOD_QUADRANT_INFO, AiLogExtraction } from '@/types/aiLog';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import { INTER } from '@/theme/fine';
 
 const REQUEST_TIMEOUT_MS = 60000;
@@ -69,6 +70,8 @@ export const AiLogModule = () => {
       await recorder.stop();
       return;
     }
+    // El diálogo del permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const permission = await requestRecordingPermissionsAsync();
     if (!permission.granted) {
       setError(t('Microphone permission is required to record audio.'));

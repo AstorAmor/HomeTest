@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -6,9 +6,19 @@ import { DonutChart } from '@/components/DonutChart';
 import { FRow, Pill, SecHead } from '@/components/fine/Fine';
 import { FineLink, measureStyles, SecRow } from '@/components/fine/FineMeasure';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
-import { loadBodyBasics, type BodyBasics } from '@/data/bodyBasics';
-import { BodyComp, latestBodyComp, latestBodyFat, weightRepository } from '@/data/weightRepository';
-import { loadMeasureReadings, sampleMeasureReadings } from '@/data/measurementsRepository';
+import { loadBodyBasics, peekBodyBasics, type BodyBasics } from '@/data/bodyBasics';
+import {
+  BodyComp,
+  latestBodyComp,
+  latestBodyFat,
+  peekLatestBodyComp,
+  peekLatestBodyFat,
+  weightRepository,
+  type LatestBodyComp,
+  type LatestBodyFat,
+} from '@/data/weightRepository';
+import { loadMeasureReadings, peekMeasureReadings, sampleMeasureReadings } from '@/data/measurementsRepository';
+import type { SimpleMetricEntry } from '@/types/simpleMetric';
 import { useLengthUnit } from '@/data/lengthUnit';
 import { bmi as bmiOf, BMI_RANGE, CompSlice, compositionSlices, weighAdvice } from '@/logic/weight';
 import { foldEstimate, jp3Kinds, jp3Sites, latestComplete, MeasureReadings, SiteSummary, summarize, waistToHeight } from '@/logic/bodyMeasures';
@@ -91,18 +101,100 @@ function MeasureGrid({ title, items, lengthUnit, onOpen }: { title: string; item
   );
 }
 
+// Lo que lee la parte del peso: la última composición, la última grasa de la báscula, las pesadas, lo del perfil y las
+// medidas
+interface WeightInfoSources {
+  c: LatestBodyComp;
+  lastFat: LatestBodyFat;
+  entries: SimpleMetricEntry[];
+  basics: BodyBasics;
+  readings: MeasureReadings;
+}
+
+// Lo mismo con lo último leído, sin esperar a la red (undefined si falta algo por leer)
+function peekWeightInfoSources(): WeightInfoSources | undefined {
+  const c = peekLatestBodyComp();
+  const lastFat = peekLatestBodyFat();
+  const entries = weightRepository.peek();
+  const basics = peekBodyBasics();
+  const readings = peekMeasureReadings();
+  if (c === undefined || lastFat === undefined || !entries || !basics || !readings) return undefined;
+  return { c, lastFat, entries, basics, readings };
+}
+
+interface WeightInfoView {
+  comp: { fecha: string; values: BodyComp; weight: number | null } | null;
+  next: { due: boolean; date: Date | null; tooOften: boolean };
+  body: BodyBasics & { bmi: number | null; hasHeight: boolean; minor: boolean };
+  measures: { readings: MeasureReadings; sample: boolean };
+  estComp: EstimatedComp | null;
+}
+
+function weightInfoFrom({ c, lastFat, entries, basics, readings }: WeightInfoSources): WeightInfoView {
+  const latest = entries.length ? entries.reduce((a, e) => (e.fecha > a.fecha ? e : a)) : null;
+  const weightOn = (iso: string) => entries.find((e) => e.fecha.slice(0, 10) === iso.slice(0, 10))?.valor;
+  const a = weighAdvice(entries);
+  // Sin medidas propias: las de ejemplo (demo y cuentas de prueba), que nunca se guardan
+  const own = summarize(readings).length > 0;
+  const sample = own ? null : sampleMeasureReadings();
+  const shown = sample ?? readings;
+  // Qué grasa manda: la última de la báscula o la estimada con las medidas (pliegues o cinta). Las medidas de
+  // ejemplo solo cuentan si no hay ninguna composición propia: lo de ejemplo nunca tapa lo apuntado
+  const scale: BodyFatCandidate | null = lastFat ? { pct: lastFat.pct, fecha: lastFat.fecha, source: 'scale' } : null;
+  const pick = pickBodyFat([scale, ...(sample && c ? [] : measureFatCandidates(shown, basics))]);
+  // Con una estimación, el peso de ese día; si no, el último (o el del perfil)
+  const weight = pick && pick.source !== 'scale' ? (weightOn(pick.fecha) ?? latest?.valor ?? basics.weightKg ?? null) : null;
+  const split = pick && weight ? fatSplit(weight, pick.pct) : null;
+  return {
+    // El peso del día de la composición (la báscula la da a la vez); si no, el último
+    comp: c ? { ...c, weight: weightOn(c.fecha) ?? latest?.valor ?? null } : null,
+    next: { due: a.due, date: a.next, tooOften: a.tooOften },
+    // Sexo, edad y altura del perfil; en la demo, con una altura y una persona de ejemplo si faltan (bodyBasics)
+    body: {
+      ...basics,
+      bmi: bmiOf(latest?.valor ?? basics.weightKg, basics.heightCm),
+      hasHeight: !!basics.heightCm,
+      minor: basics.age !== null && basics.age < 18,
+    },
+    measures: { readings: shown, sample: !!sample },
+    estComp: pick && weight && split ? { pick, weight, split, scale } : null,
+  };
+}
+
 export const WeightInfo = () => {
   const router = useRouter();
-  const [comp, setComp] = useState<{ fecha: string; values: BodyComp; weight: number | null } | null>(null);
-  const [next, setNext] = useState<{ due: boolean; date: Date | null; tooOften: boolean } | null>(null);
-  const [estComp, setEstComp] = useState<EstimatedComp | null>(null);
-  const [body, setBody] = useState<(BodyBasics & { bmi: number | null; hasHeight: boolean; minor: boolean }) | null>(null);
+  // Con cuenta, nace con lo último leído (pesadas, composición, medidas y perfil) y lo refresca de la red detrás, en vez
+  // de aparecer un segundo después de la gráfica (fundador, 2026-11-17: «las medidas tardan en cargar»)
+  const [cached] = useState(() => {
+    const src = peekWeightInfoSources();
+    return src ? weightInfoFrom(src) : null;
+  });
+  const [comp, setComp] = useState<WeightInfoView['comp']>(cached?.comp ?? null);
+  const [next, setNext] = useState<WeightInfoView['next'] | null>(cached?.next ?? null);
+  const [estComp, setEstComp] = useState<EstimatedComp | null>(cached?.estComp ?? null);
+  const [body, setBody] = useState<WeightInfoView['body'] | null>(cached?.body ?? null);
   const [bmiOpen, setBmiOpen] = useState(false);
-  const [measures, setMeasures] = useState<{ readings: MeasureReadings; sample: boolean } | null>(null);
+  const [measures, setMeasures] = useState<WeightInfoView['measures'] | null>(cached?.measures ?? null);
   const [lengthUnit] = useLengthUnit();
+  const firstLoad = useRef(true);
 
   useReloadOnFocus(
     useCallback(async () => {
+      const apply = (v: WeightInfoView) => {
+        setComp(v.comp);
+        setNext(v.next);
+        setBody(v.body);
+        setMeasures(v.measures);
+        setEstComp(v.estComp);
+      };
+      // Al volver de apuntar un peso o unas medidas, lo último leído ya lo lleva: se ve al momento
+      if (!firstLoad.current) {
+        const src = peekWeightInfoSources();
+        if (src) apply(weightInfoFrom(src));
+      }
+      firstLoad.current = false;
+      // Todo a la vez: la composición, la grasa, las pesadas y las medidas salen en UNA petición
+      // (src/data/metricBatch.ts) y el perfil se comparte con la ficha (src/data/readCache.ts)
       const [c, lastFat, entries, basics, readings] = await Promise.all([
         latestBodyComp(),
         latestBodyFat().catch(() => null),
@@ -110,32 +202,7 @@ export const WeightInfo = () => {
         loadBodyBasics(),
         loadMeasureReadings().catch(() => ({}) as MeasureReadings),
       ]);
-      const latest = entries.length ? entries.reduce((a, e) => (e.fecha > a.fecha ? e : a)) : null;
-      const weightOn = (iso: string) => entries.find((e) => e.fecha.slice(0, 10) === iso.slice(0, 10))?.valor;
-      // El peso del día de la composición (la báscula la da a la vez); si no, el último
-      setComp(c ? { ...c, weight: weightOn(c.fecha) ?? latest?.valor ?? null } : null);
-      const a = weighAdvice(entries);
-      setNext({ due: a.due, date: a.next, tooOften: a.tooOften });
-      // Sexo, edad y altura del perfil; en la demo, con una altura y una persona de ejemplo si faltan (bodyBasics)
-      setBody({
-        ...basics,
-        bmi: bmiOf(latest?.valor ?? basics.weightKg, basics.heightCm),
-        hasHeight: !!basics.heightCm,
-        minor: basics.age !== null && basics.age < 18,
-      });
-      // Sin medidas propias: las de ejemplo (demo y cuentas de prueba), que nunca se guardan
-      const own = summarize(readings).length > 0;
-      const sample = own ? null : sampleMeasureReadings();
-      const shown = sample ?? readings;
-      setMeasures({ readings: shown, sample: !!sample });
-      // Qué grasa manda: la última de la báscula o la estimada con las medidas (pliegues o cinta). Las medidas de
-      // ejemplo solo cuentan si no hay ninguna composición propia: lo de ejemplo nunca tapa lo apuntado
-      const scale: BodyFatCandidate | null = lastFat ? { pct: lastFat.pct, fecha: lastFat.fecha, source: 'scale' } : null;
-      const pick = pickBodyFat([scale, ...(sample && c ? [] : measureFatCandidates(shown, basics))]);
-      // Con una estimación, el peso de ese día; si no, el último (o el del perfil)
-      const weight = pick && pick.source !== 'scale' ? (weightOn(pick.fecha) ?? latest?.valor ?? basics.weightKg ?? null) : null;
-      const split = pick && weight ? fatSplit(weight, pick.pct) : null;
-      setEstComp(pick && weight && split ? { pick, weight, split, scale } : null);
+      apply(weightInfoFrom({ c, lastFat, entries, basics, readings }));
     }, []),
   );
 

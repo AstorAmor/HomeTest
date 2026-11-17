@@ -7,6 +7,8 @@ export const simpleMetricRemote = (kind: string): RemoteTable<SimpleMetricEntry>
   table: 'metric_readings',
   dateColumn: 'measured_at',
   match: { kind },
+  // Mediciones: lo último leído se guarda también en el móvil (src/data/readCache.ts)
+  persist: true,
   toRow: (e) =>
     definedOnly({
       id: e.id,

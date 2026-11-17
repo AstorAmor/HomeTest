@@ -1,6 +1,7 @@
 import { Share } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import * as FileSystem from 'expo-file-system/legacy';
+import { expectSystemUi } from './systemUi';
 
 // Móvil: convierte un HTML en PDF (expo-print) y abre el menú de compartir del sistema (expo-sharing),
 // como el PDF del plan (sharePlan.ts). Si la APK no lleva esos módulos, se comparte el texto.
@@ -23,6 +24,7 @@ const PAGE = { width: 595, height: 842, margins: { left: 34, right: 34, top: 40,
 export async function shareHtmlPdf(o: { html: string; fileName: string; fallbackText: string; dialogTitle: string }): Promise<void> {
   const native = loadNative();
   if (!native || !(await native.Sharing.isAvailableAsync())) {
+    expectSystemUi();
     await Share.share({ message: o.fallbackText });
     return;
   }
@@ -33,5 +35,7 @@ export async function shareHtmlPdf(o: { html: string; fileName: string; fallback
     await FileSystem.deleteAsync(file, { idempotent: true });
     await FileSystem.moveAsync({ from: uri, to: file });
   }
+  // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+  expectSystemUi();
   await native.Sharing.shareAsync(file, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: o.dialogTitle });
 }

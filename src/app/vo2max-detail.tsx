@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { SimpleMetricDetailScreen } from '@/screens/SimpleMetricDetailScreen';
 import { Vo2maxInfo } from '@/screens/Vo2maxInfo';
 import { vo2maxRepository } from '@/data/vo2maxRepository';
-import { profileRepository } from '@/data/profileRepository';
+import { profileRepository, type UserProfile } from '@/data/profileRepository';
 import { VO2_BAND_LABEL, vo2Band } from '@/logic/vo2max';
 import { FINE } from '@/theme/fine';
 import { t } from '@/i18n';
@@ -16,13 +16,20 @@ const ageOf = (dob?: string) => {
 
 // VO2max: se mide en una prueba con un especialista y aquí se apunta; la ficha dice cómo queda
 // frente a la gente de tu edad y sexo (registro FRIEND). La curva en jade, como las demás fichas en fino (2026-11-17).
+type Who = { age: number | null; sex: 'male' | 'female' | null };
+const whoOf = (p: UserProfile): Who => ({ age: ageOf(p.dateOfBirth), sex: p.sex === 'female' ? 'female' : p.sex === 'male' ? 'male' : null });
+
 export default function Vo2maxDetail() {
   const router = useRouter();
-  const [who, setWho] = useState<{ age: number | null; sex: 'male' | 'female' | null }>({ age: null, sex: null });
+  // Con el perfil leído la última vez, la banda sale al momento (fundador, 2026-11-17: «las medidas tardan en cargar»)
+  const [who, setWho] = useState<Who>(() => {
+    const p = profileRepository.peek();
+    return p ? whoOf(p) : { age: null, sex: null };
+  });
   useEffect(() => {
     profileRepository
       .get()
-      .then((p) => setWho({ age: ageOf(p.dateOfBirth), sex: p.sex === 'female' ? 'female' : p.sex === 'male' ? 'male' : null }))
+      .then((p) => setWho(whoOf(p)))
       .catch(() => undefined);
   }, []);
 
@@ -32,6 +39,7 @@ export default function Vo2maxDetail() {
       color={FINE.jade}
       icon="mci:lungs"
       loadEntries={() => vo2maxRepository.getAll()}
+      peekEntries={() => vo2maxRepository.peek()}
       onAddPress={() => router.push('/log-vo2max')}
       onEditPress={(id) => router.push({ pathname: '/log-vo2max', params: { id } })}
       describe={(v) => (who.age != null && who.sex ? t(VO2_BAND_LABEL[vo2Band(v, who.age, who.sex)]) : null)}

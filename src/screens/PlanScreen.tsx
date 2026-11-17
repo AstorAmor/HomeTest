@@ -3,7 +3,7 @@
 // src/components/metas/), tu compromiso, las insignias (antes en Hoy), Entrenamientos y Menús (antes en Más,
 // con su candado) y el plan de tu especialista si lo hay. Lo de dentro de cada cosa se rehace en la fase 2.
 // Con el lenguaje fino del prototipo (src/theme/fine.ts): cabeceras pequeñas, filas con línea y letra Inter.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -29,6 +29,7 @@ import { specialistPlans } from '@/logic/specialistPlan';
 import { useDailyWearables } from '@/wearables/dailySeries';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, num, t } from '@/i18n';
+import { onTabSection, pendingTabSection, TAB } from '@/constants/tabs';
 import { FINE, ff, fine } from '@/theme/fine';
 
 export const PlanScreen = () => {
@@ -36,6 +37,18 @@ export const PlanScreen = () => {
   const show = useSections();
   const tourScroll = useMemo(makeTourScroll, []);
   const on = show('plan');
+
+  // «Semana» en Hoy trae aquí a la altura de «Tu semana» (fundador, 2026-11-17). Mientras la petición es reciente se
+  // vuelve a colocar cada vez que el bloque se mueve (tus objetivos cargan encima y lo empujan hacia abajo).
+  const weekY = useRef<number | null>(null);
+  const toWeek = useCallback(() => {
+    if (pendingTabSection(TAB.plan) !== 'week' || weekY.current == null) return;
+    tourScroll.ref.current?.scrollTo({ y: Math.max(0, weekY.current - 8), animated: true });
+  }, [tourScroll]);
+  useEffect(() => {
+    toWeek();
+    return onTabSection(toWeek);
+  }, [toWeek]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -47,7 +60,14 @@ export const PlanScreen = () => {
         {on ? (
           <>
             <GoalsRow />
-            <MetasToday variant="plan" tourScroll={tourScroll} />
+            <View
+              onLayout={(e) => {
+                weekY.current = e.nativeEvent.layout.y;
+                toWeek();
+              }}
+            >
+              <MetasToday variant="plan" tourScroll={tourScroll} />
+            </View>
             <CommitBlock />
           </>
         ) : (
@@ -268,9 +288,10 @@ const styles = StyleSheet.create({
   pad: { paddingHorizontal: 20 },
   padH: { marginHorizontal: 20 },
   goals: { flexDirection: 'row', gap: 8 },
-  goal: { flex: 1, minHeight: 78, gap: 8 },
-  goalName: { ...ff('medium'), color: FINE.ivory, fontSize: 14, lineHeight: 18 },
-  goalFig: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, fontVariant: ['tabular-nums'] },
+  // Emblema, nombre y cifra centrados a lo ancho de la tarjeta (fundador, 2026-11-17: «centrados lateralmente, no verticalmente»)
+  goal: { flex: 1, minHeight: 78, gap: 8, alignItems: 'center' },
+  goalName: { ...ff('medium'), color: FINE.ivory, fontSize: 14, lineHeight: 18, textAlign: 'center' },
+  goalFig: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, fontVariant: ['tabular-nums'], textAlign: 'center' },
   commit: { paddingTop: 12, paddingBottom: 14 },
   commitLine: { borderBottomWidth: 1, borderBottomColor: FINE.line },
   commitHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
+import { readCache } from './readCache';
 
 export type Sex = 'female' | 'male' | 'other' | 'undisclosed';
 export type ActivityLevel = 'sedentary' | 'light' | 'active' | 'very_active';
@@ -139,17 +140,22 @@ const toRow = (p: UserProfile) => ({
   onboarding_completed_at: p.completedAt ?? null,
 });
 
+// Cada quien recibe su copia (awardBadge, p. ej., añade a `badges` antes de guardar)
+const copyProfile = (p: UserProfile): UserProfile => ({ ...p, goals: [...(p.goals ?? [])], badges: [...(p.badges ?? [])], conditions: [...(p.conditions ?? [])] });
+
+// Con cuenta, la lectura pasa por la caché (src/data/readCache.ts): Hoy, los avisos, las metas, el peso y su ficha
+// piden el perfil a la vez y sale UNA petición; lo último leído queda para pintar al momento (la altura para el
+// IMC, el sexo y la edad para el VO2max y la fuerza de agarre). get() siempre vuelve a preguntar a Supabase.
+const CACHE_KEY = 'profile';
+async function fetchRemoteProfile(): Promise<UserProfile> {
+  const { data, error } = await supabase!.from('profiles').select('*').eq('id', getCurrentUserId()!).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? fromRow(data) : { ...EMPTY };
+}
+
 export const profileRepository = {
   async get(): Promise<UserProfile> {
-    if (isRemoteActive()) {
-      const { data, error } = await supabase!
-        .from('profiles')
-        .select('*')
-        .eq('id', getCurrentUserId()!)
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      return data ? fromRow(data) : { ...EMPTY };
-    }
+    if (isRemoteActive()) return copyProfile(await readCache.load(CACHE_KEY, fetchRemoteProfile, { persist: true }));
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...EMPTY };
     try {
@@ -158,10 +164,17 @@ export const profileRepository = {
       return { ...EMPTY };
     }
   },
+  // Lo último leído de la cuenta, sin esperar a la red (undefined si aún no se ha leído o en la demo)
+  peek(): UserProfile | undefined {
+    if (!isRemoteActive()) return undefined;
+    const p = readCache.peek<UserProfile>(CACHE_KEY);
+    return p ? copyProfile(p) : undefined;
+  },
   async save(profile: UserProfile): Promise<void> {
     if (isRemoteActive()) {
       const { error } = await supabase!.from('profiles').update(toRow(profile)).eq('id', getCurrentUserId()!);
       if (error) throw new Error(error.message);
+      readCache.set(CACHE_KEY, copyProfile(profile), { persist: true });
       return;
     }
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));

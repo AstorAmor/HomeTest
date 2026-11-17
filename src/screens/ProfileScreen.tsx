@@ -14,6 +14,7 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { GOAL_OPTIONS, profileRepository, UserProfile } from '@/data/profileRepository';
 import { PURPOSE_OPTIONS, useAppPrefs } from '@/data/appPrefs';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import { TAB, tabHref } from '@/constants/tabs';
 import { removeAvatar, setAvatar, useAvatar } from '@/data/avatar';
 import { confirmAsk } from '@/components/dev/confirmAsk';
@@ -29,6 +30,8 @@ export const ProfileScreen = () => {
 
   const pickPhoto = async () => {
     setHeroError('');
+    // La hoja del sistema sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
     if (result.canceled) return;
     setPhotoBusy(true);

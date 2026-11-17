@@ -2,6 +2,7 @@ import { Share } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import * as FileSystem from 'expo-file-system/legacy';
 import { CARD_H, CARD_W } from '@/components/badges/BadgeShareCard';
+import { expectSystemUi } from './systemUi';
 
 // Móvil: la tarjeta SVG de la insignia se convierte en PNG (toDataURL de react-native-svg) y se
 // abre el menú de compartir del sistema → Instagram, WhatsApp, TikTok… La web tiene su versión
@@ -34,6 +35,8 @@ export async function shareBadge({ svg, fileName, message, size }: BadgeShare): 
         encoding: FileSystem.EncodingType.Base64,
       });
       if (await Sharing.isAvailableAsync()) {
+        // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+        expectSystemUi();
         await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: message });
         return;
       }
@@ -41,5 +44,6 @@ export async function shareBadge({ svg, fileName, message, size }: BadgeShare): 
       // Si la imagen falla, al menos el texto
     }
   }
+  expectSystemUi();
   await Share.share({ message });
 }

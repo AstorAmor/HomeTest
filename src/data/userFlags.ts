@@ -35,17 +35,37 @@ async function writeLocal(flags: Record<string, FlagValue>) {
 // atrás justo después de abrir algo leía el valor antiguo de la nube y el aviso reaparecía).
 const pending = new Map<string, FlagValue>();
 
+async function readAll(): Promise<Record<string, FlagValue>> {
+  const local = await readLocal();
+  if (!isRemoteActive() || !supabase) return local;
+  const { data, error } = await supabase.from('user_flags').select('key, value').eq('user_id', getCurrentUserId());
+  if (error || !data) return local;
+  const merged = { ...local };
+  for (const row of data) merged[row.key] = row.value as FlagValue;
+  for (const [k, v] of pending) merged[k] = v;
+  await writeLocal(merged);
+  return merged;
+}
+
+// Una lectura en camino se comparte: al abrir Hoy, el aviso del informe, las metas, los objetivos del día y los avisos
+// pedían las marcas a la vez (unas 9 peticiones iguales que hacían esperar a las mediciones; fundador, 2026-11-17).
+// Guardar una marca corta la lectura compartida, para que lo que se lea después ya la traiga. Cada quien recibe su
+// copia.
+let shared: { uid: string | null; p: Promise<Record<string, FlagValue>> } | null = null;
+
 export const userFlags = {
   async getAll(): Promise<Record<string, FlagValue>> {
-    const local = await readLocal();
-    if (!isRemoteActive() || !supabase) return local;
-    const { data, error } = await supabase.from('user_flags').select('key, value').eq('user_id', getCurrentUserId());
-    if (error || !data) return local;
-    const merged = { ...local };
-    for (const row of data) merged[row.key] = row.value as FlagValue;
-    for (const [k, v] of pending) merged[k] = v;
-    await writeLocal(merged);
-    return merged;
+    const uid = getCurrentUserId();
+    let entry = shared;
+    if (!entry || entry.uid !== uid) {
+      const mine = { uid, p: readAll() };
+      const done = () => {
+        if (shared === mine) shared = null;
+      };
+      mine.p.then(done, done);
+      shared = entry = mine;
+    }
+    return JSON.parse(JSON.stringify(await entry.p)) as Record<string, FlagValue>;
   },
 
   async get(key: string): Promise<FlagValue | undefined> {
@@ -54,6 +74,7 @@ export const userFlags = {
 
   async set(key: string, value: FlagValue = true): Promise<void> {
     pending.set(key, value);
+    shared = null;
     try {
       const local = await readLocal();
       await writeLocal({ ...local, [key]: value });
@@ -65,6 +86,7 @@ export const userFlags = {
       }
     } finally {
       if (pending.get(key) === value) pending.delete(key);
+      shared = null;
     }
   },
 };

@@ -11,6 +11,7 @@ import { settingsStyles } from '@/components/settings/SettingsParts';
 import { EVIDENCE, EvidenceBlock, EvidenceTopic } from '@/data/evidence';
 import { READINESS_BANDS, READINESS_WEIGHTS, type ReadinessPart } from '@/wearables/seriesLogic';
 import { t as tr } from '@/i18n';
+import { withSystemUi } from '@/utils/systemUi';
 import { TAB, tabHref } from '@/constants/tabs';
 import { FINE, ff, fine } from '@/theme/fine';
 
@@ -111,7 +112,7 @@ function TopicBody({ topic: t }: { topic: EvidenceTopic }) {
           <Text style={fine.kicker}>{tr('Sources')}</Text>
           {t.sources.map((s) =>
             s.url ? (
-              <TouchableOpacity key={s.label} onPress={() => WebBrowser.openBrowserAsync(s.url!)} activeOpacity={0.7} accessibilityRole="link" style={styles.source}>
+              <TouchableOpacity key={s.label} onPress={() => withSystemUi(() => WebBrowser.openBrowserAsync(s.url!))} activeOpacity={0.7} accessibilityRole="link" style={styles.source}>
                 <Text style={styles.sourceLink}>{tr(s.label)}</Text>
               </TouchableOpacity>
             ) : (
