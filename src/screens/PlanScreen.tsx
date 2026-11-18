@@ -14,6 +14,7 @@ import { goalHref } from '@/screens/GoalDetailScreen';
 import { TourTarget } from '@/components/tour/TourTarget';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { FRow, LockTag, Pill, SecHead, TabHead } from '@/components/fine/Fine';
+import { FineLink } from '@/components/fine/FineMeasure';
 import { useMetas } from '@/hooks/useMetas';
 import { GOALS, commitProgress, dateOfKey, dayKeyOf, dayMonth, selectedIds } from '@/logic/metas';
 import { CometLine } from '@/components/CometLine';
@@ -130,6 +131,11 @@ function GoalsRow() {
       ) : (
         <FRow title={t('Choose your goals')} onPress={() => router.push('/metas-objetivos')} />
       )}
+      {/* Cambiarlos todos a la vez, debajo y centrado (fundador, 2026-11-18: «que aparezca Edit your goals debajo de
+          estos y que te lleve a la edición de todos») */}
+      {goals.length ? (
+        <FineLink label={t('Edit your goals')} icon="create-outline" onPress={() => router.push('/metas-objetivos')} style={styles.editGoals} />
+      ) : null}
       {/* Sin la nota «Hasta 3. Cada uno va ligado a algo que se mide» (fundador, 2026-11-18: «eso sobra y mete ruido») */}
     </View>
   );
@@ -290,6 +296,7 @@ const styles = StyleSheet.create({
   pad: { paddingHorizontal: 20 },
   padH: { marginHorizontal: 20 },
   goals: { flexDirection: 'row', gap: 8 },
+  editGoals: { alignSelf: 'center', marginTop: 10 },
   // Emblema, nombre y cifra centrados a lo ancho de la tarjeta (fundador, 2026-11-17: «centrados lateralmente, no verticalmente»)
   goal: { flex: 1, minHeight: 78, gap: 8, alignItems: 'center' },
   goalName: { ...ff('medium'), color: FINE.ivory, fontSize: 14, lineHeight: 18, textAlign: 'center' },

@@ -210,7 +210,6 @@ export const es: Record<string, string> = {
   manage: 'gestionar',
   'Connect a wearable to see your readiness.': 'Conecta un wearable para ver tu estado de hoy.',
   Biomarkers: 'Biomarcadores',
-  Sugar: 'Glucosa',
   'Blood pressure': 'Tensión arterial',
   'Resting HR': 'Pulso en reposo',
   HRV: 'VFC',
@@ -4813,6 +4812,7 @@ export const es: Record<string, string> = {
   'If pain or symptoms before your period disrupt your daily life, talk to your doctor.': 'Si el dolor o los síntomas antes de la regla alteran tu día a día, coméntalo con tu médico.',
   // Hoy: la sección del estado se llama «Preparación» (Alta, Moderada o Baja) y la ficha de la distancia (2026-11-17)
   Readiness: 'Preparación',
+  'Edit your goals': 'Editar tus objetivos',
   'Distance walked or run each day, as estimated by your phone or wearable.': 'Distancia que caminas o corres cada día, según la estima tu móvil o tu wearable.',
   'Around 6-8 km a day is roughly 8,000-10,000 steps; it depends on stride length.': 'Unos 6-8 km al día equivalen a unos 8.000-10.000 pasos; depende de la longitud de tu zancada.',
   'Walks and runs. Phone estimates depend on stride length and on where you carry it.': 'Paseos y carreras. Lo que estima el móvil depende de tu zancada y de dónde lo lleves.',

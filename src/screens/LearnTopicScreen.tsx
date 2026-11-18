@@ -131,7 +131,8 @@ const styles = StyleSheet.create({
   lessonBody: { ...ff('regular'), fontSize: 14, lineHeight: 20, color: FINE.mute, marginTop: 3 },
   noLine: { borderBottomWidth: 0 },
   flex: { flex: 1, minWidth: 0 },
-  pill: { alignItems: 'flex-start', marginTop: 10, marginBottom: 6 },
+  // Centrado (fundador, 2026-11-18: «tiene que aparecer centrado y ahora está a la izquierda»)
+  pill: { alignItems: 'center', marginTop: 14, marginBottom: 6 },
   plan: { paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: FINE.line },
   sourceRow: { paddingVertical: 5 },
   source: { ...ff('regular'), fontSize: 12.5, lineHeight: 18, color: FINE.mute, textDecorationLine: 'underline' },

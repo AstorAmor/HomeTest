@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   areaScore,
   dayFills,
+  dayScore,
   weekScore,
   bedtimeOnTime,
   cfgWithPer,
@@ -54,11 +55,26 @@ describe('Cada meta en los últimos 7 días', () => {
     expect(e.score).toBeCloseTo((4 + 6100 / 7500 + 4300 / 7500 + 5240 / 7500) / 7);
   });
 
-  it('un día sin dato no cuenta, ni para bien ni para mal', () => {
-    const e = evalMeta(meta(st(), 'fruta'), [3, null, null, 3, 1, 3, null]);
-    expect(e.days).toBe(5);
+  // Fundador, 2026-11-18: la parte hecha es de la semana entera; un día sin marcar cuenta como no hecho
+  it('un día sin dato cuenta como no hecho: la parte hecha es de la semana entera', () => {
+    const m = meta(st(), 'fruta');
+    const e = evalMeta(m, [3, null, null, 3, 1, 3, null]);
+    expect(e.days).toBe(7);
     expect(e.n).toBe(3);
-    expect(progressText(meta(st(), 'fruta'), e)).toBe('3 of 5 days');
+    expect(e.score).toBeCloseTo((3 + dayScore(m, 1)) / 7);
+    expect(progressText(m, e)).toBe('3 of 7 days');
+  });
+
+  it('marcar hoy o un día pasado sube lo mismo (fundador, 2026-11-18)', () => {
+    const m = meta(st(), 'paseo');
+    const thursday = { from: 0, to: 3, current: true, share: 1 };
+    const none = evalMeta(m, [null, null, null, null, null, null, null], thursday).score;
+    const today = evalMeta(m, [null, null, null, 1, null, null, null], thursday).score;
+    const andMonday = evalMeta(m, [1, null, null, 1, null, null, null], thursday).score;
+    expect(none).toBe(0);
+    expect(today).toBeCloseTo(1 / 7);
+    expect(andMonday).toBeCloseTo(2 / 7);
+    expect(andMonday - today).toBeCloseTo(today - none);
   });
 
   it('un límite al día se cumple quedándose por debajo; hoy ya cuenta', () => {
@@ -82,7 +98,7 @@ describe('Cada meta en los últimos 7 días', () => {
     const e = evalMeta(meta(st(), 'paseo'), [null, null, null, null, null, null, null]);
     expect(e.started).toBe(false);
     expect(e.score).toBe(0);
-    expect(progressText(meta(st(), 'paseo'), e)).toBe('0 of 1 day');
+    expect(progressText(meta(st(), 'paseo'), e)).toBe('0 of 7 days');
     const past = evalMeta(meta(st(), 'paseo'), Array(7).fill(null), { from: 0, to: 6, current: false, share: 1 });
     expect(progressText(meta(st(), 'paseo'), past)).toBe('No data that week');
     expect(progressText(meta(st(), 'pasos'), evalMeta(meta(st(), 'pasos'), Array(7).fill(null)))).toBe('Counts once data arrives');
@@ -148,7 +164,7 @@ describe('El donut de cada área', () => {
       cfg: { 'own-1': { tgt: 1, per: 'day' } },
     });
     expect(areaScore(s, 'ha', { 'own-1': Array(7).fill(null) })).toBe(0); // ya cuenta, a 0
-    expect(areaScore(s, 'ha', { 'own-1': [null, null, null, null, null, 1, 1] })).toBe(1);
+    expect(areaScore(s, 'ha', { 'own-1': [null, null, null, null, null, 1, 1] })).toBeCloseTo(2 / 7);
     expect(areaScore(s, 'ha', { 'own-1': Array(7).fill(null) }, { from: 0, to: 6, current: false, share: 1 })).toBeNull(); // semana pasada sin datos
     expect(metaText(meta(s, 'own-1'))).toBe('Leer antes de dormir every day');
   });
@@ -327,7 +343,7 @@ describe('La semana y la enhorabuena', () => {
     const part = { from: 2, to: 4, current: true, share: 5 / 7 };
     const pasos = evalMeta(meta(s0, 'pasos'), [9000, 9000, 8000, 4000, null, null, null], part);
     expect(pasos.st).toEqual(['off', 'off', 'ok', 'no', 'pend', 'off', 'off']);
-    expect(progressText(meta(s0, 'pasos'), pasos)).toBe('1 of 3 days');
+    expect(progressText(meta(s0, 'pasos'), pasos)).toBe('1 of 5 days'); // del miércoles al domingo
     const cardio = evalMeta(meta(s0, 'cardio'), [60, 0, 30, 30, null, null, null], part);
     expect(cardio.sum).toBe(60);
     expect(cardio.score).toBe(1);
@@ -345,7 +361,7 @@ describe('La semana y la enhorabuena', () => {
     const known = knownBefore(s0, '2026-11-02', { fruta: { '2026-10-30': 3 } }, {});
     expect(known).toEqual({ fruta: true });
     expect(areaScore(s0, 'al', empty, monday, known)).toBe(0);
-    expect(progressText(meta(s0, 'fruta'), evalMeta(meta(s0, 'fruta'), empty.fruta, monday, true))).toBe('0 of 1 day');
+    expect(progressText(meta(s0, 'fruta'), evalMeta(meta(s0, 'fruta'), empty.fruta, monday, true))).toBe('0 of 7 days');
   });
 
   it('las fechas: «del 2 al 8 de noviembre»', () => {

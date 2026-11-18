@@ -396,7 +396,7 @@ export const MyDataScreen = ({ part }: { part: 'measurements' | 'biomarkers' }) 
   // Analíticas (antes «Biomarcadores»; fundador, 2026-11-06: «todo son biomarcadores», lo de las analíticas
   // se llama Analíticas): primero lo medido; lo que no, "apagado" como incentivo. El VO2max va en Mediciones.
   const biomarkers = [
-    { key: 'sugar', marker: 'glucose', title: 'Sugar', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
+    { key: 'sugar', marker: 'glucose', title: 'Glucose', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
     { key: 'chol', marker: 'total_cholesterol', title: 'Total cholesterol', icon: 'analytics-outline', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
     { key: 'cortisol', marker: 'cortisol_am', title: 'Cortisol', icon: 'sunny-outline', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
   ]

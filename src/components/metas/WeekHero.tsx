@@ -105,7 +105,10 @@ export function WeekHero({
         })}
       </View>
 
-      {/* Día a día: un círculo por día con lo hecho de tus metas diarias; los que no cuentan, apagados */}
+      {/* Día a día: un círculo por día con lo hecho de tus metas diarias; los que no cuentan, apagados. Un día con
+          todo hecho lleva dentro un relleno dorado muy tenue (fundador, 2026-11-18: «si se completa el 100 % estaría
+          bien un relleno muy tenue dorado, pero que se note que se cumplió el día»), con un check dorado dentro
+          (fundador, el mismo día: «me gusta el tono difuminado dentro… pero incluiría un check, si no queda raro») */}
       {hasDaily && (
         <>
           <View style={styles.days}>
@@ -119,7 +122,17 @@ export function WeekHero({
                   accessible
                   accessibilityLabel={`${weekdayLetter(d)}: ${f == null ? t('No data') : `${Math.round(f * 100)} %`}`}
                 >
-                  {f == null ? <View style={[styles.empty, i > T && week.current && styles.future]} /> : <GlowRing progress={f} colors={tones} size={34} stroke={3} />}
+                  {f == null ? (
+                    <View style={[styles.empty, i > T && week.current && styles.future]} />
+                  ) : (
+                    <GlowRing progress={f} colors={tones} size={34} stroke={3}>
+                      {Math.round(f * 100) >= 100 ? (
+                        <View style={styles.doneFill}>
+                          <Ionicons name="checkmark" size={15} color={FINE.gold} />
+                        </View>
+                      ) : null}
+                    </GlowRing>
+                  )}
                   <Text style={[styles.letter, today && styles.letterToday]}>{weekdayLetter(d)}</Text>
                 </View>
               );
@@ -154,6 +167,8 @@ const styles = StyleSheet.create({
   day: { alignItems: 'center', gap: 6, width: 38 },
   empty: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: FINE.line },
   future: { borderStyle: 'dashed' },
+  // El día cumplido: el dorado de los aros, muy tenue, por dentro del aro
+  doneFill: { width: 27, height: 27, borderRadius: 13.5, backgroundColor: 'rgba(216,185,120,0.2)', alignItems: 'center', justifyContent: 'center' },
   letter: { ...ff('regular'), fontSize: 11.5, color: FINE.mute },
   letterToday: { ...ff('semibold'), color: FINE.ivory },
 });

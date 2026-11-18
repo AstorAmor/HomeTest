@@ -398,7 +398,7 @@ export type DayState = 'ok' | 'no' | 'pend' | 'none' | 'mark' | 'off';
 export interface MetaEval {
   st: DayState[];
   n: number; // días cumplidos (metas al día)
-  days: number; // días que cuentan (con dato, y hoy)
+  days: number; // días de la semana que cuentan (de los que se evalúan, de tu primer día al último de la semana)
   sum: number; // lo apuntado en los días que cuentan (en lo que se guarda)
   tgt: number; // la meta de esta semana (en la unidad elegida): en proporción si no cuenta entera
   score: number; // 0..1
@@ -435,6 +435,10 @@ export function weekGoal(m: Meta, share = 1): number {
 
 // vals: los días de la semana; null = sin dato. `known`: la meta ya tenía datos antes de esta semana
 // (sigue contando aunque la semana empiece de cero).
+// Una meta al día es la parte hecha de la semana entera, como las de la semana: cada día hecho suma lo mismo, sea
+// hoy o uno pasado, y un día sin marcar cuenta como no hecho. Fundador, 2026-11-18: «cuando marco el día de hoy se
+// sube un montón, y luego marco días pasados y no hay cambio». Antes solo contaban los días con dato y hoy: con hoy
+// marcado y nada más, 1 de 1 = 100 %, y marcar el lunes daba 2 de 2, otra vez 100 %.
 export function evalMeta(m: Meta, vals: (number | null)[], w: WeekPart = { from: 0, to: vals.length - 1, current: true, share: 1 }, known = false): MetaEval {
   const on = (i: number) => i >= w.from && i <= w.to;
   const T = w.current ? w.to : -1; // hoy
@@ -450,9 +454,8 @@ export function evalMeta(m: Meta, vals: (number | null)[], w: WeekPart = { from:
       return i === T && !m.limit ? 'pend' : 'no';
     });
     const n = st.filter((s) => s === 'ok').length;
-    const counted = vals.map((v, i) => on(i) && (v != null || i === T));
-    const days = counted.filter(Boolean).length;
-    const got = vals.reduce<number>((a, v, i) => a + (counted[i] ? dayScore(m, v) : 0), 0);
+    const days = Math.max(0, vals.length - w.from); // los de la semana desde tu primer día; los que faltan, a 0
+    const got = vals.reduce<number>((a, v, i) => a + (on(i) ? dayScore(m, v) : 0), 0);
     return { st, n, days, sum, tgt, score: days ? got / days : 0, started, current: w.current };
   }
   const st = vals.map<DayState>((v, i) => (!on(i) ? 'off' : v != null && v > 0 ? 'mark' : 'none'));

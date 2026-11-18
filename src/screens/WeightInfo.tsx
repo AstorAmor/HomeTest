@@ -419,8 +419,7 @@ export const WeightInfo = () => {
         <>
           <SecRow title={t('Body composition')} />
           <Text style={measureStyles.p}>{t('Copy it from your scale or estimate it from your measurements when you log your weight.')}</Text>
-          <View style={styles.addRow}>
-            <View />
+          <View style={styles.addCol}>
             <Pill label={t('Add')} onPress={() => router.push('/log-weight')} />
           </View>
         </>
@@ -479,9 +478,10 @@ export const WeightInfo = () => {
           ) : measuresBasicsNote ? (
             <Text style={fine.note}>{measuresBasicsNote}</Text>
           ) : null}
-          <View style={styles.addRow}>
-            {tape.length || folds.length ? <FineLink label={t('See history')} icon="analytics-outline" onPress={() => router.push('/measurements-history')} /> : null}
+          {/* Los botones, centrados (fundador, 2026-11-18: «el botón aparece a la izquierda, debería estar centrado») */}
+          <View style={styles.addCol}>
             <Pill label={t('Add measurements')} onPress={() => router.push('/log-measurements')} />
+            {tape.length || folds.length ? <FineLink label={t('See history')} icon="analytics-outline" onPress={() => router.push('/measurements-history')} /> : null}
           </View>
         </>
       )}
@@ -528,5 +528,5 @@ const styles = StyleSheet.create({
   cellValue: { ...fine.num, fontSize: 19, lineHeight: 24, marginTop: 1 },
   cellUnit: { ...ff('regular'), fontSize: 11.5, color: FINE.mute },
   lineRow: { minHeight: 0 },
-  addRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 14 },
+  addCol: { alignItems: 'center', gap: 8, marginTop: 16 },
 });

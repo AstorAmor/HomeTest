@@ -29,7 +29,7 @@ export interface Biomarker {
 export const mockBiomarkers: Biomarker[] = [
   {
     id: 'sugar',
-    nombre: 'Sugar',
+    nombre: 'Glucose',
     valor: '94',
     unidad: 'mg/dL',
     status: 'excellent',
