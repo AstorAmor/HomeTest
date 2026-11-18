@@ -3079,3 +3079,27 @@ Astor: «lo quiero en el release final» y, para el OK, «Sí, las dos cosas» (
   - Comprobado: los dos grupos en el canal con runtime exposdk:57.0.0; el bundle de iOS lleva la base de producción y
     no la de pruebas. Sin comprobar: ningún teléfono de la beta. Los iPhone de la beta son las compilaciones de
     TestFlight 1.1.0 (4) y (5), anteriores a los módulos nativos nuevos, que la app trata como opcionales.
+
+## 2026-11-18 (noche) — Metas como avance de la semana y ajustes de Plan, Hoy y Peso (master 0d395ca, PUBLICADO)
+
+Astor: «Pruebas y pública».
+
+- **Punto de vuelta:** etiqueta `app-publica-antes-de-metas-semana` en GitHub (= 6d68133). En Expo, el grupo
+  anterior del canal `preview` es 0fdb4159; en Vercel, el despliegue anterior de cada web.
+- **Qué se unió:** `entorno-pruebas` 8e172b5 en master (merge sin conflictos, `src` idéntico, sin cambios de
+  dependencias, `supabase/`, `app.config.js` ni `eas.json`; tsc 0, 929 tests).
+  - Metas al día: el % es la parte hecha de la semana entera (`evalMeta`: días = 7 − desde; un día sin marcar
+    cuenta como no hecho). Antes solo contaban los días con dato y hoy: marcar hoy daba 100 % y marcar días
+    pasados no cambiaba nada. El lunes, con todo hecho, la semana va en torno al 14 %.
+  - Plan: «Editar tus objetivos» bajo los objetivos (→ `/metas-objetivos`); el día con todo hecho, relleno dorado
+    tenue y check.
+  - Hoy: el círculo «Hoy» pasa a «Preparación»; «Sugar» pasa a «Glucose» (en español ya era «Glucosa»). La
+    explicación de la preparación no enseña el ciclo menstrual a un perfil de hombre (sin sexo, sí).
+  - Botones centrados en Peso (Añadir medidas, Añadir composición) y en Aprende («En la app»).
+- **Publicado:** EAS `preview` grupo aadb1327-6d1a-421b-9a8b-fe925ae7394d (Android + iOS) y las dos webs.
+  `eas-cli update` dijo «Published!» y después el proceso salió con 3221226505 (fallo de Windows al cerrar); se
+  comprobó con `eas update:list --branch preview` que el grupo está publicado antes de seguir, sin repetirlo.
+  Webs: pantalla de entrar sin errores, sin la marca «Pruebas», base de producción y código nuevo en el bundle.
+  Sin comprobar: pantallas con sesión iniciada en la web publicada, cualquier teléfono.
+- **No tocado:** la beta de amigos (canal `pruebas`) ni la base de producción. Kuova Pruebas recibió lo mismo
+  (OTA staging 20cb5aa1).
