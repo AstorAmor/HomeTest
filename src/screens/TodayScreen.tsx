@@ -300,13 +300,14 @@ export const TodayScreen = () => {
     },
   ].filter((r) => !!r) as GoalNumProps[];
 
-  // Los tres círculos: Hoy (tu estado), Semana (tus metas) y Ciclo (mujeres, con reglas)
+  // Los tres círculos: Preparación (tu estado; antes «Hoy», fundador 2026-11-18: «TODAY debería ser READINESS, en
+  // español también»), Semana (tus metas) y Ciclo (mujeres, con reglas)
   // La misma cifra que la de arriba de Plan (weekScore), adonde lleva este círculo
   const weekScore = metas.data ? weekScoreOf(metas.data.state, metas.vals, metas.week ?? undefined, metas.known) : null;
   const circles = [
     show('readiness') && {
       key: 'today',
-      label: t('Today'),
+      label: t('Readiness'),
       progress: readiness ? readiness.score / 100 : 0,
       tones: ringTones(Colors.green),
       center: <Text style={styles.circleValue}>{readiness ? readiness.score : '—'}</Text>,
@@ -549,7 +550,7 @@ export const TodayScreen = () => {
           {weightFirst && weightCard}
           {sugar && (
             <BiomarkerCard
-              name={t('Sugar')}
+              name={t('Glucose')}
               icon="glucose"
               iconColor={Colors.accent}
               value={sugar.valor}

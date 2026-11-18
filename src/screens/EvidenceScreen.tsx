@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { FLink } from '@/components/fine/FineForm';
 import { measureStyles } from '@/components/fine/FineMeasure';
 import { settingsStyles } from '@/components/settings/SettingsParts';
 import { EVIDENCE, EvidenceBlock, EvidenceTopic } from '@/data/evidence';
+import { profileRepository } from '@/data/profileRepository';
 import { READINESS_BANDS, READINESS_WEIGHTS, type ReadinessPart } from '@/wearables/seriesLogic';
 import { t as tr } from '@/i18n';
 import { withSystemUi } from '@/utils/systemUi';
@@ -97,7 +98,23 @@ export const EvidenceScreen = () => {
 };
 
 // Lo de dentro de un tema: párrafos, bloques con su etiqueta, si está en revisión y las fuentes
+// ¿Es hombre según su perfil? Lo del ciclo menstrual no se le enseña (fundador, 2026-11-18: «si es un chico, no
+// pongas lo del período»). Con el perfil leído la última vez sale al momento; sin sexo en el perfil, se enseña
+function useIsMale() {
+  const [male, setMale] = useState(() => profileRepository.peek()?.sex === 'male');
+  useEffect(() => {
+    profileRepository
+      .get()
+      .then((p) => setMale(p?.sex === 'male'))
+      .catch(() => undefined);
+  }, []);
+  return male;
+}
+
 function TopicBody({ topic: t }: { topic: EvidenceTopic }) {
+  const male = useIsMale();
+  const blocks = t.blocks?.filter((b) => !(male && b.cycle));
+  const sources = t.sources.filter((s) => !(male && s.cycle));
   return (
     <View style={styles.body}>
       {t.body.map((p) => (
@@ -105,12 +122,12 @@ function TopicBody({ topic: t }: { topic: EvidenceTopic }) {
           {tr(p)}
         </Text>
       ))}
-      {t.blocks?.map((b) => <Block key={b.label} block={b} />)}
+      {blocks?.map((b) => <Block key={b.label} block={b} />)}
       {t.status === 'pending' && <Text style={styles.pending}>{tr('Being reviewed by our medical team')}</Text>}
-      {t.sources.length > 0 && (
+      {sources.length > 0 && (
         <View style={styles.sources}>
           <Text style={fine.kicker}>{tr('Sources')}</Text>
-          {t.sources.map((s) =>
+          {sources.map((s) =>
             s.url ? (
               <TouchableOpacity key={s.label} onPress={() => withSystemUi(() => WebBrowser.openBrowserAsync(s.url!))} activeOpacity={0.7} accessibilityRole="link" style={styles.source}>
                 <Text style={styles.sourceLink}>{tr(s.label)}</Text>

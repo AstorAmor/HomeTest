@@ -5,6 +5,7 @@
 export interface EvidenceSource {
   label: string;
   url?: string;
+  cycle?: boolean; // solo trata del ciclo menstrual: no se enseña a los hombres
 }
 
 // Un bloque con su etiqueta pequeña encima («QUÉ ENTRA», «QUÉ NO ES») y, si hace falta, un dibujo que EvidenceScreen
@@ -13,6 +14,9 @@ export interface EvidenceBlock {
   label: string;
   text?: string;
   figure?: 'readinessWeights' | 'readinessBands';
+  // Solo trata del ciclo menstrual: no se enseña a los hombres (fundador, 2026-11-18: «si es un chico, no pongas lo
+  // del período»). Sin sexo en el perfil se enseña
+  cycle?: boolean;
 }
 
 export interface EvidenceTopic {
@@ -143,6 +147,7 @@ export const EVIDENCE: EvidenceTopic[] = [
       { label: 'What the number means', figure: 'readinessBands', text: 'A typical day is around 65.' },
       {
         label: 'Menstrual cycle',
+        cycle: true,
         text: 'If you log your periods, in the luteal phase we offset the change that is normal then (resting heart rate about 2 bpm higher, HRV slightly lower), so it does not lower your score.',
       },
       {
@@ -152,7 +157,7 @@ export const EVIDENCE: EvidenceTopic[] = [
     ],
     sources: [
       { label: 'HRV-guided training: daily values compared with your own rolling baseline (Plews et al., Sports Med 2013)', url: 'https://doi.org/10.1007/s40279-013-0071-8' },
-      { label: 'Wrist wearables capture menstrual-cycle temperature changes (Shilaih et al., 2018)', url: 'https://doi.org/10.1038/s41598-018-20796-9' },
+      { label: 'Wrist wearables capture menstrual-cycle temperature changes (Shilaih et al., 2018)', url: 'https://doi.org/10.1038/s41598-018-20796-9', cycle: true },
     ],
     status: 'pending',
   },
