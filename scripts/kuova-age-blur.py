@@ -32,3 +32,30 @@ for theme, rgb in COLORS.items():
         path = OUT / f"blur_{sep}_{theme}.png"
         img.save(path, optimize=True)
         print(path.name, path.stat().st_size, "bytes")
+
+
+# La cifra fina (desde el 2026-11-18): la Edad KUOVA aún sin calcular en Análisis y en su detalle, como la cifra de
+# verdad de KuovaAgeSection (Inter Light 54, alto de línea 60, letra −1) pero desenfocada (fundador: «unos números
+# difuminados como: pendiente desbloquear»). Escribe blur_fine_{comma,dot}_{dark,light}.png a ×3, con un margen
+# PAD alrededor para que quepa el desenfoque; KuovaAgeLockedFigure lo descuenta con márgenes negativos, así que ocupa
+# lo mismo que la cifra. Siempre «00,0»: decorativo, no es la edad de nadie.
+FINE_FONT = Path(__file__).resolve().parent.parent / "node_modules/@expo-google-fonts/inter/300Light/Inter_300Light.ttf"
+FS, LH, TRACK, PAD, SIGMA, K = 54, 60, -1, 18, 5.2, 3
+FINE_COLORS = {"dark": (0xF0, 0xEF, 0xE6), "light": (0x0E, 0x2A, 0x24)}
+ffont = ImageFont.truetype(str(FINE_FONT), FS * K)
+for sep, text in TEXTS.items():
+    advances = [ffont.getlength(ch) + TRACK * K for ch in text]
+    tw = sum(advances)
+    w, h = round(tw + 2 * PAD * K), (LH + 2 * PAD) * K
+    for theme, rgb in FINE_COLORS.items():
+        img = Image.new("RGBA", (w, h), (*rgb, 0))
+        draw = ImageDraw.Draw(img)
+        x = PAD * K
+        # anchor "lm": el centro de la x de la letra a media altura de la línea
+        for ch, adv in zip(text, advances):
+            draw.text((x, (PAD + LH / 2) * K), ch, font=ffont, fill=(*rgb, 255), anchor="lm")
+            x += adv
+        img = img.filter(ImageFilter.GaussianBlur(SIGMA * K))
+        path = OUT / f"blur_fine_{sep}_{theme}.png"
+        img.save(path, optimize=True)
+        print(path.name, f"{w / K:.1f} x {h / K:.1f} pt", path.stat().st_size, "bytes")

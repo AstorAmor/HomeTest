@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { baselineReport, currentReport } from '@/data/reportRepository';
 import { showSamples } from '@/data/dataMode';
-import { KuovaAgeDots, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
+import { KuovaAgeDots, KuovaAgeLockedFigure, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
 import { kuovaAge, kuovaAgeFromUploads, KuovaAgeResult, LabInput, PHENOAGE_INPUTS, realChange } from '@/logic/kuovaAge';
 import type { PhenoInput } from '@/logic/phenoAge';
 import { labUploadRepository } from '@/data/labUploads';
@@ -146,9 +146,18 @@ export const BiologicalAgeScreen = () => {
 
           {locked && (
             <>
-              {/* Aún sin Edad KUOVA: los 9 puntos de lo que hay y, en pequeño, qué falta */}
+              {/* Aún sin Edad KUOVA: donde iría la cifra, «00,0» difuminado y «Pendiente de desbloquear» con los 9
+                  puntos de lo que hay (fundador, 2026-11-18); debajo, en pequeño, qué falta */}
               <View style={styles.lockedTop}>
-                <KuovaAgeDots c={locked.coverage} />
+                <View style={styles.hero}>
+                  <KuovaAgeLockedFigure />
+                  <View style={styles.flex}>
+                    <Text style={styles.diff}>{t('Not unlocked yet')}</Text>
+                    <View style={styles.lockedDots}>
+                      <KuovaAgeDots c={locked.coverage} />
+                    </View>
+                  </View>
+                </View>
                 <Text style={styles.lockedHint}>{kuovaAgeLockedHint(locked)}</Text>
               </View>
 
@@ -303,6 +312,7 @@ const styles = StyleSheet.create({
   para: { marginBottom: 8 },
   source: { ...ff('regular'), color: FINE.jade, fontSize: 12.5, lineHeight: 18, marginBottom: 8 },
   lockedTop: { gap: 10, marginTop: 4 },
+  lockedDots: { marginTop: 7 },
   lockedHint: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 19 },
   needState: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
 });

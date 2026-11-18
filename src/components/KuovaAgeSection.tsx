@@ -7,7 +7,7 @@ import { SecHead } from '@/components/fine/Fine';
 import { FINE, ff, fine } from '@/theme/fine';
 import { TourTarget } from '@/components/tour/TourTarget';
 import type { TourScroll } from '@/components/tour/tourStore';
-import { KuovaAgeDots, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
+import { KuovaAgeDots, KuovaAgeLockedFigure, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
 import { KuovaAge, kuovaAge, kuovaAgeFromUploads, KuovaAgeResult, realChange } from '@/logic/kuovaAge';
 import { labUploadRepository } from '@/data/labUploads';
 import { profileRepository } from '@/data/profileRepository';
@@ -51,14 +51,23 @@ export function KuovaAgeSection({ tourScroll }: { tourScroll?: TourScroll }) {
         <KuovaAgeHero k={kres.k} previous={kres.previous} onPress={open} />
       </TourTarget>
     );
-  // Cuenta real sin Edad KUOVA todavía: sin cifra, los 9 puntos de lo que hay y en pequeño qué falta (valores,
-  // fecha de nacimiento…); al tocarla, el detalle con los 9
+  // Cuenta real sin Edad KUOVA todavía: donde iría la cifra, «00,0» difuminado y «Pendiente de desbloquear» con los
+  // 9 puntos de lo que hay (fundador, 2026-11-18); debajo, en pequeño, qué falta (valores, fecha de nacimiento…). Al
+  // tocarla, el detalle con los 9
   return (
     <TourTarget id="analysis.age" scroll={tourScroll}>
       <View style={styles.wrap}>
         <SecHead title={t('Your KUOVA age')} />
-        <TouchableOpacity onPress={open} activeOpacity={0.8}>
-          <KuovaAgeDots c={kres.coverage} />
+        <TouchableOpacity onPress={open} activeOpacity={0.8} accessibilityRole="button">
+          <View style={styles.hero}>
+            <KuovaAgeLockedFigure />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.diff}>{t('Not unlocked yet')}</Text>
+              <View style={styles.lockedDots}>
+                <KuovaAgeDots c={kres.coverage} />
+              </View>
+            </View>
+          </View>
           <Text style={[fine.note, { marginTop: 10 }]}>{kuovaAgeLockedHint(kres)}</Text>
         </TouchableOpacity>
         {kres.status === 'missing' && (
@@ -111,4 +120,5 @@ const styles = StyleSheet.create({
   age: { ...fine.num, fontSize: 54, lineHeight: 60, letterSpacing: -1 },
   diff: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 19 },
   meta: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 17, marginTop: 2 },
+  lockedDots: { marginTop: 7 },
 });

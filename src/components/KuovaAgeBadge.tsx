@@ -78,6 +78,35 @@ const BlurredNumber = ({ size, light }: { size: number; light: boolean }) => (
   <Image source={BLUR[light ? 'light' : 'dark'][num('0.5').includes(',') ? 'comma' : 'dot']} style={{ width: size, height: size }} contentFit="contain" />
 );
 
+// La Edad KUOVA aún sin calcular en el lenguaje fino (Análisis y su detalle), donde iría la cifra: «00,0» desenfocado
+// y ya pintado (scripts/kuova-age-blur.py, blur_fine_*), del tamaño de la cifra de verdad (Inter Light 54). La imagen
+// trae un margen de FINE_PAD alrededor para el desenfoque; el margen negativo lo descuenta y ocupa lo mismo que la
+// cifra. Fundador, 2026-11-18: «unos números difuminados como: pendiente desbloquear». Decorativo, no es la edad de nadie
+const BLUR_FINE = {
+  dark: {
+    comma: require('../../assets/images/kuova-age/blur_fine_comma_dark.png'),
+    dot: require('../../assets/images/kuova-age/blur_fine_dot_dark.png'),
+  },
+  light: {
+    comma: require('../../assets/images/kuova-age/blur_fine_comma_light.png'),
+    dot: require('../../assets/images/kuova-age/blur_fine_dot_light.png'),
+  },
+};
+const FINE_PAD = 18;
+
+export const KuovaAgeLockedFigure = () => {
+  const comma = num('0.5').includes(',');
+  return (
+    <Image
+      source={BLUR_FINE[Colors.isLight ? 'light' : 'dark'][comma ? 'comma' : 'dot']}
+      style={{ width: comma ? 146.3 : 146, height: 96, margin: -FINE_PAD }}
+      contentFit="contain"
+      accessible
+      accessibilityLabel={t('Not unlocked yet')}
+    />
+  );
+};
+
 const andList = (items: string[]) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} ${t('and')} ${items[items.length - 1]}`);
 
 const inputLabel = (id: PhenoInput) => t(PHENOAGE_INPUTS.find((i) => i.id === id)!.label);

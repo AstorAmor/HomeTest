@@ -1,6 +1,7 @@
 // El dibujo del cuerpo de «Medidas» (lo pinta BodyHologram por debajo de las marcas), separado para poder
-// cambiarlo sin tocar el resto. Desde el 2026-11-16, las cuatro figuras del fundador: hombre y mujer, de frente y de
-// espaldas (la de espaldas, para los pliegues de tríceps y subescapular). Recortadas con el fondo transparente y su
+// cambiarlo sin tocar el resto. Las cuatro figuras del fundador: hombre y mujer, de frente y de espaldas (la de
+// espaldas, para los pliegues de tríceps y subescapular); desde el 2026-11-18, las de su segunda imagen («unas figuras
+// menos sexuales»; recorte en proyectos/borradores/figuras-medidas/v2). Recortadas con el fondo transparente y su
 // propia malla y brillo, en assets/images/body (360 × 784, el mismo encuadre en las cuatro). Se ajustan a la caja como
 // el SVG de las marcas (contain = xMidYMid meet), así que las marcas caen en su sitio.
 // Para cambiarlas otra vez: sustituir las imágenes (o pintar aquí un SVG), poner su tamaño en FIGURES de

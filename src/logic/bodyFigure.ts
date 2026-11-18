@@ -1,7 +1,10 @@
 // La figura de «Medidas» (BodyHologram): dónde va cada sitio sobre el dibujo del cuerpo y cuánto se acerca la
-// figura al elegirlo. El dibujo está en src/components/BodyFigureArt.tsx: desde el 2026-11-16, las cuatro figuras
-// del fundador (hombre y mujer, de frente y de espaldas; 360 × 784, el cuerpo centrado y los pies abajo, las cuatro
-// con el mismo encuadre). Lo de abajo va en sus coordenadas (el SVG de las marcas usa ese mismo `w` × `h` de viewBox).
+// figura al elegirlo. El dibujo está en src/components/BodyFigureArt.tsx: las cuatro figuras del fundador (hombre y
+// mujer, de frente y de espaldas; 360 × 784, el cuerpo centrado y los pies abajo, las cuatro con el mismo encuadre).
+// Desde el 2026-11-18, las de su segunda imagen («unas figuras menos sexuales»): las marcas se volvieron a colocar
+// midiendo la silueta de cada una (lo más estrecho del cuello y la cintura, lo más ancho de la cadera y la
+// pantorrilla…) y comprobándolas pintadas encima. Lo de abajo va en sus coordenadas (el SVG de las marcas usa ese
+// mismo `w` × `h` de viewBox).
 // Los sitios son los de la antropometría (ISAK; pliegues de Jackson-Pollock): brazo, muslo, pantorrilla y todos
 // los pliegues se toman en el lado derecho de la persona, que de frente queda a la izquierda de la pantalla y de
 // espaldas, a la derecha. Los pliegues que se toman por detrás (tríceps y subescapular) van en la figura de
@@ -53,39 +56,39 @@ export const ZOOM: Record<string, number> = {
 // abdominal, vertical a un lado del ombligo; muslo, vertical en la parte de delante a medio muslo. De espaldas:
 // tríceps, vertical a media altura del brazo, y subescapular, bajo la punta de la escápula en diagonal hacia fuera.
 const MALE_MARKS: Record<string, TapeMark | FoldMark> = {
-  tape_neck: { x: 181, y: 109, half: 27 },
-  tape_chest: { x: 181, y: 197, half: 72 },
-  tape_waist: { x: 182, y: 268, half: 57 },
-  tape_hip: { x: 182, y: 378, half: 78 },
-  tape_arm: { x: 89, y: 212, half: 21 },
-  tape_thigh: { x: 138, y: 465, half: 31 },
-  tape_calf: { x: 127, y: 572, half: 28 },
-  skinfold_chest: { x: 132, y: 200, angle: 50 },
-  skinfold_biceps: { x: 91, y: 212, angle: 90 },
-  skinfold_suprailiac: { x: 134, y: 318, angle: 40 },
-  skinfold_abdominal: { x: 167, y: 292, angle: 90 },
-  skinfold_thigh: { x: 138, y: 465, angle: 90 },
+  tape_neck: { x: 180, y: 114, half: 24 },
+  tape_chest: { x: 181, y: 204, half: 64 },
+  tape_waist: { x: 181, y: 268, half: 52 },
+  tape_hip: { x: 180, y: 374, half: 70 },
+  tape_arm: { x: 89, y: 234, half: 21 },
+  tape_thigh: { x: 140, y: 460, half: 29 },
+  tape_calf: { x: 131, y: 584, half: 26 },
+  skinfold_chest: { x: 127, y: 204, angle: 50 },
+  skinfold_biceps: { x: 90, y: 234, angle: 90 },
+  skinfold_suprailiac: { x: 136, y: 312, angle: 40 },
+  skinfold_abdominal: { x: 167, y: 288, angle: 90 },
+  skinfold_thigh: { x: 140, y: 460, angle: 90 },
   // De espaldas
-  skinfold_triceps: { x: 277, y: 212, angle: 90 },
-  skinfold_subscapular: { x: 216, y: 236, angle: 45 },
+  skinfold_triceps: { x: 271, y: 238, angle: 90 },
+  skinfold_subscapular: { x: 216, y: 246, angle: 45 },
 };
 
 const FEMALE_MARKS: Record<string, TapeMark | FoldMark> = {
-  tape_neck: { x: 181, y: 122, half: 20 },
-  tape_chest: { x: 181, y: 222, half: 57 },
-  tape_waist: { x: 182, y: 272, half: 42 },
-  tape_hip: { x: 182, y: 378, half: 75 },
-  tape_arm: { x: 110, y: 212, half: 15 },
-  tape_thigh: { x: 148, y: 462, half: 28 },
-  tape_calf: { x: 146, y: 578, half: 25 },
-  skinfold_chest: { x: 134, y: 214, angle: 50 },
-  skinfold_biceps: { x: 111, y: 212, angle: 90 },
-  skinfold_suprailiac: { x: 140, y: 316, angle: 40 },
-  skinfold_abdominal: { x: 168, y: 300, angle: 90 },
-  skinfold_thigh: { x: 148, y: 462, angle: 90 },
+  tape_neck: { x: 180, y: 135, half: 19 },
+  tape_chest: { x: 180, y: 214, half: 52 },
+  tape_waist: { x: 180, y: 280, half: 42 },
+  tape_hip: { x: 180, y: 382, half: 66 },
+  tape_arm: { x: 108, y: 238, half: 16 },
+  tape_thigh: { x: 148, y: 456, half: 26 },
+  tape_calf: { x: 144, y: 580, half: 23 },
+  skinfold_chest: { x: 136, y: 214, angle: 50 },
+  skinfold_biceps: { x: 108, y: 238, angle: 90 },
+  skinfold_suprailiac: { x: 140, y: 318, angle: 40 },
+  skinfold_abdominal: { x: 167, y: 300, angle: 90 },
+  skinfold_thigh: { x: 148, y: 456, angle: 90 },
   // De espaldas
-  skinfold_triceps: { x: 251, y: 214, angle: 90 },
-  skinfold_subscapular: { x: 211, y: 236, angle: 45 },
+  skinfold_triceps: { x: 251, y: 244, angle: 90 },
+  skinfold_subscapular: { x: 212, y: 250, angle: 45 },
 };
 
 export const FIGURES: Record<FigureSex, BodyFigure> = {

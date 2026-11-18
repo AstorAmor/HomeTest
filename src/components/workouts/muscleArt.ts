@@ -1,12 +1,12 @@
 // Las imágenes del mapa de músculos (MuscleMap): por cada figura (hombre y mujer, de frente y de espaldas), la base
 // (el cuerpo entero en un solo tono) y, por cada grupo muscular, su capa en dos tonos: principal (rojo, -p) y
 // secundario (violeta azulado, -s). Todas del mismo tamaño (320 × 790) y con el fondo transparente. Salen de la
-// imagen del fundador (2026-11-16), recortada por capas separando cada grupo por su color y cambiándole luego el
-// tono (fundador, 2026-11-17: «que sea rojo el músculo principal, y luego violeta/azul los secundarios»); están en
-// assets/images/muscles. GENERADO junto con las imágenes: para cambiarlas, volver a recortarlas con los mismos
-// nombres (musc-<m|f>-<front|back>[-<capa>-<p|s>].webp) y, si cambia la lista de capas, VIEW_LAYERS en
-// src/logic/muscleMap.ts. El script que las recorta (layers.py) y la imagen de partida están fuera del
-// repositorio, en proyectos/borradores/musculos-capas.
+// imagen del fundador, recortada por capas separando cada grupo por su color y cambiándole luego el tono (fundador,
+// 2026-11-17: «que sea rojo el músculo principal, y luego violeta/azul los secundarios»); desde el 2026-11-18, de su
+// segunda imagen («unas figuras menos sexuales»). Están en assets/images/muscles. GENERADO junto con las imágenes:
+// para cambiarlas, volver a recortarlas con los mismos nombres (musc-<m|f>-<front|back>[-<capa>-<p|s>].webp) y, si
+// cambia la lista de capas, VIEW_LAYERS en src/logic/muscleMap.ts. El script que las recorta (v2/layers2.py) y la
+// imagen de partida están fuera del repositorio, en proyectos/borradores/musculos-capas.
 import type { FigureSex } from '@/logic/bodyFigure';
 import type { MuscleLayer, MuscleLevel, MuscleView } from '@/logic/muscleMap';
 
