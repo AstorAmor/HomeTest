@@ -3068,4 +3068,14 @@ Astor: «lo quiero en el release final» y, para el OK, «Sí, las dos cosas» (
   0fdb4159-a081-4f54-88ed-72528431cdc1 (Android + iOS) y las dos webs (hometest-app y hometest-demo). Comprobado: las
   dos webs cargan la pantalla de entrar sin errores, sin la marca «Pruebas», con la base de producción y con el código
   nuevo en el bundle. Sin comprobar: pantallas con sesión iniciada en la web publicada, cualquier teléfono.
-- **No tocado:** la beta de amigos (canal `pruebas`) ni la base de producción.
+- **No tocado en la publicación:** la beta de amigos (canal `pruebas`; se envió después, ver el punto siguiente) ni la
+  base de producción.
+- **Beta de amigos, la misma tarde (OK de Astor: «sí, envía a la beta» y «Sí, a iPhone»):** el mismo código (master
+  fed1143, código = 82f1ff8) al canal `pruebas`, con `--environment preview`, en dos envíos desde `hometest-app-publica`:
+  - Android: grupo b9ceaaa3-3d05-4e81-ace1-b447027f49d4. El anterior es 88888240 (el rediseño de la mañana).
+  - iPhone: grupo f0d3332b-75ac-43fa-b0dc-8516e94d9cda. Es la primera vez que los iPhone de la beta reciben el
+    rediseño; el anterior es d65ce897-f4c9-4550-a774-7b3aa7c9e2da (Android + iOS, `pruebas-entrada`).
+  - Para volver atrás: `eas update:republish --group …` con el grupo anterior de cada plataforma.
+  - Comprobado: los dos grupos en el canal con runtime exposdk:57.0.0; el bundle de iOS lleva la base de producción y
+    no la de pruebas. Sin comprobar: ningún teléfono de la beta. Los iPhone de la beta son las compilaciones de
+    TestFlight 1.1.0 (4) y (5), anteriores a los módulos nativos nuevos, que la app trata como opcionales.
