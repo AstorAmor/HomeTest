@@ -83,13 +83,23 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
     return () => clearTimeout(id);
   }, [looping, n, step, scrollX]);
 
-  // Al pararse, si se ha salido de la copia del medio, salta sin animación a la misma tarjeta allí
+  // Al pararse, si se ha salido de la copia del medio, salta sin animación a la misma tarjeta allí (y la posición se
+  // pone a mano, por lo mismo que al empezar: en el iPhone ese salto no avisa)
   const recenter = (x: number) => {
     if (!looping) return;
     const i = Math.round(x / step);
-    if (i < n) scrollRef.current?.scrollTo?.({ x: x + n * step, animated: false });
-    else if (i >= 2 * n) scrollRef.current?.scrollTo?.({ x: x - n * step, animated: false });
+    const to = i < n ? x + n * step : i >= 2 * n ? x - n * step : null;
+    if (to == null) return;
+    scrollRef.current?.scrollTo?.({ x: to, animated: false });
+    scrollX.setValue(to);
   };
+
+  // Segunda protección para el arranque (fundador, 2026-11-18, otra vez: «sigo viendo […] que aparecen todos ocultos
+  // de primeras»): mientras no llegue el primer aviso de desplazamiento, cada tarjeta se pinta quieta según lo lejos
+  // que está de la del centro, sin depender de la posición animada. Al primer movimiento pasa a la animada.
+  const [live, setLive] = useState(false);
+  const liveRef = useRef(false);
+  const still = looping && !live;
 
   const press = (s: T) => (s.id === '__more' && more ? more.onPress() : onSelect(s));
 
@@ -98,7 +108,7 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
 
   // `blur`: en el carrusel, la capa desenfocada de la foto que aparece al alejarse del centro.
   // `gold`: lo que se ve del reborde de oro (1 en el centro, 0 a los lados)
-  const card = (s: T, blur?: Animated.AnimatedInterpolation<number>, gold?: Animated.AnimatedInterpolation<number>) => {
+  const card = (s: T, blur?: Animated.AnimatedInterpolation<number> | number, gold?: Animated.AnimatedInterpolation<number> | number) => {
     const d = drawing(s);
     return (
       <TouchableOpacity activeOpacity={0.85} onPress={() => press(s)} accessibilityRole="button" accessibilityLabel={`${s.label}. ${s.subtitle}`}>
@@ -171,6 +181,10 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
           useNativeDriver: useNative,
           listener: (e: any) => {
             const x = e.nativeEvent.contentOffset.x;
+            if (!liveRef.current) {
+              liveRef.current = true;
+              setLive(true);
+            }
             if (settle.current) clearTimeout(settle.current);
             settle.current = setTimeout(() => recenter(x), 180);
           },
@@ -179,12 +193,14 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
       >
         {list.map((s, i) => {
           const inputRange = [(i - 2) * step, (i - 1) * step, i * step, (i + 1) * step, (i + 2) * step];
-          const scale = scrollX.interpolate({ inputRange, outputRange: [0.62, 0.78, 1, 0.78, 0.62], extrapolate: 'clamp' });
-          const opacity = scrollX.interpolate({ inputRange, outputRange: [0.25, 0.55, 1, 0.55, 0.25], extrapolate: 'clamp' });
+          // Quieta (antes del primer movimiento): el valor de la tabla según su distancia a la del centro, la n
+          const at = (out: number[]) => (still ? out[Math.max(0, Math.min(4, i - n + 2))] : scrollX.interpolate({ inputRange, outputRange: out, extrapolate: 'clamp' }));
+          const scale = at([0.62, 0.78, 1, 0.78, 0.62]);
+          const opacity = at([0.25, 0.55, 1, 0.55, 0.25]);
           // Capa desenfocada encima que aparece al alejarse del centro (solo en las fotos)
-          const blurOpacity = scrollX.interpolate({ inputRange, outputRange: [1, 0.85, 0, 0.85, 1], extrapolate: 'clamp' });
+          const blurOpacity = at([1, 0.85, 0, 0.85, 1]);
           // El reborde de oro: solo la tarjeta del centro
-          const goldOpacity = scrollX.interpolate({ inputRange, outputRange: [0, 0, 1, 0, 0], extrapolate: 'clamp' });
+          const goldOpacity = at([0, 0, 1, 0, 0]);
           return (
             <Animated.View key={`${s.id}-${Math.floor(i / n)}`} style={{ width: CARD, transform: [{ scale }], opacity }}>
               {card(s, blurOpacity, goldOpacity)}

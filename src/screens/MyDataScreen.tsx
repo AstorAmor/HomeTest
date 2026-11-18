@@ -53,7 +53,7 @@ import { userFlags } from '@/data/userFlags';
 import { markerHref, markerName } from '@/utils/markerLinks';
 import { Chev, SecHead } from '@/components/fine/Fine';
 import { SecRow } from '@/components/fine/FineMeasure';
-import { FineDonut, labToneColor, rangeTone, StatusWord } from '@/components/fine/FineLab';
+import { countParts, FineDonut, labToneColor, rangeTone, StatusWord } from '@/components/fine/FineLab';
 import { rangeStatusLabel } from '@/utils/rangeStatus';
 import { FINE, ff, fine } from '@/theme/fine';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
@@ -689,11 +689,7 @@ const AnalysesList = ({ list, any, charts, onEye }: { list: MarkerSummary[]; any
   const shown = all ? list : list.slice(0, first);
   const more = list.length > first;
   // Sin rojos: lo de fuera en oro, lo de dentro en jade
-  const parts = [
-    counts.out ? { text: t(counts.out === 1 ? '1 out of range' : '{n} out of range', { n: counts.out }), color: FINE.gold } : null,
-    counts.in ? { text: t('{n} in range', { n: counts.in }), color: FINE.jade } : null,
-    counts.none ? { text: t('{n} with no reference', { n: counts.none }), color: FINE.mute } : null,
-  ].filter(Boolean) as { text: string; color: string }[];
+  const parts = countParts(counts);
   return (
     <>
       {/* La flecha de la derecha abre y cierra la lista entera (fundador, 2026-11-06); la de abajo, también */}
@@ -716,7 +712,7 @@ const AnalysesList = ({ list, any, charts, onEye }: { list: MarkerSummary[]; any
           cuántos hay, en rango y fuera, y su recuento al lado (fundador, 2026-11-18: «no pondría esa fecha, sino que lo
           marcaría en cada uno de ellos […] antes de eso añadiría el circulito») */}
       <View style={styles.anaHead}>
-        <FineDonut size={58} stroke={3} inRange={counts.in} review={counts.out} label={`${list.length}`} />
+        <FineDonut size={92} stroke={4.5} inRange={counts.in} review={counts.out} label={`${list.length}`} />
         <View style={styles.anaHeadText}>
           {parts.map((p) => (
             <Text key={p.text} style={[styles.anaCounts, { color: p.color }]}>
@@ -799,12 +795,14 @@ const styles = StyleSheet.create({
   bioTestStatus: { ...ff('regular'), fontSize: 13 },
   anaFirst: { marginTop: 0 },
   anaUpload: { marginTop: 10 },
-  anaCounts: { ...ff('regular'), fontSize: 13, lineHeight: 18 },
-  anaHead: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 },
+  anaCounts: { ...ff('regular'), fontSize: 14, lineHeight: 20 },
+  // El rosco de tus valores, más grande (fundador, 2026-11-18: «el 110 y su correspondiente círculo lo haría más grande»)
+  anaHead: { flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 10 },
   anaHeadText: { flex: 1, gap: 2 },
   anaMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   anaEye: { paddingRight: 2 },
-  anaEyeHint: { marginTop: 4, marginBottom: 2 },
+  // Separada del rosco y de la lista (fundador, 2026-11-18: «lo pondría más separado»)
+  anaEyeHint: { marginTop: 18, marginBottom: 8 },
   anaRight: { alignItems: 'flex-end', gap: 2 },
   anaUnit: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
   anaMore: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 10 },

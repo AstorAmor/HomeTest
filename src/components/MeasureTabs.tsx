@@ -18,10 +18,34 @@ export function MeasureTabs({
   style?: StyleProp<ViewStyle>;
 }) {
   return (
+    <FineTabs
+      value={value}
+      onChange={onChange}
+      style={style}
+      options={(['tape', 'fold'] as const).map((id) => ({
+        id,
+        label: `${id === 'tape' ? t('Tape measure') : t('Skinfold caliper')}${counts?.[id] ? ` · ${counts[id]}` : ''}`,
+      }))}
+    />
+  );
+}
+
+// Las mismas pestañas con cualquier opción (p. ej. «Con tus medidas · De tu báscula» al apuntar el peso)
+export function FineTabs<T extends string>({
+  value,
+  onChange,
+  options,
+  style,
+}: {
+  value: T;
+  onChange: (id: T) => void;
+  options: readonly { id: T; label: string }[];
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
     <View style={[styles.tabs, style]} accessibilityRole="tablist">
-      {(['tape', 'fold'] as const).map((id) => {
+      {options.map(({ id, label }) => {
         const on = value === id;
-        const n = counts?.[id];
         return (
           <TouchableOpacity
             key={id}
@@ -31,10 +55,7 @@ export function MeasureTabs({
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
           >
-            <Text style={[styles.tabText, on && styles.tabTextOn]}>
-              {id === 'tape' ? t('Tape measure') : t('Skinfold caliper')}
-              {n ? ` · ${n}` : ''}
-            </Text>
+            <Text style={[styles.tabText, on && styles.tabTextOn]}>{label}</Text>
           </TouchableOpacity>
         );
       })}

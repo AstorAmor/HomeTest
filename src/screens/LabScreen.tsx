@@ -5,7 +5,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, type Href } from 'expo-router';
 import { getRangeStatus } from '@/utils/rangeStatus';
-import { DonutLegend, FineDonut, LabGauge } from '@/components/fine/FineLab';
+import { countParts, DonutLegend, FineDonut, LabGauge } from '@/components/fine/FineLab';
 import { SpecialistCarousel } from '@/components/SpecialistCarousel';
 import { KuovaAgeSection } from '@/components/KuovaAgeSection';
 import { FirstAnalysisCard } from '@/components/FirstAnalysisCard';
@@ -27,6 +27,8 @@ import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { getMarkerValueTextEn } from '@/data/reportContentEn';
 import { markerHref } from '@/utils/markerLinks';
 import { FINE, ff, fine } from '@/theme/fine';
+import { FineGlyph } from '@/components/fine/FineMeasure';
+import { reportObservations } from '@/logic/reportObservations';
 import {
   labReports,
   flaggedMarkers,
@@ -144,14 +146,13 @@ export const LabScreen = () => {
 
         <View style={styles.pad}>
           {/* 3. Tu último informe: el recuento y TODO lo que conviene mirar, con su línea de rango. La cabecera y el
-              recuento abren el informe completo; cada marcador, su ficha con todos sus valores (fundador, 2026-11-17:
+              rosco abren las observaciones (sin el enlace «Informe completo»: fundador, 2026-11-18, «sobra»); cada marcador, su ficha con todos sus valores (fundador, 2026-11-17:
               «Pon todos los que estén para revisar. Al pinchar en ellos, llévame al detalle de ese marcador […] Al
               informe total quiero ir cuando pinche en "tu último informe"») */}
           {hasAny && (
             <>
               <SecHead
                 title={t('Your latest report')}
-                more={latestReport ? t('Full report') : undefined}
                 onPress={latestReport ? () => openReport(latestReport.id) : undefined}
               />
               {latestReport ? (
@@ -159,6 +160,7 @@ export const LabScreen = () => {
                   const { id, title, lab, report } = latestReport;
                   const counts = reportCounts(report);
                   const flagged = flaggedMarkers(report, Infinity);
+                  const obs = reportObservations(report);
                   const areas = report.sections
                     .map((sec) => ({
                       id: sec.category_id,
@@ -175,6 +177,7 @@ export const LabScreen = () => {
                         note={`${formatReportDate(report.test_date)} · ${lab}${title ? ` · ${title}` : ''}`}
                         areas={areas}
                         onPress={() => openReport(id)}
+                        observation={obs.compared ? { improved: obs.backInRange.length + obs.closer.length, worse: obs.worse.length } : undefined}
                       />
                       {flagged.length > 0 && <Text style={[fine.kicker, styles.flaggedHead]}>{t('Markers that need a look')}</Text>}
                       {flagged.map((m) => {
@@ -221,13 +224,31 @@ export const LabScreen = () => {
               {/* Con el rosco de todos tus valores (en rango / fuera) y cuántos son de hace más de un año (fundador,
                   2026-11-18: «quisiera que aparezca el circulito también y que tenga una especie de "alarma de
                   caducidad", máximo 1 año») */}
-              <SecHead title={t('Your biomarkers')} />
+              {/* «110 marcadores» y debajo cuántos en rango y cuántos fuera (fundador, 2026-11-18); «Ver todos» arriba */}
+              <SecHead
+                title={t('Your biomarkers')}
+                more={values.list.length > 0 ? t('See all') : undefined}
+                onMore={values.list.length > 0 ? () => router.push('/biomarkers') : undefined}
+              />
               {values.list.length > 0 ? (
-                <TouchableOpacity style={[fine.row, styles.valuesRow]} onPress={() => router.push('/biomarkers')} activeOpacity={0.7} accessibilityRole="button">
+                <TouchableOpacity
+                  style={[fine.row, styles.valuesRow]}
+                  onPress={() => router.push('/biomarkers')}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('{n} markers', { n: values.list.length })}. ${t('See all your values')}`}
+                >
                   <FineDonut size={54} stroke={3} inRange={values.counts.in} review={values.counts.out} label={`${values.list.length}`} />
                   <View style={{ flex: 1 }}>
-                    <Text style={fine.rowTitle}>{t('See all your values')}</Text>
-                    <Text style={fine.rowSub}>{t('Each one against the range of its lab, with its history')}</Text>
+                    <Text style={fine.rowTitle}>{t('{n} markers', { n: values.list.length })}</Text>
+                    <Text style={fine.rowSub}>
+                      {countParts(values.counts).map((p, i) => (
+                        <Text key={p.text} style={{ color: p.color }}>
+                          {i > 0 ? ' · ' : ''}
+                          {p.text}
+                        </Text>
+                      ))}
+                    </Text>
                     {values.stale > 0 && (
                       <Text style={[fine.rowSub, { color: FINE.gold }]}>{tn(values.stale, '1 value is over a year old', '{n} values are over a year old')}</Text>
                     )}
@@ -322,36 +343,63 @@ export const LabScreen = () => {
 };
 
 // Tu último informe en Análisis, como «Tu informe» del prototipo (fundador, 2026-11-18, con su captura: «deberíamos
-// tener algo tal que así»): el total en el rosco con «de N en rango», a su lado la leyenda, debajo la fecha y el
-// laboratorio y, en roscos pequeños, las áreas con algo que revisar. Todo abre el informe.
+// tener algo tal que así»): el rosco con su leyenda, debajo la fecha y el laboratorio y, en roscos pequeños, las áreas
+// con algo que revisar. El mismo día (fundador): dentro del rosco, el total de marcadores («quiero que pongas el total
+// de marcadores», no «103 de 110 en rango»); solo el rosco grande abre las observaciones («el detalle de hierro,
+// metabolismo… no quiero que deje pinchar, que pinche en los 110 de arriba»), y debajo, en una línea, cuántos han
+// mejorado y si alguno ha empeorado desde la analítica anterior (src/logic/reportObservations.ts)
 type ReportArea = { id: string; label: string; inRange: number; total: number };
-function ReportRing({ inRange, review, note, areas, onPress }: { inRange: number; review: number; note: string; areas: ReportArea[]; onPress: () => void }) {
+function ReportRing({
+  inRange,
+  review,
+  note,
+  areas,
+  onPress,
+  observation,
+}: {
+  inRange: number;
+  review: number;
+  note: string;
+  areas: ReportArea[];
+  onPress: () => void;
+  observation?: { improved: number; worse: number };
+}) {
   return (
     <>
       <TouchableOpacity style={styles.ringRow} onPress={onPress} activeOpacity={0.8} accessibilityRole="button">
-        <FineDonut size={116} stroke={5} inRange={inRange} review={review} label={`${inRange}`} sub={t('of {n} in range', { n: inRange + review })} />
+        <FineDonut size={116} stroke={5} inRange={inRange} review={review} label={`${inRange + review}`} />
         <View style={{ flex: 1 }}>
           <DonutLegend inRange={inRange} review={review} />
         </View>
         <Chev />
       </TouchableOpacity>
       <Text style={[fine.note, { marginTop: 4 }]}>{note}</Text>
+      {observation && (
+        <View style={styles.obsRow}>
+          <FineGlyph name="up" size={15} color={observation.improved ? FINE.jade : FINE.mute} />
+          <Text style={styles.obsText}>
+            {tn(observation.improved, '{n} has improved significantly', '{n} have improved significantly')}
+            <Text style={{ color: observation.worse ? FINE.gold : FINE.mute }}>
+              {' · '}
+              {observation.worse ? tn(observation.worse, '{n} has worsened', '{n} have worsened') : t('none has worsened')}
+            </Text>
+          </Text>
+        </View>
+      )}
       {areas.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.areaScroll} contentContainerStyle={styles.areaRow} {...holdTabsProps}>
           {areas.map((a) => (
-            <TouchableOpacity
+            <View
               key={a.id}
               style={styles.area}
-              onPress={onPress}
-              activeOpacity={0.8}
-              accessibilityRole="button"
+              accessible
               accessibilityLabel={`${a.label}: ${t('{n} in range', { n: a.inRange })} · ${t('{n} need a look', { n: a.total - a.inRange })}`}
             >
               <FineDonut size={60} stroke={3} inRange={a.inRange} review={a.total - a.inRange} label={`${a.inRange}/${a.total}`} />
               <Text style={styles.areaLabel} numberOfLines={2}>
                 {a.label}
               </Text>
-            </TouchableOpacity>
+            </View>
           ))}
         </ScrollView>
       )}
@@ -394,6 +442,9 @@ const styles = StyleSheet.create({
   paramStatus: { ...ff('regular'), color: FINE.mute },
   gauge: { width: 96 },
   ringRow: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingTop: 6 },
+  // «17 han mejorado de forma significativa · ninguno ha empeorado», bajo la fecha
+  obsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
+  obsText: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 13.5, lineHeight: 19 },
   // Los roscos de las áreas, de borde a borde de la pantalla
   areaScroll: { marginHorizontal: -20, marginTop: 14 },
   areaRow: { paddingHorizontal: 20, gap: 14 },
