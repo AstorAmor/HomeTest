@@ -3043,3 +3043,29 @@ rellene con sus datos reales.
   anterior del canal es d65ce897-f4c9-4550-a774-7b3aa7c9e2da (Android + iOS) y es lo que siguen viendo los iPhone de
   la beta. master incluye todo lo de `pruebas-entrada` (idioma, entrada con la K, bloqueo con huella, toque del aviso
   de la toma). El iPhone de la beta, cuando Astor haya visto este código en el iPhone de Kuova Pruebas.
+
+## 2026-11-18 (tarde) — Peso con composición y Observaciones del informe en la app pública (master 82f1ff8, PUBLICADO)
+
+Astor: «lo quiero en el release final» y, para el OK, «Sí, las dos cosas» (Kuova Pruebas y la app pública).
+
+- **Punto de vuelta:** etiqueta `app-publica-antes-de-observaciones` en GitHub (= d4eb351). En Expo, el grupo
+  anterior del canal `preview` es 96d41dd5 (`eas update:republish --group …`); en Vercel, el despliegue anterior de
+  cada web.
+- **Qué se unió:** `entorno-pruebas` (60d9ff8: 6702067, 98d5546, 4c2e209, 60d9ff8) en master con un merge sin
+  conflictos; `src` idéntico a entorno-pruebas; sin cambios de dependencias, de `supabase/` ni de `app.config.js`;
+  tsc 0, 928 tests.
+  - Plan y Análisis tras probar en el iPhone (compromiso bajo los objetivos, informe con anillos, aviso de valores de
+    más de un año); próximo análisis con el aspecto nuevo; carrusel de especialistas sin tarjetas ocultas al empezar.
+  - Peso: medidas y composición al apuntar el peso (de las medidas o de la báscula), IMC en una línea con la franja
+    de la OMS, anillo de composición (grasa, músculo, hueso, resto) con el agua en el anillo de dentro. Sin
+    migración: la composición ya iba en `metric_readings`.
+  - Análisis: el rosco del último informe muestra el total de marcadores; las áreas no se tocan; sin «Informe
+    completo». «Tu informe» pasa a «Observaciones» (`src/logic/reportObservations.ts`): mejora = vuelve a su rango
+    o se acerca; empeora = sale o se aleja; los cambios dentro del rango van aparte (17 mejoras en el ejemplo, no 39).
+  - Kuova Pruebas: con la base de pruebas toda cuenta es de prueba (`amITester`), porque la base de pruebas no tiene
+    admins y todas entraban como reales y vacías. En la app pública no cambia nada.
+- **Publicado:** `npm run release` en dos pasos (`--skip-web`, luego `--skip-app`): EAS `preview` grupo
+  0fdb4159-a081-4f54-88ed-72528431cdc1 (Android + iOS) y las dos webs (hometest-app y hometest-demo). Comprobado: las
+  dos webs cargan la pantalla de entrar sin errores, sin la marca «Pruebas», con la base de producción y con el código
+  nuevo en el bundle. Sin comprobar: pantallas con sesión iniciada en la web publicada, cualquier teléfono.
+- **No tocado:** la beta de amigos (canal `pruebas`) ni la base de producción.
