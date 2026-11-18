@@ -168,6 +168,14 @@ export function latestAnalysis(points: MarkerPoint[]): MarkerPoint | null {
   return [...points].sort(newestFirst)[0] ?? null;
 }
 
+// Un valor «caducado»: de un análisis de hace más de un año (fundador, 2026-11-18: «una especie de "alarma de
+// caducidad", máximo 1 año»). No dice nada de la salud; solo que el dato es antiguo
+export const STALE_DAYS = 365;
+export function isStale(date: string, today: Date = new Date()): boolean {
+  const d = new Date(`${date.slice(0, 10)}T12:00:00`);
+  return !Number.isNaN(d.getTime()) && today.getTime() - d.getTime() > STALE_DAYS * 86_400_000;
+}
+
 // Cuántos fuera, en rango y sin referencia
 export function stateCounts(list: MarkerSummary[]): { out: number; in: number; none: number } {
   return {

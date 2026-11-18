@@ -5,13 +5,17 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, type Href } from 'expo-router';
 import { getRangeStatus } from '@/utils/rangeStatus';
-import { LabGauge } from '@/components/fine/FineLab';
+import { DonutLegend, FineDonut, LabGauge } from '@/components/fine/FineLab';
 import { SpecialistCarousel } from '@/components/SpecialistCarousel';
 import { KuovaAgeSection } from '@/components/KuovaAgeSection';
 import { FirstAnalysisCard } from '@/components/FirstAnalysisCard';
 import { Chev, FRow, SecHead, TabHead } from '@/components/fine/Fine';
 import { LAB_CENTERS } from '@/data/labCenters';
-import { dateLocale, t } from '@/i18n';
+import { dateLocale, t, tn } from '@/i18n';
+import { holdTabsProps } from '@/constants/tabs';
+import { categoryLabel } from '@/utils/reportDisplay';
+import { isStale, markerSummaries, pointsFromReports, pointsFromUploads, stateCounts } from '@/logic/labMarkers';
+import type { ExtractedParametro } from '@/types/labReport';
 import { mockUpcomingAnalyses } from '@/data/mockData';
 import { showSamples } from '@/data/dataMode';
 import { useSections } from '@/data/appPrefs';
@@ -41,18 +45,18 @@ const shortDate = (d: string) => new Date(`${d.slice(0, 10)}T12:00:00`).toLocale
 
 // Recuento en rango / fuera de rango de una analítica subida (con los rangos del propio laboratorio;
 // "< 200" cuenta como rango). Lo que no trae ninguna referencia no suma en ninguno de los dos.
-const uploadCounts = (u: LabUpload) => {
+const paramCounts = (params: ExtractedParametro[]) => {
   let inRange = 0;
   let out = 0;
-  for (const sec of u.data.secciones)
-    for (const p of sec.parametros) {
-      if (typeof p.valor !== 'number') continue;
-      const st = getRangeStatus(p.valor, p.rango_min, p.rango_max);
-      if (st === 'en_rango') inRange++;
-      else if (st !== 'sin_rango') out++;
-    }
+  for (const p of params) {
+    if (typeof p.valor !== 'number') continue;
+    const st = getRangeStatus(p.valor, p.rango_min, p.rango_max);
+    if (st === 'en_rango') inRange++;
+    else if (st !== 'sin_rango') out++;
+  }
   return { inRange, out };
 };
+const uploadCounts = (u: LabUpload) => paramCounts(u.data.secciones.flatMap((sec) => sec.parametros));
 
 const AGENDA_MAX = 3;
 
@@ -93,6 +97,12 @@ export const LabScreen = () => {
   // Tu último informe: el más reciente de los del laboratorio o, si no hay, la última analítica subida
   const [latestReport, ...olderReports] = reports;
   const lastUpload = [...uploads].sort((a, b) => (b.testDate ?? b.createdAt).localeCompare(a.testDate ?? a.createdAt))[0];
+  // Tus biomarcadores: el último valor de cada uno (de todas tus analíticas), cuántos en rango y cuántos fuera, y cuántos
+  // son de hace más de un año
+  const values = useMemo(() => {
+    const list = markerSummaries([...pointsFromUploads(uploads), ...pointsFromReports(reports)]);
+    return { list, counts: stateCounts(list), stale: list.filter((v) => isStale(v.latest.date)).length };
+  }, [uploads, reports]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -149,20 +159,24 @@ export const LabScreen = () => {
                   const { id, title, lab, report } = latestReport;
                   const counts = reportCounts(report);
                   const flagged = flaggedMarkers(report, Infinity);
+                  const areas = report.sections
+                    .map((sec) => ({
+                      id: sec.category_id,
+                      label: categoryLabel(sec.category_id),
+                      total: sec.markers.length,
+                      inRange: sec.markers.filter((m) => m.flag === 'en_rango').length,
+                    }))
+                    .filter((a) => a.inRange < a.total);
                   return (
                     <>
-                      <TouchableOpacity style={fine.row} onPress={() => openReport(id)} activeOpacity={0.7}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={fine.rowTitle}>
-                            {t('{n} in range', { n: counts.inRange })} · {t('{n} need a look', { n: counts.needsReview })}
-                          </Text>
-                          <Text style={fine.rowSub}>
-                            {formatReportDate(report.test_date)} · {lab}
-                            {title ? ` · ${title}` : ''}
-                          </Text>
-                        </View>
-                        <Chev />
-                      </TouchableOpacity>
+                      <ReportRing
+                        inRange={counts.inRange}
+                        review={counts.needsReview}
+                        note={`${formatReportDate(report.test_date)} · ${lab}${title ? ` · ${title}` : ''}`}
+                        areas={areas}
+                        onPress={() => openReport(id)}
+                      />
+                      {flagged.length > 0 && <Text style={[fine.kicker, styles.flaggedHead]}>{t('Markers that need a look')}</Text>}
                       {flagged.map((m) => {
                         // Lo que conviene mirar, con su línea de rango fina (sin rojos). Fuera del rango, el valor en oro y
                         // «Por encima/debajo»; dentro pero cerca del límite, en marfil y dicho así, como en su ficha (que
@@ -204,13 +218,30 @@ export const LabScreen = () => {
           {/* 4. Tus biomarcadores: todos los valores de tus análisis, con su historia */}
           {hasAny && (
             <>
+              {/* Con el rosco de todos tus valores (en rango / fuera) y cuántos son de hace más de un año (fundador,
+                  2026-11-18: «quisiera que aparezca el circulito también y que tenga una especie de "alarma de
+                  caducidad", máximo 1 año») */}
               <SecHead title={t('Your biomarkers')} />
-              <FRow
-                title={t('See all your values')}
-                sub={t('Each one against the range of its lab, with its history')}
-                onPress={() => router.push('/biomarkers')}
-                last
-              />
+              {values.list.length > 0 ? (
+                <TouchableOpacity style={[fine.row, styles.valuesRow]} onPress={() => router.push('/biomarkers')} activeOpacity={0.7} accessibilityRole="button">
+                  <FineDonut size={54} stroke={3} inRange={values.counts.in} review={values.counts.out} label={`${values.list.length}`} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={fine.rowTitle}>{t('See all your values')}</Text>
+                    <Text style={fine.rowSub}>{t('Each one against the range of its lab, with its history')}</Text>
+                    {values.stale > 0 && (
+                      <Text style={[fine.rowSub, { color: FINE.gold }]}>{tn(values.stale, '1 value is over a year old', '{n} values are over a year old')}</Text>
+                    )}
+                  </View>
+                  <Chev />
+                </TouchableOpacity>
+              ) : (
+                <FRow
+                  title={t('See all your values')}
+                  sub={t('Each one against the range of its lab, with its history')}
+                  onPress={() => router.push('/biomarkers')}
+                  last
+                />
+              )}
             </>
           )}
 
@@ -274,7 +305,8 @@ export const LabScreen = () => {
 
           {/* 8. Pedir: qué análisis, el catálogo y laboratorios cerca. Subir un informe está en Tus archivos; seguir tu
               pedido, fuera mientras no funcione (fundador, 2026-11-16) */}
-          <SecHead title={t('Order')} />
+          {/* «Pedir» a secas se quedaba corto (fundador, 2026-11-18: «me gusta más "Pedir un análisis"») */}
+          <SecHead title={t('Order a test')} />
           <FRow title={t('Not sure which test to order?')} sub={t('4 quick questions')} onPress={() => router.push('/test-finder')} />
           <FRow title={t('Test catalogue')} onPress={() => router.push('/store')} />
           <FRow
@@ -289,14 +321,61 @@ export const LabScreen = () => {
   );
 };
 
-// La última analítica subida por ti: el recuento (en rango / fuera) y de cuándo es
+// Tu último informe en Análisis, como «Tu informe» del prototipo (fundador, 2026-11-18, con su captura: «deberíamos
+// tener algo tal que así»): el total en el rosco con «de N en rango», a su lado la leyenda, debajo la fecha y el
+// laboratorio y, en roscos pequeños, las áreas con algo que revisar. Todo abre el informe.
+type ReportArea = { id: string; label: string; inRange: number; total: number };
+function ReportRing({ inRange, review, note, areas, onPress }: { inRange: number; review: number; note: string; areas: ReportArea[]; onPress: () => void }) {
+  return (
+    <>
+      <TouchableOpacity style={styles.ringRow} onPress={onPress} activeOpacity={0.8} accessibilityRole="button">
+        <FineDonut size={116} stroke={5} inRange={inRange} review={review} label={`${inRange}`} sub={t('of {n} in range', { n: inRange + review })} />
+        <View style={{ flex: 1 }}>
+          <DonutLegend inRange={inRange} review={review} />
+        </View>
+        <Chev />
+      </TouchableOpacity>
+      <Text style={[fine.note, { marginTop: 4 }]}>{note}</Text>
+      {areas.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.areaScroll} contentContainerStyle={styles.areaRow} {...holdTabsProps}>
+          {areas.map((a) => (
+            <TouchableOpacity
+              key={a.id}
+              style={styles.area}
+              onPress={onPress}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={`${a.label}: ${t('{n} in range', { n: a.inRange })} · ${t('{n} need a look', { n: a.total - a.inRange })}`}
+            >
+              <FineDonut size={60} stroke={3} inRange={a.inRange} review={a.total - a.inRange} label={`${a.inRange}/${a.total}`} />
+              <Text style={styles.areaLabel} numberOfLines={2}>
+                {a.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </>
+  );
+}
+
+// La última analítica subida por ti, igual: el rosco con su recuento (en rango / fuera), de cuándo es y sus
+// secciones con algo que revisar
 function UploadRow({ u }: { u: LabUpload }) {
   const router = useRouter();
   const c = uploadCounts(u);
+  const areas = u.data.secciones
+    .map((sec, i) => {
+      const n = paramCounts(sec.parametros);
+      return { id: `${i}`, label: sec.titulo, inRange: n.inRange, total: n.inRange + n.out };
+    })
+    .filter((a) => a.total > 0 && a.inRange < a.total);
   return (
-    <FRow
-      title={`${t('{n} in range', { n: c.inRange })} · ${t('{n} need a look', { n: c.out })}`}
-      sub={`${u.testDate ? formatReportDate(u.testDate) : formatReportDate(u.createdAt.slice(0, 10))} · ${t('User upload')}${u.labName ? ` · ${u.labName}` : ''}`}
+    <ReportRing
+      inRange={c.inRange}
+      review={c.out}
+      note={`${u.testDate ? formatReportDate(u.testDate) : formatReportDate(u.createdAt.slice(0, 10))} · ${t('User upload')}${u.labName ? ` · ${u.labName}` : ''}`}
+      areas={areas}
       onPress={() => router.push({ pathname: '/progress', params: { upload: u.id } })}
     />
   );
@@ -314,5 +393,13 @@ const styles = StyleSheet.create({
   paramValue: { ...ff('regular'), color: FINE.ivory, fontSize: 12.5, marginTop: 1, fontVariant: ['tabular-nums'] },
   paramStatus: { ...ff('regular'), color: FINE.mute },
   gauge: { width: 96 },
+  ringRow: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingTop: 6 },
+  // Los roscos de las áreas, de borde a borde de la pantalla
+  areaScroll: { marginHorizontal: -20, marginTop: 14 },
+  areaRow: { paddingHorizontal: 20, gap: 14 },
+  area: { width: 72, alignItems: 'center', gap: 6 },
+  areaLabel: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 14, textAlign: 'center' },
+  flaggedHead: { marginTop: 18, marginBottom: 2 },
+  valuesRow: { gap: 14, borderBottomWidth: 0 },
   agendaDot: { width: 7, height: 7, borderRadius: 4 },
 });

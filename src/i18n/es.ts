@@ -4817,4 +4817,9 @@ export const es: Record<string, string> = {
   'Around 6-8 km a day is roughly 8,000-10,000 steps; it depends on stride length.': 'Unos 6-8 km al día equivalen a unos 8.000-10.000 pasos; depende de la longitud de tu zancada.',
   'Walks and runs. Phone estimates depend on stride length and on where you carry it.': 'Paseos y carreras. Lo que estima el móvil depende de tu zancada y de dónde lo lleves.',
   'Not unlocked yet': 'Pendiente de desbloquear',
+  // Notas del fundador del 2026-11-18 sobre Análisis
+  'Order a test': 'Pedir un análisis',
+  'Over a year old': 'hace más de un año',
+  '1 value is over a year old': '1 valor es de hace más de un año',
+  '{n} values are over a year old': '{n} valores son de hace más de un año',
 };

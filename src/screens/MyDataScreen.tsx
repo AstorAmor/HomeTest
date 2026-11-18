@@ -36,6 +36,7 @@ import {
   chartPoints,
   DEFAULT_CHARTS,
   isOut,
+  isStale,
   latestAnalysis,
   markerHistory,
   markerSummaries,
@@ -52,7 +53,7 @@ import { userFlags } from '@/data/userFlags';
 import { markerHref, markerName } from '@/utils/markerLinks';
 import { Chev, SecHead } from '@/components/fine/Fine';
 import { SecRow } from '@/components/fine/FineMeasure';
-import { labToneColor, rangeTone, StatusWord } from '@/components/fine/FineLab';
+import { FineDonut, labToneColor, rangeTone, StatusWord } from '@/components/fine/FineLab';
 import { rangeStatusLabel } from '@/utils/rangeStatus';
 import { FINE, ff, fine } from '@/theme/fine';
 import { SimpleMetricEntry } from '@/types/simpleMetric';
@@ -72,6 +73,7 @@ interface ChartData {
   series: TrendSeries[];
   latest: string;
   isSample: boolean;
+  lastDate?: string; // la del último valor (YYYY-MM-DD…), en las de verdad
 }
 
 const RECENT = 10; // puntos que se muestran en las gráficas de análisis
@@ -87,6 +89,7 @@ function simpleChart(entries: DatedValue[], mockId: string, color: string): Char
       series: [{ color, values: asc.map((e) => e.valor) }],
       latest: String(asc[asc.length - 1].valor),
       isSample: false,
+      lastDate: asc[asc.length - 1].fecha,
     };
   }
   if (!showSamples()) return null;
@@ -501,18 +504,24 @@ export const MyDataScreen = ({ part }: { part: 'measurements' | 'biomarkers' }) 
         <View style={grid ? styles.bioGrid : undefined}>
         {biomarkers.map((b) => {
           const off = !b.data || b.data.isSample;
+          // Con un solo valor, lo mismo que en las demás (la creatinina…): «Un resultado por ahora…» y su fecha, en vez
+          // de la gráfica vacía con «Aún no hay datos suficientes» (fundador, 2026-11-18: «prefiero lo de la creatinina,
+          // además ocupa menos y aparece la fecha»)
+          const one = !off && (b.data!.series[0]?.values.length ?? 0) < 2;
           return (
             <BioChart
               key={b.key}
               title={t(b.title)}
               value={off ? '—' : b.data!.latest}
               unit={off ? undefined : b.unit}
-              sub={off ? t('Not measured yet') : ''}
+              sub={off ? t('Not measured yet') : b.data!.lastDate ? shortDay(b.data!.lastDate.slice(0, 10)) : ''}
               off={off}
               onPress={() => router.push(b.to as any)}
               onHide={() => flipChart(b.marker)}
             >
-              {b.data ? (
+              {one ? (
+                <Text style={fine.note}>{t('One result so far: your next lab test will draw the line.')}</Text>
+              ) : b.data ? (
                 <TrendChart
                   labels={b.data.labels}
                   series={b.data.series.map((s) => ({ ...s, color: off ? FINE.mute : FINE.jade }))}
@@ -532,7 +541,7 @@ export const MyDataScreen = ({ part }: { part: 'measurements' | 'biomarkers' }) 
         {biomarkers.length + pinned.length === 0 && analyses.any && (
           <Text style={fine.note}>{t('No charts chosen. Tap the eye next to a value to see its chart here.')}</Text>
         )}
-        <AnalysesList list={analyses.list} last={analyses.last} any={analyses.any} charts={charts} onEye={flipChart} />
+        <AnalysesList list={analyses.list} any={analyses.any} charts={charts} onEye={flipChart} />
 
         {/* Una debajo de otra: no sabemos cuántas pruebas habrá en camino (de ejemplo: no en cuentas reales) */}
         {showSamples() && (
@@ -660,7 +669,7 @@ const BioChart = ({
   </View>
 );
 
-const AnalysesList = ({ list, last, any, charts, onEye }: { list: MarkerSummary[]; last: MarkerPoint | null; any: boolean; charts: string[]; onEye: (key: string) => void }) => {
+const AnalysesList = ({ list, any, charts, onEye }: { list: MarkerSummary[]; any: boolean; charts: string[]; onEye: (key: string) => void }) => {
   const router = useRouter();
   const [all, setAll] = useState(false);
   if (!any) {
@@ -703,15 +712,19 @@ const AnalysesList = ({ list, last, any, charts, onEye }: { list: MarkerSummary[
           ) : undefined
         }
       />
-      {last && <Text style={fine.rowSub}>{t('Latest test: {date} · {lab}', { date: shortDay(last.date), lab: last.source.lab || t('Uploaded by you') })}</Text>}
-      <Text style={styles.anaCounts}>
-        {parts.map((p, i) => (
-          <Text key={p.text} style={{ color: p.color }}>
-            {i > 0 ? '  ·  ' : ''}
-            {p.text}
-          </Text>
-        ))}
-      </Text>
+      {/* Sin la fecha del último análisis arriba (cada valor lleva la suya); en su lugar, el rosco de tus valores con
+          cuántos hay, en rango y fuera, y su recuento al lado (fundador, 2026-11-18: «no pondría esa fecha, sino que lo
+          marcaría en cada uno de ellos […] antes de eso añadiría el circulito») */}
+      <View style={styles.anaHead}>
+        <FineDonut size={58} stroke={3} inRange={counts.in} review={counts.out} label={`${list.length}`} />
+        <View style={styles.anaHeadText}>
+          {parts.map((p) => (
+            <Text key={p.text} style={[styles.anaCounts, { color: p.color }]}>
+              {p.text}
+            </Text>
+          ))}
+        </View>
+      </View>
       <Text style={[fine.note, styles.anaEyeHint]}>{t('The eye shows or hides its chart above.')}</Text>
       {shown.map((s, i) => {
         const on = charts.includes(s.key);
@@ -732,9 +745,12 @@ const AnalysesList = ({ list, last, any, charts, onEye }: { list: MarkerSummary[
                 <Text style={fine.rowTitle} numberOfLines={2}>
                   {markerName(s.key, s.latest.name)}
                 </Text>
+                {/* La fecha del valor y, si es de hace más de un año, dicho en oro: el dato está viejo (fundador,
+                    2026-11-18: «una especie de "alarma de caducidad", máximo 1 año») */}
                 <Text style={fine.rowSub}>
                   {shortDay(s.latest.date)}
                   {s.count > 1 ? ` · ${t('{n} results', { n: s.count })}` : ''}
+                  {isStale(s.latest.date) ? <Text style={{ color: FINE.gold }}>{` · ${t('Over a year old')}`}</Text> : null}
                 </Text>
               </View>
               <View style={styles.anaRight}>
@@ -783,7 +799,9 @@ const styles = StyleSheet.create({
   bioTestStatus: { ...ff('regular'), fontSize: 13 },
   anaFirst: { marginTop: 0 },
   anaUpload: { marginTop: 10 },
-  anaCounts: { ...ff('regular'), fontSize: 12.5, marginTop: 6 },
+  anaCounts: { ...ff('regular'), fontSize: 13, lineHeight: 18 },
+  anaHead: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 },
+  anaHeadText: { flex: 1, gap: 2 },
   anaMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   anaEye: { paddingRight: 2 },
   anaEyeHint: { marginTop: 4, marginBottom: 2 },

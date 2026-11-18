@@ -4,10 +4,12 @@
 // del laboratorio y el punto de luz, tu resultado) y la cifra grande y ligera de un biomarcador con su estado al
 // lado. Sin rojos: lo que está en rango va en jade y lo que queda fuera, en oro. Un valor fuera del rango no es
 // un diagnóstico.
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, G } from 'react-native-svg';
+import Svg, { Circle, Defs, G, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
 import { FineGauge } from '@/components/fine/FineGauge';
+import { mixHex, ringTones } from '@/components/GlowRing';
+import { Colors } from '@/constants/colors';
 import { rangeBarLayout } from '@/utils/rangeBar';
 import type { RangeStatus } from '@/utils/rangeStatus';
 import { FINE, ff, fine } from '@/theme/fine';
@@ -32,7 +34,9 @@ export function LabGauge({ value, low, high, style }: { value: number | null; lo
 }
 
 // El rosco del informe: en jade lo que está en rango y en oro lo que hay que revisar, con un hueco entre los dos;
-// dentro, la cifra grande y ligera
+// dentro, la cifra grande y ligera. Desde el 2026-11-18 con el color de los anillos de Hoy (GlowRing: cada tramo en
+// degradado, más claro arriba) y más brillo (un resplandor bajo cada tramo y un halo suave), pero sin el punto de luz
+// de la cabeza (fundador: «con estética de color actualizada, sin bolita brillante pero en general con más brillo»)
 export function FineDonut({
   inRange,
   review,
@@ -48,12 +52,21 @@ export function FineDonut({
   label?: string;
   sub?: string;
 }) {
+  const id = `fd${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const c = size / 2;
-  const r = (size - stroke) / 2;
+  const r = (size - stroke * 2.4) / 2; // deja sitio al resplandor
   const C = 2 * Math.PI * r;
   const total = inRange + review;
   const a = total ? (C * inRange) / total : 0;
   const gap = inRange > 0 && review > 0 ? 3 : 0;
+  const light = Colors.isLight;
+  const jade = ringTones(FINE.jade);
+  const gold = ringTones(FINE.gold);
+  // Los dos tramos: [tonos, trazo, desplazamiento]
+  const arcs = [
+    inRange > 0 ? { key: 'in', tones: jade, dash: `${Math.max(0, a - gap)} ${C - a + gap}`, offset: 0 } : null,
+    review > 0 ? { key: 'out', tones: gold, dash: `${Math.max(0, C - a - gap)} ${a + gap}`, offset: -a } : null,
+  ].filter(Boolean) as { key: string; tones: readonly [string, string, string]; dash: string; offset: number }[];
   return (
     <View
       style={{ width: size, height: size }}
@@ -62,23 +75,40 @@ export function FineDonut({
       accessibilityLabel={`${t('{n} in range', { n: inRange })} · ${t('{n} need a look', { n: review })}`}
     >
       <Svg width={size} height={size}>
+        <Defs>
+          {/* Girado −90°: en el dibujo, x = c + r es arriba en pantalla y x = c − r, abajo. Cada tramo, más claro arriba */}
+          {arcs.map((s) => (
+            <LinearGradient key={s.key} id={`${id}${s.key}`} gradientUnits="userSpaceOnUse" x1={c + r} y1={c} x2={c - r} y2={c}>
+              <Stop offset="0" stopColor={s.tones[2]} />
+              <Stop offset="0.55" stopColor={s.tones[1]} />
+              <Stop offset="1" stopColor={mixHex(s.tones[1], s.tones[0], 0.5)} />
+            </LinearGradient>
+          ))}
+          {/* Halo: una luz suave a lo largo del anillo, del color de lo que más pesa */}
+          <RadialGradient id={`${id}h`} cx="50%" cy="50%" r="50%">
+            <Stop offset={String(Math.max(0, (r - stroke * 2.5) / c))} stopColor={(inRange >= review ? jade : gold)[2]} stopOpacity={0} />
+            <Stop offset={String(r / c)} stopColor={(inRange >= review ? jade : gold)[2]} stopOpacity={light ? 0.1 : 0.17} />
+            <Stop offset="1" stopColor={(inRange >= review ? jade : gold)[2]} stopOpacity={0} />
+          </RadialGradient>
+          {/* Disco interior: casi transparente en el centro y un velo del color hacia el borde */}
+          <RadialGradient id={`${id}d`} cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={jade[1]} stopOpacity={0} />
+            <Stop offset="0.75" stopColor={jade[1]} stopOpacity={light ? 0.03 : 0.05} />
+            <Stop offset="1" stopColor={jade[1]} stopOpacity={light ? 0.08 : 0.11} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={c} cy={c} r={c} fill={`url(#${id}h)`} />
+        <Circle cx={c} cy={c} r={r - stroke / 2} fill={`url(#${id}d)`} />
         <G transform={`rotate(-90, ${c}, ${c})`}>
           <Circle cx={c} cy={c} r={r} stroke={FINE.line} strokeWidth={stroke} fill="none" />
-          {inRange > 0 && (
-            <Circle cx={c} cy={c} r={r} stroke={FINE.jade} strokeWidth={stroke} strokeDasharray={`${Math.max(0, a - gap)} ${C - a + gap}`} fill="none" />
-          )}
-          {review > 0 && (
-            <Circle
-              cx={c}
-              cy={c}
-              r={r}
-              stroke={FINE.gold}
-              strokeWidth={stroke}
-              strokeDasharray={`${Math.max(0, C - a - gap)} ${a + gap}`}
-              strokeDashoffset={-a}
-              fill="none"
-            />
-          )}
+          {arcs.map((s) => (
+            <G key={s.key}>
+              {/* El resplandor: el mismo tramo, más ancho y muy suave, en dos capas */}
+              <Circle cx={c} cy={c} r={r} stroke={s.tones[1]} strokeOpacity={light ? 0.07 : 0.11} strokeWidth={stroke * 2.4} strokeDasharray={s.dash} strokeDashoffset={s.offset} fill="none" />
+              <Circle cx={c} cy={c} r={r} stroke={s.tones[2]} strokeOpacity={light ? 0.12 : 0.2} strokeWidth={stroke * 1.6} strokeDasharray={s.dash} strokeDashoffset={s.offset} fill="none" />
+              <Circle cx={c} cy={c} r={r} stroke={`url(#${id}${s.key})`} strokeWidth={stroke} strokeDasharray={s.dash} strokeDashoffset={s.offset} fill="none" />
+            </G>
+          ))}
         </G>
       </Svg>
       {label || sub ? (

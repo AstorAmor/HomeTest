@@ -15,7 +15,7 @@ import { TourTarget } from '@/components/tour/TourTarget';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { FRow, LockTag, Pill, SecHead, TabHead } from '@/components/fine/Fine';
 import { useMetas } from '@/hooks/useMetas';
-import { GOALS, GOALS_MAX, commitProgress, dateOfKey, dayKeyOf, dayMonth, selectedIds } from '@/logic/metas';
+import { GOALS, commitProgress, dateOfKey, dayKeyOf, dayMonth, selectedIds } from '@/logic/metas';
 import { CometLine } from '@/components/CometLine';
 import { Ionicons } from '@expo/vector-icons';
 import { useSections } from '@/data/appPrefs';
@@ -60,6 +60,9 @@ export const PlanScreen = () => {
         {on ? (
           <>
             <GoalsRow />
+            {/* Tu compromiso justo debajo de tus objetivos (fundador, 2026-11-18: «Tus objetivos y justo debajo pondría
+                ya Tu compromiso. Semana 1 de X») */}
+            <CommitBlock />
             <View
               onLayout={(e) => {
                 weekY.current = e.nativeEvent.layout.y;
@@ -68,7 +71,6 @@ export const PlanScreen = () => {
             >
               <MetasToday variant="plan" tourScroll={tourScroll} />
             </View>
-            <CommitBlock />
           </>
         ) : (
           // Quien usa Kuova solo para sus análisis (sin plan): cómo encenderlo
@@ -128,7 +130,7 @@ function GoalsRow() {
       ) : (
         <FRow title={t('Choose your goals')} onPress={() => router.push('/metas-objetivos')} />
       )}
-      <Text style={fine.note}>{t('Up to {n}. Each one is tied to something that is measured.', { n: GOALS_MAX })}</Text>
+      {/* Sin la nota «Hasta 3. Cada uno va ligado a algo que se mide» (fundador, 2026-11-18: «eso sobra y mete ruido») */}
     </View>
   );
 }

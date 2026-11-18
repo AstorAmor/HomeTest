@@ -68,12 +68,20 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
   // quedaba desplazado a la derecha); en el móvil, el carrusel ocupa todo el ancho.
   const sidePadding: any = Platform.OS === 'web' ? `calc(50% - ${CARD / 2}px)` : (width - CARD) / 2;
 
-  // En bucle se empieza en la copia del medio, con la primera tarjeta centrada
+  // En bucle se empieza en la copia del medio, con la primera tarjeta centrada. En el iPhone ese salto sin animación
+  // no avisa del desplazamiento: la posición se quedaba en 0 y todas las tarjetas de la copia del medio salían
+  // pequeñas y apagadas hasta tocar el carrusel (fundador, 2026-11-18: «de primeras aparecen apagados todos»). Por
+  // eso la posición se pone también a mano, y en el móvil el carrusel nace ya en su sitio (contentOffset).
+  const startX = looping ? n * step : 0;
   useEffect(() => {
     if (!looping) return;
-    const id = setTimeout(() => scrollRef.current?.scrollTo?.({ x: n * step, animated: false }), 0);
+    scrollX.setValue(n * step);
+    const id = setTimeout(() => {
+      scrollRef.current?.scrollTo?.({ x: n * step, animated: false });
+      scrollX.setValue(n * step);
+    }, 0);
     return () => clearTimeout(id);
-  }, [looping, n, step]);
+  }, [looping, n, step, scrollX]);
 
   // Al pararse, si se ha salido de la copia del medio, salta sin animación a la misma tarjeta allí
   const recenter = (x: number) => {
@@ -153,6 +161,7 @@ export const SpecialistCarousel = <T extends SpecialistCard>({
         showsHorizontalScrollIndicator={false}
         snapToInterval={step}
         decelerationRate="fast"
+        contentOffset={useNative && looping ? { x: startX, y: 0 } : undefined}
         // Mientras lo deslizas, las pestañas no se mueven (a veces cambiaba de pantalla, fundador 2026-11-16)
         {...holdTabsProps}
         // Un poco de aire arriba y abajo: la ScrollView recorta lo que sale de ella, y el reborde de oro de la
