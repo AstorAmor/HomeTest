@@ -5,12 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { SecHead, Tag } from '@/components/fine/Fine';
+import { FButton, FLink } from '@/components/fine/FineForm';
 import { mockUpcomingAnalyses } from '@/data/mockData';
-import { fine, INTER } from '@/theme/fine';
+import { FINE, ff, fine } from '@/theme/fine';
 
 const formatLongDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+const capitalised = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // Huecos alternativos (dummy): los próximos días laborables a partir de la fecha actual del test.
 function nextSlots(fromIso: string, count = 5) {
@@ -23,6 +25,11 @@ function nextSlots(fromIso: string, count = 5) {
   return slots;
 }
 
+// Tu próximo análisis (/upcoming-analysis?id=…, «Analítica de sangre» en Análisis). Desde el 2026-11-18 en el
+// lenguaje fino (fundador: «en Analítica de sangre me parece que es una estética antigua»): la fecha grande y
+// ligera con la entrega y la muestra apagadas, qué se mide por áreas en filas con línea fina (sin chips de color),
+// cómo prepararte con una marca a línea en jade, el botón esmeralda y la acción secundaria en jade. La hoja de
+// cambiar o cancelar, igual: filas finas y sin rojos.
 export const UpcomingAnalysisScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const analysis = mockUpcomingAnalyses.find((a) => a.id === id) ?? mockUpcomingAnalyses[0];
@@ -31,67 +38,49 @@ export const UpcomingAnalysisScreen = () => {
   const [sheet, setSheet] = useState<null | 'menu' | 'reschedule' | 'cancel'>(null);
   const slots = useMemo(() => nextSlots(analysis.fecha), [analysis.fecha]);
   const markerCount = analysis.markerGroups.reduce((n, g) => n + g.markers.length, 0);
+  const cancelled = status === 'cancelled';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={analysis.nombre} showBack />
 
-        <View style={styles.heroCard}>
-          <View style={styles.heroIcon}>
-            <Ionicons name={status === 'cancelled' ? 'close-circle-outline' : 'calendar'} size={26} color={Colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.heroDate}>{status === 'cancelled' ? t('Cancelled') : formatLongDate(date)}</Text>
-            {status !== 'cancelled' && <Text style={styles.heroSlot}>{t('Delivery {time}', { time: analysis.timeSlot })}</Text>}
-            <Text style={styles.heroSample}>{analysis.sampleType}</Text>
-          </View>
+        <View style={styles.body}>
+          {/* La fecha, grande y ligera; debajo, la entrega y la muestra */}
+          <Text style={[styles.heroDate, cancelled && { color: FINE.mute }]}>{cancelled ? t('Cancelled') : capitalised(formatLongDate(date))}</Text>
+          {!cancelled && <Text style={styles.heroLine}>{t('Delivery {time}', { time: analysis.timeSlot })}</Text>}
+          <Text style={styles.heroLine}>{analysis.sampleType}</Text>
           {status === 'confirmed' && (
-            <View style={styles.confirmedPill}>
-              <Ionicons name="checkmark" size={12} color={Colors.background} />
-              <Text style={styles.confirmedText}>{t('Confirmed')}</Text>
+            <View style={styles.tag}>
+              <Tag label={t('Confirmed')} />
             </View>
           )}
-        </View>
 
-        <Text style={styles.sectionTitle}>{t("What we'll measure")}</Text>
-        <Text style={styles.sectionSubtitle}>{t('{n} markers', { n: markerCount })}</Text>
-        <View style={styles.card}>
+          {/* Qué se mide: un área por fila, con sus marcadores */}
+          <SecHead title={t("What we'll measure")} />
+          <Text style={[fine.note, styles.count]}>{t('{n} markers', { n: markerCount })}</Text>
           {analysis.markerGroups.map((g, i) => (
-            <View key={g.category} style={[styles.group, i > 0 && styles.groupDivider]}>
+            <View key={g.category} style={[fine.row, styles.group, i === analysis.markerGroups.length - 1 && styles.noLine]}>
               <Text style={styles.groupTitle}>{g.category}</Text>
-              <View style={styles.chips}>
-                {g.markers.map((m) => (
-                  <View key={m} style={styles.chip}>
-                    <Text style={styles.chipText}>{m}</Text>
-                  </View>
-                ))}
-              </View>
+              <Text style={styles.groupMarkers}>{g.markers.join(' · ')}</Text>
             </View>
           ))}
-        </View>
 
-        <Text style={styles.sectionTitle}>{t('How to prepare')}</Text>
-        <View style={styles.card}>
-          {analysis.preparation.map((p) => (
-            <View key={p} style={styles.prepRow}>
-              <Ionicons name="checkmark-circle-outline" size={18} color={Colors.accent} />
-              <Text style={styles.prepText}>{p}</Text>
+          {/* Cómo prepararte */}
+          <SecHead title={t('How to prepare')} />
+          {analysis.preparation.map((p, i) => (
+            <View key={p} style={[fine.row, i === analysis.preparation.length - 1 && styles.noLine]}>
+              <Ionicons name="checkmark" size={16} color={FINE.jade} />
+              <Text style={[fine.body, styles.flex]}>{p}</Text>
             </View>
           ))}
         </View>
       </ScrollView>
 
-      {status !== 'cancelled' && (
+      {!cancelled && (
         <View style={styles.actions}>
-          {status === 'scheduled' && (
-            <TouchableOpacity style={styles.primary} onPress={() => setStatus('confirmed')}>
-              <Text style={styles.primaryText}>{t('Confirm date')}</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.secondary} onPress={() => setSheet('menu')}>
-            <Text style={styles.secondaryText}>{t('Reschedule or cancel')}</Text>
-          </TouchableOpacity>
+          {status === 'scheduled' && <FButton label={t('Confirm date')} onPress={() => setStatus('confirmed')} />}
+          <FLink label={t('Reschedule or cancel')} onPress={() => setSheet('menu')} />
         </View>
       )}
 
@@ -102,55 +91,40 @@ export const UpcomingAnalysisScreen = () => {
           {sheet === 'menu' && (
             <>
               <Text style={styles.sheetTitle}>{t('Change this test')}</Text>
-              <TouchableOpacity style={styles.sheetOption} onPress={() => setSheet('reschedule')}>
-                <Ionicons name="calendar-outline" size={22} color={Colors.accent} />
-                <Text style={styles.sheetOptionText}>{t('Reschedule')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.sheetOption} onPress={() => setSheet('cancel')}>
-                <Ionicons name="close-circle-outline" size={22} color={Colors.danger} />
-                <Text style={[styles.sheetOptionText, { color: Colors.danger }]}>{t('Cancel test')}</Text>
-              </TouchableOpacity>
+              <SheetRow icon="calendar-outline" label={t('Reschedule')} onPress={() => setSheet('reschedule')} />
+              <SheetRow icon="close-outline" label={t('Cancel test')} onPress={() => setSheet('cancel')} last />
             </>
           )}
           {sheet === 'reschedule' && (
             <>
               <Text style={styles.sheetTitle}>{t('Pick a new date')}</Text>
-              {slots.map((s) => (
-                <TouchableOpacity
+              {slots.map((s, i) => (
+                <SheetRow
                   key={s}
-                  style={styles.sheetOption}
+                  icon="time-outline"
+                  label={`${capitalised(formatLongDate(s))} · ${analysis.timeSlot}`}
                   onPress={() => {
                     setDate(s);
                     setStatus('confirmed');
                     setSheet(null);
                   }}
-                >
-                  <Ionicons name="time-outline" size={20} color={Colors.textSecondary} />
-                  <Text style={styles.sheetOptionText}>
-                    {formatLongDate(s)} · {analysis.timeSlot}
-                  </Text>
-                </TouchableOpacity>
+                  last={i === slots.length - 1}
+                />
               ))}
             </>
           )}
           {sheet === 'cancel' && (
             <>
               <Text style={styles.sheetTitle}>{t('Cancel this test?')}</Text>
-              <Text style={styles.sheetText}>
-                {t('It stays included in your subscription, so you can book it again whenever you want.')}
-              </Text>
-              <TouchableOpacity
-                style={[styles.primary, { backgroundColor: Colors.danger }]}
+              <Text style={styles.sheetText}>{t('It stays included in your subscription, so you can book it again whenever you want.')}</Text>
+              <FButton
+                label={t('Yes, cancel')}
                 onPress={() => {
                   setStatus('cancelled');
                   setSheet(null);
                 }}
-              >
-                <Text style={styles.primaryText}>{t('Yes, cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.secondary} onPress={() => setSheet(null)}>
-                <Text style={styles.secondaryText}>{t('Keep it')}</Text>
-              </TouchableOpacity>
+              />
+              <FLink label={t('Keep it')} onPress={() => setSheet(null)} />
             </>
           )}
         </View>
@@ -159,100 +133,44 @@ export const UpcomingAnalysisScreen = () => {
   );
 };
 
+// Una opción de la hoja: icono a línea en jade, el texto y la flecha, con una línea fina debajo
+function SheetRow({ icon, label, onPress, last }: { icon: string; label: string; onPress: () => void; last?: boolean }) {
+  return (
+    <TouchableOpacity style={[fine.row, last && styles.noLine]} onPress={onPress} activeOpacity={0.7} accessibilityRole="button">
+      <Ionicons name={icon as any} size={18} color={FINE.jade} />
+      <Text style={[fine.rowTitle, styles.flex]}>{label}</Text>
+      <Ionicons name="chevron-forward" size={15} color={FINE.mute} />
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
-  heroCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 24,
-  },
-  heroIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.accentSoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  heroDate: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
-  heroSlot: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
-  heroSample: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
-  confirmedPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.accent,
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  confirmedText: { color: Colors.background, fontSize: 11, fontFamily: INTER.medium },
-  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20 },
-  sectionSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginTop: 2, marginBottom: 12 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    marginTop: 4,
-  },
-  group: { paddingVertical: 10 },
-  groupDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  groupTitle: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', marginBottom: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { backgroundColor: Colors.accentSoft, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5 },
-  chipText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13 },
-  prepRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
-  prepText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, flex: 1 },
-  actions: { paddingHorizontal: 20, paddingBottom: 8, gap: 10 },
-  primary: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 15, alignItems: 'center' },
-  primaryText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
-  secondary: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 30,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  secondaryText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  body: { paddingHorizontal: 20 },
+  flex: { flex: 1 },
+  noLine: { borderBottomWidth: 0 },
+  heroDate: { ...fine.num, fontSize: 30, lineHeight: 36, letterSpacing: -0.3, marginTop: 4 },
+  heroLine: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, lineHeight: 19, marginTop: 2 },
+  tag: { flexDirection: 'row', marginTop: 10 },
+  count: { marginTop: -4, marginBottom: 2 },
+  group: { flexDirection: 'column', alignItems: 'flex-start', gap: 3 },
+  groupTitle: { ...fine.kicker },
+  groupMarkers: { ...ff('regular'), color: FINE.ivory, fontSize: 14, lineHeight: 20 },
+  actions: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8, gap: 2 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
+  // Como la hoja «Apuntar» de la K (BottomTabBar): esmeralda muy oscuro con una línea fina arriba
   sheet: {
-    backgroundColor: Colors.backgroundElevated,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    paddingBottom: 36,
-    gap: 8,
+    backgroundColor: '#0A2019',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderTopWidth: 1,
+    borderColor: FINE.line,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 32,
   },
-  sheetHandle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.cardBorder,
-    marginBottom: 8,
-  },
-  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium, marginBottom: 6 },
-  sheetText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 12 },
-  sheetOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 16,
-  },
-  sheetOptionText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: FINE.rule, marginBottom: 14 },
+  sheetTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 18, marginBottom: 4 },
+  sheetText: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, marginTop: 4, marginBottom: 14 },
 });

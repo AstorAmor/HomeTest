@@ -71,7 +71,8 @@
     },
     "staging-ios": {
       "ios": {
-        "language": "es-ES"
+        "language": "es-ES",
+        "ascAppId": "6836277823"
       }
     }
   }

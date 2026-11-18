@@ -1,4 +1,4 @@
-import { isPublicDemo, isRemoteActive, supabase } from '@/lib/supabase';
+import { isPublicDemo, isRemoteActive, isTestDatabase, supabase } from '@/lib/supabase';
 import { userFlags } from './userFlags';
 
 // Cuenta real o cuenta de prueba.
@@ -30,8 +30,14 @@ export const isRealAccount = () => FORCE_REAL || (real && isRemoteActive() && !i
 export const showSamples = () => !isRealAccount();
 
 // ¿Puede esta cuenta ser de prueba? Sin la función en Supabase todavía, solo los admins.
+// En la base de pruebas («Kuova Pruebas», solo datos inventados) toda cuenta es de prueba: con ejemplos donde no
+// hay datos y con Ajustes → Casos de prueba. Fundador, 2026-11-18: «me gustaría que el pruebas tenga datos para
+// verlo todo, que es el problema con el que me encuentro, que no veo las funcionalidades». La base de pruebas no
+// tiene admins, así que is_tester() decía que no a todos y cada cuenta entraba como real, vacía. Quien quiera
+// verla como real sigue teniendo Ajustes → «Cuenta real». La app pública (base de producción) no cambia.
 export async function amITester(isAdmin: boolean): Promise<boolean> {
   if (!isRemoteActive() || !supabase) return false;
+  if (isTestDatabase) return true;
   const { data, error } = await supabase.rpc('is_tester');
   if (error) return isAdmin;
   return data === true;

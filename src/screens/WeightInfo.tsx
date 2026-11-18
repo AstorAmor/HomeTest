@@ -2,8 +2,11 @@ import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { DonutChart } from '@/components/DonutChart';
 import { FRow, Pill, SecHead } from '@/components/fine/Fine';
+import { FineGauge } from '@/components/fine/FineGauge';
+import { FineRing } from '@/components/fine/FineLab';
+import { mixHex } from '@/components/GlowRing';
+import { Colors } from '@/constants/colors';
 import { FineLink, measureStyles, SecRow } from '@/components/fine/FineMeasure';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { loadBodyBasics, peekBodyBasics, type BodyBasics } from '@/data/bodyBasics';
@@ -46,13 +49,21 @@ import { FINE, ff, fine } from '@/theme/fine';
 // y, el mismo día, la que se escribe de la báscula antes que los pliegues y que la cinta. Con la de la báscula,
 // la composición sale como siempre (grasa, músculo, hueso y resto).
 
-// Los tonos del prototipo: oro, jade, turquesa y una línea apenas marcada para el resto
+// El anillo de la composición, en el aspecto de ahora (fundador, 2026-11-18: «la circunferencia de la composición
+// corporal, quiero que tenga estética actual y separaría entre grasa, músculo, agua y hueso»): FineRing, como el
+// rosco de los análisis. Con lo de la báscula, cuatro tramos (grasa en oro, músculo en jade, hueso en marfil y el
+// resto apagado) y el agua en un anillo fino por dentro: no es un tramo más porque está repartida en todo lo demás
+// (el músculo es agua en sus tres cuartas partes), así que sumada a los tramos daría más que el peso. Con la
+// estimación de las medidas, solo grasa y masa sin grasa: partir la masa sin grasa en músculo, hueso y agua con
+// fórmulas de población sería poco preciso (el fundador: «si es poco preciso, déjalo como está»).
 const SLICE: Record<CompSlice['kind'], { label: string; color: string }> = {
   fat: { label: 'Fat', color: FINE.gold },
   muscle: { label: 'Muscle', color: FINE.jade },
-  bone: { label: 'Bone', color: '#5CC7C9' },
-  rest: { label: 'Rest (organs, skin…)', color: 'rgba(240,239,230,0.18)' },
+  bone: { label: 'Bone', color: '#D9D2C1' },
+  rest: { label: 'Rest (organs, skin…)', color: '#5E7068' },
 };
+// El agua, en un azul suave hacia el marfil
+const WATER = mixHex(Colors.water, FINE.ivory, 0.3);
 
 // La composición que sale de una estimación con las medidas: la cifra elegida, el peso con el que se pasa a
 // kilos y, si la hay, la última grasa de la báscula (anterior a la estimación)
@@ -63,7 +74,26 @@ interface EstimatedComp {
   scale: BodyFatCandidate | null;
 }
 
-const longDate = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', year: 'numeric' });
+// La línea del IMC va de 15 a 40: cabe casi cualquier adulto y la franja de la OMS (18,5–24,9) queda a la vista
+const BMI_SCALE = { min: 15, max: 40 };
+
+// Corta («18 nov 2026»), para que quepa junto al título de la sección sin partirlo
+const longDate = (iso: string) => new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
+
+// Una fila de la leyenda de la composición: el punto (un aro para el agua, que es el anillo de dentro), el nombre y, a
+// la derecha, el % y debajo los kilos apagados (en dos líneas, para que «Masa sin grasa» quepa en una)
+function LegendRow({ color, ring, label, pct, kg, last }: { color: string; ring?: boolean; label: string; pct: string; kg?: number; last?: boolean }) {
+  return (
+    <View style={[styles.legendRow, last && styles.lastRow]}>
+      <View style={ring ? [styles.ringDot, { borderColor: color }] : [styles.dot, { backgroundColor: color }]} />
+      <Text style={styles.legendLabel}>{label}</Text>
+      <View style={styles.legendNums}>
+        <Text style={styles.legendPct}>{`${pct} %`}</Text>
+        {kg != null ? <Text style={styles.legendKg}>{`${num(kg.toFixed(1))} kg`}</Text> : null}
+      </View>
+    </View>
+  );
+}
 
 // Las medidas de una herramienta en dos columnas: nombre apagado y la cifra, sin el cambio (fundador, 2026-11-17).
 // Tocar una abre su evolución, con su curva. La cinta, en la unidad elegida al apuntar (cm o pulgadas:
@@ -207,7 +237,8 @@ export const WeightInfo = () => {
   );
 
   const day = (d: Date) => d.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
-  const slices = comp?.weight ? compositionSlices(comp.weight, comp.values) : null;
+  // El resto, solo si llega al 1 %: cuando la báscula casi suma el peso, un tramo de «0 %» no dice nada
+  const slices = comp?.weight ? (compositionSlices(comp.weight, comp.values)?.filter((s) => s.kind !== 'rest' || s.kg / comp.weight! >= 0.01) ?? null) : null;
   const whoRange = `${num(BMI_RANGE.min)}–${num(BMI_RANGE.max)}`;
   const addHeight = () => router.push({ pathname: '/profile', params: { edit: 'height' } });
   const openHistory = (kind: string) => router.push({ pathname: '/measurements-history', params: { kind } });
@@ -254,10 +285,25 @@ export const WeightInfo = () => {
             <>
               <FRow
                 title={t('Your BMI')}
-                sub={body.minor ? t('Under 18, BMI is read with charts by age and sex: take it as a guide.') : t('WHO range: {range}', { range: whoRange })}
+                sub={body.minor ? t('Under 18, BMI is read with charts by age and sex: take it as a guide.') : undefined}
                 value={`${num(body.bmi.toFixed(1))} kg/m²`}
                 last
               />
+              {/* En una línea, como los marcadores (fundador, 2026-11-18: «el IMC lo ubicaría también en una línea»):
+                  la franja jade es el rango de la OMS y el punto de luz, tu IMC. Neutro: sin más tramos ni colores.
+                  En menores no: su rango va por edad y sexo */}
+              {!body.minor && (
+                <View style={styles.bmiLine} accessible accessibilityLabel={t('WHO range: {range}', { range: whoRange })}>
+                  <FineGauge
+                    min={BMI_SCALE.min}
+                    max={BMI_SCALE.max}
+                    value={body.bmi}
+                    range={[BMI_RANGE.min, BMI_RANGE.max]}
+                    edgeLabels={[num(BMI_RANGE.min), num(BMI_RANGE.max)]}
+                  />
+                  <Text style={styles.bmiCaption}>{t('The band is the WHO range for adults.')}</Text>
+                </View>
+              )}
               {/* Demo sin altura en el perfil: el IMC sale con una de ejemplo y se dice */}
               {body.sampleHeight && (
                 <TouchableOpacity onPress={addHeight} hitSlop={8} accessibilityRole="link">
@@ -300,32 +346,20 @@ export const WeightInfo = () => {
         <>
           <SecRow title={t('Body composition')} right={<Text style={styles.date}>{longDate(estComp.pick.fecha)}</Text>} />
           <View style={styles.donutRow}>
-            <DonutChart
-              segments={[
+            <FineRing
+              parts={[
                 { value: estComp.split.fatKg, color: FINE.gold },
                 { value: estComp.split.leanKg, color: FINE.jade },
               ]}
-              size={124}
-              strokeWidth={10}
-              trackColor={FINE.line}
-              centerLabel={`${num(estComp.weight)}`}
-              centerSubLabel="kg"
+              size={112}
+              stroke={6}
+              label={`${num(estComp.weight)}`}
+              sub="kg"
+              accessibilityLabel={`${t('Fat')} ${num(estComp.split.fatPct)} %, ${t('Fat-free mass')} ${num(estComp.split.leanPct)} %`}
             />
             <View style={styles.legend}>
-              <View style={styles.legendRow}>
-                <View style={[styles.dot, { backgroundColor: FINE.gold }]} />
-                <Text style={styles.legendLabel}>{t('Fat')}</Text>
-                <Text style={styles.legendValue}>
-                  {num(estComp.split.fatKg.toFixed(1))} kg · {num(estComp.split.fatPct)} %
-                </Text>
-              </View>
-              <View style={[styles.legendRow, styles.lastRow]}>
-                <View style={[styles.dot, { backgroundColor: FINE.jade }]} />
-                <Text style={styles.legendLabel}>{t('Fat-free mass')}</Text>
-                <Text style={styles.legendValue}>
-                  {num(estComp.split.leanKg.toFixed(1))} kg · {num(estComp.split.leanPct)} %
-                </Text>
-              </View>
+              <LegendRow color={FINE.gold} label={t('Fat')} pct={num(estComp.split.fatPct)} kg={estComp.split.fatKg} />
+              <LegendRow color={FINE.jade} label={t('Fat-free mass')} pct={num(estComp.split.leanPct)} kg={estComp.split.leanKg} last />
             </View>
           </View>
           <Text style={[measureStyles.p, styles.source]}>{estSource}</Text>
@@ -346,29 +380,28 @@ export const WeightInfo = () => {
           <SecRow title={t('Body composition')} right={<Text style={styles.date}>{longDate(comp.fecha)}</Text>} />
           {slices && comp.weight ? (
             <View style={styles.donutRow}>
-              <DonutChart
-                segments={slices.map((s) => ({ value: s.kg, color: SLICE[s.kind].color }))}
-                size={124}
-                strokeWidth={10}
-                trackColor={FINE.line}
-                centerLabel={`${num(comp.weight)}`}
-                centerSubLabel="kg"
+              <FineRing
+                parts={slices.map((s) => ({ value: s.kg, color: SLICE[s.kind].color }))}
+                size={112}
+                stroke={6}
+                label={`${num(comp.weight)}`}
+                sub="kg"
+                inner={comp.values.body_water != null ? { fraction: comp.values.body_water / 100, color: WATER } : undefined}
+                accessibilityLabel={slices.map((s) => `${t(SLICE[s.kind].label)} ${num(s.kg.toFixed(1))} kg`).join(', ')}
               />
               <View style={styles.legend}>
                 {slices.map((s, i) => (
-                  <View key={s.kind} style={[styles.legendRow, i === slices.length - 1 && styles.lastRow]}>
-                    <View style={[styles.dot, { backgroundColor: SLICE[s.kind].color }]} />
-                    <Text style={styles.legendLabel}>{t(SLICE[s.kind].label)}</Text>
-                    <Text style={styles.legendValue}>
-                      {num(s.kg.toFixed(1))} kg · {Math.round((s.kg / comp.weight!) * 100)} %
-                    </Text>
-                  </View>
+                  <LegendRow
+                    key={s.kind}
+                    color={SLICE[s.kind].color}
+                    label={t(SLICE[s.kind].label)}
+                    pct={`${Math.round((s.kg / comp.weight!) * 100)}`}
+                    kg={s.kg}
+                    last={i === slices.length - 1 && comp.values.body_water == null}
+                  />
                 ))}
-                {comp.values.body_water != null && (
-                  <Text style={styles.water}>
-                    <Ionicons name="water-outline" size={12} color={FINE.mute} /> {t('Water: {v} % (spread across all of it)', { v: num(comp.values.body_water) })}
-                  </Text>
-                )}
+                {/* El agua: un aro en vez de un punto, porque es el anillo de dentro */}
+                {comp.values.body_water != null && <LegendRow color={WATER} ring label={t('Water')} pct={num(comp.values.body_water)} last />}
               </View>
             </View>
           ) : (
@@ -376,7 +409,20 @@ export const WeightInfo = () => {
               {comp.values.body_water != null ? t('Water: {v} % (spread across all of it)', { v: num(comp.values.body_water) }) : '—'}
             </Text>
           )}
+          {slices && comp.values.body_water != null ? (
+            <Text style={fine.note}>{t('Water is spread across everything else, so it goes in the inner ring and not as one more part.')}</Text>
+          ) : null}
           <Text style={fine.note}>{t('Home scales estimate it from your hydration: compare it between weigh-ins in the same conditions.')}</Text>
+        </>
+      ) : body ? (
+        // Sin composición todavía: de dónde puede salir y cómo apuntarla, en vez de no decir nada
+        <>
+          <SecRow title={t('Body composition')} />
+          <Text style={measureStyles.p}>{t('Copy it from your scale or estimate it from your measurements when you log your weight.')}</Text>
+          <View style={styles.addRow}>
+            <View />
+            <Pill label={t('Add')} onPress={() => router.push('/log-weight')} />
+          </View>
         </>
       ) : null}
 
@@ -455,19 +501,24 @@ const styles = StyleSheet.create({
   more: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 10, marginBottom: 6, minHeight: 32 },
   // «Con una altura de ejemplo (176 cm). Añade tu altura», pegada al IMC
   sampleLine: { marginTop: 0 },
+  // La línea del IMC, pegada a su fila
+  bmiLine: { marginTop: -4, marginBottom: 8 },
+  bmiCaption: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, marginTop: 4 },
   // De dónde sale la grasa estimada, bajo el donut
   source: { marginTop: 12 },
   // Para qué sirven las medidas, bajo la cabecera
   purpose: { marginTop: 0 },
   date: { ...ff('regular'), color: FINE.mute, fontSize: 12.5 },
-  donutRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 4 },
+  donutRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 },
   legend: { flex: 1 },
-  legendRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  legendRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: FINE.line },
   lastRow: { borderBottomWidth: 0 },
   dot: { width: 8, height: 8, borderRadius: 4 },
+  ringDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 1.5 },
   legendLabel: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 13.5 },
-  legendValue: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, fontVariant: ['tabular-nums'] },
-  water: { ...ff('regular'), color: FINE.mute, fontSize: 12, marginTop: 6 },
+  legendNums: { alignItems: 'flex-end' },
+  legendPct: { ...ff('regular'), color: FINE.ivory, fontSize: 13.5, lineHeight: 17, fontVariant: ['tabular-nums'] },
+  legendKg: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 14, fontVariant: ['tabular-nums'] },
   // «Cinta métrica» / «Pinza de grasa» dentro de Medidas
   group: { ...fine.kicker, marginTop: 12, marginBottom: 2 },
   // Dos columnas de celdas pequeñas, cada una con su línea fina debajo

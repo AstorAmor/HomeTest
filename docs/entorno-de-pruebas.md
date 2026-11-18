@@ -102,8 +102,14 @@ Con la CLI 3 los comandos van contra la base **local** si no se dice otra cosa: 
   de juntar) y lo dice en el mensaje.
 - iPhone (2026-11-17): segunda app en App Store Connect («Kuova Pruebas», `com.kuovahealth.app.pruebas`). Compilar y
   subir a TestFlight: `npx eas-cli build --platform ios --profile staging-ios --auto-submit` (la primera vez, en una
-  terminal, entrando con la cuenta de Apple de Astor; el perfil de envío `staging-ios` de eas.json no lleva `ascAppId`
-  de la app real para que nunca suba ahí). Para compartirla: grupo de TestFlight externo con enlace público (la
+  terminal; el perfil de envío `staging-ios` de eas.json lleva el `ascAppId` de «Kuova Pruebas», 6836277823, nunca
+  el de la app real). Desde el 2026-11-18 el inicio de sesión de EAS con Apple falla (fallo de Apple, eas-cli 27.10.0):
+  se compila y se sube con una clave de la API de App Store Connect (variables `EXPO_ASC_API_KEY_PATH`,
+  `EXPO_ASC_KEY_ID`, `EXPO_ASC_ISSUER_ID`, `EXPO_APPLE_TEAM_ID`, `EXPO_APPLE_TEAM_TYPE=INDIVIDUAL`); el archivo `.p8`
+  lo guarda Astor fuera del repositorio y de OneDrive. Para subirlo (`eas submit`), EAS pide además la clave en el
+  perfil de envío: añadir en local, SIN commit, `ascApiKeyPath`, `ascApiKeyId`, `ascApiKeyIssuerId` y `appleTeamId` a
+  `submit.staging-ios.ios`, lanzar `eas submit --platform ios --profile staging-ios --id <build> --non-interactive` y
+  quitarlos. Primer build: 1.1.0 (6), d0bf7a9a, subido a TestFlight el 2026-11-18. Para compartirla: grupo de TestFlight externo con enlace público (la
   primera versión pasa la revisión de Apple; Apple pide una cuenta de prueba, que crea Astor).
 
 ## Compartir «Kuova Pruebas» (desde el 2026-11-17)

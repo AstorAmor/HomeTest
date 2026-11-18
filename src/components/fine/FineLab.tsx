@@ -4,10 +4,12 @@
 // del laboratorio y el punto de luz, tu resultado) y la cifra grande y ligera de un biomarcador con su estado al
 // lado. Sin rojos: lo que está en rango va en jade y lo que queda fuera, en oro. Un valor fuera del rango no es
 // un diagnóstico.
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, G } from 'react-native-svg';
+import Svg, { Circle, Defs, G, LinearGradient, RadialGradient, Stop } from 'react-native-svg';
 import { FineGauge } from '@/components/fine/FineGauge';
+import { mixHex, ringTones } from '@/components/GlowRing';
+import { Colors } from '@/constants/colors';
 import { rangeBarLayout } from '@/utils/rangeBar';
 import type { RangeStatus } from '@/utils/rangeStatus';
 import { FINE, ff, fine } from '@/theme/fine';
@@ -32,7 +34,10 @@ export function LabGauge({ value, low, high, style }: { value: number | null; lo
 }
 
 // El rosco del informe: en jade lo que está en rango y en oro lo que hay que revisar, con un hueco entre los dos;
-// dentro, la cifra grande y ligera
+// dentro, la cifra grande y ligera. Desde el 2026-11-18 con el color de los anillos de Hoy (GlowRing: cada tramo en
+// degradado, más claro arriba) y más brillo (un resplandor bajo cada tramo y un halo suave), pero sin el punto de luz
+// de la cabeza (fundador: «con estética de color actualizada, sin bolita brillante pero en general con más brillo»).
+// El mismo día, rebajado a la mitad (fundador: «lo veo demasiado brillante ahora»)
 export function FineDonut({
   inRange,
   review,
@@ -48,47 +53,147 @@ export function FineDonut({
   label?: string;
   sub?: string;
 }) {
-  const c = size / 2;
-  const r = (size - stroke) / 2;
-  const C = 2 * Math.PI * r;
-  const total = inRange + review;
-  const a = total ? (C * inRange) / total : 0;
-  const gap = inRange > 0 && review > 0 ? 3 : 0;
   return (
-    <View
-      style={{ width: size, height: size }}
-      accessible
-      accessibilityRole="image"
+    <FineRing
+      parts={[
+        { value: inRange, color: FINE.jade },
+        { value: review, color: FINE.gold },
+      ]}
+      size={size}
+      stroke={stroke}
+      label={label}
+      sub={sub}
       accessibilityLabel={`${t('{n} in range', { n: inRange })} · ${t('{n} need a look', { n: review })}`}
-    >
+    />
+  );
+}
+
+// El mismo anillo con los tramos que hagan falta (la composición corporal del peso: grasa, músculo, hueso y resto,
+// 2026-11-18) y, si se pasa `inner`, un segundo anillo fino por dentro con una fracción (el agua, que no es un
+// tramo más: está repartida en todo lo demás). Cada tramo en degradado, más claro arriba, con su resplandor y un
+// hueco entre tramos; el halo, del color del tramo que más pesa
+export interface RingPart {
+  value: number;
+  color: string;
+}
+
+export function FineRing({
+  parts,
+  size = 132,
+  stroke = 6,
+  label,
+  sub,
+  inner,
+  accessibilityLabel,
+}: {
+  parts: RingPart[];
+  size?: number;
+  stroke?: number;
+  label?: string;
+  sub?: string;
+  inner?: { fraction: number; color: string };
+  accessibilityLabel?: string;
+}) {
+  const id = `fr${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
+  const c = size / 2;
+  const r = (size - stroke * 2.4) / 2; // deja sitio al resplandor
+  const C = 2 * Math.PI * r;
+  const shown = parts.filter((p) => p.value > 0);
+  const total = shown.reduce((n, p) => n + p.value, 0);
+  const gap = shown.length > 1 ? 3 : 0;
+  const light = Colors.isLight;
+  // Los tramos: [tonos, trazo, desplazamiento], uno detrás de otro desde arriba
+  let start = 0;
+  const arcs = shown.map((p, i) => {
+    const len = total ? (C * p.value) / total : 0;
+    const arc = { key: `a${i}`, tones: ringTones(p.color), dash: `${Math.max(0, len - gap)} ${C - len + gap}`, offset: -start };
+    start += len;
+    return arc;
+  });
+  const main = shown.reduce<RingPart | null>((a, p) => (!a || p.value > a.value ? p : a), null);
+  const haloTones = ringTones(main?.color ?? FINE.jade);
+  const veil = ringTones(FINE.jade);
+  // El anillo de dentro: fino y separado del de fuera
+  const ri = r - stroke * 2.3;
+  const si = Math.max(2, stroke * 0.5);
+  const Ci = 2 * Math.PI * ri;
+  const fi = inner ? Math.max(0, Math.min(1, inner.fraction)) : 0;
+  const innerTones = inner ? ringTones(inner.color) : null;
+  return (
+    <View style={{ width: size, height: size }} accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel}>
       <Svg width={size} height={size}>
+        <Defs>
+          {/* Girado −90°: en el dibujo, x = c + r es arriba en pantalla y x = c − r, abajo. Cada tramo, más claro arriba */}
+          {arcs.map((s) => (
+            <LinearGradient key={s.key} id={`${id}${s.key}`} gradientUnits="userSpaceOnUse" x1={c + r} y1={c} x2={c - r} y2={c}>
+              <Stop offset="0" stopColor={mixHex(s.tones[1], s.tones[2], 0.45)} />
+              <Stop offset="0.55" stopColor={s.tones[1]} />
+              <Stop offset="1" stopColor={mixHex(s.tones[1], s.tones[0], 0.35)} />
+            </LinearGradient>
+          ))}
+          {innerTones && (
+            <LinearGradient id={`${id}in`} gradientUnits="userSpaceOnUse" x1={c + ri} y1={c} x2={c - ri} y2={c}>
+              <Stop offset="0" stopColor={mixHex(innerTones[1], innerTones[2], 0.45)} />
+              <Stop offset="1" stopColor={mixHex(innerTones[1], innerTones[0], 0.35)} />
+            </LinearGradient>
+          )}
+          {/* Halo: una luz suave a lo largo del anillo, del color de lo que más pesa */}
+          <RadialGradient id={`${id}h`} cx="50%" cy="50%" r="50%">
+            <Stop offset={String(Math.max(0, (r - stroke * 2.5) / c))} stopColor={haloTones[2]} stopOpacity={0} />
+            <Stop offset={String(r / c)} stopColor={haloTones[2]} stopOpacity={light ? 0.06 : 0.09} />
+            <Stop offset="1" stopColor={haloTones[2]} stopOpacity={0} />
+          </RadialGradient>
+          {/* Disco interior: casi transparente en el centro y un velo del color hacia el borde */}
+          <RadialGradient id={`${id}d`} cx="50%" cy="50%" r="50%">
+            <Stop offset="0" stopColor={veil[1]} stopOpacity={0} />
+            <Stop offset="0.75" stopColor={veil[1]} stopOpacity={light ? 0.03 : 0.05} />
+            <Stop offset="1" stopColor={veil[1]} stopOpacity={light ? 0.08 : 0.11} />
+          </RadialGradient>
+        </Defs>
+        <Circle cx={c} cy={c} r={c} fill={`url(#${id}h)`} />
+        <Circle cx={c} cy={c} r={inner ? ri - si / 2 : r - stroke / 2} fill={`url(#${id}d)`} />
         <G transform={`rotate(-90, ${c}, ${c})`}>
           <Circle cx={c} cy={c} r={r} stroke={FINE.line} strokeWidth={stroke} fill="none" />
-          {inRange > 0 && (
-            <Circle cx={c} cy={c} r={r} stroke={FINE.jade} strokeWidth={stroke} strokeDasharray={`${Math.max(0, a - gap)} ${C - a + gap}`} fill="none" />
-          )}
-          {review > 0 && (
-            <Circle
-              cx={c}
-              cy={c}
-              r={r}
-              stroke={FINE.gold}
-              strokeWidth={stroke}
-              strokeDasharray={`${Math.max(0, C - a - gap)} ${a + gap}`}
-              strokeDashoffset={-a}
-              fill="none"
-            />
+          {arcs.map((s) => (
+            <G key={s.key}>
+              {/* El resplandor: el mismo tramo, más ancho y muy suave, en dos capas */}
+              <Circle cx={c} cy={c} r={r} stroke={s.tones[1]} strokeOpacity={light ? 0.04 : 0.06} strokeWidth={stroke * 2.4} strokeDasharray={s.dash} strokeDashoffset={s.offset} fill="none" />
+              <Circle cx={c} cy={c} r={r} stroke={s.tones[1]} strokeOpacity={light ? 0.07 : 0.11} strokeWidth={stroke * 1.6} strokeDasharray={s.dash} strokeDashoffset={s.offset} fill="none" />
+              <Circle cx={c} cy={c} r={r} stroke={`url(#${id}${s.key})`} strokeWidth={stroke} strokeDasharray={s.dash} strokeDashoffset={s.offset} fill="none" />
+            </G>
+          ))}
+          {innerTones && (
+            <G>
+              <Circle cx={c} cy={c} r={ri} stroke={FINE.line} strokeWidth={si} fill="none" />
+              {fi > 0 && (
+                <>
+                  <Circle cx={c} cy={c} r={ri} stroke={innerTones[1]} strokeOpacity={light ? 0.07 : 0.11} strokeWidth={si * 2.2} strokeDasharray={`${Ci * fi} ${Ci}`} fill="none" />
+                  <Circle cx={c} cy={c} r={ri} stroke={`url(#${id}in)`} strokeWidth={si} strokeDasharray={`${Ci * fi} ${Ci}`} fill="none" />
+                </>
+              )}
+            </G>
           )}
         </G>
       </Svg>
       {label || sub ? (
         <View style={[styles.center, { width: size, height: size }]}>
-          {label ? <Text style={[styles.centerNum, { fontSize: Math.round(size * 0.27), lineHeight: Math.round(size * 0.33) }]}>{label}</Text> : null}
+          {label ? <Text style={[styles.centerNum, { fontSize: Math.round(size * (inner ? 0.22 : 0.27)), lineHeight: Math.round(size * (inner ? 0.27 : 0.33)) }]}>{label}</Text> : null}
           {sub ? <Text style={styles.centerSub}>{sub}</Text> : null}
         </View>
       ) : null}
     </View>
   );
+}
+
+// El recuento de unos valores, para poner al lado o debajo de «N marcadores»: primero cuántos en rango (jade), luego
+// cuántos fuera (oro) y, si los hay, sin referencia (apagado). Fundador, 2026-11-18: «110 marcadores y luego la
+// aclaración de cuántos en rango y cuántos fuera»
+export function countParts(c: { in: number; out: number; none: number }): { text: string; color: string }[] {
+  return [
+    c.in ? { text: t('{n} in range', { n: c.in }), color: FINE.jade } : null,
+    c.out ? { text: t(c.out === 1 ? '1 out of range' : '{n} out of range', { n: c.out }), color: FINE.gold } : null,
+    c.none ? { text: t('{n} with no reference', { n: c.none }), color: FINE.mute } : null,
+  ].filter(Boolean) as { text: string; color: string }[];
 }
 
 // La leyenda del rosco: un punto jade y uno de oro con su recuento

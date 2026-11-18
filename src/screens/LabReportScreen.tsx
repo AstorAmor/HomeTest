@@ -45,8 +45,9 @@ export const LabReportScreen = () => {
           <Text style={fine.rowSub}>
             {formatReportDate(report.test_date)} · {entry.lab}
           </Text>
+          {/* Dentro del rosco, el total de marcadores (fundador, 2026-11-18: «quiero que pongas el total de marcadores») */}
           <View style={styles.donutRow}>
-            <FineDonut size={112} inRange={counts.inRange} review={counts.needsReview} label={`${counts.inRange}`} sub={t('of {n}', { n: counts.total })} />
+            <FineDonut size={112} inRange={counts.inRange} review={counts.needsReview} label={`${counts.total}`} />
             <DonutLegend inRange={counts.inRange} review={counts.needsReview} />
           </View>
 
