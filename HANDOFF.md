@@ -3038,3 +3038,8 @@ rellene con sus datos reales.
 - **Para lo siguiente:** `entorno-pruebas` ya está dentro de master. Cada tanda nueva se pasa uniendo `entorno-pruebas`
   en master (sin conflictos mientras master no cambie por su cuenta) y con `npm run release` desde
   `hometest-app-publica`, que tiene el `.env.local` de producción y los enlaces de Vercel en `deploy/`.
+- **Beta de amigos, el mismo día (OK de Astor: «Sí, envíalo»):** el mismo código (master 25ad349) al canal `pruebas`,
+  **solo Android**: grupo 88888240 (`eas-cli update --channel pruebas --environment preview --platform android`). El
+  anterior del canal es d65ce897-f4c9-4550-a774-7b3aa7c9e2da (Android + iOS) y es lo que siguen viendo los iPhone de
+  la beta. master incluye todo lo de `pruebas-entrada` (idioma, entrada con la K, bloqueo con huella, toque del aviso
+  de la toma). El iPhone de la beta, cuando Astor haya visto este código en el iPhone de Kuova Pruebas.
