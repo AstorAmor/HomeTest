@@ -29,6 +29,11 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
   : null;
 
 export const supabaseUrl = url ?? '';
+
+// ¿Conectada a una base que no es la de producción (la de pruebas o una local)? Aquí y no en appVariant.ts para
+// que lo puedan leer los módulos de datos sin cargar expo-constants (dataMode.ts, y sus tests).
+const PROD_REF = 'jpqtposdxexdvdfeorzh';
+export const isTestDatabase = isSupabaseConfigured && !supabaseUrl.includes(PROD_REF);
 export const supabasePublishableKey = publishableKey ?? '';
 
 // Usuario con sesión activa (lo mantiene AuthContext). Los repositorios lo
