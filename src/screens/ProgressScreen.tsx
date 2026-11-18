@@ -8,6 +8,8 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { compareUpload, ChangeVerdict, ProgressResult, VERDICT_LABEL } from '@/utils/progress';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
+import { useAfterTransition } from '@/hooks/useAfterTransition';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSections } from '@/data/appPrefs';
 import { LabValuesList } from '@/components/LabValuesList';
 import { OutOfRangeSummary } from '@/components/OutOfRangeSummary';
@@ -51,12 +53,29 @@ const countUpload = (u: LabUpload) => {
   return c;
 };
 
+// La analítica que se abre y su comparación con las anteriores (null si aún no está entre las leídas)
+const pick = (all: LabUpload[] | undefined, id: string | undefined): { upload: LabUpload; result: ProgressResult } | null => {
+  const u = all?.find((x) => x.id === id);
+  if (!all || !u) return null;
+  return { upload: u, result: compareUpload(u, all.filter((x) => x.id !== u.id && x.createdAt < u.createdAt)) };
+};
+
+// Filas de «Progreso» que se pintan mientras la pantalla se desliza; las demás, al acabar
+const FIRST_ROWS = 8;
+
 export const ProgressScreen = () => {
   const show = useSections();
   const router = useRouter();
   const { upload: uploadId, view } = useLocalSearchParams<{ upload: string; view?: string }>();
-  const [upload, setUpload] = useState<LabUpload | null>(null);
-  const [result, setResult] = useState<ProgressResult | null>(null);
+  // Fundador, 2026-11-18: al abrir el informe desde el rosco de Análisis «lo hace de forma poco fluida». La pantalla
+  // esperaba vacía a Supabase (todas las analíticas, cada una con su informe entero) y luego montaba de golpe sus ~60
+  // filas mientras se deslizaba. Ahora pinta al momento lo que Análisis ya leyó (peek), durante el deslizamiento solo lo
+  // de arriba (recuentos y «Para revisar») y el resto al acabar, con un fundido corto. Al volver, si nada ha cambiado,
+  // no se vuelve a dibujar.
+  const peeked = useRef<LabUpload[] | undefined>(undefined);
+  const [data, setData] = useState(() => pick((peeked.current = labUploadRepository.peek()), uploadId));
+  const lastSig = useRef<string | null>(null);
+  const settled = useAfterTransition();
   const [showOthers, setShowOthers] = useState(false);
   const [tab, setTab] = useState<'results' | 'progress'>(view === 'progress' ? 'progress' : 'results');
   // Tocar «En rango», «Para revisar» o «Sin referencia» baja a su grupo
@@ -70,13 +89,15 @@ export const ProgressScreen = () => {
   useReloadOnFocus(
     useCallback(async () => {
       const all = await labUploadRepository.getAll();
-      const u = all.find((x) => x.id === uploadId) ?? null;
-      setUpload(u);
-      if (u) setResult(compareUpload(u, all.filter((x) => x.id !== u.id && x.createdAt < u.createdAt)));
+      const sig = JSON.stringify(all);
+      if (lastSig.current === null && peeked.current) lastSig.current = JSON.stringify(peeked.current);
+      if (sig === lastSig.current) return;
+      lastSig.current = sig;
+      setData(pick(all, uploadId));
     }, [uploadId]),
   );
 
-  if (!upload || !result) {
+  if (!data) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScreenHeader title={t('Uploaded analysis')} showBack backFallback={tabHref(TAB.analysis)} />
@@ -84,6 +105,7 @@ export const ProgressScreen = () => {
     );
   }
 
+  const { upload, result } = data;
   const better = result.changes.filter((c) => c.verdict === 'back_in_range' || c.verdict === 'improving').length;
   const worse = result.changes.filter((c) => c.verdict === 'worsening' || c.verdict === 'newly_out').length;
   const same = result.changes.length - better - worse;
@@ -118,12 +140,16 @@ export const ProgressScreen = () => {
             <View onLayout={(e) => (groupY.current.out = e.nativeEvent.layout.y)}>
               <OutOfRangeSummary report={upload.data} uploadId={upload.id} />
             </View>
-            <View style={styles.pad} onLayout={(e) => (groupY.current.in = e.nativeEvent.layout.y)}>
-              <LabValuesList report={upload.data} group="in" title={t('In range')} uploadId={upload.id} />
-            </View>
-            <View style={styles.pad} onLayout={(e) => (groupY.current.none = e.nativeEvent.layout.y)}>
-              <LabValuesList report={upload.data} group="none" title={t('No reference')} uploadId={upload.id} />
-            </View>
+            {settled && (
+              <>
+                <Animated.View entering={FadeIn.duration(180)} style={styles.pad} onLayout={(e) => (groupY.current.in = e.nativeEvent.layout.y)}>
+                  <LabValuesList report={upload.data} group="in" title={t('In range')} uploadId={upload.id} />
+                </Animated.View>
+                <Animated.View entering={FadeIn.duration(180)} style={styles.pad} onLayout={(e) => (groupY.current.none = e.nativeEvent.layout.y)}>
+                  <LabValuesList report={upload.data} group="none" title={t('No reference')} uploadId={upload.id} />
+                </Animated.View>
+              </>
+            )}
           </>
         )}
 
@@ -141,7 +167,7 @@ export const ProgressScreen = () => {
 
             {result.changes.length === 0 && <Text style={fine.note}>{t('None of these markers had an earlier value to compare with.')}</Text>}
 
-            {result.changes.map((c, i) => (
+            {(settled ? result.changes : result.changes.slice(0, FIRST_ROWS)).map((c, i) => (
               <View key={c.markerId} style={[fine.row, i === 0 && styles.firstRow]}>
                 <View style={styles.flex}>
                   <View style={styles.changeHead}>
@@ -167,7 +193,7 @@ export const ProgressScreen = () => {
               </View>
             ))}
 
-            {(result.firstTime.length > 0 || result.notCompared.length > 0) && (
+            {(settled || result.changes.length <= FIRST_ROWS) && (result.firstTime.length > 0 || result.notCompared.length > 0) && (
               <TouchableOpacity
                 style={styles.othersToggle}
                 onPress={() => setShowOthers((v) => !v)}

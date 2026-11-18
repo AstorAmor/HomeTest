@@ -166,7 +166,8 @@ function CommitBlock() {
         (s.commit ? (
           <CommitTimeline commit={s.commit} onPress={() => router.push('/metas-firmar')} last={!specialist} />
         ) : (
-          <View style={{ alignItems: 'flex-start', paddingVertical: 8 }}>
+          // Centrado, como los demás botones sueltos (fundador, 2026-11-18)
+          <View style={{ alignItems: 'center', paddingVertical: 8 }}>
             <Pill label={t('Sign your commitment')} onPress={() => router.push('/metas-firmar')} />
           </View>
         ))}

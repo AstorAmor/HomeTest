@@ -239,7 +239,8 @@ export const WearablesScreen = () => {
 
   const clearAll = () =>
     run('clear', async () => {
-      await wearableRepository.clearRecords();
+      // Lo apuntado a mano (pasos y sueño desde la K) no es del reloj: se queda
+      await wearableRepository.clearRecords({ keepManual: true });
       setRecords([]);
       return t('Wearable data cleared.');
     });

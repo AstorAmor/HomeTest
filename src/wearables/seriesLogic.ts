@@ -19,11 +19,13 @@ export const todayValue = (points?: DailyPoint[]) => {
   return last && last.date === localDayKey(new Date()) ? last.value : null;
 };
 
-// Si un día tiene varias fuentes para la misma métrica, ¿cuál manda? El reloj antes que el teléfono;
-// el pulso en reposo que da el reloj antes que el estimado; en lo que se acumula (pasos, calorías,
-// distancia), la que más ha contado (la que llevabas encima).
+// Si un día tiene varias fuentes para la misma métrica, ¿cuál manda? Lo apuntado a mano antes que todo (es una
+// corrección tuya de ese día); el reloj antes que el teléfono; el pulso en reposo que da el reloj antes que el
+// estimado; en lo que se acumula (pasos, calorías, distancia), la que más ha contado (la que llevabas encima).
 const CUMULATIVE: WearableMetric[] = ['steps', 'active_energy', 'distance'];
 const better = (a: DailyWearableRecord, b: DailyWearableRecord) => {
+  const manual = (r: DailyWearableRecord) => Number(r.provider === 'manual');
+  if (manual(a) !== manual(b)) return manual(a) > manual(b);
   const phone = (r: DailyWearableRecord) => Number(r.sourceName === PHONE_SOURCE);
   if (phone(a) !== phone(b)) return phone(a) < phone(b);
   const estimated = (r: DailyWearableRecord) => Number(r.rawTypeId.includes(':'));
@@ -58,6 +60,23 @@ export function pickPerDay(records: DailyWearableRecord[]): DailyWearableRecord[
     if (night && night.sourceName === r.sourceName && night.provider === r.provider) best.set(`${r.metric}|${r.date}`, r);
   }
   return [...best.values()];
+}
+
+// ¿Solo hay lo apuntado a mano (pasos y sueño desde la K)? Entonces, en la demo y las cuentas de prueba, se sigue
+// enseñando el reloj de ejemplo, con lo apuntado encima (overlayManual)
+export const isManualRecord = (r: DailyWearableRecord) => r.provider === 'manual';
+export const onlyManual = (records: DailyWearableRecord[]) => records.length > 0 && records.every(isManualRecord);
+
+// Pone lo apuntado a mano encima de unas series (sustituye el valor de ese día o lo añade)
+export function overlayManual(series: DailySeries, records: DailyWearableRecord[]): DailySeries {
+  const out: DailySeries = { ...series };
+  for (const r of records) {
+    if (!isManualRecord(r) || isSleepDetail(r.metric)) continue;
+    const points = (out[r.metric] ?? []).filter((p) => p.date !== r.date);
+    points.push({ date: r.date, value: r.value });
+    out[r.metric] = points.sort((a, b) => a.date.localeCompare(b.date));
+  }
+  return out;
 }
 
 // Agrupa los registros por métrica (una fuente por día, ver pickPerDay) y los ordena ascendente.

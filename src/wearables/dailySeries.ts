@@ -15,7 +15,7 @@ import { appleHealthAsked, appleHealthSyncDue, isAppleHealthAvailable, markApple
 import { PHONE_SOURCE } from './sources';
 import { showSamples } from '@/data/dataMode';
 import { userFlags } from '@/data/userFlags';
-import { DailyPoint, DailySeries, localDayKey, pickPerDay, toDailySeries } from './seriesLogic';
+import { DailyPoint, DailySeries, localDayKey, onlyManual, overlayManual, pickPerDay, toDailySeries } from './seriesLogic';
 
 export * from './seriesLogic';
 
@@ -71,6 +71,9 @@ interface WearableView {
 // Lo que enseña una pantalla con estos registros: los suyos; sin ninguno, los de ejemplo (demo y cuentas de prueba)
 // o nada (cuenta real)
 function viewOf(stored: DailyWearableRecord[], days: number): WearableView {
+  // Solo pasos o sueño apuntados a mano: en la demo y las cuentas de prueba, el ejemplo con eso encima
+  if (onlyManual(stored) && showSamples())
+    return { series: lastDays(overlayManual(sampleSeries(), stored), days), sources: ['Huawei Health'], isSample: true, hasAny: true };
   if (stored.length > 0) return { series: lastDays(seriesOf(stored), days), sources: recentSources(stored), isSample: false, hasAny: true };
   if (showSamples()) return { series: lastDays(sampleSeries(), days), sources: ['Huawei Health'], isSample: true, hasAny: true };
   return { series: {}, sources: [], isSample: false, hasAny: false };

@@ -24,6 +24,8 @@ const ORIGIN_NAMES: Record<string, string> = {
 };
 
 export const PHONE_SOURCE = 'This phone';
+// Lo apuntado a mano (pasos y sueño desde la K): texto fuente en inglés, t() lo traduce («A mano»)
+export const MANUAL_SOURCE = 'By hand';
 
 // Health Connect cuenta los pasos con el propio teléfono (Android 14+) y los firma con un
 // paquete del sistema tipo "com.android.healthconnect.phone.<hash>".

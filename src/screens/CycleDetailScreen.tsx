@@ -19,7 +19,7 @@ import { postAi } from '@/utils/apiBaseUrl';
 import { kegelRepository } from '@/data/kegelRepository';
 import { EXERCISES } from '@/data/exercises';
 import { kegelDayKey, kegelWeek, KegelWeek } from '@/logic/kegel';
-import { PHASE_EXPECT, PHASE_EXPECT_NOTE, PHASE_EXPECT_SAFETY, showPhaseSafety } from '@/logic/cycleExpectations';
+import { PHASE_EXPECT, PHASE_EXPECT_NOTE, PHASE_EXPECT_SAFETY, PHASE_FERTILITY_NOTE, showPhaseSafety } from '@/logic/cycleExpectations';
 import { FINE, ff, fine } from '@/theme/fine';
 
 // Detalle del ciclo en el lenguaje fino (fundador, 2026-11-17: «cuando entras, sigue siendo formato antiguo; me
@@ -82,7 +82,7 @@ const PhaseExpect = ({ phase }: { phase: CyclePhaseId }) => {
         </View>
       ))}
       <Text style={[fine.note, styles.expectNote]}>
-        {t(PHASE_EXPECT_NOTE)}
+        {t(PHASE_EXPECT_NOTE)} {t(PHASE_FERTILITY_NOTE)}
         {showPhaseSafety(phase) ? ` ${t(PHASE_EXPECT_SAFETY)}` : ''}
       </Text>
     </>
@@ -163,45 +163,64 @@ export const CycleDetailScreen = () => {
   // Día, fase y cuándo llegaría la próxima regla, como en Hoy (solo con reglas suyas, sin el ejemplo)
   const cycle = entries.length ? currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength, cycleGoal) : null;
   const days = (n: number) => t('{n} days', { n: num(String(n)) });
-  const showPrediction = loadingPrediction || !!predictionError || (!!prediction && !prediction.error);
+  const serverOk = !!prediction && !prediction.error;
+  // La próxima regla de arriba: la de la predicción o, mientras se calcula o si no se ha podido, la estimación de aquí
+  // (la de Hoy), para que lo primero sea siempre la fecha y el retraso. «Hace días» solo cuando se esperaba hace poco
+  // (sin registros recientes, la frase de la fase lo explica)
+  const local = cycle?.next ?? null;
+  const top = serverOk
+    ? { date: formatFullDate(prediction!.predicted_next_start), window: prediction!.window_days, late: prediction!.is_late ? prediction!.days_late : 0 }
+    : local
+      ? { date: formatFullDate(`${local.date}T12:00:00`), window: local.windowDays, late: local.status === 'late' ? -local.daysLeft : 0 }
+      : null;
+  const showPrediction = !!top || loadingPrediction || !!predictionError;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={{ paddingBottom: 48 + insets.bottom }} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Menstrual Cycle')} showBack />
         <View style={styles.body}>
-          {cycle && (
-            <>
-              <CycleStrip info={cycle} variant="hero" />
-              <PhaseExpect phase={cycle.phase} />
-            </>
-          )}
-
-          {/* Próxima regla: la fecha en grande y, debajo, las duraciones en filas finas */}
+          {/* Lo primero, la próxima regla en grande y si se retrasa; después la fase con su recta, «En esta fase» y las
+              duraciones (fundador, 2026-11-18: «me gustaría que empezase con el Next period predicted XX y lo de los días
+              late..., luego lo de luteal phase si quieres, con la línea y tal. In this phase me gusta») */}
           {showPrediction && (
-            <View style={fine.secHead}>
+            <View style={[fine.secHead, styles.topHead]}>
               <Text style={fine.secTitle}>{t('Next period predicted')}</Text>
               <InfoButton topic="cycle_prediction" size={15} color={FINE.mute} />
             </View>
           )}
-          {loadingPrediction && (
+          {loadingPrediction && !top && (
             <View style={styles.status}>
               <ActivityIndicator color={FINE.mute} />
               <Text style={fine.note}>{t('Computing prediction…')}</Text>
             </View>
           )}
-          {predictionError ? <Text style={fine.note}>{predictionError}</Text> : null}
-          {prediction && !prediction.error && (
+          {predictionError && !top ? <Text style={fine.note}>{predictionError}</Text> : null}
+          {top && (
             <>
               <View style={styles.big}>
-                <Text style={styles.bigDate}>{formatFullDate(prediction.predicted_next_start)}</Text>
-                <Text style={styles.bigSide}>± {days(prediction.window_days)}</Text>
+                <Text style={styles.bigDate}>{top.date}</Text>
+                <Text style={styles.bigSide}>± {days(top.window)}</Text>
               </View>
-              {prediction.is_late && (
+              {top.late > 0 && (
                 <View style={styles.late}>
-                  <Tag gold label={prediction.days_late === 1 ? t('1 day late') : t('{n} days late', { n: prediction.days_late })} />
+                  <Tag gold label={top.late === 1 ? t('1 day late') : t('{n} days late', { n: top.late })} />
                 </View>
               )}
+            </>
+          )}
+
+          {cycle && (
+            <View style={showPrediction ? styles.phaseAfter : undefined}>
+              <CycleStrip info={cycle} variant="hero" />
+              <PhaseExpect phase={cycle.phase} />
+            </View>
+          )}
+
+          {/* Las duraciones en filas finas, con lo fiable que es la previsión */}
+          {serverOk && prediction && (
+            <>
+              <SecHead title={t('Your cycle')} />
               <FRow title={t('Median length')} value={days(prediction.median_cycle_length)} />
               <FRow title={t('Average length')} value={days(prediction.avg_cycle_length)} />
               <FRow title={t('Period days')} value={avgPeriod != null ? days(avgPeriod) : '—'} last />
@@ -257,6 +276,9 @@ const styles = StyleSheet.create({
   bigDate: { ...ff('light'), color: FINE.ivory, fontSize: 30, lineHeight: 36 },
   bigSide: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
   late: { flexDirection: 'row', marginBottom: 6 },
+  // Arriba del todo, sin la raya de sección (justo debajo del título de la pantalla)
+  topHead: { marginTop: 4, paddingTop: 4, borderTopWidth: 0 },
+  phaseAfter: { marginTop: 22 },
   empty: { marginTop: 18 },
   logBtn: { ...fine.pill, alignSelf: 'center', marginTop: 22, minHeight: 44, paddingHorizontal: 22, justifyContent: 'center' },
   kegel: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8 },

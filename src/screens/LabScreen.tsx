@@ -214,7 +214,13 @@ export const LabScreen = () => {
               ) : lastUpload ? (
                 <UploadRow u={lastUpload} />
               ) : null}
-              <FRow title={t('Talk it over with a doctor')} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })} last />
+              {/* Más separado de los roscos de las áreas y más cerca de la raya de la sección siguiente (fundador, 2026-11-18) */}
+              <FRow
+                title={t('Talk it over with a doctor')}
+                onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}
+                last
+                style={styles.doctorRow}
+              />
             </>
           )}
 
@@ -451,6 +457,7 @@ const styles = StyleSheet.create({
   area: { width: 72, alignItems: 'center', gap: 6 },
   areaLabel: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 14, textAlign: 'center' },
   flaggedHead: { marginTop: 18, marginBottom: 2 },
+  doctorRow: { marginTop: 14, marginBottom: -16 }, // más aire arriba (roscos) que abajo (la raya)
   valuesRow: { gap: 14, borderBottomWidth: 0 },
   agendaDot: { width: 7, height: 7, borderRadius: 4 },
 });
