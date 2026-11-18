@@ -3010,3 +3010,31 @@ producción: ni migración, ni funciones, ni ajustes del panel de `HomeTest00`, 
   **Falta que Astor lo instale y lo pruebe en su Xiaomi.**
   Worktree: `hometest-app-staging/node_modules` ya no es un junction a `hometest-app/node_modules` (instalar paquetes
   aquí habría tocado la carpeta de la otra sesión): tiene los suyos (`npm ci`, 2026-11-11).
+
+## 2026-11-18 — El rediseño de «Kuova Pruebas» pasa a la app pública (master 6918b39, PUBLICADO)
+
+Astor: «guardar en GitHub cómo está Kuova ahora, pero ya actualizar al formato del de pruebas», para que la gente la
+rellene con sus datos reales.
+
+- **Punto de vuelta:** etiqueta `app-publica-antes-del-rediseno` en GitHub (= c6c1b98, la app pública hasta hoy). En
+  Expo, el grupo anterior del canal `preview` es 9706e52b-efff-4283-a899-ebd9da1226ed (se puede volver a publicar con
+  `eas update:republish --group …`); en Vercel, el despliegue anterior de cada web se puede promover desde el panel.
+- **Qué se unió:** `entorno-pruebas` (670dc7e) en master, en una carpeta aparte (`hometest-app-publica`, rama
+  `publica-rediseno` → master por fast-forward). Conflictos solo en idioma y «¿Has olvidado tu contraseña?» (hechos en
+  las dos ramas): se queda la versión de entorno-pruebas. `PasswordResetGuard` desaparece (lo hace `MfaGuard`). `src`
+  queda idéntico a entorno-pruebas; tsc 0, 920 tests.
+- **Publicado:** `npm run release` en dos pasos (`--skip-web` y luego `--skip-app`), con unos 2 GB de RAM libres y sin
+  fallos: EAS Update canal `preview`, grupo 96d41dd5 (Android + iOS, exposdk:57.0.0, commit limpio) y las dos webs.
+  Comprobado en vivo: las dos webs cargan la pantalla de entrar sin errores de consola y sin la marca de pruebas,
+  apuntan a la base real y mantienen `X-Robots-Tag: noindex`. No se ha entrado con una cuenta ni se ha probado en móvil.
+- **Producción sin tocar:** ni migraciones, ni funciones, ni ajustes de Auth. Falta, con el OK de Astor
+  (docs/doble-factor.md): migración `20261109180000_mfa_aal2`, función `admin-mfa-reset` y activar TOTP en Auth (hasta
+  entonces, activar el doble factor desde la app dará error en producción); y la plantilla `confirmar-cuenta.html` con
+  el código de 6 cifras (sin comprobar qué plantilla tiene producción: la pantalla admite el código o el botón del correo).
+- **Lo que NO lleva esto:** el canal `pruebas` (beta de amigos: APK facf2926 y TestFlight 1.1.0 (5), también contra la
+  base real) sigue con lo de `pruebas-entrada`. Los APK del canal `preview` ya han caducado en Expo (el último es de
+  octubre) y no llevan los módulos nativos nuevos (bloqueo con huella, portapapeles, kuova-privacy), que la app trata
+  como opcionales. En iPhone este código no se ha probado nunca.
+- **Para lo siguiente:** `entorno-pruebas` ya está dentro de master. Cada tanda nueva se pasa uniendo `entorno-pruebas`
+  en master (sin conflictos mientras master no cambie por su cuenta) y con `npm run release` desde
+  `hometest-app-publica`, que tiene el `.env.local` de producción y los enlaces de Vercel en `deploy/`.
