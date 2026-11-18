@@ -3101,5 +3101,7 @@ Astor: «Pruebas y pública».
   comprobó con `eas update:list --branch preview` que el grupo está publicado antes de seguir, sin repetirlo.
   Webs: pantalla de entrar sin errores, sin la marca «Pruebas», base de producción y código nuevo en el bundle.
   Sin comprobar: pantallas con sesión iniciada en la web publicada, cualquier teléfono.
-- **No tocado:** la beta de amigos (canal `pruebas`) ni la base de producción. Kuova Pruebas recibió lo mismo
-  (OTA staging 20cb5aa1).
+- **No tocado:** la base de producción. Kuova Pruebas recibió lo mismo (OTA staging 20cb5aa1).
+- **Beta de amigos, el mismo día (Astor: «sí, a la beta ya»):** el mismo código (master 99fa458 = 0d395ca) al canal
+  `pruebas`, Android + iOS: grupo 2c5983c7-a386-4ebe-b38b-e94ff8f182a3 (`eas-cli update --channel pruebas
+  --environment preview`). El anterior del canal es b9ceaaa3 (Android) / f0d3332b (iOS).
