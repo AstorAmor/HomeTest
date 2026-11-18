@@ -9,7 +9,7 @@ Astor lo prueba en la app «Kuova Pruebas» y, **con su OK**, pasa a producción
 |---|---|---|---|
 | **Kuova** (APK `preview` y la web) | `preview` | `HomeTest00` (producción, `jpqtposdxexdvdfeorzh`) | Todos |
 | **Kuova** (APK de pruebas b3972691, TestFlight «Probadores») | `pruebas` | `HomeTest00` (producción) | Beta de amigos |
-| **Kuova Pruebas** (icono naranja, «PRUEBAS») | `staging` | «Kuova pruebas» (solo datos inventados) | Astor y las sesiones de código |
+| **Kuova Pruebas** (icono naranja, «PRUEBAS») | `staging` | «Kuova pruebas» (solo datos inventados) | Astor, las sesiones de código y, desde el 2026-11-17, gente a la que Astor la comparte para ver el diseño nuevo (con datos inventados) |
 
 - Ojo con los nombres: el canal `pruebas` es la **beta de amigos y va a producción**. La base de pruebas es
   la del canal `staging`.
@@ -96,11 +96,26 @@ Con la CLI 3 los comandos van contra la base **local** si no se dice otra cosa: 
   primero, el 2026-11-09 (build `16edc92f`, versionCode 1, llave de firma creada por EAS en la nube).
   Ojo al juntar con `metas-fase1`: si el código juntado usa un módulo nativo que este APK no tiene (por
   ejemplo `modules/kuova-wallpaper`), hace falta otro APK antes de mandar esa actualización a `staging`.
-- Actualizaciones: `npm run release:staging -- "qué cambia"` (Android; `--all` para Android e iPhone). Se
+- Actualizaciones: `npm run release:staging -- "qué cambia"` (Android e iPhone desde el 2026-11-17; `--android` para solo
+  Android). Para la OTA hace falta memoria: para antes el preview web de la app si está abierto. Se
   niega si el entorno `development` apunta a producción. Puede publicar cambios sin commit (para probar antes
   de juntar) y lo dice en el mensaje.
-- iPhone: segunda app en App Store Connect (`com.kuovahealth.app.pruebas`) cuando haga falta; perfil
-  `staging-ios`.
+- iPhone (2026-11-17): segunda app en App Store Connect («Kuova Pruebas», `com.kuovahealth.app.pruebas`). Compilar y
+  subir a TestFlight: `npx eas-cli build --platform ios --profile staging-ios --auto-submit` (la primera vez, en una
+  terminal, entrando con la cuenta de Apple de Astor; el perfil de envío `staging-ios` de eas.json no lleva `ascAppId`
+  de la app real para que nunca suba ahí). Para compartirla: grupo de TestFlight externo con enlace público (la
+  primera versión pasa la revisión de Apple; Apple pide una cuenta de prueba, que crea Astor).
+
+## Compartir «Kuova Pruebas» (desde el 2026-11-17)
+
+- Decisión de Astor: se puede compartir con gente para que vea el diseño nuevo, **siempre con datos inventados**
+  (la base de pruebas no es para datos reales de nadie). Va apuntado en el vault de Curro, en
+  `Strategy/Kuova/Entorno de pruebas y seguridad de cuentas - encargo.md`.
+- Android: el APK de `staging` (build 030ee462, 12/11). Lleva todo lo nativo del código actual; al abrirlo por
+  primera vez, cerrar y abrir dos veces para recibir la última actualización. Si se añade un módulo nativo, hace
+  falta otro APK y otro build de iPhone.
+- iPhone: TestFlight de la app «Kuova Pruebas» (no el grupo «Probadores», que es de la app real).
+- La base va en el plan gratuito: se pausa tras 7 días sin uso y se puede rehacer; lo apuntado puede perderse.
 
 ## Guardas para no publicar con la base equivocada
 

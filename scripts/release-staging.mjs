@@ -1,6 +1,6 @@
 // Publica una actualización (OTA) para «Kuova Pruebas», la app conectada a la base de pruebas:
-//   npm run release:staging -- "qué cambia"            → Android
-//   npm run release:staging -- "qué cambia" --all      → Android e iPhone (cuando exista la app de iPhone)
+//   npm run release:staging -- "qué cambia"            → Android e iPhone (desde el 2026-11-17 hay app de iPhone)
+//   npm run release:staging -- "qué cambia" --android  → solo Android (si falta memoria o el iPhone no lo necesita)
 //
 // - Canal `staging` y entorno `development` de EAS (ahí están las variables de la base de pruebas).
 // - APP_VARIANT=staging, para que la configuración de la actualización sea la de «Kuova Pruebas».
@@ -12,7 +12,7 @@ import { execSync } from 'node:child_process';
 import { PROD_REF, STAGING_REF, easSupabaseRef } from './supabase-target.mjs';
 
 const args = process.argv.slice(2);
-const all = args.includes('--all');
+const all = !args.includes('--android'); // --all se sigue aceptando: es lo de siempre
 const message = args.find((a) => !a.startsWith('--'));
 
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim();
