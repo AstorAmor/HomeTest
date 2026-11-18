@@ -25,7 +25,7 @@ insert into storage.objects (bucket_id, name) values
 set local role authenticated;
 
 -- 1) El paciente A da acceso a soporte: glucosa y nutrición, 7 días
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a3","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a3","role":"authenticated","aal":"aal2"}';
 select lives_ok(
   $$ insert into public.data_shares (id, grantee, scopes, expires_at, note)
      values ('5a000000-0000-0000-0000-000000000001', 'support', array['glucose', 'nutrition'],
@@ -44,7 +44,7 @@ select throws_ok(
   '23514', null, 'un permiso de soporte no puede llevar profesional');
 
 -- 2) Un profesional no gana nada con el permiso de soporte
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c3","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c3","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.glucose_readings), 0::bigint, 'el profesional no ve la glucosa de A');
 select is((select count(*) from public.my_shared_patients()), 0::bigint, 'ni a A en su lista de pacientes');
 select throws_ok(
@@ -52,7 +52,7 @@ select throws_ok(
   '42501', null, 'ni puede usar la lectura de soporte');
 
 -- 3) Soporte: sin lectura directa; solo con motivo y por la función
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.glucose_readings), 0::bigint, 'soporte no lee las tablas de salud directamente');
 select is((select count(*) from public.data_shares), 0::bigint, 'ni la tabla de permisos');
 select is(
@@ -99,10 +99,10 @@ select throws_ok(
   '42501', null, 'ni cambiarlo');
 
 -- 6) El usuario retira el acceso: soporte deja de leer al momento
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a3","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a3","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.support_access_log), 0::bigint, 'el usuario no ve el registro interno');
 update public.data_shares set revoked_at = now() where id = '5a000000-0000-0000-0000-000000000001';
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000e3","role":"authenticated","aal":"aal2"}';
 select throws_ok(
   $$ select public.support_read('5a000000-0000-0000-0000-000000000001', 'glucose', 'Incidencia 1: volver a mirar') $$,
   '42501', 'no_active_permission', 'tras retirarlo, soporte ya no lee');

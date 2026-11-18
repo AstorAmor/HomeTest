@@ -5,10 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
-import { AddMeasurementButton, MetricHero, RangeId, rangeDays, RangeTabs, StatsRow } from '@/components/MetricDetailParts';
-import { Colors } from '@/constants/colors';
+import { RangeId, rangeDays } from '@/components/MetricDetailParts';
+import { FRow, Pill, SecHead } from '@/components/fine/Fine';
+import { BigFigure, FineRangeTabs } from '@/components/fine/FineMeasure';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, num, t } from '@/i18n';
+import { FINE, ff, fine } from '@/theme/fine';
 
 export interface GenericMetricEntry {
   id: string;
@@ -26,29 +28,35 @@ const shortDay = (iso: string) => {
 
 interface SimpleMetricDetailScreenProps {
   title: string;
-  color: string;
-  icon: string; // nombre de AppIcon (p. ej. 'glucose')
+  color: string; // el de la curva
+  icon: string; // nombre de AppIcon (p. ej. 'glucose'); desde el 2026-11-16 la ficha ya no lo pinta
   band?: { low: number; high: number }; // franja de referencia en la gráfica
   loadEntries: () => Promise<GenericMetricEntry[]>;
+  // Lo último leído, sin esperar a la red (undefined si aún no hay nada): la ficha nace con ello y, al volver de
+  // apuntar una medición, lo enseña al momento mientras loadEntries trae lo de ahora (fundador, 2026-11-17: «las
+  // medidas tardan en cargar»)
+  peekEntries?: () => GenericMetricEntry[] | undefined;
   onAddPress: () => void;
   onEditPress: (id: string) => void;
   // Registros de ejemplo cuando aún no hay ninguno propio (no se pueden editar)
   sample?: GenericMetricEntry[];
-  // Texto que se añade bajo el último valor (p. ej. "Bueno para tu edad" en el VO2max)
-  describe?: (latest: number) => string | null;
+  // Texto que se añade bajo el último valor (p. ej. "Bueno para tu edad" en el VO2max). Puede llevar un enlace
+  // (un <Text onPress> dentro): en Peso, «Añade tu altura» para ver el IMC (2026-11-16)
+  describe?: (latest: number) => React.ReactNode;
   // Contenido propio de la ficha, debajo de "+ Añadir medición" (p. ej. tablas de referencia)
   extra?: React.ReactNode;
 }
 
-// Ficha de una medición que se apunta a mano (glucosa, colesterol, cortisol), con el mismo
-// aspecto que las de los wearables: icono y último valor, 7D/14D/1M/6M, curva con color debajo,
-// media/mínimo/máximo, "+ Añadir medición" e historial.
+// Ficha de una medición que se apunta a mano (peso, glucosa, VO2max, colesterol, cortisol). Desde el
+// 2026-11-16, como la ficha de una medición del prototipo (borradores/app-estructura/prototipo): la última
+// cifra grande y ligera con la unidad y la fecha al lado, los periodos en pestañas con borde, la curva sin
+// tarjeta, «En números» en filas con línea fina, «Añadir medición» en píldora esmeralda y el historial en filas.
 export const SimpleMetricDetailScreen = ({
   title,
   color,
-  icon,
   band,
   loadEntries,
+  peekEntries,
   onAddPress,
   onEditPress,
   sample,
@@ -56,14 +64,26 @@ export const SimpleMetricDetailScreen = ({
   extra,
 }: SimpleMetricDetailScreenProps) => {
   const router = useRouter();
-  const [entries, setEntries] = useDeepState<GenericMetricEntry[]>([]);
+  const [initial] = useState(() => peekEntries?.());
+  const [entries, setEntries] = useDeepState<GenericMetricEntry[]>(initial ?? []);
   const loadEntriesRef = useRef(loadEntries);
+  const peekEntriesRef = useRef(peekEntries);
+  const firstLoad = useRef(true);
   const [range, setRange] = useState<RangeId>('1M');
 
   useEffect(() => {
     loadEntriesRef.current = loadEntries;
+    peekEntriesRef.current = peekEntries;
   });
-  const load = useCallback(() => loadEntriesRef.current().then(setEntries), [setEntries]);
+  const load = useCallback(() => {
+    // Al volver a la ficha, lo último leído ya (tras apuntar, ya lleva lo nuevo); la red lo confirma detrás
+    if (!firstLoad.current) {
+      const snap = peekEntriesRef.current?.();
+      if (snap) setEntries(snap);
+    }
+    firstLoad.current = false;
+    return loadEntriesRef.current().then(setEntries);
+  }, [setEntries]);
   useReloadOnFocus(load);
 
   const isSample = entries.length === 0 && !!sample?.length;
@@ -77,164 +97,106 @@ export const SimpleMetricDetailScreen = ({
   const unit = latest?.unidad ?? '';
   const fmt = (v: number) => `${num(Math.round(v * 10) / 10)} ${unit}`.trim();
   const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+  const withUnit = (v: string) => (v === '—' ? v : `${v} ${unit}`.trim());
+  const described = latest ? describe?.(latest.valor) : null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={title} showBack />
 
-        <MetricHero
-          icon={icon}
-          color={color}
-          value={latest ? fmt(latest.valor) : '—'}
-          sub={
-            latest
-              ? `${t('Latest value')} · ${new Date(latest.fecha).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}${isSample ? ` · ${t('sample data')}` : ''}`
-              : t('No entries yet.')
-          }
-        />
-        {latest && describe?.(latest.valor) ? <Text style={[styles.describe, { color }]}>{describe(latest.valor)}</Text> : null}
+        <View style={styles.body}>
+          {/* La última cifra, grande y ligera; al lado, la unidad y cuándo */}
+          <BigFigure
+            value={latest ? num(Math.round(latest.valor * 10) / 10) : '—'}
+            lines={
+              latest
+                ? [
+                    unit,
+                    `${t('Latest value')} · ${new Date(latest.fecha).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })}`,
+                    isSample && t('sample data'),
+                  ]
+                : [t('No entries yet.')]
+            }
+          />
+          {described ? <Text style={styles.describe}>{described}</Text> : null}
 
-        {/* Con menos de dos mediciones no hay curva que enseñar: solo el valor y "+ Añadir medición" */}
-        {shown.length >= 2 && (
-          <>
-            <RangeTabs value={range} onChange={setRange} />
-
-            <View style={styles.card}>
-              <TrendChart height={150} labels={filtered.map((e) => shortDay(e.fecha))} series={[{ color, values }]} band={band} formatValue={fmt} />
+          {/* Con menos de dos mediciones no hay curva que enseñar: solo el valor y "+ Añadir medición" */}
+          {shown.length >= 2 && (
+            <>
+              <FineRangeTabs value={range} onChange={setRange} />
+              <View style={styles.chart}>
+                <TrendChart height={150} labels={filtered.map((e) => shortDay(e.fecha))} series={[{ color, values }]} band={band} formatValue={fmt} />
+              </View>
               <Text style={styles.tapHint}>{t('Tap the chart to see each reading')}</Text>
-            </View>
 
-            <StatsRow
-              unit={unit}
-              items={[
-                {
-                  label: 'Average',
-                  value: values.length ? num(Math.round(avg * 10) / 10) : '—',
-                },
-                {
-                  label: 'Lowest',
-                  value: values.length ? num(Math.min(...values)) : '—',
-                },
-                {
-                  label: 'Highest',
-                  value: values.length ? num(Math.max(...values)) : '—',
-                },
-              ]}
-            />
-          </>
-        )}
+              <SecHead title={t('In numbers')} />
+              <FRow title={t('Average')} value={withUnit(values.length ? num(Math.round(avg * 10) / 10) : '—')} />
+              <FRow title={t('Lowest')} value={withUnit(values.length ? num(Math.min(...values)) : '—')} />
+              <FRow title={t('Highest')} value={withUnit(values.length ? num(Math.max(...values)) : '—')} last />
+            </>
+          )}
 
-        <AddMeasurementButton onPress={onAddPress} />
-        {extra}
-
-        {isSample && (
-          <View style={styles.sampleNote}>
-            <Ionicons name="flask-outline" size={16} color={Colors.textSecondary} />
-            <Text style={styles.sampleNoteText}>{t('Sample data: log your first reading to see your own.')}</Text>
+          <View style={styles.add}>
+            <Pill label={t('Add measurement')} onPress={onAddPress} />
           </View>
-        )}
+        </View>
 
-        <Text style={styles.sectionTitle}>{t('History')}</Text>
-        {historyDesc.length === 0 ? (
-          <Text style={styles.emptyText}>{t('No entries yet.')}</Text>
-        ) : (
-          <View style={styles.historyList}>
-            {historyDesc.map((entry, i) => (
+        {/* Lo propio de cada ficha (peso: IMC y composición; VO2max: la tabla por edad) */}
+        {extra ? <View style={styles.body}>{extra}</View> : null}
+
+        <View style={styles.body}>
+          {isSample && (
+            <View style={styles.sampleNote}>
+              <Ionicons name="flask-outline" size={15} color={FINE.mute} />
+              <Text style={styles.sampleNoteText}>{t('Sample data: log your first reading to see your own.')}</Text>
+            </View>
+          )}
+
+          <SecHead title={t('History')} />
+          {historyDesc.length === 0 ? (
+            <Text style={styles.emptyText}>{t('No entries yet.')}</Text>
+          ) : (
+            historyDesc.map((entry, i) => (
               <TouchableOpacity
                 key={entry.id}
-                style={[styles.historyRow, i > 0 && styles.historyDivider]}
+                style={[fine.row, i === historyDesc.length - 1 && styles.lastRow]}
                 disabled={isSample}
                 onPress={() =>
                   entry.uploadId ? router.push({ pathname: '/progress', params: { upload: entry.uploadId } }) : onEditPress(entry.id)
                 }
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: isSample }}
               >
                 <Text style={styles.historyDate}>{shortDay(entry.fecha)}</Text>
                 <Text style={styles.historyValue}>
-                  {num(entry.valor)} {entry.unidad}
-                  {entry.extra ? <Text style={styles.historyExtra}>{`  ·  ${entry.extra}`}</Text> : null}
+                  {num(entry.valor)} <Text style={styles.historyUnit}>{entry.unidad}</Text>
+                  {entry.extra ? <Text style={styles.historyUnit}>{`  ·  ${entry.extra}`}</Text> : null}
                 </Text>
-                {!isSample && <Ionicons name={entry.uploadId ? 'flask-outline' : 'pencil-outline'} size={16} color={Colors.textMuted} />}
+                {!isSample && <Ionicons name={entry.uploadId ? 'flask-outline' : 'create-outline'} size={16} color={FINE.mute} />}
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
+            ))
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    paddingTop: 24,
-    marginHorizontal: 20,
-  },
-  describe: {
-    fontSize: 14,
-    fontWeight: '800',
-    textAlign: 'center',
-    marginTop: -8,
-    marginBottom: 12,
-  },
-  tapHint: {
-    color: Colors.textMuted,
-    fontSize: 11,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  sampleNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 14,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-  },
-  sampleNoteText: {
-    flex: 1,
-    color: Colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '700',
-    paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  emptyText: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20 },
-  historyList: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    paddingHorizontal: 14,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-  },
-  historyDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  historyDate: { color: Colors.textSecondary, fontSize: 13, width: 44 },
-  historyValue: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  historyExtra: { color: Colors.textSecondary, fontWeight: '500' },
+  body: { paddingHorizontal: 20 },
+  describe: { ...ff('medium'), color: FINE.ivory, fontSize: 14, lineHeight: 20, marginTop: 10 },
+  chart: { marginTop: 14 },
+  tapHint: { ...fine.note, textAlign: 'center', marginTop: 6 },
+  add: { alignItems: 'center', marginTop: 22 },
+  sampleNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16 },
+  sampleNoteText: { ...fine.note, flex: 1, marginTop: 0 },
+  emptyText: { ...fine.note, marginTop: 0 },
+  lastRow: { borderBottomWidth: 0 },
+  historyDate: { ...ff('regular'), color: FINE.mute, fontSize: 13, width: 44, fontVariant: ['tabular-nums'] },
+  historyValue: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 15, fontVariant: ['tabular-nums'] },
+  historyUnit: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
 });

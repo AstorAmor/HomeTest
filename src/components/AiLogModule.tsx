@@ -22,6 +22,9 @@ import { Colors } from '@/constants/colors';
 import { postAi } from '@/utils/apiBaseUrl';
 import { saveAiLogEntry } from '@/data/aiLogRepository';
 import { MoodQuadrant, MOOD_QUADRANTS, MOOD_QUADRANT_INFO, AiLogExtraction } from '@/types/aiLog';
+import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
+import { INTER } from '@/theme/fine';
 
 const REQUEST_TIMEOUT_MS = 60000;
 const WHEEL_SIZE = 212;
@@ -67,9 +70,11 @@ export const AiLogModule = () => {
       await recorder.stop();
       return;
     }
+    // El diálogo del permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const permission = await requestRecordingPermissionsAsync();
     if (!permission.granted) {
-      setError('Microphone permission is required to record audio.');
+      setError(t('Microphone permission is required to record audio.'));
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -106,7 +111,7 @@ export const AiLogModule = () => {
 
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? 'Error processing the entry');
+        setError(data.error ?? t('Error processing the entry'));
         return;
       }
 
@@ -133,7 +138,7 @@ export const AiLogModule = () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : t('Unknown error'));
     } finally {
       setSubmitting(false);
     }
@@ -146,8 +151,8 @@ export const AiLogModule = () => {
       <View style={styles.diagramRow}>
         <View style={styles.wheelWrap}>
           <View style={styles.wheel}>
-            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelTop]}>Energy</Text>
-            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelBottom]}>Mood</Text>
+            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelTop]}>{t('Energy')}</Text>
+            <Text style={[styles.wheelAxisLabel, styles.wheelAxisLabelBottom]}>{t('Mood')}</Text>
             {MOOD_QUADRANTS.map((option) => {
               const info = MOOD_QUADRANT_INFO[option];
               const selected = quadrant === option;
@@ -168,7 +173,7 @@ export const AiLogModule = () => {
                       selected && styles.quadrantLabelActive,
                     ]}
                   >
-                    {info.label}
+                    {t(info.label)}
                   </Text>
                   {selected && (
                     <View style={styles.quadrantCheck}>
@@ -201,7 +206,7 @@ export const AiLogModule = () => {
           style={styles.textInput}
           value={note}
           onChangeText={setNote}
-          placeholder="Add more detail (optional)…"
+          placeholder={t('Add more detail (optional)…')}
           placeholderTextColor={Colors.textMuted}
           multiline
           autoFocus
@@ -210,7 +215,7 @@ export const AiLogModule = () => {
 
       {recorderState.isRecording && (
         <Text style={styles.recordingText}>
-          Recording… {Math.round(recorderState.durationMillis / 1000)}s
+          {t('Recording… {n}s', { n: Math.round(recorderState.durationMillis / 1000) })}
         </Text>
       )}
 
@@ -225,7 +230,7 @@ export const AiLogModule = () => {
           {submitting ? (
             <ActivityIndicator color={Colors.background} size="small" />
           ) : (
-            <Text style={styles.logButtonText}>{saved ? 'Logged ✓' : 'Log'}</Text>
+            <Text style={styles.logButtonText}>{saved ? t('Logged ✓') : t('Log')}</Text>
           )}
         </TouchableOpacity>
 
@@ -301,7 +306,7 @@ const styles = StyleSheet.create({
     right: 0,
     textAlign: 'center',
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     color: 'rgba(255, 255, 255, 0.55)',
     zIndex: 1,
   },
@@ -318,12 +323,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quadrantEmoji: {
-    fontSize: 18,
+    fontFamily: INTER.regular, fontSize: 18,
   },
   quadrantLabel: {
     color: Colors.textSecondary,
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginTop: 2,
   },
   quadrantLabelActive: {
@@ -366,7 +371,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     backgroundColor: Colors.background,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -380,13 +385,13 @@ const styles = StyleSheet.create({
   recordingText: {
     color: Colors.danger,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginTop: 10,
     textAlign: 'center',
   },
   errorText: {
     color: Colors.danger,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     marginTop: 10,
     textAlign: 'center',
   },
@@ -414,6 +419,6 @@ const styles = StyleSheet.create({
   logButtonText: {
     color: Colors.background,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
 });

@@ -7,6 +7,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { mockUpcomingAnalyses } from '@/data/mockData';
+import { fine, INTER } from '@/theme/fine';
 
 const formatLongDate = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
@@ -159,7 +160,7 @@ export const UpcomingAnalysisScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 24 },
   heroCard: {
     flexDirection: 'row',
@@ -181,9 +182,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  heroDate: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
-  heroSlot: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
-  heroSample: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  heroDate: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
+  heroSlot: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginTop: 2 },
+  heroSample: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   confirmedPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -193,9 +194,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  confirmedText: { color: Colors.background, fontSize: 11, fontWeight: '800' },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', paddingHorizontal: 20 },
-  sectionSubtitle: { color: Colors.textSecondary, fontSize: 13, paddingHorizontal: 20, marginTop: 2, marginBottom: 12 },
+  confirmedText: { color: Colors.background, fontSize: 11, fontFamily: INTER.medium },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20 },
+  sectionSubtitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginTop: 2, marginBottom: 12 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -208,15 +209,15 @@ const styles = StyleSheet.create({
   },
   group: { paddingVertical: 10 },
   groupDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  groupTitle: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', marginBottom: 8 },
+  groupTitle: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.semibold, textTransform: 'uppercase', marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { backgroundColor: Colors.accentSoft, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5 },
-  chipText: { color: Colors.textPrimary, fontSize: 13 },
+  chipText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13 },
   prepRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
-  prepText: { color: Colors.textPrimary, fontSize: 14, flex: 1 },
+  prepText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, flex: 1 },
   actions: { paddingHorizontal: 20, paddingBottom: 8, gap: 10 },
   primary: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 15, alignItems: 'center' },
-  primaryText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  primaryText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
   secondary: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  secondaryText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  secondaryText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   sheet: {
     backgroundColor: Colors.backgroundElevated,
@@ -243,8 +244,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cardBorder,
     marginBottom: 8,
   },
-  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', marginBottom: 6 },
-  sheetText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 12 },
+  sheetTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium, marginBottom: 6 },
+  sheetText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginBottom: 12 },
   sheetOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -253,5 +254,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
   },
-  sheetOptionText: { color: Colors.textPrimary, fontSize: 15, fontWeight: '600' },
+  sheetOptionText: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
 });

@@ -84,23 +84,25 @@ export const exerciseEquipmentText = (ex: CatalogExercise) => {
   return parts.length ? parts.join(' + ') : t('No equipment');
 };
 
+// Nombres de músculo, no de zona (fundador, 2026-11-16: «Pecho no es un músculo: Pectorales sí. Lo mismo con
+// Hombros: Deltoides lo es»). Las zonas («Pecho», «Hombros») siguen siendo los nombres de los patrones de arriba
 export const MUSCLE_LABEL: Record<string, string> = {
   abdominals: 'Abs',
   abductors: 'Abductors',
   adductors: 'Adductors',
   biceps: 'Biceps',
   calves: 'Calves',
-  chest: 'Chest',
+  chest: 'Pectorals',
   forearms: 'Forearms',
   glutes: 'Glutes',
   hamstrings: 'Hamstrings',
   lats: 'Lats',
-  'lower back': 'Lower back',
-  'middle back': 'Mid back',
+  'lower back': 'Lumbar muscles',
+  'middle back': 'Rhomboids',
   neck: 'Neck',
   quadriceps: 'Quads',
-  shoulders: 'Shoulders',
-  traps: 'Traps',
+  shoulders: 'Deltoids',
+  traps: 'Trapezius',
   triceps: 'Triceps',
 };
 export const muscleLabel = (m: string) => t(MUSCLE_LABEL[m] ?? m);

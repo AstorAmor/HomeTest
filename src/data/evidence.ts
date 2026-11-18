@@ -7,11 +7,20 @@ export interface EvidenceSource {
   url?: string;
 }
 
+// Un bloque con su etiqueta pequeña encima («QUÉ ENTRA», «QUÉ NO ES») y, si hace falta, un dibujo que EvidenceScreen
+// sabe pintar con los números de la propia fórmula
+export interface EvidenceBlock {
+  label: string;
+  text?: string;
+  figure?: 'readinessWeights' | 'readinessBands';
+}
+
 export interface EvidenceTopic {
   id: string;
   title: string;
   summary: string; // una frase
   body: string[]; // párrafos cortos
+  blocks?: EvidenceBlock[]; // en lugar de párrafos sueltos, bloques con etiqueta (van después de body)
   sources: EvidenceSource[];
   status?: 'validated' | 'pending'; // pending = pendiente de validación clínica
 }
@@ -103,7 +112,7 @@ export const EVIDENCE: EvidenceTopic[] = [
     body: [
       'Each notification follows a written rule: for example, no records of any kind for 7 days, or three low-energy check-ins in a row.',
       'The same reminder never repeats before its minimum gap, and you get at most two a day, health-related ones first.',
-      'You can mute any of them for 7 days, 1 month, 3 months or for good, from the notification itself or from More → Notifications.',
+      'You can mute any of them for 7 days, 1 month, 3 months or for good, from the notification itself or from You → Notifications.',
       'We test these rules with simulated users at different moments before they reach you.',
     ],
     sources: [],
@@ -112,12 +121,34 @@ export const EVIDENCE: EvidenceTopic[] = [
   {
     id: 'readiness',
     title: 'Daily readiness',
-    summary: 'A daily score from your sleep, resting heart rate and HRV compared with your own usual values.',
-    body: [
-      'Each part is compared with your own last four weeks, not with an average person: how far today’s HRV and resting heart rate are from your usual, measured in your own day-to-day spread. A normal day scores around 65; it takes a clearly better day than usual to go above 90.',
-      'Sleep is compared with your sleep goal (Your daily goals): reaching it scores 90, and each 10% short takes off 15.',
-      'If you log your periods, in the luteal phase we allow for the slightly higher resting heart rate and lower HRV that are normal then.',
-      'It is a guide to how hard to push today, not a medical measure. The formula is being reviewed by our medical team.',
+    summary: 'A score from 0 to 100 from last night’s sleep, your HRV and your resting heart rate, each compared with your own values.',
+    // 2026-11-17 (fundador: «cómo calculamos lo del readiness tampoco…»): en bloques con etiqueta, preciso y corto. Los
+    // pesos y los tramos salen de la fórmula (READINESS_WEIGHTS y READINESS_BANDS en wearables/seriesLogic.ts)
+    body: [],
+    blocks: [
+      {
+        label: 'What goes in',
+        text: 'Last night’s sleep, and this morning’s HRV and resting heart rate, all from your wearable. Each is compared with your own values, not with a population average.',
+      },
+      { label: 'Sleep', text: 'Against your sleep goal: reaching it scores 90; each 10% short subtracts 15.' },
+      {
+        label: 'HRV and resting heart rate',
+        text: 'Today against your previous 28 days, in standard deviations of your own day-to-day variation (HRV on a log scale). A typical day scores 65 and each deviation adds or subtracts 15: higher HRV and lower resting heart rate score higher. With less than 14 days of history, the deviation counts in proportion (half at 7 days).',
+      },
+      {
+        label: 'Weighting',
+        figure: 'readinessWeights',
+        text: 'If a signal is missing, the others share its weight. There is no score when both last night’s sleep and today’s resting heart rate are missing.',
+      },
+      { label: 'What the number means', figure: 'readinessBands', text: 'A typical day is around 65.' },
+      {
+        label: 'Menstrual cycle',
+        text: 'If you log your periods, in the luteal phase we offset the change that is normal then (resting heart rate about 2 bpm higher, HRV slightly lower), so it does not lower your score.',
+      },
+      {
+        label: 'What it is not',
+        text: 'Not a medical measure or a diagnosis, and not your watch’s own score: each brand uses its own formula. Training load, illness, alcohol or stress only count through these three signals.',
+      },
     ],
     sources: [
       { label: 'HRV-guided training: daily values compared with your own rolling baseline (Plews et al., Sports Med 2013)', url: 'https://doi.org/10.1007/s40279-013-0071-8' },
@@ -212,7 +243,7 @@ export const EVIDENCE: EvidenceTopic[] = [
     body: [
       'When you log a symptom in Digestion, we ask what you ate before: what it was, what it had (gluten, dairy, legumes, onion and garlic, sweet fruit, polyols, fried food, spicy food, alcohol, coffee), how long before and how much. We never ask before anything happens, and we do not use the meals in Your nutrients. The first time a food shows up, we ask how often you usually have it.',
       'Then we compare: if dairy came before 9 of your 10 logs and you have it a few times a week, that is far more than chance. Doctors call this a case-crossover design with your usual frequency (Maclure, 1991). A symptom only counts for a meal that fits by the time: heaviness, heartburn and nausea up to 3 hours after eating; bloating, gas and pain from 30 minutes to 8 hours; loose stools from 1 to 12 hours.',
-      'Symptoms follow the GSRS questionnaire in plain words, with three levels, and we only look at pairs that make clinical sense (for example dairy and bloating, alcohol and reflux). We need at least 5 logs with what you ate. A pattern is "likely" with 5 logs, the food at least 25 points above what you usually eat and a binomial test under 0.05; "quite clear" with 8 logs, 30 points above and under 0.005. When two foods always go together, we say so, unless you eat one of them far more often without trouble (bread at almost every meal, symptoms only with milk). We always show the numbers.',
+      'Symptoms follow the GSRS questionnaire in plain words, with three levels, and we only look at pairs that make clinical sense (for example dairy and bloating, alcohol and reflux). We need at least 5 logs with what you ate. A pattern has "medium reliability" with 5 logs, the food at least 25 points above what you usually eat and a binomial test under 0.05; "high reliability" with 8 logs, 30 points above and under 0.005. When two foods always go together, we say so, unless you eat one of them far more often without trouble (bread at almost every meal, symptoms only with milk). We always show the numbers.',
       'Frequent symptoms follow Rome IV (heaviness 3 days a week, pain with changes in your stools 1 day a week) and the Montreal definition of reflux. Rome IV asks for 3 months.',
       'Before any test we ask about warning signs (weight loss, blood, anaemia, symptoms at night, trouble swallowing, starting after 50, family history). With any of them, we suggest a doctor instead of a test.',
       'We do not recommend IgG "food intolerance" tests: allergy societies advise against using them for diagnosis. This is guidance from your own notes, not a diagnosis.',

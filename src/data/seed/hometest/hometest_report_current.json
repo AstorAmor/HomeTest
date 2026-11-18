@@ -2356,7 +2356,7 @@
             "source": "laboratorio",
             "adjustment": "ninguno"
           },
-          "flag": "limite_bajo",
+          "flag": "en_rango",
           "tier": "verde",
           "trend": {
             "previous_value": 0,

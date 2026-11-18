@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native'
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
 import { directionsUrl, hoursLabel, LabCenter } from '@/data/labCenters';
+import { INTER } from '@/theme/fine';
 
 // Lo que hay que saber de un centro: dirección, horario de extracciones, llamar, cómo llegar y cómo
 // ir preparado. Igual en la ficha de la cita (/lab-appointment, con "Calendario") y en "Pedir cita"
@@ -56,9 +57,9 @@ export const LabCenterInfo = ({ center, title, calendarUrl }: { center: LabCente
 };
 
 const styles = StyleSheet.create({
-  title: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginHorizontal: 20 },
-  address: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginHorizontal: 20, marginTop: 12 },
-  muted: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 3 },
+  title: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginHorizontal: 20 },
+  address: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginHorizontal: 20, marginTop: 12 },
+  muted: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginHorizontal: 20, marginTop: 3 },
   actions: { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 20, marginTop: 20 },
   action: { alignItems: 'center', gap: 6, width: 90 },
   actionIcon: {
@@ -69,8 +70,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  phone: { color: Colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: 8 },
+  actionText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  phone: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 8 },
   prepCard: {
     flexDirection: 'row',
     gap: 8,
@@ -82,5 +83,5 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 18,
   },
-  prepText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  prepText: { flex: 1, color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 18 },
 });

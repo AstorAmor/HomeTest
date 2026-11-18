@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { OnDark } from '@/constants/colors';
+import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
+import { expectSystemUi } from '@/utils/systemUi';
 
 // Móvil: la sala de Daily se abre en la ventana segura del navegador integrado (Chrome
 // Custom Tabs / Safari) por encima de la app. Al colgar, se vuelve a la pantalla.
@@ -12,6 +15,8 @@ export const DailyCall = ({ joinUrl, onClose, patientName }: { joinUrl: string; 
 
   const open = async () => {
     setOpened(true);
+    // Sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     await WebBrowser.openBrowserAsync(joinUrl, {
       presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
       toolbarColor: '#0A1D19',
@@ -29,16 +34,16 @@ export const DailyCall = ({ joinUrl, onClose, patientName }: { joinUrl: string; 
   return (
     <View style={styles.wrap}>
       <Ionicons name="videocam" size={44} color={OnDark.text} />
-      <Text style={styles.title}>{opened ? 'Video consultation in progress' : 'Opening the video…'}</Text>
+      <Text style={styles.title}>{opened ? t('Video consultation in progress') : t('Opening the video…')}</Text>
       {patientName ? <Text style={styles.sub}>{patientName}</Text> : null}
       <TouchableOpacity style={styles.btn} onPress={open}>
         <Ionicons name="enter-outline" size={18} color="#111" />
-        <Text style={styles.btnText}>{opened ? 'Back to the call' : 'Join video'}</Text>
+        <Text style={styles.btnText}>{opened ? t('Back to the call') : t('Join video')}</Text>
       </TouchableOpacity>
       {onClose && (
         <TouchableOpacity style={styles.end} onPress={onClose}>
           <Ionicons name="call" size={20} color="#FFFFFF" style={{ transform: [{ rotate: '135deg' }] }} />
-          <Text style={styles.endText}>End consultation</Text>
+          <Text style={styles.endText}>{t('End consultation')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -47,10 +52,10 @@ export const DailyCall = ({ joinUrl, onClose, patientName }: { joinUrl: string; 
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: OnDark.background, alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 },
-  title: { color: OnDark.text, fontSize: 18, fontWeight: '800', textAlign: 'center' },
-  sub: { color: OnDark.textSecondary, fontSize: 14 },
+  title: { color: OnDark.text, fontSize: 18, fontFamily: INTER.medium, textAlign: 'center' },
+  sub: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 14 },
   btn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFFFFF', borderRadius: 24, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 },
-  btnText: { color: '#111', fontSize: 15, fontWeight: '800' },
+  btnText: { color: '#111', fontSize: 15, fontFamily: INTER.medium },
   end: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E5484D', borderRadius: 24, paddingHorizontal: 18, paddingVertical: 11 },
-  endText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  endText: { color: '#FFFFFF', fontSize: 14, fontFamily: INTER.medium },
 });

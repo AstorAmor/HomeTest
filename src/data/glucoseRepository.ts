@@ -6,6 +6,7 @@ const STORAGE_KEY = 'hometest:glucose_entries';
 export const glucoseRepository = createMetricRepository<GlucoseEntry>(STORAGE_KEY, {
   table: 'glucose_readings',
   dateColumn: 'measured_at',
+  persist: true, // lo último leído también en el móvil, para pintarlo al abrir (src/data/readCache.ts)
   toRow: (e) =>
     definedOnly({
       id: e.id,

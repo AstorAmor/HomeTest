@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors, withAlpha } from '@/constants/colors';
-import { AppIcon } from '@/components/HealthIcons';
+import { FRow, Pill } from '@/components/fine/Fine';
 import { t } from '@/i18n';
+import { FINE, ff, fine } from '@/theme/fine';
 
-// Piezas comunes de las fichas de detalle (VFC, pulso, sueño… y también glucosa, tensión,
-// colesterol y cortisol) para que todas se vean igual: icono arriba con el último valor,
-// selector 7D/14D/1M/6M en pastilla, media/mínimo/máximo y "+ Añadir medición".
+// Piezas comunes de las fichas de detalle: los periodos 7D/14D/1M/6M y, para lo que aún las use, la cifra de
+// arriba, las medias y «Añadir medición». Desde el 2026-11-16, en el lenguaje fino del prototipo (src/theme/fine.ts),
+// igual que FineMeasure: sin icono en un círculo de color, pestañas con borde, las medias en filas con línea fina y
+// la píldora esmeralda (el fundador: los iconos de estas fichas «se ven un poco bastos»). Las fichas usan ya
+// FineMeasure (BigFigure, FineRangeTabs); estas se quedan con el mismo aspecto para no romper a quien las importe.
 
 export const RANGES = [
   { id: '7D', days: 7 },
@@ -18,72 +19,63 @@ export const RANGES = [
 export type RangeId = (typeof RANGES)[number]['id'];
 export const rangeDays = (id: RangeId) => RANGES.find((r) => r.id === id)!.days;
 
-export const RangeTabs = ({ value, onChange }: { value: RangeId; onChange: (r: RangeId) => void }) => (
+// `only`: algunos periodos (p. ej. «Tus últimos días», sin 6M). Pestañas pequeñas con borde, como FineRangeTabs
+export const RangeTabs = ({ value, onChange, only }: { value: RangeId; onChange: (r: RangeId) => void; only?: RangeId[] }) => (
   <View style={styles.tabs}>
-    {RANGES.map((r) => (
-      <TouchableOpacity key={r.id} style={[styles.tab, value === r.id && styles.tabOn]} onPress={() => onChange(r.id)}>
-        <Text style={[styles.tabText, value === r.id && styles.tabTextOn]}>{r.id}</Text>
-      </TouchableOpacity>
-    ))}
+    {RANGES.filter((r) => !only || only.includes(r.id)).map((r) => {
+      const on = value === r.id;
+      return (
+        <TouchableOpacity
+          key={r.id}
+          style={[styles.tab, on && styles.tabOn]}
+          onPress={() => onChange(r.id)}
+          activeOpacity={0.75}
+          hitSlop={{ top: 8, bottom: 8, left: 3, right: 3 }}
+          accessibilityRole="button"
+          accessibilityState={{ selected: on }}
+        >
+          <Text style={[styles.tabText, on && styles.tabTextOn]}>{r.id}</Text>
+        </TouchableOpacity>
+      );
+    })}
   </View>
 );
 
-export const MetricHero = ({ icon, color, value, sub }: { icon: string; color: string; value: string; sub: string }) => (
+// La cifra grande y ligera con lo suyo debajo, sin icono (`icon` y `color` ya no se pintan; se aceptan por compatibilidad)
+export const MetricHero = ({ value, sub }: { icon?: string; color?: string; value: string; sub: string }) => (
   <View style={styles.hero}>
-    <View style={[styles.icon, { backgroundColor: withAlpha(color, 0.14) }]}>
-      <AppIcon name={icon} size={22} color={color} />
-    </View>
-    <Text style={styles.value}>{value}</Text>
+    <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+      {value}
+    </Text>
     <Text style={styles.valueSub}>{sub}</Text>
   </View>
 );
 
-// `unit` va en pequeño debajo del nombre, para que el número quepa en una línea
+// Las medias en filas con línea fina; `unit` va al lado de cada cifra
 export const StatsRow = ({ items, unit }: { items: { label: string; value: string }[]; unit?: string }) => (
   <View style={styles.stats}>
-    {items.map((s) => (
-      <View key={s.label} style={styles.stat}>
-        <Text style={styles.statValue} numberOfLines={1}>
-          {s.value}
-        </Text>
-        <Text style={styles.statLabel}>{unit ? `${t(s.label)} · ${unit}` : t(s.label)}</Text>
-      </View>
+    {items.map((s, i) => (
+      <FRow key={s.label} title={t(s.label)} value={unit && s.value !== '—' ? `${s.value} ${unit}` : s.value} last={i === items.length - 1} />
     ))}
   </View>
 );
 
+// «Añadir medición» en píldora esmeralda, centrada
 export const AddMeasurementButton = ({ onPress, label }: { onPress: () => void; label?: string }) => (
-  <TouchableOpacity style={styles.add} onPress={onPress} activeOpacity={0.85}>
-    <Ionicons name="add" size={20} color={Colors.accent} />
-    <Text style={styles.addText}>{label ?? t('Add measurement')}</Text>
-  </TouchableOpacity>
+  <View style={styles.add}>
+    <Pill label={label ?? t('Add measurement')} onPress={onPress} />
+  </View>
 );
 
 const styles = StyleSheet.create({
-  tabs: { flexDirection: 'row', alignSelf: 'center', backgroundColor: Colors.card, borderRadius: 18, padding: 3, marginBottom: 12 },
-  tab: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 15 },
-  tabOn: { backgroundColor: Colors.accent },
-  tabText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  tabTextOn: { color: Colors.background },
-  hero: { alignItems: 'center', marginBottom: 14 },
-  icon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
-  value: { color: Colors.textPrimary, fontSize: 34, fontWeight: '800' },
-  valueSub: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
-  stats: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginTop: 12 },
-  stat: { flex: 1, backgroundColor: Colors.card, borderRadius: 12, padding: 12, alignItems: 'center' },
-  statValue: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  statLabel: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
-  add: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.6),
-    borderRadius: 24,
-    paddingVertical: 12,
-    marginHorizontal: 20,
-    marginTop: 12,
-  },
-  addText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
+  tabs: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 14, marginBottom: 12 },
+  tab: { paddingVertical: 5, paddingHorizontal: 11, borderRadius: 20, borderWidth: 1, borderColor: FINE.line, minHeight: 30, justifyContent: 'center' },
+  tabOn: { borderColor: FINE.jade },
+  tabText: { ...ff('regular'), fontSize: 12.5, color: FINE.mute },
+  tabTextOn: { color: FINE.ivory },
+  hero: { marginBottom: 14 },
+  value: { ...fine.num, fontSize: 44, lineHeight: 52 },
+  valueSub: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18, marginTop: 2 },
+  stats: { marginTop: 12 },
+  add: { alignItems: 'center', marginTop: 22 },
 });

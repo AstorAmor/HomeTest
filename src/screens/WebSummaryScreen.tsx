@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { AppIcon } from '@/components/HealthIcons';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -32,6 +33,7 @@ import { buildSummary, summaryAppointments, SummaryLine } from '@/logic/summary'
 import { computeReadiness, formatSleep, latest, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
 import { TAB } from '@/constants/tabs';
 import { WelcomePrompts } from '@/components/WelcomePrompts';
+import { INTER } from '@/theme/fine';
 
 // "Resumen" de la web del paciente en escritorio (estilo Salud de Apple): cabecera con la
 // persona, bloques fijados con el último dato de cada parte y tendencias. Cada bloque abre su
@@ -159,7 +161,7 @@ export const WebSummaryScreen = () => {
   const taken = doses.filter((d) => d.log?.status === 'taken').length;
   const firstName = useFirstName();
   const go = (pathname: string, params?: Record<string, string>) => router.navigate({ pathname, params } as any);
-  const icon = (n: string, c: string) => <Ionicons name={n as any} size={16} color={c} />;
+  const icon = (n: string, c: string) => <AppIcon name={n} size={16} color={c} />;
   const sampleNote = isSample ? ` · ${t('sample')}` : '';
 
   // "Para hoy": hasta 3 cosas concretas que mirar, sacadas de los datos (en vez de una ficha de perfil)
@@ -208,7 +210,7 @@ export const WebSummaryScreen = () => {
       icon: icon('happy-outline', Colors.gold),
       when: lastCheckIn ? day(lastCheckIn.fecha) : undefined,
       caption: lastCheckIn?.energy ? t('Energy {n}/5', { n: lastCheckIn.energy }) : t('How are you feeling?'),
-      value: mood ? `${mood.emoji} ${t(mood.label)}` : t('Check in'),
+      value: mood ? t(mood.label) : t('Check in'),
       onPress: () => router.push('/check-in'),
     });
   if (show('wearables') && sleep != null)
@@ -387,7 +389,7 @@ export const WebSummaryScreen = () => {
         )}
       </View>
 
-      <TouchableOpacity style={styles.allData} onPress={() => go('/(tabs)', { tab: String(TAB.myData) })} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.allData} onPress={() => go('/(tabs)', { tab: String(TAB.analysis) })} activeOpacity={0.85}>
         <Ionicons name="grid-outline" size={18} color={Colors.accent} />
         <Text style={styles.allDataText}>{t('Show all health data')}</Text>
         <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
@@ -402,8 +404,8 @@ export const WebSummaryScreen = () => {
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: Colors.background },
   content: { paddingHorizontal: 28, paddingTop: 28, paddingBottom: 48 },
-  date: { color: Colors.textMuted, fontSize: 13, fontWeight: '700' },
-  greeting: { color: Colors.textPrimary, fontSize: 30, fontWeight: '800', marginTop: 2, marginBottom: 16 },
+  date: { color: Colors.textMuted, fontSize: 13, fontFamily: INTER.medium },
+  greeting: { color: Colors.textPrimary, fontSize: 30, fontFamily: INTER.medium, marginTop: 2, marginBottom: 16 },
   todo: {
     backgroundColor: Colors.card,
     borderRadius: 18,
@@ -414,11 +416,11 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     marginBottom: 24,
   },
-  todoTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800', marginBottom: 4 },
+  todoTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, marginBottom: 4 },
   todoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 },
   sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
-  sync: { color: Colors.textMuted, fontSize: 12 },
-  section: { color: Colors.textPrimary, fontSize: 19, fontWeight: '800', marginTop: 8, marginBottom: 12 },
+  sync: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
+  section: { color: Colors.textPrimary, fontSize: 19, fontFamily: INTER.medium, marginTop: 8, marginBottom: 12 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 18 },
   card: {
     backgroundColor: Colors.card,
@@ -431,22 +433,22 @@ const styles = StyleSheet.create({
   },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 10 },
   cardIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  cardTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', flex: 1 },
-  cardWhen: { color: Colors.textMuted, fontSize: 12 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, flex: 1 },
+  cardWhen: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
   cardBody: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
-  cardCaption: { color: Colors.textSecondary, fontSize: 12, marginBottom: 2 },
-  cardValue: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  cardUnit: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  cardCaption: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginBottom: 2 },
+  cardValue: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
+  cardUnit: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   miniBars: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 40 },
   miniBar: { width: 8, borderRadius: 3 },
   panel: { backgroundColor: Colors.card, borderRadius: 18, borderWidth: 1, borderColor: Colors.cardBorder, paddingHorizontal: 14, marginBottom: 18 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13 },
   rowBorder: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  rowText: { flex: 1, color: Colors.textPrimary, fontSize: 14 },
-  rowWhen: { color: Colors.textMuted, fontSize: 12 },
+  rowText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
+  rowWhen: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12 },
   markerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
-  markerName: { flex: 1, color: Colors.textPrimary, fontSize: 14 },
-  markerValue: { color: Colors.attention, fontSize: 14, fontWeight: '800' },
+  markerName: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
+  markerValue: { color: Colors.attention, fontSize: 14, fontFamily: INTER.medium },
   allData: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -457,5 +459,5 @@ const styles = StyleSheet.create({
     borderColor: Colors.cardBorder,
     padding: 14,
   },
-  allDataText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  allDataText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
 });

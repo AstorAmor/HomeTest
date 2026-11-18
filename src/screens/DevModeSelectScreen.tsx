@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
+import { markAppReady } from '@/components/LaunchIntro';
 import { CosmicBackground } from '@/components/CosmicBackground';
 import { DemoMode, useAuth } from '@/context/AuthContext';
 import { currentReport } from '@/data/reportRepository';
@@ -12,6 +13,7 @@ import { isPublicDemo } from '@/lib/supabase';
 import { setRealAccount } from '@/data/dataMode';
 import { reloadKeepingPlace } from '@/theme/appearance';
 import { useWebShell } from '@/web/webMode';
+import { INTER } from '@/theme/fine';
 
 const OPTIONS: { mode: DemoMode; title: string; subtitle: string; icon: string; color: string }[] = [
   {
@@ -49,6 +51,8 @@ export const DevModeSelectScreen = () => {
   const router = useRouter();
   const { setDemoMode, authMode } = useAuth();
   const webShell = useWebShell();
+  // Ya está el selector debajo: la entrada de la marca se puede ir (LaunchIntro)
+  React.useEffect(() => markAppReady(), []);
 
   // Su cuenta de verdad, sin ejemplos (lo mismo que Ajustes → Cuenta real): recarga para leerla así
   const chooseReal = async () => {
@@ -59,7 +63,8 @@ export const DevModeSelectScreen = () => {
 
   const choose = (mode: DemoMode) => {
     setDemoMode(mode);
-    if (mode === 'new') router.replace('/onboarding');
+    // Usuario nuevo: el mismo recorrido que una cuenta nueva (cuestionario → objetivos y metas → compromiso)
+    if (mode === 'new') router.replace({ pathname: '/onboarding', params: { inicio: '1' } });
     else if (mode === 'results') {
       // Demo: al elegir "acaba de recibir resultados" el aviso de informe vuelve a salir
       userFlags.set(reportSeenKey(currentReport.report_id), false);
@@ -78,7 +83,7 @@ export const DevModeSelectScreen = () => {
           <Text style={styles.devPillText}>Developer mode</Text>
         </View>
         <Text style={styles.title}>Which user do you want to show?</Text>
-        <Text style={styles.subtitle}>Prototype only. Log out from More → Settings to come back here.</Text>
+        <Text style={styles.subtitle}>Prototype only. Log out from You → My Profile to come back here.</Text>
 
         <View style={styles.list}>
           {authMode === 'supabase' && (
@@ -88,7 +93,7 @@ export const DevModeSelectScreen = () => {
               </View>
               <View style={styles.textWrap}>
                 <Text style={styles.cardTitle}>My real account</Text>
-                <Text style={styles.cardSubtitle}>Only your own data, no examples. Change it in More → Settings → Real account</Text>
+                <Text style={styles.cardSubtitle}>Only your own data, no examples. Change it in You → Preferences → Real account</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
             </TouchableOpacity>
@@ -157,17 +162,17 @@ const styles = StyleSheet.create({
   devPillText: {
     color: Colors.warning,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   title: {
     color: Colors.textPrimary,
     fontSize: 26,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
     marginBottom: 8,
   },
   subtitle: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     lineHeight: 20,
     marginBottom: 28,
   },
@@ -197,12 +202,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     marginBottom: 3,
   },
   cardSubtitle: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 18,
   },
 });

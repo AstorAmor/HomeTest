@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { WheelPicker } from '@/components/WheelPicker';
+import { StepsBar } from '@/components/fine/FineSteps';
+import { FButton, FChip, FChips, FOption, formStyles } from '@/components/fine/FineForm';
 import {
   ActivityLevel,
   Alcohol,
@@ -20,67 +20,50 @@ import {
   profileRepository,
 } from '@/data/profileRepository';
 import { AppPurpose, appPrefs, PURPOSE_OPTIONS } from '@/data/appPrefs';
-import { sectionsFromAnswers } from '@/data/goalEffects';
 import { t as tr } from '@/i18n';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { requestTourAfterOnboarding } from '@/components/tour/tourStore';
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1));
-const YEARS = Array.from({ length: 81 }, (_, i) => String(1930 + i));
-const HEIGHTS = Array.from({ length: 71 }, (_, i) => String(140 + i));
-const WEIGHTS = Array.from({ length: 111 }, (_, i) => String(40 + i));
+import { userFlags } from '@/data/userFlags';
+import { FIRST_STEPS_FLAG } from '@/logic/firstSteps';
+// Opciones, ruedas y lo que se enciende al guardar: compartido con «Sobre ti» de Mi perfil (2026-11-16)
+import {
+  ACTIVITY_OPTIONS,
+  ALCOHOL_OPTIONS,
+  applyProfileSections,
+  DAYS,
+  DAYS_OPTIONS,
+  daysInMonth,
+  dobFromWheels,
+  HEIGHTS,
+  monthLabels,
+  SEX_OPTIONS,
+  SLEEP_OPTIONS,
+  SMOKING_OPTIONS,
+  STEPS_OPTIONS,
+  toggleConditionIn,
+  WEIGHTS,
+  wheelsFromDob,
+  YEARS,
+} from '@/components/profile/profileFields';
+import { FINE, ff, fine } from '@/theme/fine';
 
 type Step = 'purpose' | 'dob' | 'sex' | 'body' | 'activity' | 'habits' | 'health' | 'goals';
 
 // Mismos pasos para todos (la barra de avance no cambia según lo que elija). Lo que se ve en la
 // app no se pregunta: sale de estas respuestas (src/data/goalEffects.ts) y se ajusta luego en
-// More → Configure my experience.
+// Tú → Configura tu experiencia.
 const STEPS: Step[] = ['purpose', 'dob', 'sex', 'body', 'activity', 'habits', 'health', 'goals'];
 
-// Días a la semana de fuerza y de cardio («3» = 3 o más): sin entrenos registrados, el plan parte de aquí
-const DAYS_OPTIONS = [
-  { id: '0', label: 'None' },
-  { id: '1', label: '1 day' },
-  { id: '2', label: '2 days' },
-  { id: '3', label: '3 or more' },
-];
-
-interface ChipOption<T extends string> {
-  id: T;
-  label: string;
-}
-
-function ChipGroup<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: ChipOption<T>[];
-  value?: T;
-  onChange: (v: T) => void;
-}) {
-  return (
-    <View style={styles.chips}>
-      {options.map((o) => {
-        const selected = value === o.id;
-        return (
-          <TouchableOpacity
-            key={o.id}
-            style={[styles.chip, selected && styles.chipSelected]}
-            onPress={() => onChange(o.id)}
-          >
-            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{tr(o.label)}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
+// Las opciones con su texto en el idioma de la app, para los chips
+const opts = <T extends string>(list: { id: T; label: string }[]) => list.map((o) => ({ id: o.id, label: tr(o.label) }));
 
 export const OnboardingScreen = () => {
   const router = useRouter();
+  // Primeros pasos de una cuenta nueva (src/logic/firstSteps.ts): al acabar, a objetivos y metas en vez de a Hoy
+  const inicio = useLocalSearchParams<{ inicio?: string }>().inicio === '1';
   const [stepIndex, setStepIndex] = useState(0);
+  const months = useMemo(monthLabels, []);
 
   const [day, setDay] = useState(14);
   const [month, setMonth] = useState(5);
@@ -112,11 +95,11 @@ export const OnboardingScreen = () => {
     profileRepository
       .get()
       .then((p) => {
-        if (p.dateOfBirth) {
-          const [y, m, d] = p.dateOfBirth.split('-').map(Number);
-          if (YEARS.includes(String(y))) setYear(YEARS.indexOf(String(y)));
-          setMonth(m - 1);
-          setDay(d - 1);
+        const dob = wheelsFromDob(p.dateOfBirth);
+        if (dob) {
+          setYear(dob.year);
+          setMonth(dob.month);
+          setDay(dob.day);
         }
         if (p.sex) setSex(p.sex);
         if (p.heightCm && HEIGHTS.includes(String(p.heightCm))) setHeight(HEIGHTS.indexOf(String(p.heightCm)));
@@ -145,7 +128,8 @@ export const OnboardingScreen = () => {
     const current = await profileRepository.get();
     const profile: UserProfile = { ...current, goals };
     if (answered.has('dob')) {
-      profile.dateOfBirth = `${YEARS[year]}-${String(month + 1).padStart(2, '0')}-${String(day + 1).padStart(2, '0')}`;
+      // Un 31 de febrero se guarda como el último día de febrero (como en «Sobre ti»)
+      profile.dateOfBirth = dobFromWheels(Math.min(day, daysInMonth(month, year) - 1), month, year);
     }
     if (sex) profile.sex = sex;
     if (answered.has('body')) {
@@ -164,9 +148,7 @@ export const OnboardingScreen = () => {
 
   // Enciende lo que piden sus respuestas (p. ej. medicación si toma alguna, el ciclo si cuida su
   // salud reproductiva y es mujer); lo demás queda como esté
-  const applySections = async (profile: UserProfile) => {
-    for (const section of sectionsFromAnswers(profile)) await appPrefs.setSectionVisible(section, true);
-  };
+  const applySections = applyProfileSections;
 
   const skipAll = async () => {
     if (purposes.length) await appPrefs.setPurposes(purposes);
@@ -174,6 +156,8 @@ export const OnboardingScreen = () => {
     await profileRepository.save(profile);
     await applySections(profile);
     await requestTourAfterOnboarding();
+    // Saltó el cuestionario: no se le vuelve a llevar a los primeros pasos
+    if (inicio) await userFlags.set(FIRST_STEPS_FLAG, 'skipped').catch(() => undefined);
     router.replace('/(tabs)');
   };
 
@@ -191,15 +175,13 @@ export const OnboardingScreen = () => {
     // Directo a Hoy, donde empieza el tutorial. Sin las pantallas de presentación del plan (el
     // fundador las quitó el 2026-10-21: no se veían bien ni tienen sentido sin la suscripción completa)
     await requestTourAfterOnboarding();
-    router.replace('/(tabs)');
+    // Cuenta nueva: sigue con sus objetivos y metas (lo que recomiendan sus respuestas) y la firma; el tutorial,
+    // al llegar a Hoy (fundador, 2026-11-17)
+    if (inicio) router.replace({ pathname: '/metas-objetivos', params: { inicio: '1' } });
+    else router.replace('/(tabs)');
   };
 
-  const toggleCondition = (id: ConditionId) =>
-    setConditions((prev) => {
-      if (id === 'none') return prev.includes('none') ? [] : ['none'];
-      const without = prev.filter((c) => c !== 'none');
-      return without.includes(id) ? without.filter((c) => c !== id) : [...without, id];
-    });
+  const toggleCondition = (id: ConditionId) => setConditions((prev) => toggleConditionIn(prev, id));
 
   const toggleGoal = (id: GoalId) =>
     setGoals((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
@@ -208,53 +190,41 @@ export const OnboardingScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <View style={styles.topBar}>
-        <TouchableOpacity
-          onPress={() => (stepIndex > 0 ? setStepIndex(stepIndex - 1) : undefined)}
-          hitSlop={12}
-          style={{ opacity: stepIndex > 0 ? 1 : 0 }}
-        >
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${((stepIndex + 1) / STEPS.length) * 100}%` }]} />
-        </View>
-        <TouchableOpacity onPress={skipAll} hitSlop={12}>
-          <Text style={styles.skip}>{tr('Skip')}</Text>
-        </TouchableOpacity>
-      </View>
+      {/* La barra de los cuestionarios paso a paso (fine/FineSteps.tsx): «‹» al paso anterior, el avance como una línea
+          cometa y «Omitir». En el primer paso de una cuenta nueva no hay × (no hay adónde volver) */}
+      <StepsBar
+        index={stepIndex}
+        total={STEPS.length}
+        onBack={() => (stepIndex > 0 ? setStepIndex(stepIndex - 1) : router.back())}
+        noClose={inicio || !router.canGoBack()}
+        right={
+          <TouchableOpacity onPress={skipAll} hitSlop={10} style={styles.skipBox} accessibilityRole="button">
+            <Text style={styles.skip}>{tr('Skip')}</Text>
+          </TouchableOpacity>
+        }
+      />
 
-      <KeyboardAwareScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {step === 'purpose' && (
           <>
             <Text style={styles.title}>{tr('What do you want Kuova for?')}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.lead}>
               {tr(
-                'Pick one or more. Your answer shapes your experience: what you see in the app and which options appear. You can change it anytime in More → Configure my experience.',
+                'Pick one or more. Your answer shapes your experience: what you see in the app and which options appear. You can change it anytime in You → Configure my experience.',
               )}
             </Text>
-            <View style={styles.goalList}>
-              {PURPOSE_OPTIONS.map((o) => {
-                const selected = purposes.includes(o.id);
-                return (
-                  <TouchableOpacity
-                    key={o.id}
-                    style={[styles.goalRow, styles.purposeRow, selected && styles.bigOptionSelected]}
-                    onPress={() => togglePurpose(o.id)}
-                  >
-                    <Ionicons name={o.icon as any} size={24} color={selected ? Colors.accent : Colors.textSecondary} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.purposeTitle, selected && { color: Colors.accent }]}>{tr(o.title)}</Text>
-                      <Text style={styles.purposeSubtitle}>{tr(o.subtitle)}</Text>
-                    </View>
-                    <Ionicons
-                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={22}
-                      color={selected ? Colors.accent : Colors.textMuted}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
+            <View>
+              {PURPOSE_OPTIONS.map((o, i) => (
+                <FOption
+                  key={o.id}
+                  multi
+                  title={tr(o.title)}
+                  hint={tr(o.subtitle)}
+                  on={purposes.includes(o.id)}
+                  onPress={() => togglePurpose(o.id)}
+                  last={i === PURPOSE_OPTIONS.length - 1}
+                />
+              ))}
             </View>
           </>
         )}
@@ -262,11 +232,11 @@ export const OnboardingScreen = () => {
         {step === 'dob' && (
           <>
             <Text style={styles.title}>{tr('When were you born?')}</Text>
-            <Text style={styles.subtitle}>{tr('Reference ranges change with age.')}</Text>
+            <Text style={styles.lead}>{tr('Reference ranges change with age.')}</Text>
             <View style={styles.wheels}>
-              <WheelPicker items={DAYS} selectedIndex={day} onChange={setDay} width={84} />
-              <WheelPicker items={MONTHS} selectedIndex={month} onChange={setMonth} width={104} />
-              <WheelPicker items={YEARS} selectedIndex={year} onChange={setYear} width={110} />
+              <WheelPicker items={DAYS} selectedIndex={day} onChange={setDay} width={72} />
+              <WheelPicker items={months} selectedIndex={month} onChange={setMonth} width={100} />
+              <WheelPicker items={YEARS} selectedIndex={year} onChange={setYear} width={100} />
             </View>
           </>
         )}
@@ -274,28 +244,11 @@ export const OnboardingScreen = () => {
         {step === 'sex' && (
           <>
             <Text style={styles.title}>{tr("What's your biological sex?")}</Text>
-            <Text style={styles.subtitle}>{tr('Many markers (iron, hormones…) have different ranges.')}</Text>
-            <View style={styles.bigOptions}>
-              {(
-                [
-                  { id: 'female', label: 'Female', icon: 'female' },
-                  { id: 'male', label: 'Male', icon: 'male' },
-                  { id: 'other', label: 'Other', icon: 'male-female' },
-                  { id: 'undisclosed', label: 'Prefer not to say', icon: 'remove-circle-outline' },
-                ] as const
-              ).map((o) => {
-                const selected = sex === o.id;
-                return (
-                  <TouchableOpacity
-                    key={o.id}
-                    style={[styles.bigOption, selected && styles.bigOptionSelected]}
-                    onPress={() => setSex(o.id)}
-                  >
-                    <Ionicons name={o.icon} size={26} color={selected ? Colors.accent : Colors.textSecondary} />
-                    <Text style={[styles.bigOptionText, selected && { color: Colors.textPrimary }]}>{tr(o.label)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <Text style={styles.lead}>{tr('Many markers (iron, hormones…) have different ranges.')}</Text>
+            <View>
+              {SEX_OPTIONS.map((o, i) => (
+                <FOption key={o.id} title={tr(o.label)} on={sex === o.id} onPress={() => setSex(o.id)} last={i === SEX_OPTIONS.length - 1} />
+              ))}
             </View>
           </>
         )}
@@ -303,14 +256,14 @@ export const OnboardingScreen = () => {
         {step === 'body' && (
           <>
             <Text style={styles.title}>{tr('Height and weight')}</Text>
-            <Text style={styles.subtitle}>{tr('Used for body composition and energy needs.')}</Text>
+            <Text style={styles.lead}>{tr('Used for body composition and energy needs.')}</Text>
             <View style={styles.wheels}>
               <View style={styles.wheelColumn}>
-                <WheelPicker items={HEIGHTS} selectedIndex={height} onChange={setHeight} width={130} />
+                <WheelPicker items={HEIGHTS} selectedIndex={height} onChange={setHeight} width={120} />
                 <Text style={styles.wheelUnit}>{tr('cm')}</Text>
               </View>
               <View style={styles.wheelColumn}>
-                <WheelPicker items={WEIGHTS} selectedIndex={weight} onChange={setWeight} width={130} />
+                <WheelPicker items={WEIGHTS} selectedIndex={weight} onChange={setWeight} width={120} />
                 <Text style={styles.wheelUnit}>{tr('kg')}</Text>
               </View>
             </View>
@@ -320,126 +273,71 @@ export const OnboardingScreen = () => {
         {step === 'activity' && (
           <>
             <Text style={styles.title}>{tr('Your activity')}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.lead}>
               {tr('Roughly is fine. If you log your workouts or connect a watch, your plan will use that instead.')}
             </Text>
-            <Text style={styles.question}>{tr('How active are you?')}</Text>
-            <ChipGroup
-              value={activity}
-              onChange={setActivity}
-              options={[
-                { id: 'sedentary', label: 'Mostly sitting' },
-                { id: 'light', label: 'Light activity' },
-                { id: 'active', label: 'Fairly active' },
-                { id: 'very_active', label: 'Very active' },
-              ]}
-            />
-            <Text style={styles.question}>{tr('How many days a week do you do strength training?')}</Text>
-            <ChipGroup value={strengthDays != null ? String(strengthDays) : undefined} onChange={(v) => setStrengthDays(Number(v))} options={DAYS_OPTIONS} />
-            <Text style={styles.question}>{tr('And cardio (running, cycling, swimming…)?')}</Text>
-            <ChipGroup value={cardioDays != null ? String(cardioDays) : undefined} onChange={(v) => setCardioDays(Number(v))} options={DAYS_OPTIONS} />
-            <Text style={styles.question}>{tr('How many steps do you walk a day?')}</Text>
-            <ChipGroup
-              value={stepsBand}
-              onChange={setStepsBand}
-              options={[
-                { id: 'lt5k', label: 'Fewer than 5,000' },
-                { id: '5to7k', label: '5,000-7,500' },
-                { id: '7to10k', label: '7,500-10,000' },
-                { id: 'gt10k', label: 'More than 10,000' },
-                { id: 'unknown', label: "I don't know" },
-              ]}
-            />
+            <Text style={[styles.label, styles.firstLabel]}>{tr('How active are you?')}</Text>
+            <FChips value={activity} onChange={setActivity} options={opts(ACTIVITY_OPTIONS)} />
+            <Text style={styles.label}>{tr('How many days a week do you do strength training?')}</Text>
+            <FChips value={strengthDays != null ? String(strengthDays) : undefined} onChange={(v) => setStrengthDays(Number(v))} options={opts(DAYS_OPTIONS)} />
+            <Text style={styles.label}>{tr('And cardio (running, cycling, swimming…)?')}</Text>
+            <FChips value={cardioDays != null ? String(cardioDays) : undefined} onChange={(v) => setCardioDays(Number(v))} options={opts(DAYS_OPTIONS)} />
+            <Text style={styles.label}>{tr('How many steps do you walk a day?')}</Text>
+            <FChips value={stepsBand} onChange={setStepsBand} options={opts(STEPS_OPTIONS)} />
           </>
         )}
 
         {step === 'habits' && (
           <>
             <Text style={styles.title}>{tr('Your habits')}</Text>
-            <Text style={styles.subtitle}>{tr('Knowing where you start from helps us build a plan that fits you.')}</Text>
-            <Text style={styles.question}>{tr('How much do you usually sleep?')}</Text>
-            <ChipGroup
-              value={sleep}
-              onChange={setSleep}
-              options={[
-                { id: 'lt6', label: '< 6 h' },
-                { id: '6to7', label: '6–7 h' },
-                { id: '7to8', label: '7–8 h' },
-                { id: 'gt8', label: '> 8 h' },
-              ]}
-            />
-            <Text style={styles.question}>{tr('Do you smoke?')}</Text>
-            <ChipGroup
-              value={smoking}
-              onChange={setSmoking}
-              options={[
-                { id: 'never', label: 'Never' },
-                { id: 'former', label: 'I used to' },
-                { id: 'occasional', label: 'Occasionally' },
-                { id: 'current', label: 'Yes' },
-              ]}
-            />
-            <Text style={styles.question}>{tr('Alcohol')}</Text>
-            <ChipGroup
-              value={alcohol}
-              onChange={setAlcohol}
-              options={[
-                { id: 'never', label: 'Never' },
-                { id: 'occasional', label: 'Occasionally' },
-                { id: 'weekly', label: 'Every week' },
-                { id: 'daily', label: 'Daily' },
-              ]}
-            />
+            <Text style={styles.lead}>{tr('Knowing where you start from helps us build a plan that fits you.')}</Text>
+            <Text style={[styles.label, styles.firstLabel]}>{tr('How much do you usually sleep?')}</Text>
+            <FChips value={sleep} onChange={setSleep} options={opts(SLEEP_OPTIONS)} />
+            <Text style={styles.label}>{tr('Do you smoke?')}</Text>
+            <FChips value={smoking} onChange={setSmoking} options={opts(SMOKING_OPTIONS)} />
+            <Text style={styles.label}>{tr('Alcohol')}</Text>
+            <FChips value={alcohol} onChange={setAlcohol} options={opts(ALCOHOL_OPTIONS)} />
           </>
         )}
 
         {step === 'health' && (
           <>
             <Text style={styles.title}>{tr('Your health background')}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.lead}>
               {tr('Some medicines and conditions change how results should be read. Only you and the professionals you choose can see this.')}
             </Text>
-            <Text style={styles.question}>{tr('Do you take any regular medication?')}</Text>
-            <ChipGroup
+            <Text style={[styles.label, styles.firstLabel]}>{tr('Do you take any regular medication?')}</Text>
+            <FChips
               value={takesMedication === undefined ? undefined : takesMedication ? 'yes' : 'no'}
               onChange={(v) => setTakesMedication(v === 'yes')}
               options={[
-                { id: 'no', label: 'No' },
-                { id: 'yes', label: 'Yes' },
+                { id: 'no', label: tr('No') },
+                { id: 'yes', label: tr('Yes') },
               ]}
             />
             {takesMedication && (
               <TextInput
-                style={styles.textInput}
+                style={[formStyles.input, styles.input]}
                 value={medications}
                 onChangeText={setMedications}
                 placeholder={tr('Which ones? e.g. levothyroxine 50 µg, contraceptive pill')}
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={FINE.mute}
                 multiline
               />
             )}
-            <Text style={styles.question}>{tr('Have you been diagnosed with any condition?')}</Text>
+            <Text style={styles.label}>{tr('Have you been diagnosed with any condition?')}</Text>
             <View style={styles.chips}>
-              {CONDITION_OPTIONS.filter((c) => !c.femaleOnly || sex === 'female').map((c) => {
-                const selected = conditions.includes(c.id);
-                return (
-                  <TouchableOpacity
-                    key={c.id}
-                    style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => toggleCondition(c.id)}
-                  >
-                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{tr(c.label)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {CONDITION_OPTIONS.filter((c) => !c.femaleOnly || sex === 'female').map((c) => (
+                <FChip key={c.id} multi check label={tr(c.label)} on={conditions.includes(c.id)} onPress={() => toggleCondition(c.id)} />
+              ))}
             </View>
             {conditions.includes('other') && (
               <TextInput
-                style={styles.textInput}
+                style={[formStyles.input, styles.input]}
                 value={conditionsOther}
                 onChangeText={setConditionsOther}
                 placeholder={tr('Tell us which')}
-                placeholderTextColor={Colors.textMuted}
+                placeholderTextColor={FINE.mute}
               />
             )}
           </>
@@ -448,236 +346,41 @@ export const OnboardingScreen = () => {
         {step === 'goals' && (
           <>
             <Text style={styles.title}>{tr('What do you want to achieve?')}</Text>
-            <Text style={styles.subtitle}>{tr('Everyone has their own goals. Choose yours and we will build your plan around them.')}</Text>
-            <View style={styles.goalList}>
-              {GOAL_OPTIONS.map((g) => {
-                const selected = goals.includes(g.id);
-                return (
-                  <TouchableOpacity
-                    key={g.id}
-                    style={[styles.goalRow, selected && styles.bigOptionSelected]}
-                    onPress={() => toggleGoal(g.id)}
-                  >
-                    <Ionicons name={g.icon as any} size={22} color={selected ? Colors.accent : Colors.textSecondary} />
-                    <Text style={[styles.goalText, selected && { color: Colors.accent }]}>{tr(g.label)}</Text>
-                    <Ionicons
-                      name={selected ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={22}
-                      color={selected ? Colors.accent : Colors.textMuted}
-                    />
-                  </TouchableOpacity>
-                );
-              })}
+            <Text style={styles.lead}>{tr('Everyone has their own goals. Choose yours and we will build your plan around them.')}</Text>
+            <View>
+              {GOAL_OPTIONS.map((g, i) => (
+                <FOption key={g.id} multi title={tr(g.label)} on={goals.includes(g.id)} onPress={() => toggleGoal(g.id)} last={i === GOAL_OPTIONS.length - 1} />
+              ))}
             </View>
           </>
         )}
       </KeyboardAwareScrollView>
 
-      <TouchableOpacity style={styles.cta} onPress={next} activeOpacity={0.85}>
-        <Text style={styles.ctaText}>
-          {stepIndex < STEPS.length - 1 ? tr('Continue') : tr('Done')}
-        </Text>
-      </TouchableOpacity>
+      <KeyboardFooter style={styles.footer}>
+        <FButton label={stepIndex < STEPS.length - 1 ? tr('Continue') : tr('Done')} onPress={next} />
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };
 
+// En el lenguaje fino desde el 2026-11-17 (fundador: «si queda pendiente lo del cuestionario… ¿por qué no lo
+// actualizas?»), como el cuestionario del ciclo: la pregunta grande y su explicación, opciones en filas con una línea
+// fina y un círculo, chips con borde y el botón esmeralda. Sin tarjetas ni iconos de color.
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 28,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  progressTrack: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.divider,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.accent,
-  },
-  skip: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  body: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 24,
-  },
-  title: {
-    color: Colors.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 21,
-    marginBottom: 28,
-  },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  skipBox: { minWidth: 40, height: 44, justifyContent: 'center', alignItems: 'flex-end' },
+  skip: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
+  title: { ...formStyles.q },
+  lead: { ...formStyles.lead, marginBottom: 18 },
+  // Las preguntas de dentro de un paso
+  label: { ...ff('medium'), color: FINE.ivory, fontSize: 16, lineHeight: 22, marginTop: 24, marginBottom: 10 },
+  firstLabel: { marginTop: 4 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  input: { marginTop: 12 },
   // Ruedas pegadas: las rayas de la selección forman una sola franja de lado a lado
-  wheels: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  wheelColumn: {
-    alignItems: 'center',
-  },
-  wheelUnit: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    marginTop: 6,
-  },
-  bigOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  bigOption: {
-    width: '47%',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingVertical: 22,
-  },
-  bigOptionSelected: {
-    borderColor: Colors.accent,
-    backgroundColor: withAlpha(Colors.accent, 0.08),
-  },
-  bigOptionText: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  question: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 10,
-    marginTop: 6,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 18,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  chipSelected: {
-    borderColor: Colors.accent,
-    backgroundColor: Colors.accentSoft,
-  },
-  chipText: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  chipTextSelected: {
-    color: Colors.textPrimary,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    color: Colors.textPrimary,
-    fontSize: 15,
-    marginBottom: 18,
-  },
-  goalList: {
-    gap: 10,
-  },
-  goalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 16,
-  },
-  goalText: {
-    flex: 1,
-    color: Colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  purposeRow: {
-    alignItems: 'flex-start',
-    paddingVertical: 18,
-  },
-  purposeTitle: {
-    color: Colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  purposeSubtitle: {
-    color: Colors.textMuted,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  cta: {
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  ctaText: {
-    color: Colors.background,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  preview: {
-    marginTop: 18,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.accent, 0.35),
-    backgroundColor: withAlpha(Colors.accent, 0.06),
-    padding: 14,
-    gap: 4,
-  },
-  previewTitle: { color: Colors.accent, fontSize: 13, fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
-  previewItem: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  previewNote: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 4 },
-  buildingText: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    marginTop: 16,
-  },
+  wheels: { flexDirection: 'row', justifyContent: 'center', marginTop: 12 },
+  wheelColumn: { alignItems: 'center' },
+  wheelUnit: { ...fine.unit, marginTop: 6 },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
 });

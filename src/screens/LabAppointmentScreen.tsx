@@ -14,6 +14,7 @@ import { appointmentEvent, LabAppointment, labAppointmentRepository } from '@/da
 import { calendarLinks } from '@/data/schedule';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { TAB, tabHref } from '@/constants/tabs';
+import { INTER } from '@/theme/fine';
 
 const longDate = (day: string) =>
   new Date(`${day}T12:00:00`).toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
@@ -41,7 +42,7 @@ export const LabAppointmentScreen = () => {
   if (!appt || !center) {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.schedule)} />
+        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.analysis)} />
         {loaded && <Text style={styles.empty}>{t('This appointment no longer exists. It may have been cancelled.')}</Text>}
       </SafeAreaView>
     );
@@ -60,13 +61,13 @@ export const LabAppointmentScreen = () => {
     if (!ok) return;
     await labAppointmentRepository.cancel(appt.id);
     if (router.canGoBack()) router.back();
-    else router.replace(tabHref(TAB.schedule) as any);
+    else router.replace(tabHref(TAB.analysis) as any);
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.schedule)} />
+        <ScreenHeader title={t('Lab appointment')} showBack backFallback={tabHref(TAB.analysis)} />
 
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
@@ -118,9 +119,9 @@ export const LabAppointmentScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
-  empty: { color: Colors.textSecondary, fontSize: 14, marginHorizontal: 20, marginTop: 12 },
+  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, marginHorizontal: 20, marginTop: 12 },
   hero: { alignItems: 'center', gap: 4, marginHorizontal: 20, marginBottom: 18 },
   heroIcon: {
     width: 52,
@@ -131,9 +132,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 6,
   },
-  heroDate: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', textAlign: 'center' },
-  heroTime: { color: Colors.accent, fontSize: 30, fontWeight: '800' },
-  heroLab: { color: Colors.textSecondary, fontSize: 14, textAlign: 'center' },
+  heroDate: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, textAlign: 'center' },
+  heroTime: { color: Colors.accent, fontSize: 30, fontFamily: INTER.medium },
+  heroLab: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, textAlign: 'center' },
   mapWrap: { marginHorizontal: 20, borderRadius: 16, overflow: 'hidden' },
   reschedule: {
     flexDirection: 'row',
@@ -146,9 +147,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 22,
   },
-  rescheduleText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  rescheduleText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   cancelBtn: { alignItems: 'center', paddingVertical: 14, marginTop: 4 },
-  cancelText: { color: Colors.danger, fontSize: 14, fontWeight: '700' },
-  proto: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginTop: 2 },
-  pastNote: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center', marginHorizontal: 20, marginTop: 22 },
+  cancelText: { color: Colors.danger, fontSize: 14, fontFamily: INTER.medium },
+  proto: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginTop: 2 },
+  pastNote: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center', marginHorizontal: 20, marginTop: 22 },
 });

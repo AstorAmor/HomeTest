@@ -5,6 +5,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { SHARE_SCOPES } from '@/data/sharing';
 import { SharedScope } from '@/data/specialistTypes';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // "Qué comparte contigo": las 11 categorías que un paciente puede compartir. Las compartidas, con
 // un resumen de un vistazo; las demás, con candado: el especialista sabe que existen pero no las ve
@@ -41,14 +42,14 @@ export const SharedDataGrid = ({ items, wide }: { items: SharedScope[]; wide?: b
 };
 
 const styles = StyleSheet.create({
-  count: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  count: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tile: { backgroundColor: Colors.background, borderWidth: 1, borderColor: withAlpha(Colors.accent, 0.3), borderRadius: 12, padding: 10, gap: 4 },
   tileWide: { width: '32%', minWidth: 200, flexGrow: 1 },
   tileNarrow: { width: '48%', flexGrow: 1 },
   tileLocked: { borderColor: Colors.cardBorder, borderStyle: 'dashed', backgroundColor: 'transparent' },
   tileHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tileTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', flexShrink: 1 },
-  tileBody: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
-  note: { color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  tileTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, flexShrink: 1 },
+  tileBody: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  note: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
 });

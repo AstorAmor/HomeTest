@@ -19,6 +19,7 @@ import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import {
   LANGUAGES,
   Modality,
@@ -28,6 +29,7 @@ import {
   updateMyProfessionalProfile,
   uploadMyProfessionalPhoto,
 } from '@/data/sharing';
+import { INTER } from '@/theme/fine';
 
 const RATE_STATUS: Record<string, { label: string; color: string }> = {
   none: { label: 'No rate proposed yet', color: Colors.textMuted },
@@ -79,6 +81,8 @@ export const ProfessionalProfileScreen = () => {
 
   const pickPhoto = async () => {
     setMessage('');
+    // La hoja del sistema sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -242,7 +246,7 @@ export const ProfessionalProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
   photoWrap: { alignSelf: 'center', marginTop: 4 },
   photo: { width: 108, height: 108, borderRadius: 54 },
@@ -260,8 +264,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.background,
   },
-  photoHint: { color: Colors.textMuted, fontSize: 12, textAlign: 'center', marginTop: 8 },
-  label: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 16, marginBottom: 8 },
+  photoHint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, textAlign: 'center', marginTop: 8 },
+  label: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium, marginTop: 16, marginBottom: 8 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
@@ -270,22 +274,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 11,
     color: Colors.textPrimary,
-    fontSize: 15,
+    fontFamily: INTER.regular, fontSize: 15,
   },
   bio: { minHeight: 96, textAlignVertical: 'top' },
   row2: { flexDirection: 'row', gap: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
   chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  chipText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   chipTextOn: { color: Colors.textPrimary },
   rateStatus: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  rateStatusText: { fontSize: 13, fontWeight: '700' },
-  hint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 6 },
-  note: { color: Colors.textPrimary, fontSize: 13, marginTop: 10, backgroundColor: Colors.card, borderRadius: 10, padding: 10 },
-  error: { color: Colors.danger, fontSize: 13, marginTop: 14 },
+  rateStatusText: { fontSize: 13, fontFamily: INTER.medium },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17, marginTop: 6 },
+  note: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, marginTop: 10, backgroundColor: Colors.card, borderRadius: 10, padding: 10 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginTop: 14 },
   cta: { backgroundColor: Colors.accent, borderRadius: 30, paddingVertical: 15, alignItems: 'center', marginHorizontal: 20, marginBottom: 12 },
   ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
 });

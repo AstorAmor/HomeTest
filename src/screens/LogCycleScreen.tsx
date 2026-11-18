@@ -4,9 +4,11 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Colors } from '@/constants/colors';
 import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
+import { FRow } from '@/components/fine/Fine';
+import { FButton, FLink, formStyles } from '@/components/fine/FineForm';
 import { cycleRepository } from '@/data/cycleRepository';
+import { FINE } from '@/theme/fine';
 
 const DAY_MS = 24 * 3600 * 1000;
 const fromKey = (key: string) => new Date(`${key}T12:00:00`);
@@ -15,6 +17,9 @@ const formatDay = (key: string) =>
 
 // "Log period": primer día y último día de la regla (duración), en un calendario.
 // Primer toque = inicio; segundo toque = fin. Si aún no ha terminado, se guarda solo el inicio.
+// En el lenguaje fino desde el 2026-11-17, como el detalle del ciclo: × en jade arriba, el título a la izquierda, el
+// calendario entre dos líneas finas, el resumen en filas finas y «Guardar» abajo (antes, botones redondos con la marca
+// arriba, el loto en un círculo rosa y tres tarjetas). «Borrar registro», un enlace apagado sin rojo.
 export const LogCycleScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -77,30 +82,20 @@ export const LogCycleScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={() => router.back()}>
-          <Ionicons name="close" size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.circleButton, start ? styles.circleButtonActive : null]}
-          onPress={handleSave}
-          disabled={saving || !start}
-        >
-          <Ionicons name="checkmark" size={22} color={start ? Colors.background : Colors.textMuted} />
+        <TouchableOpacity style={styles.close} onPress={() => router.back()} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('Close')}>
+          <Ionicons name="close" size={24} color={FINE.jade} />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.iconBadge}>
-            <Ionicons name="rose-outline" size={26} color={Colors.pulseAccent} />
-          </View>
-          <Text style={styles.title}>{t('Log period')}</Text>
-          <Text style={styles.subtitle}>
-            {t('Tap the first day, then the last day. If it has not finished yet, just save the first day and add the end later.')}
-          </Text>
-        </View>
+        <Text style={styles.title} accessibilityRole="header">
+          {t('Log period')}
+        </Text>
+        <Text style={styles.lead}>
+          {t('Tap the first day, then the last day. If it has not finished yet, just save the first day and add the end later.')}
+        </Text>
 
-        <View style={styles.card}>
+        <View style={styles.calendar}>
           <MonthCalendar
             month={month}
             onMonthChange={setMonth}
@@ -111,74 +106,29 @@ export const LogCycleScreen = () => {
           />
         </View>
 
-        <View style={styles.summary}>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>{t('Started')}</Text>
-            <Text style={styles.summaryValue}>{start ? formatDay(start) : '—'}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>{t('Ended')}</Text>
-            <Text style={styles.summaryValue}>{end ? formatDay(end) : start ? t('Ongoing') : '—'}</Text>
-          </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>{t('Duration')}</Text>
-            <Text style={styles.summaryValue}>{start && end ? t('{n} days', { n: days }) : '—'}</Text>
-          </View>
-        </View>
+        <FRow title={t('Started')} value={start ? formatDay(start) : '—'} />
+        <FRow title={t('Ended')} value={end ? formatDay(end) : start ? t('Ongoing') : '—'} />
+        <FRow title={t('Duration')} value={start && end ? t('{n} days', { n: days }) : '—'} last />
 
-        {isEditing && (
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-            <Ionicons name="trash-outline" size={16} color={Colors.danger} />
-            <Text style={styles.deleteButtonText}>{t('Delete entry')}</Text>
-          </TouchableOpacity>
-        )}
+        {isEditing && <FLink label={t('Delete entry')} onPress={handleDelete} muted style={styles.delete} />}
       </ScrollView>
+
+      <View style={styles.footer}>
+        <FButton label={t('Save')} onPress={handleSave} disabled={!start} busy={saving} />
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
-  topBar: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8 },
-  circleButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  circleButtonActive: { backgroundColor: Colors.pinkSoft },
-  content: { paddingHorizontal: 20, paddingBottom: 32 },
-  header: { alignItems: 'center', marginTop: 8, marginBottom: 18 },
-  iconBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.pinkSoftBg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800' },
-  subtitle: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19, textAlign: 'center', marginTop: 6 },
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 14,
-  },
-  summary: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  summaryItem: {
-    flex: 1,
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-  },
-  summaryLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
-  summaryValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 4, textAlign: 'center' },
-  deleteButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 24 },
-  deleteButtonText: { color: Colors.danger, fontSize: 14, fontWeight: '600' },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  topBar: { flexDirection: 'row', paddingLeft: 10, paddingTop: 6, minHeight: 50, alignItems: 'center' },
+  close: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24 },
+  title: { ...formStyles.q },
+  lead: { ...formStyles.lead, marginBottom: 18 },
+  // El calendario, sin tarjeta: entre dos líneas finas (como en el cuestionario del ciclo)
+  calendar: { paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line, marginBottom: 6 },
+  delete: { marginTop: 20 },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
 });

@@ -20,8 +20,10 @@ export interface Professional {
   online: boolean;
 }
 
-// Icono de cada tipo de profesional (MaterialCommunityIcons): el mismo en Today (carrusel), en el
-// filtro de Professionals y donde aparezca el rol.
+// Nombre de cada tipo de profesional. `icon` (MaterialCommunityIcons) y `palette` son la ilustración de antes con
+// manchas de color (BlobArt), que ya no se pinta: desde el 2026-11-16 el carrusel, el filtro de Professionals y
+// «Habla con un especialista» usan el dibujo a línea de cada rol (components/fine/RoleEmblem.tsx). Se quedan por si
+// vuelve la ilustración.
 export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string; palette: [string, string, string] }> = {
   doctor: { label: t('Doctors'), icon: 'stethoscope', palette: ['#0E2A24', '#2E6B57', '#C9A36B'] },
   psychologist: { label: t('Psychologists'), icon: 'head-heart-outline', palette: ['#1E2A4A', '#4B5BA6', '#C7B6F2'] },
@@ -33,64 +35,6 @@ export const ROLE_INFO: Record<ProfessionalRole, { label: string; icon: string; 
 };
 
 export const mockProfessionals: Professional[] = [
-  // Profesionales con los que trabaja Kuova (2026-10-10). Valoraciones y textos provisionales:
-  // confirmar con cada uno antes de enseñarlo fuera. rating 0 = aún sin valoraciones ("Nuevo en Kuova").
-  {
-    id: 'pro-gema-martinez',
-    name: t('Dr. Gema Martínez Tamés'),
-    role: 'doctor',
-    specialty: t('Endocrinology'),
-    bio: t('Hormones, thyroid and metabolism: she reviews your results and tells you what to do next.'),
-    pricePerSession: 110,
-    sessionMinutes: 20,
-    rating: 4.9,
-    reviews: 0,
-    languages: ['Spanish'],
-    nextAvailable: t('Tue 13 Oct, 17:00'),
-    online: true,
-  },
-  {
-    id: 'pro-alejandro-alonso',
-    name: t('Dr. Alejandro Alonso Cabrero'),
-    role: 'doctor',
-    specialty: t('Haematology'),
-    bio: t('Blood count, iron, ferritin and anaemia: what your values mean and when they need a closer look.'),
-    pricePerSession: 110,
-    sessionMinutes: 20,
-    rating: 0,
-    reviews: 0,
-    languages: ['Spanish'],
-    nextAvailable: t('Wed 14 Oct, 18:00'),
-    online: true,
-  },
-  {
-    id: 'pro-covadonga-carrera',
-    name: t('Dr. Covadonga Carrera'),
-    role: 'doctor',
-    specialty: t('Dermatology'),
-    bio: t('Skin, hair and nails, and how they relate to your blood tests and hormones.'),
-    pricePerSession: 110,
-    sessionMinutes: 20,
-    rating: 0,
-    reviews: 0,
-    languages: ['Spanish'],
-    nextAvailable: t('Thu 15 Oct, 16:30'),
-    online: true,
-  },
-  {
-    id: 'pro-andrea-otero',
-    name: t('Dr. Andrea Otero Gonzalez'),
-    role: 'geneticist',
-    specialty: t('Genetic counselling'),
-    bio: t('Goes through your family history with you and tells you whether a genetic test makes sense, and which one.'),
-    pricePerSession: 80,
-    sessionMinutes: 45,
-    rating: 0,
-    reviews: 0,
-    languages: ['Spanish'],
-    nextAvailable: t('Mon 12 Oct, 12:00'),
-    online: true,
-  },
   {
     id: 'pro-1',
     name: t('Dr. Laura Méndez'),
@@ -204,7 +148,7 @@ export const mockProfessionals: Professional[] = [
     online: true,
   },
   {
-    id: 'pro-8',
+    id: 'pro-10',
     name: t('Marta Ibáñez, MSc'),
     role: 'geneticist',
     specialty: t('Genetic counselling · Family history and hereditary cancer'),

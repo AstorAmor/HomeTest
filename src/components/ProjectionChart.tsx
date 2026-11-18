@@ -5,6 +5,7 @@ import { Colors } from '@/constants/colors';
 import { num, t } from '@/i18n';
 import { axisLabel, axisPadding, getResponseProfile, HORIZON_MONTHS, projectionCurve } from '@/logic/projection';
 import { rangeText } from '@/utils/rangeStatus';
+import { INTER } from '@/theme/fine';
 
 interface ProjectionChartProps {
   markerId: string;
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
   },
   axisLabel: {
     color: Colors.textMuted,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
   },
   xAxisRow: {
     flexDirection: 'row',
@@ -176,12 +177,12 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     color: Colors.ok,
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
     letterSpacing: 0.6,
   },
   note: {
     color: Colors.textSecondary,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     lineHeight: 16,
     marginTop: 8,
   },

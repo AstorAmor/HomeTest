@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { ChatMessage } from './specialistTypes';
+import { t } from '@/i18n';
 
 // Chat paciente ↔ especialista. Con cuenta: tablas `conversations` / `messages` y
 // Supabase Realtime (los mensajes nuevos llegan al instante; RLS decide quién los ve).
@@ -74,7 +75,7 @@ export const chat = {
       .insert({ conversation_id: conversationId, body: text })
       .select('*')
       .single();
-    if (error || !data) throw new Error(error?.message ?? 'Could not send');
+    if (error || !data) throw new Error(error?.message ?? t('Could not send'));
     return toMessage(data);
   },
 

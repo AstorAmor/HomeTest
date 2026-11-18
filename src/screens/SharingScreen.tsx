@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { DataShare, isShareActive, listMyShares, revokeShare, roleLabel, scopeLabel } from '@/data/sharing';
 import { TAB, tabHref } from '@/constants/tabs';
+import { fine, INTER } from '@/theme/fine';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
@@ -52,7 +53,7 @@ export const SharingScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('Sharing & privacy')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('Sharing & privacy')} showBack backFallback={tabHref(TAB.you)} />
 
         <View style={styles.intro}>
           <Ionicons name="shield-checkmark" size={22} color={Colors.accent} />
@@ -193,7 +194,7 @@ export const SharingScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 32 },
   intro: {
     flexDirection: 'row',
@@ -204,9 +205,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 18,
   },
-  introText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
-  muted: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
-  error: { color: Colors.danger, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
+  introText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  muted: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -218,15 +219,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 8,
   },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-    paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 10,
-  },
+  ctaText: { color: Colors.background, fontSize: 16, fontFamily: INTER.medium },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -237,10 +231,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   cardMuted: { opacity: 0.7 },
-  supportText: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  supportText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   supportCta: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', marginTop: 12 },
-  supportCtaText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  note: { color: Colors.textSecondary, fontSize: 13, fontStyle: 'italic', marginTop: 10 },
+  supportCtaText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  note: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, fontStyle: 'italic', marginTop: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: {
     width: 40,
@@ -250,16 +244,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  meta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  name: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
   chip: { backgroundColor: Colors.violetSoft, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 4 },
-  chipText: { color: Colors.textPrimary, fontSize: 12 },
+  chipText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12 },
   revoke: { alignSelf: 'flex-start', marginTop: 12 },
-  revokeText: { color: Colors.danger, fontSize: 13, fontWeight: '700' },
+  revokeText: { color: Colors.danger, fontSize: 13, fontFamily: INTER.medium },
   confirmRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginTop: 12 },
-  confirmText: { color: Colors.textPrimary, fontSize: 13, flexBasis: '100%' },
+  confirmText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, flexBasis: '100%' },
   revokeConfirm: { backgroundColor: Colors.danger, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  revokeConfirmText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  cancelText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
+  revokeConfirmText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  cancelText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
 });

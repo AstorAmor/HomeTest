@@ -13,9 +13,9 @@ export interface FeatureGuide {
 
 export const FEATURE_GUIDE: Record<AppSection, FeatureGuide> = {
   plan: {
-    what: 'Concrete actions built from your results and goals, with the markers each one should improve.',
-    youDo: 'Follow the actions and log what you do (workouts, meals, breathing).',
-    youGet: 'Your progress each week and, at your next test, how your markers moved.',
+    what: 'Your goals (the ones your lab test recommends and your own) with targets for exercise, food and habits, plus your workouts, meal plan and any plan a specialist sends you.',
+    youDo: 'Mark your targets each day, or let your watch and Workouts do it for you.',
+    youGet: 'How your targets are going each week and, at your next test, how your markers moved.',
     evidenceTopic: 'plan',
   },
   checkin: {
@@ -83,5 +83,10 @@ export const FEATURE_GUIDE: Record<AppSection, FeatureGuide> = {
     youDo: 'Read when you feel like it.',
     youGet: 'Context for your numbers, in plain words.',
     evidenceTopic: 'learning',
+  },
+  history: {
+    what: 'Your allergies, blood group, vaccines and medical history (surgeries, hospital stays, illnesses…) in one place.',
+    youDo: 'Add what you know, when you want.',
+    youGet: 'Everything to hand for an appointment, and your emergency card with a QR code.',
   },
 };

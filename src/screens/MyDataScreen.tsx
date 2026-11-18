@@ -1,51 +1,66 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { labUploadRepository } from '@/data/labUploads';
-import { rememberKuovaAge } from '@/data/kuovaAgeCache';
-import { TourTarget } from '@/components/tour/TourTarget';
+import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { makeTourScroll } from '@/components/tour/tourStore';
 import { labValuesFrom } from '@/data/labUploadValues';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart, TrendSeries } from '@/components/TrendChart';
-import { Colors, withAlpha } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { mockBiomarkers, mockDiagnosticTests, DiagnosticTest } from '@/data/mockData';
 import { loadSeedData } from '@/data/seedData';
 import { importLocalDataToAccount } from '@/data/importLocalData';
-import { profileRepository, Sex } from '@/data/profileRepository';
 import { useAuth } from '@/context/AuthContext';
-import { getGlucoseEntries } from '@/data/glucoseRepository';
-import { getBloodPressureEntries } from '@/data/bloodPressureRepository';
+import { getGlucoseEntries, glucoseRepository } from '@/data/glucoseRepository';
+import { bloodPressureRepository, getBloodPressureEntries } from '@/data/bloodPressureRepository';
 import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { cortisolRepository } from '@/data/cortisolRepository';
 import { vo2maxRepository } from '@/data/vo2maxRepository';
-import { baselineReport, currentReport } from '@/data/reportRepository';
+import { gripStrengthRepository } from '@/data/gripStrengthRepository';
 import { formatSleep, shortDate, useDailyWearables, DailyPoint } from '@/wearables/dailySeries';
-import { cycleRepository } from '@/data/cycleRepository';
-import { currentCyclePhase, CyclePhaseInfo } from '@/utils/cyclePhase';
-import { cycleGoalStore } from '@/data/cycleGoal';
-import { CycleStrip } from '@/components/CycleStrip';
+import { WearableMetric } from '@/wearables/types';
+import { metricAxis, metricLine } from '@/screens/MetricDetailScreen';
 import { useSections } from '@/data/appPrefs';
 import { dateLocale, num, t } from '@/i18n';
 import { useWebShell } from '@/web/webMode';
-import { IconBadge } from '@/components/HealthIcons';
-import { KuovaAge, kuovaAge, kuovaAgeFromUploads, KuovaAgeResult, realChange } from '@/logic/kuovaAge';
-import { KuovaAgeBadge, KuovaAgeDots, kuovaAgeLockedHint } from '@/components/KuovaAgeBadge';
 import { showSamples } from '@/data/dataMode';
+import { TAB, tabHref } from '@/constants/tabs';
+import { weightRepository } from '@/data/weightRepository';
+import { weighAdvice, WeighAdvice } from '@/logic/weight';
+import { labReports } from '@/utils/labReportView';
+import {
+  chartBand,
+  chartPoints,
+  DEFAULT_CHARTS,
+  isOut,
+  latestAnalysis,
+  markerHistory,
+  markerSummaries,
+  MarkerPoint,
+  MarkerSummary,
+  normalizeCharts,
+  OWN_SCREEN,
+  pointsFromReports,
+  pointsFromUploads,
+  stateCounts,
+  toggleChart,
+} from '@/logic/labMarkers';
+import { userFlags } from '@/data/userFlags';
+import { markerHref, markerName } from '@/utils/markerLinks';
+import { Chev, SecHead } from '@/components/fine/Fine';
+import { SecRow } from '@/components/fine/FineMeasure';
+import { labToneColor, rangeTone, StatusWord } from '@/components/fine/FineLab';
+import { rangeStatusLabel } from '@/utils/rangeStatus';
+import { FINE, ff, fine } from '@/theme/fine';
+import { SimpleMetricEntry } from '@/types/simpleMetric';
+import { BloodPressureEntry } from '@/types/bloodPressure';
 
-const diagnosticIcon = (status: DiagnosticTest['status']) => {
-  switch (status) {
-    case 'ok':
-      return { name: 'happy-outline' as const, color: Colors.accent };
-    case 'waiting':
-      return { name: 'time-outline' as const, color: Colors.textSecondary };
-    case 'attention':
-      return { name: 'alert-circle-outline' as const, color: Colors.danger };
-  }
-};
+// El estado de una prueba de ejemplo, en los tonos finos (sin rojo): bien en jade, en espera apagado, para
+// mirar en oro
+const diagnosticTone = (status: DiagnosticTest['status']) => (status === 'ok' ? FINE.jade : status === 'attention' ? FINE.gold : FINE.mute);
 
 interface DatedValue {
   fecha: string;
@@ -84,17 +99,152 @@ function simpleChart(entries: DatedValue[], mockId: string, color: string): Char
   return { labels, series: [{ color, values: mock.history }], latest: mock.valor, isSample: true };
 }
 
-const wearableChart = (points: DailyPoint[] | undefined, color: string, format: (v: number) => string) => {
+// Una medición del reloj con la misma línea que su ficha (color y franja de MetricDetailScreen)
+const wearableChart = (points: DailyPoint[] | undefined, kind: WearableMetric, format: (v: number) => string) => {
   const pts = points ?? [];
+  const line = metricLine(kind);
   return {
     labels: pts.map((p) => shortDate(p.date)),
-    series: [{ color, values: pts.map((p) => p.value) }],
+    series: [{ color: line.color, values: pts.map((p) => p.value) }],
+    band: line.band,
+    formatY: metricAxis(kind),
     latest: pts.length ? format(pts[pts.length - 1].value) : '—',
     avg: pts.length ? format(pts.reduce((a, p) => a + p.value, 0) / pts.length) : '—',
   };
 };
 
-export const MyDataScreen = () => {
+// Las gráficas de Mediciones, pequeñas: la misma línea que la de su ficha, sin el toque (tocar abre la ficha)
+const SMALL = 90;
+// La tensión baja, en turquesa como en su ficha (BloodPressureDetailScreen)
+const TURQUOISE = '#5CC7C9';
+
+// Los nombres de los últimos `n` meses («jun», «jul»…), para las líneas de ejemplo
+const lastMonths = (n: number) => {
+  const now = new Date();
+  return Array.from({ length: n }, (_, i) =>
+    new Date(now.getFullYear(), now.getMonth() - (n - 1 - i), 1).toLocaleDateString(dateLocale(), { month: 'short' }),
+  );
+};
+
+// Lo que se apunta a mano de vez en cuando (VO2max, fuerza de agarre): las últimas mediciones en jade; sin ninguna,
+// en la demo una línea de ejemplo `sample` que se pinta apagada, y en una cuenta real nada
+function manualChart(entries: DatedValue[], sample: number[]): ChartData | null {
+  const asc = [...entries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+  if (asc.length) {
+    return { labels: asc.map((e) => shortDate(e.fecha)), series: [{ color: FINE.jade, values: asc.map((e) => e.valor) }], latest: num(asc[asc.length - 1].valor), isSample: false };
+  }
+  return showSamples() ? { labels: lastMonths(sample.length), series: [{ color: FINE.jade, values: sample }], latest: '—', isSample: true } : null;
+}
+
+// Las líneas de ejemplo del VO2max y de la fuerza de agarre (apagadas, sin mediciones)
+const VO2_SAMPLE = [37, 38.5, 39, 40.5, 41];
+const GRIP_SAMPLE = [41, 42, 42.5, 43.5, 44];
+
+// El peso: las últimas pesadas en jade; sin ninguna, nada
+function weightChart(all: SimpleMetricEntry[]): ChartData | null {
+  const asc = [...all].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+  return asc.length
+    ? { labels: asc.map((e) => shortDate(e.fecha)), series: [{ color: FINE.jade, values: asc.map((e) => e.valor) }], latest: num(asc[asc.length - 1].valor.toFixed(1)), isSample: false }
+    : null;
+}
+
+// La tensión: la alta en jade y la baja en turquesa. Sin tomas, en una cuenta real la tarjeta vacía (invita a
+// registrar la primera); en la demo, una línea de ejemplo
+function bpChart(entries: BloodPressureEntry[]): ChartData {
+  const bpAsc = [...entries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
+  if (bpAsc.length >= 2 || (bpAsc.length === 1 && !showSamples())) {
+    return {
+      labels: bpAsc.map((e) => shortDate(e.fecha)),
+      series: [
+        { label: t('Systolic (high)'), color: FINE.jade, values: bpAsc.map((e) => e.systolic) },
+        { label: t('Diastolic (low)'), color: TURQUOISE, values: bpAsc.map((e) => e.diastolic) },
+      ],
+      latest: `${bpAsc[bpAsc.length - 1].systolic}/${bpAsc[bpAsc.length - 1].diastolic}`,
+      isSample: false,
+    };
+  }
+  if (!showSamples()) return { labels: [], series: [], latest: '—', isSample: false };
+  const sys = [118, 122, 119, 125, 121, 120];
+  const dia = [78, 81, 77, 83, 80, 80];
+  return {
+    labels: lastMonths(sys.length),
+    series: [
+      { label: t('Systolic (high)'), color: FINE.jade, values: sys },
+      { label: t('Diastolic (low)'), color: TURQUOISE, values: dia },
+    ],
+    latest: '120/80',
+    isSample: true,
+  };
+}
+
+// Mediciones (lo que apuntas a mano): cada gráfica por su lado, porque cada una llega cuando llega
+interface MeasureCharts {
+  weight?: ChartData | null;
+  weighIn?: WeighAdvice;
+  bp?: ChartData;
+  vo2?: ChartData | null;
+  grip?: ChartData | null;
+}
+
+// Las de lo último leído, sin esperar a la red (fundador, 2026-11-17: «las medidas tardan en cargar»): de Hoy a «Ver
+// todas» o al volver de apuntar algo se pintan al momento; las que aún no se han leído nunca, no
+function measureChartsFromCache(): MeasureCharts {
+  const out: MeasureCharts = {};
+  const w = weightRepository.peek();
+  if (w) {
+    out.weight = weightChart(w);
+    out.weighIn = weighAdvice(w);
+  }
+  const bp = bloodPressureRepository.peek();
+  if (bp) out.bp = bpChart(bp);
+  const vo = vo2maxRepository.peek();
+  if (vo) out.vo2 = manualChart(vo, VO2_SAMPLE);
+  const gr = gripStrengthRepository.peek();
+  if (gr) out.grip = manualChart(gr, GRIP_SAMPLE);
+  return out;
+}
+
+// Tus biomarcadores: las tres gráficas propias y los valores de tus analíticas
+interface Analyses {
+  list: MarkerSummary[];
+  last: MarkerPoint | null;
+  any: boolean;
+  points: MarkerPoint[];
+}
+const NO_ANALYSES: Analyses = { list: [], last: null, any: false, points: [] };
+interface LabCharts {
+  glucose: ChartData | null;
+  cholesterol: ChartData | null;
+  cortisol: ChartData | null;
+  analyses: Analyses;
+}
+
+function labChartsFrom(g: DatedValue[], chol: DatedValue[], cort: DatedValue[], uploads: LabUpload[]): LabCharts {
+  const points = [...pointsFromUploads(uploads), ...pointsFromReports(labReports())];
+  return {
+    // Lo apuntado a mano más lo que traen las analíticas subidas (glucosa, colesterol total, cortisol)
+    glucose: simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent),
+    cholesterol: simpleChart([...chol, ...labValuesFrom(uploads, 'total_cholesterol')], 'cholesterol', Colors.amber),
+    cortisol: simpleChart([...cort, ...labValuesFrom(uploads, 'cortisol_am')], 'cortisol', Colors.violet),
+    // Todos, también azúcar, colesterol total y cortisol: su ojo pone o quita su tarjeta de arriba
+    analyses: { list: markerSummaries(points, (p) => markerName(p.key, p.name)), last: latestAnalysis(points), any: points.length > 0, points },
+  };
+}
+
+// Las de lo último leído (undefined si falta algo por leer)
+function labChartsFromCache(): LabCharts | undefined {
+  const g = glucoseRepository.peek();
+  const chol = cholesterolRepository.peek();
+  const cort = cortisolRepository.peek();
+  const uploads = labUploadRepository.peek();
+  return g && chol && cort && uploads ? labChartsFrom(g, chol, cort, uploads) : undefined;
+}
+
+// Lo que quedaba de «Mis datos», que dejó de ser pestaña el 2026-11-16 (borradores/app-estructura): dos
+// pantallas sueltas. `measurements`: tus mediciones con su línea en el tiempo (pasos, sueño, tensión, peso…;
+// «Ver todas» desde Hoy). `biomarkers`: los valores de tus analíticas con sus gráficas y la lista entera
+// («Ver todos» desde Análisis). La Edad KUOVA pasó a Análisis; el historial y el perfil genético, a Tú.
+export const MyDataScreen = ({ part }: { part: 'measurements' | 'biomarkers' }) => {
   const router = useRouter();
   const show = useSections();
   const { series, isSample } = useDailyWearables();
@@ -102,83 +252,102 @@ export const MyDataScreen = () => {
   // Web del paciente en escritorio: las tarjetas van en 2 columnas en vez de una debajo de otra
   const grid = useWebShell();
   const [seedStatus, setSeedStatus] = useState('');
-  const [glucose, setGlucose] = useDeepState<ChartData | null>(null);
-  const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(null);
-  const [cortisol, setCortisol] = useDeepState<ChartData | null>(null);
-  const [vo2, setVo2] = useDeepState<ChartData | null>(null);
-  const [bp, setBp] = useDeepState<ChartData | null>(null);
-  // El ciclo menstrual solo se muestra a perfiles de mujer
-  const [sex, setSex] = useState<Sex | undefined>(undefined);
-  const [cycle, setCycle] = useDeepState<CyclePhaseInfo | null>(null);
-  // Edad KUOVA de la cuenta real: con sus analíticas subidas y su fecha de nacimiento (o qué falta)
-  const [kres, setKres] = useDeepState<KuovaAgeResult | null>(null);
+  // Con cuenta, la pantalla nace con lo último leído (fundador, 2026-11-17: «las medidas tardan en cargar») y lo
+  // refresca de la red detrás. Cada parte lee solo lo que enseña: Mediciones no espera a las analíticas.
+  const [cached] = useState(() =>
+    part === 'measurements' ? { m: measureChartsFromCache(), lab: undefined } : { m: {} as MeasureCharts, lab: labChartsFromCache() },
+  );
+  const [glucose, setGlucose] = useDeepState<ChartData | null>(cached.lab?.glucose ?? null);
+  const [cholesterol, setCholesterol] = useDeepState<ChartData | null>(cached.lab?.cholesterol ?? null);
+  const [cortisol, setCortisol] = useDeepState<ChartData | null>(cached.lab?.cortisol ?? null);
+  const [vo2, setVo2] = useDeepState<ChartData | null>(cached.m.vo2 ?? null);
+  // Fuerza de agarre (fundador, 2026-11-17: «añade otra sección (como VO2max) para "fuerza de agarre"»)
+  const [grip, setGrip] = useDeepState<ChartData | null>(cached.m.grip ?? null);
+  const [bp, setBp] = useDeepState<ChartData | null>(cached.m.bp ?? null);
+  // Peso (fundador, 2026-11-06: salía en Hoy pero no aquí) y cuándo toca pesarse
+  const [weight, setWeight] = useDeepState<ChartData | null>(cached.m.weight ?? null);
+  const [weighIn, setWeighIn] = useState<WeighAdvice | null>(cached.m.weighIn ?? null);
+  // «Analíticas»: el último valor de cada marcador de tus analíticas (los de la demo, en las de prueba)
+  const [analyses, setAnalyses] = useDeepState<Analyses>(cached.lab?.analyses ?? NO_ANALYSES);
+  // Qué gráficas se ven en Analíticas: el ojo de cada una (fundador, 2026-11-06)
+  const [charts, setCharts] = useState<string[]>(DEFAULT_CHARTS);
   const tourScroll = useMemo(makeTourScroll, []);
+  const firstLoad = useRef(true);
+
+  const applyMeasures = useCallback(
+    (c: MeasureCharts) => {
+      if (c.weighIn) setWeighIn(c.weighIn);
+      if (c.weight !== undefined) setWeight(c.weight);
+      if (c.bp) setBp(c.bp);
+      if (c.vo2 !== undefined) setVo2(c.vo2);
+      if (c.grip !== undefined) setGrip(c.grip);
+    },
+    [setWeight, setBp, setVo2, setGrip],
+  );
+  const applyLab = useCallback(
+    (l: LabCharts) => {
+      setGlucose(l.glucose);
+      setCholesterol(l.cholesterol);
+      setCortisol(l.cortisol);
+      setAnalyses(l.analyses);
+    },
+    [setGlucose, setCholesterol, setCortisol, setAnalyses],
+  );
 
   const load = useCallback(async () => {
-    profileRepository
-      .get()
-      .then(async (p) => {
-        setSex(p.sex);
-        if (p.sex !== 'female') return setCycle(null);
-        const [entries, cycleGoal] = await Promise.all([cycleRepository.getAll(), cycleGoalStore.get().catch(() => null)]);
-        setCycle(currentCyclePhase(entries, new Date(), cycleGoal?.cycleLength, cycleGoal));
-      })
+    // Al volver a la pantalla (p. ej. tras apuntar un peso), lo último leído se ve ya y la red lo confirma detrás. Al
+    // abrirla, eso ya lo trae el estado inicial
+    const again = !firstLoad.current;
+    firstLoad.current = false;
+    if (part === 'measurements') {
+      if (again) applyMeasures(measureChartsFromCache());
+      // Cada una por su lado, en cuanto llega (antes esperaban todas a la más lenta, también a las analíticas, que
+      // aquí no salen). Sin red, se queda lo último leído
+      weightRepository
+        .getAll()
+        .then((all) => applyMeasures({ weight: weightChart(all), weighIn: weighAdvice(all) }))
+        .catch(() => {
+          if (!weightRepository.peek()) setWeight(null);
+        });
+      getBloodPressureEntries()
+        .then((e) => setBp(bpChart(e)))
+        .catch(() => undefined);
+      // VO2max y fuerza de agarre: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
+      vo2maxRepository
+        .getAll()
+        .catch(() => vo2maxRepository.peek() ?? [])
+        .then((vo) => setVo2(manualChart(vo, VO2_SAMPLE)));
+      gripStrengthRepository
+        .getAll()
+        .catch(() => gripStrengthRepository.peek() ?? [])
+        .then((gr) => setGrip(manualChart(gr, GRIP_SAMPLE)));
+      return;
+    }
+    if (again) {
+      const l = labChartsFromCache();
+      if (l) applyLab(l);
+    }
+    userFlags
+      .get(CHARTS_FLAG)
+      .then((v) => setCharts(normalizeCharts(v)))
       .catch(() => undefined);
-    const [g, bpEntries, chol, cort, vo, uploads, prof] = await Promise.all([
+    const [g, chol, cort, uploads] = await Promise.all([
       getGlucoseEntries(),
-      getBloodPressureEntries(),
       cholesterolRepository.getAll(),
       cortisolRepository.getAll(),
-      vo2maxRepository.getAll().catch(() => []),
-      labUploadRepository.getAll().catch(() => []),
-      profileRepository.get().catch(() => null),
+      labUploadRepository.getAll().catch(() => [] as LabUpload[]),
     ]);
-    // Lo apuntado a mano más lo que traen las analíticas subidas (glucosa, colesterol total, cortisol)
-    setGlucose(simpleChart([...g, ...labValuesFrom(uploads, 'glucose')], 'sugar', Colors.accent));
-    setCholesterol(simpleChart([...chol, ...labValuesFrom(uploads, 'total_cholesterol')], 'cholesterol', Colors.amber));
-    setCortisol(simpleChart([...cort, ...labValuesFrom(uploads, 'cortisol_am')], 'cortisol', Colors.violet));
-    const age = kuovaAgeFromUploads(uploads, prof?.dateOfBirth);
-    rememberKuovaAge(age);
-    setKres(age);
-    // VO2max: sin mediciones, una línea de ejemplo "apagada" (como los demás sin medir)
-    const voAsc = [...vo].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);    setVo2(
-      voAsc.length
-        ? { labels: voAsc.map((e) => shortDate(e.fecha)), series: [{ color: Colors.sky, values: voAsc.map((e) => e.valor) }], latest: num(voAsc[voAsc.length - 1].valor), isSample: false }
-        : showSamples()
-          ? { labels: ['', '', '', '', ''], series: [{ color: Colors.sky, values: [37, 38.5, 39, 40.5, 41] }], latest: '—', isSample: true }
-          : null,
-    );
-
-    const bpAsc = [...bpEntries].sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(-RECENT);
-    if (bpAsc.length >= 2 || (bpAsc.length === 1 && !showSamples())) {
-      setBp({
-        labels: bpAsc.map((e) => shortDate(e.fecha)),
-        series: [
-          { label: t('Systolic (high)'), color: Colors.coral, values: bpAsc.map((e) => e.systolic) },
-          { label: t('Diastolic (low)'), color: Colors.sky, values: bpAsc.map((e) => e.diastolic) },
-        ],
-        latest: `${bpAsc[bpAsc.length - 1].systolic}/${bpAsc[bpAsc.length - 1].diastolic}`,
-        isSample: false,
-      });
-    } else if (!showSamples()) {
-      // Cuenta real sin tomas: la tarjeta, vacía, invita a registrar la primera
-      setBp({ labels: [], series: [], latest: '—', isSample: false });
-    } else {
-      const sys = [118, 122, 119, 125, 121, 120];
-      const dia = [78, 81, 77, 83, 80, 80];
-      setBp({
-        labels: ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
-        series: [
-          { label: t('Systolic (high)'), color: Colors.coral, values: sys },
-          { label: t('Diastolic (low)'), color: Colors.sky, values: dia },
-        ],
-        latest: '120/80',
-        isSample: true,
-      });
-    }
-  }, [setGlucose, setCholesterol, setCortisol, setBp, setKres]);
+    applyLab(labChartsFrom(g, chol, cort, uploads));
+  }, [part, applyMeasures, applyLab, setBp, setVo2, setGrip, setWeight]);
 
   useReloadOnFocus(load);
+
+  // El ojo: pone la gráfica (al final) o la quita, y se guarda en la cuenta
+  const flipChart = (key: string) => {
+    const next = toggleChart(charts, key);
+    setCharts(next);
+    userFlags.set(CHARTS_FLAG, { keys: next }).catch(() => undefined);
+  };
 
   const handleLoadSeed = async () => {
     setSeedStatus('Loading…');
@@ -199,222 +368,199 @@ export const MyDataScreen = () => {
     }
   };
 
-  const hr = wearableChart(series.resting_heart_rate, Colors.coral, (v) => `${Math.round(v)}`);
-  const hrv = wearableChart(series.hrv, Colors.accent, (v) => `${Math.round(v)}`);
-  const sleep = wearableChart(series.sleep_duration, Colors.violet, formatSleep);
-  const steps = wearableChart(series.steps, Colors.sky, (v) => Math.round(v).toLocaleString(dateLocale()));
-  const kcal = wearableChart(series.active_energy, Colors.amber, (v) => `${Math.round(v)}`);
-  const temp = wearableChart(series.body_temperature, Colors.pinkSoft, (v) => v.toFixed(1));
+  const hr = wearableChart(series.resting_heart_rate, 'resting_heart_rate', (v) => `${Math.round(v)}`);
+  const hrv = wearableChart(series.hrv, 'hrv', (v) => `${Math.round(v)}`);
+  const sleep = wearableChart(series.sleep_duration, 'sleep_duration', formatSleep);
+  const steps = wearableChart(series.steps, 'steps', (v) => Math.round(v).toLocaleString(dateLocale()));
+  const kcal = wearableChart(series.active_energy, 'active_energy', (v) => `${Math.round(v)}`);
+  // Con la coma decimal del idioma (fundador, 2026-11-17: «sé coherente entre comas y puntos»)
+  const temp = wearableChart(series.body_temperature, 'body_temperature', (v) => num(v.toFixed(1)));
+  // Una gráfica de reloj en Mediciones: su cifra (la de hoy) con la media al lado y la línea de su ficha
+  const watchChart = (title: string, c: ReturnType<typeof wearableChart>, unit: string | undefined, kind: WearableMetric) => (
+    <BioChart
+      key={kind}
+      title={title}
+      value={c.latest}
+      unit={c.latest === '—' ? undefined : unit}
+      sub={c.avg === '—' ? t('Not measured yet') : t('avg {v}', { v: c.avg })}
+      off={c.latest === '—'}
+      onPress={() => router.push({ pathname: '/metric', params: { kind } })}
+    >
+      <TrendChart labels={c.labels} series={c.series} height={SMALL} band={c.band} formatY={c.formatY} interactive={false} />
+    </BioChart>
+  );
 
-  // Biomarcadores: primero lo que la persona ha medido; lo que no, "apagado" como incentivo
+  // Analíticas (antes «Biomarcadores»; fundador, 2026-11-06: «todo son biomarcadores», lo de las analíticas
+  // se llama Analíticas): primero lo medido; lo que no, "apagado" como incentivo. El VO2max va en Mediciones.
   const biomarkers = [
-    { key: 'sugar', title: 'Sugar', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
-    { key: 'chol', title: 'Total cholesterol', icon: 'analytics-outline', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
-    { key: 'cortisol', title: 'Cortisol', icon: 'sunny-outline', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
-    { key: 'vo2max', title: 'VO2max', icon: 'mci:lungs', color: Colors.sky, data: vo2, unit: 'mL/kg/min', to: '/vo2max-detail' },
-  ].sort((a, b) => Number(!a.data || a.data.isSample) - Number(!b.data || b.data.isSample));
+    { key: 'sugar', marker: 'glucose', title: 'Sugar', icon: 'glucose', color: Colors.accent, data: glucose, unit: 'mg/dL', to: '/glucose-detail', band: { low: 70, high: 99 } },
+    { key: 'chol', marker: 'total_cholesterol', title: 'Total cholesterol', icon: 'analytics-outline', color: Colors.amber, data: cholesterol, unit: 'mg/dL', to: '/cholesterol-detail', band: { low: 125, high: 200 } },
+    { key: 'cortisol', marker: 'cortisol_am', title: 'Cortisol', icon: 'sunny-outline', color: Colors.violet, data: cortisol, unit: 'µg/dL', to: '/cortisol-detail' },
+  ]
+    .filter((b) => charts.includes(b.marker))
+    .sort((a, b) => Number(!a.data || a.data.isSample) - Number(!b.data || b.data.isSample));
+  // Las demás gráficas elegidas con el ojo (vitamina D…), con los valores de tus analíticas
+  const pinned = charts.filter((k) => !OWN_SCREEN[k] && analyses.points.some((p) => p.key === k));
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView {...tourScroll.props} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ScreenHeader title={t('My Data')} />
+        <ScreenHeader title={part === 'measurements' ? t('Measurements') : t('Your biomarkers')} showBack backFallback={tabHref(part === 'measurements' ? TAB.today : TAB.analysis)} />
 
-        {/* Edad KUOVA (PhenoAge) de la última analítica completa: lo primero que se ve */}
-        {!showSamples() && kres?.status === 'ok' && (
-          <TourTarget id="mydata.age" scroll={tourScroll}>
-            <KuovaAgeHero k={kres.k} previous={kres.previous} onPress={() => router.push('/biological-age')} />
-          </TourTarget>
-        )}
-        {!showSamples() && kres && kres.status !== 'ok' && (
-          // Cuenta real sin Edad KUOVA todavía: la insignia difuminada, sin cifra, y en pequeño qué
-          // falta (valores, fecha de nacimiento…); al tocarla, el detalle con los 9
-          <TourTarget id="mydata.age" scroll={tourScroll}>
-          <TouchableOpacity style={styles.bioAge} onPress={() => router.push('/biological-age')} activeOpacity={0.9}>
-            <Text style={styles.bioAgeKicker}>{t('Your KUOVA age')}</Text>
-            <KuovaAgeBadge size={180} locked />
-            <View style={{ marginTop: 14 }}>
-              <KuovaAgeDots c={kres.coverage} />
-            </View>
-            <Text style={styles.bioAgeLocked}>{kuovaAgeLockedHint(kres)}</Text>
-            {kres.status === 'missing' && (
-              <TouchableOpacity onPress={() => router.push('/store')} hitSlop={8}>
-                <Text style={styles.bioAgeMore}>
-                  {t('Get the full blood test')} <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
-                </Text>
-              </TouchableOpacity>
-            )}
-          </TouchableOpacity>
-          </TourTarget>
-        )}
-        {showSamples() && currentReport.summary.phenoage.available && (
-          <TourTarget id="mydata.age" scroll={tourScroll}>
-            <KuovaAgeHero
-              sample
-              k={kuovaAge(currentReport.summary.phenoage)}
-              previous={baselineReport.summary.phenoage.available ? kuovaAge(baselineReport.summary.phenoage) : null}
-              onPress={() => router.push('/biological-age')}
-            />
-          </TourTarget>
-        )}
-
-        {sex === 'female' && cycle && show('cycle') && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('Menstrual cycle')}</Text>
-            </View>
-            <View style={styles.periodBlock}>
-              <CycleStrip info={cycle} onPress={() => router.push('/cycle-detail')} />
-            </View>
-          </>
-        )}
-
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{show('wearables') ? t('Wearable measurements') : t('Measurements')}</Text>
-          {show('wearables') && <Text style={styles.sectionMeta}>{t('Last 14 days')}{isSample ? ` · ${t('sample')}` : ''}</Text>}
-        </View>
-        <View style={grid ? styles.grid : undefined}>
+        {/* Mediciones («Ver todas» desde Hoy), desde el 2026-11-17 en fino como Tus biomarcadores (fundador: «"ver
+            todas" pierde la coherencia, vuelve al formato antiguo»): cada medición en su sección con la raya, la cifra
+            grande y ligera y, debajo, la misma curva que su ficha (la de pasos, la que le gusta: línea fina, degradado
+            suave y el punto de luz al final), sin tarjeta ni icono en círculo de color */}
+        {part === 'measurements' && (
+        <View style={styles.bioBody}>
+        <Text style={fine.lead}>
+          {show('wearables') ? `${t('From your watch (last 14 days) and what you log')}${isSample ? ` · ${t('sample')}` : ''}` : t('What you log')}
+        </Text>
+        <View style={grid ? styles.bioGrid : undefined}>
         {/* Orden pedido: pasos, sueño, calorías, pulso en reposo y variabilidad */}
         {show('wearables') && (
           <>
-            <MetricCard title={t('Steps')} icon="footsteps-outline" iconColor={Colors.sky} value={steps.latest} avg={t('avg {v}', { v: steps.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'steps' } })}>
-              <TrendChart labels={steps.labels} series={steps.series} height={90} formatY={(v) => `${(v / 1000).toFixed(1)}k`} />
-            </MetricCard>
-            <MetricCard title={t('Sleep')} icon="moon-outline" iconColor={Colors.violet} value={sleep.latest} avg={t('avg {v}', { v: sleep.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'sleep_duration' } })}>
-              <TrendChart labels={sleep.labels} series={sleep.series} height={90} formatY={(v) => `${(v / 60).toFixed(1)}h`} />
-            </MetricCard>
-            <MetricCard title={t('Active calories')} icon="flame-outline" iconColor={Colors.amber} value={kcal.latest} unit="kcal" avg={t('avg {v}', { v: kcal.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'active_energy' } })}>
-              <TrendChart labels={kcal.labels} series={kcal.series} height={90} />
-            </MetricCard>
-            <MetricCard title={t('Resting heart rate')} icon="heart-outline" iconColor={Colors.coral} value={hr.latest} unit="bpm" avg={t('avg {v}', { v: hr.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'resting_heart_rate' } })}>
-              <TrendChart labels={hr.labels} series={hr.series} height={90} />
-            </MetricCard>
-            <MetricCard title={t('Heart rate variability')} icon="pulse-outline" iconColor={Colors.accent} value={hrv.latest} unit="ms" avg={t('avg {v}', { v: hrv.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'hrv' } })}>
-              <TrendChart labels={hrv.labels} series={hrv.series} height={90} />
-            </MetricCard>
+            {watchChart(t('Steps'), steps, t('steps'), 'steps')}
+            {watchChart(t('Sleep'), sleep, undefined, 'sleep_duration')}
+            {watchChart(t('Active calories'), kcal, 'kcal', 'active_energy')}
+            {watchChart(t('Resting heart rate'), hr, 'bpm', 'resting_heart_rate')}
+            {watchChart(t('Heart rate variability'), hrv, 'ms', 'hrv')}
           </>
         )}
 
         {bp && (
-          <MetricCard
+          <BioChart
             title={t('Blood pressure')}
-            icon="speedometer-outline"
-            iconColor={Colors.coral}
             value={bp.latest}
-            unit="mmHg"
-            avg={bp.isSample ? t('sample') : bp.latest === '—' ? t('Not measured yet') : t('tap to log')}
+            unit={bp.latest === '—' ? undefined : 'mmHg'}
+            sub={bp.isSample ? t('sample') : bp.latest === '—' ? t('Not measured yet') : bp.labels[bp.labels.length - 1]}
+            off={bp.latest === '—'}
             onPress={() => router.push('/blood-pressure-detail')}
           >
-            <TrendChart labels={bp.labels} series={bp.series} height={110} />
-          </MetricCard>
+            {/* Las dos líneas de su ficha: la alta en jade y la baja en turquesa */}
+            <TrendChart labels={bp.labels} series={bp.series} height={SMALL + 10} interactive={false} />
+          </BioChart>
         )}
 
-        {show('wearables') && (
-          <MetricCard title={t('Temperature')} icon="thermometer-outline" iconColor={Colors.pinkSoft} value={temp.latest} unit="°C" avg={t('avg {v}', { v: temp.avg })} onPress={() => router.push({ pathname: '/metric', params: { kind: 'body_temperature' } })}>
-            <TrendChart
-              labels={temp.labels}
-              series={temp.series}
-              height={90}
-              band={{ low: 36.1, high: 37.2 }}
-              formatY={(v) => v.toFixed(1)}
-            />
-          </MetricCard>
-        )}
-        </View>
+        <BioChart
+          title={t('Weight')}
+          value={weight ? weight.latest : '—'}
+          unit={weight ? 'kg' : undefined}
+          sub={
+            !weighIn?.last
+              ? t('Not measured yet')
+              : weighIn.due
+                ? t('Time to weigh in')
+                : t('Next: {day}', { day: weighIn.next ? weighIn.next.toLocaleDateString(dateLocale(), { weekday: 'short', day: 'numeric' }) : '' })
+          }
+          off={!weight}
+          onPress={() => router.push(weight ? '/weight-detail' : '/log-weight')}
+        >
+          {weight ? (
+            <TrendChart labels={weight.labels} series={weight.series} height={SMALL} formatY={(v) => v.toFixed(0)} interactive={false} />
+          ) : (
+            <Text style={fine.note}>{t('Weigh yourself once a week, on the same day and at the same time, to see your trend here.')}</Text>
+          )}
+        </BioChart>
 
-        <View style={[styles.sectionHeader, { marginTop: 16 }]}>
-          <Text style={styles.sectionTitle}>{t('Biomarkers')}</Text>
-          <Text style={styles.sectionMeta}>{t('What you have measured first. Tap any to see history or log a reading.')}</Text>
-        </View>
-        <View style={grid ? styles.grid : undefined}>
-        {biomarkers.map((b) => {
-          const off = !b.data || b.data.isSample;
+        {show('wearables') && watchChart(t('Temperature'), temp, '°C', 'body_temperature')}
+
+        {/* VO2max y fuerza de agarre: se apuntan a mano. Sin mediciones, una línea de ejemplo apagada */}
+        {[
+          { key: 'vo2', title: t('VO2max'), data: vo2, unit: 'mL/kg/min', to: '/vo2max-detail', hint: t('Log a reading or add it to your next test to see your own line here.') },
+          { key: 'grip', title: t('Grip strength'), data: grip, unit: 'kg', to: '/grip-strength-detail', hint: t('Log your best attempt with a hand dynamometer to see your own line here.') },
+        ].map((m) => {
+          const off = !m.data || m.data.isSample;
           return (
-            <MetricCard
-              key={b.key}
-              title={t(b.title)}
-              icon={b.icon}
-              iconColor={b.color}
-              value={off ? '—' : b.data!.latest}
-              unit={off ? undefined : b.unit}
-              avg={off ? t('Not measured yet') : ''}
+            <BioChart
+              key={m.key}
+              title={m.title}
+              value={off ? '—' : m.data!.latest}
+              unit={off ? undefined : m.unit}
+              sub={off ? t('Not measured yet') : m.data!.labels[m.data!.labels.length - 1]}
               off={off}
-              onPress={() => router.push(b.to as any)}
+              onPress={() => router.push(m.to as any)}
             >
-              {b.data ? (
-                <TrendChart labels={b.data.labels} series={off ? b.data.series.map((s) => ({ ...s, color: Colors.textMuted })) : b.data.series} height={90} band={b.band} formatY={b.key === 'cortisol' ? (v) => v.toFixed(0) : undefined} />
+              {m.data ? (
+                <TrendChart labels={m.data.labels} series={m.data.series.map((s) => ({ ...s, color: off ? FINE.mute : FINE.jade }))} height={SMALL} interactive={false} />
               ) : null}
-              {off && <Text style={styles.offHint}>{t('Log a reading or add it to your next test to see your own line here.')}</Text>}
-            </MetricCard>
+              {off && <Text style={fine.note}>{m.hint}</Text>}
+            </BioChart>
           );
         })}
         </View>
+        </View>
+        )}
 
-        {showSamples() && <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>{t('Tests')}</Text>}
+        {/* Tus biomarcadores, desde el 2026-11-16 en fino (como la ficha de un biomarcador del prototipo): cada
+            gráfica en su sección con la raya, la cifra grande y ligera y la curva en jade sin tarjeta; la lista
+            entera en filas con línea fina, lo de fuera en oro y sin iconos rellenos */}
+        {part === 'biomarkers' && (
+        <View style={styles.bioBody}>
+        <Text style={fine.lead}>{t('The values of your lab tests, each one against the range of its lab. Tap one to see all your results for it.')}</Text>
+        <View style={grid ? styles.bioGrid : undefined}>
+        {biomarkers.map((b) => {
+          const off = !b.data || b.data.isSample;
+          return (
+            <BioChart
+              key={b.key}
+              title={t(b.title)}
+              value={off ? '—' : b.data!.latest}
+              unit={off ? undefined : b.unit}
+              sub={off ? t('Not measured yet') : ''}
+              off={off}
+              onPress={() => router.push(b.to as any)}
+              onHide={() => flipChart(b.marker)}
+            >
+              {b.data ? (
+                <TrendChart
+                  labels={b.data.labels}
+                  series={b.data.series.map((s) => ({ ...s, color: off ? FINE.mute : FINE.jade }))}
+                  height={90}
+                  band={b.band}
+                  formatY={b.key === 'cortisol' ? (v) => v.toFixed(0) : undefined}
+                />
+              ) : null}
+              {off && <Text style={fine.note}>{t('Log a reading or add it to your next test to see your own line here.')}</Text>}
+            </BioChart>
+          );
+        })}
+        {pinned.map((k) => (
+          <LabChartCard key={k} k={k} points={analyses.points} onHide={() => flipChart(k)} />
+        ))}
+        </View>
+        {biomarkers.length + pinned.length === 0 && analyses.any && (
+          <Text style={fine.note}>{t('No charts chosen. Tap the eye next to a value to see its chart here.')}</Text>
+        )}
+        <AnalysesList list={analyses.list} last={analyses.last} any={analyses.any} charts={charts} onEye={flipChart} />
+
         {/* Una debajo de otra: no sabemos cuántas pruebas habrá en camino (de ejemplo: no en cuentas reales) */}
-        {showSamples() && <View style={styles.testList}>
-          {mockDiagnosticTests.map((test, i) => {
-            const icon = diagnosticIcon(test.status);
-            return (
-              <View key={test.id} style={[styles.testRow, i > 0 && styles.testDivider]}>
-                <Text style={styles.diagnosticName}>{test.nombre}</Text>
-                <View style={styles.testStatus}>
-                  <Ionicons name={icon.name} size={20} color={icon.color} />
-                  <Text style={[styles.testStatusText, { color: icon.color }]}>
-                    {test.statusLabel ? t(test.statusLabel) : test.status === 'ok' ? t('Normal') : t('Needs a look')}
-                  </Text>
-                </View>
+        {showSamples() && (
+          <>
+            <SecHead title={t('Tests')} />
+            {mockDiagnosticTests.map((test, i) => (
+              <View key={test.id} style={[fine.row, i === mockDiagnosticTests.length - 1 && styles.bioNoLine]}>
+                <Text style={[fine.rowTitle, styles.bioFlex]}>{test.nombre}</Text>
+                <Text style={[styles.bioTestStatus, { color: diagnosticTone(test.status) }]}>
+                  {test.statusLabel ? t(test.statusLabel) : test.status === 'ok' ? t('Normal') : t('Needs a look')}
+                </Text>
               </View>
-            );
-          })}
-        </View>}
-
-        {/* Perfil genético: antecedentes familiares ("Know your roots") y, más adelante, resultados */}
-        <TourTarget id="mydata.genetics" scroll={tourScroll} style={styles.geneticSlot}>
-        <TouchableOpacity style={[styles.genetic, styles.geneticInSlot]} onPress={() => router.push('/genetic-profile')} activeOpacity={0.85}>
-          <View style={styles.geneticIcon}>
-            <MaterialCommunityIcons name="dna" size={20} color={Colors.gold} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.geneticTitle}>{t('Your genetic profile')}</Text>
-            <Text style={styles.geneticSub}>{t('Know your roots: what runs in your family')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
-        </TourTarget>
-
-        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/files')} activeOpacity={0.85}>
-          <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.accent, 0.12) }]}>
-            <Ionicons name="folder-open-outline" size={20} color={Colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.geneticTitle}>{t('Your files')}</Text>
-            <Text style={styles.geneticSub}>{t('Lab reports and everything you upload')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
-
-        {/* Informe de evolución: hábitos y marcadores entre tus dos últimas analíticas */}
-        <TouchableOpacity style={styles.genetic} onPress={() => router.push('/habits')} activeOpacity={0.85}>
-          <View style={[styles.geneticIcon, { backgroundColor: withAlpha(Colors.ok, 0.14) }]}>
-            <Ionicons name="trending-up" size={20} color={Colors.ok} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.geneticTitle}>{t('Your evolution report')}</Text>
-            <Text style={styles.geneticSub}>{t('How your habits and markers have changed. Create it and share it.')}</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
+            ))}
+          </>
+        )}
+        </View>
+        )}
 
         {/* Botones de desarrollo: nunca en una cuenta real (meterían datos inventados en ella) */}
-        {showSamples() && (
+        {part === 'measurements' && showSamples() && (
         <TouchableOpacity style={styles.seedButton} onPress={handleLoadSeed}>
-          <Ionicons name="flask-outline" size={18} color={Colors.textMuted} />
+          <Ionicons name="flask-outline" size={16} color={FINE.mute} />
           <Text style={styles.seedButtonText}>Load dummy data (dev)</Text>
         </TouchableOpacity>
         )}
-        {authMode === 'supabase' && showSamples() && (
+        {part === 'measurements' && authMode === 'supabase' && showSamples() && (
           <TouchableOpacity style={styles.seedButton} onPress={handleImportLocal}>
-            <Ionicons name="cloud-upload-outline" size={18} color={Colors.textMuted} />
+            <Ionicons name="cloud-upload-outline" size={16} color={FINE.mute} />
             <Text style={styles.seedButtonText}>Upload this phone's data to my account (dev)</Text>
           </TouchableOpacity>
         )}
@@ -424,244 +570,227 @@ export const MyDataScreen = () => {
   );
 };
 
-// "Buque insignia": la insignia sola, sin bloque, y al tocarla el detalle (como Whoop). Debajo, los
-// años de diferencia, el margen y el cambio desde la analítica anterior solo si supera el margen.
-const KuovaAgeHero = ({ k, previous, sample = false, onPress }: { k: KuovaAge; previous: KuovaAge | null; sample?: boolean; onPress: () => void }) => {
-  const change = previous ? realChange(k, previous) : null;
+// «Analíticas»: el último valor de cada marcador de tus analíticas, frente al rango de su laboratorio. Primero
+// los que están fuera, luego en rango y sin referencia; se ven unos pocos y «Ver todos». Cada uno abre su ficha
+// con todos sus valores (/lab-marker). Sin analíticas, cómo subir la primera.
+const LIST_FIRST = 6;
+const CHARTS_FLAG = 'mydata_charts';
+const shortDay = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
+const monthLabel = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString(dateLocale(), { month: 'short', year: '2-digit' });
+
+// La gráfica de un valor de tus analíticas elegido con el ojo: el último, y su línea si hay dos o más en la
+// misma unidad (con la franja del rango recortada, como en su ficha). Al tocarla, su ficha.
+const LabChartCard = ({ k, points, onHide }: { k: string; points: MarkerPoint[]; onHide: () => void }) => {
+  const router = useRouter();
+  const history = markerHistory(points, k);
+  const latest = history[history.length - 1];
+  if (!latest) return null;
+  const chart = chartPoints(history);
+  const values = chart.points.map((p) => p.value as number);
   return (
-    <TouchableOpacity style={styles.bioAge} onPress={onPress} activeOpacity={0.9}>
-      <Text style={styles.bioAgeKicker}>
-        {t('Your KUOVA age')}
-        {sample ? ` · ${t('sample')}` : ''}
-      </Text>
-      <KuovaAgeBadge size={230} value={num(k.age.toFixed(1))} good={k.diff >= 0} />
-      <Text style={[styles.bioAgeDiff, { color: k.diff >= 0 ? Colors.gold : Colors.attention }]}>
-        {t(k.diff >= 0 ? '{years} younger' : '{years} older', { years: t(Math.abs(k.diff) === 1 ? '{n} year' : '{n} years', { n: num(Math.abs(k.diff).toFixed(1)) }) })}
-      </Text>
-      <View style={styles.bioAgeMeta}>
-        <Text style={styles.bioAgeMargin}>{t('± {n} years', { n: num(k.margin.toFixed(1)) })}</Text>
-        {previous && (
-          <Text style={styles.bioAgeSub}>
-            ·{' '}
-            {change == null
-              ? t('no real change since your previous test')
-              : t('{n} since your previous test', { n: `${change > 0 ? '+' : '−'}${num(Math.abs(change).toFixed(1))}` })}
-          </Text>
-        )}
-      </View>
-      <Text style={styles.bioAgeMore}>
-        {t('See what moves it')} <Ionicons name="chevron-forward" size={13} color={Colors.accent} />
-      </Text>
-    </TouchableOpacity>
+    <BioChart
+      title={markerName(k, latest.name)}
+      value={latest.value != null ? num(latest.value) : latest.text || '—'}
+      unit={latest.unit || undefined}
+      sub={shortDay(latest.date)}
+      onPress={() => router.push(markerHref(k))}
+      onHide={onHide}
+    >
+      {values.length >= 2 ? (
+        <TrendChart
+          labels={chart.points.map((p) => monthLabel(p.date))}
+          series={[{ color: FINE.jade, values }]}
+          height={90}
+          band={chartBand(values, latest.low ? latest.low : null, latest.high)}
+          formatY={(v) => num(Math.round(v * 10) / 10)}
+        />
+      ) : (
+        <Text style={fine.note}>{t('One result so far: your next lab test will draw the line.')}</Text>
+      )}
+    </BioChart>
   );
 };
 
-const MetricCard = ({
+// Una gráfica en fino (Tus biomarcadores y, desde el 2026-11-17, Mediciones): la cabecera de sección con su raya,
+// el nombre y, en los biomarcadores, el ojo (quita la gráfica); debajo, la cifra grande y ligera con la unidad y la
+// fecha (o la media) apagadas, y la curva sin tarjeta. Al tocarla, su ficha. `off`: aún sin medir, apagada.
+const BioChart = ({
   title,
-  icon,
-  iconColor,
   value,
   unit,
-  avg,
+  sub,
   off,
   onPress,
+  onHide,
   children,
 }: {
   title: string;
-  icon: string;
-  iconColor: string;
   value: string;
   unit?: string;
-  avg?: string;
-  off?: boolean; // aún sin medir: se ve "apagado"
+  sub?: string;
+  off?: boolean;
   onPress: () => void;
+  onHide?: () => void; // el ojo (solo en Tus biomarcadores)
   children?: React.ReactNode;
 }) => (
-  <TouchableOpacity style={[styles.metricCard, useWebShell() && styles.metricCardHalf, off && styles.metricOff]} onPress={onPress} activeOpacity={0.85}>
-    <View style={styles.metricHeader}>
-      <IconBadge name={icon} color={iconColor} size={28} />
-      <Text style={styles.metricTitle}>{title}</Text>
-      <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-    </View>
-    <View style={styles.metricValueRow}>
-      <Text style={styles.metricValue}>{value}</Text>
-      {unit ? <Text style={styles.metricUnit}> {unit}</Text> : null}
-      {avg ? <Text style={styles.metricAvg}>{avg}</Text> : null}
-    </View>
-    {children}
-  </TouchableOpacity>
+  <View style={[useWebShell() && styles.bioHalf, off && styles.metricOff]}>
+    <SecRow
+      title={title}
+      right={
+        onHide ? (
+          <TouchableOpacity onPress={onHide} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('Hide this chart')}>
+            <Ionicons name="eye-outline" size={17} color={FINE.jade} />
+          </TouchableOpacity>
+        ) : undefined
+      }
+    />
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={title}>
+      <View style={styles.bioFigure}>
+        <Text style={styles.bioNum} numberOfLines={1}>
+          {value}
+        </Text>
+        {unit ? <Text style={styles.bioUnit}>{unit}</Text> : null}
+        <Text style={styles.bioSub} numberOfLines={1}>
+          {sub}
+        </Text>
+        <Chev />
+      </View>
+      {children}
+    </TouchableOpacity>
+  </View>
 );
+
+const AnalysesList = ({ list, last, any, charts, onEye }: { list: MarkerSummary[]; last: MarkerPoint | null; any: boolean; charts: string[]; onEye: (key: string) => void }) => {
+  const router = useRouter();
+  const [all, setAll] = useState(false);
+  if (!any) {
+    return (
+      <>
+        <SecHead title={t('All your values')} />
+        <Text style={[fine.note, styles.anaFirst]}>{t('No lab tests in Kuova yet. Upload a report (photo or PDF) and you will see each value here, with its history.')}</Text>
+        <TouchableOpacity onPress={() => router.push('/upload-test')} hitSlop={8} style={styles.anaUpload} accessibilityRole="button">
+          <Text style={fine.link}>{t('Upload a lab test')} ›</Text>
+        </TouchableOpacity>
+      </>
+    );
+  }
+  if (!list.length) return null;
+  const counts = stateCounts(list);
+  const first = Math.max(LIST_FIRST, counts.out);
+  const shown = all ? list : list.slice(0, first);
+  const more = list.length > first;
+  // Sin rojos: lo de fuera en oro, lo de dentro en jade
+  const parts = [
+    counts.out ? { text: t(counts.out === 1 ? '1 out of range' : '{n} out of range', { n: counts.out }), color: FINE.gold } : null,
+    counts.in ? { text: t('{n} in range', { n: counts.in }), color: FINE.jade } : null,
+    counts.none ? { text: t('{n} with no reference', { n: counts.none }), color: FINE.mute } : null,
+  ].filter(Boolean) as { text: string; color: string }[];
+  return (
+    <>
+      {/* La flecha de la derecha abre y cierra la lista entera (fundador, 2026-11-06); la de abajo, también */}
+      <SecRow
+        title={t('All your values')}
+        right={
+          more ? (
+            <TouchableOpacity
+              onPress={() => setAll(!all)}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={all ? t('Show fewer') : t('See all {n} values', { n: list.length })}
+            >
+              <Ionicons name={all ? 'chevron-up' : 'chevron-down'} size={16} color={FINE.jade} />
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
+      {last && <Text style={fine.rowSub}>{t('Latest test: {date} · {lab}', { date: shortDay(last.date), lab: last.source.lab || t('Uploaded by you') })}</Text>}
+      <Text style={styles.anaCounts}>
+        {parts.map((p, i) => (
+          <Text key={p.text} style={{ color: p.color }}>
+            {i > 0 ? '  ·  ' : ''}
+            {p.text}
+          </Text>
+        ))}
+      </Text>
+      <Text style={[fine.note, styles.anaEyeHint]}>{t('The eye shows or hides its chart above.')}</Text>
+      {shown.map((s, i) => {
+        const on = charts.includes(s.key);
+        return (
+          <View key={s.key} style={[fine.row, i === shown.length - 1 && !more && styles.bioNoLine]}>
+            <TouchableOpacity
+              onPress={() => onEye(s.key)}
+              hitSlop={8}
+              style={styles.anaEye}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: on }}
+              accessibilityLabel={t('Show its chart')}
+            >
+              <Ionicons name={on ? 'eye-outline' : 'eye-off-outline'} size={17} color={on ? FINE.jade : FINE.mute} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.anaMain} onPress={() => router.push(markerHref(s.key))} activeOpacity={0.7} accessibilityRole="button">
+              <View style={styles.bioFlex}>
+                <Text style={fine.rowTitle} numberOfLines={2}>
+                  {markerName(s.key, s.latest.name)}
+                </Text>
+                <Text style={fine.rowSub}>
+                  {shortDay(s.latest.date)}
+                  {s.count > 1 ? ` · ${t('{n} results', { n: s.count })}` : ''}
+                </Text>
+              </View>
+              <View style={styles.anaRight}>
+                <Text style={[fine.rowValue, isOut(s.state) && { color: labToneColor('out') }]}>
+                  {s.latest.value != null ? num(s.latest.value) : s.latest.text || '—'} <Text style={styles.anaUnit}>{s.latest.unit}</Text>
+                </Text>
+                <StatusWord label={rangeStatusLabel(s.state)} tone={rangeTone(s.state)} />
+              </View>
+              <Chev />
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+      {more ? (
+        <TouchableOpacity onPress={() => setAll(!all)} hitSlop={8} style={styles.anaMore} accessibilityRole="button">
+          <Text style={fine.link}>{all ? t('Show fewer') : t('See all {n} values', { n: list.length })}</Text>
+          <Ionicons name={all ? 'chevron-up' : 'chevron-down'} size={14} color={FINE.jade} />
+        </TouchableOpacity>
+      ) : null}
+      <Text style={fine.note}>
+        {t('In range: within the reference range of its lab. Above or below: outside that range, which is not a diagnosis; your doctor puts it in context. No reference: the lab gives no range.')}
+      </Text>
+    </>
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent', // deja ver el fondo ambiental de las pestañas
   },
   content: {
     paddingBottom: 32,
   },
-  sectionHeader: {
-    paddingHorizontal: 20,
-    marginBottom: 12,
-    gap: 2,
-  },
-  bioAge: { alignItems: 'center', marginHorizontal: 20, marginTop: 4, marginBottom: 24 },
-  bioAgeKicker: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
-  bioAgeMeta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginTop: 6 },
-  bioAgeMore: { color: Colors.accent, fontSize: 13, fontWeight: '800', marginTop: 10 },
-  bioAgeDiff: { fontSize: 17, fontWeight: '800', marginTop: 14 },
-  bioAgeMargin: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800' },
-  // El tutorial señala el bloque genético: los márgenes van en su marco para que el hueco se ajuste
-  geneticSlot: { marginHorizontal: 20, marginBottom: 20 },
-  geneticInSlot: { marginHorizontal: 0, marginBottom: 0 },
-  genetic: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-  },
-  geneticIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: withAlpha(Colors.gold, 0.14),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  geneticTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  geneticSub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  // "years" pequeño y abajo, como un subíndice
-  bioAgeSub: { color: Colors.textSecondary, fontSize: 12, lineHeight: 18 },
-  bioAgeLocked: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 8, maxWidth: 290 },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  sectionTitleSpaced: {
-    paddingHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  sectionMeta: {
-    color: Colors.textMuted,
-    fontSize: 12,
-  },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 20 },
-  metricCardHalf: { width: '49%', marginHorizontal: 0 },
-  metricCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  metricHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
-  },
-  metricTitle: {
-    flex: 1,
-    color: Colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  metricValueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 10,
-  },
-  metricValue: {
-    color: Colors.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-  },
-  metricUnit: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  metricAvg: {
-    marginLeft: 'auto',
-    color: Colors.textMuted,
-    fontSize: 12,
-  },
-  testList: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-  },
-  testRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
-  testDivider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  testStatus: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  testStatusText: { fontSize: 13, fontWeight: '600' },
   metricOff: { opacity: 0.55 },
-  offHint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: 6 },
-  diagnosticGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginBottom: 20,
-  },
-  diagnosticCard: {
-    width: '47%',
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  diagnosticName: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-    flexShrink: 1,
-  },
-  diagnosticWaiting: {
-    alignItems: 'center',
-    gap: 2,
-  },
-  diagnosticWaitingText: {
-    color: Colors.textSecondary,
-    fontSize: 10,
-    textAlign: 'center',
-    width: 60,
-  },
-  periodBlock: { paddingHorizontal: 20, marginBottom: 24, gap: 10 },
-  filesCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-  },
-  filesText: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  // Mediciones y Tus biomarcadores, en fino (2026-11-16 y 2026-11-17)
+  bioBody: { paddingHorizontal: 20 },
+  bioGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  bioHalf: { width: '48%' },
+  bioFlex: { flex: 1, minWidth: 0 },
+  bioNoLine: { borderBottomWidth: 0 },
+  bioFigure: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 8 },
+  bioNum: { ...fine.num, fontSize: 34, lineHeight: 40, flexShrink: 1 },
+  bioUnit: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
+  bioSub: { ...ff('regular'), flex: 1, color: FINE.mute, fontSize: 12.5, textAlign: 'right' },
+  bioTestStatus: { ...ff('regular'), fontSize: 13 },
+  anaFirst: { marginTop: 0 },
+  anaUpload: { marginTop: 10 },
+  anaCounts: { ...ff('regular'), fontSize: 12.5, marginTop: 6 },
+  anaMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  anaEye: { paddingRight: 2 },
+  anaEyeHint: { marginTop: 4, marginBottom: 2 },
+  anaRight: { alignItems: 'flex-end', gap: 2 },
+  anaUnit: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
+  anaMore: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 10 },
+  // Botones de desarrollo, apagados
   seedButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -671,14 +800,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 10,
   },
-  seedButtonText: {
-    color: Colors.textMuted,
-    fontSize: 13,
-  },
-  seedStatus: {
-    color: Colors.textMuted,
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 4,
-  },
+  seedButtonText: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
+  seedStatus: { ...ff('regular'), color: FINE.mute, fontSize: 12, textAlign: 'center', marginTop: 4 },
 });

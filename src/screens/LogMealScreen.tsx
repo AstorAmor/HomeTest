@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
 import { Confetti } from '@/components/Confetti';
+import { GlowRing, ringTones } from '@/components/GlowRing';
+import { FButton, FChip, FLink, formStyles } from '@/components/fine/FineForm';
 import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
 import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
+import { FINE, ff, fine } from '@/theme/fine';
 
 const MEAL_TYPES: { id: MealEntry['mealType']; label: string }[] = [
   { id: 'breakfast', label: 'Breakfast' },
@@ -28,6 +32,8 @@ const guessMealType = (): MealEntry['mealType'] => {
 
 // Foto de la comida + qué es. Gamificado (puntos y racha). Las fotos con su
 // descripción quedan guardadas: a futuro, dataset para entrenar un modelo propio.
+// Rediseño del 2026-11-16 (lenguaje fino): la foto en un recuadro de línea discontinua fina con la cámara a línea,
+// cabeceras pequeñas, chips con borde y el botón en esmeralda; al guardar, los puntos dentro de un aro de oro.
 export const LogMealScreen = () => {
   const router = useRouter();
   const [photoUri, setPhotoUri] = useState<string>();
@@ -41,11 +47,14 @@ export const LogMealScreen = () => {
     setError('');
     try {
       if (Platform.OS !== 'web') {
+        // La hoja del sistema sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+        expectSystemUi();
         const perm = await ImagePicker.requestCameraPermissionsAsync();
         if (!perm.granted) {
-          setError('Camera permission is needed to snap your meal.');
+          setError(t('Camera permission is needed to snap your meal.'));
           return;
         }
+        expectSystemUi();
         const result = await ImagePicker.launchCameraAsync({ quality: 0.6 });
         if (!result.canceled) setPhotoUri(result.assets[0].uri);
       } else {
@@ -53,11 +62,12 @@ export const LogMealScreen = () => {
         if (!result.canceled) setPhotoUri(result.assets[0].uri);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open the camera');
+      setError(e instanceof Error ? e.message : t('Could not open the camera'));
     }
   };
 
   const pickFromGallery = async () => {
+    expectSystemUi();
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.6 });
     if (!result.canceled) setPhotoUri(result.assets[0].uri);
   };
@@ -81,17 +91,17 @@ export const LogMealScreen = () => {
       <SafeAreaView style={[styles.safeArea, styles.centered]}>
         <Confetti count={50} />
         <View style={styles.pointsBadge}>
-          <Text style={styles.pointsText}>+10</Text>
-          <Text style={styles.pointsLabel}>{t('points')}</Text>
+          <GlowRing progress={1} colors={ringTones(FINE.gold)} size={124} stroke={5}>
+            <Text style={styles.pointsText}>+10</Text>
+            <Text style={styles.pointsLabel}>{t('points')}</Text>
+          </GlowRing>
         </View>
         <Text style={styles.doneTitle}>{t('Meal logged!')}</Text>
         <Text style={styles.doneText}>
-          {streak > 1 ? `🔥 ${streak}-day streak. Keep it going!` : 'Log tomorrow too to start a streak.'}
-          {addedSugar === false ? '\nNo added sugar, nice one.' : ''}
+          {streak > 1 ? t('🔥 {n}-day streak. Keep it going!', { n: streak }) : t('Log tomorrow too to start a streak.')}
+          {addedSugar === false ? `\n${t('No added sugar, nice one.')}` : ''}
         </Text>
-        <TouchableOpacity style={[styles.cta, { alignSelf: 'stretch' }]} onPress={() => router.back()}>
-          <Text style={styles.ctaText}>{t('Done')}</Text>
-        </TouchableOpacity>
+        <FButton label={t('Done')} onPress={() => router.back()} style={styles.doneBtn} />
       </SafeAreaView>
     );
   }
@@ -99,89 +109,64 @@ export const LogMealScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="close" size={24} color={Colors.textPrimary} />
+        <TouchableOpacity onPress={() => router.back()} hitSlop={12} accessibilityRole="button" accessibilityLabel={t('Close')}>
+          <Ionicons name="close" size={24} color={FINE.jade} />
         </TouchableOpacity>
         <Text style={styles.topTitle}>{t('Snap your meal')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <KeyboardAwareScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity style={styles.photoBox} onPress={takePhoto} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.photoBox} onPress={takePhoto} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel={t('Tap to take a photo')}>
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
           ) : (
             <>
-              <View style={styles.cameraCircle}>
-                <Ionicons name="camera" size={34} color={Colors.background} />
-              </View>
+              <Ionicons name="camera-outline" size={36} color={FINE.jade} style={{ marginBottom: 10 }} />
               <Text style={styles.photoText}>{t('Tap to take a photo')}</Text>
             </>
           )}
         </TouchableOpacity>
-        <TouchableOpacity onPress={pickFromGallery} style={styles.galleryLink}>
-          <Ionicons name="images-outline" size={16} color={Colors.accent} />
-          <Text style={styles.galleryText}>{photoUri ? t('Choose another photo') : t('Or choose from gallery')}</Text>
-        </TouchableOpacity>
+        <FLink label={photoUri ? t('Choose another photo') : t('Or choose from gallery')} icon="images-outline" onPress={pickFromGallery} />
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <Text style={styles.label}>{t('What is it?')}</Text>
         <TextInput
           style={styles.input}
           placeholder={t('e.g. Rice with chicken and salad')}
-          placeholderTextColor={Colors.textMuted}
+          placeholderTextColor={FINE.mute}
           value={description}
           onChangeText={setDescription}
+          accessibilityLabel={t('What is it?')}
         />
 
         <Text style={styles.label}>{t('Meal')}</Text>
-        <View style={styles.chips}>
+        <View style={styles.chips} accessibilityRole="radiogroup">
           {MEAL_TYPES.map((m) => (
-            <TouchableOpacity
-              key={m.id}
-              style={[styles.chip, mealType === m.id && styles.selected]}
-              onPress={() => setMealType(m.id)}
-            >
-              <Text style={[styles.chipText, mealType === m.id && { color: Colors.textPrimary }]}>{t(m.label)}</Text>
-            </TouchableOpacity>
+            <FChip key={m.id} label={t(m.label)} on={mealType === m.id} onPress={() => setMealType(m.id)} />
           ))}
         </View>
 
         <Text style={styles.label}>{t('Any added sugar?')}</Text>
-        <View style={styles.chips}>
+        <View style={styles.chips} accessibilityRole="radiogroup">
           {[
-            { v: false, label: 'No', icon: 'check-circle-outline' },
-            { v: true, label: 'Yes', icon: 'cube-outline' },
+            { v: false, label: 'No' },
+            { v: true, label: 'Yes' },
           ].map((o) => (
-            <TouchableOpacity
-              key={o.label}
-              style={[styles.chip, styles.sugarChip, addedSugar === o.v && styles.selected]}
-              onPress={() => setAddedSugar(o.v)}
-            >
-              <MaterialCommunityIcons
-                name={o.icon as any}
-                size={16}
-                color={addedSugar === o.v ? Colors.amber : Colors.textSecondary}
-              />
-              <Text style={[styles.chipText, addedSugar === o.v && { color: Colors.textPrimary }]}>{t(o.label)}</Text>
-            </TouchableOpacity>
+            <FChip key={o.label} label={t(o.label)} on={addedSugar === o.v} check onPress={() => setAddedSugar(o.v)} />
           ))}
         </View>
       </KeyboardAwareScrollView>
 
-      <TouchableOpacity
-        style={[styles.cta, !photoUri && !description.trim() && styles.ctaDisabled]}
-        onPress={save}
-        disabled={!photoUri && !description.trim()}
-      >
-        <Text style={styles.ctaText}>{t('Save meal · +10 points')}</Text>
-      </TouchableOpacity>
+      <KeyboardFooter>
+        <FButton label={t('Save meal · +10 points')} onPress={save} disabled={!photoUri && !description.trim()} style={styles.cta} />
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   centered: { justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   topBar: {
     flexDirection: 'row',
@@ -191,79 +176,31 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 8,
   },
-  topTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
+  topTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 17 },
   body: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
+  // El recuadro de la foto: línea discontinua fina, casi transparente
   photoBox: {
     height: 220,
     borderRadius: 20,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: withAlpha(Colors.amber, 0.5),
-    backgroundColor: withAlpha(Colors.amber, 0.06),
+    borderColor: 'rgba(240,239,230,0.22)',
+    backgroundColor: FINE.tile,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
   },
   photo: { width: '100%', height: '100%' },
-  cameraCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.amber,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  photoText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  galleryLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
-  galleryText: { color: Colors.accent, fontSize: 14, fontWeight: '600' },
-  error: { color: Colors.danger, fontSize: 13, textAlign: 'center' },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginBottom: 10, marginTop: 14 },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: Colors.textPrimary,
-    fontSize: 15,
-  },
+  photoText: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  error: { ...formStyles.error, textAlign: 'center' },
+  label: { ...fine.secTitle, marginBottom: 10, marginTop: 22 },
+  input: { ...formStyles.input },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    backgroundColor: Colors.card,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-  },
-  sugarChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  selected: { borderColor: Colors.amber, backgroundColor: withAlpha(Colors.amber, 0.1) },
-  chipText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  cta: {
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
-  pointsBadge: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: withAlpha(Colors.amber, 0.14),
-    borderWidth: 2,
-    borderColor: withAlpha(Colors.amber, 0.5),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  pointsText: { color: Colors.amber, fontSize: 34, fontWeight: '900' },
-  pointsLabel: { color: Colors.amber, fontSize: 12, fontWeight: '700' },
-  doneTitle: { color: Colors.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 8 },
-  doneText: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 32 },
+  cta: { marginHorizontal: 20, marginBottom: 12 },
+  doneBtn: { alignSelf: 'stretch' },
+  pointsBadge: { marginBottom: 20 },
+  pointsText: { ...ff('light'), color: FINE.gold, fontSize: 34, lineHeight: 40, fontVariant: ['tabular-nums'] },
+  pointsLabel: { ...ff('regular'), color: FINE.gold, fontSize: 12 },
+  doneTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 26, lineHeight: 32, marginBottom: 8 },
+  doneText: { ...ff('regular'), color: FINE.mute, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 32 },
 });

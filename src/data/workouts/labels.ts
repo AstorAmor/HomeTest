@@ -1,6 +1,7 @@
 import { num, t, tn } from '@/i18n';
 import { getExercise } from './catalog';
 import { plannedSets } from '@/logic/setPlan';
+import { isScheduled, sessionsPerWeek } from '@/logic/workoutWeek';
 import type { Level, SetLog, TrainingPlace, WorkoutBlock, WorkoutExercise, WorkoutGoal, WorkoutSession } from './types';
 
 // Textos de los entrenamientos que comparten la app y el portal (fuente en inglés, ver workoutsEs.ts)
@@ -37,19 +38,27 @@ export const BLOCK_LABEL: Record<WorkoutBlock, string> = {
 export const blockLabel = (b: WorkoutBlock) => t(BLOCK_LABEL[b]);
 export const BLOCK_ORDER: WorkoutBlock[] = ['warmup', 'main', 'finisher', 'cooldown'];
 
-// Objetivo y días del programa, sin repetir lo que ya dice el nombre ("Ganar fuerza · 3 días")
-// (en las rutinas hechas a mano no hay objetivo)
-export function programFacts(p: { title: string; prefs: { goal: WorkoutGoal; custom?: boolean }; sessions: unknown[] }): string[] {
+// Objetivo y días del programa, sin repetir lo que ya dice el nombre ("Ganar fuerza · 3 días"). En los hechos a
+// mano no hay objetivo; con días de la semana, cuántos días y cuántas rutinas ("4 días a la semana · 2 rutinas"); sin
+// días, cuántas rutinas (van en orden)
+export function programFacts(p: { title: string; prefs: { goal: WorkoutGoal; custom?: boolean }; sessions: Pick<WorkoutSession, 'weekdays'>[] }): string[] {
   const name = t(p.title);
   const out: string[] = [];
+  const n = p.sessions.length;
   if (!p.prefs.custom && !name.includes(goalLabel(p.prefs.goal))) out.push(goalLabel(p.prefs.goal));
-  if (!name.includes(t('{n} days', { n: p.sessions.length }))) out.push(tn(p.sessions.length, '{n} day a week', '{n} days a week'));
+  if (isScheduled(p)) {
+    out.push(tn(sessionsPerWeek(p), '{n} day a week', '{n} days a week'));
+    if (n > 1) out.push(tn(n, '{n} routine', '{n} routines'));
+  } else if (p.prefs.custom) out.push(tn(n, '{n} routine', '{n} routines'));
+  else if (!name.includes(t('{n} days', { n }))) out.push(tn(n, '{n} day a week', '{n} days a week'));
   return out;
 }
 
-// "Cuerpo completo · A"; los días de una rutina propia sin nombre, "Día A"
-export const sessionTitle = (s: Pick<WorkoutSession, 'title' | 'id'>) => (s.title ? `${t(s.title)} · ${s.id}` : t('Day {id}', { id: s.id }));
-export const sessionName = (s: Pick<WorkoutSession, 'title' | 'id'>) => (s.title ? t(s.title) : t('Day {id}', { id: s.id }));
+// "Cuerpo completo · A"; una rutina sin nombre, "Rutina A" (hasta el 2026-11-06, "Día A": el día es ahora el de la
+// semana)
+// (`own`: un programa hecho a mano, cuyos nombres se escribieron tal cual y no se traducen: «Push» no es «Empuje»)
+export const sessionName = (s: Pick<WorkoutSession, 'title' | 'id'>, own = false) => (s.title ? (own ? s.title : t(s.title)) : t('Routine {id}', { id: s.id }));
+export const sessionTitle = (s: Pick<WorkoutSession, 'title' | 'id'>, own = false) => (s.title ? `${sessionName(s, own)} · ${s.id}` : sessionName(s, own));
 
 export const kgText = (kg: number) => `${num(kg)} kg`;
 

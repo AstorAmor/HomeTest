@@ -13,6 +13,7 @@ import { getVideoJoinUrl } from '@/data/video';
 import { Appointment, PatientLabResult, PatientSummary } from '@/data/specialistTypes';
 
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 type Panel = 'results' | 'notes';
 
 // D. Sala de consulta. Web de escritorio → SplitScreenConsultation (vídeo a la
@@ -194,21 +195,21 @@ const styles = StyleSheet.create({
   split: { flex: 1, flexDirection: 'row', backgroundColor: Colors.background },
   splitVideo: { flex: 1.35, padding: 12, paddingRight: 6 },
   splitSide: { flex: 1, maxWidth: 520, backgroundColor: Colors.card, borderLeftWidth: 1, borderLeftColor: Colors.cardBorder, padding: 16, gap: 12 },
-  sideTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '900', flex: 1 },
+  sideTitle: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, flex: 1 },
   sideHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   endBtn: { backgroundColor: '#E5484D', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
-  endBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  endBtnText: { color: '#FFFFFF', fontSize: 13, fontFamily: INTER.medium },
   videoState: { flex: 1, backgroundColor: OnDark.background, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, borderRadius: 12 },
-  videoStateText: { color: OnDark.text, fontSize: 15, textAlign: 'center' },
-  videoStateLink: { color: OnDark.textSecondary, fontSize: 14, textDecorationLine: 'underline' },
+  videoStateText: { color: OnDark.text, fontFamily: INTER.regular, fontSize: 15, textAlign: 'center' },
+  videoStateLink: { color: OnDark.textSecondary, fontFamily: INTER.regular, fontSize: 14, textDecorationLine: 'underline' },
   tabs: { flexDirection: 'row', gap: 8 },
   tab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14, borderWidth: 1, borderColor: Colors.cardBorder },
   tabOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  tabText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  tabText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   mobileRoot: { flex: 1, backgroundColor: OnDark.background, overflow: 'hidden' },
   mobileBar: { position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', justifyContent: 'center', gap: 12, paddingBottom: 12 },
   mobileBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 18, paddingHorizontal: 16, paddingVertical: 9 },
-  mobileBtnText: { color: OnDark.text, fontSize: 13, fontWeight: '700' },
+  mobileBtnText: { color: OnDark.text, fontSize: 13, fontFamily: INTER.medium },
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   sheet: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: Colors.card, borderTopLeftRadius: 22, borderTopRightRadius: 22 },
   handleArea: { alignItems: 'center', paddingTop: 8, paddingBottom: 12, gap: 10 },

@@ -6,6 +6,7 @@ import { AuthUser } from '@/types';
 import { mockPatient } from '@/data/mockData';
 import { isSupabaseConfigured, setCurrentUserId, supabase } from '@/lib/supabase';
 import { amITester, loadDataMode, resetDataMode } from '@/data/dataMode';
+import { readCache } from '@/data/readCache';
 import {
   amIAdmin,
   getMyProfessionalAccount,
@@ -14,6 +15,8 @@ import {
   registerAsProfessional,
 } from '@/data/sharing';
 import { amISupportAgent } from '@/data/support';
+import { currentMfaGate } from '@/data/mfa';
+import { cleanTotpCode, type MfaGate } from '@/logic/mfa';
 import { clearPasswordResetPending, markPasswordResetPending, markPasswordResetSaved } from '@/data/passwordReset';
 
 export interface ProfessionalSignup {
@@ -48,11 +51,18 @@ interface AuthContextType {
   isSupportAgent: boolean;
   // Cuenta real: sin datos de ejemplo ni selector "developer" (src/data/dataMode.ts)
   realAccount: boolean;
+  // Doble factor pendiente: 'enroll' (su cuenta lo exige y no tiene app de autenticación) o 'verify' (falta
+  // el código de esta sesión). Mientras tanto la base de datos no le enseña nada (ver logic/mfa.ts)
+  mfaGate: MfaGate;
+  refreshMfa: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   // 'confirm_email' = cuenta creada, falta abrir el correo de confirmación para poder entrar
   signup: (email: string, password: string, nombre: string, professional?: ProfessionalSignup) => Promise<'signed_in' | 'confirm_email'>;
+  // Código de 6 cifras del correo «Confirma tu cuenta»: confirma el email y deja la sesión iniciada
+  verifySignupCode: (email: string, code: string) => Promise<void>;
+  resendSignupEmail: (email: string) => Promise<void>;
   // «¿Has olvidado tu contraseña?»: correo con un código de 6 cifras (no dice si la cuenta existe) → con el
-  // código se abre la sesión y la app solo enseña «Elige una contraseña nueva» (PasswordResetGuard) → se guarda
+  // código se abre la sesión y la app solo enseña «Elige una contraseña nueva» (MfaGuard) → se guarda
   requestPasswordReset: (email: string) => Promise<void>;
   verifyResetCode: (email: string, code: string) => Promise<void>;
   setNewPassword: (password: string) => Promise<void>;
@@ -70,6 +80,7 @@ const userFromSession = (session: Session | null): AuthUser | null => {
     id: u.id,
     email: u.email ?? '',
     nombre: (u.user_metadata?.display_name as string | undefined) ?? u.email?.split('@')[0] ?? '',
+    createdAt: u.created_at,
   };
 };
 
@@ -113,8 +124,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isTester, setIsTester] = useState(false);
   const [isSupportAgent, setIsSupportAgent] = useState(false);
   const [realAccount, setRealAccount] = useState(false);
+  const [mfaGate, setMfaGate] = useState<MfaGate>(null);
   // Durante el alta de un profesional, la ficha aún no existe: no consultarla en paralelo
   const creatingProfessional = useRef(false);
+
+  const refreshMfa = async () => {
+    try {
+      setMfaGate(await currentMfaGate());
+    } catch {
+      setMfaGate(null);
+    }
+  };
 
   const refreshProfessional = async () => {
     try {
@@ -144,13 +164,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const apply = async (session: Session | null) => {
       // El id se fija antes que el estado para que los repositorios ya lean de la nube
       setCurrentUserId(session?.user.id ?? null);
+      // Lo último leído de esta cuenta y guardado en el móvil (src/data/readCache.ts), para que las mediciones se
+      // pinten al momento al abrir la app. Va a la vez que las comprobaciones de abajo y está antes de la primera
+      // pantalla. Sin sesión, fuera todo lo guardado
+      const cacheReady = session ? readCache.hydrate(session.user.id) : readCache.clear();
       if (!session) {
         setProfessional(null);
         setIsAdmin(false);
         setIsTester(false);
         setIsSupportAgent(false);
+        setMfaGate(null);
         resetDataMode();
       } else {
+        // Primero el doble factor: sin él, un admin o un profesional no lee nada de lo de abajo
+        await refreshMfa();
         if (!creatingProfessional.current) {
           await finishPendingProfessional(session);
           await refreshProfessional();
@@ -164,6 +191,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // probador puede tener cuenta de prueba: las demás entran directas a los cuestionarios
         setRealAccount(await loadDataMode(tester));
       }
+      await cacheReady;
       setUser(userFromSession(session));
     };
     supabase.auth.getSession().then(async ({ data }) => {
@@ -222,6 +250,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return 'signed_in';
   };
 
+  const verifySignupCode = async (email: string, code: string) => {
+    if (!supabase) return;
+    const token = cleanTotpCode(code);
+    // 'email' es el tipo actual para el código del correo de alta; 'signup', el antiguo (por si acaso)
+    let { error } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: 'email' });
+    if (error) ({ error } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: 'signup' }));
+    if (error) throw new Error(error.message);
+  };
+
+  const resendSignupEmail = async (email: string) => {
+    if (!supabase) return;
+    const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+    if (error) throw new Error(error.message);
+  };
+
   const requestPasswordReset = async (email: string) => {
     if (!supabase) return;
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
@@ -232,13 +275,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!supabase) return;
     // Antes de abrir la sesión, para que la app vaya directa a «Elige una contraseña nueva» y no a las pestañas
     await markPasswordResetPending();
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.replace(/\D/g, ''), type: 'recovery' });
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: cleanTotpCode(code), type: 'recovery' });
     if (error) {
       await clearPasswordResetPending();
       throw new Error(error.message);
     }
   };
 
+  // Con doble factor, Supabase pide antes el código de la app de autenticación (aal2): MfaGuard lo pide primero
   const setNewPassword = async (password: string) => {
     if (!supabase) return;
     const { error } = await supabase.auth.updateUser({ password });
@@ -266,12 +310,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Fuera ya, sin esperar al aviso de Supabase: si no, «/» volvía a entrar en las pestañas con la
       // sesión aún puesta y, al cerrarse, se quedaba dentro sin cuenta (con lo guardado en el móvil)
       setCurrentUserId(null);
+      // Lo guardado de esta cuenta para pintar rápido (mediciones, perfil…) no se queda en el móvil
+      readCache.clear();
       setUser(null);
       setProfessional(null);
       setIsAdmin(false);
       setIsTester(false);
       setIsSupportAgent(false);
       setRealAccount(false);
+      setMfaGate(null);
       clearPasswordResetPending();
       resetDataMode();
       supabase.auth.signOut().catch(() => undefined);
@@ -295,8 +342,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isTester,
         isSupportAgent,
         realAccount,
+        mfaGate,
+        refreshMfa,
         login,
         signup,
+        verifySignupCode,
+        resendSignupEmail,
         requestPasswordReset,
         verifyResetCode,
         setNewPassword,

@@ -11,6 +11,7 @@ import type { DietPlan } from '@/data/diet/types';
 import { weekSummary } from '@/logic/dietPlanner';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Portal → Dietas (como Entrenamientos): los menús que has mandado, con sus kcal y macros, y crear uno
 // nuevo para un paciente. Se edita en ProDietScreen (?from=diets para volver aquí).
@@ -100,18 +101,18 @@ export const ProDietsScreen = () => {
 
 const styles = StyleSheet.create({
   newBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 },
-  newText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
-  section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 16, marginBottom: 8 },
-  muted: { color: Colors.textSecondary, fontSize: 13 },
+  newText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
+  section: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginTop: 16, marginBottom: 8 },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   list: { gap: 8 },
   listWide: { flexDirection: 'row', flexWrap: 'wrap' },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14, gap: 4, marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   donut: { marginTop: 8 },
   cardWide: { width: '49%' },
-  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  badge: { color: Colors.accent, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  cardTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  badge: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
   patients: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
   patient: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, minWidth: 160 },
-  patientName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  patientName: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
 });

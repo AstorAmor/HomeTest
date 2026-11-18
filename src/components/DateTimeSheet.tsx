@@ -4,6 +4,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/colors';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Selector de fecha u hora de los registros. En Android es el diálogo del sistema, que se cierra solo
 // al elegir (la pantalla pone `mode` a null en su onChange). En iOS la rueda no trae botón de cerrar:
@@ -52,5 +53,5 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: Colors.card, borderTopLeftRadius: 18, borderTopRightRadius: 18 },
   head: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 18, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  done: { color: Colors.accent, fontSize: 16, fontWeight: '800' },
+  done: { color: Colors.accent, fontSize: 16, fontFamily: INTER.medium },
 });

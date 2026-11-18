@@ -18,7 +18,7 @@ insert into public.professional_private (professional_id, personal_phone) values
 
 -- ---------------------------------------------------------------- Paciente A
 set local role authenticated;
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
 
 select lives_ok(
   $$ insert into public.appointments (id, professional_id, patient_id, patient_name, starts_at, duration_min)
@@ -54,7 +54,7 @@ select throws_ok(
   'P0001', null, 'el paciente no puede contestarse a sí mismo');
 
 -- ---------------------------------------------------------------- Paciente B (ajeno)
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.appointments), 0::bigint, 'B no ve las citas de A');
 select is((select count(*) from public.messages), 0::bigint, 'B no ve los mensajes de A');
 select throws_ok(
@@ -63,7 +63,7 @@ select throws_ok(
 select is((select count(*) from public.consultation_requests), 0::bigint, 'B no ve las solicitudes de A');
 
 -- ---------------------------------------------------------------- Especialista P
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated","aal":"aal2"}';
 select lives_ok(
   $$ update public.appointments set status = 'confirmed', video_room_url = 'https://video.example/room'
      where id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
@@ -86,7 +86,7 @@ select lives_ok(
   'P crea un plan de acción para A');
 
 -- ---------------------------------------------------------------- A de nuevo
-set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}';
+set local request.jwt.claims to '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
 select is((select count(*) from public.clinical_notes), 0::bigint, 'las notas clínicas son privadas del especialista');
 
 select * from finish();

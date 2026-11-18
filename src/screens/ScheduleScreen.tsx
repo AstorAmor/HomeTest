@@ -11,6 +11,7 @@ import { labAppointmentEvents } from '@/data/labAppointments';
 import { consultationEvents } from '@/data/consultations';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { dateLocale, t } from '@/i18n';
+import { fine, INTER } from '@/theme/fine';
 
 const TYPE_LABEL: Record<ScheduleType, string> = {
   delivery: 'Kit delivery',
@@ -68,7 +69,7 @@ export const ScheduleScreen = ({ embedded = false }: { embedded?: boolean }) => 
   const dayEvents = selected ? events.filter((e) => e.date === selected) : [];
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, embedded && styles.transparent]} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your schedule')} showBack={!embedded} />
 
@@ -200,8 +201,9 @@ const EventCard = ({ event, showDate, past = false }: { event: ScheduleEvent; sh
 };
 
 const styles = StyleSheet.create({
-  eventLink: { color: Colors.accent, fontSize: 13, fontWeight: '700', marginTop: 8 },
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  eventLink: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium, marginTop: 8 },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  transparent: { backgroundColor: 'transparent' }, // en la pestaña, deja ver el fondo ambiental
   content: { paddingBottom: 32 },
   card: {
     backgroundColor: Colors.card,
@@ -214,12 +216,12 @@ const styles = StyleSheet.create({
   legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10, justifyContent: 'center' },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 7, height: 7, borderRadius: 4 },
-  legendText: { color: Colors.textSecondary, fontSize: 11 },
+  legendText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11 },
   sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 20, marginTop: 20, marginBottom: 10 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700' },
-  sectionLink: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  sectionTitle: { ...fine.secTitle },
+  sectionLink: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   eventPast: { opacity: 0.7 },
-  empty: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20 },
+  empty: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20 },
   event: {
     backgroundColor: Colors.card,
     borderRadius: 14,
@@ -230,12 +232,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   eventHeader: { flexDirection: 'row', justifyContent: 'space-between' },
-  eventType: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  eventTime: { color: Colors.textSecondary, fontSize: 12 },
-  eventTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  eventDetail: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
+  eventType: { fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase' },
+  eventTime: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
+  eventTitle: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  eventDetail: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
   addRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, flexWrap: 'wrap' },
-  addLabel: { color: Colors.textMuted, fontSize: 12, marginRight: 2 },
+  addLabel: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginRight: 2 },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -247,7 +249,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 5,
   },
-  addText: { color: Colors.textPrimary, fontSize: 12, fontWeight: '600' },
+  addText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
   syncNote: { flexDirection: 'row', gap: 8, marginHorizontal: 20, marginTop: 14 },
-  syncText: { flex: 1, color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  syncText: { flex: 1, color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
 });

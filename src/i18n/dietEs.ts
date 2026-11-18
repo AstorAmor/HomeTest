@@ -390,4 +390,46 @@ export const dietEs: Record<string, string> = {
   'Shopping': 'Compra',
   day: 'día',
   week: 'semana',
+  // «Calorías y macros» de tu menú (fundador, 2026-11-06)
+  'Calories and macros': 'Calorías y macros',
+  'Adjust calories and macros': 'Ajustar calorías y macros',
+  'Your calories and macros': 'Tus calorías y macros',
+  'Your menu has points to discuss with your doctor. Check these numbers with them or with a dietitian before changing them.':
+    'Tu menú tiene puntos para comentar con tu médico. Revisa estos números con tu médico o con un dietista antes de cambiarlos.',
+  'Your menu': 'Tu menú',
+  'Empty boxes share what is left of the day. Your dishes stay and their portions follow your numbers.':
+    'Las casillas vacías se reparten lo que queda del día. Tus platos se quedan y sus raciones siguen tus números.',
+  'Menus under {n} kcal a day are not made here. If you need one, a dietitian can make it for you.':
+    'Aquí no se hacen menús de menos de {n} kcal al día. Si lo necesitas, un dietista puede hacértelo.',
+  'Save and choose new dishes': 'Guardar y elegir otros platos',
+  'Choose new dishes?': '¿Elegir otros platos?',
+  'You will get dishes that fit these numbers. Changes you made by hand will be lost.': 'Te saldrán platos que encajen con estos números. Lo que cambiaste a mano se perderá.',
+  'Choose them': 'Elegirlos',
+  'Could not save. Check your connection and try again.': 'No se ha podido guardar. Revisa tu conexión y vuelve a intentarlo.',
+  'Create your menu first: then you can set its calories and macros.': 'Primero crea tu menú: luego podrás poner sus calorías y macros.',
+  '{name} set the numbers of this menu. To change them, ask them.': '{name} ha puesto los números de este menú. Para cambiarlos, pídeselo.',
+  'Your dietitian': 'Tu dietista',
+  'Back to my menu': 'Volver a mi menú',
+  'Choose a day and set its numbers, as a dietitian would. Leave a box empty and we work it out from your answers.':
+    'Elige un día y pon sus números, como haría un dietista. Si dejas una casilla vacía, la calculamos con tus respuestas.',
+  'Apply to all days': 'Aplicar a todos los días',
+  'Done: every day has these numbers now.': 'Hecho: ahora todos los días tienen estos números.',
+  'Every day has the same numbers.': 'Todos los días tienen los mismos números.',
+  'Use the calculated ones for this day': 'Usar los calculados en este día',
+  // 2026-11-06: que el día y el reparto por comida siempre cuadren (MacroTargetsPanel, mealSplit)
+  'Your macros add up to {n} kcal, more than the {k} kcal of the day. Lower a macro or raise the kcal.':
+    'Tus macros suman {n} kcal, más que las {k} kcal del día. Baja algún macro o sube las kcal.',
+  '{meal}: its grams add up to {n} kcal and its share is {k} kcal ({s} %).': '{meal}: sus gramos suman {n} kcal y su parte es de {k} kcal ({s} %).',
+  '{meal}: its grams add up to {n} kcal, more than its {k} kcal ({s} %).': '{meal}: sus gramos suman {n} kcal, más que sus {k} kcal ({s} %).',
+  'The meals add up to {n} % of the kcal: leave at least 5 % for each empty meal.': 'Las comidas suman el {n} % de las kcal: deja al menos un 5 % a cada comida vacía.',
+  'The meals add up to {n} % of the kcal of the day, not 100 %.': 'Las comidas suman el {n} % de las kcal del día, no el 100 %.',
+  'The meals add up to {n} g of {macro} and the day has {k} g.': 'Las comidas suman {n} g de {macro} y el día tiene {k} g.',
+  'With three boxes filled in, the fourth is worked out from them.': 'Con tres casillas puestas, la cuarta sale de ellas.',
+  'Split it for me': 'Repartir automáticamente',
+  'Clear this meal': 'Vaciar esta comida',
+  'Boxes with a dashed border are worked out: what is left so that everything adds up to the day.':
+    'Las casillas con borde discontinuo se calculan solas: es lo que queda para que todo sume lo del día.',
+  'worked out': 'se calcula sola',
+  'Some numbers do not add up on: {days}.': 'Hay números que no cuadran en: {days}.',
+  'Some numbers do not add up: check them before sending the menu.': 'Hay números que no cuadran: revísalos antes de mandar el menú.',
 };

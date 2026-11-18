@@ -310,7 +310,7 @@ export async function listMyShares(): Promise<DataShare[]> {
     grantee: r.grantee === 'support' ? 'support' : 'professional',
     professionalId: r.professional_id,
     professionalName:
-      r.grantee === 'support' ? t('KUOVA Support') : r.professionals?.display_name ?? 'Professional',
+      r.grantee === 'support' ? t('KUOVA Support') : r.professionals?.display_name ?? t('Professional'),
     professionalRole: r.professionals?.role ?? '',
     scopes: r.scopes,
     note: r.note ?? null,
@@ -417,12 +417,14 @@ export async function fetchSharedPatientData(patientId: string, scopes: ShareSco
     for (const { table, dateColumn, ownerColumn = 'user_id' } of SCOPE_TABLES[scope] ?? []) {
       jobs.push(
         (async () => {
-          const { data, error } = await supabase!
-            .from(table)
-            .select('*')
-            .eq(ownerColumn, patientId)
-            .order(dateColumn, { ascending: false })
-            .limit(60);
+          let query = supabase!.from(table).select('*').eq(ownerColumn, patientId);
+          // Las metas de Hoy (kind 'meta', una fila por meta y día) y las sesiones de Kegel no salen en la
+          // vista del profesional: llenarían las 60 filas y taparían el peso o el colesterol
+          // (src/data/metasRepository.ts, src/data/kegelRepository.ts). Tampoco las etiquetas del check-in
+          // (kind 'checkin_tag', src/data/checkInTagRepository.ts) ni el diario de síntomas (kind 'symptom',
+          // src/data/symptomRepository.ts: lleva texto libre y no es una categoría que el paciente haya compartido)
+          if (table === 'metric_readings') query = query.not('kind', 'in', '(meta,kegel,checkin_tag,symptom)');
+          const { data, error } = await query.order(dateColumn, { ascending: false }).limit(60);
           fail(error);
           out[table] = data ?? [];
         })()

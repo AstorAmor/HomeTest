@@ -18,6 +18,7 @@ import {
   supportRead,
   SupportReadResult,
 } from '@/data/support';
+import { fine, INTER } from '@/theme/fine';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
@@ -110,7 +111,7 @@ export const SupportScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <ScreenHeader title={t('Support access')} showBack backFallback={tabHref(TAB.more)} />
+        <ScreenHeader title={t('Support access')} showBack backFallback={tabHref(TAB.you)} />
 
         <View style={styles.intro}>
           <Ionicons name="shield-checkmark" size={22} color={Colors.accent} />
@@ -241,7 +242,7 @@ export const SupportScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
   intro: {
     flexDirection: 'row',
@@ -252,20 +253,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 18,
   },
-  introText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
-  muted: { color: Colors.textMuted, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
-  error: { color: Colors.danger, fontSize: 13, paddingHorizontal: 20, marginVertical: 10 },
-  hint: { color: Colors.textMuted, fontSize: 12, paddingHorizontal: 20, marginTop: 6 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  introText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  muted: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, paddingHorizontal: 20, marginVertical: 10 },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, paddingHorizontal: 20, marginTop: 6 },
+  link: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 20, marginBottom: 10 },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    paddingHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 8,
-  },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginTop: 16, marginBottom: 8 },
   card: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -275,13 +269,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 10,
   },
-  name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  meta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  note: { color: Colors.textSecondary, fontSize: 13, fontStyle: 'italic', marginTop: 8 },
+  name: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  meta: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
+  note: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, fontStyle: 'italic', marginTop: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
   scopeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
   chip: { backgroundColor: Colors.violetSoft, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 4 },
-  chipText: { color: Colors.textPrimary, fontSize: 12 },
+  chipText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12 },
   input: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -291,7 +285,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     minHeight: 60,
     color: Colors.textPrimary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     textAlignVertical: 'top',
   },
   scopeButton: {
@@ -303,9 +297,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   scopeButtonOn: { borderColor: Colors.accent, backgroundColor: withAlpha(Colors.accent, 0.12) },
-  scopeButtonText: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  scopeButtonText: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
   disabled: { opacity: 0.45 },
-  tableTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800', paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
+  tableTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium, paddingHorizontal: 20, marginTop: 18, marginBottom: 8 },
   row: {
     backgroundColor: Colors.card,
     borderWidth: 1,
@@ -316,8 +310,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     gap: 2,
   },
-  rowText: { color: Colors.textPrimary, fontSize: 12, lineHeight: 17 },
-  rowKey: { color: Colors.textSecondary, fontWeight: '700' },
+  rowText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
+  rowKey: { color: Colors.textSecondary, fontFamily: INTER.medium },
   fileRow: {
     flexDirection: 'row',
     alignItems: 'center',

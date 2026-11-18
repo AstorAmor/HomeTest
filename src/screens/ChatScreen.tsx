@@ -11,6 +11,7 @@ import { TemplatePicker } from '@/components/pro/TemplatePicker';
 import { findGaps } from '@/data/proTemplates';
 
 import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 const time = (iso: string) => new Date(iso).toLocaleTimeString(dateLocale(), { hour: '2-digit', minute: '2-digit' });
 
 // Chat paciente ↔ especialista (lo usan los dos lados). Mensajes en directo con
@@ -65,13 +66,13 @@ export const ChatScreen = () => {
     try {
       const reply =
         side === 'pro'
-          ? 'Thanks, doctor! (automatic demo reply)'
-          : 'Thanks for your message. I usually answer within 24 h on working days. (automatic demo reply)';
+          ? t('Thanks, doctor! (automatic demo reply)')
+          : t('Thanks for your message. I usually answer within 24 h on working days. (automatic demo reply)');
       const m = await chat.send(conversation, body, demo ? reply : undefined);
       setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
     } catch (e) {
       setText(body);
-      setError(e instanceof Error ? e.message : 'Could not send');
+      setError(e instanceof Error ? e.message : t('Could not send'));
     }
   };
 
@@ -96,7 +97,7 @@ export const ChatScreen = () => {
                 <Text style={[styles.body, mine && { color: Colors.background }]}>{item.body}</Text>
                 <Text style={[styles.time, mine && { color: Colors.background, opacity: 0.8 }]}>
                   {time(item.createdAt)}
-                  {mine && item.readAt ? ' · read' : ''}
+                  {mine && item.readAt ? ` · ${t('read')}` : ''}
                 </Text>
               </View>
             );
@@ -119,7 +120,7 @@ ${t}` : t));
             />
           </View>
         )}
-        {gaps.length > 0 && <Text style={styles.gaps}>Fill in or delete before sending: {gaps.slice(0, 4).join('  ')}</Text>}
+        {gaps.length > 0 && <Text style={styles.gaps}>{t('Fill in or delete before sending: {gaps}', { gaps: gaps.slice(0, 4).join('  ') })}</Text>}
         <View style={styles.composer}>
           {side === 'pro' && (
             <TouchableOpacity style={[styles.tplBtn, showTemplates && { backgroundColor: Colors.accent }]} onPress={() => setShowTemplates((v) => !v)} accessibilityLabel={t('Templates')}>
@@ -145,20 +146,20 @@ ${t}` : t));
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
-  notice: { color: Colors.textMuted, fontSize: 11, textAlign: 'center', marginHorizontal: 24, marginBottom: 6 },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  notice: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, textAlign: 'center', marginHorizontal: 24, marginBottom: 6 },
   list: { paddingHorizontal: 16, paddingVertical: 8, gap: 8, flexGrow: 1 },
   bubble: { maxWidth: '80%', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },
   mine: { alignSelf: 'flex-end', backgroundColor: Colors.accent, borderBottomRightRadius: 4 },
   theirs: { alignSelf: 'flex-start', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderBottomLeftRadius: 4 },
-  body: { color: Colors.textPrimary, fontSize: 15, lineHeight: 20 },
-  time: { color: Colors.textMuted, fontSize: 10, marginTop: 3, alignSelf: 'flex-end' },
+  body: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 20 },
+  time: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10, marginTop: 3, alignSelf: 'flex-end' },
   empty: { color: Colors.textSecondary, textAlign: 'center', marginTop: 40 },
-  error: { color: Colors.danger, fontSize: 12, marginHorizontal: 16 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 12, marginHorizontal: 16 },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, padding: 12, borderTopWidth: 1, borderTopColor: Colors.divider },
-  input: { flex: 1, maxHeight: 120, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9, color: Colors.textPrimary, fontSize: 15 },
+  input: { flex: 1, maxHeight: 120, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 15 },
   templates: { paddingHorizontal: 12, paddingTop: 8, borderTopWidth: 1, borderTopColor: Colors.divider },
-  gaps: { color: Colors.attention, fontSize: 12, fontWeight: '700', marginHorizontal: 16, marginTop: 6 },
+  gaps: { color: Colors.attention, fontSize: 12, fontFamily: INTER.medium, marginHorizontal: 16, marginTop: 6 },
   tplBtn: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, borderColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
   send: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center' },
 });

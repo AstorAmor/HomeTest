@@ -7,6 +7,7 @@ import { Colors } from '@/constants/colors';
 import { ActionPlanList } from '@/components/ActionPlanList';
 import { SharePlanButton } from '@/components/SharePlanButton';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Plan personalizado del informe: solo qué puedes hacer y qué se espera que mejore.
 // La comparativa de hábitos (sueño, HRV, pasos…) vive aparte en /habits.
@@ -51,7 +52,7 @@ export const ReportPlanScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   content: {
     paddingBottom: 40,
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
   },
   intro: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     lineHeight: 20,
   },
   ctaRow: {
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
   ctaPrimaryText: {
     color: Colors.background,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   ctaSecondary: {
     flex: 1,
@@ -94,6 +95,6 @@ const styles = StyleSheet.create({
   ctaSecondaryText: {
     color: Colors.accent,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
 });

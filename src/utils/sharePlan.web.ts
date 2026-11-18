@@ -1,4 +1,5 @@
 import { PlanDoc, planToHtml } from './planPdf';
+import { t } from '@/i18n';
 
 // Web: el navegador no puede adjuntar un fichero generado a WhatsApp o al correo, así
 // que se abre el diálogo de impresión con el plan maquetado (el mismo HTML que el PDF
@@ -15,7 +16,7 @@ export async function printPlan(doc: PlanDoc): Promise<void> {
   const win = iframe.contentWindow;
   if (!win) {
     iframe.remove();
-    throw new Error('Could not open the print preview.');
+    throw new Error(t('Could not open the print preview.'));
   }
   win.document.open();
   win.document.write(planToHtml(doc));

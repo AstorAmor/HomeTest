@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AppIcon } from '@/components/HealthIcons';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { TrendChart } from '@/components/TrendChart';
 import { Colors } from '@/constants/colors';
@@ -11,8 +12,10 @@ import { showSamples } from '@/data/dataMode';
 import { LabUpload, labUploadRepository } from '@/data/labUploads';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { ChangeVerdict, classifyChange, compareUpload } from '@/utils/progress';
+import { expectSystemUi } from '@/utils/systemUi';
 import { DailyPoint, formatSleep, useDailyWearables } from '@/wearables/dailySeries';
 import { dateLocale, num, t } from '@/i18n';
+import { fine, INTER } from '@/theme/fine';
 
 interface HabitStat {
   key: string;
@@ -38,7 +41,7 @@ const SAMPLE_STATS: HabitStat[] = [
     unit: 'h',
     higherIsBetter: true,
     decimals: 1,
-    note: `Bedtime moved from ${userProfile.typical_bedtime.baseline} to ${userProfile.typical_bedtime.current}`,
+    note: t('Bedtime moved from {from} to {to}', { from: userProfile.typical_bedtime.baseline, to: userProfile.typical_bedtime.current }),
   },
   {
     key: 'sleep_regularity',
@@ -220,6 +223,8 @@ export const HabitsProgressScreen = () => {
     if (moves.length) lines.push('', t('Two tests are not a trend: values change from day to day and between labs.'));
     const message = lines.join('\n');
     try {
+      // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (fundador, 2026-11-17)
+      expectSystemUi();
       await Share.share({ message });
     } catch {
       try {
@@ -289,7 +294,8 @@ export const HabitsProgressScreen = () => {
               return (
                 <View key={stat.key} style={styles.statCard}>
                   <View style={styles.statHeader}>
-                    <Ionicons name={stat.icon} size={18} color={Colors.accent} />
+                    {/* AppIcon: las pesas salen con el dibujo único de la app (fine/dumbbell.ts) */}
+                    <AppIcon name={stat.icon} size={18} color={Colors.accent} />
                     {improved && <Ionicons name="trending-up" size={14} color={Colors.accent} />}
                   </View>
                   <Text style={styles.statValue}>{formatStat(stat, stat.current)}</Text>
@@ -326,21 +332,21 @@ export const HabitsProgressScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   content: {
     paddingBottom: 40,
   },
-  intro: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
-  empty: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 20 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 16 },
+  empty: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginHorizontal: 20, marginBottom: 20 },
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  groupTitle: { fontSize: 15, fontWeight: '700' },
+  groupTitle: { ...fine.secTitle },
   markerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
-  markerName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  markerValue: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600', flexShrink: 0 },
-  markerWas: { color: Colors.textMuted, fontWeight: '400' },
+  markerName: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  markerValue: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, flexShrink: 0 },
+  markerWas: { color: Colors.textMuted, fontFamily: INTER.regular },
   disclaimer: { flexDirection: 'row', gap: 8, marginHorizontal: 20, marginBottom: 20, marginTop: -2 },
-  disclaimerText: { flex: 1, color: Colors.textMuted, fontSize: 12, lineHeight: 17 },
+  disclaimerText: { flex: 1, color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, lineHeight: 17 },
   share: {
     flexDirection: 'row',
     gap: 8,
@@ -352,15 +358,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 12,
   },
-  shareText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-    marginTop: 8,
-  },
+  shareText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  sectionTitle: { ...fine.secTitle, paddingHorizontal: 20, marginBottom: 12, marginTop: 8 },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -384,22 +383,22 @@ const styles = StyleSheet.create({
   statValue: {
     color: Colors.textPrimary,
     fontSize: 22,
-    fontWeight: '800',
+    fontFamily: INTER.medium,
   },
   statLabel: {
     color: Colors.textPrimary,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginTop: 2,
   },
   statBaseline: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 2,
   },
   statNote: {
     color: Colors.textMuted,
-    fontSize: 10,
+    fontFamily: INTER.regular, fontSize: 10,
     marginTop: 6,
     lineHeight: 14,
   },
@@ -415,7 +414,7 @@ const styles = StyleSheet.create({
   trendLabel: {
     color: Colors.textPrimary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     marginBottom: 8,
   },
 });

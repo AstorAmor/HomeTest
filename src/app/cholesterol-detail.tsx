@@ -4,7 +4,10 @@ import { cholesterolRepository } from '@/data/cholesterolRepository';
 import { Colors } from '@/constants/colors';
 import { sampleSimpleEntries } from '@/data/sampleReadings';
 import { t } from '@/i18n';
-import { LAB_VALUE_LABEL, labValues } from '@/data/labUploadValues';
+import { peekWithLabValues, withLabValues } from '@/data/labUploadValues';
+import { SimpleMetricEntry } from '@/types/simpleMetric';
+
+const rows = (entries: SimpleMetricEntry[]) => entries.map((e): GenericMetricEntry => ({ id: e.id, valor: e.valor, unidad: e.unidad, fecha: e.fecha }));
 
 export default function CholesterolDetail() {
   const router = useRouter();
@@ -15,17 +18,12 @@ export default function CholesterolDetail() {
       color={Colors.accent}
       icon="analytics-outline"
       band={{ low: 125, high: 200 }}
-      loadEntries={async () => {
-        const entries = await cholesterolRepository.getAll();
-        return entries.map((e): GenericMetricEntry => ({
-          id: e.id,
-          valor: e.valor,
-          unidad: e.unidad,
-          fecha: e.fecha,
-        })).concat(
-          // Lo que trae cada analítica subida (no se edita aquí: abre la analítica)
-          (await labValues('total_cholesterol')).map((l) => ({ id: l.id, valor: l.valor, unidad: l.unidad, fecha: l.fecha, extra: LAB_VALUE_LABEL(), uploadId: l.uploadId })),
-        );
+      // Lo apuntado más lo que trae cada analítica subida (no se edita aquí: abre la analítica); con lo último
+      // leído, al momento
+      loadEntries={() => withLabValues(cholesterolRepository.getAll().then(rows), 'total_cholesterol')}
+      peekEntries={() => {
+        const own = cholesterolRepository.peek();
+        return peekWithLabValues(own && rows(own), 'total_cholesterol');
       }}
       onAddPress={() => router.push('/log-cholesterol')}
       sample={sampleSimpleEntries('cholesterol', 'mg/dL')}

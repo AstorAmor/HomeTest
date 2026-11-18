@@ -2,6 +2,7 @@ import { FOOD_GROUPS, FoodGroup, mealGroups } from './foodGroups';
 import type { DigestionEntry, GutSafetyAnswers, GutSymptom, SafetyQuestionId, UsualFoods, UsualFrequency } from '@/types/digestion';
 import { USUAL_FREQUENCIES } from '@/types/digestion';
 import type { BowelEntry } from '@/types/bathroom';
+import { effectiveSafetyAnswers } from './gutSafety';
 import { num, t } from '@/i18n';
 
 // Lo que vemos en tu digestión. Cada vez que el usuario apunta una molestia en Digestión, le
@@ -286,10 +287,11 @@ export interface GutContext {
 
 const rank: Record<Confidence, number> = { clear: 3, probable: 2, hint: 1 };
 
+// Cómo se enseña: «Fiabilidad alta / media / baja», más formal que «Bastante claro» (fundador, 2026-11-16)
 export const CONFIDENCE_LABEL: Record<Confidence, string> = {
-  clear: 'Quite clear',
-  probable: 'Likely',
-  hint: 'A hint',
+  clear: 'High reliability',
+  probable: 'Medium reliability',
+  hint: 'Low reliability',
 };
 
 const FACTOR_TITLE: Record<Factor, string> = {
@@ -351,15 +353,15 @@ export const SUGGESTIONS: Record<TestSuggestion['id'], () => TestSuggestion> = {
   hpylori: () => ({
     id: 'hpylori',
     title: t('Helicobacter pylori test'),
-    body: t('Heaviness and feeling full quickly can come from a stomach infection with Helicobacter pylori. A doctor or pharmacy can do the breath test (urea C13); it is not in our store yet.'),
+    body: t('Heaviness and feeling full quickly can come from a stomach infection with Helicobacter pylori. A breath test (urea C13) can show it: you can request it here or ask your doctor or pharmacy.'),
     warning: t('For a reliable result: 2 weeks without omeprazole or similar, and 4 weeks without antibiotics.'),
-    storeIds: [],
+    storeIds: ['hpylori'],
   }),
   ibs: () => ({
     id: 'ibs',
     title: t('See a digestive doctor first'),
     body: t('When nothing else explains it, tummy pain that comes with changes in your stools is what doctors call irritable bowel. The usual first steps are a doctor visit and a coeliac blood test; with diarrhoea, also a stool calprotectin test, which your doctor can order. A low-FODMAP diet can help, best guided by a dietitian.'),
-    storeIds: ['coeliac', 'consult_digestive'],
+    storeIds: ['coeliac'],
   }),
   reflux_advice: () => ({
     id: 'reflux_advice',
@@ -451,7 +453,8 @@ export function analyseGut(ctx: GutContext): GutAnalysis {
 
   // ---- Alarmas ----
   const alarms: GutAlarm[] = [];
-  const answers = ctx.safety?.answers ?? {};
+  // Lo de «empezaron después de los 50» no cuenta (vale «no») si el perfil dice que tiene menos de 50
+  const answers = effectiveSafetyAnswers(ctx.safety?.answers ?? {}, ctx.age);
   (['weight_loss', 'blood', 'anaemia', 'night', 'swallow_vomit', 'onset_after_50', 'family'] as SafetyQuestionId[]).forEach((id) => {
     if (answers[id]) alarms.push(alarm(id));
   });

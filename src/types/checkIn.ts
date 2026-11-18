@@ -3,7 +3,9 @@
 
 export type DayMoment = 'just_woke_up' | 'mid_day' | 'winding_down';
 
-export type Mood = 'excited' | 'happy' | 'calm' | 'neutral' | 'sad' | 'anxious' | 'stressed' | 'irritable';
+// 'unmotivated' (Desmotivado) ya no se elige (fundador, 2026-11-05: en su lugar, Acelerado), pero los
+// check-ins que lo llevan se siguen viendo con su carita
+export type Mood = 'excited' | 'happy' | 'calm' | 'neutral' | 'sad' | 'wired' | 'unmotivated' | 'anxious' | 'stressed' | 'irritable';
 
 export interface CheckInEntry {
   id: string;
@@ -24,14 +26,19 @@ export const MOMENT_OPTIONS: { id: DayMoment; label: string; icon: string }[] = 
   { id: 'winding_down', label: 'My day is winding down', icon: 'moon-outline' },
 ];
 
-export const MOOD_OPTIONS: { id: Mood; label: string; emoji: string; positive: boolean }[] = [
+export const MOOD_OPTIONS: { id: Mood; label: string; emoji: string; positive: boolean; legacy?: boolean }[] = [
   // Con energía y ganas de hacer cosas (ambición), distinto de simplemente contento
   { id: 'excited', label: 'Excited', emoji: '🤩', positive: true },
   { id: 'happy', label: 'Happy', emoji: '😊', positive: true },
   { id: 'calm', label: 'Calm', emoji: '😌', positive: true },
   { id: 'neutral', label: 'Neutral', emoji: '😐', positive: true },
   { id: 'sad', label: 'Sad', emoji: '😔', positive: false },
+  // Revolucionado, a mil por hora: la sonrisa nerviosa
+  { id: 'wired', label: 'Wired', emoji: '😬', positive: false },
   { id: 'anxious', label: 'Anxious', emoji: '😟', positive: false },
   { id: 'stressed', label: 'Stressed', emoji: '😣', positive: false },
   { id: 'irritable', label: 'Irritable', emoji: '😤', positive: false },
+  { id: 'unmotivated', label: 'Unmotivated', emoji: '😞', positive: false, legacy: true },
 ];
+// Los que se pueden elegir al hacer el check-in
+export const MOOD_PICKER = MOOD_OPTIONS.filter((m) => !m.legacy);

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TextStyle, StyleProp, StyleSheet } from 'react-native';
+import { INTER } from '@/theme/fine';
 
 interface UnitLabelProps {
   unit: string;
@@ -68,6 +69,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   superscript: {
-    fontSize: 9,
+    fontFamily: INTER.regular, fontSize: 9,
   },
 });

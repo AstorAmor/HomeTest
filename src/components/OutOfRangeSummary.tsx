@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, withAlpha } from '@/constants/colors';
 import { ExtractedLabReport } from '@/types/labReport';
 import { getRangeStatus } from '@/utils/rangeStatus';
+import { SecHead } from './fine/Fine';
 import { LabValueRow } from './LabValueRow';
 import { t } from '@/i18n';
+import { FINE, ff, fine } from '@/theme/fine';
 
-// "Para revisar" de una analítica subida: los valores fuera del rango del laboratorio, cada uno con
-// su resumen al tocarlo (qué es, para qué se mide, qué puede moverlo y qué ayuda según tu plan). La
-// fila es la misma que en «Todos tus valores» (LabValueRow).
-export const OutOfRangeSummary = ({ report }: { report: ExtractedLabReport }) => {
-  const [open, setOpen] = useState<string | null>(null);
+// "Para revisar" de una analítica subida: los valores fuera del rango del laboratorio. Al tocar uno se abre
+// ese marcador en Mis datos (qué es, qué puede moverlo y todos sus valores). La fila es la misma que en
+// «En rango» (LabValueRow). Desde el 2026-11-16, sin tarjeta con borde de color: la cabecera fina de sección
+// y las filas con línea fina (lo de fuera, en oro).
+export const OutOfRangeSummary = ({ report, uploadId }: { report: ExtractedLabReport; uploadId?: string }) => {
   const items = report.secciones.flatMap((sec) =>
     sec.parametros
       .filter((p) => typeof p.valor === 'number')
@@ -20,39 +21,29 @@ export const OutOfRangeSummary = ({ report }: { report: ExtractedLabReport }) =>
   );
   if (!items.length) {
     return (
-      <View style={[styles.card, styles.allGood]}>
-        <Ionicons name="checkmark-circle" size={20} color={Colors.ok} />
+      <View style={[styles.wrap, styles.allGood]}>
+        <Ionicons name="checkmark" size={17} color={FINE.jade} />
         <Text style={styles.allGoodText}>{t('Everything with a reference is within range.')}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.title}>{t('To review')}</Text>
-      <Text style={styles.sub}>{t('Tap a value to see what it is and what has been linked to better values.')}</Text>
-      {items.map(({ p }, i) => {
-        const key = `${p.nombre}-${i}`;
-        return <LabValueRow key={key} p={p} open={open === key} onToggle={() => setOpen(open === key ? null : key)} divider={i > 0} />;
-      })}
-      <Text style={styles.note}>{t('A value out of range is not a diagnosis. Your doctor puts it in context.')}</Text>
+    <View style={styles.wrap}>
+      <SecHead title={t('To review')} style={styles.head} />
+      <Text style={[fine.note, styles.sub]}>{t('Tap a value to see what it is and all your results for it.')}</Text>
+      {items.map(({ p }, i) => (
+        <LabValueRow key={`${p.nombre}-${i}`} p={p} divider={i > 0} uploadId={uploadId} />
+      ))}
+      <Text style={fine.note}>{t('A value out of range is not a diagnosis. Your doctor puts it in context.')}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: withAlpha(Colors.attention, 0.45),
-    borderRadius: 16,
-    padding: 14,
-    marginHorizontal: 20,
-    marginBottom: 16,
-  },
-  allGood: { flexDirection: 'row', alignItems: 'center', gap: 8, borderColor: Colors.cardBorder },
-  allGoodText: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  title: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  sub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2, marginBottom: 6 },
-  note: { color: Colors.textMuted, fontSize: 11, marginTop: 8 },
+  wrap: { marginHorizontal: 20 },
+  head: { marginBottom: 0 },
+  sub: { marginTop: 0, marginBottom: 2 },
+  allGood: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 24, paddingTop: 14, borderTopWidth: 1, borderTopColor: FINE.rule },
+  allGoodText: { ...ff('regular'), flex: 1, color: FINE.ivory, fontSize: 14, lineHeight: 20 },
 });

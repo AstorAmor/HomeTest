@@ -1,7 +1,7 @@
-import type { SetLog, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
+import type { SetLog, WorkoutCompletion, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
 
 // Historial de entrenos (Entrenamientos → Historial): lo que se entrenó, del más reciente al más
-// antiguo, sin editar nada. Junta dos fuentes:
+// antiguo. No se edita, pero desde el 2026-11-06 se puede borrar un entreno (historyRemoval). Junta dos fuentes:
 // - las sesiones hechas de los programas (`completions`, con cada serie desde el 2026-10-23);
 // - los entrenamientos del plan (tabla `workouts`): los apuntados a mano con «Apuntar un entreno».
 // Cada sesión de programa guarda también un entrenamiento del plan con la misma hora: ese no se repite.
@@ -13,6 +13,7 @@ export interface LoggedWorkout {
   id: string;
   fecha: string;
   type: 'strength' | 'cardio' | 'mobility' | 'sport';
+  sport?: string; // con 'sport' («Otro»): qué deporte, si se apuntó (src/logic/workoutSports.ts)
   minutes: number;
   intensity: 'easy' | 'moderate' | 'hard';
 }
@@ -21,6 +22,9 @@ export type HistoryEntry =
   | {
       kind: 'session';
       key: string;
+      programId: string;
+      index: number; // posición en `completions` del programa (para borrarla)
+      sessionId: string;
       at: string;
       minutes: number;
       programTitle: string;
@@ -44,6 +48,9 @@ export function workoutHistory(programs: Pick<WorkoutProgram, 'id' | 'title' | '
       return {
         kind: 'session' as const,
         key: `${p.id}-${c.at}-${i}`,
+        programId: p.id,
+        index: i,
+        sessionId: c.sessionId,
         at: c.at,
         minutes: c.minutes,
         programTitle: p.title,
@@ -56,8 +63,35 @@ export function workoutHistory(programs: Pick<WorkoutProgram, 'id' | 'title' | '
   const times = sessions.map((s) => Date.parse(s.at));
   const others: HistoryEntry[] = logged
     .filter((w) => !times.some((t) => Math.abs(t - Date.parse(w.fecha)) < SAME_MS))
-    .map((w) => ({ kind: 'logged' as const, key: w.id, at: w.fecha, type: w.type, minutes: w.minutes, intensity: w.intensity }));
+    .map((w) => ({ kind: 'logged' as const, key: w.id, at: w.fecha, type: w.type, ...(w.sport ? { sport: w.sport } : {}), minutes: w.minutes, intensity: w.intensity }));
   return [...sessions, ...others].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+// Qué hay que borrar para quitar un entreno del historial (fundador, 2026-11-06: «quitar un entrenamiento que
+// hiciste»): uno apuntado, su fila de la tabla de entrenos; una sesión de un programa, esa sesión de sus
+// `completions` (con sus series) y el entreno del plan que se guardó con ella a la misma hora, para que no
+// vuelva a salir por ahí. Así deja de contar también en las metas de cardio y fuerza.
+export interface HistoryRemoval {
+  program: { id: string; completions: WorkoutCompletion[] } | null;
+  loggedIds: string[];
+}
+
+export function historyRemoval(
+  e: HistoryEntry,
+  programs: Pick<WorkoutProgram, 'id' | 'completions'>[],
+  logged: Pick<LoggedWorkout, 'id' | 'fecha'>[],
+): HistoryRemoval {
+  if (e.kind === 'logged') return { program: null, loggedIds: [e.key] };
+  const at = Date.parse(e.at);
+  const p = programs.find((x) => x.id === e.programId);
+  // Por su posición si sigue siendo la misma sesión; si no (la lista cambió), la primera con esa hora
+  const list = p?.completions ?? [];
+  const same = (c: WorkoutCompletion) => c.sessionId === e.sessionId && c.at === e.at;
+  const i = same(list[e.index] ?? ({} as WorkoutCompletion)) ? e.index : list.findIndex(same);
+  return {
+    program: p && i >= 0 ? { id: p.id, completions: list.filter((_, j) => j !== i) } : null,
+    loggedIds: logged.filter((w) => Math.abs(Date.parse(w.fecha) - at) < SAME_MS).map((w) => w.id),
+  };
 }
 
 // Las series de una sesión agrupadas por ejercicio, en el orden en que se hicieron

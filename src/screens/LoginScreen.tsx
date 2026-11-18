@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Text,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -21,21 +20,26 @@ import { PROFESSIONAL_ROLES, ProfessionalRole } from '@/data/sharing';
 import { isPublicDemo } from '@/lib/supabase';
 import { t } from '@/i18n';
 import { PasswordInput } from '@/components/PasswordInput';
+import { CodeInput } from '@/components/CodeInput';
+import { isStagingApp, isTestDatabase } from '@/lib/appVariant';
+import { isTotpCodeComplete } from '@/logic/mfa';
+import { isPasswordStrongEnough, passwordRuleFromAuthError } from '@/logic/password';
+import { PasswordRules } from '@/components/PasswordRules';
+import { markAppReady } from '@/components/LaunchIntro';
+import { INTER } from '@/theme/fine';
 
 // Los errores de Supabase llegan en inglés: los más comunes, en el idioma de la app
 const authMessage = (m: string) => {
   if (/invalid login credentials/i.test(m)) return t('Wrong email or password.');
   if (/email not confirmed/i.test(m)) return t('Confirm your email first: open the message we sent you.');
   if (/already registered|already exists/i.test(m)) return t('There is already an account with this email. Sign in instead.');
-  if (/password should be at least/i.test(m)) return t('The password needs at least 6 characters.');
+  if (passwordRuleFromAuthError(m)) return t('The password needs at least 8 characters, with letters (a-z) and numbers.');
   if (/only request this after|rate limit|too many/i.test(m)) return t('Wait a minute before asking for another email.');
   if (/token has expired|otp.*(invalid|expired)|invalid.*otp/i.test(m))
     return t('That code is not right or has expired. Check the latest email or ask for a new one.');
   return m;
 };
 
-// Código de 6 cifras del correo de «¿Has olvidado tu contraseña?»
-const cleanCode = (raw: string) => raw.replace(/\D/g, '').slice(0, 6);
 const RESEND_SECONDS = 60;
 
 export const LoginScreen = () => {
@@ -54,13 +58,12 @@ export const LoginScreen = () => {
   const [specialty, setSpecialty] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
 
-  const { login, signup, authMode, setDemoMode, requestPasswordReset, verifyResetCode } = useAuth();
-  const isProfessional = proAccess && authMode === 'supabase';
-
-  // «¿Has olvidado tu contraseña?»: 'email' = pedir el código; 'code' = escribirlo (enviado a resetTo).
-  // Reenvío con espera de 1 minuto, como Supabase
+  const { login, signup, authMode, setDemoMode, verifySignupCode, resendSignupEmail, requestPasswordReset, verifyResetCode } = useAuth();
+  // «¿Has olvidado tu contraseña?»: 'email' = pedir el código; 'code' = escribirlo (enviado a resetTo)
   const [reset, setReset] = useState<null | 'email' | 'code'>(null);
   const [resetTo, setResetTo] = useState('');
+  const isProfessional = proAccess && authMode === 'supabase';
+  // «Revisa tu correo»: código de 6 cifras del correo y reenvío (con espera de 1 minuto, como Supabase)
   const [code, setCode] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [info, setInfo] = useState('');
@@ -70,9 +73,43 @@ export const LoginScreen = () => {
     return () => clearTimeout(id);
   }, [cooldown]);
 
+  const showConfirm = (to: string) => {
+    setSentTo(to);
+    setCode('');
+    setInfo('');
+    setError('');
+  };
+
+  // c: el código recién completado (al llegar a 6 cifras se envía solo, antes de que se guarde en el estado)
+  const confirmCode = async (c = code) => {
+    if (!sentTo || loading) return;
+    setError('');
+    setLoading(true);
+    try {
+      // Con el código bueno queda la sesión iniciada: AuthContext lleva a la app
+      await verifySignupCode(sentTo, c);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resend = async () => {
+    if (!sentTo || cooldown > 0) return;
+    setError('');
+    setInfo('');
+    try {
+      await resendSignupEmail(sentTo);
+      setInfo(t('Sent again. It can take a minute; look in spam or promotions too.'));
+      setCooldown(RESEND_SECONDS);
+    } catch (err) {
+      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+    }
+  };
+
   const openReset = () => {
     setReset('email');
-    setSentTo(null);
     setCode('');
     setInfo('');
     setError('');
@@ -106,12 +143,13 @@ export const LoginScreen = () => {
     }
   };
 
-  const confirmResetCode = async () => {
+  const confirmResetCode = async (c = code) => {
+    if (loading) return;
     setError('');
     setLoading(true);
     try {
-      // Con el código bueno se abre la sesión y PasswordResetGuard enseña «Elige una contraseña nueva»
-      await verifyResetCode(resetTo, code);
+      // Con el código bueno se abre la sesión y MfaGuard enseña «Elige una contraseña nueva»
+      await verifyResetCode(resetTo, c);
     } catch (err) {
       setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
       setLoading(false);
@@ -131,6 +169,11 @@ export const LoginScreen = () => {
           setLoading(false);
           return;
         }
+        if (authMode === 'supabase' && !isPasswordStrongEnough(password)) {
+          setError(t('The password needs at least 8 characters, with letters (a-z) and numbers.'));
+          setLoading(false);
+          return;
+        }
         if (password !== password2) {
           setError(t('The two passwords do not match.'));
           setLoading(false);
@@ -145,32 +188,42 @@ export const LoginScreen = () => {
             : undefined
         );
         if (result === 'confirm_email') {
-          // Cuenta creada: a iniciar sesión cuando confirme el correo
-          setSentTo(email.trim());
+          // Cuenta creada: falta confirmar el correo (código de 6 cifras o el botón del correo)
           setIsSignUp(false);
           setPassword('');
           setPassword2('');
+          showConfirm(email.trim());
+          setCooldown(RESEND_SECONDS);
         }
       } else {
         await login(email, password);
       }
     } catch (err) {
-      setError(err instanceof Error ? authMessage(err.message) : t('Authentication error'));
+      const message = err instanceof Error ? err.message : '';
+      // Cuenta sin confirmar: directamente a «Revisa tu correo», con el reenvío a mano
+      if (/email not confirmed/i.test(message)) {
+        showConfirm(email.trim());
+        return;
+      }
+      setError(message ? authMessage(message) : t('Authentication error'));
     } finally {
       setLoading(false);
     }
   };
 
+  // Ya está el log-in debajo: la entrada de la marca se puede ir (LaunchIntro)
+  useEffect(() => markAppReady(), []);
+
   const isFormValid = email && password && (!isSignUp || (nombre && password2));
+  const showRules = isSignUp && authMode === 'supabase';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <CosmicBackground />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* 'padding' también en Android (app de borde a borde: la ventana ya no se encoge sola; con 'height' el
+          teclado tapaba la casilla del código y el botón, 2026-11-11) */}
+      <KeyboardAvoidingView behavior="padding" style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* El idioma arriba del todo, separado de la marca; el resto queda centrado en el hueco que sobra */}
           <LanguagePicker />
           <View style={styles.spacer} />
@@ -180,6 +233,12 @@ export const LoginScreen = () => {
             </View>
             <Text style={styles.health}>{t('HEALTH')}</Text>
             <Text style={styles.subtitle}>{proAccess ? t('Professional access') : t('Know more. Live better.')}</Text>
+            {(isStagingApp || isTestDatabase) && (
+              <View style={styles.testBadge}>
+                <Ionicons name="flask-outline" size={14} color="#FFFFFF" />
+                <Text style={styles.testBadgeText}>{t('TEST ENVIRONMENT · invented data only')}</Text>
+              </View>
+            )}
             {proAccess && (
               <Text style={styles.proIntro}>
                 {t('For doctors, nutritionists and other health professionals: see what your patients choose to share with you.')}
@@ -232,25 +291,19 @@ export const LoginScreen = () => {
                 </View>
               </View>
               <Text style={styles.label}>{t('Code from the email')}</Text>
-              <TextInput
+              <CodeInput
                 style={[styles.input, styles.codeInput]}
                 value={code}
-                onChangeText={(v) => setCode(cleanCode(v))}
-                keyboardType="number-pad"
-                autoComplete="one-time-code"
-                textContentType="oneTimeCode"
-                placeholder="123456"
-                placeholderTextColor={Colors.textMuted}
-                maxLength={7}
+                onChange={setCode}
+                onComplete={confirmResetCode}
                 editable={!loading}
-                onSubmitEditing={() => code.length === 6 && confirmResetCode()}
               />
               {error ? <Text style={styles.error}>{error}</Text> : null}
               {info ? <Text style={styles.info}>{info}</Text> : null}
               <TouchableOpacity
-                style={[styles.button, (code.length !== 6 || loading) && styles.buttonDisabled]}
-                onPress={confirmResetCode}
-                disabled={code.length !== 6 || loading}
+                style={[styles.button, (!isTotpCodeComplete(code) || loading) && styles.buttonDisabled]}
+                onPress={() => confirmResetCode()}
+                disabled={!isTotpCodeComplete(code) || loading}
               >
                 {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Continue')}</Text>}
               </TouchableOpacity>
@@ -264,6 +317,51 @@ export const LoginScreen = () => {
               </TouchableOpacity>
               <TouchableOpacity onPress={closeReset} disabled={loading}>
                 <Text style={styles.toggleText}>{t('Back to sign in')}</Text>
+              </TouchableOpacity>
+              <Text style={styles.proNote}>{t('Not arriving? Look in spam or promotions.')}</Text>
+            </View>
+          ) : sentTo ? (
+            <View style={styles.form}>
+              <View style={styles.sent}>
+                <Ionicons name="mail-outline" size={20} color={Colors.ok} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sentTitle}>{t('Check your email')}</Text>
+                  <Text style={styles.sentText}>
+                    {t('We have sent an email to {email}. Type the 6-digit code from the email here, or tap «Confirm my email» in it and then sign in.', { email: sentTo })}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.label}>{t('Code from the email')}</Text>
+              <CodeInput
+                style={[styles.input, styles.codeInput]}
+                value={code}
+                onChange={setCode}
+                onComplete={confirmCode}
+                editable={!loading}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {info ? <Text style={styles.info}>{info}</Text> : null}
+              <TouchableOpacity
+                style={[styles.button, (!isTotpCodeComplete(code) || loading) && styles.buttonDisabled]}
+                onPress={() => confirmCode()}
+                disabled={!isTotpCodeComplete(code) || loading}
+              >
+                {loading ? <ActivityIndicator color={Colors.background} /> : <Text style={styles.buttonText}>{t('Confirm')}</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity onPress={resend} disabled={cooldown > 0}>
+                <Text style={[styles.toggleText, cooldown > 0 && styles.toggleTextWaiting]}>
+                  {cooldown > 0 ? t('You can ask for another email in {s} s.', { s: cooldown }) : t('Send the email again')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setEmail(sentTo);
+                  setSentTo(null);
+                  setError('');
+                  setInfo('');
+                }}
+              >
+                <Text style={styles.toggleText}>{t('I have confirmed it: sign in')}</Text>
               </TouchableOpacity>
               <Text style={styles.proNote}>{t('Not arriving? Look in spam or promotions.')}</Text>
             </View>
@@ -330,6 +428,8 @@ export const LoginScreen = () => {
               placeholderTextColor={Colors.textMuted}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoComplete="email"
+              textContentType={isSignUp ? 'emailAddress' : 'username'}
               value={email}
               onChangeText={setEmail}
               editable={!loading}
@@ -344,7 +444,9 @@ export const LoginScreen = () => {
               onChangeText={setPassword}
               editable={!loading}
               textContentType={isSignUp ? 'newPassword' : 'password'}
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
             />
+            {showRules && <PasswordRules password={password} />}
             {!isSignUp && authMode === 'supabase' && (
               <TouchableOpacity style={styles.forgot} onPress={openReset} disabled={loading} accessibilityRole="button">
                 <Text style={styles.forgotText}>{t('Forgot your password?')}</Text>
@@ -361,18 +463,10 @@ export const LoginScreen = () => {
                   onChangeText={setPassword2}
                   editable={!loading}
                   textContentType="newPassword"
+                  autoComplete="new-password"
                 />
               </>
             )}
-
-            {sentTo && !isSignUp ? (
-              <View style={styles.sent}>
-                <Ionicons name="mail-outline" size={18} color={Colors.ok} />
-                <Text style={styles.sentText}>
-                  {t('We have sent an email to {email}. Open it to confirm your account, then sign in here.', { email: sentTo })}
-                </Text>
-              </View>
-            ) : null}
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -473,12 +567,12 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     paddingLeft: 7,
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     letterSpacing: 7,
     color: '#C9A36B',
   },
   subtitle: {
-    fontSize: 16,
+    fontFamily: INTER.regular, fontSize: 16,
     color: Colors.textSecondary,
   },
   form: {
@@ -486,28 +580,39 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     color: Colors.textSecondary,
     marginBottom: 8,
     marginTop: 16,
   },
   sent: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: withAlpha(Colors.ok, 0.12), borderRadius: 10, padding: 12, marginTop: 14 },
-  sentText: { flex: 1, color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
-  sentTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  codeInput: { fontSize: 22, letterSpacing: 8, textAlign: 'center' },
-  info: { color: Colors.ok, fontSize: 13, marginTop: 10, paddingHorizontal: 8, lineHeight: 19 },
-  toggleTextWaiting: { color: Colors.textMuted, textDecorationLine: 'none' },
+  sentText: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
+  sentTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginBottom: 4 },
+  codeInput: { fontFamily: INTER.regular, fontSize: 22, letterSpacing: 8, textAlign: 'center' },
+  info: { color: Colors.ok, fontFamily: INTER.regular, fontSize: 13, marginTop: 10, paddingHorizontal: 8, lineHeight: 19 },
   forgot: { alignSelf: 'flex-end', marginTop: 10, paddingVertical: 4 },
-  forgotText: { color: Colors.accent, fontSize: 13, fontWeight: '600' },
-  resetTitle: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', marginTop: 4 },
-  resetText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 6 },
+  forgotText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  resetTitle: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, marginTop: 4 },
+  resetText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, marginTop: 6 },
+  toggleTextWaiting: { color: Colors.textMuted, textDecorationLine: 'none' },
+  testBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: '#D6621E',
+  },
+  testBadgeText: { color: '#FFFFFF', fontSize: 12, fontFamily: INTER.medium, letterSpacing: 0.5 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 16,
+    fontFamily: INTER.regular, fontSize: 16,
     color: Colors.textPrimary,
     backgroundColor: withAlpha(Colors.card, 0.72),
   },
@@ -524,24 +629,24 @@ const styles = StyleSheet.create({
   buttonText: {
     color: Colors.background,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   toggleText: {
     color: Colors.accent,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     textAlign: 'center',
     marginTop: 16,
     textDecorationLine: 'underline',
   },
   error: {
     color: Colors.danger,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
     marginTop: 12,
     paddingHorizontal: 8,
   },
   proIntro: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
     marginTop: 8,
@@ -563,7 +668,7 @@ const styles = StyleSheet.create({
   proLinkText: {
     color: Colors.accent,
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   proBox: {
     marginTop: 12,
@@ -592,14 +697,14 @@ const styles = StyleSheet.create({
   roleChipText: {
     color: Colors.textSecondary,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   roleChipTextSelected: {
     color: Colors.textPrimary,
   },
   proNote: {
     color: Colors.textMuted,
-    fontSize: 12,
+    fontFamily: INTER.regular, fontSize: 12,
     lineHeight: 17,
     marginTop: 10,
   },
@@ -617,7 +722,7 @@ const styles = StyleSheet.create({
   privacyHint: { borderLeftColor: Colors.accent },
   demoText: {
     flex: 1,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     color: Colors.textSecondary,
   },
 });

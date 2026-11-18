@@ -7,6 +7,7 @@ import { programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutProgram } from '@/data/workouts/types';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { t, tn } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // En «Sigue aprendiendo → Entrenamiento», como «Construye tu plan» en Alimentación: si aún no tiene
 // programa, crear uno (/workout-new); si lo tiene, ir a él. Más adelante irá con las suscripciones más
@@ -54,9 +55,9 @@ export const TrainingPlanCard = () => {
 
 const styles = StyleSheet.create({
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, marginHorizontal: 20, marginBottom: 16, gap: 10 },
-  badge: { color: Colors.accent, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  title: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
-  text: { color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  badge: { color: Colors.accent, fontSize: 11, fontFamily: INTER.semibold, textTransform: 'uppercase', letterSpacing: 0.5 },
+  title: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, lineHeight: 19 },
   primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'stretch', backgroundColor: Colors.accent, borderRadius: 22, paddingVertical: 11 },
-  primaryText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
 });

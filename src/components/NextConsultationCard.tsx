@@ -7,7 +7,8 @@ import { consult } from '@/data/consultations';
 import { Appointment, KIND_LABEL } from '@/data/specialistTypes';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
-import { dateLocale } from '@/i18n';
+import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 const when = (iso: string) =>
   new Date(iso).toLocaleString(dateLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -38,18 +39,18 @@ export const NextConsultationCard = () => {
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>
           {KIND_LABEL[next.kind]}
-          {next.professionalName ? ` with ${next.professionalName}` : ''}
+          {next.professionalName ? ` ${t('with')} ${next.professionalName}` : ''}
         </Text>
         <Text style={styles.sub}>
-          {when(next.startsAt)} · {next.status === 'confirmed' ? 'Confirmed' : 'Waiting for confirmation'}
+          {when(next.startsAt)} · {next.status === 'confirmed' ? t('Confirmed') : t('Waiting for confirmation')}
         </Text>
       </View>
       {canJoin && (
         <TouchableOpacity
           style={styles.join}
-          onPress={() => router.push({ pathname: '/video', params: { appt: next.id, title: next.professionalName ?? 'Video consultation' } })}
+          onPress={() => router.push({ pathname: '/video', params: { appt: next.id, title: next.professionalName ?? t('Video consultation') } })}
         >
-          <Text style={styles.joinText}>Join</Text>
+          <Text style={styles.joinText}>{t('Join')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -70,8 +71,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   icon: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
-  sub: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
+  title: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
+  sub: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, marginTop: 2 },
   join: { backgroundColor: Colors.accent, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 9 },
-  joinText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  joinText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
 });

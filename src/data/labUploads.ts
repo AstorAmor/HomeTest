@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCurrentUserId, isRemoteActive, supabase } from '@/lib/supabase';
 import { ExtractedLabReport } from '@/types/labReport';
+import { readCache } from './readCache';
 
 // Analíticas subidas por el usuario (Lab → Upload lab report). Con cuenta: tabla
 // `lab_uploads`; en modo demo: en el móvil.
@@ -37,18 +38,29 @@ async function localAll(): Promise<LabUpload[]> {
   }
 }
 
+// Con cuenta, la lectura pasa por la caché (src/data/readCache.ts): Hoy pedía las analíticas tres veces a la vez
+// (azúcar, «Lo siguiente» y las metas) y cada una trae el informe entero; ahora sale UNA petición, y lo último leído
+// queda para pintar al momento (fundador, 2026-11-17: «las medidas tardan en cargar»)
+const CACHE_KEY = 'lab_uploads';
+async function fetchRemoteUploads(): Promise<LabUpload[]> {
+  const { data, error } = await supabase!
+    .from('lab_uploads')
+    .select('id, lab_name, test_date, data, created_at')
+    .eq('user_id', getCurrentUserId())
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => ({ id: r.id, labName: r.lab_name, testDate: r.test_date, data: r.data, createdAt: r.created_at }));
+}
+
 export const labUploadRepository = {
   async getAll(): Promise<LabUpload[]> {
-    if (isRemoteActive() && supabase) {
-      const { data, error } = await supabase
-        .from('lab_uploads')
-        .select('id, lab_name, test_date, data, created_at')
-        .eq('user_id', getCurrentUserId())
-        .order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return (data ?? []).map((r) => ({ id: r.id, labName: r.lab_name, testDate: r.test_date, data: r.data, createdAt: r.created_at }));
-    }
+    if (isRemoteActive() && supabase) return (await readCache.load(CACHE_KEY, fetchRemoteUploads, { persist: true })).slice();
     return (await localAll()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+
+  // Lo último leído de la cuenta, sin esperar a la red (undefined si aún no se ha leído o en la demo)
+  peek(): LabUpload[] | undefined {
+    return isRemoteActive() && supabase ? readCache.peek<LabUpload[]>(CACHE_KEY)?.slice() : undefined;
   },
 
   async get(id: string): Promise<LabUpload | null> {
@@ -65,7 +77,9 @@ export const labUploadRepository = {
         .select('id, created_at')
         .single();
       if (error || !data) throw new Error(error?.message ?? 'Could not save');
-      return { id: data.id, labName, testDate, data: report, createdAt: data.created_at };
+      const upload: LabUpload = { id: data.id, labName, testDate, data: report, createdAt: data.created_at };
+      readCache.invalidate<LabUpload[]>(CACHE_KEY, (prev) => [upload, ...prev]);
+      return upload;
     }
     const upload: LabUpload = { id: `upload-${Date.now()}`, labName, testDate, data: report, createdAt: new Date().toISOString() };
     await AsyncStorage.setItem(KEY, JSON.stringify([upload, ...(await localAll())]));

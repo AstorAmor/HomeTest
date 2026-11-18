@@ -4,13 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors, withAlpha } from '@/constants/colors';
+import { FButton } from '@/components/fine/FineForm';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { hasOriginals, labUploadRepository } from '@/data/labUploads';
 import { userFlags } from '@/data/userFlags';
 import { labReports } from '@/utils/labReportView';
 import { dateLocale, t } from '@/i18n';
 import { TAB, tabHref } from '@/constants/tabs';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // "Your files": los informes que nos envía el laboratorio y todo lo que sube el usuario (escaneado
 // o PDF), en una lista. Cada archivo puede llevar el nombre que el usuario quiera dentro de la app
@@ -76,105 +77,87 @@ export const FilesScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <ScreenHeader title={t('Your files')} showBack backFallback={tabHref(TAB.myData)} />
+        <ScreenHeader title={t('Your files')} showBack backFallback={tabHref(TAB.analysis)} />
 
-        <TouchableOpacity style={styles.add} onPress={() => router.push('/upload-test')} activeOpacity={0.85}>
-          <Ionicons name="add-circle-outline" size={20} color={Colors.background} />
-          <Text style={styles.addText}>{t('Add a file (scan or PDF)')}</Text>
-        </TouchableOpacity>
+        <View style={styles.body}>
+          <FButton label={t('Add a file (scan or PDF)')} icon="add" onPress={() => router.push('/upload-test')} />
 
-        <View style={styles.card}>
-          {files.length === 0 && <Text style={styles.empty}>{t('No files yet.')}</Text>}
-          {files.map((f, i) => {
-            const name = names[f.id] ?? f.defaultName;
-            const isEditing = editing === f.id;
-            return (
-              <View key={f.id} style={[styles.row, i > 0 && styles.divider]}>
-                <View style={[styles.icon, { backgroundColor: withAlpha(f.source === 'lab' ? Colors.gold : Colors.accent, 0.14) }]}>
-                  <Ionicons name={f.source === 'lab' ? 'flask-outline' : 'document-text-outline'} size={18} color={f.source === 'lab' ? Colors.gold : Colors.accent} />
-                </View>
-                {isEditing ? (
-                  <TextInput
-                    style={styles.input}
-                    value={draft}
-                    onChangeText={setDraft}
-                    autoFocus
-                    placeholder={f.defaultName}
-                    placeholderTextColor={Colors.textMuted}
-                    onSubmitEditing={() => saveName(f.id)}
-                    onBlur={() => saveName(f.id)}
-                    returnKeyType="done"
-                  />
-                ) : (
-                  <TouchableOpacity style={{ flex: 1 }} onPress={f.open} activeOpacity={0.8}>
-                    <Text style={styles.name} numberOfLines={2}>
-                      {name}
-                    </Text>
-                    <Text style={styles.meta}>
-                      {f.source === 'lab' ? t('Received {date}', { date: fmt(f.addedAt) }) : t('Uploaded {date}', { date: fmt(f.addedAt) })} · {f.sourceLabel}
-                    </Text>
-                    {f.original && (
-                      <TouchableOpacity onPress={f.original} hitSlop={8} style={styles.originalLink}>
-                        <Ionicons name="image-outline" size={14} color={Colors.accent} />
-                        <Text style={styles.originalText}>{t('See the original')}</Text>
-                      </TouchableOpacity>
-                    )}
+          {/* La lista, en filas con línea fina (2026-11-16): sin tarjeta ni iconos en círculos de color */}
+          <View style={styles.list}>
+            {files.length === 0 && <Text style={fine.note}>{t('No files yet.')}</Text>}
+            {files.map((f, i) => {
+              const name = names[f.id] ?? f.defaultName;
+              const isEditing = editing === f.id;
+              return (
+                <View key={f.id} style={[fine.row, i === files.length - 1 && styles.noLine]}>
+                  {isEditing ? (
+                    <TextInput
+                      style={styles.input}
+                      value={draft}
+                      onChangeText={setDraft}
+                      autoFocus
+                      placeholder={f.defaultName}
+                      placeholderTextColor={FINE.mute}
+                      onSubmitEditing={() => saveName(f.id)}
+                      onBlur={() => saveName(f.id)}
+                      returnKeyType="done"
+                    />
+                  ) : (
+                    <TouchableOpacity style={styles.flex} onPress={f.open} activeOpacity={0.7} accessibilityRole="button">
+                      <Text style={fine.rowTitle} numberOfLines={2}>
+                        {name}
+                      </Text>
+                      <Text style={fine.rowSub}>
+                        {f.source === 'lab' ? t('Received {date}', { date: fmt(f.addedAt) }) : t('Uploaded {date}', { date: fmt(f.addedAt) })} · {f.sourceLabel}
+                      </Text>
+                      {f.original && (
+                        <TouchableOpacity onPress={f.original} hitSlop={8} style={styles.originalLink} accessibilityRole="button">
+                          <Text style={fine.link}>{t('See the original')} ›</Text>
+                        </TouchableOpacity>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (isEditing) return saveName(f.id);
+                      setDraft(names[f.id] ?? '');
+                      setEditing(f.id);
+                    }}
+                    hitSlop={10}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('Rename')}
+                  >
+                    <Ionicons name={isEditing ? 'checkmark' : 'create-outline'} size={18} color={isEditing ? FINE.jade : FINE.mute} />
                   </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  onPress={() => {
-                    if (isEditing) return saveName(f.id);
-                    setDraft(names[f.id] ?? '');
-                    setEditing(f.id);
-                  }}
-                  hitSlop={10}
-                  accessibilityLabel={t('Rename')}
-                >
-                  <Ionicons name={isEditing ? 'checkmark' : 'create-outline'} size={20} color={Colors.textMuted} />
-                </TouchableOpacity>
-              </View>
-            );
-          })}
+                </View>
+              );
+            })}
+          </View>
+          <Text style={fine.note}>{t('Tap the pencil to give a file your own name. It only changes inside Kuova.')}</Text>
         </View>
-        <Text style={styles.hint}>{t('Tap the pencil to give a file your own name. It only changes inside Kuova.')}</Text>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingBottom: 40 },
-  add: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    paddingVertical: 13,
-    borderRadius: 24,
-    backgroundColor: Colors.accent,
-  },
-  addText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
-  card: { marginHorizontal: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 14 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
-  divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  icon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  name: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  meta: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  originalLink: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, alignSelf: 'flex-start' },
-  originalText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  body: { paddingHorizontal: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  noLine: { borderBottomWidth: 0 },
+  list: { marginTop: 20, borderTopWidth: 1, borderTopColor: FINE.rule },
+  originalLink: { marginTop: 6, alignSelf: 'flex-start' },
   input: {
+    ...ff('regular'),
     flex: 1,
-    color: Colors.textPrimary,
+    color: FINE.ivory,
     fontSize: 15,
     borderWidth: 1,
-    borderColor: Colors.accent,
+    borderColor: FINE.jadeLine,
     borderRadius: 10,
+    backgroundColor: FINE.tile,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  empty: { color: Colors.textMuted, fontSize: 14, paddingVertical: 16 },
-  hint: { color: Colors.textMuted, fontSize: 12, lineHeight: 17, marginHorizontal: 24, marginTop: 10 },
 });

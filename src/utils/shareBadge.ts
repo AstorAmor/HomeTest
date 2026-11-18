@@ -2,6 +2,7 @@ import { Share } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import * as FileSystem from 'expo-file-system/legacy';
 import { CARD_H, CARD_W } from '@/components/badges/BadgeShareCard';
+import { expectSystemUi } from './systemUi';
 
 // Móvil: la tarjeta SVG de la insignia se convierte en PNG (toDataURL de react-native-svg) y se
 // abre el menú de compartir del sistema → Instagram, WhatsApp, TikTok… La web tiene su versión
@@ -12,6 +13,7 @@ export interface BadgeShare {
   domId: string; // solo web
   fileName: string;
   message: string;
+  size?: { width: number; height: number }; // la imagen; por defecto, la de las insignias (1080 × 1350)
 }
 
 const sharingModule = (): typeof import('expo-sharing') | null => {
@@ -23,16 +25,18 @@ const sharingModule = (): typeof import('expo-sharing') | null => {
   }
 };
 
-export async function shareBadge({ svg, fileName, message }: BadgeShare): Promise<void> {
+export async function shareBadge({ svg, fileName, message, size }: BadgeShare): Promise<void> {
   const Sharing = sharingModule();
   if (Sharing && svg?.toDataURL && FileSystem.cacheDirectory) {
     try {
-      const data: string = await new Promise((resolve) => svg.toDataURL(resolve, { width: CARD_W, height: CARD_H }));
+      const data: string = await new Promise((resolve) => svg.toDataURL(resolve, size ?? { width: CARD_W, height: CARD_H }));
       const uri = `${FileSystem.cacheDirectory}${fileName}.png`;
       await FileSystem.writeAsStringAsync(uri, data.replace(/^data:image\/png;base64,/, ''), {
         encoding: FileSystem.EncodingType.Base64,
       });
       if (await Sharing.isAvailableAsync()) {
+        // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+        expectSystemUi();
         await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: message });
         return;
       }
@@ -40,5 +44,6 @@ export async function shareBadge({ svg, fileName, message }: BadgeShare): Promis
       // Si la imagen falla, al menos el texto
     }
   }
+  expectSystemUi();
   await Share.share({ message });
 }

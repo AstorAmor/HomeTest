@@ -4,6 +4,7 @@ import { DailyWearableRecord, WearableMetric } from '../types';
 import { appleSourceName, joinAppleSources } from '../sources';
 import { appleSleepSessions, summarizeSleepSessions } from '../seriesLogic';
 import type { AppleHealthRead } from './appleHealthShared';
+import { expectSystemUi } from '@/utils/systemUi';
 
 // Nunca de './appleHealth': en iOS es este mismo archivo (ver appleHealthShared.ts)
 export { APPLE_READ_TYPES, APPLE_TYPE_LABEL } from './appleHealthShared';
@@ -76,6 +77,8 @@ export async function appleHealthAsked(): Promise<boolean> {
 export async function connectAppleHealth(): Promise<boolean> {
   const lib = loadLib();
   if (!lib) throw new Error('Apple Health only works in the Kuova app for iPhone.');
+  // El permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+  expectSystemUi();
   await lib.requestAuthorization({ toRead: TO_READ });
   return appleHealthAsked();
 }

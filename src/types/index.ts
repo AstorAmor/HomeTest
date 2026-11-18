@@ -41,4 +41,5 @@ export interface AuthUser {
   id: string;
   email: string;
   nombre: string;
+  createdAt?: string; // alta de la cuenta (Supabase); decide si le toca el recorrido de primeros pasos
 }

@@ -53,6 +53,15 @@
         "NODE_OPTIONS": "--max-old-space-size=6144"
       },
       "port": 8084
+    },
+    {
+      "name": "expo-web-pruebas",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/web-pruebas.mjs",
+        "8094"
+      ],
+      "port": 8094
     }
   ]
 }

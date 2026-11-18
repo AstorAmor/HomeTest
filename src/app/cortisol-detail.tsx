@@ -4,7 +4,10 @@ import { cortisolRepository } from '@/data/cortisolRepository';
 import { Colors } from '@/constants/colors';
 import { sampleSimpleEntries } from '@/data/sampleReadings';
 import { t } from '@/i18n';
-import { LAB_VALUE_LABEL, labValues } from '@/data/labUploadValues';
+import { peekWithLabValues, withLabValues } from '@/data/labUploadValues';
+import { SimpleMetricEntry } from '@/types/simpleMetric';
+
+const rows = (entries: SimpleMetricEntry[]) => entries.map((e): GenericMetricEntry => ({ id: e.id, valor: e.valor, unidad: e.unidad, fecha: e.fecha }));
 
 export default function CortisolDetail() {
   const router = useRouter();
@@ -14,17 +17,12 @@ export default function CortisolDetail() {
       title={t('Cortisol')}
       color={Colors.warning}
       icon="sunny-outline"
-      loadEntries={async () => {
-        const entries = await cortisolRepository.getAll();
-        return entries.map((e): GenericMetricEntry => ({
-          id: e.id,
-          valor: e.valor,
-          unidad: e.unidad,
-          fecha: e.fecha,
-        })).concat(
-          // Lo que trae cada analítica subida (no se edita aquí: abre la analítica)
-          (await labValues('cortisol_am')).map((l) => ({ id: l.id, valor: l.valor, unidad: l.unidad, fecha: l.fecha, extra: LAB_VALUE_LABEL(), uploadId: l.uploadId })),
-        );
+      // Lo apuntado más lo que trae cada analítica subida (no se edita aquí: abre la analítica); con lo último
+      // leído, al momento
+      loadEntries={() => withLabValues(cortisolRepository.getAll().then(rows), 'cortisol_am')}
+      peekEntries={() => {
+        const own = cortisolRepository.peek();
+        return peekWithLabValues(own && rows(own), 'cortisol_am');
       }}
       onAddPress={() => router.push('/log-cortisol')}
       sample={sampleSimpleEntries('cortisol', 'µg/dL')}

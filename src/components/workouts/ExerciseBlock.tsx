@@ -1,20 +1,22 @@
 import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/colors';
 import { exerciseName } from '@/data/workouts/catalog';
 import { doseText } from '@/data/workouts/labels';
 import type { CatalogExercise, SetLog, WorkoutExercise } from '@/data/workouts/types';
 import { timeText } from '@/logic/workoutTimer';
 import type { SetRow } from '@/logic/workoutLog';
+import { FChip, ON_BG } from '@/components/fine/FineForm';
 import { ExerciseLoop } from './ExerciseLoop';
 import { SetTable } from './SetTable';
 import { t } from '@/i18n';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Un ejercicio en la sesión, como en Hevy: miniatura redonda y nombre (tocar = cómo se hace), lo que
 // pide la rutina, el descanso de este ejercicio (se cambia aquí, solo para hoy), la papelera (quitarlo de
 // la sesión de hoy) y su tabla de series.
 // Memo: el reloj y la cuenta atrás no lo vuelven a pintar; solo cambia el ejercicio que se toca.
+// Con el lenguaje fino (2026-11-16): fila con una línea fina debajo, el nombre en marfil y el descanso en un chip con borde.
 
 export const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 180];
 
@@ -54,35 +56,40 @@ export const ExerciseBlock = memo(function ExerciseBlock({
   return (
     <View style={styles.block}>
       <View style={styles.head}>
-        <TouchableOpacity onPress={() => actions.open(ex.id)} accessibilityLabel={exerciseName(ex)}>
+        <TouchableOpacity onPress={() => actions.open(ex.id)} accessibilityRole="button" accessibilityLabel={exerciseName(ex)}>
           <ExerciseLoop exercise={ex} size={46} radius={23} />
         </TouchableOpacity>
-        <TouchableOpacity style={{ flex: 1 }} onPress={() => actions.open(ex.id)}>
+        <TouchableOpacity style={{ flex: 1 }} onPress={() => actions.open(ex.id)} accessibilityRole="button">
           <Text style={styles.name} numberOfLines={2}>
             {exerciseName(ex)}
           </Text>
-          <Text style={styles.target}>{t('Target: {dose}', { dose: doseText(item) })}</Text>
+          <Text style={fine.rowSub}>{t('Target: {dose}', { dose: doseText(item) })}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => actions.remove(index)} hitSlop={10} accessibilityLabel={t('Remove {name} from this session', { name: exerciseName(ex) })}>
-          <Ionicons name="trash-outline" size={20} color={Colors.textMuted} />
+        <TouchableOpacity
+          onPress={() => actions.remove(index)}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={t('Remove {name} from this session', { name: exerciseName(ex) })}
+        >
+          <Ionicons name="trash-outline" size={19} color={FINE.mute} />
         </TouchableOpacity>
       </View>
       <View style={styles.chips}>
-        <TouchableOpacity style={[styles.chip, restOpen && styles.chipOn]} onPress={() => actions.toggleRestMenu(index)} accessibilityState={{ expanded: restOpen }}>
-          <Ionicons name="timer-outline" size={16} color={Colors.textPrimary} />
-          <Text style={styles.chipText}>{restLabel(item.restSec)}</Text>
+        <TouchableOpacity
+          style={[styles.chip, restOpen && styles.chipOn]}
+          onPress={() => actions.toggleRestMenu(index)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: restOpen }}
+        >
+          <Ionicons name="timer-outline" size={15} color={restOpen ? FINE.jade : FINE.mute} />
+          <Text style={[styles.chipText, restOpen && { color: FINE.ivory }]}>{restLabel(item.restSec)}</Text>
         </TouchableOpacity>
       </View>
       {restOpen && (
         <View style={styles.restMenu}>
-          {REST_OPTIONS.map((sec) => {
-            const on = item.restSec === sec;
-            return (
-              <TouchableOpacity key={sec} style={[styles.option, on && styles.chipOn]} onPress={() => actions.setRest(index, sec)}>
-                <Text style={[styles.optionText, on && { color: Colors.textPrimary }]}>{sec ? timeText(sec) : t('No rest')}</Text>
-              </TouchableOpacity>
-            );
-          })}
+          {REST_OPTIONS.map((sec) => (
+            <FChip key={sec} label={sec ? timeText(sec) : t('No rest')} on={item.restSec === sec} onPress={() => actions.setRest(index, sec)} />
+          ))}
         </View>
       )}
       {item.note ? <Text style={styles.note}>“{item.note}”</Text> : null}
@@ -103,16 +110,13 @@ export const ExerciseBlock = memo(function ExerciseBlock({
 });
 
 const styles = StyleSheet.create({
-  block: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.divider, gap: 10 },
+  block: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: FINE.line, gap: 10 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  name: { color: Colors.accent, fontSize: 17, fontWeight: '800' },
-  target: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  name: { ...ff('medium'), color: FINE.ivory, fontSize: 16, lineHeight: 21 },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.card, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 },
-  chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: FINE.line, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7, minHeight: 36 },
+  chipOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  chipText: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
   restMenu: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  option: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7 },
-  optionText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  note: { color: Colors.textPrimary, fontSize: 13, fontStyle: 'italic' },
+  note: { ...ff('regular'), color: '#CFD6CF', fontSize: 13, lineHeight: 18, fontStyle: 'italic' },
 });

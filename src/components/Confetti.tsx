@@ -8,11 +8,12 @@ const useNative = Platform.OS !== 'web';
 interface ConfettiProps {
   count?: number;
   duration?: number;
+  colors?: string[];
 }
 
 // Lluvia de confeti de una sola vez (sin dependencias externas). Se monta encima
 // de la pantalla con pointerEvents="none" para no bloquear toques.
-export const Confetti = ({ count = 70, duration = 2600 }: ConfettiProps) => {
+export const Confetti = ({ count = 70, duration = 2600, colors = COLORS }: ConfettiProps) => {
   const { width, height } = useWindowDimensions();
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -24,10 +25,10 @@ export const Confetti = ({ count = 70, duration = 2600 }: ConfettiProps) => {
         delay: Math.random() * 0.35,
         size: 6 + Math.random() * 7,
         round: i % 3 === 0,
-        color: COLORS[i % COLORS.length],
+        color: colors[i % colors.length],
         spins: 2 + Math.random() * 4,
       })),
-    [count, width]
+    [count, width, colors]
   );
 
   useEffect(() => {

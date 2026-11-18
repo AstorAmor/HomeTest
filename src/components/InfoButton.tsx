@@ -3,6 +3,7 @@ import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/colors';
+import { t } from '@/i18n';
 
 // Icono (i) junto a un número o recomendación: abre cómo lo calculamos y sus fuentes
 // (src/data/evidence.ts).
@@ -13,7 +14,7 @@ export const InfoButton = ({ topic, size = 18, color = Colors.textMuted }: { top
       onPress={() => router.push({ pathname: '/evidence', params: { topic } })}
       hitSlop={10}
       accessibilityRole="button"
-      accessibilityLabel="How this works and sources"
+      accessibilityLabel={t('How this works and sources')}
     >
       <Ionicons name="information-circle-outline" size={size} color={color} />
     </TouchableOpacity>

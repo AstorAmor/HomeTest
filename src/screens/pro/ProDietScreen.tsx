@@ -6,15 +6,17 @@ import { ProLayout, useIsWide, useProIdentity } from '@/components/pro/ProLayout
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { RecipeImage } from '@/components/diet/RecipeImage';
 import { MacroDonut } from '@/components/diet/MacroDonut';
+import { issueText, MacroTargetsPanel, NumField } from '@/components/diet/MacroTargetsPanel';
 import { Colors } from '@/constants/colors';
 import { portal } from '@/data/specialistPortal';
 import type { PatientSummary } from '@/data/specialistTypes';
 import { getRecipe, recipeName, slotLabel } from '@/data/diet/catalog';
 import { ALLERGENS, AVOID_GROUPS, BUDGETS, DIET_GOALS, DIET_TYPES, MARKER_NAME, SKILLS } from '@/data/diet/labels';
-import type { DayTargets, DietPlan, DietPrefs, MealMacroPlan, MealSlot, PlannedMeal } from '@/data/diet/types';
+import type { DayTargets, DietPlan, DietPrefs, MealSlot, PlannedMeal } from '@/data/diet/types';
 import {
   alternativesForSlot,
   DEFAULT_DIET_PREFS,
+  dayLock,
   dayTotals,
   dietTargets,
   fitDay,
@@ -22,19 +24,16 @@ import {
   generateDiet,
   prefsForDay,
   LabFlag,
-  mealTargets,
+  macroIssues,
   portionFor,
   REFERRAL_TEXT,
   referralReasons,
-  slotAverages,
-  slotCount,
-  slotShares,
-  isRamadan,
   weekSummary,
 } from '@/logic/dietPlanner';
 import { WEEKDAYS_LONG, WEEKDAYS_SHORT } from '@/screens/diet/DietScreen';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Portal → menú semanal de un paciente. El dietista parte del borrador que hace el generador con sus
 // analíticas compartidas y sus objetivos, fija calorías y macros del día si quiere (y el reparto por
@@ -123,6 +122,8 @@ export const ProDietScreen = () => {
     setDays(generateDiet(next, labs).days);
   };
   const referral = referralReasons(prefs, labs);
+  // Con números que no cuadran (la semana o algún día) no se manda: el panel y la hoja del día dicen qué es
+  const blocked = loaded && (macroIssues(prefs, g.targets).length > 0 || days.some((d) => d.targets && macroIssues(prefsForDay(prefs, d), dietTargets(prefsForDay(prefs, d), labs)).length > 0));
   const summary = weekSummary(days);
   const slots = days[0]?.meals.map((m) => m.slot) ?? [];
 
@@ -136,6 +137,7 @@ export const ProDietScreen = () => {
   }, [current, prefs, labs, query]);
 
   const send = async () => {
+    if (blocked) return;
     setState('saving');
     setError('');
     try {
@@ -165,14 +167,6 @@ export const ProDietScreen = () => {
     ? { label: t('Diets'), onPress: () => router.replace('/pro-diets') }
     : { label: name, onPress: () => router.replace({ pathname: '/pro-patient', params: { id: patientId } }) };
   const section = fromDiets ? 'diets' : 'patients';
-  // Reparto por comida: lo que le toca a cada una y lo que trae el menú de ahora
-  const mt = mealTargets(prefs, g.targets);
-  const inMenu = slotAverages(days);
-  const mealSlots = (Object.keys(slotShares(prefs.snacks, isRamadan(prefs))) as MealSlot[]).filter((s) => slotCount(prefs, s) > 0);
-  const setMeal = (slot: MealSlot, field: keyof MealMacroPlan, v: number | null) =>
-    set({ meals: { ...(prefs.meals ?? {}), [slot]: { ...(prefs.meals?.[slot] ?? {}), [field]: v } } });
-  const macroKcal = g.targets.protein * 4 + (g.targets.carbs ?? 0) * 4 + (g.targets.fat ?? 0) * 9;
-  const macrosOff = !!prefs.kcalTarget && (!!prefs.carbsTarget || !!prefs.fatTarget) && Math.abs(macroKcal - g.targets.kcal) > g.targets.kcal * 0.05;
 
   if (state === 'sent') {
     return (
@@ -195,7 +189,7 @@ export const ProDietScreen = () => {
       title={`${t('Weekly menu')} · ${name}`}
       back={back}
       right={
-        <TouchableOpacity style={styles.send} onPress={send} disabled={state === 'saving' || !loaded}>
+        <TouchableOpacity style={[styles.send, blocked && { opacity: 0.45 }]} onPress={send} disabled={state === 'saving' || !loaded || blocked}>
           {state === 'saving' ? <ActivityIndicator size="small" color={Colors.background} /> : <Text style={styles.sendText}>{existing ? t('Update') : t('Send to patient')}</Text>}
         </TouchableOpacity>
       }
@@ -206,6 +200,7 @@ export const ProDietScreen = () => {
         <>
           <Text style={styles.intro}>{t('Draft made from their shared results and goals. Adjust the settings, swap dishes or servings and add notes before sending.')}</Text>
           {error ? <Text style={styles.error}>{error}</Text> : null}
+          {blocked ? <Text style={styles.blocked}>{t('Some numbers do not add up: check them before sending the menu.')}</Text> : null}
           {referral.length ? (
             <View style={styles.warn}>
               <Ionicons name="alert-circle-outline" size={18} color={Colors.warning} />
@@ -244,65 +239,13 @@ export const ProDietScreen = () => {
               <ChoiceChips options={[15, 30, 45, 60].map((m) => ({ id: m, label: m === 60 ? t('1 hour or more') : `${m} min` }))} value={prefs.minutes} onChange={(minutes) => set({ minutes })} />
               <Text style={styles.label}>{t('Snacks')}</Text>
               <ChoiceChips options={[0, 1, 2].map((n) => ({ id: n, label: String(n) }))} value={prefs.snacks} onChange={(snacks) => set({ snacks })} />
-              <View style={styles.targets}>
-                <NumField label={t('kcal a day')} value={prefs.kcalTarget} placeholder={g.targets.kcal} onChange={(kcalTarget) => set({ kcalTarget })} />
-                <NumField label={t('Protein (g)')} value={prefs.proteinTarget} placeholder={g.targets.protein} onChange={(proteinTarget) => set({ proteinTarget })} />
-              </View>
-              <View style={styles.targets}>
-                <NumField label={t('Carbs (g)')} value={prefs.carbsTarget} placeholder={g.targets.carbs ?? 0} onChange={(carbsTarget) => set({ carbsTarget })} />
-                <NumField label={t('Fat (g)')} value={prefs.fatTarget} placeholder={g.targets.fat ?? 0} onChange={(fatTarget) => set({ fatTarget })} />
-              </View>
-              {macrosOff && (
-                <Text style={styles.macroWarn}>{t('Your macros add up to {n} kcal (target {k}).', { n: num(Math.round(macroKcal)), k: num(g.targets.kcal) })}</Text>
-              )}
-
-              {/* Reparto por comida: % de las kcal del día y gramos de cada macro (vacío = su parte) */}
-              <View style={styles.mealsHead}>
-                <Text style={[styles.label, { flex: 1 }]}>{t('Per meal')}</Text>
-                {prefs.meals ? (
-                  <TouchableOpacity onPress={() => set({ meals: null })} hitSlop={8}>
-                    <Text style={styles.reset}>{t('Default split')}</Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-              <View style={styles.mealRow}>
-                <View style={styles.mealLabel} />
-                {[t('% kcal'), t('Prot. g'), t('Carbs g'), t('Fat g')].map((h) => (
-                  <Text key={h} style={styles.mealHead}>
-                    {h}
-                  </Text>
-                ))}
-              </View>
-              {mealSlots.map((slot) => {
-                const target = mt[slot];
-                const menu = inMenu[slot];
-                const own = prefs.meals?.[slot];
-                const sharePct = target ? Math.round((target.kcal / Math.max(1, g.targets.kcal)) * 100) : 0;
-                return (
-                  <View key={slot} style={styles.mealBlock}>
-                    <View style={styles.mealRow}>
-                      <Text style={styles.mealLabel} numberOfLines={2}>
-                        {slotCount(prefs, slot) > 1 ? t('{slot} (each)', { slot: slotLabel(slot) }) : slotLabel(slot)}
-                      </Text>
-                      <MealCell value={own?.share} placeholder={sharePct} onChange={(v) => setMeal(slot, 'share', v)} />
-                      <MealCell value={own?.protein} placeholder={target?.protein ?? 0} onChange={(v) => setMeal(slot, 'protein', v)} />
-                      <MealCell value={own?.carbs} placeholder={target?.carbs ?? 0} onChange={(v) => setMeal(slot, 'carbs', v)} />
-                      <MealCell value={own?.fat} placeholder={target?.fat ?? 0} onChange={(v) => setMeal(slot, 'fat', v)} />
-                    </View>
-                    {menu ? (
-                      <Text style={styles.mealMenu}>
-                        {t('Menu now: {kcal} kcal · P {p} · C {c} · F {f}', {
-                          kcal: num(Math.round(menu.kcal)),
-                          p: Math.round(menu.protein),
-                          c: Math.round(menu.carbs),
-                          f: Math.round(menu.fat),
-                        })}
-                      </Text>
-                    ) : null}
-                  </View>
-                );
-              })}
-              <Text style={styles.mealHint}>{t('Empty boxes take their share of the day. Portions follow your numbers straight away; make the draft again to choose other dishes. Tap a day to adjust it on its own.')}</Text>
+              <MacroTargetsPanel
+                prefs={prefs}
+                targets={g.targets}
+                days={days}
+                onChange={set}
+                hint={t('Empty boxes share what is left of the day. Portions follow your numbers straight away; make the draft again to choose other dishes. Tap a day to adjust it on its own.')}
+              />
               <View style={styles.genRow}>
                 <TouchableOpacity style={styles.secondary} onPress={() => remake()}>
                   <Ionicons name="sparkles-outline" size={16} color={Colors.accent} />
@@ -477,32 +420,6 @@ export const ProDietScreen = () => {
   );
 };
 
-// Un número del dietista: vacío = lo que calcula el generador (se ve en gris)
-const NumField = ({ label, value, placeholder, onChange }: { label: string; value?: number | null; placeholder: number; onChange: (v: number | null) => void }) => (
-  <View style={{ flex: 1 }}>
-    <Text style={styles.label}>{label}</Text>
-    <TextInput
-      style={styles.input}
-      keyboardType="number-pad"
-      value={value ? String(value) : ''}
-      placeholder={String(Math.round(placeholder))}
-      placeholderTextColor={Colors.textMuted}
-      onChangeText={(v) => onChange(Number(v.replace(/\D/g, '')) || null)}
-    />
-  </View>
-);
-
-const MealCell = ({ value, placeholder, onChange }: { value?: number | null; placeholder: number; onChange: (v: number | null) => void }) => (
-  <TextInput
-    style={[styles.input, styles.mealCell]}
-    keyboardType="number-pad"
-    value={value ? String(value) : ''}
-    placeholder={String(Math.round(placeholder))}
-    placeholderTextColor={Colors.textMuted}
-    onChangeText={(v) => onChange(Number(v.replace(/\D/g, '')) || null)}
-  />
-);
-
 // El detalle de un día: lo que trae (kcal y macros), un objetivo propio para ese día si se quiere (vacío
 // = el de la semana; al cambiarlo, sus raciones se rehacen), sus comidas con sus macros y su ración, y
 // otra versión del día con otros platos
@@ -529,7 +446,11 @@ const DaySheet = ({
   if (!day || index == null) return null;
   // Lo vacío sugiere lo de este día: las kcal, las de la semana; los macros, los que salen de sus kcal
   const week = dietTargets(prefs, labs);
-  const own = dietTargets(prefsForDay(prefs, day), labs);
+  const dayPrefs = prefsForDay(prefs, day);
+  const own = dietTargets(dayPrefs, labs);
+  // La misma regla que en la semana: con tres casillas puestas (las de este día o, si no, las de la semana), la cuarta sale de ellas
+  const lock = dayLock(dayPrefs);
+  const issues = macroIssues(dayPrefs, own);
   const totals = dayTotals(day);
   const setTarget = (patch: DayTargets) => {
     const merged = { ...(day.targets ?? {}), ...patch };
@@ -564,13 +485,18 @@ const DaySheet = ({
               ) : null}
             </View>
             <View style={styles.targets}>
-              <NumField label={t('kcal a day')} value={day.targets?.kcal} placeholder={week.kcal} onChange={(kcal) => setTarget({ kcal })} />
-              <NumField label={t('Protein (g)')} value={day.targets?.protein} placeholder={own.protein} onChange={(protein) => setTarget({ protein })} />
+              <NumField label={t('kcal a day')} value={day.targets?.kcal} placeholder={lock === 'kcal' ? own.kcal : week.kcal} locked={lock === 'kcal'} onChange={(kcal) => setTarget({ kcal })} />
+              <NumField label={t('Protein (g)')} value={day.targets?.protein} placeholder={own.protein} locked={lock === 'protein'} onChange={(protein) => setTarget({ protein })} />
             </View>
             <View style={styles.targets}>
-              <NumField label={t('Carbs (g)')} value={day.targets?.carbs} placeholder={own.carbs ?? 0} onChange={(carbs) => setTarget({ carbs })} />
-              <NumField label={t('Fat (g)')} value={day.targets?.fat} placeholder={own.fat ?? 0} onChange={(fat) => setTarget({ fat })} />
+              <NumField label={t('Carbs (g)')} value={day.targets?.carbs} placeholder={own.carbs ?? 0} locked={lock === 'carbs'} onChange={(carbs) => setTarget({ carbs })} />
+              <NumField label={t('Fat (g)')} value={day.targets?.fat} placeholder={own.fat ?? 0} locked={lock === 'fat'} onChange={(fat) => setTarget({ fat })} />
             </View>
+            {issues.map((i) => (
+              <Text key={i.kind === 'column' ? `c-${i.col}` : i.kind === 'meal' ? `m-${i.slot}` : 'd'} style={styles.blocked}>
+                {issueText(i, dayPrefs)}
+              </Text>
+            ))}
 
             <Text style={styles.label}>{t('Meals')}</Text>
             {day.meals.map((m, i) => {
@@ -630,71 +556,63 @@ const MultiChips = ({ options, value, onChange }: { options: { id: string; label
 );
 
 const styles = StyleSheet.create({
-  intro: { color: Colors.textSecondary, fontSize: 13, marginBottom: 8 },
-  error: { color: Colors.danger, fontSize: 13, marginBottom: 8 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginBottom: 8 },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginBottom: 8 },
+  blocked: { color: Colors.warning, fontFamily: INTER.regular, fontSize: 12, lineHeight: 16, marginBottom: 6 },
   warn: { flexDirection: 'row', gap: 8, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.warning, borderRadius: 12, padding: 10, marginBottom: 8 },
-  warnText: { color: Colors.textPrimary, fontSize: 13 },
-  labs: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600', marginBottom: 10 },
+  warnText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13 },
+  labs: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, marginBottom: 10 },
   columns: { flexDirection: 'row', gap: 20, alignItems: 'flex-start' },
   panel: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 14, marginBottom: 14 },
   panelWide: { width: 340 },
-  label: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800', marginTop: 12, marginBottom: 6 },
+  label: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium, marginTop: 12, marginBottom: 6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
   chipOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  chipText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  chipText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   chipTextOn: { color: Colors.textPrimary },
   targets: { flexDirection: 'row', gap: 10 },
-  macroWarn: { color: Colors.warning, fontSize: 12, marginTop: 6 },
   mealsHead: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  reset: { color: Colors.accent, fontSize: 12, fontWeight: '700', marginTop: 6 },
-  mealBlock: { marginBottom: 6 },
-  mealRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  mealLabel: { width: 76, color: Colors.textPrimary, fontSize: 12, fontWeight: '700' },
-  mealHead: { flex: 1, color: Colors.textMuted, fontSize: 10, fontWeight: '800', textAlign: 'center', marginBottom: 4 },
-  // width 0 + minWidth 0: en la web un campo de texto no se encoge por debajo de su ancho por defecto
-  mealCell: { flex: 1, width: 0, minWidth: 0, paddingVertical: 6, paddingHorizontal: 4, textAlign: 'center', fontSize: 13 },
-  mealMenu: { color: Colors.textMuted, fontSize: 10, marginTop: 3, marginLeft: 82 },
-  mealHint: { color: Colors.textMuted, fontSize: 11, lineHeight: 15, marginTop: 4 },
-  input: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 9, color: Colors.textPrimary, fontSize: 14 },
+  reset: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 6 },
+  input: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 9, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
   genRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   secondary: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
-  secondaryText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  summary: { color: Colors.textSecondary, fontSize: 12 },
+  secondaryText: { color: Colors.accent, fontSize: 13, fontFamily: INTER.medium },
+  summary: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12 },
   summaryCard: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 16, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, marginBottom: 12 },
   summaryFacts: { flex: 1, minWidth: 220, gap: 4 },
-  summaryTitle: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
+  summaryTitle: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
   row: { flexDirection: 'row', gap: 6, marginBottom: 8, alignItems: 'flex-start' },
   rowLabel: { width: 70, paddingTop: 4 },
-  rowLabelText: { color: Colors.textSecondary, fontSize: 11, fontWeight: '800' },
+  rowLabelText: { color: Colors.textSecondary, fontSize: 11, fontFamily: INTER.medium },
   head: { width: 96, alignItems: 'center', marginTop: 6 },
-  headText: { color: Colors.textPrimary, fontSize: 12, fontWeight: '800' },
-  headKcal: { color: Colors.textMuted, fontSize: 10 },
+  headText: { color: Colors.textPrimary, fontSize: 12, fontFamily: INTER.medium },
+  headKcal: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
   headOwn: { borderBottomWidth: 2, borderBottomColor: Colors.accent },
   dayTop: { alignItems: 'center' },
   dayMeal: { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 8 },
   dayMealMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  dayMealSlot: { color: Colors.textMuted, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  dayMealSlot: { color: Colors.textMuted, fontSize: 10, fontFamily: INTER.semibold, textTransform: 'uppercase' },
   dayStepper: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   cell: { width: 96, gap: 3 },
-  cellName: { color: Colors.textPrimary, fontSize: 10, fontWeight: '600' },
-  cellMeta: { color: Colors.textMuted, fontSize: 10 },
+  cellName: { color: Colors.textPrimary, fontSize: 10, fontFamily: INTER.medium },
+  cellMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
   send: { backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7 },
-  sendText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
+  sendText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
   done: { alignItems: 'center', gap: 12, marginTop: 60, paddingHorizontal: 20 },
-  doneTitle: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900', textAlign: 'center' },
-  mutedCenter: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center', maxWidth: 520 },
+  doneTitle: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, textAlign: 'center' },
+  mutedCenter: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center', maxWidth: 520 },
   primary: { backgroundColor: Colors.accent, borderRadius: 22, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 },
-  primaryText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', padding: 16 },
   sheet: { width: '100%', maxWidth: 560, maxHeight: '90%', backgroundColor: Colors.background, borderRadius: 18, borderWidth: 1, borderColor: Colors.cardBorder, overflow: 'hidden' },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sheetTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
+  sheetTitle: { color: Colors.textPrimary, fontSize: 17, fontFamily: INTER.medium },
   currentRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  currentName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  currentName: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  portion: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
+  portion: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
   alt: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
-  altName: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '600' },
-  altMeta: { color: Colors.textMuted, fontSize: 11 },
+  altName: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  altMeta: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
 });

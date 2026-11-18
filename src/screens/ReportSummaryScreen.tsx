@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { DonutChart } from '@/components/DonutChart';
-import { Colors } from '@/constants/colors';
+import { Chev, SecHead } from '@/components/fine/Fine';
+import { FineGlyph } from '@/components/fine/FineMeasure';
+import { DonutLegend, FineDonut, LabGauge, labStyles } from '@/components/fine/FineLab';
 import {
   currentReport,
   getComputedSummaryCounts,
@@ -15,8 +15,10 @@ import {
   getMarkerDisplayNameEn,
   getMarkerValueTextEn,
 } from '@/data/reportContentEn';
-import { TIER_COLOR, FLAG_LABEL, FLAG_ICON, categoryLabel } from '@/utils/reportDisplay';
-import { t } from '@/i18n';
+import { FLAG_LABEL, categoryLabel } from '@/utils/reportDisplay';
+import { findLabReport, formatReportDate } from '@/utils/labReportView';
+import { t, tn } from '@/i18n';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Proxy simplificado: "mejora" = cambio significativo que además ya aterrizó en rango.
 // No tenemos (todavía) una tabla de qué dirección es clínicamente buena por marcador,
@@ -38,320 +40,115 @@ const getCategoryBreakdown = () =>
     })
     .filter((c) => c.inRange < c.total);
 
+const asNumber = (v: number | string) => (typeof v === 'number' ? v : Number(v));
+
+// Tu informe (el último): desde el 2026-11-16, como el «Tu informe» del prototipo. El total en un rosco fino de
+// jade (en rango) y oro (para revisar) con su leyenda, los roscos pequeños de las áreas con algo que revisar y lo
+// que conviene mirar en filas con línea fina, cada una con su línea de rango. Sin tarjetas ni iconos de color.
 export const ReportSummaryScreen = () => {
   const router = useRouter();
-  const { summary } = currentReport;
   const counts = getComputedSummaryCounts();
   const markersNeedingReview = getMarkersNeedingReview();
   const improvedCount = countImprovedMarkers();
   const categoryBreakdown = getCategoryBreakdown();
+  const { lab } = findLabReport('current');
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ScreenHeader title={t('Your Report')} showBack />
 
-        <View style={styles.headlineBlock}>
+        <View style={styles.body}>
           <Text style={styles.headline}>{t('Your improvement shows in the numbers')}</Text>
-          <View style={styles.improvementPill}>
-            <Ionicons name="trending-up" size={14} color={Colors.accent} />
-            <Text style={styles.improvementPillText}>
-              {improvedCount} markers improved significantly since your last test
+          <View style={styles.improved}>
+            <FineGlyph name="up" size={16} color={FINE.jade} />
+            <Text style={styles.improvedText}>
+              {tn(improvedCount, '{n} marker improved significantly since your last test', '{n} markers improved significantly since your last test')}
             </Text>
           </View>
-        </View>
 
-        <View style={styles.donutRow}>
-          <DonutChart
-            segments={[
-              { value: counts.enRango, color: Colors.ok },
-              { value: counts.needsReview, color: Colors.attention },
-            ]}
-            centerLabel={`${counts.enRango}`}
-            centerSubLabel={t('of {n} in range', { n: counts.total })}
-          />
-          <View style={styles.legend}>
-            <View style={styles.legendRow}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.ok }]} />
-              <Text style={styles.legendText}>{t('{n} in range', { n: counts.enRango })}</Text>
-            </View>
-            <View style={styles.legendRow}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.attention }]} />
-              <Text style={styles.legendText}>{t('{n} need a look', { n: counts.needsReview })}</Text>
-            </View>
+          {/* El rosco del informe y su leyenda */}
+          <View style={styles.donutRow}>
+            <FineDonut
+              inRange={counts.enRango}
+              review={counts.needsReview}
+              label={`${counts.enRango}`}
+              sub={t('of {n} in range', { n: counts.total })}
+            />
+            <DonutLegend inRange={counts.enRango} review={counts.needsReview} />
           </View>
+          <Text style={fine.note}>
+            {formatReportDate(currentReport.test_date)} · {lab}
+          </Text>
         </View>
 
+        {/* Las áreas con algo que revisar, cada una en su rosco pequeño */}
         {categoryBreakdown.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryRow}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
             {categoryBreakdown.map((c) => (
-              <View key={c.categoryId} style={styles.categoryCard}>
-                <DonutChart
-                  size={64}
-                  strokeWidth={7}
-                  segments={[
-                    { value: c.inRange, color: Colors.ok },
-                    { value: c.total - c.inRange, color: Colors.attention },
-                  ]}
-                  centerLabel={`${c.inRange}/${c.total}`}
-                />
-                <Text style={styles.categoryLabel}>{categoryLabel(c.categoryId)}</Text>
+              <View key={c.categoryId} style={styles.category}>
+                <FineDonut size={60} stroke={3} inRange={c.inRange} review={c.total - c.inRange} label={`${c.inRange}/${c.total}`} />
+                <Text style={styles.categoryLabel} numberOfLines={2}>
+                  {categoryLabel(c.categoryId)}
+                </Text>
               </View>
             ))}
           </ScrollView>
         )}
 
-        {/* Informe objetivo: sin edad biológica (está en My Data), sin plan ni hábitos */}
-        <Text style={styles.sectionTitle}>{t('Markers that need a look')}</Text>
-        <View style={styles.markersList}>
-          {markersNeedingReview.map((marker) => {
-            const color = TIER_COLOR[marker.tier];
+        {/* Informe objetivo: sin edad biológica (está en Análisis), sin plan ni hábitos */}
+        <View style={styles.body}>
+          <SecHead title={t('Markers that need a look')} />
+          {markersNeedingReview.map((marker, i) => {
+            const name = getMarkerDisplayNameEn(marker.marker_id, marker.display_name);
+            const value = asNumber(marker.value);
             return (
               <TouchableOpacity
                 key={marker.marker_id}
-                style={styles.markerRow}
+                style={[fine.row, i === markersNeedingReview.length - 1 && styles.noLine]}
                 onPress={() =>
                   router.push({
                     pathname: '/report-marker-detail',
                     params: { markerId: marker.marker_id },
                   })
                 }
-                activeOpacity={0.75}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${name}, ${getMarkerValueTextEn(marker.value, marker.unit)}, ${t(FLAG_LABEL[marker.flag])}`}
               >
-                <Ionicons name={FLAG_ICON[marker.flag]} size={22} color={color} />
-                <View style={styles.markerTextWrap}>
-                  <View style={styles.markerNameRow}>
-                    <Text style={styles.markerName}>
-                      {getMarkerDisplayNameEn(marker.marker_id, marker.display_name)}
-                    </Text>
-                    <View style={styles.categoryPill}>
-                      <Text style={styles.categoryPillText}>
-                        {categoryLabel(marker.categoryId)}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.markerValue}>
-                    {getMarkerValueTextEn(marker.value, marker.unit)}
+                <View style={styles.flex}>
+                  <Text style={fine.rowTitle} numberOfLines={2}>
+                    {name}
                   </Text>
-                </View>
-                <View style={[styles.markerBadge, { backgroundColor: `${color}22` }]}>
-                  <Text style={[styles.markerBadgeText, { color }]}>
-                    {t(FLAG_LABEL[marker.flag])}
+                  <Text style={fine.rowSub}>
+                    {categoryLabel(marker.categoryId)} · <Text style={{ color: FINE.gold }}>{t(FLAG_LABEL[marker.flag])}</Text>
                   </Text>
+                  <LabGauge value={Number.isNaN(value) ? null : value} low={marker.range.low} high={marker.range.high} style={labStyles.rowGauge} />
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                <Text style={fine.rowValue}>{getMarkerValueTextEn(marker.value, marker.unit)}</Text>
+                <Chev />
               </TouchableOpacity>
             );
           })}
+          <Text style={fine.note}>{t('The band on each line is the range of the lab; the dot is your result.')}</Text>
+          <Text style={fine.note}>{t('A value out of range is not a diagnosis. Your doctor puts it in context.')}</Text>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  content: {
-    paddingBottom: 40,
-  },
-  headlineBlock: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  headline: {
-    color: Colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  improvementPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.accentSoft,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  improvementPillText: {
-    color: Colors.accent,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  donutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 24,
-    marginBottom: 24,
-  },
-  legend: {
-    gap: 10,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendText: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  categoryRow: {
-    paddingHorizontal: 20,
-    gap: 14,
-    marginBottom: 24,
-  },
-  categoryCard: {
-    alignItems: 'center',
-    width: 80,
-  },
-  categoryLabel: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  phenoCard: {
-    marginHorizontal: 20,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 28,
-  },
-  phenoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  phenoTitle: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  phenoRange: {
-    color: Colors.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-  },
-  phenoChrono: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  phenoExplanation: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
-  markersList: {
-    paddingHorizontal: 20,
-    gap: 10,
-    marginBottom: 28,
-  },
-  markerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 14,
-  },
-  markerTextWrap: {
-    flex: 1,
-  },
-  markerNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 2,
-  },
-  markerName: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  categoryPill: {
-    backgroundColor: Colors.divider,
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  categoryPillText: {
-    color: Colors.textMuted,
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  markerValue: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  markerBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  markerBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  planButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 16,
-    marginHorizontal: 20,
-  },
-  planButtonText: {
-    color: Colors.background,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  habitsLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 14,
-    marginHorizontal: 20,
-    marginTop: 12,
-  },
-  habitsLinkText: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  content: { paddingBottom: 40 },
+  body: { paddingHorizontal: 20 },
+  flex: { flex: 1, minWidth: 0 },
+  noLine: { borderBottomWidth: 0 },
+  headline: { ...ff('light'), color: FINE.ivory, fontSize: 24, lineHeight: 30, letterSpacing: -0.2 },
+  improved: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  improvedText: { ...ff('regular'), flex: 1, color: FINE.mute, fontSize: 13, lineHeight: 18 },
+  donutRow: { flexDirection: 'row', alignItems: 'center', gap: 22, marginTop: 22 },
+  categoryRow: { paddingHorizontal: 20, gap: 16, paddingTop: 18 },
+  category: { alignItems: 'center', width: 74 },
+  categoryLabel: { ...ff('regular'), color: FINE.mute, fontSize: 11, lineHeight: 14, marginTop: 6, textAlign: 'center' },
 });

@@ -11,6 +11,7 @@ import { useLogout } from '@/hooks/useLogout';
 import { getLang, t } from '@/i18n';
 import { roleLabel } from '@/data/sharing';
 import { isPortalDemo } from '@/data/specialistPortal';
+import { INTER } from '@/theme/fine';
 
 // Portal del especialista. Web de escritorio (≥ 900 px): barra lateral fija y
 // contenido ancho. Móvil / web estrecha: pestañas abajo como en una app.
@@ -181,7 +182,7 @@ export const ProLayout = ({ active, title, right, children, scroll = true, badge
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   wideRoot: { flex: 1, flexDirection: 'row', backgroundColor: Colors.background },
   sidebar: {
     width: 230,
@@ -194,30 +195,30 @@ const styles = StyleSheet.create({
   },
   brand: { paddingHorizontal: 10, marginBottom: 18 },
   brandLogo: { marginBottom: 6 },
-  brandSub: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  brandSub: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium },
   navItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingVertical: 10, borderRadius: 10 },
   navItemOn: { backgroundColor: Colors.accentSoft },
-  navText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700', flex: 1 },
-  navBadge: { color: Colors.background, backgroundColor: Colors.accent, fontSize: 11, fontWeight: '800', borderRadius: 9, paddingHorizontal: 6, overflow: 'hidden' },
+  navText: { color: Colors.textSecondary, fontSize: 14, fontFamily: INTER.medium, flex: 1 },
+  navBadge: { color: Colors.background, backgroundColor: Colors.accent, fontSize: 11, fontFamily: INTER.medium, borderRadius: 9, paddingHorizontal: 6, overflow: 'hidden' },
   me: { flexDirection: 'row', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: Colors.divider, paddingTop: 12, paddingHorizontal: 6 },
   avatar: { width: 34, height: 34, borderRadius: 17 },
   avatarEmpty: { backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: Colors.accent, fontWeight: '800' },
-  meName: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  meRole: { color: Colors.textSecondary, fontSize: 11 },
+  avatarText: { color: Colors.accent, fontFamily: INTER.medium },
+  meName: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  meRole: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 11 },
   main: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10 },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900' },
+  title: { color: Colors.textPrimary, fontSize: 24, fontFamily: INTER.medium },
   back: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start', marginBottom: 4, marginLeft: -4 },
-  backText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  backText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   demo: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: 20, marginBottom: 8 },
-  demoText: { color: Colors.warning, fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  demoText: { color: Colors.warning, fontSize: 12, fontFamily: INTER.medium, flexShrink: 1 },
   body: { paddingHorizontal: 20, paddingBottom: 32 },
   bodyWide: { paddingHorizontal: 28, maxWidth: 1180, width: '100%' },
   bodyWideFlex: { paddingHorizontal: 8 },
   tabBar: { flexDirection: 'row', borderTopWidth: 1, borderTopColor: Colors.tabBarBorder, backgroundColor: Colors.tabBarBackground, paddingTop: 8, paddingBottom: 4 },
   tab: { flex: 1, alignItems: 'center', gap: 2 },
   // Ocho pestañas en el móvil: letra un punto más pequeña para que quepan
-  tabText: { color: Colors.tabBarInactive, fontSize: 10, fontWeight: '600' },
+  tabText: { color: Colors.tabBarInactive, fontSize: 10, fontFamily: INTER.medium },
   tabDot: { position: 'absolute', top: -2, right: -4, width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.danger },
 });

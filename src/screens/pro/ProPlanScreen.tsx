@@ -10,6 +10,7 @@ import { draftActionsForMarkers } from '@/utils/planUpdate';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 // "Generar plan de acción": borrador a partir de los valores fuera de rango del
 // paciente; el especialista edita las recomendaciones y lo envía. Kuova no emite
 // recetas: si hace falta una, el médico la hace fuera (su plataforma o papel).
@@ -107,21 +108,21 @@ export const ProPlanScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  intro: { color: Colors.textSecondary, fontSize: 13, marginBottom: 8 },
-  muted: { color: Colors.textSecondary, fontSize: 13, textAlign: 'center' },
-  error: { color: Colors.danger, fontSize: 13, marginBottom: 8 },
-  section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 14, marginBottom: 8 },
+  intro: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, marginBottom: 8 },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13, textAlign: 'center' },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13, marginBottom: 8 },
+  section: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium, marginTop: 14, marginBottom: 8 },
   card: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12, marginBottom: 8, gap: 8 },
   cardHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontWeight: '800', paddingVertical: 4 },
-  input: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 10, color: Colors.textPrimary, fontSize: 14, minHeight: 56, textAlignVertical: 'top' },
-  based: { color: Colors.textMuted, fontSize: 11 },
+  title: { flex: 1, color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium, paddingVertical: 4 },
+  input: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, padding: 10, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14, minHeight: 56, textAlignVertical: 'top' },
+  based: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11 },
   add: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6 },
-  addText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  addText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   send: { backgroundColor: Colors.accent, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7 },
-  sendText: { color: Colors.background, fontSize: 13, fontWeight: '800' },
+  sendText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
   done: { alignItems: 'center', gap: 12, marginTop: 60, paddingHorizontal: 20 },
-  doneTitle: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900', textAlign: 'center' },
+  doneTitle: { color: Colors.textPrimary, fontSize: 22, fontFamily: INTER.medium, textAlign: 'center' },
   primary: { backgroundColor: Colors.accent, borderRadius: 22, paddingHorizontal: 20, paddingVertical: 12, marginTop: 8 },
-  primaryText: { color: Colors.background, fontSize: 14, fontWeight: '800' },
+  primaryText: { color: Colors.background, fontSize: 14, fontFamily: INTER.medium },
 });

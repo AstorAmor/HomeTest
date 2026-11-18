@@ -1,10 +1,12 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '@/constants/colors';
 import { SimulationDay } from '@/logic/nudges';
+import { FINE, ff } from '@/theme/fine';
 
 // Línea de tiempo de un usuario simulado: cada día con avisos (enviados o retenidos) y el motivo.
 // La usan Simulated users y Build a case (modo desarrollador).
+// Desde el 2026-11-17, con los colores del lenguaje fino: enviado en jade, retenido en oro y lo demás apagado
+// (sin naranja ni rojo); el día de hoy, con el fondo apenas marcado.
 
 export const STATUS_LABEL: Record<string, string> = {
   send: 'sent',
@@ -16,8 +18,7 @@ export const STATUS_LABEL: Record<string, string> = {
 };
 
 export const statusColor = (status: string) =>
-  ({ send: Colors.ok, muted: Colors.textMuted, cooldown: Colors.gold, daily_limit: Colors.attention })[status] ??
-  Colors.textMuted;
+  ({ send: FINE.jade, muted: FINE.mute, cooldown: FINE.gold, daily_limit: FINE.gold })[status] ?? FINE.mute;
 
 const interesting = (d: SimulationDay, onlySent: boolean) =>
   d.decisions.some((x) => (onlySent ? x.status === 'send' : x.status !== 'not_due')) ||
@@ -56,7 +57,7 @@ export function NudgeTimeline({
               .map((x) => (
                 <View key={x.id}>
                   <Text style={styles.nudgeText}>
-                    <Text style={{ color: statusColor(x.status), fontWeight: '800' }}>{STATUS_LABEL[x.status]}</Text>{' '}
+                    <Text style={{ color: statusColor(x.status), ...ff('medium') }}>{STATUS_LABEL[x.status]}</Text>{' '}
                     {showText && x.title ? x.title : x.label}
                   </Text>
                   {showText && x.status === 'send' && x.body ? <Text style={styles.body}>{x.body}</Text> : null}
@@ -71,13 +72,13 @@ export function NudgeTimeline({
 }
 
 const styles = StyleSheet.create({
-  empty: { color: Colors.textMuted, fontSize: 12, paddingVertical: 6 },
-  dayRow: { flexDirection: 'row', gap: 10, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  today: { backgroundColor: Colors.accentSoft, borderRadius: 8, paddingHorizontal: 6 },
-  dayLabel: { width: 54, color: Colors.textPrimary, fontSize: 12, fontWeight: '700' },
-  dayDate: { color: Colors.textMuted, fontSize: 11, fontWeight: '500' },
-  eventText: { color: Colors.gold, fontSize: 12, fontWeight: '600' },
-  nudgeText: { color: Colors.textPrimary, fontSize: 12 },
-  body: { color: Colors.textSecondary, fontSize: 12, lineHeight: 17 },
-  reason: { color: Colors.textMuted, fontSize: 11, lineHeight: 15 },
+  empty: { ...ff('regular'), color: FINE.mute, fontSize: 12, paddingVertical: 6 },
+  dayRow: { flexDirection: 'row', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  today: { backgroundColor: 'rgba(131,214,180,0.08)', borderRadius: 8, paddingHorizontal: 6 },
+  dayLabel: { ...ff('medium'), width: 54, color: FINE.ivory, fontSize: 12 },
+  dayDate: { ...ff('regular'), color: FINE.mute, fontSize: 11 },
+  eventText: { ...ff('regular'), color: FINE.gold, fontSize: 12 },
+  nudgeText: { ...ff('regular'), color: FINE.ivory, fontSize: 12 },
+  body: { ...ff('regular'), color: FINE.mute, fontSize: 12, lineHeight: 17 },
+  reason: { ...ff('regular'), color: FINE.mute, fontSize: 11, lineHeight: 15 },
 });

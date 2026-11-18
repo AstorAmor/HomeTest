@@ -6,6 +6,7 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { KuovaAgeResult, PHENOAGE_INPUTS, PhenoAgeCoverage } from '@/logic/kuovaAge';
 import type { PhenoInput } from '@/logic/phenoAge';
 import { num, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Insignia de la Edad KUOVA, el "buque insignia" de Mis datos: las "capas" de la marca (láminas
 // apiladas con borde de ruido fractal, sin contorno; las eligió el fundador), recortadas en círculo,
@@ -53,7 +54,7 @@ export const KuovaAgeBadge = ({ size = 220, value, good = true, locked = false }
           <Text
             style={[
               styles.value,
-              { fontSize: 60 * k, lineHeight: 68 * k, color: light ? '#0E2A24' : '#FFFFFF' },
+              { fontFamily: INTER.regular, fontSize: 60 * k, lineHeight: 68 * k, color: light ? '#0E2A24' : '#FFFFFF' },
               light ? styles.shadowLight : styles.shadowDark,
             ]}
           >
@@ -76,6 +77,35 @@ const BLUR = {
 const BlurredNumber = ({ size, light }: { size: number; light: boolean }) => (
   <Image source={BLUR[light ? 'light' : 'dark'][num('0.5').includes(',') ? 'comma' : 'dot']} style={{ width: size, height: size }} contentFit="contain" />
 );
+
+// La Edad KUOVA aún sin calcular en el lenguaje fino (Análisis y su detalle), donde iría la cifra: «00,0» desenfocado
+// y ya pintado (scripts/kuova-age-blur.py, blur_fine_*), del tamaño de la cifra de verdad (Inter Light 54). La imagen
+// trae un margen de FINE_PAD alrededor para el desenfoque; el margen negativo lo descuenta y ocupa lo mismo que la
+// cifra. Fundador, 2026-11-18: «unos números difuminados como: pendiente desbloquear». Decorativo, no es la edad de nadie
+const BLUR_FINE = {
+  dark: {
+    comma: require('../../assets/images/kuova-age/blur_fine_comma_dark.png'),
+    dot: require('../../assets/images/kuova-age/blur_fine_dot_dark.png'),
+  },
+  light: {
+    comma: require('../../assets/images/kuova-age/blur_fine_comma_light.png'),
+    dot: require('../../assets/images/kuova-age/blur_fine_dot_light.png'),
+  },
+};
+const FINE_PAD = 18;
+
+export const KuovaAgeLockedFigure = () => {
+  const comma = num('0.5').includes(',');
+  return (
+    <Image
+      source={BLUR_FINE[Colors.isLight ? 'light' : 'dark'][comma ? 'comma' : 'dot']}
+      style={{ width: comma ? 146.3 : 146, height: 96, margin: -FINE_PAD }}
+      contentFit="contain"
+      accessible
+      accessibilityLabel={t('Not unlocked yet')}
+    />
+  );
+};
 
 const andList = (items: string[]) => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} ${t('and')} ${items[items.length - 1]}`);
 
@@ -110,11 +140,11 @@ export const KuovaAgeDots = ({ c }: { c: PhenoAgeCoverage }) => (
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
-  value: { fontWeight: '800' },
+  value: { fontFamily: INTER.medium },
   // Sombra suave para que el número se lea sobre el brillo del corazón
   shadowDark: { textShadowColor: 'rgba(0,0,0,0.65)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 10 },
   shadowLight: { textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 10 },
   dots: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot: { width: 7, height: 7, borderRadius: 3.5 },
-  dotsText: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', marginLeft: 4 },
+  dotsText: { color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium, marginLeft: 4 },
 });

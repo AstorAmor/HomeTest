@@ -4,6 +4,8 @@ import { withAlpha } from '@/constants/colors';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 import { IntestineIcon } from './IntestineIcon';
+import { DumbbellIcon, isWeightsIcon } from './fine/DumbbellIcon';
+import { LotusIcon, isFlowerIcon } from './fine/LotusIcon';
 
 // Iconos de salud que no traen las librerías, en contorno y con el mismo tamaño que un icono normal.
 
@@ -52,7 +54,12 @@ export const IronIcon = ({ size = 20, color }: { size?: number; color: string })
 
 // Un nombre de icono para toda la app: Ionicons por defecto, 'mci:<nombre>' para
 // MaterialCommunityIcons y 'glucose' | 'kidney' | 'iron' | 'intestine' para los propios.
+// Las pesas ('barbell-outline', 'mci:dumbbell'…) salen siempre con el dibujo único de fine/dumbbell.ts, el del
+// entrenador personal (fundador, 2026-11-17: «sé coherente con los iconos»), no con el de la librería.
 export const AppIcon = ({ name, size = 20, color }: { name: string; size?: number; color: string }) => {
+  if (isWeightsIcon(name)) return <DumbbellIcon size={size} color={color} />;
+  // Las flores y rosas del ciclo, siempre el loto único de fine/lotus.ts (fundador, 2026-11-17)
+  if (isFlowerIcon(name)) return <LotusIcon size={size} color={color} />;
   switch (name) {
     case 'glucose':
       return <GlucoseIcon size={size} color={color} />;

@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
+import { INTER } from '@/theme/fine';
 
 // Regla con degradado y un punto en el valor actual: la usan la temperatura (con su franja normal)
 // y la hidratación según el color de la orina. Mide su propio ancho para dibujar el degradado.
@@ -94,6 +95,6 @@ const styles = StyleSheet.create({
   tick: { position: 'absolute', width: 2, borderRadius: 1, backgroundColor: Colors.textMuted, opacity: 0.8 },
   dot: { position: 'absolute', backgroundColor: Colors.textPrimary, borderWidth: 2, borderColor: Colors.card },
   labels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
-  label: { color: Colors.textMuted, fontSize: 10 },
+  label: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 10 },
   rangeLabel: { position: 'absolute', top: 0, width: 140, textAlign: 'center', color: Colors.textSecondary },
 });

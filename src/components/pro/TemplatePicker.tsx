@@ -7,6 +7,7 @@ import { useProIdentity } from '@/components/pro/ProLayout';
 import { ProTemplate, TemplateTopic, fillTemplate, suggestTemplates, templateTopicIcon, templateTopicName, templates } from '@/data/proTemplates';
 
 import { t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 interface Props {
   question: string; // texto del paciente: de aquí salen las sugerencias
   patientName: string;
@@ -113,20 +114,20 @@ export const TemplatePicker = ({ question, patientName, extraTopic, onInsert, st
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
-  label: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700', marginRight: 2 },
+  label: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium, marginRight: 2 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 5, maxWidth: 260, borderWidth: 1, borderColor: withAlpha(Colors.accent, 0.45), borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
-  chipText: { color: Colors.accent, fontSize: 12, fontWeight: '700', flexShrink: 1 },
+  chipText: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, flexShrink: 1 },
   browse: { borderColor: Colors.cardBorder },
-  browseText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  browseText: { color: Colors.textSecondary, fontSize: 12, fontFamily: INTER.medium },
   panel: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 12, padding: 10, gap: 6 },
   search: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 10, paddingHorizontal: 10 },
-  searchInput: { flex: 1, color: Colors.textPrimary, fontSize: 13, paddingVertical: 8 },
+  searchInput: { flex: 1, color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 13, paddingVertical: 8 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  itemTitle: { color: Colors.textPrimary, fontSize: 13, fontWeight: '800' },
-  itemPreview: { color: Colors.textSecondary, fontSize: 12, lineHeight: 16, marginTop: 1 },
-  insert: { color: Colors.accent, fontSize: 12, fontWeight: '800' },
-  muted: { color: Colors.textSecondary, fontSize: 12, paddingVertical: 8 },
-  manage: { color: Colors.accent, fontSize: 12, fontWeight: '700', marginTop: 2 },
+  itemTitle: { color: Colors.textPrimary, fontSize: 13, fontFamily: INTER.medium },
+  itemPreview: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, lineHeight: 16, marginTop: 1 },
+  insert: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 12, paddingVertical: 8 },
+  manage: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, marginTop: 2 },
   emptyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 },
-  emptyText: { color: Colors.accent, fontSize: 12, fontWeight: '700', flexShrink: 1 },
+  emptyText: { color: Colors.accent, fontSize: 12, fontFamily: INTER.medium, flexShrink: 1 },
 });

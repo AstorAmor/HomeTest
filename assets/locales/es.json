@@ -5,6 +5,7 @@
     "NSCameraUsageDescription": "Kuova usa la cámara para fotografiar tus informes de análisis y tus comidas, y para tu foto de perfil.",
     "NSPhotoLibraryUsageDescription": "Kuova abre tus fotos para que elijas un informe de análisis, una comida o tu foto de perfil.",
     "NSMicrophoneUsageDescription": "Kuova usa el micrófono para grabar notas de voz en tu registro, solo cuando pulsas grabar.",
+    "NSFaceIDUsageDescription": "Kuova usa Face ID para desbloquear la app cuando activas el bloqueo en Ajustes.",
     "NSPhotoLibraryAddUsageDescription": "Kuova solo guarda una imagen en tus fotos cuando eliges «Guardar imagen», por ejemplo una insignia que quieres compartir."
   }
 }

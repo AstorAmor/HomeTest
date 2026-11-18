@@ -13,14 +13,18 @@ const DARK = {
   background: '#0A1D19',
   backgroundElevated: '#0F2722',
   card: '#12302A',
-  cardBorder: '#1E4038',
+  // Bordes y separadores: la línea fina del prototipo (marfil al 9 %)
+  cardBorder: 'rgba(240, 239, 230, 0.09)',
 
-  textPrimary: '#FAF8F3',
+  textPrimary: '#F0EFE6',
   textSecondary: '#A9B8B1',
-  textMuted: '#748A82',
+  textMuted: '#8D9E95',
 
-  accent: '#C9A36B',
-  accentSoft: 'rgba(201, 163, 107, 0.16)',
+  // Lo que se toca (botones, enlaces, lo marcado), en jade como el prototipo de las 4 pestañas (2026-11-16: el
+  // fundador quiere toda la app coherente con él). El oro queda para lo de pago y lo que hay que revisar
+  // (Colors.gold y FINE.gold). Los textos sobre un botón de acento siguen en Colors.background
+  accent: '#83D6B4',
+  accentSoft: 'rgba(131, 214, 180, 0.12)',
 
   danger: '#E8735C',
   dangerSoft: 'rgba(232, 115, 92, 0.16)',
@@ -33,10 +37,10 @@ const DARK = {
 
   tabBarBackground: '#0D241F',
   tabBarBorder: '#1A3A33',
-  tabBarActive: '#C9A36B',
-  tabBarInactive: '#748A82',
+  tabBarActive: '#83D6B4',
+  tabBarInactive: '#8D9E95',
 
-  divider: '#1A3A33',
+  divider: 'rgba(240, 239, 230, 0.09)',
 
   pulseAccent: '#E06B9E',
   pinkSoft: '#F7B6D2',

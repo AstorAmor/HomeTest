@@ -20,12 +20,14 @@ import { isNetworkError, postAi } from '@/utils/apiBaseUrl';
 import { ExtractedLabReport, ExtractedParametro } from '@/types/labReport';
 import { mergeLabReports } from '@/utils/mergeLabReports';
 import { prepareImage, chunk } from '@/utils/imageUpload';
+import { expectSystemUi } from '@/utils/systemUi';
 import { useRouter } from 'expo-router';
 import { labUploadRepository, saveOriginals } from '@/data/labUploads';
 import { useSections } from '@/data/appPrefs';
 import { useFeature } from '@/data/access';
 import { SubscribePopup } from '@/components/SubscribePopup';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 type Status = 'idle' | 'reading' | 'uploading' | 'done' | 'error';
 
@@ -55,7 +57,7 @@ export const UploadTestScreen = () => {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState('');
 
-  const saveAndGo = async (pathname: '/progress' | '/plan-update') => {
+  const saveAndGo = async (pathname: '/progress' | '/metas-objetivos') => {
     if (!report) return;
     setSaveError('');
     try {
@@ -69,7 +71,8 @@ export const UploadTestScreen = () => {
           console.warn('Lab upload: originals not saved', e instanceof Error ? e.message : e),
         );
       }
-      router.push({ pathname, params: pathname === '/progress' ? { upload: id, view: 'progress' } : { upload: id } });
+      if (pathname === '/progress') router.push({ pathname, params: { upload: id, view: 'progress' } });
+      else router.push(pathname);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : t('Could not save your results'));
     }
@@ -141,7 +144,7 @@ export const UploadTestScreen = () => {
       const isAbort = err instanceof Error && err.name === 'AbortError';
       setErrorText(
         isAbort
-          ? `A batch took longer than ${REQUEST_TIMEOUT_MS / 1000}s and was canceled. Try fewer pages per batch or lighter photos.`
+          ? t('A batch took longer than {n}s and was canceled. Try fewer pages per batch or lighter photos.', { n: REQUEST_TIMEOUT_MS / 1000 })
           : isNetworkError(err)
             ? t('Could not connect to Kuova. Check that you have internet (Wi-Fi or mobile data) and tap Analyse again: your photos are still here.')
             : err instanceof Error
@@ -154,6 +157,8 @@ export const UploadTestScreen = () => {
   };
 
   const pickDocument = async () => {
+    // La hoja del sistema sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/pdf'],
       copyToCacheDirectory: true,
@@ -181,6 +186,7 @@ export const UploadTestScreen = () => {
   };
 
   const pickFromGallery = async () => {
+    expectSystemUi();
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
@@ -188,6 +194,7 @@ export const UploadTestScreen = () => {
       return;
     }
 
+    expectSystemUi();
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.8,
@@ -208,6 +215,7 @@ export const UploadTestScreen = () => {
   };
 
   const addPhoto = async () => {
+    expectSystemUi();
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       setStatus('error');
@@ -215,6 +223,7 @@ export const UploadTestScreen = () => {
       return;
     }
 
+    expectSystemUi();
     const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
 
     if (result.canceled || !result.assets?.[0]) return;
@@ -363,9 +372,9 @@ export const UploadTestScreen = () => {
                 <Text style={styles.nextPrimaryText}>{t('See my progress')}</Text>
               </TouchableOpacity>
               {show('plan') && (
-                <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/plan-update')}>
-                  <Ionicons name="sparkles-outline" size={18} color={Colors.accent} />
-                  <Text style={styles.nextSecondaryText}>{t('Update plan')}</Text>
+                <TouchableOpacity style={styles.nextSecondary} onPress={() => saveAndGo('/metas-objetivos')}>
+                  <Ionicons name="flag-outline" size={18} color={Colors.accent} />
+                  <Text style={styles.nextSecondaryText}>{t('Review my goals')}</Text>
                 </TouchableOpacity>
               )}
               {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
@@ -392,7 +401,7 @@ export const UploadTestScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   locked: {
     marginHorizontal: 20,
@@ -406,11 +415,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   lockedIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
-  lockedTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', textAlign: 'center' },
-  lockedText: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  lockedTitle: { color: Colors.textPrimary, fontSize: 18, fontFamily: INTER.medium, textAlign: 'center' },
+  lockedText: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   lockedCta: { alignSelf: 'stretch', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  lockedCtaText: { color: Colors.background, fontSize: 15, fontWeight: '800', textAlign: 'center' },
-  lockedLink: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
+  lockedCtaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium, textAlign: 'center' },
+  lockedLink: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
   content: {
     paddingBottom: 40,
   },
@@ -436,7 +445,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: Colors.textPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
   },
   pagesSection: {
     paddingHorizontal: 20,
@@ -444,7 +453,7 @@ const styles = StyleSheet.create({
   },
   pagesTitle: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     marginBottom: 10,
   },
   pagesRow: {
@@ -462,7 +471,7 @@ const styles = StyleSheet.create({
   },
   thumbIndex: {
     color: Colors.textMuted,
-    fontSize: 11,
+    fontFamily: INTER.regular, fontSize: 11,
     marginTop: 4,
   },
   thumbRemove: {
@@ -484,11 +493,11 @@ const styles = StyleSheet.create({
   analyzeButtonText: {
     color: Colors.background,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: INTER.medium,
   },
   fileName: {
     color: Colors.textSecondary,
-    fontSize: 13,
+    fontFamily: INTER.regular, fontSize: 13,
     paddingHorizontal: 20,
     marginBottom: 12,
   },
@@ -501,7 +510,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: Colors.textSecondary,
-    fontSize: 14,
+    fontFamily: INTER.regular, fontSize: 14,
   },
   tableWrap: {
     paddingHorizontal: 20,
@@ -513,7 +522,7 @@ const styles = StyleSheet.create({
   rawToggleText: {
     color: Colors.accent,
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: INTER.medium,
     textDecorationLine: 'underline',
   },
   resultBox: {
@@ -535,7 +544,7 @@ const styles = StyleSheet.create({
   },
   resultLabel: {
     fontSize: 13,
-    fontWeight: '700',
+    fontFamily: INTER.semibold,
     marginBottom: 10,
     textTransform: 'uppercase',
   },
@@ -546,7 +555,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   nextActions: { marginTop: 16, gap: 10 },
-  nextTitle: { color: Colors.textSecondary, fontSize: 13 },
+  nextTitle: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   nextPrimary: {
     flexDirection: 'row',
     gap: 8,
@@ -556,7 +565,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     paddingVertical: 14,
   },
-  nextPrimaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  nextPrimaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   nextSecondary: {
     flexDirection: 'row',
     gap: 8,
@@ -567,6 +576,6 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     paddingVertical: 14,
   },
-  nextSecondaryText: { color: Colors.accent, fontSize: 15, fontWeight: '800' },
-  saveError: { color: Colors.danger, fontSize: 13 },
+  nextSecondaryText: { color: Colors.accent, fontSize: 15, fontFamily: INTER.medium },
+  saveError: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 13 },
 });

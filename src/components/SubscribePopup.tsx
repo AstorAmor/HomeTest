@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Colors, withAlpha } from '@/constants/colors';
 import { featureValue, isIncluded, loadPlanFeatures, Tier, tierName } from '@/data/access';
 import { t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // Lo que no va en tu suscripción (escanear informes, el menú semanal…): al entrar sale esta ventana,
 // «Suscríbete a Kuova Basic», con qué es y qué trae. Se puede cerrar (botón, fuera o «atrás») y al
@@ -62,11 +63,11 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   card: { width: '100%', maxWidth: 420, backgroundColor: Colors.background, borderRadius: 20, borderWidth: 1, borderColor: Colors.cardBorder, padding: 22, alignItems: 'center', gap: 10 },
   icon: { width: 56, height: 56, borderRadius: 28, backgroundColor: withAlpha(Colors.gold, 0.14), alignItems: 'center', justifyContent: 'center' },
-  title: { color: Colors.textPrimary, fontSize: 20, fontWeight: '800', textAlign: 'center' },
-  text: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  title: { color: Colors.textPrimary, fontSize: 20, fontFamily: INTER.medium, textAlign: 'center' },
+  text: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   primary: { alignSelf: 'stretch', alignItems: 'center', backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 13, marginTop: 6 },
-  primaryText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  link: { color: Colors.accent, fontSize: 14, fontWeight: '700', paddingVertical: 4 },
+  primaryText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
+  link: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium, paddingVertical: 4 },
   secondary: { alignSelf: 'stretch', alignItems: 'center', borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingVertical: 12 },
-  secondaryText: { color: Colors.textSecondary, fontSize: 15, fontWeight: '700' },
+  secondaryText: { color: Colors.textSecondary, fontSize: 15, fontFamily: INTER.medium },
 });

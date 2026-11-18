@@ -8,12 +8,17 @@ import { Redirect, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/colors';
 import { useWebShell } from '@/web/webMode';
 import { type ActiveWorkout, isFreshWorkout, loadActiveWorkout } from '@/data/workouts/activeWorkout';
+import { profileRepository } from '@/data/profileRepository';
+import { userFlags } from '@/data/userFlags';
+import { FIRST_STEPS_FLAG, isNewAccount, needsFirstSteps } from '@/logic/firstSteps';
 
 // Solo la primera vez que se pasa por aquí tras abrir la app: luego «/» es la portada de siempre
 let resumeChecked = false;
+// Cuenta para la que ya se miró si le tocan los primeros pasos (src/logic/firstSteps.ts), una vez por apertura
+let firstStepsCheckedFor: string | null = null;
 
 export default function RootIndex() {
-  const { isLoggedIn, demoMode, initializing, professional, realAccount } = useAuth();
+  const { isLoggedIn, demoMode, initializing, professional, realAccount, authMode, user } = useAuth();
   const params = useLocalSearchParams<{ tab?: string }>();
   const webShell = useWebShell();
   // Tras cambiar el tema la app se recarga: volver a donde estabas (undefined = leyendo)
@@ -29,9 +34,24 @@ export default function RootIndex() {
     resumeChecked = true;
     loadActiveWorkout().then((w) => setWorkout(w && isFreshWorkout(w) ? w : null));
   }, [initializing]);
+  // Cuenta nueva sin el cuestionario hecho: primeros pasos (cuestionario → objetivos y metas → compromiso → Hoy).
+  // undefined = mirando (el perfil y la marca salen de la caché del móvil, así que es casi al momento)
+  const uid = user?.id ?? null;
+  const [firstSteps, setFirstSteps] = useState<boolean | undefined>(uid && firstStepsCheckedFor === uid ? false : undefined);
+  useEffect(() => {
+    if (initializing || !isLoggedIn || !uid || firstStepsCheckedFor === uid) return;
+    firstStepsCheckedFor = uid;
+    if (authMode !== 'supabase' || demoMode || professional || !realAccount || !isNewAccount(user?.createdAt)) {
+      setFirstSteps(false);
+      return;
+    }
+    Promise.all([profileRepository.get(), userFlags.get(FIRST_STEPS_FLAG)])
+      .then(([profile, flag]) => setFirstSteps(needsFirstSteps(user?.createdAt, profile?.completedAt, flag)))
+      .catch(() => setFirstSteps(false));
+  }, [initializing, isLoggedIn, uid, authMode, demoMode, professional, realAccount, user?.createdAt]);
 
   // Mientras se recupera la sesión guardada, pantalla vacía (evita un parpadeo del login)
-  if (initializing || returnTo === undefined || workout === undefined) {
+  if (initializing || returnTo === undefined || workout === undefined || (isLoggedIn && uid && firstSteps === undefined)) {
     return <View style={{ flex: 1, backgroundColor: Colors.background }} />;
   }
 
@@ -49,6 +69,8 @@ export default function RootIndex() {
   if (!demoMode && !realAccount) {
     return <DevModeSelectScreen />;
   }
+
+  if (firstSteps) return <Redirect href={{ pathname: '/onboarding', params: { inicio: '1' } }} />;
 
   // Volver a una pestaña concreta ("/(tabs)?tab=2", ver src/constants/tabs.ts) o a otra pantalla guardada
   const tabFromReturn = returnTo?.startsWith('/(tabs)') ? (returnTo.match(/[?&]tab=(\d)/)?.[1] ?? null) : null;

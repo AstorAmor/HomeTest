@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { Colors } from '@/constants/colors';
+import { SecHead } from '@/components/fine/Fine';
+import { FMark } from '@/components/fine/FineForm';
 import { useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 import { amountText, FOODS, foodName, SECTION_LABEL } from '@/data/diet/catalog';
 import { dietRepository, shoppingChecks } from '@/data/diet/dietRepository';
@@ -13,8 +14,12 @@ import { shoppingList } from '@/logic/dietPlanner';
 import { num, t } from '@/i18n';
 import { menuFileName, menuToHtml, shoppingText } from '@/utils/menuPdf';
 import { shareHtmlPdf } from '@/utils/shareHtml';
+import { expectSystemUi } from '@/utils/systemUi';
+import { FINE, ff, fine } from '@/theme/fine';
 
-// Lista de la compra de la semana, por secciones del súper, con casillas y el coste aproximado
+// Lista de la compra de la semana, por secciones del súper, con casillas y el coste aproximado.
+// Rediseño del 2026-11-16 (lenguaje fino): secciones con su cabecera pequeña, cada cosa en una fila con línea fina y
+// un círculo para marcarla; compartir y PDF como etiquetas con borde en jade.
 const ORDER: ShopSection[] = ['produce', 'meat_fish', 'chilled', 'frozen', 'bakery', 'pantry'];
 const STAPLES = new Set(['salt', 'paprika', 'cumin', 'oregano', 'cinnamon']);
 
@@ -57,6 +62,8 @@ export const ShoppingListScreen = () => {
       }
       return;
     }
+    // El menú de compartir sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     await Share.share({ message });
   };
 
@@ -66,16 +73,18 @@ export const ShoppingListScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <Text style={styles.total}>{t('About {v} € for the week', { v: num(Math.round(total)) })}</Text>
-          <TouchableOpacity style={styles.share} onPress={share}>
-            <Ionicons name={Platform.OS === 'web' ? 'copy-outline' : 'share-outline'} size={16} color={Colors.accent} />
+          <TouchableOpacity style={styles.share} onPress={share} accessibilityRole="button">
+            <Ionicons name={Platform.OS === 'web' ? 'copy-outline' : 'share-outline'} size={15} color={FINE.jade} />
             <Text style={styles.shareText}>{copied ? t('Copied') : Platform.OS === 'web' ? t('Copy') : t('Share')}</Text>
           </TouchableOpacity>
           {plan ? (
             <TouchableOpacity
               style={styles.share}
               onPress={() => shareHtmlPdf({ html: menuToHtml(plan), fileName: menuFileName(), fallbackText: text(), dialogTitle: t('Send your menu') }).catch(() => undefined)}
+              accessibilityRole="button"
+              accessibilityLabel="PDF"
             >
-              <Ionicons name="document-text-outline" size={16} color={Colors.accent} />
+              <Ionicons name="document-text-outline" size={15} color={FINE.jade} />
               <Text style={styles.shareText}>PDF</Text>
             </TouchableOpacity>
           ) : null}
@@ -85,13 +94,19 @@ export const ShoppingListScreen = () => {
           const list = items.filter((i) => FOODS[i.food]?.section === sec);
           if (!list.length) return null;
           return (
-            <View key={sec} style={{ marginTop: 14 }}>
-              <Text style={styles.section}>{t(SECTION_LABEL[sec])}</Text>
-              {list.map((i) => {
+            <View key={sec}>
+              <SecHead title={t(SECTION_LABEL[sec])} style={styles.secHead} />
+              {list.map((i, k) => {
                 const on = checked.includes(i.food);
                 return (
-                  <TouchableOpacity key={i.food} style={styles.item} onPress={() => toggle(i.food)}>
-                    <Ionicons name={on ? 'checkbox' : 'square-outline'} size={20} color={on ? Colors.textMuted : Colors.accent} />
+                  <TouchableOpacity
+                    key={i.food}
+                    style={[styles.item, k === list.length - 1 && { borderBottomWidth: 0 }]}
+                    onPress={() => toggle(i.food)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on }}
+                  >
+                    <FMark on={on} />
                     <Text style={[styles.itemName, on && styles.done]}>{foodName(FOODS[i.food])}</Text>
                     <Text style={[styles.itemAmount, on && styles.done]}>{STAPLES.has(i.food) ? t('to taste') : amountText(i.food, i.grams, { whole: true })}</Text>
                   </TouchableOpacity>
@@ -106,16 +121,16 @@ export const ShoppingListScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 40 },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  total: { color: Colors.textPrimary, fontSize: 18, fontWeight: '900' },
-  share: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
-  shareText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  hint: { color: Colors.textMuted, fontSize: 12, marginTop: 4 },
-  section: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  itemName: { flex: 1, color: Colors.textPrimary, fontSize: 14 },
-  itemAmount: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  done: { color: Colors.textMuted, textDecorationLine: 'line-through' },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  total: { flex: 1, ...ff('medium'), color: FINE.ivory, fontSize: 17, lineHeight: 22 },
+  share: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 32, borderWidth: 1, borderColor: FINE.jadeLine, borderRadius: 20, paddingHorizontal: 11, paddingVertical: 5 },
+  shareText: { ...ff('regular'), color: FINE.jade, fontSize: 12.5 },
+  hint: { ...fine.note, marginTop: 6 },
+  secHead: { marginTop: 24, marginBottom: 2 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, minHeight: 48, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  itemName: { flex: 1, ...fine.body, fontSize: 14.5 },
+  itemAmount: { ...ff('regular'), color: FINE.mute, fontSize: 13, fontVariant: ['tabular-nums'] },
+  done: { color: FINE.mute, textDecorationLine: 'line-through' },
 });

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 
 import { dateLocale, t } from '@/i18n';
+import { INTER } from '@/theme/fine';
 // Calendario mensual propio (funciona igual en Android, iOS y web). Sirve para:
 // - marcar días con puntos de color (agenda de pruebas)
 // - seleccionar un rango (inicio y fin del periodo)
@@ -105,8 +106,8 @@ export const MonthCalendar = ({
                   style={[
                     styles.dayText,
                     disabled && styles.dayDisabled,
-                    edge && { color: '#3A1128', fontWeight: '800' },
-                    selected && { color: Colors.background, fontWeight: '800' },
+                    edge && { color: '#3A1128', fontFamily: INTER.medium },
+                    selected && { color: Colors.background, fontFamily: INTER.medium },
                   ]}
                 >
                   {Number(day.slice(8))}
@@ -127,15 +128,15 @@ export const MonthCalendar = ({
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  monthTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
+  monthTitle: { color: Colors.textPrimary, fontSize: 16, fontFamily: INTER.medium },
   row: { flexDirection: 'row' },
-  weekday: { flex: 1, textAlign: 'center', color: Colors.textMuted, fontSize: 11, fontWeight: '700', marginBottom: 6 },
+  weekday: { flex: 1, textAlign: 'center', color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium, marginBottom: 6 },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { width: `${100 / 7}%`, alignItems: 'center', paddingVertical: 3 },
   dayCircle: { width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' },
   selected: { backgroundColor: Colors.accent },
   today: { borderWidth: 1, borderColor: Colors.accent },
-  dayText: { color: Colors.textPrimary, fontSize: 14 },
+  dayText: { color: Colors.textPrimary, fontFamily: INTER.regular, fontSize: 14 },
   dayDisabled: { color: Colors.textMuted, opacity: 0.4 },
   dots: { flexDirection: 'row', gap: 3, height: 6, marginTop: 2 },
   dot: { width: 5, height: 5, borderRadius: 2.5 },

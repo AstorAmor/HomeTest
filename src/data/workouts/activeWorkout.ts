@@ -58,3 +58,13 @@ export const saveActiveWorkout = (w: Omit<ActiveWorkout, 'v' | 'owner'>) =>
   AsyncStorage.setItem(KEY, JSON.stringify({ v: 1, owner: owner(), ...w })).catch(() => undefined);
 
 export const clearActiveWorkout = () => AsyncStorage.removeItem(KEY).catch(() => undefined);
+
+// Al guardar el editor las rutinas vuelven a ir por orden y pueden cambiar de letra: el entreno a medias se va con la
+// suya (si la rutina se quitó, se queda como estaba)
+export async function moveActiveWorkout(programId: string, map: Record<string, string>): Promise<void> {
+  const w = await loadActiveWorkout();
+  const to = w ? map[w.session.id] : undefined;
+  if (!w || w.programId !== programId || !to || to === w.session.id || to.startsWith('x')) return;
+  const { v: _v, owner: _owner, ...rest } = w;
+  await saveActiveWorkout({ ...rest, session: { ...w.session, id: to } });
+}

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, PanResponder, LayoutChangeEve
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, withAlpha } from '@/constants/colors';
+import { INTER } from '@/theme/fine';
 
 // Mapa ligero hecho con teselas (sin módulos nativos: funciona en el APK actual,
 // Expo Go y web). Encaja todos los puntos al abrirse, se puede arrastrar y hacer zoom
@@ -175,7 +176,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 6,
     bottom: 4,
-    fontSize: 9,
+    fontFamily: INTER.regular, fontSize: 9,
     color: Colors.textSecondary,
     backgroundColor: withAlpha(Colors.card, 0.7),
     paddingHorizontal: 4,

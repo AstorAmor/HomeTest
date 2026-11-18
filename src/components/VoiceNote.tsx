@@ -13,6 +13,8 @@ import { Colors, withAlpha } from '@/constants/colors';
 import { audioUrl } from '@/data/consultations';
 
 import { t } from '@/i18n';
+import { expectSystemUi } from '@/utils/systemUi';
+import { INTER } from '@/theme/fine';
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const MAX_SECONDS = 180;
 
@@ -31,9 +33,11 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
 
   const start = async () => {
     setError('');
+    // El diálogo del permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const perm = await requestRecordingPermissionsAsync();
     if (!perm.granted) {
-      setError('Allow microphone access to record a voice note.');
+      setError(t('Allow microphone access to record a voice note.'));
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -69,7 +73,7 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
   if (state === 'done' && uri) {
     return (
       <View style={styles.row}>
-        <AudioPlayerButton uri={uri} label={`Voice note · ${mmss(seconds)}`} />
+        <AudioPlayerButton uri={uri} label={`${t('Voice note')} · ${mmss(seconds)}`} />
         <TouchableOpacity onPress={discard} hitSlop={8} accessibilityLabel={t('Delete voice note')}>
           <Ionicons name="trash-outline" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
@@ -82,11 +86,11 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
       <TouchableOpacity
         style={[styles.recordBtn, state === 'recording' && styles.recording]}
         onPress={state === 'recording' ? stop : start}
-        accessibilityLabel={state === 'recording' ? 'Stop recording' : 'Record a voice note'}
+        accessibilityLabel={state === 'recording' ? t('Stop recording') : t('Record a voice note')}
       >
         <Ionicons name={state === 'recording' ? 'stop' : 'mic'} size={20} color={state === 'recording' ? '#FFFFFF' : Colors.accent} />
         <Text style={[styles.recordText, state === 'recording' && { color: '#FFFFFF' }]}>
-          {state === 'recording' ? `Recording… ${mmss(seconds)} · tap to stop` : 'Record a voice note instead'}
+          {state === 'recording' ? t('Recording… {time} · tap to stop', { time: mmss(seconds) }) : t('Record a voice note instead')}
         </Text>
       </TouchableOpacity>
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -96,7 +100,7 @@ export const VoiceRecorder = ({ onChange }: { onChange: (uri: string | null) => 
 };
 
 // Botón para escuchar un audio (local o URL firmada).
-export const AudioPlayerButton = ({ uri, label = 'Voice note' }: { uri: string; label?: string }) => {
+export const AudioPlayerButton = ({ uri, label = t('Voice note') }: { uri: string; label?: string }) => {
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
   const playing = status.playing;
@@ -132,11 +136,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   recording: { backgroundColor: '#E5484D', borderColor: '#E5484D' },
-  recordText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  error: { color: Colors.danger, fontSize: 12, marginTop: 6 },
-  hint: { color: Colors.textMuted, fontSize: 11, marginTop: 4 },
+  recordText: { color: Colors.accent, fontSize: 14, fontFamily: INTER.medium },
+  error: { color: Colors.danger, fontFamily: INTER.regular, fontSize: 12, marginTop: 6 },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 4 },
   player: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9, alignSelf: 'flex-start' },
-  playerText: { color: Colors.background, fontSize: 13, fontWeight: '700' },
+  playerText: { color: Colors.background, fontSize: 13, fontFamily: INTER.medium },
 });
 
 // Nota de voz guardada (Storage o local): pide la URL firmada y la reproduce.

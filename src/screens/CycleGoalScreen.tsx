@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
 import { ChoiceChips } from '@/components/ChoiceChips';
 import { MonthCalendar, toDayKey } from '@/components/MonthCalendar';
-import { WheelPicker } from '@/components/WheelPicker';
+import { StepsBar } from '@/components/fine/FineSteps';
+import { FButton, FChip, FLink, FOption, formStyles } from '@/components/fine/FineForm';
+import { FineNumber } from '@/components/fine/FineNumber';
+import { KeyboardAwareScrollView } from '@/components/KeyboardAwareScrollView';
+import { KeyboardFooter } from '@/components/KeyboardFooter';
 import { CYCLE_GOAL_PROMPTED, cycleGoalStore } from '@/data/cycleGoal';
 import { cycleRepository } from '@/data/cycleRepository';
 import { profileRepository } from '@/data/profileRepository';
@@ -27,6 +29,7 @@ import {
 import { fertilityAdvice, SexFrequency, Timing, TryingFor } from '@/logic/fertility';
 import { t as tr } from '@/i18n';
 import { offerPhoneReminders } from '@/data/phoneReminders';
+import { FINE, ff, fine } from '@/theme/fine';
 
 type Step = 'goal' | 'last' | 'lengths' | 'flow' | 'pain' | 'contraception' | 'conditions' | 'trying' | 'temperature' | 'result';
 
@@ -41,8 +44,9 @@ const ageFrom = (dob?: string) => {
 
 const DAY_MS = 24 * 3600 * 1000;
 const fromKey = (key: string) => new Date(`${key}T12:00:00`);
-const CYCLE_DAYS = Array.from({ length: 46 }, (_, i) => i + 15); // 15 a 60
-const PERIOD_DAYS = Array.from({ length: 12 }, (_, i) => i + 1); // 1 a 12
+// Los mismos límites que tenían las ruedas: el ciclo, de 15 a 60 días; la regla, de 1 a 12
+const CYCLE = { min: 15, max: 60, start: 28 };
+const PERIOD = { min: 1, max: 12, start: 5 };
 
 // Multiselección con «Ninguno/a» que excluye lo demás
 const toggleIn = (list: string[], id: string) => {
@@ -57,16 +61,25 @@ const toggleIn = (list: string[], id: string) => {
 // cuidado de no pasarse). Empieza siempre vacía. Al final, si toca según las guías, recomienda hablar
 // con un médico. La fecha de la última regla se apunta como su primer ciclo, y la duración del ciclo
 // se usa para predecir mientras no haya dos reglas apuntadas.
+// Rediseño del 2026-11-17 (lenguaje fino, src/theme/fine.ts). El fundador: «no está coherente la barra de progreso y
+// la fuente e iconos con el resto de la app… ¿Cuánto suelen durar tus ciclos, la regla?, ponlo con +-, la rueda es
+// demasiado. Y que no sea taaan grande». El avance es una línea cometa fina (StepsBar), las opciones van en filas con
+// una línea fina y su marca redonda o en chips con borde, sin iconos; las dos duraciones, con el «− cifra +» de las
+// mediciones (FineNumber) en su tamaño pequeño, y el botón de seguir, en esmeralda. Las preguntas, lo que se guarda y
+// el orden de los pasos no cambian.
 export const CycleGoalScreen = () => {
   const router = useRouter();
   const [step, setStep] = useState<Step>('goal');
   const [goals, setGoals] = useState<CycleGoal[]>([]);
   const [lastStart, setLastStart] = useState<string | null | undefined>(); // null = no lo recuerda
   const [month, setMonth] = useState(new Date());
-  const [cycleIdx, setCycleIdx] = useState(CYCLE_DAYS.indexOf(28));
+  const [cycleDays, setCycleDays] = useState(CYCLE.start);
   const [cycleUnknown, setCycleUnknown] = useState(false);
-  const [periodIdx, setPeriodIdx] = useState(PERIOD_DAYS.indexOf(5));
+  const [periodDays, setPeriodDays] = useState(PERIOD.start);
   const [periodUnknown, setPeriodUnknown] = useState(false);
+  // Una cifra a medio escribir con el teclado que aún no vale (p. ej. «9» días de ciclo) apaga «Continuar»
+  const [cycleOk, setCycleOk] = useState(true);
+  const [periodOk, setPeriodOk] = useState(true);
   const [regular, setRegular] = useState<CycleGoalAnswers['regularCycles'] | undefined>();
   const [flow, setFlow] = useState<Flow | undefined>();
   const [pain, setPain] = useState<PeriodPain | undefined>();
@@ -94,7 +107,7 @@ export const CycleGoalScreen = () => {
   const canContinue =
     (step === 'goal' && goals.length > 0) ||
     (step === 'last' && lastStart !== undefined) ||
-    step === 'lengths' ||
+    (step === 'lengths' && (cycleUnknown || cycleOk) && (periodUnknown || periodOk)) ||
     (step === 'flow' && !!regular && !!flow) ||
     (step === 'pain' && !!pain) ||
     (step === 'contraception' && !!contraception) ||
@@ -103,8 +116,8 @@ export const CycleGoalScreen = () => {
     (step === 'temperature' && !!logTemp) ||
     step === 'result';
 
-  const cycleLength = cycleUnknown ? null : CYCLE_DAYS[cycleIdx];
-  const periodLength = periodUnknown ? null : PERIOD_DAYS[periodIdx];
+  const cycleLength = cycleUnknown ? null : cycleDays;
+  const periodLength = periodUnknown ? null : periodDays;
   const diagnosed = conditions.filter((c) => c !== 'none');
 
   const answers = (): CycleGoalAnswers => ({
@@ -166,59 +179,50 @@ export const CycleGoalScreen = () => {
       : null;
   // Sangrado muy abundante o dolor que impide hacer cosas: merece una consulta (sin diagnosticar nada)
   const worthAsking = flow === 'very_heavy' || pain === 'severe';
+  const toDoctor = () => router.push({ pathname: '/professionals', params: { role: 'doctor' } });
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.circleButton} onPress={() => (index > 0 ? setStep(steps[index - 1]) : router.back())}>
-          <Ionicons name={index > 0 ? 'chevron-back' : 'close'} size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${((index + 1) / steps.length) * 100}%` }]} />
-        </View>
-        {step !== 'result' ? (
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
-            <Text style={styles.skip}>{tr('Skip')}</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: 30 }} />
-        )}
-      </View>
+      <StepsBar
+        index={index}
+        total={steps.length}
+        onBack={() => (index > 0 ? setStep(steps[index - 1]) : router.back())}
+        right={
+          step !== 'result' ? (
+            <TouchableOpacity onPress={() => router.back()} hitSlop={10} style={styles.skipBox} accessibilityRole="button">
+              <Text style={styles.skip}>{tr('Skip')}</Text>
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      {/* Las duraciones se pueden escribir con el teclado: la lista y el botón de seguir suben con él, como al apuntar el peso */}
+      <KeyboardAwareScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {step === 'goal' && (
           <>
-            <Ionicons name="rose-outline" size={34} color={Colors.pulseAccent} style={styles.icon} />
             <Text style={styles.title}>{tr('What would you like to do?')}</Text>
-            <Text style={styles.subtitle}>{tr('Choose all that apply. We will adapt your cycle predictions and tips. You can change it any time.')}</Text>
-            {CYCLE_GOAL_OPTIONS.map((o) => {
-              const selected = goals.includes(o.id);
-              return (
-                <TouchableOpacity
+            <Text style={styles.lead}>{tr('Choose all that apply. We will adapt your cycle predictions and tips. You can change it any time.')}</Text>
+            <View>
+              {CYCLE_GOAL_OPTIONS.map((o, i) => (
+                <FOption
                   key={o.id}
-                  style={[styles.option, selected && styles.optionSelected]}
+                  multi
+                  title={tr(o.title)}
+                  hint={tr(o.subtitle)}
+                  on={goals.includes(o.id)}
                   onPress={() => setGoals((g) => (g.includes(o.id) ? g.filter((x) => x !== o.id) : [...g, o.id]))}
-                  activeOpacity={0.85}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: selected }}
-                >
-                  <Ionicons name={o.icon as any} size={22} color={selected ? Colors.pulseAccent : Colors.textSecondary} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.optionTitle}>{tr(o.title)}</Text>
-                    <Text style={styles.optionSubtitle}>{tr(o.subtitle)}</Text>
-                  </View>
-                  <Ionicons name={selected ? 'checkbox' : 'square-outline'} size={20} color={selected ? Colors.pulseAccent : Colors.textMuted} />
-                </TouchableOpacity>
-              );
-            })}
+                  last={i === CYCLE_GOAL_OPTIONS.length - 1}
+                />
+              ))}
+            </View>
           </>
         )}
 
         {step === 'last' && (
           <>
             <Text style={styles.title}>{tr('When did your last period start?')}</Text>
-            <Text style={styles.subtitle}>{tr('The first day of bleeding. With it we can tell you when the next one is coming.')}</Text>
-            <View style={styles.calendarCard}>
+            <Text style={styles.lead}>{tr('The first day of bleeding. With it we can tell you when the next one is coming.')}</Text>
+            <View style={styles.calendar}>
               <MonthCalendar
                 month={month}
                 onMonthChange={setMonth}
@@ -238,27 +242,43 @@ export const CycleGoalScreen = () => {
         {step === 'lengths' && (
           <>
             <Text style={styles.title}>{tr('How long do your cycles usually last?')}</Text>
-            <Text style={styles.hint}>{tr('From the first day of one period to the day before the next one. Most last 21 to 35 days.')}</Text>
-            <View style={[styles.wheels, cycleUnknown && styles.dim]}>
-              <WheelPicker items={CYCLE_DAYS.map(String)} selectedIndex={cycleIdx} onChange={(i) => {
-                  setCycleIdx(i);
-                  setCycleUnknown(false);
-                }} width={90} />
-              <Text style={styles.unit}>{tr('days')}</Text>
-            </View>
+            <Text style={styles.lead}>{tr('From the first day of one period to the day before the next one. Most last 21 to 35 days.')}</Text>
+            {/* «− cifra +» en lugar de la rueda; al tocarlo deja de estar en «No lo sé», como pasaba con la rueda */}
+            <FineNumber
+              compact
+              value={cycleDays}
+              min={CYCLE.min}
+              max={CYCLE.max}
+              fastStep={5}
+              unit={tr('days')}
+              label={tr('Cycle length')}
+              onChange={(v) => {
+                setCycleDays(v);
+                setCycleUnknown(false);
+              }}
+              onValidChange={setCycleOk}
+              style={[styles.number, cycleUnknown && styles.dim]}
+            />
             <ChoiceChips
               options={[{ id: 'unknown' as const, label: tr("I don't know") }]}
               value={cycleUnknown ? 'unknown' : undefined}
               onChange={() => setCycleUnknown((v) => !v)}
             />
-            <Text style={styles.label}>{tr('And how many days does your period usually last?')}</Text>
-            <View style={[styles.wheels, periodUnknown && styles.dim]}>
-              <WheelPicker items={PERIOD_DAYS.map(String)} selectedIndex={periodIdx} onChange={(i) => {
-                  setPeriodIdx(i);
-                  setPeriodUnknown(false);
-                }} width={90} />
-              <Text style={styles.unit}>{tr('days')}</Text>
-            </View>
+            <Text style={[styles.label, styles.second]}>{tr('And how many days does your period usually last?')}</Text>
+            <FineNumber
+              compact
+              value={periodDays}
+              min={PERIOD.min}
+              max={PERIOD.max}
+              unit={tr('days')}
+              label={tr('Period length')}
+              onChange={(v) => {
+                setPeriodDays(v);
+                setPeriodUnknown(false);
+              }}
+              onValidChange={setPeriodOk}
+              style={[styles.number, periodUnknown && styles.dim]}
+            />
             <ChoiceChips
               options={[{ id: 'unknown' as const, label: tr("I don't know") }]}
               value={periodUnknown ? 'unknown' : undefined}
@@ -312,15 +332,10 @@ export const CycleGoalScreen = () => {
             />
             <Text style={styles.label}>{tr('Do you notice any of these before or during your period?')}</Text>
             <Text style={styles.hint}>{tr('Choose all that apply.')}</Text>
-            <View style={styles.multi}>
-              {SYMPTOM_OPTIONS.map((s) => {
-                const on = symptoms.includes(s.id);
-                return (
-                  <TouchableOpacity key={s.id} style={[styles.pill, on && styles.pillOn]} onPress={() => setSymptoms((l) => toggleIn(l, s.id))}>
-                    <Text style={[styles.pillText, on && styles.pillTextOn]}>{tr(s.label)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <View style={styles.chips}>
+              {SYMPTOM_OPTIONS.map((s) => (
+                <FChip key={s.id} multi check label={tr(s.label)} on={symptoms.includes(s.id)} onPress={() => setSymptoms((l) => toggleIn(l, s.id))} />
+              ))}
             </View>
           </>
         )}
@@ -328,16 +343,11 @@ export const CycleGoalScreen = () => {
         {step === 'contraception' && (
           <>
             <Text style={styles.title}>{tr('Are you using any contraception?')}</Text>
-            <Text style={styles.subtitle}>{tr('Hormonal methods change how your cycle and predictions behave.')}</Text>
-            <View style={styles.multi}>
-              {CONTRACEPTION_OPTIONS.map((c) => {
-                const on = contraception === c.id;
-                return (
-                  <TouchableOpacity key={c.id} style={[styles.pill, on && styles.pillOn]} onPress={() => setContraception(c.id)}>
-                    <Text style={[styles.pillText, on && styles.pillTextOn]}>{tr(c.label)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <Text style={styles.lead}>{tr('Hormonal methods change how your cycle and predictions behave.')}</Text>
+            <View style={styles.chips} accessibilityRole="radiogroup">
+              {CONTRACEPTION_OPTIONS.map((c) => (
+                <FChip key={c.id} label={tr(c.label)} on={contraception === c.id} onPress={() => setContraception(c.id)} />
+              ))}
             </View>
           </>
         )}
@@ -345,16 +355,11 @@ export const CycleGoalScreen = () => {
         {step === 'conditions' && (
           <>
             <Text style={styles.title}>{tr('Has a doctor told you that you have any of these?')}</Text>
-            <Text style={styles.subtitle}>{tr('Only if it has been diagnosed. It helps us read your cycle better. Optional.')}</Text>
-            <View style={styles.multi}>
-              {CONDITION_OPTIONS.map((c) => {
-                const on = conditions.includes(c.id);
-                return (
-                  <TouchableOpacity key={c.id} style={[styles.pill, on && styles.pillOn]} onPress={() => setConditions((l) => toggleIn(l, c.id))}>
-                    <Text style={[styles.pillText, on && styles.pillTextOn]}>{tr(c.label)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <Text style={styles.lead}>{tr('Only if it has been diagnosed. It helps us read your cycle better. Optional.')}</Text>
+            <View style={styles.chips}>
+              {CONDITION_OPTIONS.map((c) => (
+                <FChip key={c.id} multi check label={tr(c.label)} on={conditions.includes(c.id)} onPress={() => setConditions((l) => toggleIn(l, c.id))} />
+              ))}
             </View>
           </>
         )}
@@ -362,8 +367,8 @@ export const CycleGoalScreen = () => {
         {step === 'trying' && (
           <>
             <Text style={styles.title}>{tr('Trying to conceive')}</Text>
-            <Text style={styles.subtitle}>{tr('These help us tell you when it is worth seeing a doctor. Only the first one is needed.')}</Text>
-            <Text style={styles.label}>{tr('How long have you been trying?')}</Text>
+            <Text style={styles.lead}>{tr('These help us tell you when it is worth seeing a doctor. Only the first one is needed.')}</Text>
+            <Text style={[styles.label, styles.afterLead]}>{tr('How long have you been trying?')}</Text>
             <ChoiceChips
               options={[
                 { id: 'under_6m', label: tr('Less than 6 months') },
@@ -401,19 +406,12 @@ export const CycleGoalScreen = () => {
 
         {step === 'temperature' && (
           <>
-            <Ionicons name="thermometer-outline" size={34} color={Colors.gold} style={styles.icon} />
             <Text style={styles.title}>{tr('Add your morning temperature?')}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.lead}>
               {conceive
                 ? tr('Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you get up, lets us confirm when it happened and learn your fertile window.')
                 : tr('Your temperature rises slightly (about 0.2–0.5 °C) after you ovulate. Taking it every morning, before you get up, lets us confirm when it happened.')}
             </Text>
-            <View style={styles.infoCard}>
-              <Ionicons name="watch-outline" size={18} color={Colors.textSecondary} />
-              <Text style={styles.infoText}>
-                {tr('If your wearable measures temperature at night, we use it too. It is less precise than a thermometer, so the two together work best.')}
-              </Text>
-            </View>
             <ChoiceChips
               options={[
                 { id: 'yes', label: tr("Yes, I'll log it") },
@@ -422,34 +420,33 @@ export const CycleGoalScreen = () => {
               value={logTemp}
               onChange={(v) => setLogTemp(v as 'yes' | 'no')}
             />
+            {/* Lo del reloj o la pulsera, como una nota apagada debajo (antes, una tarjeta con su icono) */}
+            <Text style={styles.aside}>
+              {tr('If your wearable measures temperature at night, we use it too. It is less precise than a thermometer, so the two together work best.')}
+            </Text>
           </>
         )}
 
         {step === 'result' && (
           <>
-            <Ionicons name="checkmark-circle" size={40} color={Colors.ok} style={styles.icon} />
             <Text style={styles.title}>{tr('All set')}</Text>
             {advice && (
-              <View style={[styles.adviceCard, advice.level !== 'keep_trying' && { borderColor: withAlpha(Colors.gold, 0.5) }]}>
-                <Text style={styles.adviceTitle}>{advice.title}</Text>
-                <Text style={styles.adviceBody}>{advice.body}</Text>
+              <View style={[styles.block, advice.level !== 'keep_trying' && styles.blockGold]}>
+                <Text style={styles.blockTitle}>{advice.title}</Text>
+                <Text style={styles.p}>{advice.body}</Text>
                 {advice.tips.map((t) => (
                   <View key={t} style={styles.tipRow}>
-                    <Ionicons name="ellipse" size={6} color={Colors.textMuted} style={{ marginTop: 7 }} />
+                    <View style={styles.tipDot} />
                     <Text style={styles.tipText}>{t}</Text>
                   </View>
                 ))}
-                {advice.level !== 'keep_trying' && (
-                  <TouchableOpacity style={styles.secondaryCta} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-                    <Text style={styles.secondaryCtaText}>{tr('Find a gynaecologist or fertility specialist')}</Text>
-                  </TouchableOpacity>
-                )}
+                {advice.level !== 'keep_trying' && <FLink label={`${tr('Find a gynaecologist or fertility specialist')} ›`} onPress={toDoctor} style={styles.blockLink} />}
               </View>
             )}
             {goals
               .filter((g) => g !== 'conceive')
               .map((g) => (
-                <Text key={g} style={styles.subtitle}>
+                <Text key={g} style={[styles.p, styles.goalLine]}>
                   {g === 'symptoms'
                     ? tr('Log how you feel through the month and we will show you patterns by cycle phase.')
                     : g === 'perimenopause'
@@ -458,16 +455,11 @@ export const CycleGoalScreen = () => {
                 </Text>
               ))}
             {worthAsking && (
-              <View style={styles.infoCard}>
-                <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.textSecondary} />
-                <View style={{ flex: 1, gap: 8 }}>
-                  <Text style={styles.infoText}>
-                    {tr('Very heavy bleeding or pain that stops you doing things is worth mentioning to your gynaecologist. It is common and there is a lot that can help.')}
-                  </Text>
-                  <Text style={styles.link} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-                    {tr('Talk to a doctor')}
-                  </Text>
-                </View>
+              <View style={styles.block}>
+                <Text style={styles.p}>
+                  {tr('Very heavy bleeding or pain that stops you doing things is worth mentioning to your gynaecologist. It is common and there is a lot that can help.')}
+                </Text>
+                <FLink label={`${tr('Talk to a doctor')} ›`} onPress={toDoctor} style={styles.blockLink} />
               </View>
             )}
             <Text style={styles.disclaimer}>
@@ -475,99 +467,45 @@ export const CycleGoalScreen = () => {
             </Text>
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
-      <TouchableOpacity style={[styles.cta, !canContinue && styles.ctaDisabled]} onPress={next} disabled={!canContinue}>
-        <Text style={styles.ctaText}>{step === 'result' ? tr('Done') : tr('Continue')}</Text>
-      </TouchableOpacity>
+      <KeyboardFooter style={styles.footer}>
+        <FButton label={step === 'result' ? tr('Done') : tr('Continue')} onPress={next} disabled={!canContinue} />
+      </KeyboardFooter>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: Colors.background },
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 8 },
-  circleButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.card,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.divider, overflow: 'hidden' },
-  progressFill: { height: 6, borderRadius: 3, backgroundColor: Colors.pulseAccent },
-  skip: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  content: { paddingHorizontal: 20, paddingTop: 22, paddingBottom: 24 },
-  icon: { alignSelf: 'center', marginBottom: 10 },
-  title: { color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 8 },
-  subtitle: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 18 },
-  label: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 18, marginBottom: 6 },
-  hint: { color: Colors.textMuted, fontSize: 12, marginBottom: 10 },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-  },
-  optionSelected: { borderColor: Colors.pulseAccent, backgroundColor: Colors.pinkSoftBg },
-  optionTitle: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  optionSubtitle: { color: Colors.textSecondary, fontSize: 12, marginTop: 2 },
-  calendarCard: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 12, marginBottom: 12 },
-  wheels: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginVertical: 6 },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  skipBox: { minWidth: 40, height: 44, justifyContent: 'center', alignItems: 'flex-end' },
+  skip: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
+  content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
+  // La pregunta de cada paso y su explicación, como en «Crear mi menú»
+  title: { ...formStyles.q },
+  lead: { ...formStyles.lead, marginBottom: 18 },
+  // Las preguntas de dentro de un paso
+  label: { ...ff('medium'), color: FINE.ivory, fontSize: 16, lineHeight: 22, marginTop: 24, marginBottom: 8 },
+  afterLead: { marginTop: 4 },
+  second: { marginTop: 32, marginBottom: 12 },
+  hint: { ...ff('regular'), color: FINE.mute, fontSize: 12.5, lineHeight: 18, marginTop: -4, marginBottom: 10 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // El calendario, sin tarjeta: entre dos líneas finas
+  calendar: { paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line, marginBottom: 14 },
+  // El «− cifra +», a la izquierda como el resto de las respuestas del cuestionario
+  number: { alignItems: 'flex-start', marginTop: 4, marginBottom: 14 },
   dim: { opacity: 0.35 },
-  unit: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700' },
-  multi: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  pill: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.card, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 9 },
-  pillOn: { borderColor: Colors.pulseAccent, backgroundColor: Colors.pinkSoftBg },
-  pillText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
-  pillTextOn: { color: Colors.textPrimary },
-  infoCard: {
-    flexDirection: 'row',
-    gap: 10,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 18,
-  },
-  infoText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  link: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  adviceCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-    marginBottom: 14,
-  },
-  adviceTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '800' },
-  adviceBody: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
-  tipRow: { flexDirection: 'row', gap: 8 },
-  tipText: { flex: 1, color: Colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  secondaryCta: {
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    borderRadius: 24,
-    paddingVertical: 11,
-    alignItems: 'center',
-  },
-  secondaryCtaText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  disclaimer: { color: Colors.textMuted, fontSize: 11, lineHeight: 16, marginTop: 18 },
-  cta: {
-    backgroundColor: Colors.accent,
-    borderRadius: 30,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginBottom: 12,
-  },
-  ctaDisabled: { backgroundColor: Colors.cardBorder },
-  ctaText: { color: Colors.background, fontSize: 16, fontWeight: '700' },
+  aside: { ...fine.note, marginTop: 20, paddingTop: 14, borderTopWidth: 1, borderTopColor: FINE.line },
+  // Lo que conviene leer al acabar: una tarjeta casi transparente; con borde de oro si toca consultarlo
+  block: { ...fine.tile, padding: 14, gap: 8, marginTop: 14 },
+  blockGold: { borderColor: FINE.goldLine },
+  blockTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 16, lineHeight: 22 },
+  blockLink: { alignSelf: 'flex-start', justifyContent: 'flex-start', minHeight: 36, paddingVertical: 6 },
+  p: { ...ff('regular'), color: '#CFD6CF', fontSize: 14, lineHeight: 20 },
+  goalLine: { marginTop: 12 },
+  tipRow: { flexDirection: 'row', gap: 10 },
+  tipDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: FINE.mute, marginTop: 8 },
+  tipText: { flex: 1, ...ff('regular'), color: '#CFD6CF', fontSize: 13.5, lineHeight: 19 },
+  disclaimer: { ...ff('regular'), color: FINE.mute, fontSize: 11.5, lineHeight: 16, marginTop: 20 },
+  footer: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
 });

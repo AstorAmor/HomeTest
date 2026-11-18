@@ -4,18 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { ChoiceChips } from '@/components/ChoiceChips';
-import { Confetti } from '@/components/Confetti';
 import { confirmAsk } from '@/components/dev/confirmAsk';
-import { Colors } from '@/constants/colors';
-import { exerciseName, getExercise, isLoadable, kgHead } from '@/data/workouts/catalog';
-import { BLOCK_ORDER, blockLabel, doseText, restText, sessionTitle, setText, setsText } from '@/data/workouts/labels';
+import { CometLine } from '@/components/CometLine';
+import { GlowRing, ringTones } from '@/components/GlowRing';
+import { FButton, FChips, FLink, ON_BG, formStyles } from '@/components/fine/FineForm';
+import { exerciseName, getExercise } from '@/data/workouts/catalog';
+import { BLOCK_ORDER, blockLabel, doseText, restText, sessionName, sessionTitle, setText, setsText } from '@/data/workouts/labels';
+import { daysText } from '@/logic/workoutWeek';
 import { programRepository } from '@/data/workouts/programRepository';
 import type { WorkoutExercise, WorkoutProgram, WorkoutSession } from '@/data/workouts/types';
 import { workoutRepository, WorkoutEntry, WorkoutType } from '@/data/planRepository';
 import { defaultDose, estimateMinutes } from '@/logic/workoutGenerator';
-import { addExercises } from '@/logic/customRoutine';
-import { applyDose, plannedSet, setSeconds } from '@/logic/setPlan';
+import { addExercises, fromDraft, isCustomProgram, switchTimed, toDraft, type DraftSet } from '@/logic/customRoutine';
+import { plannedSet, setSeconds } from '@/logic/setPlan';
 import { KeyboardAwareScroll } from '@/components/KeyboardAwareScroll';
 import { WorkoutModal } from '@/components/workouts/WorkoutModal';
 import { ExerciseLibrary } from '@/components/workouts/ExerciseLibrary';
@@ -37,11 +38,12 @@ import {
 } from '@/data/workouts/bell';
 import { isTimedReps, secondsLeft, upcomingEnds } from '@/logic/workoutTimer';
 import { allSteps, checkRow, lastTimes, nextPending, rowHints, setLogs, startRows, summarize, type Change, type LastTime, type SetRow, type Step } from '@/logic/workoutLog';
-import { DoseEditor } from '@/components/workouts/DoseEditor';
+import { RoutineExerciseCard } from '@/components/workouts/RoutineExerciseCard';
 import { UnfinishedWorkout } from '@/components/workouts/UnfinishedWorkout';
 import { type ActiveWorkout, clearActiveWorkout, loadActiveWorkout, saveActiveWorkout } from '@/data/workouts/activeWorkout';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { dateLocale, num, t, tn } from '@/i18n';
+import { FINE, ff, fine } from '@/theme/fine';
 
 // Una sesión del programa. Primero la lista (calentamiento, ejercicios, remate y estiramientos) con lo
 // que se hizo la última vez en cada ejercicio; con ?start=list (el ▶ de Entrenamientos) se empieza sin
@@ -58,6 +60,10 @@ import { dateLocale, num, t, tn } from '@/i18n';
 // mitad de la sesión pregunta antes. Mientras dura, cada cambio se copia en el móvil
 // (src/data/workouts/activeWorkout.ts): si Android cierra la app con la pantalla bloqueada, al volver
 // sigue donde estaba. Si no se puede guardar (sin conexión), se avisa y se puede reintentar.
+// Con el lenguaje fino del prototipo (rediseño del 2026-11-16): ejercicios en filas con línea fina, cifras grandes y
+// ligeras, el progreso en una línea de cometa, el descanso guiado dentro de un aro de luz y los botones en esmeralda.
+
+const PROGRESS = [FINE.emerald, FINE.jade]; // la línea de cometa del progreso y del descanso
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.floor(s % 60))).padStart(2, '0')}`;
 const fmtLong = (s: number) => (s >= 3600 ? `${Math.floor(s / 3600)}:${fmt(s % 3600).padStart(5, '0')}` : fmt(s));
@@ -114,7 +120,8 @@ export const WorkoutSessionScreen = () => {
   const [unfinished, setUnfinished] = useState<ActiveWorkout | null>(null); // otra sesión a medias
   const [swapAt, setSwapAt] = useState<number | null>(null); // índice en session.exercises
   const [swapAll, setSwapAll] = useState(false); // al cambiar: todos los ejercicios, no solo los del mismo tipo
-  const [editAt, setEditAt] = useState<number | null>(null); // ídem, para cambiar series, reps o tiempo, peso y descanso
+  const [editAt, setEditAt] = useState<number | null>(null); // ídem, para cambiar sus series, una a una, y su descanso
+  const [editDraft, setEditDraft] = useState<{ item: WorkoutExercise; draft: DraftSet[] } | null>(null); // lo que se está cambiando
   const startedAt = useRef<number>(0);
   const endsAt = useRef(0); // cuándo acaba la cuenta atrás en marcha (hora del reloj, en ms)
   const sideRung = useRef(false); // ya sonó el cambio de lado de este ejercicio
@@ -579,7 +586,7 @@ export const WorkoutSessionScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScreenHeader title={t('Workout')} showBack backFallback="/workouts" />
-        <Text style={[styles.muted, { marginHorizontal: 20 }]}>{program === undefined ? '' : t('This session does not exist any more.')}</Text>
+        <Text style={[fine.note, { marginHorizontal: 20 }]}>{program === undefined ? '' : t('This session does not exist any more.')}</Text>
       </SafeAreaView>
     );
   }
@@ -590,10 +597,13 @@ export const WorkoutSessionScreen = () => {
     const sum = summarize(logs, last);
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <Confetti count={60} />
         <ScrollView contentContainerStyle={styles.doneBody} showsVerticalScrollIndicator={false}>
+          {/* El aro de oro cerrado con el trofeo a línea (antes, un círculo de color). Sin confeti (fundador,
+              2026-11-17: «no quiero ¡confeti!») */}
           <View style={styles.doneIcon}>
-            <MaterialCommunityIcons name="trophy-outline" size={40} color={Colors.accent} />
+            <GlowRing progress={1} colors={ringTones(FINE.gold)} size={104} stroke={4}>
+              <Ionicons name="trophy-outline" size={38} color={FINE.gold} />
+            </GlowRing>
           </View>
           <Text style={styles.doneTitle}>{t('Session complete!')}</Text>
           <Text style={styles.doneText}>
@@ -620,19 +630,19 @@ export const WorkoutSessionScreen = () => {
                       <Text style={styles.resultBest}>
                         {tn(r.sets, '{n} set', '{n} sets')} · {t('best {set}', { set: setText(r.best) })}
                       </Text>
-                      <Text style={[styles.resultChange, better && { color: Colors.accent }]}>
+                      <Text style={[styles.resultChange, better && { color: FINE.jade }]}>
                         {r.change === 'less' ? t('Last time: {sets}', { sets: setText(r.previous!) }) : t(CHANGE_TEXT[r.change])}
                       </Text>
                     </View>
-                    {better && <Ionicons name="trending-up" size={18} color={Colors.accent} />}
+                    {better && <Ionicons name="trending-up-outline" size={18} color={FINE.jade} />}
                   </View>
                 );
               })}
             </View>
           )}
           <Text style={styles.q}>{t('How did it feel?')}</Text>
-          <ChoiceChips
-            center
+          <FChips
+            style={styles.center}
             options={[
               { id: 'easy' as const, label: t('Easy') },
               { id: 'moderate' as const, label: t('Moderate') },
@@ -644,9 +654,7 @@ export const WorkoutSessionScreen = () => {
         </ScrollView>
         <View style={styles.runBottom}>
           {saveFailed && <Text style={styles.saveFailed}>{t('It could not be saved. Check your connection and try again: what you did stays on this phone.')}</Text>}
-          <TouchableOpacity style={styles.primary} onPress={save} disabled={saved}>
-            <Text style={styles.primaryText}>{saveFailed ? t('Try again') : t('Save')}</Text>
-          </TouchableOpacity>
+          <FButton label={saveFailed ? t('Try again') : t('Save')} onPress={save} disabled={saved} />
         </View>
       </SafeAreaView>
     );
@@ -661,18 +669,17 @@ export const WorkoutSessionScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.runTop}>
-          <TouchableOpacity onPress={quit} hitSlop={10} accessibilityLabel={t('Stop')}>
-            <Ionicons name="close" size={26} color={Colors.textPrimary} />
+          <TouchableOpacity onPress={quit} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('Stop')}>
+            <Ionicons name="close" size={25} color={FINE.ivory} />
           </TouchableOpacity>
-          <View style={styles.progress}>
-            <View style={[styles.progressFill, { width: `${steps.length ? (doneCount / steps.length) * 100 : 0}%` }]} />
-          </View>
+          {/* Las series hechas, en una línea de cometa (antes, una barra plana) */}
+          <CometLine progress={steps.length ? doneCount / steps.length : 0} colors={PROGRESS} thickness={4} style={styles.progress} />
           <Elapsed since={startedAt.current} style={styles.clock} />
-          <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={10} accessibilityLabel={t('Sound')}>
-            <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={22} color={bell.on ? Colors.accent : Colors.textMuted} />
+          <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('Sound')}>
+            <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={21} color={bell.on ? FINE.jade : FINE.mute} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => switchView('list')} hitSlop={10} accessibilityLabel={t('See all exercises')}>
-            <Ionicons name="list" size={24} color={Colors.textPrimary} />
+          <TouchableOpacity onPress={() => switchView('list')} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('See all exercises')}>
+            <Ionicons name="list-outline" size={23} color={FINE.ivory} />
           </TouchableOpacity>
         </View>
 
@@ -680,24 +687,29 @@ export const WorkoutSessionScreen = () => {
           {phase === 'rest' ? (
             <>
               <Text style={styles.blockTag}>{t('Rest')}</Text>
-              <Text style={styles.restClock}>{fmt(Math.max(0, left))}</Text>
+              {/* El descanso dentro de un aro de luz que se va cerrando */}
+              <View style={styles.restRing}>
+                <GlowRing progress={restTotal ? 1 - Math.max(0, Math.min(1, left / restTotal)) : 0} colors={ringTones(FINE.jade)} size={224} stroke={6}>
+                  <Text style={styles.restClock}>{fmt(Math.max(0, left))}</Text>
+                </GlowRing>
+              </View>
               <View style={styles.restButtons}>
-                <TouchableOpacity style={styles.secondary} onPress={() => countTo(Math.max(Date.now(), endsAt.current - 15000))}>
+                <TouchableOpacity style={styles.secondary} onPress={() => countTo(Math.max(Date.now(), endsAt.current - 15000))} accessibilityRole="button">
                   <Text style={styles.secondaryText}>−15 s</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.secondary} onPress={() => countTo(endsAt.current + 15000)}>
+                <TouchableOpacity style={styles.secondary} onPress={() => countTo(endsAt.current + 15000)} accessibilityRole="button">
                   <Text style={styles.secondaryText}>+15 s</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.secondary} onPress={() => startStep(at)}>
+                <TouchableOpacity style={styles.secondary} onPress={() => startStep(at)} accessibilityRole="button">
                   <Text style={styles.secondaryText}>{t('Skip rest')}</Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.upNext}>
+              <View style={[fine.tile, styles.upNext]}>
                 <ExerciseLoop exercise={ex} size={72} radius={12} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.nextLabel}>{t('Next')}</Text>
                   <Text style={styles.upNextName}>{exerciseName(ex)}</Text>
-                  <Text style={styles.muted}>
+                  <Text style={fine.rowSub}>
                     {t('Set {a} of {b}', { a: at.set, b: setsHere })} · {timed ? plannedSet(item, at.set - 1).reps : setText(hintFor(at))}
                     {ex.perSide ? ` ${t('per side')}` : ''}
                   </Text>
@@ -707,7 +719,12 @@ export const WorkoutSessionScreen = () => {
           ) : (
             <>
               <Text style={styles.blockTag}>{blockLabel(item.block)}</Text>
-              <TouchableOpacity activeOpacity={0.9} onPress={() => router.push({ pathname: '/exercise-info', params: { id: ex.id } })}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => router.push({ pathname: '/exercise-info', params: { id: ex.id } })}
+                accessibilityRole="button"
+                accessibilityLabel={exerciseName(ex)}
+              >
                 <ExerciseLoop exercise={ex} width={big} radius={18} showProvisional />
               </TouchableOpacity>
               <Text style={styles.runName}>{exerciseName(ex)}</Text>
@@ -719,7 +736,7 @@ export const WorkoutSessionScreen = () => {
               {timed && (
                 <>
                   <Text style={styles.timer}>{fmt(running ? Math.max(0, left) : total)}</Text>
-                  {ex.perSide && running ? <Text style={styles.muted}>{secondSide ? t('Second side') : t('First side')}</Text> : null}
+                  {ex.perSide && running ? <Text style={fine.rowSub}>{secondSide ? t('Second side') : t('First side')}</Text> : null}
                 </>
               )}
               <View style={styles.guidedTable}>
@@ -743,19 +760,11 @@ export const WorkoutSessionScreen = () => {
         {phase === 'work' && (
           <View style={styles.runBottom}>
             {timed && !running ? (
-              <TouchableOpacity style={styles.primary} onPress={() => startTimer(at)}>
-                <Ionicons name="play" size={18} color={Colors.background} />
-                <Text style={styles.primaryText}>{t('Start timer')}</Text>
-              </TouchableOpacity>
+              <FButton label={t('Start timer')} icon="play-outline" onPress={() => startTimer(at)} />
             ) : (
-              <TouchableOpacity style={styles.primary} onPress={() => finishStep()}>
-                <Ionicons name="checkmark" size={20} color={Colors.background} />
-                <Text style={styles.primaryText}>{t('Set done')}</Text>
-              </TouchableOpacity>
+              <FButton label={t('Set done')} icon="checkmark" onPress={() => finishStep()} />
             )}
-            <TouchableOpacity style={styles.link} onPress={() => finishStep(false)}>
-              <Text style={styles.linkText}>{t('Skip')}</Text>
-            </TouchableOpacity>
+            <FLink label={t('Skip')} muted onPress={() => finishStep(false)} />
           </View>
         )}
         {bellSheet}
@@ -771,26 +780,26 @@ export const WorkoutSessionScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <View style={styles.hevyTop}>
-          <TouchableOpacity onPress={quit} hitSlop={10} accessibilityLabel={t('Discard workout')}>
-            <Ionicons name="close" size={26} color={Colors.textPrimary} />
+          <TouchableOpacity onPress={quit} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('Discard workout')}>
+            <Ionicons name="close" size={25} color={FINE.ivory} />
           </TouchableOpacity>
           <Text style={styles.hevyTitle} numberOfLines={1}>
-            {sessionTitle(session)}
+            {sessionTitle(session, isCustomProgram(program))}
           </Text>
-          <TouchableOpacity onPress={() => switchView('guided')} hitSlop={8} accessibilityLabel={t('Guided mode')}>
-            <Ionicons name="videocam-outline" size={23} color={Colors.textPrimary} />
+          <TouchableOpacity onPress={() => switchView('guided')} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('Guided mode')}>
+            <Ionicons name="videocam-outline" size={22} color={FINE.ivory} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={8} accessibilityLabel={t('Sound')}>
-            <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={22} color={bell.on ? Colors.textPrimary : Colors.textMuted} />
+          <TouchableOpacity onPress={() => setBellOpen(true)} hitSlop={8} accessibilityRole="button" accessibilityLabel={t('Sound')}>
+            <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={21} color={bell.on ? FINE.ivory : FINE.mute} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.finishBtn} onPress={finish}>
-            <Text style={styles.finishText}>{t('Finish')}</Text>
+          <TouchableOpacity style={fine.pill} onPress={finish} accessibilityRole="button">
+            <Text style={fine.pillText}>{t('Finish')}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.stats}>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>{t('Duration')}</Text>
-            <Elapsed since={startedAt.current} style={[styles.statValue, { color: Colors.accent }]} />
+            <Elapsed since={startedAt.current} style={[styles.statValue, { color: FINE.jade }]} />
           </View>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>{t('Volume')}</Text>
@@ -812,7 +821,11 @@ export const WorkoutSessionScreen = () => {
             const newBlock = blocks && (i === 0 || items[i - 1].block !== it.block);
             return (
               <React.Fragment key={`${it.exerciseId}-${i}`}>
-                {newBlock ? <Text style={styles.blockHead}>{blockLabel(it.block)}</Text> : null}
+                {newBlock ? (
+                  <Text style={styles.blockHead} accessibilityRole="header">
+                    {blockLabel(it.block)}
+                  </Text>
+                ) : null}
                 <ExerciseBlock
                   index={i}
                   item={it}
@@ -826,36 +839,34 @@ export const WorkoutSessionScreen = () => {
               </React.Fragment>
             );
           })}
-          {allDone && (
-            <TouchableOpacity style={[styles.primary, { marginTop: 16 }]} onPress={finish}>
-              <Ionicons name="flag-outline" size={18} color={Colors.background} />
-              <Text style={styles.primaryText}>{t('Finish workout')}</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.addExercise} onPress={() => setPicking(true)}>
-            <Ionicons name="add" size={20} color={Colors.background} />
+          {allDone && <FButton label={t('Finish workout')} icon="flag-outline" onPress={finish} style={{ marginTop: 16 }} />}
+          <TouchableOpacity style={styles.addExercise} onPress={() => setPicking(true)} accessibilityRole="button">
+            <Ionicons name="add" size={19} color={FINE.jade} />
             <Text style={styles.addExerciseText}>{t('Add exercise')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.discard} onPress={quit}>
+          <TouchableOpacity style={styles.discard} onPress={quit} accessibilityRole="button">
             <Text style={styles.discardText}>{t('Discard workout')}</Text>
           </TouchableOpacity>
         </KeyboardAwareScroll>
 
         {phase === 'rest' && (
           <View style={styles.restBar}>
-            <View style={[styles.restFill, { width: `${restTotal ? Math.max(0, Math.min(1, left / restTotal)) * 100 : 0}%` }]} />
-            <Text style={styles.restLabel}>{t('Rest')}</Text>
-            <Text style={styles.restBarClock}>{fmt(Math.max(0, left))}</Text>
-            <View style={{ flex: 1 }} />
-            <TouchableOpacity style={styles.restBtn} onPress={() => countTo(Math.max(Date.now(), endsAt.current - 15000))}>
-              <Text style={styles.secondaryText}>−15</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.restBtn} onPress={() => countTo(endsAt.current + 15000)}>
-              <Text style={styles.secondaryText}>+15</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.restBtn} onPress={() => setPhase('work')}>
-              <Text style={styles.secondaryText}>{t('Skip')}</Text>
-            </TouchableOpacity>
+            <View style={styles.restRow}>
+              <Text style={styles.restLabel}>{t('Rest')}</Text>
+              <Text style={styles.restBarClock}>{fmt(Math.max(0, left))}</Text>
+              <View style={{ flex: 1 }} />
+              <TouchableOpacity style={styles.restBtn} onPress={() => countTo(Math.max(Date.now(), endsAt.current - 15000))} accessibilityRole="button">
+                <Text style={styles.secondaryText}>−15</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.restBtn} onPress={() => countTo(endsAt.current + 15000)} accessibilityRole="button">
+                <Text style={styles.secondaryText}>+15</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.restBtn} onPress={() => setPhase('work')} accessibilityRole="button">
+                <Text style={styles.secondaryText}>{t('Skip')}</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Lo que va de descanso, en una línea de cometa (antes, un relleno que se encogía) */}
+            <CometLine progress={restTotal ? 1 - Math.max(0, Math.min(1, left / restTotal)) : 0} colors={PROGRESS} thickness={3} style={styles.restLine} />
           </View>
         )}
         <WorkoutModal
@@ -866,9 +877,11 @@ export const WorkoutSessionScreen = () => {
             setChosen([]);
           }}
           footer={
-            <TouchableOpacity style={[styles.primary, !chosen.length && { opacity: 0.45 }]} onPress={addChosen} disabled={!chosen.length}>
-              <Text style={styles.primaryText}>{chosen.length ? tn(chosen.length, 'Add {n} exercise', 'Add {n} exercises') : t('Choose one or more')}</Text>
-            </TouchableOpacity>
+            <FButton
+              label={chosen.length ? tn(chosen.length, 'Add {n} exercise', 'Add {n} exercises') : t('Choose one or more')}
+              onPress={addChosen}
+              disabled={!chosen.length}
+            />
           }
         >
           <ExerciseLibrary
@@ -905,57 +918,99 @@ export const WorkoutSessionScreen = () => {
     await programRepository.save(next).catch(() => undefined);
   };
 
-  const editing = editAt !== null ? session.exercises[editAt] : undefined;
-  const editingEx = editing ? getExercise(editing.exerciseId) : undefined;
-  const saveDose = async (change: Pick<WorkoutExercise, 'sets' | 'reps' | 'restSec' | 'weightKg'>) => {
-    if (editAt === null) return;
+  // Cambiar un ejercicio: el mismo editor que «Editar rutina», serie a serie (cada una con su peso y sus repeticiones o
+  // sus segundos), su descanso y su nota. Antes era una sola dosis para todas (fundador, 2026-11-06: «no considera que
+  // igual tengo varios pesos»). Se guarda al tocar «Guardar»; cancelar o cerrar no cambia nada.
+  const editingEx = editDraft ? getExercise(editDraft.item.exerciseId) : undefined;
+  const openEdit = (idx: number) => {
+    const it = session.exercises[idx];
+    if (!it) return;
+    setEditAt(idx);
+    setEditDraft({ item: it, draft: toDraft(it, num) });
+  };
+  const closeEdit = () => {
+    setEditAt(null);
+    setEditDraft(null);
+  };
+  const saveEdit = async () => {
+    if (editAt === null || !editDraft) return;
+    const changed = fromDraft(editDraft.item, editDraft.draft);
     const next: WorkoutProgram = {
       ...program,
-      sessions: program.sessions.map((s) => (s.id !== session.id ? s : { ...s, exercises: s.exercises.map((it, j) => (j === editAt ? applyDose(it, change) : it)) })),
+      sessions: program.sessions.map((s) => (s.id !== session.id ? s : { ...s, exercises: s.exercises.map((it, j) => (j === editAt ? changed : it)) })),
     };
-    setEditAt(null);
+    closeEdit();
     setProgram(next);
     await programRepository.save(next).catch(() => undefined);
   };
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <ScreenHeader title={sessionTitle(session)} showBack backFallback="/workouts" />
+      <ScreenHeader title={sessionTitle(session, isCustomProgram(program))} showBack backFallback="/workouts" />
+      {/* Las rutinas del programa con su letra y su nombre (antes solo la letra: fundador, 2026-11-06) */}
       {program.sessions.length > 1 && (
-        <View style={styles.tabs}>
-          {program.sessions.map((s) => (
-            <TouchableOpacity key={s.id} style={[styles.tab, s.id === session.id && styles.tabOn]} onPress={() => setSessionId(s.id)}>
-              <Text style={[styles.tabText, s.id === session.id && styles.tabTextOn]}>{s.id}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll} contentContainerStyle={styles.tabs}>
+          {program.sessions.map((s) => {
+            const on = s.id === session.id;
+            return (
+              <TouchableOpacity
+                key={s.id}
+                style={[styles.tab, on && styles.tabOn]}
+                onPress={() => setSessionId(s.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: on }}
+              >
+                <View style={[styles.tabLetter, on && styles.tabLetterOn]}>
+                  <Text style={[styles.tabLetterText, on && { color: FINE.ivory }]}>{s.id}</Text>
+                </View>
+                <Text style={[styles.tabText, on && styles.tabTextOn]} numberOfLines={1}>
+                  {sessionName(s, isCustomProgram(program))}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       )}
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {unfinished && <UnfinishedWorkout workout={unfinished} onContinue={continueUnfinished} />}
         <View style={styles.metaRow}>
           <Text style={[styles.meta, { flex: 1 }]}>
-            ~{estimateMinutes(session)} min · {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
+            {daysText(session) ? `${daysText(session)} · ` : ''}~{estimateMinutes(session)} min ·{' '}
+            {tn(session.exercises.filter((e) => e.block === 'main' || e.block === 'finisher').length, '{n} exercise', '{n} exercises')}
           </Text>
           {/* Quitar, añadir y ordenar ejercicios: el editor de rutinas, abierto en este día */}
-          <TouchableOpacity style={styles.editBtn} onPress={() => router.push({ pathname: '/workout-custom', params: { program: program.id, day: session.id } })}>
-            <Ionicons name="create-outline" size={16} color={Colors.accent} />
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => router.push({ pathname: '/workout-custom', params: { program: program.id, day: session.id } })}
+            hitSlop={6}
+            accessibilityRole="button"
+          >
+            <Ionicons name="create-outline" size={16} color={FINE.jade} />
             <Text style={styles.editText}>{t('Edit')}</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.soundRow} onPress={() => setBellOpen(true)} accessibilityLabel={t('Sound')}>
-          <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={16} color={bell.on ? Colors.accent : Colors.textMuted} />
+        <TouchableOpacity style={styles.soundRow} onPress={() => setBellOpen(true)} accessibilityRole="button" accessibilityLabel={t('Sound')}>
+          <MaterialCommunityIcons name={bell.on ? 'bell-outline' : 'bell-off-outline'} size={16} color={bell.on ? FINE.jade : FINE.mute} />
           <Text style={styles.soundText}>{bell.on ? t('Sound: {tone}', { tone: toneLabel }) : t('No sound')}</Text>
-          <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+          <Ionicons name="chevron-forward" size={14} color={FINE.mute} />
         </TouchableOpacity>
         {byBlock.map((g) => (
-          <View key={g.block} style={{ marginBottom: 8 }}>
-            <Text style={styles.section}>{blockLabel(g.block)}</Text>
+          <View key={g.block}>
+            <Text style={styles.section} accessibilityRole="header">
+              {blockLabel(g.block)}
+            </Text>
             {g.items.map(({ it, idx }) => {
               const e = getExercise(it.exerciseId);
               if (!e) return null;
               const prev = last.get(it.exerciseId);
               return (
-                <TouchableOpacity key={`${it.exerciseId}-${idx}`} style={styles.row} onPress={() => router.push({ pathname: '/exercise-info', params: { id: e.id } })}>
-                  <ExerciseLoop exercise={e} size={64} radius={12} />
+                <TouchableOpacity
+                  key={`${it.exerciseId}-${idx}`}
+                  style={styles.row}
+                  onPress={() => router.push({ pathname: '/exercise-info', params: { id: e.id } })}
+                  accessibilityRole="button"
+                  accessibilityLabel={exerciseName(e)}
+                >
+                  <ExerciseLoop exercise={e} size={56} radius={12} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.rowName}>{exerciseName(e)}</Text>
                     <Text style={styles.rowDose}>
@@ -969,11 +1024,23 @@ export const WorkoutSessionScreen = () => {
                     ) : null}
                     {it.note ? <Text style={styles.rowNote}>{it.note}</Text> : null}
                   </View>
-                  <TouchableOpacity style={styles.swap} onPress={() => setEditAt(idx)} hitSlop={8} accessibilityLabel={t('Edit {name}', { name: exerciseName(e) })}>
-                    <Ionicons name="pencil" size={16} color={Colors.accent} />
+                  <TouchableOpacity
+                    style={styles.swap}
+                    onPress={() => openEdit(idx)}
+                    hitSlop={6}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('Edit {name}', { name: exerciseName(e) })}
+                  >
+                    <Ionicons name="pencil-outline" size={17} color={FINE.jade} />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.swap} onPress={() => setSwapAt(idx)} hitSlop={8} accessibilityLabel={t('Swap {name}', { name: exerciseName(e) })}>
-                    <Ionicons name="swap-horizontal" size={18} color={Colors.accent} />
+                  <TouchableOpacity
+                    style={styles.swap}
+                    onPress={() => setSwapAt(idx)}
+                    hitSlop={6}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('Swap {name}', { name: exerciseName(e) })}
+                  >
+                    <Ionicons name="swap-horizontal-outline" size={19} color={FINE.jade} />
                   </TouchableOpacity>
                 </TouchableOpacity>
               );
@@ -982,14 +1049,8 @@ export const WorkoutSessionScreen = () => {
         ))}
       </ScrollView>
       <View style={[styles.runBottom, styles.startRow]}>
-        <TouchableOpacity style={[styles.primary, { flex: 1 }]} onPress={() => start('list')}>
-          <Ionicons name="play" size={18} color={Colors.background} />
-          <Text style={styles.primaryText}>{t('Start')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.guidedStart} onPress={() => start('guided')}>
-          <Ionicons name="videocam-outline" size={18} color={Colors.accent} />
-          <Text style={styles.secondaryText}>{t('Guided mode')}</Text>
-        </TouchableOpacity>
+        <FButton label={t('Start')} icon="play-outline" onPress={() => start('list')} style={{ flex: 1 }} />
+        <FLink label={t('Guided mode')} icon="videocam-outline" onPress={() => start('guided')} style={styles.guidedStart} />
       </View>
       <WorkoutModal
         visible={swapAt !== null}
@@ -1011,8 +1072,8 @@ export const WorkoutSessionScreen = () => {
                   ? t('Same type of movement, with your equipment. {name} will see the change.', { name: program.professionalName || t('Your trainer') })
                   : t('Same type of movement, with your equipment.')}
             </Text>
-            <TouchableOpacity style={styles.swapAll} onPress={() => setSwapAll((v) => !v)}>
-              <Ionicons name={swapAll ? 'funnel-outline' : 'albums-outline'} size={16} color={Colors.accent} />
+            <TouchableOpacity style={styles.swapAll} onPress={() => setSwapAll((v) => !v)} accessibilityRole="button">
+              <Ionicons name={swapAll ? 'funnel-outline' : 'albums-outline'} size={16} color={FINE.jade} />
               <Text style={styles.secondaryText}>{swapAll ? t('Only the same type of movement') : t('See all exercises')}</Text>
             </TouchableOpacity>
             <ExerciseLibrary
@@ -1030,20 +1091,33 @@ export const WorkoutSessionScreen = () => {
           </>
         )}
       </WorkoutModal>
-      <WorkoutModal visible={editAt !== null} title={editingEx ? exerciseName(editingEx) : ''} onClose={() => setEditAt(null)}>
-        {editing && (
+      <WorkoutModal visible={editAt !== null && !!editDraft} title={editingEx ? t('Edit {name}', { name: exerciseName(editingEx) }) : ''} onClose={closeEdit}>
+        {editDraft && editingEx && (
           <>
             {program.source === 'professional' && (
               <Text style={styles.swapHint}>{t('{name} will see the change.', { name: program.professionalName || t('Your trainer') })}</Text>
             )}
-            <DoseEditor
-              item={editing}
-              perSide={editingEx?.perSide}
-              withWeight={!!editingEx && isLoadable(editingEx)}
-              kgUnit={editingEx ? kgHead(editingEx) : 'kg'}
-              onSave={saveDose}
-              onCancel={() => setEditAt(null)}
+            <RoutineExerciseCard
+              item={editDraft.item}
+              ex={editingEx}
+              draft={editDraft.draft}
+              first
+              last
+              onOpen={() => undefined}
+              onChange={(patch) => setEditDraft((d) => (d ? { ...d, item: { ...d.item, ...patch } } : d))}
+              onDraft={(draft) => setEditDraft((d) => (d ? { ...d, draft } : d))}
+              onToggleTimed={() =>
+                setEditDraft((d) => {
+                  if (!d) return d;
+                  const next = switchTimed(d.item, d.draft, !isTimedReps(d.item.reps));
+                  return { item: next.item, draft: next.draft };
+                })
+              }
             />
+            <View style={styles.editButtons}>
+              <FLink label={t('Cancel')} muted onPress={closeEdit} style={{ flex: 1 }} />
+              <FButton label={t('Save')} onPress={saveEdit} style={{ flex: 1 }} />
+            </View>
           </>
         )}
       </WorkoutModal>
@@ -1053,83 +1127,109 @@ export const WorkoutSessionScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  swap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accentSoft },
-  swapHint: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, marginBottom: 10 },
-  safeArea: { flex: 1, backgroundColor: Colors.background },
+  swap: { width: 36, height: 40, alignItems: 'center', justifyContent: 'center' },
+  swapHint: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18, marginBottom: 10 },
+  editButtons: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 16 },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
   content: { paddingHorizontal: 20, paddingBottom: 24 },
-  muted: { color: Colors.textSecondary, fontSize: 13, marginHorizontal: 0 },
-  meta: { color: Colors.textSecondary, fontSize: 14, marginBottom: 6 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 6 },
-  editText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
-  swapAll: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4, marginBottom: 8 },
-  soundRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4, marginBottom: 4 },
-  soundText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  section: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 10, marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 8, marginBottom: 8 },
-  rowName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
-  rowDose: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
-  rowLast: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
-  rowNote: { color: Colors.accent, fontSize: 12, marginTop: 2, fontStyle: 'italic' },
-  tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 8 },
-  tab: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card },
-  tabOn: { borderColor: Colors.accent, backgroundColor: Colors.accentSoft },
-  tabText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '800' },
-  tabTextOn: { color: Colors.textPrimary },
-  primary: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.accent, borderRadius: 24, paddingVertical: 14 },
-  primaryText: { color: Colors.background, fontSize: 16, fontWeight: '800' },
-  secondary: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 22, paddingHorizontal: 18, paddingVertical: 10 },
-  secondaryText: { color: Colors.accent, fontSize: 14, fontWeight: '700' },
-  link: { alignItems: 'center', paddingVertical: 10 },
-  linkText: { color: Colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  center: { justifyContent: 'center' },
+  meta: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, lineHeight: 19 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, minHeight: 36 },
+  editText: { ...fine.link },
+  swapAll: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 6, minHeight: 36, marginBottom: 6 },
+  soundRow: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 6, minHeight: 36 },
+  soundText: { ...ff('regular'), color: FINE.mute, fontSize: 13 },
+  section: { ...fine.secTitle, marginTop: 22, marginBottom: 2 },
+  // Cada ejercicio, una fila con una línea fina debajo (antes, una tarjeta)
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  rowName: { ...fine.rowTitle },
+  rowDose: { ...fine.rowSub, marginTop: 2 },
+  rowLast: { ...ff('regular'), color: FINE.mute, fontSize: 12, lineHeight: 16, marginTop: 2 },
+  rowNote: { ...ff('regular'), color: '#CFD6CF', fontSize: 12, lineHeight: 16, marginTop: 2, fontStyle: 'italic' },
+  // Sin encoger: con una lista larga debajo, la tira se aplastaba y cortaba las pestañas por arriba (fundador, 2026-11-06)
+  tabsScroll: { flexGrow: 0, flexShrink: 0, marginBottom: 8 },
+  tabs: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 2 },
+  tab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: FINE.line,
+    paddingLeft: 4,
+    paddingRight: 13,
+  },
+  tabOn: { borderColor: FINE.jade, backgroundColor: ON_BG },
+  tabLetter: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: FINE.jadeLine, alignItems: 'center', justifyContent: 'center' },
+  tabLetterOn: { backgroundColor: FINE.emerald, borderColor: FINE.jade },
+  tabLetterText: { ...ff('medium'), color: FINE.jade, fontSize: 12 },
+  tabText: { ...ff('regular'), color: FINE.mute, fontSize: 13.5, maxWidth: 150 },
+  tabTextOn: { color: FINE.ivory },
+  secondary: { borderWidth: 1, borderColor: FINE.line, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, minHeight: 38, justifyContent: 'center' },
+  secondaryText: { ...ff('regular'), color: FINE.jade, fontSize: 14 },
   startRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  guidedStart: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 13 },
+  guidedStart: { paddingHorizontal: 8 },
   runTop: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 10 },
-  progress: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Colors.cardBorder, overflow: 'hidden' },
-  progressFill: { height: 6, backgroundColor: Colors.accent },
-  clock: { color: Colors.textSecondary, fontSize: 14, fontWeight: '700', minWidth: 44, textAlign: 'right' },
+  progress: { flex: 1 },
+  clock: { ...ff('regular'), color: FINE.mute, fontSize: 14, minWidth: 44, textAlign: 'right', fontVariant: ['tabular-nums'] },
   hevyTop: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 10 },
-  hevyTitle: { flex: 1, color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
-  finishBtn: { backgroundColor: Colors.accent, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
-  finishText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  stats: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: Colors.divider },
+  hevyTitle: { ...ff('medium'), flex: 1, color: FINE.ivory, fontSize: 16 },
+  // Duración, volumen y series: cifras grandes y ligeras con su nombre pequeño encima
+  stats: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderBottomWidth: 1, borderColor: FINE.line },
   stat: { flex: 1, gap: 2 },
-  statLabel: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
-  statValue: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  statOf: { color: Colors.textMuted, fontSize: 14, fontWeight: '700' },
+  statLabel: { ...fine.kicker },
+  statValue: { ...fine.num, fontSize: 24, lineHeight: 30 },
+  statOf: { ...ff('regular'), color: FINE.mute, fontSize: 14 },
   hevyList: { paddingHorizontal: 16, paddingBottom: 32 },
-  blockHead: { color: Colors.textMuted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 16 },
-  addExercise: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: Colors.accent, borderRadius: 12, paddingVertical: 13, marginTop: 18 },
-  addExerciseText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
-  discard: { alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.card, borderRadius: 12, paddingVertical: 13, marginTop: 10 },
-  discardText: { color: Colors.danger, fontSize: 15, fontWeight: '700' },
-  restBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 12, marginBottom: 8, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.accent, overflow: 'hidden' },
-  restFill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: Colors.accentSoft },
-  restLabel: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  restBarClock: { color: Colors.textPrimary, fontSize: 22, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  restBtn: { borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.background, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 6 },
+  blockHead: { ...fine.secTitle, marginTop: 20 },
+  addExercise: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: FINE.jadeLine,
+    borderRadius: 22,
+    paddingVertical: 12,
+    minHeight: 46,
+    marginTop: 18,
+  },
+  addExerciseText: { ...ff('medium'), color: FINE.jade, fontSize: 15 },
+  discard: { alignItems: 'center', justifyContent: 'center', paddingVertical: 12, minHeight: 44, marginTop: 6 },
+  discardText: { ...ff('regular'), color: formStyles.error.color, fontSize: 14 },
+  // El descanso, abajo: una barra casi opaca con la cuenta, sus botones y la línea de lo que va
+  restBar: { marginHorizontal: 12, marginBottom: 8, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 2, borderRadius: 18, backgroundColor: '#0A231D', borderWidth: 1, borderColor: FINE.jadeLine },
+  restRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  restLine: { marginHorizontal: -8 },
+  restLabel: { ...fine.kicker, color: FINE.jade },
+  restBarClock: { ...fine.num, fontSize: 24, lineHeight: 30 },
+  restBtn: { borderWidth: 1, borderColor: FINE.line, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6, minHeight: 34, justifyContent: 'center' },
   runBody: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 20, gap: 10 },
   guidedTable: { alignSelf: 'stretch', marginTop: 4 },
-  blockTag: { color: Colors.accent, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.6 },
-  runName: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900', textAlign: 'center', marginTop: 6 },
-  runSet: { color: Colors.textSecondary, fontSize: 16, fontWeight: '700', textAlign: 'center' },
-  proNote: { color: Colors.textPrimary, fontSize: 14, fontStyle: 'italic', textAlign: 'center' },
-  timer: { color: Colors.textPrimary, fontSize: 56, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  restClock: { color: Colors.textPrimary, fontSize: 72, fontWeight: '900', fontVariant: ['tabular-nums'], marginVertical: 8 },
+  blockTag: { ...fine.kicker, color: FINE.jade },
+  runName: { ...ff('medium'), color: FINE.ivory, fontSize: 23, lineHeight: 29, textAlign: 'center', marginTop: 6 },
+  runSet: { ...ff('regular'), color: FINE.mute, fontSize: 15, textAlign: 'center' },
+  proNote: { ...ff('regular'), color: '#CFD6CF', fontSize: 14, lineHeight: 20, fontStyle: 'italic', textAlign: 'center' },
+  timer: { ...fine.num, fontSize: 56, lineHeight: 64 },
+  restRing: { marginVertical: 10 },
+  restClock: { ...fine.num, fontSize: 54, lineHeight: 62 },
   restButtons: { flexDirection: 'row', gap: 10 },
-  upNext: { flexDirection: 'row', alignItems: 'center', gap: 12, alignSelf: 'stretch', backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 12, marginTop: 24 },
-  nextLabel: { color: Colors.accent, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
-  upNextName: { color: Colors.textPrimary, fontSize: 16, fontWeight: '800' },
+  upNext: { flexDirection: 'row', alignItems: 'center', gap: 12, alignSelf: 'stretch', marginTop: 24 },
+  nextLabel: { ...fine.kicker },
+  upNextName: { ...fine.rowTitle, fontSize: 16 },
   runBottom: { paddingHorizontal: 20, paddingBottom: 12, paddingTop: 6 },
   doneBody: { alignItems: 'center', paddingHorizontal: 24, paddingTop: 32, paddingBottom: 16 },
-  doneIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  doneTitle: { color: Colors.textPrimary, fontSize: 26, fontWeight: '900', textAlign: 'center' },
-  doneText: { color: Colors.textSecondary, fontSize: 15, marginTop: 6, textAlign: 'center' },
-  results: { alignSelf: 'stretch', marginTop: 20, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 14 },
-  result: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.divider },
-  resultName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '800' },
-  resultBest: { color: Colors.textSecondary, fontSize: 13, marginTop: 2 },
-  resultChange: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
-  q: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 24, marginBottom: 10 },
-  saveFailed: { color: Colors.textSecondary, fontSize: 13, lineHeight: 18, textAlign: 'center', marginBottom: 10 },
+  doneIcon: { marginBottom: 14 },
+  doneTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 26, lineHeight: 32, textAlign: 'center' },
+  doneText: { ...ff('regular'), color: FINE.mute, fontSize: 15, marginTop: 6, textAlign: 'center' },
+  // Lo de cada ejercicio, en filas con línea fina (antes, dentro de una tarjeta)
+  results: { alignSelf: 'stretch', marginTop: 20, borderTopWidth: 1, borderTopColor: FINE.line },
+  result: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: FINE.line },
+  resultName: { ...fine.rowTitle, fontSize: 14.5 },
+  resultBest: { ...fine.rowSub, marginTop: 2 },
+  resultChange: { ...ff('regular'), color: FINE.mute, fontSize: 12, marginTop: 2 },
+  q: { ...fine.secTitle, marginTop: 28, marginBottom: 10, textAlign: 'center' },
+  saveFailed: { ...ff('regular'), color: FINE.mute, fontSize: 13, lineHeight: 18, textAlign: 'center', marginBottom: 10 },
 });

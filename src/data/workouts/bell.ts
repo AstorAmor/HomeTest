@@ -4,6 +4,7 @@ import { Linking, Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import { t } from '@/i18n';
+import { expectSystemUi, withSystemUi } from '@/utils/systemUi';
 import { loadNotifications, NotificationsModule, toPermission } from '@/data/phoneReminders';
 
 // Timbre del entrenamiento: suena al acabar un descanso, un ejercicio por tiempo y a mitad de los que
@@ -157,6 +158,8 @@ export async function allowBellOnLock(tone: BellTone): Promise<BellLockStatus> {
   if (!N) return bellLockStatus();
   try {
     await channelFor(N, tone); // en Android 13+ el diálogo del permiso solo sale si ya hay un canal
+    // El diálogo del permiso sale encima de la app: que el bloqueo no la tape con la K (src/utils/systemUi.ts)
+    expectSystemUi();
     const p = toPermission(N, await N.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } }));
     return p === 'granted' ? 'on' : p === 'blocked' ? 'blocked' : 'ask';
   } catch (e) {
@@ -182,7 +185,7 @@ export async function offerBellOnLock(tone: BellTone): Promise<void> {
   }
 }
 
-export const openPhoneSettings = () => Linking.openSettings().catch(() => undefined);
+export const openPhoneSettings = () => withSystemUi(() => Linking.openSettings()).catch(() => undefined);
 
 export interface BellAlarm {
   at: number; // ms

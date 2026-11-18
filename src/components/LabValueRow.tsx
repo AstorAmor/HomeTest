@@ -1,23 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Colors, withAlpha } from '@/constants/colors';
 import { ExtractedParametro } from '@/types/labReport';
-import { getRangeStatus, RangeStatus, rangeStatusLabel } from '@/utils/rangeStatus';
-import { getParameterCard } from '@/utils/parameterInfo';
-import { markerIdForExtractedName } from '@/data/markerMatching';
-import { planRuleForMarker } from '@/utils/planUpdate';
-import { RangeBar } from './RangeBar';
+import { getRangeStatus, RangeStatus, rangeStatusLabel, rangeText } from '@/utils/rangeStatus';
+import { markerKey } from '@/logic/labMarkers';
+import { markerHref } from '@/utils/markerLinks';
+import { Chev } from './fine/Fine';
+import { LabGauge, labStyles, labToneColor, rangeTone, StatusWord } from './fine/FineLab';
 import { UnitLabel } from './UnitLabel';
-import { labEvidence } from '@/utils/labEvidence';
 import { num, t } from '@/i18n';
+import { FINE, ff, fine } from '@/theme/fine';
 
-// Una fila de una analítica, igual en todos los grupos: el nombre con el valor debajo, a la derecha si
-// está en rango o fuera y la flecha para desplegar qué es, para qué se mide y qué puede moverlo; fuera
-// de rango, además, qué se ha asociado a mejorarlo (utils/labEvidence, lenguaje prudente) o, si no hay
-// nada claro, que lo hable con un médico. Debajo, la barra de rango. Textos de la base de conocimiento
-// (pendientes de revisión médica): orientan, no diagnostican.
+// Una fila de una analítica, igual en todos los grupos: el nombre con el rango del laboratorio debajo y su línea
+// de rango; a la derecha, el valor y si está en rango o fuera. Al tocarla se abre ese marcador en Mis datos
+// (fundador, 2026-11-06): su ficha con todos sus valores, qué es, para qué se mide, qué puede moverlo y, fuera de
+// rango, qué se ha asociado a mejorarlo. Textos de la base de conocimiento, pendientes de revisión médica:
+// orientan, no diagnostican. Desde el 2026-11-16, en fino: fila con línea fina, la línea de rango con la franja
+// jade y el punto de luz, y lo de fuera en oro, sin rojos ni iconos rellenos.
 const ICON: Record<RangeStatus, string> = {
   en_rango: 'checkmark-circle',
   por_encima: 'arrow-up-circle',
@@ -25,89 +24,50 @@ const ICON: Record<RangeStatus, string> = {
   sin_rango: 'remove-circle-outline',
 };
 
-export const statusColor = (s: RangeStatus) => (s === 'en_rango' ? Colors.ok : s === 'sin_rango' ? Colors.textMuted : Colors.attention);
+// El color de un estado, en los tonos finos: jade en rango, oro fuera, apagado sin referencia
+export const statusColor = (s: RangeStatus) => labToneColor(rangeTone(s));
+export const statusIcon = (s: RangeStatus) => ICON[s];
 
-export const LabValueRow = ({ p, open, onToggle, divider }: { p: ExtractedParametro; open: boolean; onToggle: () => void; divider?: boolean }) => {
+export const LabValueRow = ({ p, divider, uploadId }: { p: ExtractedParametro; divider?: boolean; uploadId?: string }) => {
   const router = useRouter();
   const isNumber = typeof p.valor === 'number';
   const status: RangeStatus = isNumber ? getRangeStatus(p.valor, p.rango_min, p.rango_max) : 'sin_rango';
   const out = status === 'por_encima' || status === 'por_debajo';
-  const color = statusColor(status);
-  const markerId = markerIdForExtractedName(p.nombre);
-  const rule = markerId ? planRuleForMarker(markerId) : null;
-  const card = open ? getParameterCard(p.nombre) : null;
-  const evidence = out ? labEvidence(markerId, status === 'por_encima' ? 'high' : 'low') : null;
+  const range = rangeText(p.rango_min, p.rango_max);
 
   return (
-    <View style={[styles.item, divider && styles.divider]}>
-      <TouchableOpacity style={styles.row} onPress={onToggle} activeOpacity={0.8} accessibilityLabel={`${p.nombre}, ${rangeStatusLabel(status)}`}>
-        <Ionicons name={ICON[status] as any} size={20} color={color} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{p.nombre}</Text>
-          <View style={styles.valueRow}>
-            <Text style={[styles.value, { color: out ? Colors.attention : Colors.textPrimary }]}>{isNumber ? num(p.valor) : String(p.valor ?? '—')}</Text>
-            <UnitLabel unit={p.unidad} style={[styles.value, styles.unit, { color: out ? Colors.attention : Colors.textSecondary }]} />
-          </View>
+    <TouchableOpacity
+      style={[fine.row, styles.item, divider && styles.divider]}
+      onPress={() => router.push(markerHref(markerKey(p.nombre), uploadId ? `upload:${uploadId}` : undefined))}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`${p.nombre}, ${rangeStatusLabel(status)}`}
+    >
+      <View style={styles.flex}>
+        <Text style={fine.rowTitle} numberOfLines={2}>
+          {p.nombre}
+        </Text>
+        {range ? <Text style={fine.rowSub}>{t('range {range}', { range })}</Text> : null}
+        {isNumber && <LabGauge value={p.valor} low={p.rango_min} high={p.rango_max} style={labStyles.rowGauge} />}
+      </View>
+      <View style={styles.right}>
+        <View style={styles.valueRow}>
+          <Text style={[fine.rowValue, out && { color: FINE.gold }]}>{isNumber ? num(p.valor) : String(p.valor ?? '—')}</Text>
+          {p.unidad ? <UnitLabel unit={p.unidad} style={styles.unit} /> : null}
         </View>
-        <Text style={[styles.badge, { color, backgroundColor: withAlpha(color, 0.12) }]}>{rangeStatusLabel(status)}</Text>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textMuted} />
-      </TouchableOpacity>
-      {isNumber && <RangeBar value={p.valor} min={p.rango_min} max={p.rango_max} />}
-      {open && card && (
-        <View style={styles.body}>
-          <Text style={styles.label}>{t('What it is')}</Text>
-          <Text style={styles.text}>{card.role}</Text>
-          {card.relevance ? (
-            <>
-              <Text style={styles.label}>{t('Why it is measured')}</Text>
-              <Text style={styles.text}>{card.relevance}</Text>
-            </>
-          ) : null}
-          {card.factors ? (
-            <>
-              <Text style={styles.label}>{t('What can move it')}</Text>
-              <Text style={styles.text}>{card.factors}</Text>
-            </>
-          ) : null}
-          {out && (
-            <>
-              <Text style={styles.label}>{evidence ? t('What has been associated with better values') : t('What to do')}</Text>
-              <Text style={styles.text}>{evidence ? t(evidence) : t('Talk to a doctor about this result before changing anything.')}</Text>
-            </>
-          )}
-          {out && (
-            <View style={styles.links}>
-              {rule && (
-                <TouchableOpacity style={styles.link} onPress={() => router.push('/action-plan')}>
-                  <Ionicons name="trending-up" size={16} color={Colors.accent} />
-                  <Text style={styles.linkText}>{t('How it could change with your plan')}</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity style={styles.link} onPress={() => router.push({ pathname: '/professionals', params: { role: 'doctor' } })}>
-                <Ionicons name="medkit-outline" size={16} color={Colors.accent} />
-                <Text style={styles.linkText}>{t('Talk to a doctor')}</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      )}
-    </View>
+        <StatusWord label={rangeStatusLabel(status)} tone={rangeTone(status)} />
+      </View>
+      <Chev />
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  item: { paddingVertical: 10 },
-  divider: { borderTopWidth: 1, borderTopColor: Colors.divider },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  name: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4, marginTop: 2 },
-  value: { fontSize: 13, fontWeight: '800' },
-  unit: { fontWeight: '600' },
-  badge: { fontSize: 11, fontWeight: '800', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
-  body: { marginTop: 10, marginLeft: 30, gap: 3 },
-  label: { color: Colors.textMuted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', marginTop: 6 },
-  text: { color: Colors.textPrimary, fontSize: 13, lineHeight: 19 },
-  links: { gap: 8, marginTop: 10 },
-  link: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  linkText: { color: Colors.accent, fontSize: 13, fontWeight: '700' },
+  // La línea va encima de cada fila menos la primera (como antes), no debajo
+  item: { borderBottomWidth: 0 },
+  divider: { borderTopWidth: 1, borderTopColor: FINE.line },
+  flex: { flex: 1, minWidth: 0 },
+  right: { alignItems: 'flex-end', gap: 2, maxWidth: '45%' },
+  valueRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+  unit: { ...ff('regular'), color: FINE.mute, fontSize: 11.5 },
 });

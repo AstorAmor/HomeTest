@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { LotusIcon } from '@/components/fine/LotusIcon';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -10,11 +11,15 @@ import { profileRepository } from '@/data/profileRepository';
 import { useSections } from '@/data/appPrefs';
 import { t } from '@/i18n';
 import { useTourActive } from '@/components/tour/tourStore';
+import { usePermissionsGatePending } from '@/data/permissionsGate';
+import { INTER } from '@/theme/fine';
 
 // Avisos de bienvenida (fundador, 2026-10-17): al entrar en Hoy las primeras veces, una tarjeta
 // invita a hacer el perfil genético y, a las mujeres, el cuestionario de la regla. Siempre se puede
-// decidir: Empezar · Más tarde (vuelve en 3 días) · Saltar (ese no vuelve) · Silenciar estos
-// avisos (no sale ninguno más). Se guarda en user_flags, así que vale en todos los dispositivos.
+// decidir: Empezar · Omitir por ahora (vuelve en 3 días, y lo dice) · No volver a mostrar este aviso.
+// Antes eran «Más tarde», «Saltar» y «Silenciar estos avisos», y no se entendía la diferencia (fundador,
+// 2026-11-06). Quien ya los silenció sigue sin verlos (MUTED). Se guarda en user_flags, así que vale en
+// todos los dispositivos.
 
 type PromptId = 'genetics' | 'cycle';
 
@@ -31,7 +36,7 @@ const PROMPTS: Record<PromptId, { icon: React.ReactNode; title: string; body: st
     href: '/know-your-roots',
   },
   cycle: {
-    icon: <Ionicons name="flower-outline" size={30} color={Colors.gold} />,
+    icon: <LotusIcon size={30} color={Colors.gold} />,
     title: 'Tell us about your period',
     body: 'A few questions about your cycle and what you want (just to track it, to get pregnant or to avoid it), so predictions and tips fit you.',
     cta: 'Answer the questions',
@@ -49,6 +54,8 @@ const isOpen = (state: unknown) => {
 export const WelcomePrompts = () => {
   // Con el tutorial en marcha (justo después de los cuestionarios), esperan a que acabe
   const touring = useTourActive();
+  // Y a que se cierre «Before we start» (los permisos), con un rato de margen
+  const permissionsPending = usePermissionsGatePending();
   const router = useRouter();
   const show = useSections();
   const [queue, setQueue] = useState<PromptId[]>([]);
@@ -79,7 +86,7 @@ export const WelcomePrompts = () => {
   useFocusEffect(load);
 
   const current = queue[0];
-  if (!current || touring) return null;
+  if (!current || touring || permissionsPending) return null;
   const p = PROMPTS[current];
   const advance = () => setQueue((q) => q.slice(1));
 
@@ -96,10 +103,6 @@ export const WelcomePrompts = () => {
     userFlags.set(stateKey(current), 'skipped');
     advance();
   };
-  const mute = () => {
-    userFlags.set(MUTED, true);
-    setQueue([]);
-  };
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={later}>
@@ -115,16 +118,13 @@ export const WelcomePrompts = () => {
           <View style={styles.row}>
             <TouchableOpacity style={styles.secondary} onPress={later} activeOpacity={0.85}>
               <Ionicons name="time-outline" size={16} color={Colors.textPrimary} />
-              <Text style={styles.secondaryText}>{t('Later')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondary} onPress={skip} activeOpacity={0.85}>
-              <Ionicons name="play-skip-forward-outline" size={16} color={Colors.textPrimary} />
-              <Text style={styles.secondaryText}>{t('Skip this one')}</Text>
+              <Text style={styles.secondaryText}>{t('Skip for now')}</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={mute} style={styles.muteBtn}>
+          <Text style={styles.hint}>{t('We will remind you in {n} days.', { n: POSTPONE_DAYS })}</Text>
+          <TouchableOpacity onPress={skip} style={styles.muteBtn} hitSlop={8}>
             <Ionicons name="notifications-off-outline" size={14} color={Colors.textMuted} />
-            <Text style={styles.muteText}>{t('Mute these suggestions')}</Text>
+            <Text style={styles.muteText}>{t('Do not show this again')}</Text>
           </TouchableOpacity>
           {queue.length > 1 && <Text style={styles.count}>{t('1 of {n}', { n: queue.length })}</Text>}
         </Pressable>
@@ -155,8 +155,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 14,
   },
-  title: { color: Colors.textPrimary, fontSize: 21, fontWeight: '800', textAlign: 'center' },
-  body: { color: Colors.textSecondary, fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 8 },
+  title: { color: Colors.textPrimary, fontSize: 21, fontFamily: INTER.medium, textAlign: 'center' },
+  body: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 15, lineHeight: 22, textAlign: 'center', marginTop: 8 },
   cta: {
     flexDirection: 'row',
     gap: 8,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     marginTop: 20,
   },
-  ctaText: { color: Colors.background, fontSize: 15, fontWeight: '800' },
+  ctaText: { color: Colors.background, fontSize: 15, fontFamily: INTER.medium },
   row: { flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 10 },
   secondary: {
     flex: 1,
@@ -181,8 +181,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 12,
   },
-  secondaryText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  muteBtn: { flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 16 },
-  muteText: { color: Colors.textMuted, fontSize: 13 },
-  count: { color: Colors.textMuted, fontSize: 11, marginTop: 10 },
+  secondaryText: { color: Colors.textPrimary, fontSize: 14, fontFamily: INTER.medium },
+  hint: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 12, marginTop: 6 },
+  muteBtn: { flexDirection: 'row', gap: 6, alignItems: 'center', marginTop: 14 },
+  muteText: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 13 },
+  count: { color: Colors.textMuted, fontFamily: INTER.regular, fontSize: 11, marginTop: 10 },
 });

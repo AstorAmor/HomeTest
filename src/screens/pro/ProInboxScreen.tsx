@@ -10,6 +10,7 @@ import { ConsultRequest, Conversation } from '@/data/specialistTypes';
 import { useDeepState, useReloadOnFocus } from '@/hooks/useReloadOnFocus';
 
 import { dateLocale, t as tr } from '@/i18n';
+import { INTER } from '@/theme/fine';
 // Bandeja del especialista: solicitudes de los pacientes y chats abiertos.
 export const ProInboxScreen = () => {
   const router = useRouter();
@@ -87,13 +88,13 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 14 },
   tab: { borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 7 },
   tabOn: { backgroundColor: Colors.accent, borderColor: Colors.accent },
-  tabText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '700' },
-  muted: { color: Colors.textSecondary, fontSize: 13 },
+  tabText: { color: Colors.textSecondary, fontSize: 13, fontFamily: INTER.medium },
+  muted: { color: Colors.textSecondary, fontFamily: INTER.regular, fontSize: 13 },
   group: { backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 16, padding: 14, gap: 10 },
   groupHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  groupName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '800' },
+  groupName: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
   conv: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.cardBorder, borderRadius: 14, padding: 12 },
   avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: Colors.accent, fontWeight: '800' },
-  convName: { color: Colors.textPrimary, fontSize: 15, fontWeight: '700' },
+  avatarText: { color: Colors.accent, fontFamily: INTER.medium },
+  convName: { color: Colors.textPrimary, fontSize: 15, fontFamily: INTER.medium },
 });

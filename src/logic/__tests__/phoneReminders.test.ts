@@ -11,6 +11,8 @@ import {
   PhonePlanInput,
   planPhoneReminders,
   reminderData,
+  reminderKindLabel,
+  reminderTapRoute,
   resolvedPresented,
   temperatureReminders,
   usualMorningTime,
@@ -129,9 +131,24 @@ describe('tomas de medicación y suplementos', () => {
       input(ctxAt('2026-10-20T10:00:00', { medications: [med({ schedule: { type: 'times', times: ['21:00'] } }), med({ id: 'mg', name: 'Magnesio', schedule: { type: 'times', times: ['21:00'] } })] }))
     );
     expect(r[0].medIds).toEqual(['vitd', 'mg']);
-    expect(r[0].title).toBe('Your 21:00 doses');
-    expect(r[0].body).toContain('Vitamina D, Magnesio');
+    expect(r[0].title).toBe('Time for your doses');
+    expect(r[0].body).toBe('21:00 doses: mark them in Kuova when you take them.');
     expect(r).toHaveLength(7);
+  });
+
+  it('el aviso nunca dice qué medicamento es: se ve con el móvil bloqueado', () => {
+    const meds = [
+      med({ schedule: { type: 'times', times: ['09:00', '21:00'] } }),
+      med({ id: 'mg', name: 'Magnesio', schedule: { type: 'times', times: ['21:00'] } }),
+    ];
+    const r = doseReminders(input(ctxAt('2026-10-20T10:00:00', { medications: meds })));
+    expect(r.length).toBeGreaterThan(0);
+    for (const x of r) {
+      for (const name of ['Vitamina D', 'Magnesio']) expect(`${x.title} ${x.body}`).not.toContain(name);
+    }
+    const single = r.find((x) => x.medIds?.length === 1)!;
+    expect(single.title).toBe('Time for your dose');
+    expect(single.body).toBe('09:00 dose: mark it in Kuova when you take it.');
   });
 });
 
@@ -285,13 +302,39 @@ describe('ids estables y reprogramar', () => {
     const a = planPhoneReminders(input(ctx));
     const b = planPhoneReminders(input({ ...ctx, now: at('2026-10-20T10:05:00') }));
     expect(diffPending(a.map((x) => x.id), b)).toEqual({ cancel: [], add: [] });
+    // El nombre no sale en el aviso: cambiarlo no reprograma nada; otro medicamento, sí
     const renamed = planPhoneReminders(input({ ...ctx, medications: [med({ name: 'Vitamina D3' })] }));
-    expect(diffPending(a.map((x) => x.id), renamed).cancel).toHaveLength(a.length);
+    expect(diffPending(a.map((x) => x.id), renamed)).toEqual({ cancel: [], add: [] });
+    const other = planPhoneReminders(input({ ...ctx, medications: [med({ id: 'otra', name: 'Vitamina D' })] }));
+    expect(diffPending(a.map((x) => x.id), other).cancel).toHaveLength(a.length);
     expect(a.every((x) => x.id.startsWith(PHONE_ID_PREFIX))).toBe(true);
   });
 
   it('el diff no toca notificaciones que no son de Kuova', () => {
     expect(diffPending(['otra-app-1'], []).cancel).toEqual([]);
+  });
+});
+
+describe('tocar un aviso', () => {
+  const DEFAULT = 'expo.modules.notifications.actions.DEFAULT';
+  const dose = { action: DEFAULT, id: `${PHONE_ID_PREFIX}dose-x`, date: 1000, route: '/medications' };
+
+  it('la toma abre Medicación', () => {
+    expect(reminderTapRoute(dose, DEFAULT, new Set())).toBe('/medications');
+  });
+
+  it('el mismo toque solo abre la pantalla una vez (llega al escuchar y otra vez al volver a la app)', () => {
+    const seen = new Set<string>();
+    expect(reminderTapRoute(dose, DEFAULT, seen)).toBe('/medications');
+    expect(reminderTapRoute(dose, DEFAULT, seen)).toBeNull();
+    expect(reminderTapRoute({ ...dose, date: 2000 }, DEFAULT, seen)).toBe('/medications');
+  });
+
+  it('el aviso de prueba, los de otras apps, los botones y las rutas raras no abren nada', () => {
+    expect(reminderTapRoute({ ...dose, id: 'prueba-123' }, DEFAULT, new Set())).toBeNull();
+    expect(reminderTapRoute({ ...dose, action: 'otro-boton' }, DEFAULT, new Set())).toBeNull();
+    expect(reminderTapRoute({ ...dose, route: undefined }, DEFAULT, new Set())).toBeNull();
+    expect(reminderTapRoute({ ...dose, route: 'https://ejemplo.com' }, DEFAULT, new Set())).toBeNull();
   });
 });
 
@@ -330,17 +373,74 @@ describe('historial de lo que ya saltó', () => {
   });
 });
 
+describe('con el móvil bloqueado', () => {
+  // Los dos canales son PUBLIC (src/data/phoneReminders.ts): ningún aviso puede decir un dato de salud,
+  // ni en inglés ni en español. Si uno lo necesita, su canal vuelve a ser PRIVATE.
+  const HEALTH = /pes(o|ar|arte)|weigh|kg\b|temperat|°|ovul|f[eé]rtil|regla|period|ciclo|cycle|embaraz|pregnan|medic|vitamin|suplement|supplement|gluc|tensi[oó]n|pressure|s[ií]ntoma|symptom|dolor|pain/i;
+  const DOSE = /\b(dos(e|es|is)|tomas?)\b/i; // solo el canal de las tomas puede hablar de tomas
+  const goal = { goal: 'conceive' as const, regularCycles: 'yes' as const, tryingFor: 'under_6m' as const, logTemperature: true, answeredAt: iso('2026-10-01T10:00:00') };
+  const habit = Array.from({ length: 10 }, (_, i) => ({ fecha: iso(`2026-10-${String(8 + i).padStart(2, '0')}T21:00:00`), energy: 4 }));
+  const ctx = ctxAt('2026-10-18T22:00:00', {
+    medications: [med(), med({ id: 'mg', name: 'Magnesio', schedule: { type: 'times', times: ['21:00'] } })],
+    cycleGoal: goal,
+    temperatures: [{ fecha: iso('2026-10-18T07:00:00'), celsius: 36.4, source: 'manual' as const }],
+    checkIns: habit,
+  });
+  const weighIns = [{ valor: 72, fecha: iso('2026-10-14T07:50:00') }];
+  const all = [
+    ...doseReminders(input(ctx)),
+    ...temperatureReminders(input(ctx)),
+    ...weighInReminders(input(ctx, { weighIns })),
+    ...checkinReminders(input(ctx)),
+  ];
+  const dict = es as Record<string, string>;
+
+  it('hay de los cuatro tipos', () => {
+    expect(new Set(all.map((x) => x.kind))).toEqual(new Set(['dose', 'temperature', 'weigh_in', 'checkin']));
+  });
+
+  it('ningún aviso dice un dato de salud (en inglés)', () => {
+    expect(all.filter((x) => HEALTH.test(`${x.title} ${x.body}`)).map((x) => `${x.kind}: ${x.title} / ${x.body}`)).toEqual([]);
+    expect(all.filter((x) => x.kind !== 'dose' && DOSE.test(`${x.title} ${x.body}`)).map((x) => x.title)).toEqual([]);
+  });
+
+  it('ni en español', () => {
+    const doses = ['Time for your dose', 'Time for your doses', '{time} dose: mark it in Kuova when you take it.', '{time} doses: mark them in Kuova when you take them.'];
+    const reminders = ['Time to log your data in Kuova', 'It only takes a moment.', 'How have you been?', 'You were checking in regularly. 30 seconds keeps your trends going.'];
+    // Son exactamente las claves que usan los avisos de arriba
+    const used = new Set(all.flatMap((x) => [x.title, x.body]));
+    for (const k of [...doses.slice(0, 2), ...reminders]) expect(used.has(k)).toBe(true);
+    expect([...doses, ...reminders].filter((k) => !dict[k] || HEALTH.test(dict[k]))).toEqual([]);
+    expect(reminders.filter((k) => DOSE.test(dict[k]))).toEqual([]);
+  });
+
+  it('dentro de la app, la lista de próximos avisos sí dice qué es cada uno', () => {
+    expect(all.map((x) => reminderKindLabel(reminderData(x).kind))).not.toContain(null);
+    expect(reminderKindLabel('weigh_in')).toBe('Weekly weigh-in');
+    expect(reminderKindLabel('otra cosa')).toBeNull();
+  });
+
+  it('peso y temperatura llevan el mismo texto: no se distingue cuál es', () => {
+    const temp = all.find((x) => x.kind === 'temperature')!;
+    const weigh = all.find((x) => x.kind === 'weigh_in')!;
+    expect([temp.title, temp.body]).toEqual([weigh.title, weigh.body]);
+    expect(temp.id).not.toBe(weigh.id); // abren pantallas distintas
+  });
+});
+
 describe('textos', () => {
   // Las claves nuevas tienen su español y no diagnostican ni hablan de dosis
   const KEYS = [
-    '{name}: your {time} dose',
-    'Your {time} doses',
-    'Mark it in Kuova when you take it.',
-    '{names}. Mark them in Kuova when you take them.',
+    'Time for your dose',
+    'Time for your doses',
+    '{time} dose: mark it in Kuova when you take it.',
+    '{time} doses: mark them in Kuova when you take them.',
     'Time for your weekly weigh-in',
     'In the morning, after the toilet and before breakfast: that way one week compares with the next.',
     'At the time of each dose with reminders on.',
-    'Weigh-in, morning temperature and check-in.',
+    'Time to log your data in Kuova',
+    'It only takes a moment.',
+    'To log your data, and the check-in.',
     'On your phone',
     'Get your reminders even when the app is closed.',
     'Kuova notifications are off in your phone settings.',

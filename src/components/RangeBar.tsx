@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Colors, withAlpha } from '@/constants/colors';
 import { rangeBarLayout } from '@/utils/rangeBar';
 import { num } from '@/i18n';
+import { INTER } from '@/theme/fine';
 
 // El rango del laboratorio como una línea: en verde lo que está dentro, en naranja suave lo de fuera,
 // los límites escritos debajo y el valor de la analítica señalado con un triángulo. Sin rojo: un valor
@@ -62,5 +63,5 @@ const styles = StyleSheet.create({
   in: { backgroundColor: withAlpha(Colors.ok, 0.85) },
   out: { backgroundColor: withAlpha(Colors.attention, 0.5) },
   labels: { height: 16, marginTop: 3 },
-  label: { position: 'absolute', width: LABEL_W, marginLeft: -LABEL_W / 2, textAlign: 'center', color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
+  label: { position: 'absolute', width: LABEL_W, marginLeft: -LABEL_W / 2, textAlign: 'center', color: Colors.textMuted, fontSize: 11, fontFamily: INTER.medium },
 });
