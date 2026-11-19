@@ -3105,3 +3105,32 @@ Astor: «Pruebas y pública».
 - **Beta de amigos, el mismo día (Astor: «sí, a la beta ya»):** el mismo código (master 99fa458 = 0d395ca) al canal
   `pruebas`, Android + iOS: grupo 2c5983c7-a386-4ebe-b38b-e94ff8f182a3 (`eas-cli update --channel pruebas
   --environment preview`). El anterior del canal es b9ceaaa3 (Android) / f0d3332b (iOS).
+
+## 2026-11-19 — Hoy de escritorio con el lenguaje fino y lo de la noche del 18 (master a61db25, PUBLICADO)
+
+Astor, vía Curro (demo para la candidatura al INSEAD AI Founder Sprint, cierra el 1/12): «Hoy no está para nada
+actualizado […] me encaja que no sea igual que la del móvil, cuando está expandido, pero la estética tiene que ir en la
+misma línea». Luego: «Yes, commit and publish».
+
+- **Punto de vuelta:** etiqueta `app-publica-antes-de-hoy-escritorio` en GitHub (= 507390e, código 0d395ca). En
+  Expo, el grupo anterior del canal `preview` es aadb1327; en Vercel, el despliegue anterior de cada web.
+- **Qué se unió:** `entorno-pruebas` 4c74938 en master (merge sin conflictos, `src` idéntico, sin cambios de
+  dependencias, `supabase/`, `app.config.js` ni `eas.json`; tsc 0, 929 tests). Dos commits:
+  - 4c74938: el Hoy de la web en escritorio (`/resumen`, `src/screens/WebSummaryScreen.tsx`; sale con la web del
+    paciente, `?web=1` o `EXPO_PUBLIC_WEB_SHELL=1`, en ventanas de 900 px o más). Antes eran tarjetas de colores
+    sobre fondo plano; ahora, el lenguaje fino: fondo esmeralda (transparente sobre `ScreenBackdrop`), la nebulosa
+    del check-in, los tres círculos de Hoy (Preparación con el objetivo de sueño, como en el móvil; Semana; Ciclo),
+    «Lo que mirar hoy» en la caja fina con «Ver», la enhorabuena o el ánimo de la semana (`MetasToday`), «Tu panel»
+    en bloques finos con su línea de 7 días (pasos jade, sueño lavanda, pulso oro), tu último informe como en
+    Análisis (rosco, marcadores con su línea de rango) y el sueño de 14 días. Sin botón dentro de botón.
+  - 0f93dea (noche del 18, ya en la beta de amigos 019bcd1c): informe subido fluido, ciclo con la próxima regla
+    primero y fertilidad, pasos y sueño a mano (`provider: 'manual'` en `wearable_daily`, sin migración), «Regla» en
+    la K para mujeres, comida sin puntos.
+- **Publicado:** EAS `preview` grupo ccc59ab1-ab1f-4328-b7ea-2a4b51881c24 (Android + iOS) y las dos webs. Los dos
+  bundles publicados llevan el código nuevo, apuntan a la base de producción y no llevan la marca «Pruebas».
+  Sin comprobar: el Hoy de escritorio con sesión iniciada en la web publicada (comprobado en local, demo de
+  ejemplo, a 1100 y 1400 px y con perfil de mujer), cualquier teléfono.
+- **Al construir:** en `hometest-app-publica`, `.expo/types/router.d.ts` (generado, ignorado por git) no tenía las
+  rutas nuevas y tsc fallaba con `/log-steps` y `/log-sleep`; se copió el de `hometest-app-staging`.
+- **No tocado:** la base de producción, la beta de amigos (canal `pruebas`, sigue en 019bcd1c, que ya llevaba
+  0f93dea) y Kuova Pruebas (el cambio solo se ve en la web de escritorio).
