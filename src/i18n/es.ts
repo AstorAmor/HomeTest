@@ -1739,6 +1739,10 @@ export const es: Record<string, string> = {
   'Menstrual Cycle': 'Ciclo menstrual',
   'Computing prediction…': 'Calculando la predicción…',
   'Next period predicted': 'Próxima regla prevista',
+  'Your cycle': 'Tu ciclo',
+  // Pasos y sueño apuntados a mano desde la K (src/screens/LogDailyScreen.tsx, 2026-11-18)
+  'All the steps of that day.': 'Todos los pasos de ese día.',
+  'The night that ends on that day.': 'La noche que termina ese día.',
   'Median length': 'Duración mediana',
   'Average length': 'Duración media',
   'Period days': 'Días de regla',
@@ -1850,6 +1854,13 @@ export const es: Record<string, string> = {
   Meal: 'Comida',
   'Any added sugar?': '¿Lleva azúcar añadido?',
   'Save meal · +10 points': 'Guardar comida · +10 puntos',
+  // Apuntar comida sin puntos (2026-11-18): qué es y lo que lleva
+  'Save meal': 'Guardar comida',
+  'Meal logged': 'Comida apuntada',
+  Contains: 'Lleva',
+  'No added sugar': 'Sin azúcar añadido',
+  'Added sugar': 'Con azúcar añadido',
+  '{n} days in a row logging meals.': '{n} días seguidos apuntando comidas.',
   'Got it': 'Entendido',
   'Urine today': 'Orina de hoy',
   'Colour and how often say a lot about how hydrated you are.': 'El color y la frecuencia dicen mucho de lo hidratado que estás.',
@@ -4790,6 +4801,17 @@ export const es: Record<string, string> = {
   Appetite: 'Apetito',
   Body: 'Cuerpo',
   'Your watch': 'Tu reloj',
+  Fertility: 'Fertilidad',
+  'Pregnancy is unlikely in these days, but possible with short cycles: sperm can survive up to 5 days.':
+    'Un embarazo es poco probable estos días, pero posible con ciclos cortos: los espermatozoides pueden sobrevivir hasta 5 días.',
+  'The fertile window opens about 5 days before ovulation; the chance of pregnancy rises day by day.':
+    'La ventana fértil se abre unos 5 días antes de la ovulación; la probabilidad de embarazo sube día a día.',
+  'The most fertile days: the chance is highest in the 2 days before ovulation and on the day itself.':
+    'Los días más fértiles: la probabilidad es máxima los 2 días antes de la ovulación y el mismo día.',
+  'From about a day after ovulation, pregnancy is unlikely until the next cycle. If your period is late, a pregnancy test can clear it up.':
+    'Desde un día después de la ovulación, un embarazo es poco probable hasta el ciclo siguiente. Si la regla se retrasa, una prueba de embarazo lo aclara.',
+  'Fertile days are estimated from your cycles and are not a contraceptive method.':
+    'Los días fértiles se estiman con tus ciclos y no son un método anticonceptivo.',
   'It can be lower in the first days, especially with pain or heavy bleeding.': 'Puede estar más baja los primeros días, sobre todo con dolor o sangrado abundante.',
   'Premenstrual symptoms usually ease once your period starts.': 'Los síntomas premenstruales suelen remitir al empezar la regla.',
   'Period pain can make sleep lighter on the first nights.': 'El dolor de regla puede hacer el sueño más ligero las primeras noches.',
@@ -4806,7 +4828,7 @@ export const es: Record<string, string> = {
   'In the last days there can be irritability, more sensitivity or low mood (premenstrual symptoms).': 'En los últimos días puede haber irritabilidad, más sensibilidad o ánimo bajo (síntomas premenstruales).',
   'Body temperature is slightly higher and sleep can be lighter before your period.': 'La temperatura corporal es algo más alta y el sueño puede ser más ligero antes de la regla.',
   'It may increase: energy use at rest rises slightly.': 'Puede aumentar: el gasto en reposo sube ligeramente.',
-  'Resting heart rate often rises 1–3 bpm and HRV drops. Kuova allows for it in your daily readiness.': 'El pulso en reposo suele subir 1–3 lpm y la VFC bajar. Kuova lo tiene en cuenta en «Tu estado de hoy».',
+  'Resting heart rate often rises 1–3 bpm and HRV drops. Kuova allows for it in your daily readiness.': 'El pulso en reposo suele subir 1–3 lpm y la VFC bajar. Kuova lo tiene en cuenta en tu «Preparación».',
   'With higher temperature and pulse, effort can feel harder; adjust intensity to how you feel.': 'Con más temperatura y pulso, el esfuerzo puede sentirse mayor; ajusta la intensidad a cómo te encuentres.',
   'Average trends: each person varies. With your daily check-in you will see your own pattern.': 'Son tendencias medias y cada persona varía. Con tu check-in diario verás tu propio patrón.',
   'If pain or symptoms before your period disrupt your daily life, talk to your doctor.': 'Si el dolor o los síntomas antes de la regla alteran tu día a día, coméntalo con tu médico.',

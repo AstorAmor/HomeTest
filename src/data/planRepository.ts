@@ -4,7 +4,7 @@ import { compressPhoto } from '@/utils/imageUpload';
 import { planHabits, PlanHabits } from '@/logic/planHabits';
 import { workoutTypeFromRow, workoutTypeToRow } from '@/logic/workoutSports';
 import { wearableRepository } from '@/wearables/wearableRepository';
-import { toDailySeries } from '@/wearables/seriesLogic';
+import { onlyManual, overlayManual, toDailySeries } from '@/wearables/seriesLogic';
 import { generateHuaweiDummy } from '@/wearables/providers/huaweiDummy';
 import { checkInRepository } from './checkInRepository';
 import { showSamples } from './dataMode';
@@ -171,6 +171,10 @@ export async function loadPlanHabits(now = new Date()): Promise<PlanHabits> {
     medicationRepository.getAll().catch(() => []),
     doseRepository.getAll().catch(() => []),
   ]);
-  const series = toDailySeries(records.length ? records : showSamples() ? generateHuaweiDummy(28, now) : []);
+  // Sin reloj (o solo con lo apuntado a mano), en la demo y las cuentas de prueba, el reloj de ejemplo con eso encima
+  const series =
+    (!records.length || onlyManual(records)) && showSamples()
+      ? overlayManual(toDailySeries(generateHuaweiDummy(28, now)), records)
+      : toDailySeries(records);
   return planHabits(series, { workouts, calm, checkIns, meals, water, meds: { items: medItems, logs: doseLogs } }, now);
 }

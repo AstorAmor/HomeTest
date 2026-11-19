@@ -7,7 +7,9 @@
 // tenga acceso a pulso y sueño. huawei: conexión directa (Health Kit, pendiente).
 // health_connect: Android (Xiaomi, Garmin, Oura, Samsung, Google...).
 // apple_health: iPhone (Apple Watch y las apps que escriben en Salud: Oura, Garmin, WHOOP, Huawei...).
-export type WearableProviderId = 'huawei_dummy' | 'huawei' | 'health_connect' | 'apple_health';
+// 'manual': los pasos y el sueño que se apuntan a mano desde la K (fundador, 2026-11-18: «quiero poder añadir también
+// pasos y sueño»)
+export type WearableProviderId = 'huawei_dummy' | 'huawei' | 'health_connect' | 'apple_health' | 'manual';
 
 // Detalle de cada noche, del mismo día y fuente que sleep_duration: minutos en cada fase (solo si la
 // fuente manda fases) y la hora de dormirte y de despertarte, en minutos desde la medianoche del día

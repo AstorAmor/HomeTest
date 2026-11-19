@@ -127,14 +127,45 @@ export const wearableRepository = {
     return this.upsertRecords(incoming);
   },
 
-  async clearRecords(): Promise<void> {
+  // Con keepManual, solo lo de los relojes y apps (lo apuntado a mano se queda: al borrar los datos del reloj)
+  async clearRecords(opts: { keepManual?: boolean } = {}): Promise<void> {
     if (isRemoteActive()) {
-      const { error } = await supabase!.from('wearable_daily').delete().eq('user_id', getCurrentUserId()!);
+      let q = supabase!.from('wearable_daily').delete().eq('user_id', getCurrentUserId()!);
+      if (opts.keepManual) q = q.neq('provider', 'manual');
+      const { error } = await q;
       fail(error);
-      readCache.invalidate<DailyWearableRecord[]>(CACHE_KEY, () => []);
+      if (opts.keepManual) readCache.invalidate(CACHE_KEY);
+      else readCache.invalidate<DailyWearableRecord[]>(CACHE_KEY, () => []);
+      return;
+    }
+    if (opts.keepManual) {
+      const kept = (await getLocalRecords()).filter((r) => r.provider === 'manual');
+      await AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(kept));
       return;
     }
     await AsyncStorage.removeItem(RECORDS_KEY);
+  },
+
+  // Borra un registro concreto (lo apuntado a mano de un día)
+  async removeRecord(r: DailyWearableRecord): Promise<void> {
+    if (isRemoteActive()) {
+      const { error } = await supabase!
+        .from('wearable_daily')
+        .delete()
+        .eq('user_id', getCurrentUserId()!)
+        .eq('date', r.date)
+        .eq('metric', r.metric)
+        .eq('source_name', r.sourceName)
+        .eq('provider', r.provider)
+        .eq('raw_type_id', r.rawTypeId);
+      fail(error);
+      readCache.invalidate(CACHE_KEY);
+      return;
+    }
+    const same = (x: DailyWearableRecord) =>
+      x.date === r.date && x.metric === r.metric && x.sourceName === r.sourceName && x.provider === r.provider && x.rawTypeId === r.rawTypeId;
+    const kept = (await getLocalRecords()).filter((x) => !same(x));
+    await AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(kept));
   },
 
   // Sube a la cuenta los registros guardados en el móvil. Devuelve cuántos.

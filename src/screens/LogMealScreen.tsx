@@ -5,9 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { Confetti } from '@/components/Confetti';
-import { GlowRing, ringTones } from '@/components/GlowRing';
+import { Tag } from '@/components/fine/Fine';
 import { FButton, FChip, FLink, formStyles } from '@/components/fine/FineForm';
+import { FOOD_GROUPS, inferFoodGroups } from '@/logic/foodGroups';
 import { MealEntry, mealStreakDays, saveMeal } from '@/data/planRepository';
 import { t } from '@/i18n';
 import { expectSystemUi } from '@/utils/systemUi';
@@ -30,10 +30,12 @@ const guessMealType = (): MealEntry['mealType'] => {
   return 'snack';
 };
 
-// Foto de la comida + qué es. Gamificado (puntos y racha). Las fotos con su
-// descripción quedan guardadas: a futuro, dataset para entrenar un modelo propio.
-// Rediseño del 2026-11-16 (lenguaje fino): la foto en un recuadro de línea discontinua fina con la cámara a línea,
-// cabeceras pequeñas, chips con borde y el botón en esmeralda; al guardar, los puntos dentro de un aro de oro.
+// Foto de la comida + qué es. Las fotos con su descripción quedan guardadas: a futuro, dataset para entrenar un
+// modelo propio. Rediseño del 2026-11-16 (lenguaje fino): la foto en un recuadro de línea discontinua fina con la
+// cámara a línea, cabeceras pequeñas, chips con borde y el botón en esmeralda.
+// Desde el 2026-11-18, sin puntos ni confeti (fundador: «save meal + 10 points... me aporta poco... sería mejor que
+// pongamos qué es, qué cosas contiene»): debajo de lo que escribes, lo que lleva (los grupos que se deducen del texto,
+// como en Digestión: src/logic/foodGroups.ts) y, al guardar, la comida con su foto, qué es y lo que lleva.
 export const LogMealScreen = () => {
   const router = useRouter();
   const [photoUri, setPhotoUri] = useState<string>();
@@ -42,6 +44,9 @@ export const LogMealScreen = () => {
   const [addedSugar, setAddedSugar] = useState<boolean | null>(null);
   const [error, setError] = useState('');
   const [streak, setStreak] = useState<number | null>(null);
+  // Lo que lleva, deducido de lo escrito (gluten, lácteos, legumbres, frito…)
+  const groups = inferFoodGroups(description).map((g) => t(FOOD_GROUPS.find((f) => f.id === g.group)!.label));
+  const typeLabel = t(MEAL_TYPES.find((m) => m.id === mealType)!.label);
 
   const takePhoto = async () => {
     setError('');
@@ -87,20 +92,24 @@ export const LogMealScreen = () => {
   };
 
   if (streak !== null) {
+    const sugar = addedSugar === false ? t('No added sugar') : addedSugar ? t('Added sugar') : null;
     return (
       <SafeAreaView style={[styles.safeArea, styles.centered]}>
-        <Confetti count={50} />
-        <View style={styles.pointsBadge}>
-          <GlowRing progress={1} colors={ringTones(FINE.gold)} size={124} stroke={5}>
-            <Text style={styles.pointsText}>+10</Text>
-            <Text style={styles.pointsLabel}>{t('points')}</Text>
-          </GlowRing>
-        </View>
-        <Text style={styles.doneTitle}>{t('Meal logged!')}</Text>
-        <Text style={styles.doneText}>
-          {streak > 1 ? t('🔥 {n}-day streak. Keep it going!', { n: streak }) : t('Log tomorrow too to start a streak.')}
-          {addedSugar === false ? `\n${t('No added sugar, nice one.')}` : ''}
-        </Text>
+        <Text style={[fine.kicker, styles.doneKicker]}>{t('Meal logged')}</Text>
+        {photoUri ? <Image source={{ uri: photoUri }} style={styles.donePhoto} contentFit="cover" /> : null}
+        <Text style={styles.doneTitle}>{description.trim() || typeLabel}</Text>
+        <Text style={styles.doneSub}>{[description.trim() ? typeLabel : null, sugar].filter(Boolean).join(' · ')}</Text>
+        {groups.length > 0 && (
+          <>
+            <Text style={[fine.secTitle, styles.doneLabel]}>{t('Contains')}</Text>
+            <View style={[styles.chips, styles.doneChips]}>
+              {groups.map((g) => (
+                <Tag key={g} label={g} />
+              ))}
+            </View>
+          </>
+        )}
+        {streak > 1 ? <Text style={styles.doneText}>{t('{n} days in a row logging meals.', { n: streak })}</Text> : null}
         <FButton label={t('Done')} onPress={() => router.back()} style={styles.doneBtn} />
       </SafeAreaView>
     );
@@ -139,6 +148,14 @@ export const LogMealScreen = () => {
           onChangeText={setDescription}
           accessibilityLabel={t('What is it?')}
         />
+        {groups.length > 0 && (
+          <View style={styles.contains}>
+            <Text style={fine.rowSub}>{t('Contains')}</Text>
+            {groups.map((g) => (
+              <Tag key={g} label={g} />
+            ))}
+          </View>
+        )}
 
         <Text style={styles.label}>{t('Meal')}</Text>
         <View style={styles.chips} accessibilityRole="radiogroup">
@@ -159,7 +176,7 @@ export const LogMealScreen = () => {
       </KeyboardAwareScrollView>
 
       <KeyboardFooter>
-        <FButton label={t('Save meal · +10 points')} onPress={save} disabled={!photoUri && !description.trim()} style={styles.cta} />
+        <FButton label={t('Save meal')} onPress={save} disabled={!photoUri && !description.trim()} style={styles.cta} />
       </KeyboardFooter>
     </SafeAreaView>
   );
@@ -197,10 +214,13 @@ const styles = StyleSheet.create({
   input: { ...formStyles.input },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   cta: { marginHorizontal: 20, marginBottom: 12 },
-  doneBtn: { alignSelf: 'stretch' },
-  pointsBadge: { marginBottom: 20 },
-  pointsText: { ...ff('light'), color: FINE.gold, fontSize: 34, lineHeight: 40, fontVariant: ['tabular-nums'] },
-  pointsLabel: { ...ff('regular'), color: FINE.gold, fontSize: 12 },
-  doneTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 26, lineHeight: 32, marginBottom: 8 },
-  doneText: { ...ff('regular'), color: FINE.mute, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 32 },
+  doneBtn: { alignSelf: 'stretch', marginTop: 28 },
+  contains: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 10 },
+  doneKicker: { marginBottom: 16 },
+  donePhoto: { width: 180, height: 180, borderRadius: 20, marginBottom: 18 },
+  doneTitle: { ...ff('medium'), color: FINE.ivory, fontSize: 24, lineHeight: 30, textAlign: 'center' },
+  doneSub: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 4 },
+  doneLabel: { marginTop: 22, marginBottom: 8 },
+  doneChips: { justifyContent: 'center' },
+  doneText: { ...ff('regular'), color: FINE.mute, fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 20 },
 });

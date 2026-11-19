@@ -114,7 +114,7 @@ export const MoreScreen = () => {
             </TouchableOpacity>
           </TourTarget>
 
-          <SecHead title={t('Your record')} />
+          <SecHead title={t('Your record')} style={styles.recordHead} />
           <TourTarget id="more.profile" scroll={tourScroll}>
             <FRow title={t('My Profile')} sub={t('View and edit details')} onPress={() => router.push('/profile')} />
           </TourTarget>
@@ -175,7 +175,9 @@ const styles = StyleSheet.create({
   },
   content: { paddingBottom: 40 },
   pad: { paddingHorizontal: 20 },
-  // La línea jade de debajo del nombre (como «Próximo análisis · 26 mar» del prototipo)
+  // La línea jade de debajo del nombre (como «Próximo análisis · 26 mar» del prototipo). Sin raya propia debajo: la de
+  // «Tu ficha» va justo después (fundador, 2026-11-18: «aparece con una línea fina debajo... me sobra, creo que podría
+  // estar encima de la línea de YOUR RECORD y ya»)
   subLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -184,8 +186,8 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingVertical: 9,
     borderTopWidth: 1,
-    borderBottomWidth: 1,
     borderColor: FINE.line,
   },
   subLineText: { ...fine.link, flex: 1 },
+  recordHead: { marginTop: 0 },
 });

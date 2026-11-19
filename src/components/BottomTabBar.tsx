@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, type Href } from 'expo-router';
@@ -8,6 +8,7 @@ import { TourTarget } from '@/components/tour/TourTarget';
 import { K_PATH } from '@/components/LaunchIntro';
 import { DumbbellIcon } from '@/components/fine/DumbbellIcon';
 import { PathIcon } from '@/components/fine/RoleEmblem';
+import { profileRepository } from '@/data/profileRepository';
 import { FINE, ff, fine } from '@/theme/fine';
 
 type TabId = 'today' | 'plan' | 'analysis' | 'you';
@@ -69,14 +70,21 @@ const LOG_PATHS = {
   stools: 'M9 4a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM9 9h.01M9 4h8a3 3 0 0 1 3 3v12.5h-7V13',
   urine: 'M12 3.2c-3.1 3.8-5.6 7.1-5.6 10.3a5.6 5.6 0 0 0 11.2 0c0-3.2-2.5-6.5-5.6-10.3z',
   report: 'M7 3.5h7l4 4V20.5H7zM14 3.5v4h4M9.8 12.5h4.4M9.8 16h4.4',
+  // Pasos (dos huellas) y sueño (la luna), para apuntarlos a mano
+  steps: 'M8 3.5c1.7 0 2.6 1.9 2.6 4.2S9.6 12 8 12 5.4 10 5.4 7.7 6.3 3.5 8 3.5zM6 14.5h4l-.4 2.2a1.6 1.6 0 0 1-3.2 0zM16 7.5c1.7 0 2.6 1.9 2.6 4.2S17.6 16 16 16s-2.6-2-2.6-4.3.9-4.2 2.6-4.2zM14 18.5h4l-.4 2.2a1.6 1.6 0 0 1-3.2 0z',
+  sleep: 'M19.5 14.5A7.8 7.8 0 1 1 9.5 4.5a6.2 6.2 0 0 0 10 10z',
+  // La regla: un calendario con una gota
+  period: 'M5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5zM4 9.5h16M8.5 3v3.5M15.5 3v3.5M12 12c-1.3 1.6-2.2 2.8-2.2 3.9a2.2 2.2 0 0 0 4.4 0c0-1.1-.9-2.3-2.2-3.9z',
 } as const;
 type LogIcon = keyof typeof LOG_PATHS | 'weights';
 
 // «Apuntar» (el botón K): cada cosa lleva a su pantalla de apuntar, que ya existe
-const LOG_ITEMS: { label: string; to: Href; icon: LogIcon }[] = [
+const LOG_ITEMS: { label: string; to: Href; icon: LogIcon; female?: boolean }[] = [
   // Lo primero, el diario de síntomas (fundador, 2026-11-17: «quiero añadir al principio una opción que sea "Síntoma"»)
   { label: 'Symptom', to: '/log-symptom', icon: 'symptom' },
   { label: 'Check-in', to: '/check-in', icon: 'checkin' },
+  // Solo para mujeres (fundador, 2026-11-18: «no aparece loguear period (si soy mujer, quiero que aparezca)»)
+  { label: 'Period', to: '/log-cycle', icon: 'period', female: true },
   { label: 'Weight', to: '/log-weight', icon: 'weight' },
   { label: 'Blood pressure', to: '/log-blood-pressure', icon: 'pressure' },
   { label: 'Glucose', to: '/log-glucose', icon: 'glucose' },
@@ -84,6 +92,9 @@ const LOG_ITEMS: { label: string; to: Href; icon: LogIcon }[] = [
   { label: 'Meal', to: '/log-meal', icon: 'meal' },
   // Las pesas del entrenador personal y de la racha de fuerza
   { label: 'Workout', to: '/log-workout', icon: 'weights' },
+  // Pasos y sueño a mano, para quien no lleva reloj o quiere corregir un día (fundador, 2026-11-18)
+  { label: 'Steps', to: '/log-steps', icon: 'steps' },
+  { label: 'Sleep', to: '/log-sleep', icon: 'sleep' },
   { label: 'Dose', to: '/medications', icon: 'dose' },
   // Digestión, heces y orina (fundador, 2026-11-16: «faltaría también orina y heces, digestión»)
   { label: 'Digestion', to: '/log-digestion', icon: 'digestion' },
@@ -174,6 +185,16 @@ function LogSheet({ visible, onClose }: { visible: boolean; onClose: () => void 
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [gridW, setGridW] = useState(0);
+  // El sexo del perfil, al abrir la hoja (puede haber cambiado en Mi perfil)
+  const [female, setFemale] = useState(() => profileRepository.peek()?.sex === 'female');
+  useEffect(() => {
+    if (!visible) return;
+    profileRepository
+      .get()
+      .then((p) => setFemale(p?.sex === 'female'))
+      .catch(() => undefined);
+  }, [visible]);
+  const items = LOG_ITEMS.filter((it) => !it.female || female);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
@@ -191,7 +212,7 @@ function LogSheet({ visible, onClose }: { visible: boolean; onClose: () => void 
             bounces={false}
             onLayout={(e) => setGridW(e.nativeEvent.layout.width)}
           >
-            {LOG_ITEMS.map((it) => (
+            {items.map((it) => (
               <TouchableOpacity
                 key={it.label}
                 style={[styles.cell, gridW > 0 && { width: Math.floor((gridW - 2 * GRID_GAP) / 3) }]}
