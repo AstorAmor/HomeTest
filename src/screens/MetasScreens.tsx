@@ -46,6 +46,7 @@ import {
   sourceText,
   toggleSel,
   tooMany,
+  unitCase,
   unitWord,
   valuesFor,
   weekStartOf,
@@ -386,6 +387,7 @@ export function MetasAreaScreen() {
       {first && (
         <Text style={fine.note}>
           {t('Your first week counts from {day}: weekly targets go in proportion.', { day: `${weekdayName(days[week.from])} ${dateOfDay(days[week.from])}` })}
+          {week.current ? ` ${t('You can also mark the days before.')}` : ''}
         </Text>
       )}
       <SecHead
@@ -505,16 +507,19 @@ export function MetaAdjustScreen() {
   const id = String(rawId ?? '');
   const api = useMetas();
   const [draft, setDraft] = useState<MetaCfg | null>(null);
+  const [lim, setLim] = useState<boolean | null>(null); // las tuyas: «al menos» o «menos de», si lo cambias
   const loaded = api.data;
   useEffect(() => {
     if (loaded && !draft) setDraft(cfgOf(loaded.state, id));
   }, [loaded, draft, id]);
   if (!api.data || !draft) return <Loading title={t('Adjust your target')} />;
   const s = api.data.state;
-  const preview = withCfg(s, id, draft);
+  const withDraft = withCfg(s, id, draft);
+  const preview = lim == null ? withDraft : { ...withDraft, custom: withDraft.custom.map((c) => (c.id === id ? { ...c, limit: lim } : c)) };
   const m = resolveMeta(preview, id);
   if (!m) return <Loading title={t('Adjust your target')} />;
   const def = m.def;
+  const ownLimit = !!m.custom && !(m.kind === 'yesno' && m.per === 'day');
   const save = () => {
     api.update(preview);
     router.canGoBack() ? router.back() : router.replace({ pathname: '/metas-area', params: { area: m.area } });
@@ -565,7 +570,16 @@ export function MetaAdjustScreen() {
       )}
       {!(m.kind === 'yesno' && m.per === 'day') && (
         <>
-          <Text style={ms.label}>{m.limit ? t('Your limit: less than') : m.kind === 'yesno' ? t('Days a week') : t('Your target')}</Text>
+          <Text style={ms.label}>{ownLimit ? (m.kind === 'yesno' ? t('Days a week') : t('Your target')) : m.limit ? t('Your limit: less than') : m.kind === 'yesno' ? t('Days a week') : t('Your target')}</Text>
+          {ownLimit && (
+            <LimitSwitch
+              limit={m.limit}
+              onChange={(l) => {
+                setLim(l);
+                if (l && draft.tgt < 2) setDraft({ ...draft, tgt: 2 });
+              }}
+            />
+          )}
           <TargetStepper m={m} onChange={(tgt) => setDraft({ ...draft, tgt })} />
         </>
       )}
@@ -589,25 +603,44 @@ export function MetaAdjustScreen() {
   );
 }
 
+// «Al menos · Menos de» de una meta tuya (2026-11-20: «puedes poner que quieres fumar menos de 5 al día», y en las
+// tuyas no se podía)
+function LimitSwitch({ limit, onChange }: { limit: boolean; onChange: (limit: boolean) => void }) {
+  return (
+    <Segmented<'min' | 'limit'>
+      options={[
+        ['min', t('At least')],
+        ['limit', t('Less than')],
+      ]}
+      value={limit ? 'limit' : 'min'}
+      onChange={(k) => onChange(k === 'limit')}
+    />
+  );
+}
+
 // ===== Otra meta (la tuya) =====
 export function MetaCustomScreen() {
   const { area } = useLocalSearchParams<{ area?: string }>();
   const a: Area = isArea(area) ? area : 'ej';
   const router = useRouter();
   const api = useMetas();
-  const [n, setN] = useState({ name: '', kind: 'yesno' as Kind, per: 'day' as Per, q: 20, days: 5, unit: '' });
+  const [n, setN] = useState({ name: '', kind: 'yesno' as Kind, per: 'day' as Per, q: 20, days: 5, unit: '', limit: false });
   if (!api.data) return <Loading title={t('Other target')} />;
   const s = api.data.state;
   const add = () => {
     const num = Math.max(0, ...s.custom.map((c) => Number(c.id.replace('own-', '')) || 0)) + 1;
     const id = `own-${num}`;
     const amount = n.kind === 'amount';
-    const custom = [...s.custom, { id, area: a, name: n.name.trim(), kind: n.kind, unit: amount ? n.unit.trim() : '', max: Math.max(20, n.q * 2) }];
+    const limit = n.limit && (amount || n.per === 'week');
+    const custom = [...s.custom, { id, area: a, name: n.name.trim(), kind: n.kind, unit: amount ? unitCase(n.unit) : '', max: Math.max(20, n.q * 2), ...(limit ? { limit: true } : {}) }];
     const cfg = { ...s.cfg, [id]: { tgt: amount ? n.q : n.per === 'week' ? n.days : 1, per: n.per } };
     api.update({ ...s, custom, cfg, sel: { ...s.sel, [a]: [...s.sel[a], id] } });
     router.canGoBack() ? router.back() : router.replace({ pathname: '/metas-elegir', params: { area: a } });
   };
   const ready = !!n.name.trim();
+  // Un límite empieza en 2 («menos de 1» sería «ninguno»: eso es un sí / no)
+  const lo = n.limit ? 2 : 1;
+  const setLimit = (limit: boolean) => setN({ ...n, limit, q: Math.max(limit ? 2 : 1, n.q), days: Math.max(limit ? 2 : 1, n.days) });
   return (
     <MetasScreenFrame title={t('Other target')}>
       <Text style={ms.sub}>{t('For {area}: a name, how it is counted and how often.', { area: t(AREA_NAME[a]) })}</Text>
@@ -632,16 +665,18 @@ export function MetaCustomScreen() {
       {n.kind === 'amount' && (
         <>
           <Text style={ms.label}>{t('How much')}</Text>
+          <LimitSwitch limit={n.limit} onChange={setLimit} />
           <View style={styles.qRow}>
-            <SmallStepper value={n.q} onChange={(q) => setN({ ...n, q })} max={999} />
+            <SmallStepper value={n.q} onChange={(q) => setN({ ...n, q })} min={lo} max={999} />
             <TextInput
-              style={[styles.input, { flex: 1 }]}
+              style={[styles.input, { flex: 1, minWidth: 0 }]}
               value={n.unit}
               maxLength={20}
               onChangeText={(unit) => setN({ ...n, unit })}
               placeholder={t('Unit (optional)')}
               placeholderTextColor={FINE.mute}
               accessibilityLabel={t('Unit')}
+              autoCapitalize="none"
             />
           </View>
         </>
@@ -658,7 +693,8 @@ export function MetaCustomScreen() {
       {n.kind === 'yesno' && n.per === 'week' && (
         <>
           <Text style={ms.label}>{t('Days a week')}</Text>
-          <SmallStepper value={n.days} onChange={(days) => setN({ ...n, days })} max={7} />
+          <LimitSwitch limit={n.limit} onChange={setLimit} />
+          <SmallStepper value={n.days} onChange={(days) => setN({ ...n, days })} min={lo} max={7} />
         </>
       )}
       <Text style={ms.label}>{t('It will look like this')}</Text>

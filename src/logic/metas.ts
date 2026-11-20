@@ -262,6 +262,9 @@ export interface CustomMeta {
   kind: Kind;
   unit: string; // la que escribió (puede estar vacía)
   max: number; // tope por día de la ruedita
+  // «Menos de» (fundador, 2026-11-20: «puedes poner que quieres fumar menos de 5 al día», y en las tuyas no). En las
+  // de cantidad, al día o a la semana; en un sí / no, solo a la semana («menos de 3 días a la semana»)
+  limit?: boolean;
 }
 export interface MetasState {
   goals: GoalKey[];
@@ -351,16 +354,32 @@ export function resolveMeta(s: MetasState, id: string): Meta | null {
   const own = s.custom.find((x) => x.id === id);
   if (!own) return null;
   const c = s.cfg[id] ?? { tgt: 1, per: 'day' as Per };
+  const unit = unitCase(own.unit);
   return {
-    id, area: own.area, kind: own.kind, per: c.per, tgt: c.tgt, limit: false, f: 1, step: 1, max: own.kind === 'yesno' ? 1 : own.max,
-    tstep: 1, one: own.unit, many: own.unit, of: '', rawUnit: true, auto: null, autoOn: false, custom: own,
+    id, area: own.area, kind: own.kind, per: c.per, tgt: c.tgt, limit: customLimit(own, c.per), f: 1, step: 1, max: own.kind === 'yesno' ? 1 : own.max,
+    tstep: 1, one: unit, many: unit, of: '', rawUnit: true, auto: null, autoOn: false, custom: own,
   };
 }
 
-// Lo que se puede elegir como meta: de su mínimo a su máximo
+// Una tuya es «menos de» si lo elegiste y tiene sentido: un sí / no cada día no lo es («Sin dulces cada día»)
+export const customLimit = (c: Pick<CustomMeta, 'kind' | 'limit'>, per: Per) => !!c.limit && !(c.kind === 'yesno' && per === 'day');
+
+// La unidad que escribiste, sin la mayúscula que pone el teclado del iPhone al empezar («Raciones» → «raciones»);
+// las siglas y lo que lleva más mayúsculas se quedan como están («UI», «mL»)
+export function unitCase(u: string): string {
+  const x = u.trim();
+  return /^[A-ZÁÉÍÓÚÑÜ][a-záéíóúñüç .]+$/.test(x) ? x.charAt(0).toLowerCase() + x.slice(1) : x;
+}
+
+// Lo que se puede elegir como meta: de su mínimo a su máximo («menos de 1» sería «ninguno»: un límite empieza en 2)
 export function bounds(m: Meta): [number, number] {
-  if (m.kind === 'yesno') return [1, 7];
+  if (m.kind === 'yesno') return [m.limit ? 2 : 1, 7];
   return [m.limit ? 2 * m.tstep : m.tstep, r2(m.max * (m.per === 'week' ? 7 : 1))];
+}
+// Una meta escrita con el teclado: dentro de lo que se puede elegir, y entera si la meta va de entero en entero
+export function typedTarget(m: Meta, v: number): number {
+  const [lo, hi] = bounds(m);
+  return clamp(Number.isInteger(m.tstep) ? Math.round(v) : r2(v), lo, hi);
 }
 export function targetValues(m: Meta): number[] {
   const [lo, hi] = bounds(m);
@@ -546,11 +565,13 @@ export interface Week {
   share: number; // la parte que cuenta para las metas a la semana: (7 − from) / 7
 }
 
-// La semana de `day`. Empezaste el día que firmaste tu compromiso; sin él, cuenta entera.
-export function weekOf(day: string, s: Pick<MetasState, 'weekStart' | 'commit'>, today: string): Week {
+// La semana de `day`. Empezaste el día que firmaste tu compromiso o, si apuntaste algo antes, el primer día que
+// apuntaste (`firstMark`); sin compromiso, cuenta entera. Una probadora, 2026-11-20: firmó un jueves y no podía
+// apuntar el lunes ni el martes. Ahora se pueden apuntar y, al hacerlo, su primera semana cuenta desde ese día.
+export function weekOf(day: string, s: Pick<MetasState, 'weekStart' | 'commit'>, today: string, firstMark?: string | null): Week {
   const first = weekStartOf(day, s.weekStart);
   const days = Array.from({ length: 7 }, (_, i) => addDays(first, i));
-  const since = s.commit?.day;
+  const since = s.commit?.day && firstMark && firstMark < s.commit.day ? firstMark : s.commit?.day;
   const from = !since || since <= days[0] ? 0 : since > days[6] ? 7 : days.indexOf(since);
   const to = today > days[6] ? 6 : today < days[0] ? -1 : days.indexOf(today);
   return { days, from, to, current: today >= days[0] && today <= days[6], share: (7 - from) / 7 };
@@ -586,10 +607,19 @@ export function commitProgress(c: { day: string; weeks: number }, today: string)
 }
 
 // La semana que se acaba de cerrar (la anterior a la de hoy), si ya habías empezado en ella
-export function closedWeek(s: Pick<MetasState, 'weekStart' | 'commit'>, today: string): Week | null {
+export function closedWeek(s: Pick<MetasState, 'weekStart' | 'commit'>, today: string, firstMark?: string | null): Week | null {
   if (!s.commit) return null;
-  const w = weekOf(addDays(weekStartOf(today, s.weekStart), -7), s, today);
+  const w = weekOf(addDays(weekStartOf(today, s.weekStart), -7), s, today, firstMark);
   return w.from <= 6 ? w : null;
+}
+
+// El primer día en que apuntaste algo a mano en las metas que tienes: es tu comienzo si es antes del compromiso.
+// Lo que llega solo (reloj, entrenos, check-ins) no cuenta: llega también de días en los que aún no te proponías nada.
+export function firstMarkOf(s: MetasState, manual: DayMap): string | null {
+  let first: string | null = null;
+  for (const id of selectedIds(s))
+    for (const [day, v] of Object.entries(manual[id] ?? {})) if (v != null && (!first || day < first)) first = day;
+  return first;
 }
 
 // Las metas con algún dato en las 4 semanas antes de `day`
@@ -627,8 +657,9 @@ export function weekMisses(s: MetasState, weekVals: ValuesById, w: WeekPart = CL
       const k = d.filter((v) => v != null && !dayOk(m, v)).length;
       add(k, m.limit ? t(k === 1 ? '{n} day over your limit' : '{n} days over your limit', { n: k }) : t(k === 1 ? '{n} day' : '{n} days', { n: k }));
     } else if (m.kind === 'yesno') {
-      const k = tgt - d.filter((v) => v === 1).length;
-      add(k, `${k} ${unitWord(m, k)}`);
+      const done = d.filter((v) => v === 1).length;
+      if (!m.limit) add(tgt - done, `${tgt - done} ${unitWord(m, tgt - done)}`);
+      else if (done >= tgt) add(1, t('{q} too many', { q: `${done - tgt + 1} ${unitWord(m, done - tgt + 1)}` }));
     } else {
       const sum = d.reduce<number>((a, v) => a + (v ?? 0), 0);
       if (!m.limit && sum < goal) {
@@ -652,8 +683,8 @@ export interface Congrats {
 }
 
 // Al empezar cada semana, lo de la anterior. Si empezaste a mitad, se dice que contaba solo esa parte.
-export function weeklyCongrats(s: MetasState, today: string, valuesFor: (days: string[]) => ValuesById): Congrats | null {
-  const w = closedWeek(s, today);
+export function weeklyCongrats(s: MetasState, today: string, valuesFor: (days: string[]) => ValuesById, firstMark?: string | null): Congrats | null {
+  const w = closedWeek(s, today, firstMark);
   const week = w?.days[0];
   if (!w || !week || s.closedWeek === week) return null;
   const r = weekMisses(s, valuesFor(w.days), w);
@@ -745,20 +776,29 @@ export function metaText(m: Meta): string {
   if (m.kind === 'yesno') {
     if (m.per === 'day') return t('{name} every day', { name });
     if (m.def?.sessions) return t('{n} {what} a week', { n: m.tgt, what: t(m.tgt === 1 ? m.def.sessions[0] : m.def.sessions[1]) });
+    if (m.limit) return t('{name}, less than {n} days a week', { name, n: m.tgt });
     return t(m.tgt === 1 ? '{name}, {n} day a week' : '{name}, {n} days a week', { name, n: m.tgt });
   }
   const unit = unitWord(m, m.tgt);
   const q = `${fmtMeta(m, m.tgt)}${unit ? ` ${unit}` : ''}${m.of ? t(m.of) : ''}`;
+  if (m.custom && m.limit) return t(m.per === 'day' ? '{name}: less than {q} a day' : '{name}: less than {q} a week', { name, q });
   if (m.custom) return t(m.per === 'day' ? '{name}: {q} a day' : '{name}: {q} a week', { name, q });
   if (m.def?.phrase) return t(m.def.phrase, { n: q });
   return t(m.limit ? (m.per === 'day' ? 'Less than {q} a day' : 'Less than {q} a week') : m.per === 'day' ? '{q} a day' : '{q} a week', { q });
 }
 
 // Vista previa de una meta tuya, igual que quedará
-export function customText(n: { name: string; kind: Kind; per: Per; q: number; days: number; unit: string }): string {
+export function customText(n: { name: string; kind: Kind; per: Per; q: number; days: number; unit: string; limit?: boolean }): string {
   const name = n.name.trim() || t('Your target');
-  if (n.kind === 'yesno') return n.per === 'day' ? t('{name} every day', { name }) : t(n.days === 1 ? '{name}, {n} day a week' : '{name}, {n} days a week', { name, n: n.days });
-  const q = `${fmtNum(n.q)}${n.unit.trim() ? ` ${n.unit.trim()}` : ''}`;
+  const limit = customLimit(n, n.per);
+  if (n.kind === 'yesno') {
+    if (n.per === 'day') return t('{name} every day', { name });
+    if (limit) return t('{name}, less than {n} days a week', { name, n: n.days });
+    return t(n.days === 1 ? '{name}, {n} day a week' : '{name}, {n} days a week', { name, n: n.days });
+  }
+  const unit = unitCase(n.unit);
+  const q = `${fmtNum(n.q)}${unit ? ` ${unit}` : ''}`;
+  if (limit) return t(n.per === 'day' ? '{name}: less than {q} a day' : '{name}: less than {q} a week', { name, q });
   return t(n.per === 'day' ? '{name}: {q} a day' : '{name}: {q} a week', { name, q });
 }
 

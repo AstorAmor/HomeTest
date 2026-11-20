@@ -5,6 +5,7 @@
 //   En las de cantidad, la cifra de cada día debajo.
 // - Un toque en un día de un sí / no lo marca o lo desmarca; en las de cantidad (y en lo que llega solo) se abre
 //   una hoja con «− número +», la unidad fuera y «Guardar».
+// - En tu primera semana, los días de antes de empezar salen apagados pero se pueden apuntar (2026-11-20).
 // - Botones en píldora esmeralda, opciones en chips con borde, filas con una línea fina (sin tarjetas).
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Easing, Platform, Modal, Pressable } from 'react-native';
@@ -22,15 +23,18 @@ import {
   autoLabel,
   bounds,
   chipNum,
+  clamp,
   dateOfKey,
   evalMeta,
   fmtMeta,
+  fmtNum,
   fromLabel,
   metaText,
   progressText,
   r2,
   stepDay,
   stepTarget,
+  typedTarget,
   unitWord,
   valueText,
   weekdayLetter,
@@ -185,11 +189,12 @@ export function targetLine(m: Meta): string {
   if (m.kind === 'yesno') {
     if (m.per === 'day') return t('Every day');
     if (m.def?.sessions) return metaText(m);
+    if (m.limit) return t('Less than {n} days a week', { n: m.tgt });
     return t(m.tgt === 1 ? '{n} day a week' : '{n} days a week', { n: m.tgt });
   }
   const u = unitWord(m, m.tgt);
   const q = `${fmtMeta(m, m.tgt)}${u ? ` ${u}` : ''}`;
-  if (m.custom) return t(m.per === 'day' ? '{q} a day' : '{q} a week', { q });
+  if (m.custom) return t(m.limit ? (m.per === 'day' ? 'Less than {q} a day' : 'Less than {q} a week') : m.per === 'day' ? '{q} a day' : '{q} a week', { q });
   // «Dormir 7 h o más» lleva el nombre dentro: debajo de «Dormir», solo «7 h o más»
   if (m.def?.phrase) return t('{q} or more', { q });
   return metaText(m);
@@ -218,20 +223,30 @@ export interface MetaWeekProps {
 
 // Los 7 días de una meta (prototipo, `dots()`): círculos de 38 con su letra. Un sí / no a mano se marca o se
 // quita con un toque; en las de cantidad, y en lo que llega solo, se abre la hoja del día. Los que no cuentan
-// (antes de empezar, o aún por llegar) salen apagados y no se tocan.
+// salen apagados: los que aún no han llegado no se tocan; los de antes de empezar, en tu primera semana, sí (al
+// apuntar uno, la semana cuenta desde él: useMetas, `firstMarkOf`).
+// La hoja va siempre montada y se abre y se cierra con `visible` (2026-11-20: en el iPhone de una probadora los días
+// no se abrían; en iOS, un Modal que se monta y se desmonta en cada toque puede quedarse sin presentar).
 export function MetaWeek({ m, vals, autoVals, fixed, days, week, known, color, onSet }: MetaWeekProps) {
   const [pick, setPick] = useState<number | null>(null);
+  // Lo que enseña la hoja: se queda mientras se cierra; `opens` la empieza de cero en cada apertura
+  const [shown, setShown] = useState<{ i: number; opens: number } | null>(null);
   const e = evalMeta(m, vals, week, known);
   const T = week.current ? week.to : -1;
   const today = T >= 0 ? days[T] : null;
   const manual = !m.autoOn;
   const amount = m.kind === 'amount';
+  const tappable = (i: number) => e.st[i] !== 'off' || (i < week.from && i <= week.to);
 
   const tapDay = (i: number) => {
-    if (e.st[i] === 'off') return;
-    if (m.kind === 'yesno' && manual) onSet(days[i], vals[i] === 1 ? (i === T ? null : 0) : 1);
-    else setPick(i);
+    if (!tappable(i)) return;
+    if (m.kind === 'yesno' && manual) onSet(days[i], vals[i] === 1 ? (i === T || e.st[i] === 'off' ? null : 0) : 1);
+    else {
+      setPick(i);
+      setShown((x) => ({ i, opens: (x?.opens ?? 0) + 1 }));
+    }
   };
+  const close = () => setPick(null);
 
   return (
     <>
@@ -239,6 +254,7 @@ export function MetaWeek({ m, vals, autoVals, fixed, days, week, known, color, o
         {vals.map((v, i) => {
           const s = e.st[i];
           const off = s === 'off';
+          const locked = !tappable(i);
           const on = s === 'ok' || s === 'mark';
           // La cifra de cada día, con un decimal como mucho (7,25 h → 7,3): cabe debajo del círculo
           const fig = amount && !off && v != null && (v > 0 || m.per === 'day') ? chipNum(m, Math.round((v / m.f) * 10) / 10) : '';
@@ -249,10 +265,10 @@ export function MetaWeek({ m, vals, autoVals, fixed, days, week, known, color, o
                 <TouchableOpacity
                   style={[styles.dd, on && { backgroundColor: color, borderColor: color }, off && styles.ddOff]}
                   onPress={() => tapDay(i)}
-                  disabled={off}
+                  disabled={locked}
                   activeOpacity={0.7}
                   accessibilityRole="button"
-                  accessibilityState={{ disabled: off, selected: on }}
+                  accessibilityState={{ disabled: locked, selected: on }}
                   accessibilityLabel={`${fullDay(days[i], today)}: ${valueText(m, v)}`}
                 >
                   <Text style={[styles.ddText, on && styles.ddTextOn]}>{weekdayLetter(days[i])}</Text>
@@ -267,19 +283,21 @@ export function MetaWeek({ m, vals, autoVals, fixed, days, week, known, color, o
           );
         })}
       </View>
-      {pick != null && (
-        <DaySheet
-          key={days[pick]}
-          m={m}
-          title={fullDay(days[pick], today)}
-          value={vals[pick]}
-          autoValue={autoVals?.[pick] ?? null}
-          fixed={!!fixed?.[pick]}
-          color={color}
-          onSave={(v) => onSet(days[pick], v)}
-          onClose={() => setPick(null)}
-        />
-      )}
+      <Modal visible={pick != null} transparent animationType="slide" onRequestClose={close}>
+        {shown && (
+          <DaySheet
+            key={`${days[shown.i]}:${shown.opens}`}
+            m={m}
+            title={fullDay(days[shown.i], today)}
+            value={vals[shown.i]}
+            autoValue={autoVals?.[shown.i] ?? null}
+            fixed={!!fixed?.[shown.i]}
+            color={color}
+            onSave={(v) => onSet(days[shown.i], v)}
+            onClose={close}
+          />
+        )}
+      </Modal>
     </>
   );
 }
@@ -315,71 +333,69 @@ function DaySheet({
     onClose();
   };
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={[styles.sheet, { paddingBottom: insets.bottom + 24 }]} onPress={() => undefined}>
-          <Text style={styles.sheetTitle}>{metaName(m)}</Text>
-          <Text style={styles.sheetSub}>
-            {title} · {t('Your target: {text}', { text: lowerFirst(metaText(m)) })}
-          </Text>
-          {m.autoOn && m.auto && (
-            <View style={styles.autoLine}>
-              <Text style={[styles.sheetNote, { flex: 1 }]}>
-                {fixed
-                  ? t('Changed by hand ({value} {from}).', { from: fromLabel(m.auto), value: valueText(m, autoValue) })
-                  : t('{value}, {from}. You can change it by hand.', { value: valueText(m, value), from: fromLabel(m.auto) })}
-              </Text>
-              {fixed && (
-                <TouchableOpacity
-                  onPress={() => {
-                    onSave(null);
-                    onClose();
-                  }}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                >
-                  <Text style={fine.link}>{t('Undo')}</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-          {yesno ? (
-            <View style={styles.yesNo}>
-              {[1, 0].map((v) => {
-                const on = draft === v;
-                return (
-                  <TouchableOpacity
-                    key={v}
-                    style={[styles.chip, on && { borderColor: color, backgroundColor: 'rgba(131,214,180,0.08)' }]}
-                    onPress={() => setDraft(v)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: on }}
-                  >
-                    <Text style={[styles.chipText, on && styles.chipTextOn]}>{valueText(m, v)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ) : (
-            <FineStepper
-              value={fmtMeta(m, x)}
-              unit={unitWord(m, x)}
-              onMinus={() => setDraft((d) => stepDay(m, d, -1))}
-              onPlus={() => setDraft((d) => stepDay(m, d, 1))}
-              canMinus={(draft ?? 0) > 0}
-              canPlus={(draft ?? 0) < r2(m.max * m.f)}
-              style={styles.sheetStepper}
-            />
-          )}
-          <View style={styles.acts}>
-            <Pill label={t('Save')} onPress={save} />
-            <TouchableOpacity onPress={onClose} hitSlop={8} accessibilityRole="button">
-              <Text style={fine.link}>{t('Cancel')}</Text>
-            </TouchableOpacity>
+    <Pressable style={styles.backdrop} onPress={onClose}>
+      <Pressable style={[styles.sheet, { paddingBottom: insets.bottom + 24 }]} onPress={() => undefined}>
+        <Text style={styles.sheetTitle}>{metaName(m)}</Text>
+        <Text style={styles.sheetSub}>
+          {title} · {t('Your target: {text}', { text: lowerFirst(metaText(m)) })}
+        </Text>
+        {m.autoOn && m.auto && (
+          <View style={styles.autoLine}>
+            <Text style={[styles.sheetNote, { flex: 1 }]}>
+              {fixed
+                ? t('Changed by hand ({value} {from}).', { from: fromLabel(m.auto), value: valueText(m, autoValue) })
+                : t('{value}, {from}. You can change it by hand.', { value: valueText(m, value), from: fromLabel(m.auto) })}
+            </Text>
+            {fixed && (
+              <TouchableOpacity
+                onPress={() => {
+                  onSave(null);
+                  onClose();
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+              >
+                <Text style={fine.link}>{t('Undo')}</Text>
+              </TouchableOpacity>
+            )}
           </View>
-        </Pressable>
+        )}
+        {yesno ? (
+          <View style={styles.yesNo}>
+            {[1, 0].map((v) => {
+              const on = draft === v;
+              return (
+                <TouchableOpacity
+                  key={v}
+                  style={[styles.chip, on && { borderColor: color, backgroundColor: 'rgba(131,214,180,0.08)' }]}
+                  onPress={() => setDraft(v)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: on }}
+                >
+                  <Text style={[styles.chipText, on && styles.chipTextOn]}>{valueText(m, v)}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : (
+          <FineStepper
+            value={fmtMeta(m, x)}
+            unit={unitWord(m, x)}
+            onMinus={() => setDraft((d) => stepDay(m, d, -1))}
+            onPlus={() => setDraft((d) => stepDay(m, d, 1))}
+            canMinus={(draft ?? 0) > 0}
+            canPlus={(draft ?? 0) < r2(m.max * m.f)}
+            style={styles.sheetStepper}
+          />
+        )}
+        <View style={styles.acts}>
+          <Pill label={t('Save')} onPress={save} />
+          <TouchableOpacity onPress={onClose} hitSlop={8} accessibilityRole="button">
+            <Text style={fine.link}>{t('Cancel')}</Text>
+          </TouchableOpacity>
+        </View>
       </Pressable>
-    </Modal>
+    </Pressable>
   );
 }
 
@@ -417,6 +433,9 @@ export function TargetStepper({ m, onChange }: { m: Meta; onChange: (tgt: number
       onPlus={() => onChange(stepTarget(m, 1))}
       canMinus={m.tgt > lo}
       canPlus={m.tgt < hi}
+      onType={(v) => onChange(typedTarget(m, v))}
+      editText={fmtNum(m.tgt)}
+      decimals={!Number.isInteger(m.tstep)}
     />
   );
 }
@@ -432,6 +451,7 @@ export function SmallStepper({ value, onChange, min = 1, max = 999, unit }: { va
       onPlus={() => onChange(Math.min(max, value + 1))}
       canMinus={value > min}
       canPlus={value < max}
+      onType={(v) => onChange(clamp(Math.round(v), min, max))}
     />
   );
 }

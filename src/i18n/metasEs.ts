@@ -253,12 +253,21 @@ export const metasEs: Record<string, string> = {
   'How much': 'Cuánto',
   'Unit (optional)': 'Unidad (opcional)',
   Unit: 'Unidad',
-  'How often': 'Tiempo',
+  'How often': 'Cada cuánto',
   'Every day': 'Cada día',
   'Every week': 'Cada semana',
   'It will look like this': 'Quedará así',
   Add: 'Añadir',
   'Your target, {n} days a week': 'Tu meta, {n} días a la semana',
+  // «Menos de» en las tuyas (2026-11-20)
+  'At least': 'Al menos',
+  'Less than': 'Menos de',
+  '{name}: less than {q} a day': '{name}: menos de {q} al día',
+  '{name}: less than {q} a week': '{name}: menos de {q} a la semana',
+  '{name}, less than {n} days a week': '{name}, menos de {n} días a la semana',
+  'Less than {n} days a week': 'Menos de {n} días a la semana',
+  'Type the number': 'Escribe la cifra',
+  'You can also mark the days before.': 'También puedes apuntar los días de antes.',
 
   // ── La (i) ──
   'Your target: {text}': 'Tu meta: {text}',
