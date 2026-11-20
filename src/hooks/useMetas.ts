@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AppState } from 'react-native';
 import { useReloadOnFocus } from './useReloadOnFocus';
 import { useDailyWearables } from '@/wearables/dailySeries';
 import { showSamples } from '@/data/dataMode';
@@ -21,6 +22,7 @@ import {
   autoValues,
   closedWeek,
   dayKeyOf,
+  firstMarkOf,
   knownBefore,
   labGoals,
   valuesFor,
@@ -105,31 +107,41 @@ export function useMetas() {
 
   const today = dayKeyOf(new Date());
   const demoToday = showSamples() ? today : undefined;
+  // Si la app se queda abierta de un día para otro, al volver a ella hoy pasa a ser el día nuevo (y el aro con él)
+  const [, setDayShown] = useState(today);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') setDayShown(dayKeyOf(new Date()));
+    });
+    return () => sub.remove();
+  }, []);
+  // Tu primer día apuntado: si es antes de tu compromiso, tu primera semana cuenta desde él
+  const firstMark = useMemo(() => (data ? firstMarkOf(data.state, data.manual) : null), [data]);
 
   // Una semana de tus metas (de lunes a domingo, o de domingo a sábado): la en curso (0) o la anterior
   // (−1), con lo de cada día y qué metas ya tenían datos antes
   const weekView = useCallback(
     (offset = 0) => {
       if (!data) return null;
-      const week = weekOf(addDays(today, offset * 7), data.state, today);
+      const week = weekOf(addDays(today, offset * 7), data.state, today, firstMark);
       const vals = valuesFor(data.state, week.days, data.manual, auto, demoToday);
       const known = knownBefore(data.state, week.days[Math.min(week.from, 6)], data.manual, auto, demoToday);
       return { week, days: week.days, vals, known };
     },
-    [data, today, auto, demoToday],
+    [data, today, auto, demoToday, firstMark],
   );
   const cur = useMemo(() => weekView(0), [weekView]);
   const congrats = useMemo(
-    () => (data ? weeklyCongrats(data.state, today, (ds) => valuesFor(data.state, ds, data.manual, auto, demoToday)) : null),
-    [data, today, auto, demoToday],
+    () => (data ? weeklyCongrats(data.state, today, (ds) => valuesFor(data.state, ds, data.manual, auto, demoToday), firstMark) : null),
+    [data, today, auto, demoToday, firstMark],
   );
 
   // Lo que te propusiste y lo que hiciste la semana que se acaba de cerrar (al tocar la enhorabuena)
   const review = useMemo(() => {
     if (!data || !congrats) return null;
-    const w = closedWeek(data.state, today);
+    const w = closedWeek(data.state, today, firstMark);
     return w ? weekReview(data.state, valuesFor(data.state, w.days, data.manual, auto, demoToday), w) : null;
-  }, [data, congrats, today, auto, demoToday]);
+  }, [data, congrats, today, auto, demoToday, firstMark]);
 
   // Guarda lo elegido (se ve al momento)
   const update = useCallback((next: MetasState) => {
