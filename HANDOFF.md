@@ -3134,3 +3134,36 @@ misma línea». Luego: «Yes, commit and publish».
   rutas nuevas y tsc fallaba con `/log-steps` y `/log-sleep`; se copió el de `hometest-app-staging`.
 - **No tocado:** la base de producción, la beta de amigos (canal `pruebas`, sigue en 019bcd1c, que ya llevaba
   0f93dea) y Kuova Pruebas (el cambio solo se ve en la web de escritorio).
+
+## 2026-11-20 — Metas: notas de una probadora en iPhone (master 2dff2e3, PUBLICADO en los tres canales)
+
+Astor, con capturas de su madre (probadora, iPhone): «quiero que se pueda introducir el campo con el teclado (el 20)»,
+«raciones» salía con mayúscula, en las metas tuyas no se podía poner «menos de X», y en Hábitos no dejaba marcar ni el
+día ni los pasados («en Android sí funciona»). Luego: «a todas, dale».
+
+- **Punto de vuelta:** etiqueta `app-publica-antes-de-metas-teclado` en GitHub (= 345caba, código a61db25). En Expo,
+  el grupo anterior de `preview` es ccc59ab1, el de `pruebas` 019bcd1c; en Vercel, el despliegue anterior de cada web.
+- **Qué se unió:** `entorno-pruebas` 2cfbc4c en master (merge sin conflictos, `src` idéntico; solo `src/`, sin
+  dependencias, `supabase/`, `app.config.js` ni `eas.json`; tsc 0, 93 ficheros / 941 tests).
+  - **La cifra con el teclado:** `FineStepper` tiene `onType` / `editText` / `decimals` (un `TextInput` numérico en
+    una cajita de línea fina; cada número que se entiende llega ya al padre, así «Añadir» o «Guardar» con el teclado
+    abierto llevan lo escrito; `src/utils/typedNumber.ts`). Lo usan `SmallStepper` (Otra meta) y `TargetStepper`
+    (Ajustar tu meta, con `typedTarget`: dentro de `bounds`, entero si la meta va de entero en entero). La hoja de un
+    día sigue con − / + (sin teclado: tapaba la hoja).
+  - **La unidad:** `autoCapitalize="none"` y `unitCase` al guardar y al enseñar («Raciones» → «raciones»; siglas
+    como «UI» o «mL» se quedan). La etiqueta «Tiempo» pasa a «Cada cuánto».
+  - **«Menos de» en las tuyas:** `CustomMeta.limit` (`customLimit`: cantidad al día o a la semana, sí / no solo a
+    la semana). «Al menos / Menos de» al crearla y en Ajustar (para las ya creadas). Un límite empieza en 2. Frases
+    `{name}: less than {q} a day/week` y `{name}, less than {n} days a week`; `weekMisses` para sí / no con límite.
+  - **Los días de antes de empezar:** la madre firmó el jueves, y la primera semana contaba desde ese día (lunes a
+    miércoles apagados y sin tocar: eso era lo de «en Android sí», el compromiso de Astor es más antiguo). Ahora esos
+    días salen apagados pero se pueden apuntar, y `firstMarkOf` (el primer valor a mano de las metas elegidas) se
+    pasa a `weekOf` / `closedWeek` / `weeklyCongrats`: la primera semana cuenta desde ese día.
+  - **iPhone, la hoja del día:** la causa no se reprodujo (no hay iPhone aquí). La hoja va ahora siempre montada y se
+    abre con `visible` (antes se montaba y desmontaba en cada toque). `useMetas` repinta al volver la app a primer
+    plano, para que el aro de hoy pase al día nuevo si se quedó abierta de noche.
+- **Publicado:** Kuova Pruebas (canal `staging`, grupo cfa0671c, desde entorno-pruebas 2cfbc4c), pública
+  (`npm run release`: canal `preview`, grupo d7a8dea5, y las dos webs) y beta de amigos (canal `pruebas`, grupo
+  acef9916, `eas-cli update --channel pruebas --environment preview` desde master 2dff2e3), todos Android + iOS.
+  Webs: bundle con el código nuevo, base de producción, sin la de pruebas, `noindex` sigue.
+- **Sin comprobar:** cualquier teléfono, y en particular si en el iPhone ya se abre la hoja del día.
